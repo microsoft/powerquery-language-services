@@ -9,7 +9,7 @@ import {
     NodeIdMap,
     NodeIdMapUtils,
     TComment,
-    Traverse
+    Traverse,
 } from "@microsoft/powerquery-parser";
 import { CommentCollection, CommentCollectionMap } from "./comment";
 import { expectGetIsMultiline, IsMultilineMap } from "./isMultiline/common";
@@ -27,7 +27,7 @@ export const enum SerializerWriteKind {
     DoubleNewline = "DoubleNewline",
     Indented = "Indented",
     PaddedLeft = "PaddedLeft",
-    PaddedRight = "PaddedRight"
+    PaddedRight = "PaddedRight",
 }
 
 export interface SerializerParameterMap {
@@ -46,19 +46,19 @@ export function tryTraverse(
     ast: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
     commentCollectionMap: CommentCollectionMap,
-    isMultilineMap: IsMultilineMap
+    isMultilineMap: IsMultilineMap,
 ): Traverse.TriedTraverse<SerializerParameterMap> {
     const state: State = {
         result: {
             writeKind: new Map(),
             indentationChange: new Map(),
-            comments: new Map()
+            comments: new Map(),
         },
         localizationTemplates,
         nodeIdMapCollection,
         commentCollectionMap,
         isMultilineMap,
-        workspaceMap: new Map()
+        workspaceMap: new Map(),
     };
     return Traverse.tryTraverseAst(
         state,
@@ -67,13 +67,13 @@ export function tryTraverse(
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         Traverse.expectExpandAllAstChildren,
-        undefined
+        undefined,
     );
 }
 
 export function getSerializerWriteKind(
     node: Ast.TNode,
-    serializerParametersMap: SerializerParameterMap
+    serializerParametersMap: SerializerParameterMap,
 ): SerializerWriteKind {
     const maybeWriteKind: SerializerWriteKind | undefined = serializerParametersMap.writeKind.get(node.id);
     if (maybeWriteKind) {
@@ -100,7 +100,7 @@ interface Workspace {
 
 const DefaultWorkspace: Workspace = {
     maybeWriteKind: SerializerWriteKind.Any,
-    maybeIndentationChange: undefined
+    maybeIndentationChange: undefined,
 };
 
 function visitNode(state: State, node: Ast.TNode): void {
@@ -138,7 +138,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (isPairedMultiline) {
                 setWorkspace(state, node.paired, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             } else {
                 setWorkspace(state, node.paired, { maybeWriteKind: SerializerWriteKind.PaddedLeft });
@@ -205,7 +205,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (protectedIsMultiline) {
                 setWorkspace(state, node.protectedExpression, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             } else {
                 setWorkspace(state, node.protectedExpression, { maybeWriteKind: SerializerWriteKind.PaddedLeft });
@@ -235,7 +235,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 case Ast.NodeKind.ListExpression:
                 case Ast.NodeKind.RecordExpression:
                     pairedWorkspace = {
-                        maybeWriteKind: SerializerWriteKind.PaddedLeft
+                        maybeWriteKind: SerializerWriteKind.PaddedLeft,
                     };
                     break;
 
@@ -244,7 +244,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     if (pairedIsMultiline) {
                         pairedWorkspace = {
                             maybeIndentationChange: 1,
-                            maybeWriteKind: SerializerWriteKind.Indented
+                            maybeWriteKind: SerializerWriteKind.Indented,
                         };
                     } else {
                         pairedWorkspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -283,7 +283,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 if (isMultiline) {
                     typeWorkspace = {
                         maybeIndentationChange: 1,
-                        maybeWriteKind: SerializerWriteKind.Indented
+                        maybeWriteKind: SerializerWriteKind.Indented,
                     };
                 } else {
                     typeWorkspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -306,7 +306,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 if (isMultiline) {
                     workspace = {
                         maybeIndentationChange: 1,
-                        maybeWriteKind: SerializerWriteKind.Indented
+                        maybeWriteKind: SerializerWriteKind.Indented,
                     };
                 } else if (fieldsArray.elements.length) {
                     workspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -329,7 +329,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 setWorkspace(state, node.equalConstant, { maybeWriteKind: SerializerWriteKind.PaddedLeft });
                 setWorkspace(state, node.fieldType, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             } else {
                 propagateWriteKind(state, node, node.equalConstant);
@@ -353,7 +353,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (expressionIsMultiline) {
                 expressionWorkspace = {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 };
             } else {
                 expressionWorkspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -367,7 +367,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             propagateWriteKind(state, node, node.functionConstant);
 
             const commonWorkspace: Workspace = {
-                maybeWriteKind: SerializerWriteKind.PaddedLeft
+                maybeWriteKind: SerializerWriteKind.PaddedLeft,
             };
             setWorkspace(state, node.parameters, commonWorkspace);
             setWorkspace(state, node.functionReturnType, commonWorkspace);
@@ -400,7 +400,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (isMultiline) {
                 setWorkspace(state, itemSelector, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             }
 
@@ -418,7 +418,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 }
             } else {
                 closeWrapperConstantWorkspace = {
-                    maybeWriteKind: SerializerWriteKind.Any
+                    maybeWriteKind: SerializerWriteKind.Any,
                 };
             }
             setWorkspace(state, node.closeWrapperConstant, closeWrapperConstantWorkspace);
@@ -430,7 +430,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             setWorkspace(state, node.inConstant, { maybeWriteKind: SerializerWriteKind.Indented });
             setWorkspace(state, node.expression, {
                 maybeIndentationChange: 1,
-                maybeWriteKind: SerializerWriteKind.Indented
+                maybeWriteKind: SerializerWriteKind.Indented,
             });
             break;
 
@@ -441,7 +441,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (isMultiline) {
                 setWorkspace(state, node.content, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             }
             break;
@@ -454,11 +454,11 @@ function visitNode(state: State, node: Ast.TNode): void {
             let otherWorkspace: Workspace;
             if (isMultiline) {
                 otherWorkspace = {
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 };
             } else {
                 otherWorkspace = {
-                    maybeWriteKind: SerializerWriteKind.PaddedLeft
+                    maybeWriteKind: SerializerWriteKind.PaddedLeft,
                 };
             }
 
@@ -496,7 +496,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (isMultiline) {
                 setWorkspace(state, node.content, {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 });
             }
             break;
@@ -539,11 +539,11 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (rowTypeIsMultiline) {
                 rowTypeWorkspace = {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 };
             } else {
                 rowTypeWorkspace = {
-                    maybeWriteKind: SerializerWriteKind.PaddedLeft
+                    maybeWriteKind: SerializerWriteKind.PaddedLeft,
                 };
             }
             setWorkspace(state, rowType, rowTypeWorkspace);
@@ -638,12 +638,12 @@ function visitNode(state: State, node: Ast.TNode): void {
             let pairedWorkspace: Workspace;
             if (skipPrimaryTypeIndentation(paired)) {
                 pairedWorkspace = {
-                    maybeWriteKind: SerializerWriteKind.PaddedLeft
+                    maybeWriteKind: SerializerWriteKind.PaddedLeft,
                 };
             } else if (pairedIsMultiline) {
                 pairedWorkspace = {
                     maybeIndentationChange: 1,
-                    maybeWriteKind: SerializerWriteKind.Indented
+                    maybeWriteKind: SerializerWriteKind.Indented,
                 };
             } else {
                 pairedWorkspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -678,7 +678,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (!maybeWriteKind) {
                 const details: {} = {
                     node,
-                    maybeWriteKind: maybeWriteKind
+                    maybeWriteKind: maybeWriteKind,
                 };
                 throw new CommonError.InvariantError("maybeWriteKind should be truthy", details);
             }
@@ -731,7 +731,7 @@ function maybePropagateWriteKind(state: State, parent: Ast.TNode, maybeFirstChil
 function maybeSetIndentationChange(
     state: State,
     node: Ast.TNode,
-    maybeIndentationChange: IndentationChange | undefined
+    maybeIndentationChange: IndentationChange | undefined,
 ): void {
     if (maybeIndentationChange) {
         state.result.indentationChange.set(node.id, maybeIndentationChange);
@@ -750,7 +750,7 @@ function maybeSetIndentationChange(
 function visitComments(
     state: State,
     node: Ast.TNode,
-    maybeWriteKind: SerializerWriteKind | undefined
+    maybeWriteKind: SerializerWriteKind | undefined,
 ): SerializerWriteKind | undefined {
     const nodeId: number = node.id;
     const maybeComments: CommentCollection | undefined = state.commentCollectionMap.get(nodeId);
@@ -783,7 +783,7 @@ function visitComments(
 
         commentParameters.push({
             literal: comment.data,
-            writeKind
+            writeKind,
         });
     }
 
@@ -817,7 +817,7 @@ function visitKeyValuePair(state: State, node: Ast.TKeyValuePair): void {
     if (valueIsMultiline) {
         valueWorkspace = {
             maybeIndentationChange: 1,
-            maybeWriteKind: SerializerWriteKind.Indented
+            maybeWriteKind: SerializerWriteKind.Indented,
         };
     } else {
         valueWorkspace = { maybeWriteKind: SerializerWriteKind.PaddedLeft };
@@ -840,7 +840,7 @@ function visitArrayWrapper(state: State, node: Ast.TArrayWrapper): void {
     for (const element of node.elements) {
         setWorkspace(state, element, {
             maybeWriteKind,
-            maybeIndentationChange
+            maybeIndentationChange,
         });
     }
 }
@@ -867,7 +867,7 @@ function visitArrayWrapperForSectionMembers(state: State, node: Ast.IArrayWrappe
 
 function visitArrayWrapperForUnaryExpression(
     state: State,
-    node: Ast.IArrayWrapper<Ast.IConstant<Ast.UnaryOperatorKind>>
+    node: Ast.IArrayWrapper<Ast.IConstant<Ast.UnaryOperatorKind>>,
 ): void {
     // `not` is an unary operator which needs to be padded.
     // The default Any write kind is fine for the other operators (`+` and `-`).
@@ -896,36 +896,36 @@ function visitIfExpression(state: State, node: Ast.IfExpression): void {
     if (conditionIsMultiline) {
         conditionWorkspace = {
             maybeIndentationChange: 1,
-            maybeWriteKind: SerializerWriteKind.Indented
+            maybeWriteKind: SerializerWriteKind.Indented,
         };
         thenConstantWorkspace = {
-            maybeWriteKind: SerializerWriteKind.Indented
+            maybeWriteKind: SerializerWriteKind.Indented,
         };
     } else {
         conditionWorkspace = {
-            maybeWriteKind: SerializerWriteKind.PaddedLeft
+            maybeWriteKind: SerializerWriteKind.PaddedLeft,
         };
         thenConstantWorkspace = {
-            maybeWriteKind: SerializerWriteKind.PaddedLeft
+            maybeWriteKind: SerializerWriteKind.PaddedLeft,
         };
     }
     setWorkspace(state, node.condition, conditionWorkspace);
     setWorkspace(state, node.thenConstant, thenConstantWorkspace);
     setWorkspace(state, node.trueExpression, {
         maybeIndentationChange: 1,
-        maybeWriteKind: SerializerWriteKind.Indented
+        maybeWriteKind: SerializerWriteKind.Indented,
     });
 
     const falseExpression: Ast.TExpression = node.falseExpression;
     let falseExpressionWorkspace: Workspace;
     if (falseExpression.kind === Ast.NodeKind.IfExpression) {
         falseExpressionWorkspace = {
-            maybeWriteKind: SerializerWriteKind.PaddedLeft
+            maybeWriteKind: SerializerWriteKind.PaddedLeft,
         };
     } else {
         falseExpressionWorkspace = {
             maybeIndentationChange: 1,
-            maybeWriteKind: SerializerWriteKind.Indented
+            maybeWriteKind: SerializerWriteKind.Indented,
         };
     }
     setWorkspace(state, node.elseConstant, { maybeWriteKind: SerializerWriteKind.Indented });
@@ -943,7 +943,7 @@ function visitWrapped(state: State, wrapped: Ast.TWrapped): void {
         if (writeKind !== SerializerWriteKind.Indented) {
             workspace = {
                 maybeIndentationChange: undefined,
-                maybeWriteKind: writeKind
+                maybeWriteKind: writeKind,
             };
         }
     }

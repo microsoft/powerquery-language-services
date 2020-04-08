@@ -8,14 +8,14 @@ import {
     Hover,
     Position,
     SignatureHelp,
-    TextDocument
+    TextDocument,
 } from "vscode-languageserver-types";
 
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
     SignatureProviderContext,
-    SymbolProvider
+    SymbolProvider,
 } from "./providers";
 import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
 
@@ -52,7 +52,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
 
             const triedInspection: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
                 this.document,
-                this.position
+                this.position,
             );
 
             if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {

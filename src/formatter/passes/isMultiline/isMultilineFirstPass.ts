@@ -10,7 +10,7 @@ import {
     NodeIdMap,
     NodeIdMapUtils,
     StringUtils,
-    Traverse
+    Traverse,
 } from "@microsoft/powerquery-parser";
 import { CommentCollection, CommentCollectionMap } from "../comment";
 import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
@@ -20,14 +20,14 @@ export function tryTraverse(
     localizationTemplates: ILocalizationTemplates,
     ast: Ast.TNode,
     commentCollectionMap: CommentCollectionMap,
-    nodeIdMapCollection: NodeIdMap.Collection
+    nodeIdMapCollection: NodeIdMap.Collection,
 ): Traverse.TriedTraverse<IsMultilineMap> {
     const state: State = {
         localizationTemplates,
         result: new Map(),
         commentCollectionMap,
         nodeIdMapCollection,
-        linearLengthMap: new Map()
+        linearLengthMap: new Map(),
     };
 
     return Traverse.tryTraverseAst<State, IsMultilineMap>(
@@ -37,7 +37,7 @@ export function tryTraverse(
         Traverse.VisitNodeStrategy.DepthFirst,
         visitNode,
         Traverse.expectExpandAllAstChildren,
-        undefined
+        undefined,
     );
 }
 
@@ -52,7 +52,7 @@ const InvokeExpressionIdentifierLinearLengthExclusions: ReadonlyArray<string> = 
     "#datetime",
     "#datetimezone",
     "#duration",
-    "#time"
+    "#time",
 ];
 const TBinOpExpressionLinearLengthThreshold: number = 40;
 const InvokeExpressionLinearLengthThreshold: number = 40;
@@ -95,7 +95,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 state.localizationTemplates,
                 state.nodeIdMapCollection,
                 state.linearLengthMap,
-                node
+                node,
             );
             if (linearLength > TBinOpExpressionLinearLengthThreshold) {
                 isMultiline = true;
@@ -130,7 +130,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     isMultilineMap,
                     node.openWrapperConstant,
                     node.closeWrapperConstant,
-                    ...node.content.elements
+                    ...node.content.elements,
                 );
                 if (isAnyChildMultiline) {
                     isMultiline = true;
@@ -154,7 +154,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 isMultilineMap,
                 node.tryConstant,
                 node.protectedExpression,
-                node.maybeOtherwiseExpression
+                node.maybeOtherwiseExpression,
             );
             break;
 
@@ -164,7 +164,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.closeWrapperConstant,
                 node.maybeOptionalConstant,
-                ...node.content.elements
+                ...node.content.elements,
             );
             break;
 
@@ -174,7 +174,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.content,
                 node.closeWrapperConstant,
-                node.maybeOptionalConstant
+                node.maybeOptionalConstant,
             );
             break;
 
@@ -183,7 +183,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 isMultilineMap,
                 node.maybeOptionalConstant,
                 node.name,
-                node.maybeFieldTypeSpecification
+                node.maybeFieldTypeSpecification,
             );
             break;
 
@@ -226,12 +226,12 @@ function visitNode(state: State, node: Ast.TNode): void {
                     state.localizationTemplates,
                     nodeIdMapCollection,
                     linearLengthMap,
-                    node
+                    node,
                 );
 
                 const maybeArrayWrapper: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
-                    node.id
+                    node.id,
                 );
                 if (maybeArrayWrapper === undefined || maybeArrayWrapper.kind !== Ast.NodeKind.ArrayWrapper) {
                     throw new CommonError.InvariantError("InvokeExpression must have ArrayWrapper as a parent");
@@ -240,14 +240,14 @@ function visitNode(state: State, node: Ast.TNode): void {
 
                 const maybeRecursivePrimaryExpression: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
-                    arrayWrapper.id
+                    arrayWrapper.id,
                 );
                 if (
                     maybeRecursivePrimaryExpression === undefined ||
                     maybeRecursivePrimaryExpression.kind !== Ast.NodeKind.RecursivePrimaryExpression
                 ) {
                     throw new CommonError.InvariantError(
-                        "ArrayWrapper must have RecursivePrimaryExpression as a parent"
+                        "ArrayWrapper must have RecursivePrimaryExpression as a parent",
                     );
                 }
                 const recursivePrimaryExpression: Ast.RecursivePrimaryExpression = maybeRecursivePrimaryExpression;
@@ -256,7 +256,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     state.localizationTemplates,
                     nodeIdMapCollection,
                     linearLengthMap,
-                    recursivePrimaryExpression.head
+                    recursivePrimaryExpression.head,
                 );
                 const compositeLinearLength: number = headLinearLength + linearLength;
 
@@ -265,7 +265,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 if (compositeLinearLength > InvokeExpressionLinearLengthThreshold) {
                     const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionName(
                         nodeIdMapCollection,
-                        node.id
+                        node.id,
                     );
                     if (maybeName) {
                         const name: string = maybeName;
@@ -278,7 +278,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                         isMultilineMap,
                         node.openWrapperConstant,
                         node.closeWrapperConstant,
-                        ...args
+                        ...args,
                     );
                 }
             } else {
@@ -288,7 +288,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     isMultilineMap,
                     node.openWrapperConstant,
                     node.closeWrapperConstant,
-                    ...args
+                    ...args,
                 );
             }
             break;
@@ -300,7 +300,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.maybeOptionalConstant,
                 node.content,
                 node.closeWrapperConstant,
-                node.maybeOptionalConstant
+                node.maybeOptionalConstant,
             );
             break;
 
@@ -320,7 +320,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 isMultilineMap,
                 node.openWrapperConstant,
                 node.content,
-                node.closeWrapperConstant
+                node.closeWrapperConstant,
             );
             break;
 
@@ -333,7 +333,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 isMultilineMap,
                 node.openWrapperConstant,
                 node.content,
-                node.closeWrapperConstant
+                node.closeWrapperConstant,
             );
             break;
 
@@ -363,7 +363,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     node.sectionConstant,
                     node.maybeName,
                     node.semicolonConstant,
-                    ...node.sectionMembers.elements
+                    ...node.sectionMembers.elements,
                 );
             }
             break;
@@ -374,7 +374,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.maybeLiteralAttributes,
                 node.maybeSharedConstant,
                 node.namePairedExpression,
-                node.semicolonConstant
+                node.semicolonConstant,
             );
             break;
 

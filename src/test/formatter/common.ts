@@ -13,7 +13,7 @@ const DefaultFormatSettings: FormatSettings = {
     parser: Parser.CombinatorialParser,
     newParserState: DefaultSettings.newParserState,
     indentationLiteral: IndentationLiteral.SpaceX4,
-    newlineLiteral: NewlineLiteral.Unix
+    newlineLiteral: NewlineLiteral.Unix,
 };
 
 export function compare(expected: string, actual: string, newlineLiteral: NewlineLiteral = NewlineLiteral.Unix): void {
@@ -30,7 +30,7 @@ export function compare(expected: string, actual: string, newlineLiteral: Newlin
             const details: {} = {
                 lineNumber,
                 expectedLine,
-                actualLine
+                actualLine,
             };
             expect(actualLine).to.equal(expectedLine, JSON.stringify(details, undefined, 4));
         }

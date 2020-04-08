@@ -7,7 +7,7 @@ import {
     ILocalizationTemplates,
     NodeIdMap,
     NodeIdMapUtils,
-    Traverse
+    Traverse,
 } from "@microsoft/powerquery-parser";
 import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
 
@@ -15,12 +15,12 @@ export function tryTraverse(
     localizationTemplates: ILocalizationTemplates,
     ast: Ast.TNode,
     isMultilineMap: IsMultilineMap,
-    nodeIdMapCollection: NodeIdMap.Collection
+    nodeIdMapCollection: NodeIdMap.Collection,
 ): Traverse.TriedTraverse<IsMultilineMap> {
     const state: State = {
         localizationTemplates,
         result: isMultilineMap,
-        nodeIdMapCollection
+        nodeIdMapCollection,
     };
 
     return Traverse.tryTraverseAst(
@@ -30,7 +30,7 @@ export function tryTraverse(
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         Traverse.expectExpandAllAstChildren,
-        undefined
+        undefined,
     );
 }
 
@@ -50,7 +50,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             const isMultilineMap: IsMultilineMap = state.result;
             const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
                 state.nodeIdMapCollection,
-                node.id
+                node.id,
             );
             if (
                 maybeParent &&
@@ -73,7 +73,7 @@ function visitNode(state: State, node: Ast.TNode): void {
 
                 let maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
-                    node.id
+                    node.id,
                 );
                 let maybeCsv: Ast.TCsv | undefined;
                 let maybeArrayWrapper: Ast.TArrayWrapper | undefined;

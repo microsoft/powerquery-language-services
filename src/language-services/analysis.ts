@@ -12,7 +12,7 @@ import {
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
-    SymbolProvider
+    SymbolProvider,
 } from "./providers";
 import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
 
@@ -61,7 +61,7 @@ class DocumentAnalysis implements Analysis {
             context = {
                 range: getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
-                tokenKind: maybeToken.kind
+                tokenKind: maybeToken.kind,
             };
         }
 
@@ -95,7 +95,7 @@ class DocumentAnalysis implements Analysis {
             getLibraryCompletionItems,
             getKeywords,
             getEnvironmentCompletionItems,
-            getLocalCompletionItems
+            getLocalCompletionItems,
         ]);
 
         let completionItems: CompletionItem[] = Array.isArray(keywordResponse) ? keywordResponse : [keywordResponse];
@@ -109,7 +109,7 @@ class DocumentAnalysis implements Analysis {
         if (identifierToken) {
             const context: HoverProviderContext = {
                 range: getTokenRangeForPosition(identifierToken, this.position),
-                identifier: identifierToken.data
+                identifier: identifierToken.data,
             };
 
             // TODO: add tracing/logging to the catch()
@@ -132,13 +132,13 @@ class DocumentAnalysis implements Analysis {
     public async getSignatureHelp(): Promise<SignatureHelp> {
         const triedInspection: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
             this.document,
-            this.position
+            this.position,
         );
 
         if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
             const inspected: PQP.Inspection.Inspected = triedInspection.value;
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
-                inspected
+                inspected,
             );
 
             if (maybeContext !== undefined) {
@@ -169,12 +169,12 @@ function getTokenRangeForPosition(token: PQP.LineToken, cursorPosition: Position
     return {
         start: {
             line: cursorPosition.line,
-            character: token.positionStart
+            character: token.positionStart,
         },
         end: {
             line: cursorPosition.line,
-            character: token.positionEnd
-        }
+            character: token.positionEnd,
+        },
     };
 }
 
@@ -216,9 +216,9 @@ function maybeTokenAt(document: TextDocument, position: Position): undefined | P
     const currentRange: Range = {
         start: {
             line: position.line,
-            character: position.character - 1
+            character: position.character - 1,
         },
-        end: position
+        end: position,
     };
 
     if (document.getText(currentRange) === ".") {
@@ -230,7 +230,7 @@ function maybeTokenAt(document: TextDocument, position: Position): undefined | P
                         data: `${token.data}.`,
                         kind: token.kind,
                         positionStart: token.positionStart,
-                        positionEnd: token.positionEnd + 1
+                        positionEnd: token.positionEnd + 1,
                     };
                 }
             }

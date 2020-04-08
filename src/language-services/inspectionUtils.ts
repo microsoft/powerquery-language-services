@@ -14,7 +14,7 @@ export function getContextForInspected(inspected: PQP.Inspection.Inspected): und
 }
 
 export function getContextForInvokeExpression(
-    maybeExpression: PQP.Inspection.InvokeExpression
+    maybeExpression: PQP.Inspection.InvokeExpression,
 ): undefined | SignatureProviderContext {
     const functionName: undefined | string =
         maybeExpression.maybeName !== undefined ? maybeExpression.maybeName : undefined;
@@ -24,7 +24,7 @@ export function getContextForInvokeExpression(
     if (functionName !== undefined || argumentOrdinal !== undefined) {
         return {
             maybeArgumentOrdinal: argumentOrdinal,
-            maybeFunctionName: functionName
+            maybeFunctionName: functionName,
         };
     } else {
         return undefined;
@@ -105,14 +105,14 @@ export function getSymbolsForSection(sectionNode: PQP.Ast.Section): DocumentSymb
 }
 
 export function getSymbolForIdentifierPairedExpression(
-    identifierPairedExpressionNode: PQP.Ast.IdentifierPairedExpression
+    identifierPairedExpressionNode: PQP.Ast.IdentifierPairedExpression,
 ): DocumentSymbol {
     return {
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
         deprecated: false,
         name: identifierPairedExpressionNode.key.literal,
         range: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.tokenRange),
-        selectionRange: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.key.tokenRange)
+        selectionRange: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.key.tokenRange),
     };
 }
 
@@ -175,7 +175,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
             kind,
             deprecated: false,
             range,
-            selectionRange: range
+            selectionRange: range,
         });
     }
 
