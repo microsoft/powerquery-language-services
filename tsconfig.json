@@ -1,13 +1,20 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "outDir": "out",
-    "rootDir": "src",
-    "lib": ["es6"],
-    "sourceMap": true
+      "target": "es6",
+      "module": "commonjs",
+      "sourceMap": true,
+      "outDir": "lib",
+      "strict": true,
+      "noFallthroughCasesInSwitch": true,
+      "noEmitOnError": true,
+      "noImplicitReturns": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "declaration": true,
+      "rootDir": "out",
+      "incremental": true,
+      "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", ".vscode-test", "packages"],
-  "references": [{ "path": "./client" }, { "path": "./server" }]
+  "include": ["client/**/*.ts", "powerquery-language-services/**/*.ts", "server/**/*.ts"],
+  "exclude": ["node_modules"]
 }
