@@ -3,9 +3,10 @@
 
 import { TextDocument } from "vscode-languageserver-types";
 import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as InspectionUtils from "./inspectionUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
-export { LanguageServiceUtils, WorkspaceCache };
+export { LanguageServiceUtils, InspectionUtils, WorkspaceCache };
 export * from "./analysis";
 export * from "./providers";
 export * from "./validation";

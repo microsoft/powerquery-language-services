@@ -5,7 +5,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, Hover, Position, Range, SignatureHelp, TextDocument } from "vscode-languageserver-types";
 
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
-import * as InspectionHelpers from "./inspectionHelpers";
 import { KeywordProvider } from "./keywordProvider";
 import {
     CompletionItemProviderContext,
@@ -15,7 +14,7 @@ import {
     SignatureProviderContext,
     SymbolProvider
 } from "./providers";
-import { LanguageServiceUtils, WorkspaceCache } from ".";
+import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
 
 export interface Analysis {
     getCompletionItems(): Promise<CompletionItem[]>;
@@ -138,7 +137,7 @@ class DocumentAnalysis implements Analysis {
 
         if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
             const inspected: PQP.Inspection.Inspected = triedInspection.value;
-            const maybeContext: SignatureProviderContext | undefined = InspectionHelpers.getContextForInspected(
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected
             );
 

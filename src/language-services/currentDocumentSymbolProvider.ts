@@ -11,14 +11,13 @@ import {
     TextDocument
 } from "vscode-languageserver-types";
 
-import * as InspectionHelpers from "./inspectionHelpers";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
     SignatureProviderContext,
     SymbolProvider
 } from "./providers";
-import { LanguageServiceUtils, WorkspaceCache } from ".";
+import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     private readonly document: TextDocument;
@@ -58,7 +57,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
 
             if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
                 const inspected: PQP.Inspection.Inspected = triedInspection.value;
-                this.documentSymbols = InspectionHelpers.getSymbolsForInspectionScope(inspected);
+                this.documentSymbols = InspectionUtils.getSymbolsForInspectionScope(inspected);
             }
         }
 
