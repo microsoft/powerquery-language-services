@@ -3,8 +3,8 @@
 
 import { expect } from "chai";
 import "mocha";
-import { AllModules, Library } from "../library";
-import { LibraryDefinition, LibraryDefinitionKind } from "../library/jsonTypes";
+import { AllModules, Library } from "..";
+import { LibraryDefinition, LibraryDefinitionKind } from "../jsonTypes";
 
 const PowerQueryLibrary: Library = AllModules;
 

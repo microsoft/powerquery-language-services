@@ -13,8 +13,9 @@
       "declaration": true,
       "rootDir": "src",
       "incremental": true,
-      "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+      "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+      "resolveJsonModule": true
   },
-  "include": ["src/client/**/*.ts", "src/format/**/*.ts", "src/language-services/**/*.ts", "server/**/*.ts"],
+  "include": ["src/client/**/*.ts", "src/format/**/*.ts", "src/language-services/**/*.ts", "src/server/**/*.ts", "/src/server/library/standard.json"],
   "exclude": ["node_modules"]
 }

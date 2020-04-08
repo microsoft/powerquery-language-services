@@ -6,7 +6,7 @@ import {
     HoverProviderContext,
     LibrarySymbolProvider,
     SignatureProviderContext,
-} from "@microsoft/powerquery-language-services";
+} from "../../language-services";
 import { CompletionItem, Hover, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 
 import { AllModules, Library } from "./index";
