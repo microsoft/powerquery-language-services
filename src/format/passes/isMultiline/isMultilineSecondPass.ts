@@ -1,20 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, AstUtils, ILocalizationTemplates, NodeIdMap, Traverse } from "@microsoft/powerquery-parser";
-import { maybeGetParent } from "../common";
+import {
+    Ast,
+    AstUtils,
+    ILocalizationTemplates,
+    NodeIdMap,
+    NodeIdMapUtils,
+    Traverse
+} from "@microsoft/powerquery-parser";
 import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
 
 export function tryTraverse(
     localizationTemplates: ILocalizationTemplates,
     ast: Ast.TNode,
     isMultilineMap: IsMultilineMap,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection
 ): Traverse.TriedTraverse<IsMultilineMap> {
     const state: State = {
         localizationTemplates,
         result: isMultilineMap,
-        nodeIdMapCollection,
+        nodeIdMapCollection
     };
 
     return Traverse.tryTraverseAst(
@@ -24,7 +30,7 @@ export function tryTraverse(
         Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         Traverse.expectExpandAllAstChildren,
-        undefined,
+        undefined
     );
 }
 
@@ -42,7 +48,10 @@ function visitNode(state: State, node: Ast.TNode): void {
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression: {
             const isMultilineMap: IsMultilineMap = state.result;
-            const maybeParent: Ast.TNode | undefined = maybeGetParent(state.nodeIdMapCollection, node.id);
+            const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
+                state.nodeIdMapCollection,
+                node.id
+            );
             if (
                 maybeParent &&
                 AstUtils.isTBinOpExpression(maybeParent) &&
@@ -62,16 +71,19 @@ function visitNode(state: State, node: Ast.TNode): void {
             if (node.content.elements.length) {
                 const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-                let maybeParent: Ast.TNode | undefined = maybeGetParent(nodeIdMapCollection, node.id);
+                let maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
+                    nodeIdMapCollection,
+                    node.id
+                );
                 let maybeCsv: Ast.TCsv | undefined;
                 let maybeArrayWrapper: Ast.TArrayWrapper | undefined;
                 if (maybeParent && maybeParent.kind === Ast.NodeKind.Csv) {
                     maybeCsv = maybeParent;
-                    maybeParent = maybeGetParent(nodeIdMapCollection, maybeParent.id);
+                    maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
                 if (maybeParent && maybeParent.kind === Ast.NodeKind.ArrayWrapper) {
                     maybeArrayWrapper = maybeParent;
-                    maybeParent = maybeGetParent(nodeIdMapCollection, maybeParent.id);
+                    maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
 
                 if (maybeParent) {

@@ -12,7 +12,6 @@ import {
     Traverse,
 } from "@microsoft/powerquery-parser";
 import { CommentCollection, CommentCollectionMap } from "./comment";
-import { maybeGetParent } from "./common";
 import { expectGetIsMultiline, IsMultilineMap } from "./isMultiline/common";
 
 // TNodes (in general) have two responsibilities:
@@ -974,12 +973,12 @@ function wrapperOpenWriteKind(state: State, wrapped: Ast.TWrapped): SerializerWr
     }
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    let maybeParent: Ast.TNode | undefined = maybeGetParent(nodeIdMapCollection, wrapped.id);
+    let maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, wrapped.id);
     if (maybeParent && maybeParent.kind === Ast.NodeKind.Csv) {
-        maybeParent = maybeGetParent(nodeIdMapCollection, maybeParent.id);
+        maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
     }
     if (maybeParent && maybeParent.kind === Ast.NodeKind.ArrayWrapper) {
-        maybeParent = maybeGetParent(nodeIdMapCollection, maybeParent.id);
+        maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
     }
 
     if (!maybeParent) {
