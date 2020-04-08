@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { TextDocument } from "vscode-languageserver-types";
 
-import { documentUpdated, validate, ValidationResult } from "../language-services";
+import { documentUpdated, validate, ValidationResult } from "../../language-services";
 import * as Utils from "./utils";
 
 // TODO: more test cases

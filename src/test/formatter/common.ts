@@ -4,9 +4,9 @@
 import "mocha";
 import { DefaultSettings, DefaultTemplates, Parser, Result, ResultKind } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import { IndentationLiteral, NewlineLiteral } from "../../format";
-import { FormatSettings, format } from "../../format";
-import { TFormatError } from "../../format/error";
+import { IndentationLiteral, NewlineLiteral } from "../../formatter";
+import { FormatSettings, format } from "../../formatter";
+import { TFormatError } from "../../formatter/error";
 
 const DefaultFormatSettings: FormatSettings = {
     localizationTemplates: DefaultTemplates,

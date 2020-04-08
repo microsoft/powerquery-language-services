@@ -6,8 +6,7 @@ import { assert, expect } from "chai";
 import "mocha";
 import { DocumentSymbol, SymbolKind, TextDocument } from "vscode-languageserver-types";
 
-import * as InspectionHelpers from "../language-services/inspectionHelpers";
-import * as WorkspaceCache from "../language-services/workspaceCache";
+import { InspectionUtils, WorkspaceCache } from "../../language-services";
 import * as Utils from "./utils";
 
 function getLexAndParseOk(document: TextDocument): PQP.LexParseOk {
@@ -38,10 +37,10 @@ function expectSymbols(document: PQP.Ast.TDocument, expectedSymbols: ExpectedDoc
     let actualSymbols: ExpectedDocumentSymbol[];
 
     if (document.kind === PQP.Ast.NodeKind.Section) {
-        const result: DocumentSymbol[] = InspectionHelpers.getSymbolsForSection(document);
+        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForSection(document);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
     } else if (document.kind === PQP.Ast.NodeKind.LetExpression) {
-        const result: DocumentSymbol[] = InspectionHelpers.getSymbolsForLetExpression(document);
+        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForLetExpression(document);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
     } else {
         throw new Error("unsupported code path");

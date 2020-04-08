@@ -5,7 +5,7 @@ import { expect } from "chai";
 import "mocha";
 import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types";
 
-import { CurrentDocumentSymbolProvider } from "../language-services/currentDocumentSymbolProvider";
+import { CurrentDocumentSymbolProvider } from "../../language-services/currentDocumentSymbolProvider";
 import * as Utils from "./utils";
 
 const totalKeywordCount: number = 24;

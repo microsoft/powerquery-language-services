@@ -27,8 +27,8 @@ import {
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
-} from "../language-services";
-import * as WorkspaceCache from "../language-services/workspaceCache";
+    WorkspaceCache,
+} from "../../language-services";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {

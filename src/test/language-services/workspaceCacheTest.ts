@@ -6,8 +6,7 @@ import { assert, expect } from "chai";
 import "mocha";
 import { TextDocument } from "vscode-languageserver-types";
 
-import * as LanguageServices from "../language-services/index";
-import * as WorkspaceCache from "../language-services/workspaceCache";
+import { documentClosed, documentUpdated, WorkspaceCache } from "../../language-services";
 import * as Utils from "./utils";
 
 describe("workspaceCache", () => {
@@ -79,10 +78,10 @@ describe("workspaceCache", () => {
 describe("top level workspace functions", () => {
     it("document operations", () => {
         const document: TextDocument = Utils.createDocument("let c = 1 in c");
-        LanguageServices.documentUpdated(document);
-        LanguageServices.documentUpdated(document);
-        LanguageServices.documentClosed(document);
-        LanguageServices.documentClosed(document);
-        LanguageServices.documentUpdated(document);
+        documentUpdated(document);
+        documentUpdated(document);
+        documentClosed(document);
+        documentClosed(document);
+        documentUpdated(document);
     });
 });

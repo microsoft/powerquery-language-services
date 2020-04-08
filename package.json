@@ -62,18 +62,12 @@
     "scripts": {
         "setup": "cd packages/powerquery-format && npm install && lerna bootstrap",
         "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different .\\**\\src\\**\\*.ts",
-        "vscode:prepublish": "npm run build:packages && npm run webpack-prod",
-        "webpack-prod": "npm run server:webpack-prod && npm run client:webpack-prod",
-        "client:webpack-prod": "cd client && npm run webpack-prod",
-        "client:webpack-dev": "cd client && npm run webpack-dev",
-        "server:webpack-prod": "cd server && npm run webpack-prod",
-        "server:webpack-dev": "cd server && npm run webpack-dev",
+        "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test:formatter && npm run test:languageServices",
         "build": "node_modules\\.bin\\tsc",
         "watch": ".\\node_modules\\.bin\\tsc -b -watch",
         "test": "node ./scripts/e2e.js",
-        "test:packages": "npm run test:language-services && npm run test:format && npm run test:library",
-        "test:language-services": "cd packages && cd powerquery-language-services && npm test",
-        "test:format": "cd packages && cd powerquery-format && npm test",
+        "test:formatter": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/formatter/**/*.ts",
+        "test:language-services": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/language-services/**/*.ts",
         "test:library": "cd packages && cd powerquery-library && npm test"
     },
     "repository": {
@@ -83,28 +77,19 @@
     "license": "MIT",
     "devDependencies": {
         "@types/chai": "^4.2.3",
-        "@types/glob": "^7.1.1",
         "@types/mocha": "^5.2.7",
-        "@types/node": "12.12.14",
-        "@types/vscode": "1.40.0",
         "chai": "^4.2.0",
         "mocha": "^6.2.2",
+        "mocha-junit-reporter": "^1.23.1",
+        "mocha-multi-reporters": "^1.1.7",
         "prettier": "^1.18.2",
-        "source-map-support": "^0.5.12",
         "ts-loader": "^6.2.0",
         "ts-node": "^8.4.1",
-        "tslint": "^5.20.0",
-        "tslint-config-prettier": "^1.18.0",
-        "tslint-microsoft-contrib": "^6.2.0",
         "tslint-plugin-prettier": "^2.0.1",
-        "typescript": "^3.7.2",
-        "vscode-test": "1.2.3",
-        "webpack": "^4.41.3",
-        "webpack-cli": "^3.3.10"
+        "typescript": "^3.7.2"
     },
     "dependencies": {
         "@microsoft/powerquery-parser": "0.1.40",
-        "vscode-languageclient": "6.1.3",
-        "vscode-languageserver-textdocument": "1.0.1"
+        "vscode-languageserver-types": "^3.14.0"
     }
 }

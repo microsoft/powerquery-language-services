@@ -5,9 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { SignatureProviderContext } from "../language-services";
-import * as InspectionHelpers from "../language-services/inspectionHelpers";
-import * as WorkspaceCache from "../language-services/workspaceCache";
+import { SignatureProviderContext } from "../../language-services";
+import { InspectionUtils, WorkspaceCache } from "../../language-services";
 import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
@@ -21,7 +20,7 @@ describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
             const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d|,");
-            const maybeContext: SignatureProviderContext | undefined = InspectionHelpers.getContextForInspected(
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
             assert.isDefined(maybeContext);
@@ -33,7 +32,7 @@ describe("InspectedInvokeExpression", () => {
 
         it("Date.AddDays(d,|", () => {
             const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d,|");
-            const maybeContext: SignatureProviderContext | undefined = InspectionHelpers.getContextForInspected(
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
             assert.isDefined(maybeContext);
@@ -45,7 +44,7 @@ describe("InspectedInvokeExpression", () => {
 
         it("Date.AddDays(d,1|", () => {
             const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d,1|");
-            const maybeContext: SignatureProviderContext | undefined = InspectionHelpers.getContextForInspected(
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
             assert.isDefined(maybeContext);

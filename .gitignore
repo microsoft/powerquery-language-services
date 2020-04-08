@@ -351,3 +351,4 @@ MigrationBackup/
 
 lib/
 tsconfig.tsbuildinfo
+test-results.xml
