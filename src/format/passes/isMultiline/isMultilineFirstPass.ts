@@ -93,8 +93,8 @@ function visitNode(state: State, node: Ast.TNode): void {
             }
             const linearLength: number = getLinearLength(
                 state.localizationTemplates,
-                state.linearLengthMap,
                 state.nodeIdMapCollection,
+                state.linearLengthMap,
                 node
             );
             if (linearLength > TBinOpExpressionLinearLengthThreshold) {
@@ -224,8 +224,8 @@ function visitNode(state: State, node: Ast.TNode): void {
                 const linearLengthMap: LinearLengthMap = state.linearLengthMap;
                 const linearLength: number = getLinearLength(
                     state.localizationTemplates,
-                    linearLengthMap,
                     nodeIdMapCollection,
+                    linearLengthMap,
                     node
                 );
 
@@ -254,8 +254,8 @@ function visitNode(state: State, node: Ast.TNode): void {
 
                 const headLinearLength: number = getLinearLength(
                     state.localizationTemplates,
-                    linearLengthMap,
                     nodeIdMapCollection,
+                    linearLengthMap,
                     recursivePrimaryExpression.head
                 );
                 const compositeLinearLength: number = headLinearLength + linearLength;

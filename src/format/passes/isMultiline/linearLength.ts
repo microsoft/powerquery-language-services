@@ -10,9 +10,9 @@ export type LinearLengthMap = Map<number, number>;
 // Nodes which can't ever have a linear length (such as IfExpressions) will evaluate to NaN.
 export function getLinearLength(
     localizationTemplates: ILocalizationTemplates,
-    linearLengthMap: LinearLengthMap,
     nodeIdMapCollection: NodeIdMap.Collection,
-    node: Ast.TNode,
+    linearLengthMap: LinearLengthMap,
+    node: Ast.TNode
 ): number {
     const nodeId: number = node.id;
     const maybeLinearLength: number | undefined = linearLengthMap.get(nodeId);
@@ -22,7 +22,7 @@ export function getLinearLength(
             localizationTemplates,
             node,
             nodeIdMapCollection,
-            linearLengthMap,
+            linearLengthMap
         );
         linearLengthMap.set(nodeId, linearLength);
         return linearLength;
@@ -40,13 +40,13 @@ function calculateLinearLength(
     localizationTemplates: ILocalizationTemplates,
     node: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,
-    linearLengthMap: LinearLengthMap,
+    linearLengthMap: LinearLengthMap
 ): number {
     const state: State = {
         localizationTemplates,
         result: 0,
         nodeIdMapCollection,
-        linearLengthMap,
+        linearLengthMap
     };
 
     const triedTraverse: Traverse.TriedTraverse<number> = Traverse.tryTraverseAst(
@@ -56,7 +56,7 @@ function calculateLinearLength(
         Traverse.VisitNodeStrategy.DepthFirst,
         visitNode,
         Traverse.expectExpandAllAstChildren,
-        undefined,
+        undefined
     );
 
     if (triedTraverse.kind === ResultKind.Err) {
@@ -116,7 +116,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 numElements ? numElements - 1 : 0,
                 node.openWrapperConstant,
                 node.closeWrapperConstant,
-                ...elements,
+                ...elements
             );
             break;
         }
@@ -143,7 +143,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 initialLength,
                 node.tryConstant,
                 node.protectedExpression,
-                node.maybeOtherwiseExpression,
+                node.maybeOtherwiseExpression
             );
             break;
         }
@@ -155,7 +155,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.closeWrapperConstant,
                 node.maybeOptionalConstant,
-                ...node.content.elements,
+                ...node.content.elements
             );
             break;
 
@@ -166,7 +166,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.content,
                 node.closeWrapperConstant,
-                node.maybeOptionalConstant,
+                node.maybeOptionalConstant
             );
             break;
 
@@ -176,7 +176,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 0,
                 node.maybeOptionalConstant,
                 node.name,
-                node.maybeFieldTypeSpecification,
+                node.maybeFieldTypeSpecification
             );
             break;
 
@@ -192,7 +192,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.closeWrapperConstant,
                 node.maybeOpenRecordMarkerConstant,
-                ...elements,
+                ...elements
             );
             break;
         }
@@ -212,7 +212,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.parameters,
                 node.maybeFunctionReturnType,
                 node.fatArrowConstant,
-                node.expression,
+                node.expression
             );
             break;
         }
@@ -237,7 +237,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.openWrapperConstant,
                 node.content,
                 node.closeWrapperConstant,
-                node.maybeOptionalConstant,
+                node.maybeOptionalConstant
             );
             break;
 
@@ -251,7 +251,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 0,
                 node.openWrapperConstant,
                 node.content,
-                node.closeWrapperConstant,
+                node.closeWrapperConstant
             );
             break;
 
@@ -277,7 +277,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 initialLength,
                 node.maybeOptionalConstant,
                 node.name,
-                node.maybeParameterType,
+                node.maybeParameterType
             );
             break;
         }
@@ -288,16 +288,16 @@ function visitNode(state: State, node: Ast.TNode): void {
                 0,
                 node.openWrapperConstant,
                 node.content,
-                node.closeWrapperConstant,
+                node.closeWrapperConstant
             );
             break;
 
         case Ast.NodeKind.PrimitiveType:
             linearLength = getLinearLength(
                 state.localizationTemplates,
-                state.linearLengthMap,
                 state.nodeIdMapCollection,
-                node.primitiveType,
+                state.linearLengthMap,
+                node.primitiveType
             );
             break;
 
@@ -328,7 +328,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 node.maybeLiteralAttributes,
                 node.maybeSharedConstant,
                 node.namePairedExpression,
-                node.semicolonConstant,
+                node.semicolonConstant
             );
             break;
         }
@@ -353,7 +353,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                     node.sectionConstant,
                     node.maybeName,
                     node.semicolonConstant,
-                    ...sectionMembers,
+                    ...sectionMembers
                 );
             }
             break;
@@ -387,9 +387,9 @@ function sumLinearLengths(state: State, initialLength: number, ...maybeNodes: (A
         if (maybeNode) {
             const nodeLinearLength: number = getLinearLength(
                 state.localizationTemplates,
-                state.linearLengthMap,
                 state.nodeIdMapCollection,
-                maybeNode,
+                state.linearLengthMap,
+                maybeNode
             );
             summedLinearLength += nodeLinearLength;
         }
