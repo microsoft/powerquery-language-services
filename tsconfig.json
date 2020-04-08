@@ -11,7 +11,7 @@
       "noUnusedLocals": true,
       "noUnusedParameters": true,
       "declaration": true,
-      "rootDir": "out",
+      "rootDir": "src",
       "incremental": true,
       "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },

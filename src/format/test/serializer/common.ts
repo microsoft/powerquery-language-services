@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DefaultTemplates, Parser, Result, ResultKind } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 import "mocha";
-import { TFormatError } from "../../format/error";
-import { format, FormatSettings } from "../../format/format";
-import { IndentationLiteral, NewlineLiteral } from "../../format/serializer";
+import { DefaultSettings, DefaultTemplates, Parser, Result, ResultKind } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
+import { IndentationLiteral, NewlineLiteral } from "../../serializer";
+import { FormatSettings, format } from "../../format";
+import { TFormatError } from "../../error";
 
 const DefaultFormatSettings: FormatSettings = {
-    parser: Parser.CombinatorialParser,
     localizationTemplates: DefaultTemplates,
+    parser: Parser.CombinatorialParser,
+    newParserState: DefaultSettings.newParserState,
     indentationLiteral: IndentationLiteral.SpaceX4,
     newlineLiteral: NewlineLiteral.Unix,
 };

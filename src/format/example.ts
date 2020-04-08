@@ -3,8 +3,9 @@
 
 /* tslint:disable:no-console */
 import { DefaultSettings, Result, ResultKind } from "@microsoft/powerquery-parser";
-import { format, FormatSettings, IndentationLiteral, NewlineLiteral } from "./format";
-import { TFormatError } from "./format/error";
+import { format, FormatSettings } from "./format";
+import { TFormatError } from "./error";
+import { IndentationLiteral, NewlineLiteral } from "./serializer";
 
 const text: string = `
 // taken from: https://en.wikipedia.org/wiki/Exponentiation_by_squaring
