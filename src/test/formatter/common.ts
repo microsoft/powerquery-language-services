@@ -4,16 +4,16 @@
 import "mocha";
 import { DefaultSettings, DefaultTemplates, Parser, Result, ResultKind } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import { IndentationLiteral, NewlineLiteral } from "../../serializer";
+import { IndentationLiteral, NewlineLiteral } from "../../format";
 import { FormatSettings, format } from "../../format";
-import { TFormatError } from "../../error";
+import { TFormatError } from "../../format/error";
 
 const DefaultFormatSettings: FormatSettings = {
     localizationTemplates: DefaultTemplates,
     parser: Parser.CombinatorialParser,
     newParserState: DefaultSettings.newParserState,
     indentationLiteral: IndentationLiteral.SpaceX4,
-    newlineLiteral: NewlineLiteral.Unix,
+    newlineLiteral: NewlineLiteral.Unix
 };
 
 export function compare(expected: string, actual: string, newlineLiteral: NewlineLiteral = NewlineLiteral.Unix): void {
@@ -30,7 +30,7 @@ export function compare(expected: string, actual: string, newlineLiteral: Newlin
             const details: {} = {
                 lineNumber,
                 expectedLine,
-                actualLine,
+                actualLine
             };
             expect(actualLine).to.equal(expectedLine, JSON.stringify(details, undefined, 4));
         }
