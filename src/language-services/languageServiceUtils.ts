@@ -10,21 +10,21 @@ import {
     Position,
     Range,
     SignatureHelp,
-    SymbolKind,
+    SymbolKind
 } from "vscode-languageserver-types";
 
 export const EmptyCompletionItems: CompletionItem[] = [];
 
 export const EmptyHover: Hover = {
     range: undefined,
-    contents: [],
+    contents: []
 };
 
 export const EmptySignatureHelp: SignatureHelp = {
     signatures: [],
     // tslint:disable-next-line: no-null-keyword
     activeParameter: null,
-    activeSignature: 0,
+    activeSignature: 0
 };
 
 export function documentSymbolToCompletionItem(documentSymbols: DocumentSymbol[]): CompletionItem[] {
@@ -34,7 +34,7 @@ export function documentSymbolToCompletionItem(documentSymbols: DocumentSymbol[]
             deprecated: sym.deprecated,
             detail: sym.detail,
             label: sym.name,
-            kind: symbolKindToCompletionItemKind(sym.kind),
+            kind: symbolKindToCompletionItemKind(sym.kind)
         });
     });
 
@@ -77,18 +77,18 @@ export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): Completi
 export function tokenPositionToPosition(tokenPosition: PQP.TokenPosition): Position {
     return {
         line: tokenPosition.lineNumber,
-        character: tokenPosition.lineCodeUnit,
+        character: tokenPosition.lineCodeUnit
     };
 }
 
 export function tokenPositionToRange(
     startTokenPosition: PQP.TokenPosition | undefined,
-    endTokenPosition: PQP.TokenPosition | undefined,
+    endTokenPosition: PQP.TokenPosition | undefined
 ): Range | undefined {
     if (startTokenPosition && endTokenPosition) {
         return {
             start: tokenPositionToPosition(startTokenPosition),
-            end: tokenPositionToPosition(endTokenPosition),
+            end: tokenPositionToPosition(endTokenPosition)
         };
     }
 

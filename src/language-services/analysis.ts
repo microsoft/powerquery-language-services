@@ -4,7 +4,6 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, Hover, Position, Range, SignatureHelp, TextDocument } from "vscode-languageserver-types";
 
-import * as Common from "./common";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionHelpers from "./inspectionHelpers";
 import { KeywordProvider } from "./keywordProvider";
@@ -14,9 +13,10 @@ import {
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
-    SymbolProvider,
+    SymbolProvider
 } from "./providers";
 import * as WorkspaceCache from "./workspaceCache";
+import { LanguageServiceUtils } from ".";
 
 export interface Analysis {
     getCompletionItems(): Promise<CompletionItem[]>;
@@ -63,7 +63,7 @@ class DocumentAnalysis implements Analysis {
             context = {
                 range: getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
-                tokenKind: maybeToken.kind,
+                tokenKind: maybeToken.kind
             };
         }
 
@@ -77,27 +77,27 @@ class DocumentAnalysis implements Analysis {
         const getLibraryCompletionItems: Promise<CompletionItem[]> = this.librarySymbolProvider
             .getCompletionItems(context)
             .catch(() => {
-                return Common.EmptyCompletionItems;
+                return LanguageServiceUtils.EmptyCompletionItems;
             });
         const getKeywords: Promise<CompletionItem[]> = this.keywordProvider.getCompletionItems(context).catch(() => {
-            return Common.EmptyCompletionItems;
+            return LanguageServiceUtils.EmptyCompletionItems;
         });
         const getEnvironmentCompletionItems: Promise<CompletionItem[]> = this.environmentSymbolProvider
             .getCompletionItems(context)
             .catch(() => {
-                return Common.EmptyCompletionItems;
+                return LanguageServiceUtils.EmptyCompletionItems;
             });
         const getLocalCompletionItems: Promise<CompletionItem[]> = this.localSymbolProvider
             .getCompletionItems(context)
             .catch(() => {
-                return Common.EmptyCompletionItems;
+                return LanguageServiceUtils.EmptyCompletionItems;
             });
 
         const [libraryResponse, keywordResponse, environmentResponse, localResponse] = await Promise.all([
             getLibraryCompletionItems,
             getKeywords,
             getEnvironmentCompletionItems,
-            getLocalCompletionItems,
+            getLocalCompletionItems
         ]);
 
         let completionItems: CompletionItem[] = Array.isArray(keywordResponse) ? keywordResponse : [keywordResponse];
@@ -111,7 +111,7 @@ class DocumentAnalysis implements Analysis {
         if (identifierToken) {
             const context: HoverProviderContext = {
                 range: getTokenRangeForPosition(identifierToken, this.position),
-                identifier: identifierToken.data,
+                identifier: identifierToken.data
             };
 
             // TODO: add tracing/logging to the catch()
@@ -128,19 +128,19 @@ class DocumentAnalysis implements Analysis {
             }
         }
 
-        return Common.EmptyHover;
+        return LanguageServiceUtils.EmptyHover;
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
         const triedInspection: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
             this.document,
-            this.position,
+            this.position
         );
 
         if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
             const inspected: PQP.Inspection.Inspected = triedInspection.value;
             const maybeContext: SignatureProviderContext | undefined = InspectionHelpers.getContextForInspected(
-                inspected,
+                inspected
             );
 
             if (maybeContext !== undefined) {
@@ -163,7 +163,7 @@ class DocumentAnalysis implements Analysis {
             }
         }
 
-        return Common.EmptySignatureHelp;
+        return LanguageServiceUtils.EmptySignatureHelp;
     }
 }
 
@@ -171,12 +171,12 @@ function getTokenRangeForPosition(token: PQP.LineToken, cursorPosition: Position
     return {
         start: {
             line: cursorPosition.line,
-            character: token.positionStart,
+            character: token.positionStart
         },
         end: {
             line: cursorPosition.line,
-            character: token.positionEnd,
-        },
+            character: token.positionEnd
+        }
     };
 }
 
@@ -218,9 +218,9 @@ function maybeTokenAt(document: TextDocument, position: Position): undefined | P
     const currentRange: Range = {
         start: {
             line: position.line,
-            character: position.character - 1,
+            character: position.character - 1
         },
-        end: position,
+        end: position
     };
 
     if (document.getText(currentRange) === ".") {
@@ -232,7 +232,7 @@ function maybeTokenAt(document: TextDocument, position: Position): undefined | P
                         data: `${token.data}.`,
                         kind: token.kind,
                         positionStart: token.positionStart,
-                        positionEnd: token.positionEnd + 1,
+                        positionEnd: token.positionEnd + 1
                     };
                 }
             }

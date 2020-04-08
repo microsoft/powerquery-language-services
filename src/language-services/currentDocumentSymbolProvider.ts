@@ -8,18 +8,18 @@ import {
     Hover,
     Position,
     SignatureHelp,
-    TextDocument,
+    TextDocument
 } from "vscode-languageserver-types";
 
-import * as Common from "./common";
 import * as InspectionHelpers from "./inspectionHelpers";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
     SignatureProviderContext,
-    SymbolProvider,
+    SymbolProvider
 } from "./providers";
 import * as WorkspaceCache from "./workspaceCache";
+import { LanguageServiceUtils } from ".";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     private readonly document: TextDocument;
@@ -33,7 +33,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
     }
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
-        return Common.documentSymbolToCompletionItem(this.getDocumentSymbols());
+        return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());
     }
 
     public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
@@ -54,7 +54,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
 
             const triedInspection: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
                 this.document,
-                this.position,
+                this.position
             );
 
             if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {

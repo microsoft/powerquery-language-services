@@ -4,8 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
-import * as Common from "./common";
 import { SignatureProviderContext } from "./providers";
+import { LanguageServiceUtils } from ".";
 
 export function getContextForInspected(inspected: PQP.Inspection.Inspected): undefined | SignatureProviderContext {
     return inspected.maybeInvokeExpression !== undefined
@@ -14,7 +14,7 @@ export function getContextForInspected(inspected: PQP.Inspection.Inspected): und
 }
 
 export function getContextForInvokeExpression(
-    maybeExpression: PQP.Inspection.InvokeExpression,
+    maybeExpression: PQP.Inspection.InvokeExpression
 ): undefined | SignatureProviderContext {
     const functionName: undefined | string =
         maybeExpression.maybeName !== undefined ? maybeExpression.maybeName : undefined;
@@ -24,7 +24,7 @@ export function getContextForInvokeExpression(
     if (functionName !== undefined || argumentOrdinal !== undefined) {
         return {
             maybeArgumentOrdinal: argumentOrdinal,
-            maybeFunctionName: functionName,
+            maybeFunctionName: functionName
         };
     } else {
         return undefined;
@@ -105,14 +105,14 @@ export function getSymbolsForSection(sectionNode: PQP.Ast.Section): DocumentSymb
 }
 
 export function getSymbolForIdentifierPairedExpression(
-    identifierPairedExpressionNode: PQP.Ast.IdentifierPairedExpression,
+    identifierPairedExpressionNode: PQP.Ast.IdentifierPairedExpression
 ): DocumentSymbol {
     return {
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
         deprecated: false,
         name: identifierPairedExpressionNode.key.literal,
-        range: Common.tokenRangeToRange(identifierPairedExpressionNode.tokenRange),
-        selectionRange: Common.tokenRangeToRange(identifierPairedExpressionNode.key.tokenRange),
+        range: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.tokenRange),
+        selectionRange: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.key.tokenRange)
     };
 }
 
@@ -130,7 +130,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
                 }
 
                 kind = SymbolKind.Variable;
-                range = Common.tokenRangeToRange(scopeItem.each.node.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.each.node.tokenRange);
                 break;
             }
 
@@ -140,19 +140,19 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
                 }
 
                 kind = SymbolKind.Variable;
-                range = Common.tokenRangeToRange(scopeItem.key.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
             }
 
             case PQP.Inspection.ScopeItemKind.Parameter: {
                 kind = SymbolKind.Variable;
-                range = Common.tokenRangeToRange(scopeItem.name.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.name.tokenRange);
                 break;
             }
 
             case PQP.Inspection.ScopeItemKind.SectionMember: {
                 kind = SymbolKind.Variable;
-                range = Common.tokenRangeToRange(scopeItem.key.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
             }
 
@@ -162,7 +162,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
                 }
 
                 kind = SymbolKind.Variable;
-                range = Common.tokenRangeToRange(scopeItem.xorNode.node.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.xorNode.node.tokenRange);
                 break;
             }
 
@@ -175,7 +175,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
             kind,
             deprecated: false,
             range,
-            selectionRange: range,
+            selectionRange: range
         });
     }
 
