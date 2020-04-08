@@ -15,6 +15,6 @@
       "incremental": true,
       "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
   },
-  "include": ["client/**/*.ts", "powerquery-language-services/**/*.ts", "server/**/*.ts"],
+  "include": ["src/client/**/*.ts", "src/format/**/*.ts", "src/language-services/**/*.ts", "server/**/*.ts"],
   "exclude": ["node_modules"]
 }

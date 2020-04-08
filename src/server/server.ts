@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    format,
-    FormatError,
-    FormatSettings,
-    IndentationLiteral,
-    NewlineLiteral,
-    Result,
-    ResultKind,
-} from "@microsoft/powerquery-format";
+import { format, FormatError, FormatSettings, IndentationLiteral, NewlineLiteral, Result, ResultKind } from "../format";
 import * as LanguageServices from "@microsoft/powerquery-language-services";
 import * as Library from "@microsoft/powerquery-library";
 import { DefaultSettings } from "@microsoft/powerquery-parser";

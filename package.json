@@ -104,6 +104,7 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "@microsoft/powerquery-parser": "0.1.40"
+    "@microsoft/powerquery-parser": "0.1.40",
+    "vscode-languageclient": "6.1.3"
   }
 }
