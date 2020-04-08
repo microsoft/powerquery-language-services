@@ -18,8 +18,7 @@ import {
     SignatureProviderContext,
     SymbolProvider
 } from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
-import { LanguageServiceUtils } from ".";
+import { LanguageServiceUtils, WorkspaceCache } from ".";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     private readonly document: TextDocument;

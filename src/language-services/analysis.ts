@@ -15,8 +15,7 @@ import {
     SignatureProviderContext,
     SymbolProvider
 } from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
-import { LanguageServiceUtils } from ".";
+import { LanguageServiceUtils, WorkspaceCache } from ".";
 
 export interface Analysis {
     getCompletionItems(): Promise<CompletionItem[]>;

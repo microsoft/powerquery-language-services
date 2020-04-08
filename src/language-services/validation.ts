@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity, Position, TextDocument } from "vscode-languageserver-types";
 
-import * as WorkspaceCache from "./workspaceCache";
+import { WorkspaceCache } from ".";
 
 export interface ValidationResult {
     readonly hasErrors: boolean;
@@ -31,7 +31,7 @@ export function validate(document: TextDocument): ValidationResult {
     }
     return {
         hasErrors: diagnostics.length > 0,
-        diagnostics,
+        diagnostics
     };
 }
 
@@ -46,7 +46,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
                 const message: string = innerError.message;
                 const position: Position = {
                     line: graphemePosition.lineNumber,
-                    character: graphemePosition.lineCodeUnit,
+                    character: graphemePosition.lineCodeUnit
                 };
                 // TODO: "lex" errors aren't that useful to display to end user. Should we make it more generic?
                 diagnostics.push({
@@ -54,8 +54,8 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
                     severity: DiagnosticSeverity.Error,
                     range: {
                         start: position,
-                        end: position,
-                    },
+                        end: position
+                    }
                 });
             }
         }
@@ -89,12 +89,12 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.TInnerParseError): un
         range: {
             start: {
                 line: errorToken.positionStart.lineNumber,
-                character: errorToken.positionStart.lineCodeUnit,
+                character: errorToken.positionStart.lineCodeUnit
             },
             end: {
                 line: errorToken.positionEnd.lineNumber,
-                character: errorToken.positionEnd.lineCodeUnit,
-            },
-        },
+                character: errorToken.positionEnd.lineCodeUnit
+            }
+        }
     };
 }
