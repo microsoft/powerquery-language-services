@@ -11,7 +11,7 @@ import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
 
-function expectScope(inspected: PQP.Inspection.Inspected, expected: string[]): void {
+function expectScope(inspected: PQP.Task.InspectionOk, expected: string[]): void {
     expect(inspected.scope).to.have.keys(expected);
 }
 
@@ -19,7 +19,7 @@ function expectScope(inspected: PQP.Inspection.Inspected, expected: string[]): v
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
-            const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d|,");
+            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d|,");
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
@@ -31,7 +31,7 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,|", () => {
-            const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d,|");
+            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d,|");
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
@@ -43,7 +43,7 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,1|", () => {
-            const inspected: PQP.Inspection.Inspected = Utils.getInspection("Date.AddDays(d,1|");
+            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d,1|");
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
                 inspected,
             );
@@ -57,7 +57,7 @@ describe("InspectedInvokeExpression", () => {
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
                 const document: Utils.MockDocument = Utils.createDocumentFromFile("DirectQueryForSQL.pq");
-                const triedInspect: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+                const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
                     document,
                     {
                         line: 68,
@@ -72,7 +72,7 @@ describe("InspectedInvokeExpression", () => {
                 expect(triedInspect.kind).equals(PQP.ResultKind.Ok);
 
                 if (triedInspect && triedInspect.kind === PQP.ResultKind.Ok) {
-                    const inspected: PQP.Inspection.Inspected = triedInspect.value;
+                    const inspected: PQP.Task.InspectionOk = triedInspect.value;
 
                     expectScope(inspected, [
                         "ConnectionString",
@@ -86,15 +86,14 @@ describe("InspectedInvokeExpression", () => {
                         "server",
                     ]);
 
-                    assert.isDefined(inspected.maybeIdentifierUnderPosition, "position identifier should be defined");
+                    assert.isDefined(inspected.activeNode.maybeIdentifierUnderPosition, "position identifier should be defined");
 
-                    expect(inspected.maybeIdentifierUnderPosition!.identifier.kind).equals(
+                    expect(inspected.activeNode.maybeIdentifierUnderPosition!.kind).equals(
                         PQP.Ast.NodeKind.Identifier,
                         "expecting identifier",
                     );
 
-                    const identifier: PQP.Ast.Identifier = inspected.maybeIdentifierUnderPosition!
-                        .identifier as PQP.Ast.Identifier;
+                    const identifier: PQP.Ast.Identifier = inspected.activeNode.maybeIdentifierUnderPosition! as PQP.Ast.Identifier;
 
                     expect(identifier.literal).equals("OdbcDataSource");
                     expect(identifier.tokenRange.positionStart.lineNumber).equals(40);

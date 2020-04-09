@@ -31,10 +31,10 @@ describe("workspaceCache", () => {
 
     it("getTriedLexParse", () => {
         const document: TextDocument = Utils.createDocument("let c = 1 in c");
-        const triedLexParse: PQP.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
         assert.isDefined(triedLexParse);
         if (triedLexParse.kind === PQP.ResultKind.Ok) {
-            const lexParseOk: PQP.LexParseOk = triedLexParse.value;
+            const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
             assert.isDefined(lexParseOk.ast);
         } else {
             assert.fail("triedLexParse should be OK");
@@ -43,17 +43,14 @@ describe("workspaceCache", () => {
 
     it("getTriedLexParse with error", () => {
         const document: TextDocument = Utils.createDocument("let c = 1, in c");
-        const triedLexParse: PQP.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
         assert.isDefined(triedLexParse);
         expect(triedLexParse.kind).to.equal(PQP.ResultKind.Err);
     });
 
     it("getInspection", () => {
         const [document, postion] = Utils.createDocumentWithMarker("let c = 1 in |c");
-        const triedInspect: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
-            document,
-            postion,
-        );
+        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(document, postion);
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);
         } else {
@@ -63,10 +60,7 @@ describe("workspaceCache", () => {
 
     it("getInspection with parser error", () => {
         const [document, postion] = Utils.createDocumentWithMarker("let c = 1, in |");
-        const triedInspect: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
-            document,
-            postion,
-        );
+        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(document, postion);
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);
         } else {

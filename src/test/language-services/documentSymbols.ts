@@ -9,8 +9,8 @@ import { DocumentSymbol, SymbolKind, TextDocument } from "vscode-languageserver-
 import { InspectionUtils, WorkspaceCache } from "../../language-services";
 import * as Utils from "./utils";
 
-function getLexAndParseOk(document: TextDocument): PQP.LexParseOk {
-    const triedLexParse: PQP.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+function getLexAndParseOk(document: TextDocument): PQP.Task.LexParseOk {
+    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     assert.isDefined(triedLexParse);
     expect(triedLexParse.kind).equals(PQP.ResultKind.Ok, "expected OK result");
     if (triedLexParse.kind === PQP.ResultKind.Ok) {
@@ -54,7 +54,7 @@ function expectSymbols(document: PQP.Ast.TDocument, expectedSymbols: ExpectedDoc
 describe("Document symbols", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
         const document: Utils.MockDocument = Utils.createDocument(`section foo; shared a = 1; b = "abc"; c = true;`);
-        const lexAndParseOk: PQP.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
 
@@ -67,7 +67,7 @@ describe("Document symbols", () => {
 
     it(`section foo; a = {1,2};`, () => {
         const document: Utils.MockDocument = Utils.createDocument(`section foo; a = {1,2};`);
-        const lexAndParseOk: PQP.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
 
@@ -76,7 +76,7 @@ describe("Document symbols", () => {
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
         const document: Utils.MockDocument = Utils.createDocument(`let a = 1, b = 2, c = 3 in c`);
-        const lexAndParseOk: PQP.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.LetExpression);
 
@@ -89,7 +89,7 @@ describe("Document symbols", () => {
 
     it("HelloWorldWithDocs file", () => {
         const document: Utils.MockDocument = Utils.createDocumentFromFile("HelloWorldWithDocs.pq");
-        const lexAndParseOk: PQP.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
 
@@ -104,7 +104,7 @@ describe("Document symbols", () => {
 
     it("DirectQueryForSQL file", () => {
         const document: Utils.MockDocument = Utils.createDocumentFromFile("DirectQueryForSQL.pq");
-        const lexAndParseOk: PQP.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
 
