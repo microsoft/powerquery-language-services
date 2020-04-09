@@ -6,10 +6,10 @@ import {
     CommonError,
     isNever,
     NodeIdMap,
-    NodeIdMapUtils,
     Result,
     ResultKind,
     CommonSettings,
+    NodeIdMapIterator,
 } from "@microsoft/powerquery-parser";
 import { CommentCollectionMap } from "./passes/comment";
 import {
@@ -183,7 +183,7 @@ export class Serializer {
             }
 
             default:
-                const maybeChildren: ReadonlyArray<Ast.TNode> | undefined = NodeIdMapUtils.maybeAstChildren(
+                const maybeChildren: ReadonlyArray<Ast.TNode> | undefined = NodeIdMapIterator.maybeAstChildren(
                     this.nodeIdMapCollection,
                     node.id,
                 );
