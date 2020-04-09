@@ -4,15 +4,13 @@
 import {
     Ast,
     ILocalizationTemplates,
-    LexParseOk,
     NodeIdMap,
     Result,
     ResultKind,
     Settings,
+    Task,
     TComment,
     Traverse,
-    TriedLexParse,
-    tryLexParse,
 } from "@microsoft/powerquery-parser";
 import { FormatError } from ".";
 import { CommentCollectionMap, tryTraverse as tryTraverseComment } from "./passes/comment";
@@ -35,12 +33,12 @@ export interface FormatSettings extends Settings {
 }
 
 export function format(formatSettings: FormatSettings, text: string): Result<string, FormatError.TFormatError> {
-    const triedLexParse: TriedLexParse = tryLexParse(formatSettings, text);
+    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(formatSettings, text);
     if (triedLexParse.kind === ResultKind.Err) {
         return triedLexParse;
     }
 
-    const lexParseOk: LexParseOk = triedLexParse.value;
+    const lexParseOk: Task.LexParseOk = triedLexParse.value;
     const ast: Ast.TDocument = lexParseOk.ast;
     const comments: ReadonlyArray<TComment> = lexParseOk.lexerSnapshot.comments;
     const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.nodeIdMapCollection;

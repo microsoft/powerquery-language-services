@@ -310,7 +310,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             break;
 
         case Ast.NodeKind.LiteralExpression:
-            if (node.literalKind === Ast.LiteralKind.Str && containsNewline(node.literal)) {
+            if (node.literalKind === Ast.LiteralKind.Text && containsNewline(node.literal)) {
                 isMultiline = true;
             }
             break;

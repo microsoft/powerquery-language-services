@@ -12,7 +12,7 @@ export interface ValidationResult {
 }
 
 export function validate(document: TextDocument): ValidationResult {
-    const triedLexParse: PQP.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (triedLexParse.kind !== PQP.ResultKind.Ok) {
         const lexParseErr: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;

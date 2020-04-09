@@ -6,7 +6,7 @@ import { Position, TextDocument } from "vscode-languageserver-types";
 
 const lexerStateCache: Map<string, PQP.Lexer.State> = new Map();
 const lexerSnapshotCache: Map<string, PQP.TriedLexerSnapshot> = new Map();
-const triedLexParseCache: Map<string, PQP.TriedLexParse> = new Map();
+const triedLexParseCache: Map<string, PQP.Task.TriedLexParse> = new Map();
 const triedInspectionCache: Map<string, InspectionMap> = new Map();
 
 // Notice that the value type for WeakMap includes undefined.
@@ -14,7 +14,7 @@ const triedInspectionCache: Map<string, InspectionMap> = new Map();
 // then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
 // If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
 // or that we we couldn't do an inspection.
-type InspectionMap = WeakMap<Position, undefined | PQP.Inspection.TriedInspection>;
+type InspectionMap = WeakMap<Position, undefined | PQP.Task.TriedInspection>;
 
 const allCaches: Map<string, any>[] = [lexerSnapshotCache, lexerStateCache, triedLexParseCache, triedInspectionCache];
 
@@ -41,7 +41,7 @@ export function getTriedLexerSnapshot(textDocument: TextDocument): PQP.TriedLexe
     return getOrCreate(lexerSnapshotCache, textDocument, createTriedLexerSnapshot);
 }
 
-export function getTriedLexParse(textDocument: TextDocument): PQP.TriedLexParse {
+export function getTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse {
     return getOrCreate(triedLexParseCache, textDocument, createTriedLexParse);
 }
 
@@ -50,13 +50,13 @@ export function getTriedLexParse(textDocument: TextDocument): PQP.TriedLexParse 
 export function getTriedInspection(
     textDocument: TextDocument,
     position: Position,
-): undefined | PQP.Inspection.TriedInspection {
+): undefined | PQP.Task.TriedInspection {
     const cacheKey: string = textDocument.uri;
     const maybePositionCache:
         | undefined
-        | WeakMap<Position, undefined | PQP.Inspection.TriedInspection> = triedInspectionCache.get(cacheKey);
+        | WeakMap<Position, undefined | PQP.Task.TriedInspection> = triedInspectionCache.get(cacheKey);
 
-    let positionCache: WeakMap<Position, undefined | PQP.Inspection.TriedInspection>;
+    let positionCache: WeakMap<Position, undefined | PQP.Task.TriedInspection>;
     // document has been inspected before
     if (maybePositionCache !== undefined) {
         positionCache = maybePositionCache;
@@ -68,7 +68,7 @@ export function getTriedInspection(
     if (positionCache.has(position)) {
         return positionCache.get(position);
     } else {
-        const value: undefined | PQP.Inspection.TriedInspection = createTriedInspection(textDocument, position);
+        const value: undefined | PQP.Task.TriedInspection = createTriedInspection(textDocument, position);
         positionCache.set(position, value);
         return value;
     }
@@ -101,7 +101,7 @@ function createTriedLexerSnapshot(textDocument: TextDocument): PQP.TriedLexerSna
     return PQP.LexerSnapshot.tryFrom(lexerState);
 }
 
-function createTriedLexParse(textDocument: TextDocument): PQP.TriedLexParse {
+function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse {
     const triedLexerSnapshot: PQP.TriedLexerSnapshot = getTriedLexerSnapshot(textDocument);
     if (triedLexerSnapshot.kind === PQP.ResultKind.Err) {
         return triedLexerSnapshot;
@@ -109,7 +109,7 @@ function createTriedLexParse(textDocument: TextDocument): PQP.TriedLexParse {
     const lexerSnapshot: PQP.LexerSnapshot = triedLexerSnapshot.value;
 
     // TODO (Localization): update settings based on locale
-    const triedParse: PQP.TriedParse = PQP.tryParse(PQP.DefaultSettings, lexerSnapshot);
+    const triedParse: PQP.TriedParse = PQP.Task.tryParse(PQP.DefaultSettings, lexerSnapshot);
     if (triedParse.kind === PQP.ResultKind.Err) {
         return triedParse;
     }
@@ -126,40 +126,24 @@ function createTriedLexParse(textDocument: TextDocument): PQP.TriedLexParse {
 
 // We're allowed to return undefined because if a document wasn't parsed
 // then there's no way to perform an inspection.
-function createTriedInspection(
-    textDocument: TextDocument,
-    position: Position,
-): undefined | PQP.Inspection.TriedInspection {
-    const triedLexParse: PQP.TriedLexParse = getTriedLexParse(textDocument);
-    let nodeIdMapCollection: PQP.NodeIdMap.Collection;
-    let leafNodeIds: ReadonlyArray<number>;
-    let maybeParseError: PQP.ParseError.ParseError | undefined;
-
-    if (triedLexParse.kind === PQP.ResultKind.Err) {
-        // You can't inspect something that was never parsed
-        if (!(triedLexParse.error instanceof PQP.ParseError.ParseError)) {
-            return undefined;
-        }
-        const context: PQP.ParseContext.State = triedLexParse.error.state.contextState;
-        nodeIdMapCollection = context.nodeIdMapCollection;
-        leafNodeIds = context.leafNodeIds;
-        maybeParseError = triedLexParse.error;
-    } else {
-        const parseOk: PQP.ParseOk = triedLexParse.value;
-        nodeIdMapCollection = parseOk.nodeIdMapCollection;
-        leafNodeIds = parseOk.leafNodeIds;
+function createTriedInspection(textDocument: TextDocument, position: Position): undefined | PQP.Task.TriedInspection {
+    const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument);
+    if (PQP.ResultUtils.isErr(triedLexParse)) {
+        return undefined;
     }
+    const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
 
-    const inspectionPosition: PQP.Inspection.Position = {
+    const parseOk: PQP.ParseOk = {
+        ast: lexParseOk.ast,
+        leafNodeIds: lexParseOk.leafNodeIds,
+        nodeIdMapCollection: lexParseOk.nodeIdMapCollection,
+        state: lexParseOk.state,
+    };
+    const triedParse: PQP.TriedParse = PQP.ResultUtils.okFactory(parseOk);
+    const pqpPosition: PQP.Inspection.Position = {
         lineNumber: position.line,
         lineCodeUnit: position.character,
     };
 
-    return PQP.Inspection.tryFrom(
-        PQP.DefaultSettings,
-        inspectionPosition,
-        nodeIdMapCollection,
-        leafNodeIds,
-        maybeParseError,
-    );
+    return PQP.Task.tryInspection(PQP.DefaultSettings, triedParse, pqpPosition);
 }

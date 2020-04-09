@@ -91,7 +91,7 @@
         "typescript": "^3.7.2"
     },
     "dependencies": {
-        "@microsoft/powerquery-parser": "0.1.40",
+        "@microsoft/powerquery-parser": "0.1.43",
         "vscode-languageserver-types": "^3.14.0"
     }
 }

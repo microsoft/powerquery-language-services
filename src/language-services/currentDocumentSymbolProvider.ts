@@ -50,13 +50,13 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
         if (this.documentSymbols === undefined) {
             this.documentSymbols = [];
 
-            const triedInspection: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+            const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
                 this.document,
                 this.position,
             );
 
             if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
-                const inspected: PQP.Inspection.Inspected = triedInspection.value;
+                const inspected: PQP.Task.InspectionOk = triedInspection.value;
                 this.documentSymbols = InspectionUtils.getSymbolsForInspectionScope(inspected);
             }
         }

@@ -7,7 +7,7 @@ import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 import { SignatureProviderContext } from "./providers";
 import { LanguageServiceUtils } from ".";
 
-export function getContextForInspected(inspected: PQP.Inspection.Inspected): undefined | SignatureProviderContext {
+export function getContextForInspected(inspected: PQP.Task.InspectionOk): undefined | SignatureProviderContext {
     return inspected.maybeInvokeExpression !== undefined
         ? getContextForInvokeExpression(inspected.maybeInvokeExpression)
         : undefined;
@@ -45,10 +45,7 @@ export function getSymbolKindForLiteralExpression(node: PQP.Ast.LiteralExpressio
         case PQP.Ast.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Ast.LiteralKind.Record:
-            return SymbolKind.Struct;
-
-        case PQP.Ast.LiteralKind.Str:
+        case PQP.Ast.LiteralKind.Text:
             return SymbolKind.String;
 
         default:
@@ -65,6 +62,7 @@ export function getSymbolKindFromNode(node: PQP.Ast.INode | PQP.ParseContext.Nod
             return SymbolKind.Function;
 
         case PQP.Ast.NodeKind.ListExpression:
+        case PQP.Ast.NodeKind.ListLiteral:
             return SymbolKind.Array;
 
         case PQP.Ast.NodeKind.LiteralExpression:
@@ -74,6 +72,7 @@ export function getSymbolKindFromNode(node: PQP.Ast.INode | PQP.ParseContext.Nod
             return SymbolKind.TypeParameter;
 
         case PQP.Ast.NodeKind.RecordExpression:
+        case PQP.Ast.NodeKind.RecordLiteral:
             return SymbolKind.Struct;
 
         default:
@@ -116,7 +115,7 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected): DocumentSymbol[] {
+export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const [key, scopeItem] of inspected.scope.entries()) {
@@ -125,12 +124,12 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspected
 
         switch (scopeItem.kind) {
             case PQP.Inspection.ScopeItemKind.Each: {
-                if (scopeItem.each.kind !== PQP.XorNodeKind.Ast) {
+                if (scopeItem.eachExpression.kind !== PQP.XorNodeKind.Ast) {
                     continue;
                 }
 
                 kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.each.node.tokenRange);
+                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.eachExpression.node.tokenRange);
                 break;
             }
 

@@ -129,9 +129,9 @@ export function createDocumentWithMarker(text: string): [MockDocument, Position]
     return [document, cursorPosition];
 }
 
-export function getInspection(text: string): PQP.Inspection.Inspected {
+export function getInspection(text: string): PQP.Task.InspectionOk {
     const [document, cursorPosition] = createDocumentWithMarker(text);
-    const triedInspect: PQP.Inspection.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
         document,
         cursorPosition,
     );
