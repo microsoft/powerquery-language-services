@@ -131,7 +131,7 @@ export function createDocumentWithMarker(text: string): [MockDocument, Position]
 
 export function getInspection(text: string): PQP.Task.InspectionOk {
     const [document, cursorPosition] = createDocumentWithMarker(text);
-    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
         document,
         cursorPosition,
     );
@@ -302,12 +302,20 @@ export function containsCompletionItem(completionItems: CompletionItem[], label:
     assert.fail(`completion item '${label}' not found in array. Items: ${JSON.stringify(completionItems)}`);
 }
 
-export function containsCompletionItems(completionItems: CompletionItem[], labels: string[]): void {
+export function containsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
     const actualCompletionItemLabels: string[] = completionItems.map(value => {
         return value.label;
     });
 
     expect(actualCompletionItemLabels).to.contain.members(labels);
+}
+
+export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
+    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems.map(value => {
+        return value.label;
+    });
+
+    expect(actualCompletionItemLabels).deep.equals(labels);
 }
 
 export const emptyCompletionItems: CompletionItem[] = [];

@@ -47,7 +47,7 @@ export function getTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexP
 
 // We can't easily reuse getOrCreate because inspections require a position argument.
 // This results in a double layer cache.
-export function getTriedInspection(
+export function maybeTriedInspection(
     textDocument: TextDocument,
     position: Position,
 ): undefined | PQP.Task.TriedInspection {
@@ -128,18 +128,20 @@ function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse
 // then there's no way to perform an inspection.
 function createTriedInspection(textDocument: TextDocument, position: Position): undefined | PQP.Task.TriedInspection {
     const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument);
-    if (PQP.ResultUtils.isErr(triedLexParse)) {
+    if (
+        PQP.ResultUtils.isErr(triedLexParse) &&
+        (triedLexParse.error instanceof PQP.CommonError.CommonError ||
+            triedLexParse.error instanceof PQP.LexError.LexError)
+    ) {
         return undefined;
     }
-    const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
 
-    const parseOk: PQP.ParseOk = {
-        ast: lexParseOk.ast,
-        leafNodeIds: lexParseOk.leafNodeIds,
-        nodeIdMapCollection: lexParseOk.nodeIdMapCollection,
-        state: lexParseOk.state,
-    };
-    const triedParse: PQP.TriedParse = PQP.ResultUtils.okFactory(parseOk);
+    const maybeTriedParse: undefined | PQP.TriedParse = PQP.Task.maybeTriedParseFromTriedLexParse(triedLexParse);
+    if (maybeTriedParse === undefined) {
+        return undefined;
+    }
+
+    const triedParse: PQP.TriedParse = maybeTriedParse;
     const pqpPosition: PQP.Inspection.Position = {
         lineNumber: position.line,
         lineCodeUnit: position.character,

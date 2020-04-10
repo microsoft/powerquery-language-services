@@ -50,7 +50,10 @@ describe("workspaceCache", () => {
 
     it("getInspection", () => {
         const [document, postion] = Utils.createDocumentWithMarker("let c = 1 in |c");
-        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(document, postion);
+        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
+            document,
+            postion,
+        );
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);
         } else {
@@ -60,7 +63,10 @@ describe("workspaceCache", () => {
 
     it("getInspection with parser error", () => {
         const [document, postion] = Utils.createDocumentWithMarker("let c = 1, in |");
-        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(document, postion);
+        const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
+            document,
+            postion,
+        );
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);
         } else {

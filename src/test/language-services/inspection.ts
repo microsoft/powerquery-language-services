@@ -57,7 +57,7 @@ describe("InspectedInvokeExpression", () => {
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
                 const document: Utils.MockDocument = Utils.createDocumentFromFile("DirectQueryForSQL.pq");
-                const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+                const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
                     document,
                     {
                         line: 68,
@@ -86,15 +86,18 @@ describe("InspectedInvokeExpression", () => {
                         "server",
                     ]);
 
-                    assert.isDefined(inspected.activeNode.maybeIdentifierUnderPosition, "position identifier should be defined");
+                    assert.isDefined(
+                        inspected.maybeActiveNode?.maybeIdentifierUnderPosition,
+                        "position identifier should be defined",
+                    );
 
-                    expect(inspected.activeNode.maybeIdentifierUnderPosition!.kind).equals(
+                    expect(inspected.maybeActiveNode?.maybeIdentifierUnderPosition?.kind).equals(
                         PQP.Ast.NodeKind.Identifier,
                         "expecting identifier",
                     );
 
-                    const identifier: PQP.Ast.Identifier = inspected.activeNode.maybeIdentifierUnderPosition! as PQP.Ast.Identifier;
-
+                    const identifier: PQP.Ast.GeneralizedIdentifier | PQP.Ast.Identifier = inspected.maybeActiveNode!
+                        .maybeIdentifierUnderPosition!;
                     expect(identifier.literal).equals("OdbcDataSource");
                     expect(identifier.tokenRange.positionStart.lineNumber).equals(40);
                 }

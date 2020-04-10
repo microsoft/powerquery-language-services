@@ -50,7 +50,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
         if (this.documentSymbols === undefined) {
             this.documentSymbols = [];
 
-            const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+            const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
                 this.document,
                 this.position,
             );

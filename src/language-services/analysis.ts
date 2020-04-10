@@ -46,7 +46,7 @@ class DocumentAnalysis implements Analysis {
         this.environmentSymbolProvider = options.environmentSymbolProvider
             ? options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.keywordProvider = new KeywordProvider();
+        this.keywordProvider = new KeywordProvider(document, position);
         this.librarySymbolProvider = options.librarySymbolProvider
             ? options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
@@ -130,7 +130,7 @@ class DocumentAnalysis implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.getTriedInspection(
+        const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
             this.document,
             this.position,
         );

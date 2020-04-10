@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
 import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types";
@@ -12,23 +13,34 @@ const totalKeywordCount: number = 24;
 const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
 
 describe("Completion Items (null provider)", () => {
-    it("blank document keywords", async () => {
+    it("WIP blank document keywords", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|");
 
-        expect(result.length).to.equal(totalKeywordCount);
+        expect(result.length).to.equal(10);
 
         result.forEach(item => {
             expect(item.kind).to.equal(CompletionItemKind.Keyword);
         });
 
-        Utils.containsCompletionItems(result, ["let", "shared", "#shared"]);
+        Utils.equalsCompletionItemLabels(result, [
+            PQP.KeywordKind.Each,
+            PQP.KeywordKind.Error,
+            PQP.KeywordKind.False,
+            PQP.KeywordKind.If,
+            PQP.KeywordKind.Let,
+            PQP.KeywordKind.Not,
+            PQP.KeywordKind.True,
+            PQP.KeywordKind.Try,
+            PQP.KeywordKind.Type,
+            PQP.KeywordKind.Section,
+        ]);
     });
 
     it("simple document", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("let\na = 12,\nb=4, c = 2\nin\n  |c");
         expect(result.length).to.equal(totalKeywordCount + 3);
 
-        Utils.containsCompletionItems(result, ["a", "b", "c"]);
+        Utils.containsCompletionItemLabels(result, ["a", "b", "c"]);
     });
 });
 
@@ -42,7 +54,7 @@ describe("Completion Items (error provider)", () => {
             expect(item.kind).to.equal(CompletionItemKind.Keyword);
         });
 
-        Utils.containsCompletionItems(result, ["let", "shared", "#shared"]);
+        Utils.containsCompletionItemLabels(result, ["let", "shared", "#shared"]);
     });
 });
 
@@ -52,7 +64,7 @@ describe("Completion Items (Simple provider)", () => {
             librarySymbolProvider: libraryProvider,
         });
 
-        Utils.containsCompletionItems(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
     });
 
     it("keywords still work with environment provider", async () => {
@@ -60,7 +72,7 @@ describe("Completion Items (Simple provider)", () => {
             environmentSymbolProvider: libraryProvider,
         });
 
-        Utils.containsCompletionItems(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
     });
 
     it("keywords still work with library and environment", async () => {
@@ -69,7 +81,7 @@ describe("Completion Items (Simple provider)", () => {
             environmentSymbolProvider: libraryProvider,
         });
 
-        Utils.containsCompletionItems(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
     });
 });
 
@@ -83,7 +95,7 @@ describe("Completion Items (Current Document Provider)", () => {
 
         const result: CompletionItem[] = await provider.getCompletionItems({});
 
-        Utils.containsCompletionItems(result, [
+        Utils.containsCompletionItemLabels(result, [
             "ConnectionString",
             "Credential",
             "CredentialConnectionString",
@@ -101,6 +113,6 @@ describe("Completion Items (Current Document Provider)", () => {
             `section foo; a = () => true; b = "string"; c = 1; d = |;`,
         );
 
-        Utils.containsCompletionItems(result, ["a", "b", "c", "let"]);
+        Utils.containsCompletionItemLabels(result, ["a", "b", "c", "let"]);
     });
 });
