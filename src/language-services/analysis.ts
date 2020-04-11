@@ -32,25 +32,27 @@ export function createAnalysisSession(document: TextDocument, position: Position
 }
 
 class DocumentAnalysis implements Analysis {
-    private readonly document: TextDocument;
+    private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection;
     private readonly environmentSymbolProvider: SymbolProvider;
     private readonly keywordProvider: KeywordProvider;
     private readonly librarySymbolProvider: LibrarySymbolProvider;
     private readonly localSymbolProvider: SymbolProvider;
-    private readonly position: Position;
 
-    constructor(document: TextDocument, position: Position, options: AnalysisOptions) {
-        this.document = document;
-        this.position = position;
+    constructor(
+        private readonly document: TextDocument,
+        private readonly position: Position,
+        options: AnalysisOptions,
+    ) {
+        this.maybeTriedInspection = WorkspaceCache.maybeTriedInspection(this.document, this.position);
 
         this.environmentSymbolProvider = options.environmentSymbolProvider
             ? options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.keywordProvider = new KeywordProvider(document, position);
+        this.keywordProvider = new KeywordProvider(this.maybeTriedInspection);
         this.librarySymbolProvider = options.librarySymbolProvider
             ? options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(document, position);
+        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeTriedInspection);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {

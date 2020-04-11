@@ -2,10 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { CompletionItem, CompletionItemKind, Position, TextDocument } from "vscode-languageserver-types";
+import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types";
 
 import { CompletionItemProvider, CompletionItemProviderContext } from "./providers";
-import { WorkspaceCache } from ".";
 
 export class KeywordProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
@@ -24,17 +23,13 @@ export class KeywordProvider implements CompletionItemProvider {
         PQP.KeywordKind.HashTime,
     ];
 
-    constructor(private readonly document: TextDocument, private readonly position: Position) {}
+    constructor(private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
-        const maybeTriedInspection: undefined | PQP.Task.TriedInspection = WorkspaceCache.maybeTriedInspection(
-            this.document,
-            this.position,
-        );
-        if (maybeTriedInspection === undefined || PQP.ResultUtils.isErr(maybeTriedInspection)) {
+        if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
             return [];
         }
-        const inspectionOk: PQP.Task.InspectionOk = maybeTriedInspection.value;
+        const inspectionOk: PQP.Task.InspectionOk = this.maybeTriedInspection.value;
 
         return inspectionOk.autocomplete
             .filter((keyword: PQP.KeywordKind) => KeywordProvider.ExcludedKeywords.indexOf(keyword) === -1)

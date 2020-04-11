@@ -101,8 +101,6 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 }
 
-const defaultAnalysisOptions: AnalysisOptions = {};
-
 export const errorAnalysisOptions: AnalysisOptions = {
     librarySymbolProvider: new ErrorLibraryProvider(),
 };
@@ -112,29 +110,26 @@ export function createDocument(text: string): MockDocument {
 }
 
 export function createDocumentFromFile(fileName: string): MockDocument {
+    return new MockDocument(readFile(fileName), "powerquery");
+}
+
+export function readFile(fileName: string): string {
     const fullPath: string = Path.join(Path.dirname(__filename), "files", fileName);
     assert.isTrue(File.existsSync(fullPath), `file ${fullPath} not found.`);
-
-    let contents: string = File.readFileSync(fullPath, "utf8");
-    contents = contents.replace(/^\uFEFF/, "");
-
-    return new MockDocument(contents, "powerquery");
+    return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
 export function createDocumentWithMarker(text: string): [MockDocument, Position] {
     validateTextWithMarker(text);
     const document: MockDocument = createDocument(text.replace("|", ""));
-    const cursorPosition: Position = document.positionAt(text.indexOf("|"));
+    const position: Position = document.positionAt(text.indexOf("|"));
 
-    return [document, cursorPosition];
+    return [document, position];
 }
 
 export function getInspection(text: string): PQP.Task.InspectionOk {
-    const [document, cursorPosition] = createDocumentWithMarker(text);
-    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
-        document,
-        cursorPosition,
-    );
+    const [document, position] = createDocumentWithMarker(text);
+    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(document, position);
 
     assert.isDefined(triedInspect);
     // tslint:disable-next-line: no-unnecessary-type-assertion
@@ -151,23 +146,20 @@ export async function getCompletionItems(text: string, analysisOptions?: Analysi
     return createAnalysis(text, analysisOptions).getCompletionItems();
 }
 
+export async function getCompletionItemsForFile(
+    fileName: string,
+    position: Position,
+    analysisOptions?: AnalysisOptions,
+): Promise<CompletionItem[]> {
+    return createAnalysisForFile(fileName, position, analysisOptions).getCompletionItems();
+}
+
 export async function getHover(text: string, analysisOptions?: AnalysisOptions): Promise<Hover> {
     return createAnalysis(text, analysisOptions).getHover();
 }
 
 export async function getSignatureHelp(text: string, analysisOptions?: AnalysisOptions): Promise<SignatureHelp> {
     return createAnalysis(text, analysisOptions).getSignatureHelp();
-}
-
-function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
-    const [document, cursorPosition] = createDocumentWithMarker(text);
-    const options: AnalysisOptions = analysisOptions ? analysisOptions : defaultAnalysisOptions;
-    return createAnalysisSession(document, cursorPosition, options);
-}
-
-function validateTextWithMarker(text: string): void {
-    expect(text).to.contain("|", "input string must contain a | to indicate cursor position");
-    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "input string should only have one |");
 }
 
 // Adapted from vscode-languageserver-code implementation
@@ -335,4 +327,21 @@ export const emptySignatureHelp: SignatureHelp = {
 export function dumpNodeToTraceFile(node: PQP.Ast.INode, filePath: string): void {
     const asJson: string = JSON.stringify(node);
     File.writeFileSync(filePath, asJson);
+}
+
+const DefaultAnalysisOptions: AnalysisOptions = {};
+
+function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
+    const [document, position]: [MockDocument, Position] = createDocumentWithMarker(text);
+    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+}
+
+function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
+    const document: MockDocument = createDocument(readFile(fileName));
+    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+}
+
+function validateTextWithMarker(text: string): void {
+    expect(text).to.contain("|", "input string must contain a | to indicate cursor position");
+    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "input string should only have one |");
 }

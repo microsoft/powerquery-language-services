@@ -4,16 +4,15 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
-import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types";
+import { CompletionItem, CompletionItemKind, Position } from "vscode-languageserver-types";
 
-import { CurrentDocumentSymbolProvider } from "../../language-services/currentDocumentSymbolProvider";
 import * as Utils from "./utils";
 
 const totalKeywordCount: number = 24;
 const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
 
 describe("Completion Items (null provider)", () => {
-    it("WIP blank document keywords", async () => {
+    it("blank document keywords", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|");
 
         expect(result.length).to.equal(10);
@@ -36,8 +35,8 @@ describe("Completion Items (null provider)", () => {
         ]);
     });
 
-    it("simple document", async () => {
-        const result: CompletionItem[] = await Utils.getCompletionItems("let\na = 12,\nb=4, c = 2\nin\n  |c");
+    it("WIP simple document", async () => {
+        const result: CompletionItem[] = await Utils.getCompletionItems("let a = 1, b = 2, c = 3 in |c");
         expect(result.length).to.equal(totalKeywordCount + 3);
 
         Utils.containsCompletionItemLabels(result, ["a", "b", "c"]);
@@ -87,13 +86,11 @@ describe("Completion Items (Simple provider)", () => {
 
 describe("Completion Items (Current Document Provider)", () => {
     it("DirectQueryForSQL file", async () => {
-        const document: Utils.MockDocument = Utils.createDocumentFromFile("DirectQueryForSQL.pq");
-        const provider: CurrentDocumentSymbolProvider = new CurrentDocumentSymbolProvider(document, {
+        const postion: Position = {
             line: 40,
             character: 25,
-        });
-
-        const result: CompletionItem[] = await provider.getCompletionItems({});
+        };
+        const result: CompletionItem[] = await Utils.getCompletionItemsForFile("DirectQueryForSQL.pq", postion);
 
         Utils.containsCompletionItemLabels(result, [
             "ConnectionString",

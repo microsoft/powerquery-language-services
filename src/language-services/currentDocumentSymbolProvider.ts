@@ -2,14 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import {
-    CompletionItem,
-    DocumentSymbol,
-    Hover,
-    Position,
-    SignatureHelp,
-    TextDocument,
-} from "vscode-languageserver-types";
+import { CompletionItem, DocumentSymbol, Hover, SignatureHelp } from "vscode-languageserver-types";
 
 import {
     CompletionItemProviderContext,
@@ -17,18 +10,10 @@ import {
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
-import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
+import { LanguageServiceUtils, InspectionUtils } from ".";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
-    private readonly document: TextDocument;
-    private readonly position: Position;
-
-    private documentSymbols: DocumentSymbol[] | undefined;
-
-    constructor(textDocument: TextDocument, position: Position) {
-        this.document = textDocument;
-        this.position = position;
-    }
+    constructor(private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());
@@ -47,20 +32,9 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
     }
 
     private getDocumentSymbols(): DocumentSymbol[] {
-        if (this.documentSymbols === undefined) {
-            this.documentSymbols = [];
-
-            const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
-                this.document,
-                this.position,
-            );
-
-            if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
-                const inspected: PQP.Task.InspectionOk = triedInspection.value;
-                this.documentSymbols = InspectionUtils.getSymbolsForInspectionScope(inspected);
-            }
+        if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
+            return [];
         }
-
-        return this.documentSymbols;
+        return InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value);
     }
 }

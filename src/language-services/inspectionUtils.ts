@@ -134,7 +134,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): 
             }
 
             case PQP.Inspection.ScopeItemKind.KeyValuePair: {
-                if (scopeItem.maybeValue === undefined || scopeItem.maybeValue.kind !== PQP.XorNodeKind.Ast) {
+                if (scopeItem.maybeValue === undefined) {
                     continue;
                 }
 
