@@ -99,7 +99,7 @@ describe("InspectedInvokeExpression", () => {
                     const identifier: PQP.Ast.GeneralizedIdentifier | PQP.Ast.Identifier = inspected.maybeActiveNode!
                         .maybeIdentifierUnderPosition!;
                     expect(identifier.literal).equals("OdbcDataSource");
-                    expect(identifier.tokenRange.positionStart.lineNumber).equals(40);
+                    expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
                 }
             });
         });
