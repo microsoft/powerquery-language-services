@@ -19,7 +19,7 @@ export function getContextForInvokeExpression(
     const functionName: undefined | string =
         maybeExpression.maybeName !== undefined ? maybeExpression.maybeName : undefined;
     const argumentOrdinal: undefined | number =
-        maybeExpression.maybeArguments !== undefined ? maybeExpression.maybeArguments.positionArgumentIndex : undefined;
+        maybeExpression.maybeArguments !== undefined ? maybeExpression.maybeArguments.argumentOrdinal : undefined;
 
     if (functionName !== undefined || argumentOrdinal !== undefined) {
         return {

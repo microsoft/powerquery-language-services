@@ -8,8 +8,18 @@ import { CompletionItem, CompletionItemKind, Position } from "vscode-languageser
 
 import * as Utils from "./utils";
 
-const totalKeywordCount: number = 24;
-const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
+const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
+const ExpressionKeywordWhitelist: string[] = [
+    PQP.KeywordKind.Each,
+    PQP.KeywordKind.Error,
+    PQP.KeywordKind.False,
+    PQP.KeywordKind.If,
+    PQP.KeywordKind.Let,
+    PQP.KeywordKind.Not,
+    PQP.KeywordKind.True,
+    PQP.KeywordKind.Try,
+    PQP.KeywordKind.Type,
+];
 
 describe("Completion Items (null provider)", () => {
     it("blank document keywords", async () => {
@@ -21,66 +31,51 @@ describe("Completion Items (null provider)", () => {
             expect(item.kind).to.equal(CompletionItemKind.Keyword);
         });
 
-        Utils.equalsCompletionItemLabels(result, [
-            PQP.KeywordKind.Each,
-            PQP.KeywordKind.Error,
-            PQP.KeywordKind.False,
-            PQP.KeywordKind.If,
-            PQP.KeywordKind.Let,
-            PQP.KeywordKind.Not,
-            PQP.KeywordKind.True,
-            PQP.KeywordKind.Try,
-            PQP.KeywordKind.Type,
-            PQP.KeywordKind.Section,
-        ]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.KeywordKind.Section]);
     });
 
-    it("WIP simple document", async () => {
+    it("simple document", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("let a = 1, b = 2, c = 3 in |c");
-        expect(result.length).to.equal(totalKeywordCount + 3);
-
-        Utils.containsCompletionItemLabels(result, ["a", "b", "c"]);
-    });
-});
-
-describe("Completion Items (error provider)", () => {
-    it("keywords still work", async () => {
-        const result: CompletionItem[] = await Utils.getCompletionItems("|", Utils.errorAnalysisOptions);
-
-        expect(result.length).to.equal(totalKeywordCount);
-
-        result.forEach(item => {
-            expect(item.kind).to.equal(CompletionItemKind.Keyword);
-        });
-
-        Utils.containsCompletionItemLabels(result, ["let", "shared", "#shared"]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
     });
 });
 
 describe("Completion Items (Simple provider)", () => {
     it("keywords still work with library provider", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|", {
-            librarySymbolProvider: libraryProvider,
+            librarySymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, [
+            ...ExpressionKeywordWhitelist,
+            PQP.KeywordKind.Section,
+            "Text.NewGuid",
+        ]);
     });
 
     it("keywords still work with environment provider", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|", {
-            environmentSymbolProvider: libraryProvider,
+            environmentSymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, [
+            ...ExpressionKeywordWhitelist,
+            PQP.KeywordKind.Section,
+            "Text.NewGuid",
+        ]);
     });
 
     it("keywords still work with library and environment", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|", {
-            librarySymbolProvider: libraryProvider,
-            environmentSymbolProvider: libraryProvider,
+            librarySymbolProvider: LibraryProvider,
+            environmentSymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, ["Text.NewGuid", "let", "shared", "section"]);
+        Utils.containsCompletionItemLabels(result, [
+            ...ExpressionKeywordWhitelist,
+            PQP.KeywordKind.Section,
+            "Text.NewGuid",
+        ]);
     });
 });
 

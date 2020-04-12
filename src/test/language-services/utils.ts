@@ -294,12 +294,12 @@ export function containsCompletionItem(completionItems: CompletionItem[], label:
     assert.fail(`completion item '${label}' not found in array. Items: ${JSON.stringify(completionItems)}`);
 }
 
-export function containsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
-    const actualCompletionItemLabels: string[] = completionItems.map(value => {
+export function containsCompletionItemLabels(actualCompletionItems: CompletionItem[], expectedLabels: string[]): void {
+    const actualCompletionItemLabels: string[] = actualCompletionItems.map(value => {
         return value.label;
     });
 
-    expect(actualCompletionItemLabels).to.contain.members(labels);
+    expect(actualCompletionItemLabels).to.have.deep.members(expectedLabels);
 }
 
 export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {

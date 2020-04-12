@@ -173,7 +173,6 @@ function visitNode(state: State, node: Ast.TNode): void {
         // TKeyValuePair
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierExpressionPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
             visitKeyValuePair(state, node);
             break;
@@ -988,7 +987,6 @@ function wrapperOpenWriteKind(state: State, wrapped: Ast.TWrapped): SerializerWr
     switch (maybeParent.kind) {
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierExpressionPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ListType:
         case Ast.NodeKind.RecordType:

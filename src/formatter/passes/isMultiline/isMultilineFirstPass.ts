@@ -109,7 +109,6 @@ function visitNode(state: State, node: Ast.TNode): void {
         // TKeyValuePair
         case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierExpressionPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
             isMultiline = isAnyMultiline(isMultilineMap, node.key, node.equalConstant, node.value);
             break;
