@@ -299,7 +299,7 @@ export function containsCompletionItemLabels(actualCompletionItems: CompletionIt
         return value.label;
     });
 
-    expect(actualCompletionItemLabels).to.have.deep.members(expectedLabels);
+    expect(actualCompletionItemLabels).to.include.members(expectedLabels);
 }
 
 export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
