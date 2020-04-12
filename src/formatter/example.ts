@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 /* tslint:disable:no-console */
-import { DefaultSettings, Result, ResultKind } from "@microsoft/powerquery-parser";
-import { format, FormatSettings } from "./format";
+import { DefaultSettings, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { tryFormat, FormatSettings } from "./format";
 import { TFormatError } from "./error";
 import { IndentationLiteral, NewlineLiteral } from "./serializer";
 
@@ -45,9 +45,9 @@ const settings: FormatSettings = {
     newlineLiteral: NewlineLiteral.Unix,
 };
 
-const formatResult: Result<string, TFormatError> = format(settings, text);
-if (formatResult.kind === ResultKind.Ok) {
-    console.log(formatResult.value);
+const triedFormat: Result<string, TFormatError> = tryFormat(settings, text);
+if (ResultUtils.isOk(triedFormat)) {
+    console.log(triedFormat.value);
 } else {
-    console.log(JSON.stringify(formatResult.error, undefined, 4));
+    console.log(JSON.stringify(triedFormat.error, undefined, 4));
 }

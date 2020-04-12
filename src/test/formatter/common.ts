@@ -2,16 +2,15 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { DefaultSettings, DefaultTemplates, Parser, Result, ResultKind } from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import { IndentationLiteral, NewlineLiteral } from "../../formatter";
-import { FormatSettings, format } from "../../formatter";
-import { TFormatError } from "../../formatter/error";
+import { IndentationLiteral, NewlineLiteral, TriedFormat } from "../../formatter";
+import { FormatSettings, tryFormat } from "../../formatter";
 
 const DefaultFormatSettings: FormatSettings = {
-    localizationTemplates: DefaultTemplates,
-    parser: Parser.CombinatorialParser,
-    newParserState: DefaultSettings.newParserState,
+    localizationTemplates: PQP.DefaultTemplates,
+    parser: PQP.Parser.CombinatorialParser,
+    newParserState: PQP.DefaultSettings.newParserState,
     indentationLiteral: IndentationLiteral.SpaceX4,
     newlineLiteral: NewlineLiteral.Unix,
 };
@@ -44,17 +43,17 @@ export function compare(expected: string, actual: string, newlineLiteral: Newlin
 // attempts to format text twice to ensure the formatter emits the same tokens.
 export function runFormat(text: string, formatSettings: FormatSettings = DefaultFormatSettings): string {
     text = text.trim();
-    const firstFormatResult: Result<string, TFormatError> = format(formatSettings, text);
-    if (firstFormatResult.kind === ResultKind.Err) {
-        throw firstFormatResult.error;
+    const firstTriedFormat: TriedFormat = tryFormat(formatSettings, text);
+    if (PQP.ResultUtils.isErr(firstTriedFormat)) {
+        throw firstTriedFormat.error;
     }
-    const firstOk: string = firstFormatResult.value;
+    const firstOk: string = firstTriedFormat.value;
 
-    const secondFormatResult: Result<string, TFormatError> = format(formatSettings, firstOk);
-    if (secondFormatResult.kind === ResultKind.Err) {
-        throw secondFormatResult.error;
+    const secondTriedFormat: TriedFormat = tryFormat(formatSettings, firstOk);
+    if (PQP.ResultUtils.isErr(secondTriedFormat)) {
+        throw secondTriedFormat.error;
     }
-    const secondOk: string = secondFormatResult.value;
+    const secondOk: string = secondTriedFormat.value;
 
     compare(firstOk, secondOk);
     return firstOk;

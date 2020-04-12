@@ -10,7 +10,7 @@ export interface CommentCollection {
     prefixedCommentsContainsNewline: boolean;
 }
 
-export function tryTraverse(
+export function tryTraverseComment(
     localizationTemplates: ILocalizationTemplates,
     root: Ast.TNode,
     nodeIdMapCollection: NodeIdMap.Collection,

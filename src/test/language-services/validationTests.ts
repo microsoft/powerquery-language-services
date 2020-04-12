@@ -27,7 +27,7 @@ describe("validation", () => {
 });
 
 describe("validation with workspace cache", () => {
-    it("no errors after update", () => {
+    it("WIP no errors after update", () => {
         const document: Utils.MockDocument = Utils.createDocument("let a = 1,");
         let validationResult: ValidationResult = validate(document);
         expect(validationResult.hasErrors).to.equal(true, "validation result is expected to have errors");

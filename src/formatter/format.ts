@@ -1,19 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Ast,
-    ILocalizationTemplates,
-    NodeIdMap,
-    Result,
-    ResultKind,
-    Settings,
-    Task,
-    TComment,
-    Traverse,
-} from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { FormatError } from ".";
-import { CommentCollectionMap, tryTraverse as tryTraverseComment } from "./passes/comment";
+import { CommentCollectionMap, tryTraverseComment } from "./passes/comment";
 import { IsMultilineMap } from "./passes/isMultiline/common";
 import { tryTraverse as tryTraverseIsMultilineMap } from "./passes/isMultiline/isMultiline";
 import { SerializerParameterMap, tryTraverse as tryTraverseSerializerParameter } from "./passes/serializerParameter";
@@ -25,59 +15,59 @@ import {
     SerializerSettings,
 } from "./serializer";
 
-export { Result, ResultKind } from "@microsoft/powerquery-parser";
+export type TriedFormat = PQP.Result<string, FormatError.TFormatError>;
 
-export interface FormatSettings extends Settings {
+export interface FormatSettings extends PQP.Settings {
     readonly indentationLiteral: IndentationLiteral;
     readonly newlineLiteral: NewlineLiteral;
 }
 
-export function format(formatSettings: FormatSettings, text: string): Result<string, FormatError.TFormatError> {
-    const triedLexParse: Task.TriedLexParse = Task.tryLexParse(formatSettings, text);
-    if (triedLexParse.kind === ResultKind.Err) {
+export function tryFormat(formatSettings: FormatSettings, text: string): TriedFormat {
+    const triedLexParse: PQP.Task.TriedLexParse = PQP.Task.tryLexParse(formatSettings, text);
+    if (PQP.ResultUtils.isErr(triedLexParse)) {
         return triedLexParse;
     }
 
-    const lexParseOk: Task.LexParseOk = triedLexParse.value;
-    const ast: Ast.TDocument = lexParseOk.ast;
-    const comments: ReadonlyArray<TComment> = lexParseOk.lexerSnapshot.comments;
-    const nodeIdMapCollection: NodeIdMap.Collection = lexParseOk.nodeIdMapCollection;
-    const localizationTemplates: ILocalizationTemplates = formatSettings.localizationTemplates;
+    const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
+    const ast: PQP.Ast.TDocument = lexParseOk.ast;
+    const comments: ReadonlyArray<PQP.TComment> = lexParseOk.lexerSnapshot.comments;
+    const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.nodeIdMapCollection;
+    const localizationTemplates: PQP.ILocalizationTemplates = formatSettings.localizationTemplates;
 
     let commentCollectionMap: CommentCollectionMap = new Map();
     if (comments.length) {
-        const triedCommentPass: Traverse.TriedTraverse<CommentCollectionMap> = tryTraverseComment(
+        const triedCommentPass: PQP.Traverse.TriedTraverse<CommentCollectionMap> = tryTraverseComment(
             localizationTemplates,
             ast,
             nodeIdMapCollection,
             comments,
         );
 
-        if (triedCommentPass.kind === ResultKind.Err) {
+        if (PQP.ResultUtils.isErr(triedCommentPass)) {
             return triedCommentPass;
         }
         commentCollectionMap = triedCommentPass.value;
     }
 
-    const triedIsMultilineMap: Traverse.TriedTraverse<IsMultilineMap> = tryTraverseIsMultilineMap(
+    const triedIsMultilineMap: PQP.Traverse.TriedTraverse<IsMultilineMap> = tryTraverseIsMultilineMap(
         localizationTemplates,
         ast,
         commentCollectionMap,
         nodeIdMapCollection,
     );
-    if (triedIsMultilineMap.kind === ResultKind.Err) {
+    if (PQP.ResultUtils.isErr(triedIsMultilineMap)) {
         return triedIsMultilineMap;
     }
     const isMultilineMap: IsMultilineMap = triedIsMultilineMap.value;
 
-    const triedSerializerParameter: Traverse.TriedTraverse<SerializerParameterMap> = tryTraverseSerializerParameter(
+    const triedSerializerParameter: PQP.Traverse.TriedTraverse<SerializerParameterMap> = tryTraverseSerializerParameter(
         localizationTemplates,
         ast,
         nodeIdMapCollection,
         commentCollectionMap,
         isMultilineMap,
     );
-    if (triedSerializerParameter.kind === ResultKind.Err) {
+    if (PQP.ResultUtils.isErr(triedSerializerParameter)) {
         return triedSerializerParameter;
     }
     const serializerParameterMap: SerializerParameterMap = triedSerializerParameter.value;
@@ -87,7 +77,7 @@ export function format(formatSettings: FormatSettings, text: string): Result<str
         serializerParameterMap,
     };
     const serializeRequest: SerializerSettings = {
-        localizationTemplates: localizationTemplates,
+        localizationTemplates,
         document: lexParseOk.ast,
         nodeIdMapCollection,
         maps,

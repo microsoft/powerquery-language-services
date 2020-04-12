@@ -136,34 +136,32 @@ class DocumentAnalysis implements Analysis {
             this.document,
             this.position,
         );
+        if (triedInspection === undefined || PQP.ResultUtils.isErr(triedInspection)) {
+            return LanguageServiceUtils.EmptySignatureHelp;
+        }
+        const inspected: PQP.Task.InspectionOk = triedInspection.value;
 
-        if (triedInspection && triedInspection.kind === PQP.ResultKind.Ok) {
-            const inspected: PQP.Task.InspectionOk = triedInspection.value;
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
-                inspected,
-            );
+        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(inspected);
+        if (maybeContext === undefined) {
+            return LanguageServiceUtils.EmptySignatureHelp;
+        }
+        const context: SignatureProviderContext = maybeContext;
 
-            if (maybeContext !== undefined) {
-                const context: SignatureProviderContext = maybeContext;
-
-                if (context.maybeFunctionName) {
-                    // TODO: add tracing/logging to the catch()
-                    const librarySignatureHelp: Promise<SignatureHelp | null> = this.librarySymbolProvider
-                        .getSignatureHelp(context)
-                        .catch(() => {
-                            // tslint:disable-next-line: no-null-keyword
-                            return null;
-                        });
-
-                    const [libraryResponse] = await Promise.all([librarySignatureHelp]);
-                    if (libraryResponse) {
-                        return libraryResponse;
-                    }
-                }
-            }
+        if (context.maybeFunctionName === undefined) {
+            return LanguageServiceUtils.EmptySignatureHelp;
         }
 
-        return LanguageServiceUtils.EmptySignatureHelp;
+        // TODO: add tracing/logging to the catch()
+        const librarySignatureHelp: Promise<SignatureHelp | null> = this.librarySymbolProvider
+            .getSignatureHelp(context)
+            .catch(() => {
+                // tslint:disable-next-line: no-null-keyword
+                return null;
+            });
+
+        const [libraryResponse] = await Promise.all([librarySignatureHelp]);
+
+        return libraryResponse ?? LanguageServiceUtils.EmptySignatureHelp;
     }
 }
 
