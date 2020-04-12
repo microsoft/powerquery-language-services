@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 /* tslint:disable:no-console */
-import { DefaultSettings, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { tryFormat, FormatSettings } from "./format";
 import { TFormatError } from "./error";
 import { IndentationLiteral, NewlineLiteral } from "./serializer";
@@ -40,13 +40,13 @@ let
 in
     fastPow(2, 8)`;
 const settings: FormatSettings = {
-    ...DefaultSettings,
+    ...PQP.DefaultSettings,
     indentationLiteral: IndentationLiteral.SpaceX4,
     newlineLiteral: NewlineLiteral.Unix,
 };
 
-const triedFormat: Result<string, TFormatError> = tryFormat(settings, text);
-if (ResultUtils.isOk(triedFormat)) {
+const triedFormat: PQP.Result<string, TFormatError> = tryFormat(settings, text);
+if (PQP.ResultUtils.isOk(triedFormat)) {
     console.log(triedFormat.value);
 } else {
     console.log(JSON.stringify(triedFormat.error, undefined, 4));

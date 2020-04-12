@@ -1,60 +1,54 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Ast,
-    AstUtils,
-    ILocalizationTemplates,
-    NodeIdMap,
-    NodeIdMapUtils,
-    Traverse,
-} from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
 
 export function tryTraverse(
-    localizationTemplates: ILocalizationTemplates,
-    ast: Ast.TNode,
+    localizationTemplates: PQP.ILocalizationTemplates,
+    ast: PQP.Ast.TNode,
     isMultilineMap: IsMultilineMap,
-    nodeIdMapCollection: NodeIdMap.Collection,
-): Traverse.TriedTraverse<IsMultilineMap> {
+    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+): PQP.Traverse.TriedTraverse<IsMultilineMap> {
     const state: State = {
         localizationTemplates,
         result: isMultilineMap,
         nodeIdMapCollection,
     };
 
-    return Traverse.tryTraverseAst(
+    return PQP.Traverse.tryTraverseAst(
         state,
         nodeIdMapCollection,
         ast,
-        Traverse.VisitNodeStrategy.BreadthFirst,
+        PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        Traverse.expectExpandAllAstChildren,
+        PQP.Traverse.expectExpandAllAstChildren,
         undefined,
     );
 }
 
-interface State extends Traverse.IState<IsMultilineMap> {
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
+interface State extends PQP.Traverse.IState<IsMultilineMap> {
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
 }
 
-function visitNode(state: State, node: Ast.TNode): void {
+function visitNode(state: State, node: PQP.Ast.TNode): void {
+    // tslint:disable-next-line: switch-default
     switch (node.kind) {
         // TBinOpExpression
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.RelationalExpression: {
+        case PQP.Ast.NodeKind.ArithmeticExpression:
+        case PQP.Ast.NodeKind.AsExpression:
+        case PQP.Ast.NodeKind.EqualityExpression:
+        case PQP.Ast.NodeKind.IsExpression:
+        case PQP.Ast.NodeKind.LogicalExpression:
+        case PQP.Ast.NodeKind.RelationalExpression: {
             const isMultilineMap: IsMultilineMap = state.result;
-            const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
+            const maybeParent: PQP.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
                 state.nodeIdMapCollection,
                 node.id,
             );
             if (
                 maybeParent &&
-                AstUtils.isTBinOpExpression(maybeParent) &&
+                PQP.AstUtils.isTBinOpExpression(maybeParent) &&
                 expectGetIsMultiline(isMultilineMap, maybeParent)
             ) {
                 setIsMultiline(isMultilineMap, node, true);
@@ -64,36 +58,36 @@ function visitNode(state: State, node: Ast.TNode): void {
 
         // If a list or record is a child node,
         // Then by default it should be considered multiline if it has one or more values
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.ListLiteral:
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecordLiteral:
+        case PQP.Ast.NodeKind.ListExpression:
+        case PQP.Ast.NodeKind.ListLiteral:
+        case PQP.Ast.NodeKind.RecordExpression:
+        case PQP.Ast.NodeKind.RecordLiteral:
             if (node.content.elements.length) {
-                const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+                const nodeIdMapCollection: PQP.NodeIdMap.Collection = state.nodeIdMapCollection;
 
-                let maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
+                let maybeParent: PQP.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
                     node.id,
                 );
-                let maybeCsv: Ast.TCsv | undefined;
-                let maybeArrayWrapper: Ast.TArrayWrapper | undefined;
-                if (maybeParent && maybeParent.kind === Ast.NodeKind.Csv) {
+                let maybeCsv: PQP.Ast.TCsv | undefined;
+                let maybeArrayWrapper: PQP.Ast.TArrayWrapper | undefined;
+                if (maybeParent && maybeParent.kind === PQP.Ast.NodeKind.Csv) {
                     maybeCsv = maybeParent;
-                    maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
+                    maybeParent = PQP.NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
-                if (maybeParent && maybeParent.kind === Ast.NodeKind.ArrayWrapper) {
+                if (maybeParent && maybeParent.kind === PQP.Ast.NodeKind.ArrayWrapper) {
                     maybeArrayWrapper = maybeParent;
-                    maybeParent = NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
+                    maybeParent = PQP.NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
 
                 if (maybeParent) {
-                    const parent: Ast.TNode = maybeParent;
+                    const parent: PQP.Ast.TNode = maybeParent;
                     switch (parent.kind) {
-                        case Ast.NodeKind.ItemAccessExpression:
-                        case Ast.NodeKind.InvokeExpression:
-                        case Ast.NodeKind.FunctionExpression:
-                        case Ast.NodeKind.Section:
-                        case Ast.NodeKind.SectionMember:
+                        case PQP.Ast.NodeKind.ItemAccessExpression:
+                        case PQP.Ast.NodeKind.InvokeExpression:
+                        case PQP.Ast.NodeKind.FunctionExpression:
+                        case PQP.Ast.NodeKind.Section:
+                        case PQP.Ast.NodeKind.SectionMember:
                             break;
 
                         default: {
@@ -111,9 +105,5 @@ function visitNode(state: State, node: Ast.TNode): void {
                     }
                 }
             }
-            break;
-
-        default:
-            break;
     }
 }

@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, ILocalizationTemplates, NodeIdMap, TComment, Traverse } from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 
 export type CommentCollectionMap = Map<number, CommentCollection>;
 
 export interface CommentCollection {
-    readonly prefixedComments: TComment[];
+    readonly prefixedComments: PQP.TComment[];
     prefixedCommentsContainsNewline: boolean;
 }
 
 export function tryTraverseComment(
-    localizationTemplates: ILocalizationTemplates,
-    root: Ast.TNode,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    comments: ReadonlyArray<TComment>,
-): Traverse.TriedTraverse<CommentCollectionMap> {
+    localizationTemplates: PQP.ILocalizationTemplates,
+    root: PQP.Ast.TNode,
+    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+    comments: ReadonlyArray<PQP.TComment>,
+): PQP.Traverse.TriedTraverse<CommentCollectionMap> {
     const state: State = {
         localizationTemplates,
         result: new Map(),
@@ -24,25 +24,25 @@ export function tryTraverseComment(
         maybeCurrentComment: comments[0],
     };
 
-    return Traverse.tryTraverseAst<State, CommentCollectionMap>(
+    return PQP.Traverse.tryTraverseAst<State, CommentCollectionMap>(
         state,
         nodeIdMapCollection,
         root,
-        Traverse.VisitNodeStrategy.DepthFirst,
+        PQP.Traverse.VisitNodeStrategy.DepthFirst,
         visitNode,
-        Traverse.expectExpandAllAstChildren,
+        PQP.Traverse.expectExpandAllAstChildren,
         earlyExit,
     );
 }
 
-interface State extends Traverse.IState<CommentCollectionMap> {
-    readonly comments: ReadonlyArray<TComment>;
+interface State extends PQP.Traverse.IState<CommentCollectionMap> {
+    readonly comments: ReadonlyArray<PQP.TComment>;
     commentsIndex: number;
-    maybeCurrentComment: TComment | undefined;
+    maybeCurrentComment: PQP.TComment | undefined;
 }
 
-function earlyExit(state: State, node: Ast.TNode): boolean {
-    const maybeCurrentComment: TComment | undefined = state.maybeCurrentComment;
+function earlyExit(state: State, node: PQP.Ast.TNode): boolean {
+    const maybeCurrentComment: PQP.TComment | undefined = state.maybeCurrentComment;
     if (maybeCurrentComment === undefined) {
         return true;
     } else if (node.tokenRange.positionEnd.codeUnit < maybeCurrentComment.positionStart.codeUnit) {
@@ -52,14 +52,14 @@ function earlyExit(state: State, node: Ast.TNode): boolean {
     }
 }
 
-function visitNode(state: State, node: Ast.TNode): void {
+function visitNode(state: State, node: PQP.Ast.TNode): void {
     if (!node.isLeaf) {
         return;
     }
 
-    let maybeCurrentComment: TComment | undefined = state.maybeCurrentComment;
+    let maybeCurrentComment: PQP.TComment | undefined = state.maybeCurrentComment;
     while (maybeCurrentComment && maybeCurrentComment.positionStart.codeUnit < node.tokenRange.positionStart.codeUnit) {
-        const currentComment: TComment = maybeCurrentComment;
+        const currentComment: PQP.TComment = maybeCurrentComment;
         const commentMap: CommentCollectionMap = state.result;
         const nodeId: number = node.id;
         const maybeCommentCollection: CommentCollection | undefined = commentMap.get(nodeId);

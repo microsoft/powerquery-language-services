@@ -1,27 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Ast,
-    AstUtils,
-    CommonError,
-    ILocalizationTemplates,
-    isNever,
-    NodeIdMap,
-    NodeIdMapUtils,
-    StringUtils,
-    Traverse,
-} from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { CommentCollection, CommentCollectionMap } from "../comment";
 import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
 import { getLinearLength, LinearLengthMap } from "./linearLength";
 
 export function tryTraverse(
-    localizationTemplates: ILocalizationTemplates,
-    ast: Ast.TNode,
+    localizationTemplates: PQP.ILocalizationTemplates,
+    ast: PQP.Ast.TNode,
     commentCollectionMap: CommentCollectionMap,
-    nodeIdMapCollection: NodeIdMap.Collection,
-): Traverse.TriedTraverse<IsMultilineMap> {
+    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+): PQP.Traverse.TriedTraverse<IsMultilineMap> {
     const state: State = {
         localizationTemplates,
         result: new Map(),
@@ -30,21 +20,21 @@ export function tryTraverse(
         linearLengthMap: new Map(),
     };
 
-    return Traverse.tryTraverseAst<State, IsMultilineMap>(
+    return PQP.Traverse.tryTraverseAst<State, IsMultilineMap>(
         state,
         nodeIdMapCollection,
         ast,
-        Traverse.VisitNodeStrategy.DepthFirst,
+        PQP.Traverse.VisitNodeStrategy.DepthFirst,
         visitNode,
-        Traverse.expectExpandAllAstChildren,
+        PQP.Traverse.expectExpandAllAstChildren,
         undefined,
     );
 }
 
-export interface State extends Traverse.IState<IsMultilineMap> {
-    readonly localizationTemplates: ILocalizationTemplates;
+export interface State extends PQP.Traverse.IState<IsMultilineMap> {
+    readonly localizationTemplates: PQP.ILocalizationTemplates;
     readonly commentCollectionMap: CommentCollectionMap;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
     readonly linearLengthMap: LinearLengthMap;
 }
 
@@ -57,37 +47,37 @@ const InvokeExpressionIdentifierLinearLengthExclusions: ReadonlyArray<string> = 
 const TBinOpExpressionLinearLengthThreshold: number = 40;
 const InvokeExpressionLinearLengthThreshold: number = 40;
 
-function visitNode(state: State, node: Ast.TNode): void {
+function visitNode(state: State, node: PQP.Ast.TNode): void {
     const isMultilineMap: IsMultilineMap = state.result;
     let isMultiline: boolean = false;
 
     switch (node.kind) {
         // TPairedConstant
-        case Ast.NodeKind.AsNullablePrimitiveType:
-        case Ast.NodeKind.AsType:
-        case Ast.NodeKind.EachExpression:
-        case Ast.NodeKind.ErrorRaisingExpression:
-        case Ast.NodeKind.IsNullablePrimitiveType:
-        case Ast.NodeKind.NullablePrimitiveType:
-        case Ast.NodeKind.NullableType:
-        case Ast.NodeKind.OtherwiseExpression:
-        case Ast.NodeKind.TypePrimaryType:
+        case PQP.Ast.NodeKind.AsNullablePrimitiveType:
+        case PQP.Ast.NodeKind.AsType:
+        case PQP.Ast.NodeKind.EachExpression:
+        case PQP.Ast.NodeKind.ErrorRaisingExpression:
+        case PQP.Ast.NodeKind.IsNullablePrimitiveType:
+        case PQP.Ast.NodeKind.NullablePrimitiveType:
+        case PQP.Ast.NodeKind.NullableType:
+        case PQP.Ast.NodeKind.OtherwiseExpression:
+        case PQP.Ast.NodeKind.TypePrimaryType:
             isMultiline = isAnyMultiline(isMultilineMap, node.constant, node.paired);
             break;
 
         // TBinOpExpression
-        case Ast.NodeKind.IsExpression:
-        case Ast.NodeKind.AsExpression:
-        case Ast.NodeKind.ArithmeticExpression:
-        case Ast.NodeKind.EqualityExpression:
-        case Ast.NodeKind.LogicalExpression:
-        case Ast.NodeKind.RelationalExpression: {
-            const left: Ast.TNode = node.left;
-            const right: Ast.TNode = node.right;
+        case PQP.Ast.NodeKind.IsExpression:
+        case PQP.Ast.NodeKind.AsExpression:
+        case PQP.Ast.NodeKind.ArithmeticExpression:
+        case PQP.Ast.NodeKind.EqualityExpression:
+        case PQP.Ast.NodeKind.LogicalExpression:
+        case PQP.Ast.NodeKind.RelationalExpression: {
+            const left: PQP.Ast.TNode = node.left;
+            const right: PQP.Ast.TNode = node.right;
 
             if (
-                (AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
-                (AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
+                (PQP.AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
+                (PQP.AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
             ) {
                 isMultiline = true;
             }
@@ -107,21 +97,21 @@ function visitNode(state: State, node: Ast.TNode): void {
         }
 
         // TKeyValuePair
-        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
-        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierPairedExpression:
+        case PQP.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+        case PQP.Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case PQP.Ast.NodeKind.IdentifierPairedExpression:
             isMultiline = isAnyMultiline(isMultilineMap, node.key, node.equalConstant, node.value);
             break;
 
         // Possible for a parent to assign an isMultiline override.
-        case Ast.NodeKind.ArrayWrapper:
+        case PQP.Ast.NodeKind.ArrayWrapper:
             isMultiline = isAnyMultiline(isMultilineMap, ...node.elements);
             break;
 
-        case Ast.NodeKind.ListExpression:
-        case Ast.NodeKind.ListLiteral:
-        case Ast.NodeKind.RecordExpression:
-        case Ast.NodeKind.RecordLiteral: {
+        case PQP.Ast.NodeKind.ListExpression:
+        case PQP.Ast.NodeKind.ListLiteral:
+        case PQP.Ast.NodeKind.RecordExpression:
+        case PQP.Ast.NodeKind.RecordLiteral: {
             if (node.content.elements.length > 1) {
                 isMultiline = true;
             } else {
@@ -134,8 +124,8 @@ function visitNode(state: State, node: Ast.TNode): void {
                 if (isAnyChildMultiline) {
                     isMultiline = true;
                 } else {
-                    const csvs: ReadonlyArray<Ast.TCsv> = node.content.elements;
-                    const csvNodes: ReadonlyArray<Ast.TNode> = csvs.map((csv: Ast.TCsv) => csv.node);
+                    const csvs: ReadonlyArray<PQP.Ast.TCsv> = node.content.elements;
+                    const csvNodes: ReadonlyArray<PQP.Ast.TNode> = csvs.map((csv: PQP.Ast.TCsv) => csv.node);
                     isMultiline = isAnyListOrRecord(csvNodes);
                 }
             }
@@ -144,11 +134,11 @@ function visitNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.Csv:
+        case PQP.Ast.NodeKind.Csv:
             isMultiline = isAnyMultiline(isMultilineMap, node.node, node.maybeCommaConstant);
             break;
 
-        case Ast.NodeKind.ErrorHandlingExpression:
+        case PQP.Ast.NodeKind.ErrorHandlingExpression:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.tryConstant,
@@ -157,7 +147,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.FieldProjection:
+        case PQP.Ast.NodeKind.FieldProjection:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.openWrapperConstant,
@@ -167,7 +157,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.FieldSelector:
+        case PQP.Ast.NodeKind.FieldSelector:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.openWrapperConstant,
@@ -177,7 +167,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.FieldSpecification:
+        case PQP.Ast.NodeKind.FieldSpecification:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.maybeOptionalConstant,
@@ -186,9 +176,9 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.FieldSpecificationList: {
-            const fieldArray: Ast.ICsvArray<Ast.FieldSpecification> = node.content;
-            const fields: ReadonlyArray<Ast.ICsv<Ast.FieldSpecification>> = fieldArray.elements;
+        case PQP.Ast.NodeKind.FieldSpecificationList: {
+            const fieldArray: PQP.Ast.ICsvArray<PQP.Ast.FieldSpecification> = node.content;
+            const fields: ReadonlyArray<PQP.Ast.ICsv<PQP.Ast.FieldSpecification>> = fieldArray.elements;
             if (fields.length > 1) {
                 isMultiline = true;
             } else if (fields.length === 1 && node.maybeOpenRecordMarkerConstant) {
@@ -198,26 +188,26 @@ function visitNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.FieldTypeSpecification:
+        case PQP.Ast.NodeKind.FieldTypeSpecification:
             isMultiline = isAnyMultiline(isMultilineMap, node.equalConstant, node.fieldType);
             break;
 
-        case Ast.NodeKind.FunctionExpression:
+        case PQP.Ast.NodeKind.FunctionExpression:
             isMultiline = expectGetIsMultiline(isMultilineMap, node.expression);
             break;
 
-        case Ast.NodeKind.IdentifierExpression: {
+        case PQP.Ast.NodeKind.IdentifierExpression: {
             isMultiline = isAnyMultiline(isMultilineMap, node.maybeInclusiveConstant, node.identifier);
             break;
         }
 
-        case Ast.NodeKind.IfExpression:
+        case PQP.Ast.NodeKind.IfExpression:
             isMultiline = true;
             break;
 
-        case Ast.NodeKind.InvokeExpression: {
-            const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-            const args: ReadonlyArray<Ast.ICsv<Ast.TExpression>> = node.content.elements;
+        case PQP.Ast.NodeKind.InvokeExpression: {
+            const nodeIdMapCollection: PQP.NodeIdMap.Collection = state.nodeIdMapCollection;
+            const args: ReadonlyArray<PQP.Ast.ICsv<PQP.Ast.TExpression>> = node.content.elements;
 
             if (args.length > 1) {
                 const linearLengthMap: LinearLengthMap = state.linearLengthMap;
@@ -228,28 +218,27 @@ function visitNode(state: State, node: Ast.TNode): void {
                     node,
                 );
 
-                const maybeArrayWrapper: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
+                const maybeArrayWrapper: PQP.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
                     node.id,
                 );
-                if (maybeArrayWrapper === undefined || maybeArrayWrapper.kind !== Ast.NodeKind.ArrayWrapper) {
-                    throw new CommonError.InvariantError("InvokeExpression must have ArrayWrapper as a parent");
+                if (maybeArrayWrapper === undefined || maybeArrayWrapper.kind !== PQP.Ast.NodeKind.ArrayWrapper) {
+                    throw new PQP.CommonError.InvariantError("InvokeExpression must have ArrayWrapper as a parent");
                 }
-                const arrayWrapper: Ast.IArrayWrapper<Ast.TNode> = maybeArrayWrapper;
+                const arrayWrapper: PQP.Ast.IArrayWrapper<PQP.Ast.TNode> = maybeArrayWrapper;
 
-                const maybeRecursivePrimaryExpression: Ast.TNode | undefined = NodeIdMapUtils.maybeParentAstNode(
-                    nodeIdMapCollection,
-                    arrayWrapper.id,
-                );
+                const maybeRecursivePrimaryExpression:
+                    | PQP.Ast.TNode
+                    | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, arrayWrapper.id);
                 if (
                     maybeRecursivePrimaryExpression === undefined ||
-                    maybeRecursivePrimaryExpression.kind !== Ast.NodeKind.RecursivePrimaryExpression
+                    maybeRecursivePrimaryExpression.kind !== PQP.Ast.NodeKind.RecursivePrimaryExpression
                 ) {
-                    throw new CommonError.InvariantError(
+                    throw new PQP.CommonError.InvariantError(
                         "ArrayWrapper must have RecursivePrimaryExpression as a parent",
                     );
                 }
-                const recursivePrimaryExpression: Ast.RecursivePrimaryExpression = maybeRecursivePrimaryExpression;
+                const recursivePrimaryExpression: PQP.Ast.RecursivePrimaryExpression = maybeRecursivePrimaryExpression;
 
                 const headLinearLength: number = getLinearLength(
                     state.localizationTemplates,
@@ -262,7 +251,7 @@ function visitNode(state: State, node: Ast.TNode): void {
                 // if it's beyond the threshold check if it's a long literal
                 // ex. `#datetimezone(2013,02,26, 09,15,00, 09,00)`
                 if (compositeLinearLength > InvokeExpressionLinearLengthThreshold) {
-                    const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionName(
+                    const maybeName: string | undefined = PQP.NodeIdMapUtils.maybeInvokeExpressionName(
                         nodeIdMapCollection,
                         node.id,
                     );
@@ -293,7 +282,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             break;
         }
 
-        case Ast.NodeKind.ItemAccessExpression:
+        case PQP.Ast.NodeKind.ItemAccessExpression:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.maybeOptionalConstant,
@@ -303,18 +292,18 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.LetExpression:
+        case PQP.Ast.NodeKind.LetExpression:
             isMultiline = true;
             setIsMultiline(isMultilineMap, node.variableList, true);
             break;
 
-        case Ast.NodeKind.LiteralExpression:
-            if (node.literalKind === Ast.LiteralKind.Text && containsNewline(node.literal)) {
+        case PQP.Ast.NodeKind.LiteralExpression:
+            if (node.literalKind === PQP.Ast.LiteralKind.Text && containsNewline(node.literal)) {
                 isMultiline = true;
             }
             break;
 
-        case Ast.NodeKind.ListType:
+        case PQP.Ast.NodeKind.ListType:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.openWrapperConstant,
@@ -323,11 +312,11 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.MetadataExpression:
+        case PQP.Ast.NodeKind.MetadataExpression:
             isMultiline = isAnyMultiline(isMultilineMap, node.left, node.operatorConstant, node.right);
             break;
 
-        case Ast.NodeKind.ParenthesizedExpression:
+        case PQP.Ast.NodeKind.ParenthesizedExpression:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.openWrapperConstant,
@@ -336,23 +325,23 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.PrimitiveType:
+        case PQP.Ast.NodeKind.PrimitiveType:
             isMultiline = expectGetIsMultiline(isMultilineMap, node.primitiveType);
             break;
 
-        case Ast.NodeKind.RangeExpression:
+        case PQP.Ast.NodeKind.RangeExpression:
             isMultiline = isAnyMultiline(isMultilineMap, node.left, node.rangeConstant, node.right);
             break;
 
-        case Ast.NodeKind.RecordType:
+        case PQP.Ast.NodeKind.RecordType:
             isMultiline = expectGetIsMultiline(isMultilineMap, node.fields);
             break;
 
-        case Ast.NodeKind.RecursivePrimaryExpression:
+        case PQP.Ast.NodeKind.RecursivePrimaryExpression:
             isMultiline = isAnyMultiline(isMultilineMap, node.head, ...node.recursiveExpressions.elements);
             break;
 
-        case Ast.NodeKind.Section:
+        case PQP.Ast.NodeKind.Section:
             if (node.sectionMembers.elements.length) {
                 isMultiline = true;
             } else {
@@ -367,7 +356,7 @@ function visitNode(state: State, node: Ast.TNode): void {
             }
             break;
 
-        case Ast.NodeKind.SectionMember:
+        case PQP.Ast.NodeKind.SectionMember:
             isMultiline = isAnyMultiline(
                 isMultilineMap,
                 node.maybeLiteralAttributes,
@@ -377,49 +366,47 @@ function visitNode(state: State, node: Ast.TNode): void {
             );
             break;
 
-        case Ast.NodeKind.TableType:
+        case PQP.Ast.NodeKind.TableType:
             isMultiline = isAnyMultiline(isMultilineMap, node.tableConstant, node.rowType);
             break;
 
-        case Ast.NodeKind.UnaryExpression:
+        case PQP.Ast.NodeKind.UnaryExpression:
             isMultiline = isAnyMultiline(isMultilineMap, ...node.operators.elements);
             break;
 
         // no-op nodes
-        case Ast.NodeKind.Constant:
-        case Ast.NodeKind.FunctionType:
-        case Ast.NodeKind.GeneralizedIdentifier:
-        case Ast.NodeKind.Identifier:
-        case Ast.NodeKind.NotImplementedExpression:
-        case Ast.NodeKind.Parameter:
-        case Ast.NodeKind.ParameterList:
+        case PQP.Ast.NodeKind.Constant:
+        case PQP.Ast.NodeKind.FunctionType:
+        case PQP.Ast.NodeKind.GeneralizedIdentifier:
+        case PQP.Ast.NodeKind.Identifier:
+        case PQP.Ast.NodeKind.NotImplementedExpression:
+        case PQP.Ast.NodeKind.Parameter:
+        case PQP.Ast.NodeKind.ParameterList:
             break;
 
         default:
-            throw isNever(node);
+            throw PQP.isNever(node);
     }
 
     setIsMultilineWithCommentCheck(state, node, isMultiline);
 }
 
-function isAnyListOrRecord(nodes: ReadonlyArray<Ast.TNode>): boolean {
+function isAnyListOrRecord(nodes: ReadonlyArray<PQP.Ast.TNode>): boolean {
     for (const node of nodes) {
+        // tslint:disable-next-line: switch-default
         switch (node.kind) {
-            case Ast.NodeKind.ListExpression:
-            case Ast.NodeKind.ListLiteral:
-            case Ast.NodeKind.RecordExpression:
-            case Ast.NodeKind.RecordLiteral:
+            case PQP.Ast.NodeKind.ListExpression:
+            case PQP.Ast.NodeKind.ListLiteral:
+            case PQP.Ast.NodeKind.RecordExpression:
+            case PQP.Ast.NodeKind.RecordLiteral:
                 return true;
-
-            default:
-                break;
         }
     }
 
     return false;
 }
 
-function isAnyMultiline(isMultilineMap: IsMultilineMap, ...maybeNodes: (Ast.TNode | undefined)[]): boolean {
+function isAnyMultiline(isMultilineMap: IsMultilineMap, ...maybeNodes: (PQP.Ast.TNode | undefined)[]): boolean {
     for (const maybeNode of maybeNodes) {
         if (maybeNode && expectGetIsMultiline(isMultilineMap, maybeNode)) {
             return true;
@@ -429,7 +416,7 @@ function isAnyMultiline(isMultilineMap: IsMultilineMap, ...maybeNodes: (Ast.TNod
     return false;
 }
 
-function setIsMultilineWithCommentCheck(state: State, node: Ast.TNode, isMultiline: boolean): void {
+function setIsMultilineWithCommentCheck(state: State, node: PQP.Ast.TNode, isMultiline: boolean): void {
     if (precededByMultilineComment(state, node)) {
         isMultiline = true;
     }
@@ -437,7 +424,7 @@ function setIsMultilineWithCommentCheck(state: State, node: Ast.TNode, isMultili
     setIsMultiline(state.result, node, isMultiline);
 }
 
-function precededByMultilineComment(state: State, node: Ast.TNode): boolean {
+function precededByMultilineComment(state: State, node: PQP.Ast.TNode): boolean {
     const maybeCommentCollection: CommentCollection | undefined = state.commentCollectionMap.get(node.id);
     if (maybeCommentCollection) {
         return maybeCommentCollection.prefixedCommentsContainsNewline;
@@ -450,23 +437,23 @@ function containsNewline(text: string): boolean {
     const textLength: number = text.length;
 
     for (let index: number = 0; index < textLength; index += 1) {
-        if (StringUtils.maybeNewlineKindAt(text, index)) {
+        if (PQP.StringUtils.maybeNewlineKindAt(text, index)) {
             return true;
         }
     }
     return false;
 }
 
-function containsLogicalExpression(node: Ast.TBinOpExpression): boolean {
-    if (!AstUtils.isTBinOpExpression(node)) {
+function containsLogicalExpression(node: PQP.Ast.TBinOpExpression): boolean {
+    if (!PQP.AstUtils.isTBinOpExpression(node)) {
         return false;
     }
-    const left: Ast.TNode = node.left;
-    const right: Ast.TNode = node.right;
+    const left: PQP.Ast.TNode = node.left;
+    const right: PQP.Ast.TNode = node.right;
 
     return (
-        node.kind === Ast.NodeKind.LogicalExpression ||
-        (AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
-        (AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
+        node.kind === PQP.Ast.NodeKind.LogicalExpression ||
+        (PQP.AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
+        (PQP.AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
     );
 }
