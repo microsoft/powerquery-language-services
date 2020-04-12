@@ -7,7 +7,7 @@ import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 import { SignatureProviderContext } from "./providers";
 import { LanguageServiceUtils } from ".";
 
-export function getContextForInspected(inspected: PQP.Task.InspectionOk): undefined | SignatureProviderContext {
+export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): undefined | SignatureProviderContext {
     return inspected.maybeInvokeExpression !== undefined
         ? getContextForInvokeExpression(inspected.maybeInvokeExpression)
         : undefined;

@@ -141,7 +141,9 @@ class DocumentAnalysis implements Analysis {
         }
         const inspected: PQP.Task.InspectionOk = triedInspection.value;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(inspected);
+        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
+            inspected,
+        );
         if (maybeContext === undefined) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticSeverity, Position, TextDocument } from "vscode-languageserver-types";
+import { Diagnostic, DiagnosticSeverity, Position, TextDocument, Range } from "vscode-languageserver-types";
 
 import { WorkspaceCache } from ".";
 
@@ -14,16 +14,17 @@ export interface ValidationResult {
 export function validate(document: TextDocument): ValidationResult {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
-    if (triedLexParse.kind !== PQP.ResultKind.Ok) {
-        const lexParseErr: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
-        const innerError: PQP.LexError.TInnerLexError | PQP.ParseError.TInnerParseError = lexParseErr.innerError;
-        if (PQP.ParseError.isTInnerParseError(innerError)) {
-            const maybeDiagnostic: undefined | Diagnostic = maybeParseErrorToDiagnostic(innerError);
+    if (PQP.ResultUtils.isErr(triedLexParse)) {
+        const lexOrParseError: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
+        if (lexOrParseError instanceof PQP.ParseError.ParseError) {
+            const maybeDiagnostic: undefined | Diagnostic = maybeParseErrorToDiagnostic(lexOrParseError);
             if (maybeDiagnostic !== undefined) {
                 diagnostics = [maybeDiagnostic];
             }
-        } else if (PQP.LexError.isTInnerLexError(innerError)) {
-            const maybeLexerErrorDiagnostics: undefined | Diagnostic[] = maybeLexErrorToDiagnostics(innerError);
+        } else if (PQP.LexError.isTInnerLexError(lexOrParseError.innerError)) {
+            const maybeLexerErrorDiagnostics: undefined | Diagnostic[] = maybeLexErrorToDiagnostics(
+                lexOrParseError.innerError,
+            );
             if (maybeLexerErrorDiagnostics !== undefined) {
                 diagnostics = maybeLexerErrorDiagnostics;
             }
@@ -50,7 +51,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
                 };
                 // TODO: "lex" errors aren't that useful to display to end user. Should we make it more generic?
                 diagnostics.push({
-                    message: message,
+                    message,
                     severity: DiagnosticSeverity.Error,
                     range: {
                         start: position,
@@ -63,38 +64,71 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
     return diagnostics.length ? diagnostics : undefined;
 }
 
-function maybeParseErrorToDiagnostic(error: PQP.ParseError.TInnerParseError): undefined | Diagnostic {
+function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): undefined | Diagnostic {
+    const innerError: PQP.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
-    let errorToken: PQP.Token;
+    let maybeErrorToken: undefined | PQP.Token;
     if (
-        (error instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
-            error instanceof PQP.ParseError.ExpectedTokenKindError) &&
-        error.maybeFoundToken !== undefined
+        (innerError instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
+            innerError instanceof PQP.ParseError.ExpectedTokenKindError) &&
+        innerError.maybeFoundToken !== undefined
     ) {
-        errorToken = error.maybeFoundToken.token;
-    } else if (error instanceof PQP.ParseError.InvalidPrimitiveTypeError) {
-        errorToken = error.token;
-    } else if (error instanceof PQP.ParseError.UnterminatedBracketError) {
-        errorToken = error.openBracketToken;
-    } else if (error instanceof PQP.ParseError.UnterminatedParenthesesError) {
-        errorToken = error.openParenthesesToken;
-    } else if (error instanceof PQP.ParseError.UnusedTokensRemainError) {
-        errorToken = error.firstUnusedToken;
+        maybeErrorToken = innerError.maybeFoundToken.token;
+    } else if (innerError instanceof PQP.ParseError.InvalidPrimitiveTypeError) {
+        maybeErrorToken = innerError.token;
+    } else if (innerError instanceof PQP.ParseError.UnterminatedBracketError) {
+        maybeErrorToken = innerError.openBracketToken;
+    } else if (innerError instanceof PQP.ParseError.UnterminatedParenthesesError) {
+        maybeErrorToken = innerError.openParenthesesToken;
+    } else if (innerError instanceof PQP.ParseError.UnusedTokensRemainError) {
+        maybeErrorToken = innerError.firstUnusedToken;
     } else {
-        return undefined;
+        maybeErrorToken = undefined;
     }
-    return {
-        message: message,
-        severity: DiagnosticSeverity.Error,
-        range: {
+
+    let range: Range;
+    if (maybeErrorToken !== undefined) {
+        range = {
             start: {
-                line: errorToken.positionStart.lineNumber,
-                character: errorToken.positionStart.lineCodeUnit,
+                line: maybeErrorToken.positionStart.lineNumber,
+                character: maybeErrorToken.positionStart.lineCodeUnit,
             },
             end: {
-                line: errorToken.positionEnd.lineNumber,
-                character: errorToken.positionEnd.lineCodeUnit,
+                line: maybeErrorToken.positionEnd.lineNumber,
+                character: maybeErrorToken.positionEnd.lineCodeUnit,
             },
-        },
+        };
+    } else {
+        const parseContextState: PQP.ParseContext.State = error.state.contextState;
+        const maybeRoot: undefined | PQP.ParseContext.Node = parseContextState.root.maybeNode;
+        if (maybeRoot === undefined) {
+            return undefined;
+        }
+
+        const maybeLeaf: undefined | PQP.Ast.TNode = PQP.NodeIdMapUtils.maybeRightMostLeaf(
+            error.state.contextState.nodeIdMapCollection,
+            maybeRoot.id,
+        );
+        if (maybeLeaf === undefined) {
+            return undefined;
+        }
+        const leafTokenRange: PQP.TokenRange = maybeLeaf.tokenRange;
+
+        range = {
+            start: {
+                line: leafTokenRange.positionStart.lineNumber,
+                character: leafTokenRange.positionStart.lineCodeUnit,
+            },
+            end: {
+                line: leafTokenRange.positionEnd.lineNumber,
+                character: leafTokenRange.positionEnd.lineCodeUnit,
+            },
+        };
+    }
+
+    return {
+        message,
+        severity: DiagnosticSeverity.Error,
+        range,
     };
 }

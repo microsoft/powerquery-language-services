@@ -65,7 +65,7 @@ describe("Completion Items (Simple provider)", () => {
         ]);
     });
 
-    it("WIP keywords still work with library and environment", async () => {
+    it("keywords still work with library and environment", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|", {
             librarySymbolProvider: LibraryProvider,
             environmentSymbolProvider: LibraryProvider,

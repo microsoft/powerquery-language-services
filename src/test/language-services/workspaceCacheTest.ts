@@ -11,17 +11,17 @@ import * as Utils from "./utils";
 
 describe("workspaceCache", () => {
     it("getLexerState", () => {
-        const document: TextDocument = Utils.createDocument("let\n   b = 1\n   in b");
+        const document: TextDocument = Utils.documentFromText("let\n   b = 1\n   in b");
         const state: PQP.Lexer.State = WorkspaceCache.getLexerState(document);
         assert.isDefined(state);
         expect(state.lines.length).to.equal(3);
     });
 
     it("getTriedLexerSnapshot", () => {
-        const document: TextDocument = Utils.createDocument("let a = 1 in a");
+        const document: TextDocument = Utils.documentFromText("let a = 1 in a");
         const triedSnapshot: PQP.TriedLexerSnapshot = WorkspaceCache.getTriedLexerSnapshot(document);
         assert.isDefined(triedSnapshot);
-        if (triedSnapshot.kind === PQP.ResultKind.Ok) {
+        if (PQP.ResultUtils.isOk(triedSnapshot)) {
             const snapshot: PQP.LexerSnapshot = triedSnapshot.value;
             expect(snapshot.tokens.length).to.equal(6);
         } else {
@@ -30,10 +30,10 @@ describe("workspaceCache", () => {
     });
 
     it("getTriedLexParse", () => {
-        const document: TextDocument = Utils.createDocument("let c = 1 in c");
+        const document: TextDocument = Utils.documentFromText("let c = 1 in c");
         const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
         assert.isDefined(triedLexParse);
-        if (triedLexParse.kind === PQP.ResultKind.Ok) {
+        if (PQP.ResultUtils.isOk(triedLexParse)) {
             const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
             assert.isDefined(lexParseOk.ast);
         } else {
@@ -42,14 +42,14 @@ describe("workspaceCache", () => {
     });
 
     it("getTriedLexParse with error", () => {
-        const document: TextDocument = Utils.createDocument("let c = 1, in c");
+        const document: TextDocument = Utils.documentFromText("let c = 1, in c");
         const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
         assert.isDefined(triedLexParse);
         expect(triedLexParse.kind).to.equal(PQP.ResultKind.Err);
     });
 
     it("getInspection", () => {
-        const [document, postion] = Utils.createDocumentWithMarker("let c = 1 in |c");
+        const [document, postion] = Utils.documentAndPositionFrom("let c = 1 in |c");
         const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
             document,
             postion,
@@ -62,7 +62,7 @@ describe("workspaceCache", () => {
     });
 
     it("getInspection with parser error", () => {
-        const [document, postion] = Utils.createDocumentWithMarker("let c = 1, in |");
+        const [document, postion] = Utils.documentAndPositionFrom("let c = 1, in |");
         const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
             document,
             postion,
@@ -77,7 +77,7 @@ describe("workspaceCache", () => {
 
 describe("top level workspace functions", () => {
     it("document operations", () => {
-        const document: TextDocument = Utils.createDocument("let c = 1 in c");
+        const document: TextDocument = Utils.documentFromText("let c = 1 in c");
         documentUpdated(document);
         documentUpdated(document);
         documentClosed(document);

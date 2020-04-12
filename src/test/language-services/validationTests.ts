@@ -11,14 +11,14 @@ import * as Utils from "./utils";
 // TODO: more test cases
 describe("validation", () => {
     it("no errors", () => {
-        const document: TextDocument = Utils.createDocument("let\n   b = 1\n   in b");
+        const document: TextDocument = Utils.documentFromText("let b = 1 in b");
         const validationResult: ValidationResult = validate(document);
         expect(validationResult.hasErrors).to.equal(false, "validation result is not expected to have errors.");
         expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
     });
 
     it("single line query with error", () => {
-        const document: TextDocument = Utils.createDocument("let 1");
+        const document: TextDocument = Utils.documentFromText("let 1");
         const validationResult: ValidationResult = validate(document);
         expect(validationResult.hasErrors).to.equal(true, "validation result is expected to have errors");
         expect(validationResult.diagnostics.length).to.equal(1);
@@ -27,8 +27,8 @@ describe("validation", () => {
 });
 
 describe("validation with workspace cache", () => {
-    it("WIP no errors after update", () => {
-        const document: Utils.MockDocument = Utils.createDocument("let a = 1,");
+    it("no errors after update", () => {
+        const document: Utils.MockDocument = Utils.documentFromText("let a = 1,");
         let validationResult: ValidationResult = validate(document);
         expect(validationResult.hasErrors).to.equal(true, "validation result is expected to have errors");
 
@@ -40,7 +40,7 @@ describe("validation with workspace cache", () => {
     });
 
     it("errors after update", () => {
-        const document: Utils.MockDocument = Utils.createDocument("let a = 1 in a");
+        const document: Utils.MockDocument = Utils.documentFromText("let a = 1 in a");
         let validationResult: ValidationResult = validate(document);
         expect(validationResult.hasErrors).to.equal(false, "validation result is not expected to have errors.");
 

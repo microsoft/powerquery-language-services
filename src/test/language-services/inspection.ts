@@ -6,8 +6,9 @@ import { assert, expect } from "chai";
 import "mocha";
 
 import { SignatureProviderContext } from "../../language-services";
-import { InspectionUtils, WorkspaceCache } from "../../language-services";
+import { InspectionUtils } from "../../language-services";
 import * as Utils from "./utils";
+import { Position } from "vscode-languageserver-types";
 
 // tslint:disable: no-unnecessary-type-assertion
 
@@ -19,8 +20,11 @@ function expectScope(inspected: PQP.Task.InspectionOk, expected: string[]): void
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
-            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d|,");
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
+            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+                "Date.AddDays(d|,",
+            );
+            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
             assert.isDefined(maybeContext);
@@ -31,8 +35,11 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,|", () => {
-            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d,|");
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
+            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+                "Date.AddDays(d,|",
+            );
+            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
             assert.isDefined(maybeContext);
@@ -43,8 +50,11 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,1|", () => {
-            const inspected: PQP.Task.InspectionOk = Utils.getInspection("Date.AddDays(d,1|");
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getContextForInspected(
+            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+                "Date.AddDays(d,1|",
+            );
+            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
             assert.isDefined(maybeContext);
@@ -56,51 +66,39 @@ describe("InspectedInvokeExpression", () => {
 
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
-                const document: Utils.MockDocument = Utils.createDocumentFromFile("DirectQueryForSQL.pq");
-                const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
-                    document,
-                    {
-                        line: 68,
-                        character: 23,
-                    },
+                const document: Utils.MockDocument = Utils.documentFromFile("DirectQueryForSQL.pq");
+                const position: Position = {
+                    line: 68,
+                    character: 23,
+                };
+                const inspectionOk: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+
+                expectScope(inspectionOk, [
+                    "ConnectionString",
+                    "Credential",
+                    "CredentialConnectionString",
+                    "DirectSQL",
+                    "DirectSQL.Icons",
+                    "DirectSQL.UI",
+                    "OdbcDataSource",
+                    "database",
+                    "server",
+                ]);
+
+                assert.isDefined(
+                    inspectionOk.maybeActiveNode?.maybeIdentifierUnderPosition,
+                    "position identifier should be defined",
                 );
 
-                if (triedInspect === undefined) {
-                    throw new Error("triedInspect should not be undefined");
-                }
+                expect(inspectionOk.maybeActiveNode?.maybeIdentifierUnderPosition?.kind).equals(
+                    PQP.Ast.NodeKind.Identifier,
+                    "expecting identifier",
+                );
 
-                expect(triedInspect.kind).equals(PQP.ResultKind.Ok);
-
-                if (triedInspect && triedInspect.kind === PQP.ResultKind.Ok) {
-                    const inspected: PQP.Task.InspectionOk = triedInspect.value;
-
-                    expectScope(inspected, [
-                        "ConnectionString",
-                        "Credential",
-                        "CredentialConnectionString",
-                        "DirectSQL",
-                        "DirectSQL.Icons",
-                        "DirectSQL.UI",
-                        "OdbcDataSource",
-                        "database",
-                        "server",
-                    ]);
-
-                    assert.isDefined(
-                        inspected.maybeActiveNode?.maybeIdentifierUnderPosition,
-                        "position identifier should be defined",
-                    );
-
-                    expect(inspected.maybeActiveNode?.maybeIdentifierUnderPosition?.kind).equals(
-                        PQP.Ast.NodeKind.Identifier,
-                        "expecting identifier",
-                    );
-
-                    const identifier: PQP.Ast.GeneralizedIdentifier | PQP.Ast.Identifier = inspected.maybeActiveNode!
-                        .maybeIdentifierUnderPosition!;
-                    expect(identifier.literal).equals("OdbcDataSource");
-                    expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
-                }
+                const identifier: PQP.Ast.GeneralizedIdentifier | PQP.Ast.Identifier = inspectionOk.maybeActiveNode!
+                    .maybeIdentifierUnderPosition!;
+                expect(identifier.literal).equals("OdbcDataSource");
+                expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });
         });
     });

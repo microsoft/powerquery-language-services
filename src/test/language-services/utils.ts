@@ -105,11 +105,11 @@ export const errorAnalysisOptions: AnalysisOptions = {
     librarySymbolProvider: new ErrorLibraryProvider(),
 };
 
-export function createDocument(text: string): MockDocument {
+export function documentFromText(text: string): MockDocument {
     return new MockDocument(text, "powerquery");
 }
 
-export function createDocumentFromFile(fileName: string): MockDocument {
+export function documentFromFile(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
 }
 
@@ -119,27 +119,26 @@ export function readFile(fileName: string): string {
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
-export function createDocumentWithMarker(text: string): [MockDocument, Position] {
+export function documentAndPositionFrom(text: string): [MockDocument, Position] {
     validateTextWithMarker(text);
-    const document: MockDocument = createDocument(text.replace("|", ""));
+    const document: MockDocument = documentFromText(text.replace("|", ""));
     const position: Position = document.positionAt(text.indexOf("|"));
 
     return [document, position];
 }
 
-export function getInspection(text: string): PQP.Task.InspectionOk {
-    const [document, position] = createDocumentWithMarker(text);
-    const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(document, position);
-
-    assert.isDefined(triedInspect);
-    // tslint:disable-next-line: no-unnecessary-type-assertion
-    expect(triedInspect!.kind).equals(PQP.ResultKind.Ok);
-
-    if (triedInspect && triedInspect.kind === PQP.ResultKind.Ok) {
-        return triedInspect.value;
+export function expectInspectionOk(document: MockDocument, position: Position): PQP.Task.InspectionOk {
+    const maybeTriedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
+        document,
+        position,
+    );
+    if (maybeTriedInspect === undefined) {
+        throw new Error(`maybeTriedInspect is expected to be defined`);
+    } else if (PQP.ResultUtils.isErr(maybeTriedInspect)) {
+        throw new Error(`maybeTriedInspect is expected to be Ok`);
+    } else {
+        return maybeTriedInspect.value;
     }
-
-    throw new Error("unexpected");
 }
 
 export async function getCompletionItems(text: string, analysisOptions?: AnalysisOptions): Promise<CompletionItem[]> {
@@ -332,12 +331,12 @@ export function dumpNodeToTraceFile(node: PQP.Ast.INode, filePath: string): void
 const DefaultAnalysisOptions: AnalysisOptions = {};
 
 function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
-    const [document, position]: [MockDocument, Position] = createDocumentWithMarker(text);
+    const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
-    const document: MockDocument = createDocument(readFile(fileName));
+    const document: MockDocument = documentFromText(readFile(fileName));
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 

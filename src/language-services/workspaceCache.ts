@@ -103,25 +103,22 @@ function createTriedLexerSnapshot(textDocument: TextDocument): PQP.TriedLexerSna
 
 function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse {
     const triedLexerSnapshot: PQP.TriedLexerSnapshot = getTriedLexerSnapshot(textDocument);
-    if (triedLexerSnapshot.kind === PQP.ResultKind.Err) {
+    if (PQP.ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
     const lexerSnapshot: PQP.LexerSnapshot = triedLexerSnapshot.value;
 
     // TODO (Localization): update settings based on locale
     const triedParse: PQP.TriedParse = PQP.Task.tryParse(PQP.DefaultSettings, lexerSnapshot);
-    if (triedParse.kind === PQP.ResultKind.Err) {
+    if (PQP.ResultUtils.isErr(triedParse)) {
         return triedParse;
     }
     const parseOk: PQP.ParseOk = triedParse.value;
 
-    return {
-        kind: PQP.ResultKind.Ok,
-        value: {
-            ...parseOk,
-            lexerSnapshot,
-        },
-    };
+    return PQP.ResultUtils.okFactory({
+        ...parseOk,
+        lexerSnapshot,
+    });
 }
 
 // We're allowed to return undefined because if a document wasn't parsed

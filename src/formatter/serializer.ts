@@ -1,16 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Ast,
-    CommonError,
-    isNever,
-    NodeIdMap,
-    Result,
-    ResultKind,
-    CommonSettings,
-    NodeIdMapIterator,
-} from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 import { CommentCollectionMap } from "./passes/comment";
 import {
     getSerializerWriteKind,
@@ -30,10 +21,12 @@ export const enum NewlineLiteral {
     Windows = "\r\n",
 }
 
+export type TriedSerialize = PQP.Result<string, PQP.CommonError.CommonError>;
+
 export class Serializer {
     constructor(
-        private readonly document: Ast.TDocument,
-        private readonly nodeIdMapCollection: NodeIdMap.Collection,
+        private readonly document: PQP.Ast.TDocument,
+        private readonly nodeIdMapCollection: PQP.NodeIdMap.Collection,
         private readonly passthroughMaps: SerializerPassthroughMaps,
         private readonly indentationLiteral: IndentationLiteral,
         private readonly newlineLiteral: NewlineLiteral,
@@ -47,7 +40,7 @@ export class Serializer {
         this.expandIndentationCache(10);
     }
 
-    public static run(settings: SerializerSettings): Result<string, CommonError.CommonError> {
+    public static run(settings: SerializerSettings): TriedSerialize {
         const serializer: Serializer = new Serializer(
             settings.document,
             settings.nodeIdMapCollection,
@@ -56,17 +49,7 @@ export class Serializer {
             settings.newlineLiteral,
         );
 
-        try {
-            return {
-                kind: ResultKind.Ok,
-                value: serializer.run(),
-            };
-        } catch (err) {
-            return {
-                kind: ResultKind.Err,
-                error: CommonError.ensureCommonError(settings.localizationTemplates, err),
-            };
-        }
+        return PQP.ResultUtils.ensureResult(settings.localizationTemplates, () => serializer.run());
     }
 
     private run(): string {
@@ -108,7 +91,7 @@ export class Serializer {
                 break;
 
             default:
-                throw isNever(serializerWriteKind);
+                throw PQP.isNever(serializerWriteKind);
         }
     }
 
@@ -135,7 +118,7 @@ export class Serializer {
         }
     }
 
-    private visitNode(node: Ast.TNode): void {
+    private visitNode(node: PQP.Ast.TNode): void {
         const nodeId: number = node.id;
         const maybeIndentationChange:
             | IndentationChange
@@ -154,7 +137,7 @@ export class Serializer {
         }
 
         switch (node.kind) {
-            case Ast.NodeKind.Constant: {
+            case PQP.Ast.NodeKind.Constant: {
                 const writeKind: SerializerWriteKind = getSerializerWriteKind(
                     node,
                     this.passthroughMaps.serializerParameterMap,
@@ -163,8 +146,8 @@ export class Serializer {
                 break;
             }
 
-            case Ast.NodeKind.GeneralizedIdentifier:
-            case Ast.NodeKind.Identifier: {
+            case PQP.Ast.NodeKind.GeneralizedIdentifier:
+            case PQP.Ast.NodeKind.Identifier: {
                 const writeKind: SerializerWriteKind = getSerializerWriteKind(
                     node,
                     this.passthroughMaps.serializerParameterMap,
@@ -173,7 +156,7 @@ export class Serializer {
                 break;
             }
 
-            case Ast.NodeKind.LiteralExpression: {
+            case PQP.Ast.NodeKind.LiteralExpression: {
                 const writeKind: SerializerWriteKind = getSerializerWriteKind(
                     node,
                     this.passthroughMaps.serializerParameterMap,
@@ -183,19 +166,18 @@ export class Serializer {
             }
 
             default:
-                const maybeChildren: ReadonlyArray<Ast.TNode> | undefined = NodeIdMapIterator.maybeAstChildren(
+                const maybeChildren: ReadonlyArray<PQP.Ast.TNode> | undefined = PQP.NodeIdMapIterator.maybeAstChildren(
                     this.nodeIdMapCollection,
                     node.id,
                 );
                 if (maybeChildren === undefined) {
                     break;
                 }
-                const children: ReadonlyArray<Ast.TNode> = maybeChildren;
+                const children: ReadonlyArray<PQP.Ast.TNode> = maybeChildren;
 
                 for (const child of children) {
                     this.visitNode(child);
                 }
-                break;
         }
 
         if (maybeIndentationChange) {
@@ -228,9 +210,9 @@ export class Serializer {
     }
 }
 
-export interface SerializerSettings extends CommonSettings {
-    readonly document: Ast.TDocument;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
+export interface SerializerSettings extends PQP.CommonSettings {
+    readonly document: PQP.Ast.TDocument;
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
     readonly maps: SerializerPassthroughMaps;
     readonly indentationLiteral: IndentationLiteral;
     readonly newlineLiteral: NewlineLiteral;
