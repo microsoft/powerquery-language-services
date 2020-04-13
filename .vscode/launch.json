@@ -1,0 +1,42 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Formatter",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "--debug",
+                "--colors",
+                "--timeout",
+                "999999",
+                "-r",
+                "ts-node/register",
+                "${workspaceFolder}/src/test/formatter/**/*.ts"
+            ],
+            "preLaunchTask": "build",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Language Services",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "--debug",
+                "--colors",
+                "--timeout",
+                "999999",
+                "-r",
+                "ts-node/register",
+                "${workspaceFolder}/src/test/language-services/**/*.ts"
+            ],
+            "preLaunchTask": "build",
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ]
+}
