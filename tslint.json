@@ -121,7 +121,7 @@
         "no-reserved-keywords": false,
         "no-suspicious-comment": false,
         "no-use-before-declare": false,
-        "ordered-imports": false,
+        "ordered-imports": true,
         "prefer-for-of": false,
         "prefer-type-cast": false,
         "prefer-method-signature": false,

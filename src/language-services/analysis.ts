@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, Hover, Position, Range, SignatureHelp, TextDocument } from "vscode-languageserver-types";
 
+import { InspectionUtils, LanguageServiceUtils, WorkspaceCache } from ".";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import { KeywordProvider } from "./keywordProvider";
 import {
@@ -14,7 +15,6 @@ import {
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
-import { LanguageServiceUtils, InspectionUtils, WorkspaceCache } from ".";
 
 export interface Analysis {
     getCompletionItems(): Promise<CompletionItem[]>;
