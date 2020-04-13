@@ -1,64 +1,12 @@
 {
     "name": "powerquery-language-services",
     "version": "0.0.12",
-    "engines": {
-        "vscode": "^1.40.0"
-    },
     "categories": [
         "Other",
         "Programming Languages"
     ],
-    "activationEvents": [
-        "onLanguage:powerquery"
-    ],
     "publisher": "powerquery",
-    "main": "./client/dist/extension",
-    "contributes": {
-        "configuration": {
-            "type": "object",
-            "title": "Power Query configuration",
-            "properties": {
-                "powerquery.trace.server": {
-                    "scope": "window",
-                    "type": "string",
-                    "enum": [
-                        "off",
-                        "messages",
-                        "verbose"
-                    ],
-                    "default": "off",
-                    "description": "Traces the communication between VS Code and the language server."
-                }
-            }
-        },
-        "languages": [
-            {
-                "id": "powerquery",
-                "aliases": [
-                    "Power Query Formula Language",
-                    "Power Query/M",
-                    "Power Query",
-                    "powerquery",
-                    "pq",
-                    "M"
-                ],
-                "extensions": [
-                    ".pq",
-                    ".pqm",
-                    ".m",
-                    ".mout"
-                ],
-                "configuration": "./language-configuration.json"
-            }
-        ],
-        "grammars": [
-            {
-                "language": "powerquery",
-                "scopeName": "source.powerquery",
-                "path": "./syntaxes/powerquery.tmLanguage.json"
-            }
-        ]
-    },
+    "main": "index.js",
     "scripts": {
         "setup": "cd packages/powerquery-format && npm install && lerna bootstrap",
         "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different .\\**\\src\\**\\*.ts",
@@ -71,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/microsoft/vscode-powerquery.git"
+        "url": "git+https://github.com/microsoft/powerquery-language-services.git"
     },
     "license": "MIT",
     "devDependencies": {
