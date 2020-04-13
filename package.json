@@ -6,7 +6,8 @@
         "Programming Languages"
     ],
     "publisher": "powerquery",
-    "main": "index.js",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "scripts": {
         "setup": "cd packages/powerquery-format && npm install && lerna bootstrap",
         "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different .\\**\\src\\**\\*.ts",
