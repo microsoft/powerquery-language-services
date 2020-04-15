@@ -1,5 +1,7 @@
 # powerquery-language-services
 
+[![Build Status](https://dev.azure.com/ms/powerquery-language-services/_apis/build/status/Microsoft.powerquery-language-services?branchName=master)](https://dev.azure.com/ms/powerquery-language-services/_build/latest?definitionId=343&branchName=master)
+
 This project contains base functionality for implementing a language service for the Power Query / M language.
 
 ## Build and test
