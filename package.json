@@ -1,10 +1,9 @@
 {
-    "name": "powerquery-language-services",
+    "name": "@microsoft/powerquery-language-services",
     "version": "0.0.12",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "setup": "cd packages/powerquery-format && npm install && lerna bootstrap",
         "check": "node_modules\\.bin\\prettier --config \".prettierrc\" --list-different .\\**\\src\\**\\*.ts && .\\node_modules\\.bin\\tslint './src/**/*[^d].ts",
         "prepublishOnly": "git clean -xdf && npm install && npm run check && npm run build && npm run test",
         "build": ".\\node_modules\\.bin\\tsc",
@@ -21,7 +20,7 @@
     "issues": {
         "url": "https://github.com/microsoft/powerquery-language-services/issues"
     },
-    "description": "Language services for for the Power Query/M formula language.",
+    "description": "Language services for the Power Query/M formula language.",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "keywords": [
@@ -47,6 +46,6 @@
     },
     "dependencies": {
         "@microsoft/powerquery-parser": "0.1.47",
-        "vscode-languageserver-types": "^3.15.1"
+        "vscode-languageserver-types": "3.15.1"
     }
 }
