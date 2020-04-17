@@ -323,7 +323,7 @@ export const emptySignatureHelp: SignatureHelp = {
     activeSignature: 0,
 };
 
-export function dumpNodeToTraceFile(node: PQP.Ast.INode, filePath: string): void {
+export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: string): void {
     const asJson: string = JSON.stringify(node);
     File.writeFileSync(filePath, asJson);
 }

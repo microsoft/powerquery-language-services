@@ -10,9 +10,9 @@ import { SerializerParameterMap, tryTraverse as tryTraverseSerializerParameter }
 import {
     IndentationLiteral,
     NewlineLiteral,
-    Serializer,
     SerializerPassthroughMaps,
     SerializerSettings,
+    trySerialize,
 } from "./serializer";
 
 export type TriedFormat = PQP.Result<string, FormatError.TFormatError>;
@@ -29,8 +29,8 @@ export function tryFormat(formatSettings: FormatSettings, text: string): TriedFo
     }
 
     const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
-    const ast: PQP.Ast.TDocument = lexParseOk.ast;
-    const comments: ReadonlyArray<PQP.TComment> = lexParseOk.lexerSnapshot.comments;
+    const ast: PQP.Language.Ast.TDocument = lexParseOk.ast;
+    const comments: ReadonlyArray<PQP.Language.TComment> = lexParseOk.lexerSnapshot.comments;
     const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.nodeIdMapCollection;
     const localizationTemplates: PQP.ILocalizationTemplates = formatSettings.localizationTemplates;
 
@@ -80,10 +80,10 @@ export function tryFormat(formatSettings: FormatSettings, text: string): TriedFo
         localizationTemplates,
         document: lexParseOk.ast,
         nodeIdMapCollection,
-        maps,
+        passthroughMaps: maps,
         indentationLiteral: formatSettings.indentationLiteral,
         newlineLiteral: formatSettings.newlineLiteral,
     };
 
-    return Serializer.run(serializeRequest);
+    return trySerialize(serializeRequest);
 }

@@ -9,18 +9,18 @@ import { CompletionItemProvider, CompletionItemProviderContext } from "./provide
 export class KeywordProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
-    private static readonly ExcludedKeywords: ReadonlyArray<PQP.KeywordKind> = [
-        PQP.KeywordKind.HashBinary,
-        PQP.KeywordKind.HashDate,
-        PQP.KeywordKind.HashDateTime,
-        PQP.KeywordKind.HashDateTimeZone,
-        PQP.KeywordKind.HashDuration,
-        PQP.KeywordKind.HashInfinity,
-        PQP.KeywordKind.HashNan,
-        PQP.KeywordKind.HashSections,
-        PQP.KeywordKind.HashShared,
-        PQP.KeywordKind.HashTable,
-        PQP.KeywordKind.HashTime,
+    private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.KeywordKind> = [
+        PQP.Language.KeywordKind.HashBinary,
+        PQP.Language.KeywordKind.HashDate,
+        PQP.Language.KeywordKind.HashDateTime,
+        PQP.Language.KeywordKind.HashDateTimeZone,
+        PQP.Language.KeywordKind.HashDuration,
+        PQP.Language.KeywordKind.HashInfinity,
+        PQP.Language.KeywordKind.HashNan,
+        PQP.Language.KeywordKind.HashSections,
+        PQP.Language.KeywordKind.HashShared,
+        PQP.Language.KeywordKind.HashTable,
+        PQP.Language.KeywordKind.HashTime,
     ];
 
     constructor(private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection) {}
@@ -32,8 +32,8 @@ export class KeywordProvider implements CompletionItemProvider {
         const inspectionOk: PQP.Task.InspectionOk = this.maybeTriedInspection.value;
 
         return inspectionOk.autocomplete
-            .filter((keyword: PQP.KeywordKind) => KeywordProvider.ExcludedKeywords.indexOf(keyword) === -1)
-            .map((keyword: PQP.KeywordKind) => {
+            .filter((keyword: PQP.Language.KeywordKind) => KeywordProvider.ExcludedKeywords.indexOf(keyword) === -1)
+            .map((keyword: PQP.Language.KeywordKind) => {
                 return {
                     kind: CompletionItemKind.Keyword,
                     label: keyword,

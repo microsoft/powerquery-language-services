@@ -58,7 +58,7 @@ class DocumentAnalysis implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: undefined | PQP.LineToken = maybeTokenAt(this.document, this.position);
+        const maybeToken: undefined | PQP.Language.LineToken = maybeTokenAt(this.document, this.position);
         if (maybeToken !== undefined) {
             context = {
                 range: getTokenRangeForPosition(maybeToken, this.position),
@@ -107,7 +107,7 @@ class DocumentAnalysis implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.LineToken | undefined = maybeIdentifierAt(this.document, this.position);
+        const identifierToken: PQP.Language.LineToken | undefined = maybeIdentifierAt(this.document, this.position);
         if (identifierToken) {
             const context: HoverProviderContext = {
                 range: getTokenRangeForPosition(identifierToken, this.position),
@@ -167,7 +167,7 @@ class DocumentAnalysis implements Analysis {
     }
 }
 
-function getTokenRangeForPosition(token: PQP.LineToken, cursorPosition: Position): Range {
+function getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
     return {
         start: {
             line: cursorPosition.line,
@@ -180,11 +180,11 @@ function getTokenRangeForPosition(token: PQP.LineToken, cursorPosition: Position
     };
 }
 
-function maybeIdentifierAt(document: TextDocument, position: Position): undefined | PQP.LineToken {
-    const maybeToken: undefined | PQP.LineToken = maybeTokenAt(document, position);
+function maybeIdentifierAt(document: TextDocument, position: Position): undefined | PQP.Language.LineToken {
+    const maybeToken: undefined | PQP.Language.LineToken = maybeTokenAt(document, position);
     if (maybeToken) {
-        const token: PQP.LineToken = maybeToken;
-        if (token.kind === PQP.LineTokenKind.Identifier) {
+        const token: PQP.Language.LineToken = maybeToken;
+        if (token.kind === PQP.Language.LineTokenKind.Identifier) {
             return token;
         }
     }
@@ -192,21 +192,24 @@ function maybeIdentifierAt(document: TextDocument, position: Position): undefine
     return undefined;
 }
 
-function maybeLineTokensAt(document: TextDocument, position: Position): undefined | ReadonlyArray<PQP.LineToken> {
+function maybeLineTokensAt(
+    document: TextDocument,
+    position: Position,
+): undefined | ReadonlyArray<PQP.Language.LineToken> {
     const lexResult: PQP.Lexer.State = WorkspaceCache.getLexerState(document);
     const maybeLine: undefined | PQP.Lexer.TLine = lexResult.lines[position.line];
 
     return maybeLine !== undefined ? maybeLine.tokens : undefined;
 }
 
-function maybeTokenAt(document: TextDocument, position: Position): undefined | PQP.LineToken {
-    const maybeLineTokens: undefined | ReadonlyArray<PQP.LineToken> = maybeLineTokensAt(document, position);
+function maybeTokenAt(document: TextDocument, position: Position): undefined | PQP.Language.LineToken {
+    const maybeLineTokens: undefined | ReadonlyArray<PQP.Language.LineToken> = maybeLineTokensAt(document, position);
 
     if (maybeLineTokens === undefined) {
         return undefined;
     }
 
-    const lineTokens: ReadonlyArray<PQP.LineToken> = maybeLineTokens;
+    const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLineTokens;
 
     for (const token of lineTokens) {
         if (token.positionStart <= position.character && token.positionEnd >= position.character) {
@@ -226,7 +229,7 @@ function maybeTokenAt(document: TextDocument, position: Position): undefined | P
     if (document.getText(currentRange) === ".") {
         for (const token of lineTokens) {
             if (token.positionStart <= position.character - 1 && token.positionEnd >= position.character - 1) {
-                if (token.kind === PQP.LineTokenKind.Identifier) {
+                if (token.kind === PQP.Language.LineTokenKind.Identifier) {
                     // Use this token with an adjusted position
                     return {
                         data: `${token.data}.`,

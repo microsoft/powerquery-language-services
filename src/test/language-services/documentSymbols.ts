@@ -30,13 +30,13 @@ function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[])
     return expectedSymbols;
 }
 
-function expectSymbols(document: PQP.Ast.TDocument, expectedSymbols: ExpectedDocumentSymbol[]): void {
+function expectSymbols(document: PQP.Language.Ast.TDocument, expectedSymbols: ExpectedDocumentSymbol[]): void {
     let actualSymbols: ExpectedDocumentSymbol[];
 
-    if (document.kind === PQP.Ast.NodeKind.Section) {
+    if (document.kind === PQP.Language.Ast.NodeKind.Section) {
         const result: DocumentSymbol[] = InspectionUtils.getSymbolsForSection(document);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
-    } else if (document.kind === PQP.Ast.NodeKind.LetExpression) {
+    } else if (document.kind === PQP.Language.Ast.NodeKind.LetExpression) {
         const result: DocumentSymbol[] = InspectionUtils.getSymbolsForLetExpression(document);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
     } else {
@@ -53,7 +53,7 @@ describe("Document symbols", () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1; b = "abc"; c = true;`);
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
-        expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
+        expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
         expectSymbols(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
@@ -66,7 +66,7 @@ describe("Document symbols", () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; a = {1,2};`);
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
-        expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
+        expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
         expectSymbols(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
     });
@@ -75,7 +75,7 @@ describe("Document symbols", () => {
         const document: Utils.MockDocument = Utils.documentFromText(`let a = 1, b = 2, c = 3 in c`);
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
-        expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.LetExpression);
+        expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.LetExpression);
 
         expectSymbols(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
@@ -88,7 +88,7 @@ describe("Document symbols", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("HelloWorldWithDocs.pq");
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
-        expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
+        expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
         expectSymbols(lexAndParseOk.ast, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
@@ -103,7 +103,7 @@ describe("Document symbols", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("DirectQueryForSQL.pq");
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
-        expect(lexAndParseOk.ast.kind).to.equal(PQP.Ast.NodeKind.Section);
+        expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
         expectSymbols(lexAndParseOk.ast, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },

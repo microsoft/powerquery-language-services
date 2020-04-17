@@ -74,7 +74,7 @@ export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): Completi
     }
 }
 
-export function tokenPositionToPosition(tokenPosition: PQP.TokenPosition): Position {
+export function tokenPositionToPosition(tokenPosition: PQP.Language.TokenPosition): Position {
     return {
         line: tokenPosition.lineNumber,
         character: tokenPosition.lineCodeUnit,
@@ -82,8 +82,8 @@ export function tokenPositionToPosition(tokenPosition: PQP.TokenPosition): Posit
 }
 
 export function tokenPositionToRange(
-    startTokenPosition: PQP.TokenPosition | undefined,
-    endTokenPosition: PQP.TokenPosition | undefined,
+    startTokenPosition: PQP.Language.TokenPosition | undefined,
+    endTokenPosition: PQP.Language.TokenPosition | undefined,
 ): Range | undefined {
     if (startTokenPosition && endTokenPosition) {
         return {
@@ -95,6 +95,6 @@ export function tokenPositionToRange(
     return undefined;
 }
 
-export function tokenRangeToRange(tokenRange: PQP.TokenRange): Range {
+export function tokenRangeToRange(tokenRange: PQP.Language.TokenRange): Range {
     return tokenPositionToRange(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
