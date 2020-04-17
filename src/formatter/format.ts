@@ -10,9 +10,9 @@ import { SerializerParameterMap, tryTraverse as tryTraverseSerializerParameter }
 import {
     IndentationLiteral,
     NewlineLiteral,
-    Serializer,
     SerializerPassthroughMaps,
     SerializerSettings,
+    trySerialize,
 } from "./serializer";
 
 export type TriedFormat = PQP.Result<string, FormatError.TFormatError>;
@@ -85,5 +85,5 @@ export function tryFormat(formatSettings: FormatSettings, text: string): TriedFo
         newlineLiteral: formatSettings.newlineLiteral,
     };
 
-    return Serializer.run(serializeRequest);
+    return trySerialize(serializeRequest);
 }

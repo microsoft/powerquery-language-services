@@ -23,7 +23,24 @@ export const enum NewlineLiteral {
 
 export type TriedSerialize = PQP.Result<string, PQP.CommonError.CommonError>;
 
-export class Serializer {
+export interface SerializerSettings extends PQP.CommonSettings {
+    readonly document: PQP.Ast.TDocument;
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
+    readonly maps: SerializerPassthroughMaps;
+    readonly indentationLiteral: IndentationLiteral;
+    readonly newlineLiteral: NewlineLiteral;
+}
+
+export interface SerializerPassthroughMaps {
+    readonly commentCollectionMap: CommentCollectionMap;
+    readonly serializerParameterMap: SerializerParameterMap;
+}
+
+export function trySerialize(settings: SerializerSettings): TriedSerialize {
+    return PQP.ResultUtils.ensureResult(settings.localizationTemplates, () => Serializer.run(settings));
+}
+
+class Serializer {
     constructor(
         private readonly document: PQP.Ast.TDocument,
         private readonly nodeIdMapCollection: PQP.NodeIdMap.Collection,
@@ -40,7 +57,7 @@ export class Serializer {
         this.expandIndentationCache(10);
     }
 
-    public static run(settings: SerializerSettings): TriedSerialize {
+    public static run(settings: SerializerSettings): string {
         const serializer: Serializer = new Serializer(
             settings.document,
             settings.nodeIdMapCollection,
@@ -48,8 +65,7 @@ export class Serializer {
             settings.indentationLiteral,
             settings.newlineLiteral,
         );
-
-        return PQP.ResultUtils.ensureResult(settings.localizationTemplates, () => serializer.run());
+        return serializer.run();
     }
 
     private run(): string {
@@ -208,17 +224,4 @@ export class Serializer {
 
         return this.indentationCache[this.indentationCache.length - 1];
     }
-}
-
-export interface SerializerSettings extends PQP.CommonSettings {
-    readonly document: PQP.Ast.TDocument;
-    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
-    readonly maps: SerializerPassthroughMaps;
-    readonly indentationLiteral: IndentationLiteral;
-    readonly newlineLiteral: NewlineLiteral;
-}
-
-export interface SerializerPassthroughMaps {
-    readonly commentCollectionMap: CommentCollectionMap;
-    readonly serializerParameterMap: SerializerParameterMap;
 }
