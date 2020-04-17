@@ -91,12 +91,13 @@ describe("InspectedInvokeExpression", () => {
                 );
 
                 expect(inspectionOk.maybeActiveNode?.maybeIdentifierUnderPosition?.kind).equals(
-                    PQP.Ast.NodeKind.Identifier,
+                    PQP.Language.Ast.NodeKind.Identifier,
                     "expecting identifier",
                 );
 
-                const identifier: PQP.Ast.GeneralizedIdentifier | PQP.Ast.Identifier = inspectionOk.maybeActiveNode!
-                    .maybeIdentifierUnderPosition!;
+                const identifier:
+                    | PQP.Language.Ast.GeneralizedIdentifier
+                    | PQP.Language.Ast.Identifier = inspectionOk.maybeActiveNode!.maybeIdentifierUnderPosition!;
                 expect(identifier.literal).equals("OdbcDataSource");
                 expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });

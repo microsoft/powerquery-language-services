@@ -10,15 +10,15 @@ import * as Utils from "./utils";
 
 const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
 const ExpressionKeywordWhitelist: string[] = [
-    PQP.KeywordKind.Each,
-    PQP.KeywordKind.Error,
-    PQP.KeywordKind.False,
-    PQP.KeywordKind.If,
-    PQP.KeywordKind.Let,
-    PQP.KeywordKind.Not,
-    PQP.KeywordKind.True,
-    PQP.KeywordKind.Try,
-    PQP.KeywordKind.Type,
+    PQP.Language.KeywordKind.Each,
+    PQP.Language.KeywordKind.Error,
+    PQP.Language.KeywordKind.False,
+    PQP.Language.KeywordKind.If,
+    PQP.Language.KeywordKind.Let,
+    PQP.Language.KeywordKind.Not,
+    PQP.Language.KeywordKind.True,
+    PQP.Language.KeywordKind.Try,
+    PQP.Language.KeywordKind.Type,
 ];
 
 describe("Completion Items (null provider)", () => {
@@ -31,7 +31,7 @@ describe("Completion Items (null provider)", () => {
             expect(item.kind).to.equal(CompletionItemKind.Keyword);
         });
 
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.KeywordKind.Section]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.Language.KeywordKind.Section]);
     });
 
     it("simple document", async () => {
@@ -48,7 +48,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.KeywordKind.Section,
+            PQP.Language.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
@@ -60,7 +60,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.KeywordKind.Section,
+            PQP.Language.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
@@ -73,7 +73,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.KeywordKind.Section,
+            PQP.Language.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
