@@ -29,8 +29,8 @@ export function tryFormat(formatSettings: FormatSettings, text: string): TriedFo
     }
 
     const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
-    const ast: PQP.Ast.TDocument = lexParseOk.ast;
-    const comments: ReadonlyArray<PQP.TComment> = lexParseOk.lexerSnapshot.comments;
+    const ast: PQP.Language.Ast.TDocument = lexParseOk.ast;
+    const comments: ReadonlyArray<PQP.Language.TComment> = lexParseOk.lexerSnapshot.comments;
     const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.nodeIdMapCollection;
     const localizationTemplates: PQP.ILocalizationTemplates = formatSettings.localizationTemplates;
 
@@ -80,7 +80,7 @@ export function tryFormat(formatSettings: FormatSettings, text: string): TriedFo
         localizationTemplates,
         document: lexParseOk.ast,
         nodeIdMapCollection,
-        maps,
+        passthroughMaps: maps,
         indentationLiteral: formatSettings.indentationLiteral,
         newlineLiteral: formatSettings.newlineLiteral,
     };

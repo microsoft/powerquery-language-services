@@ -6,15 +6,15 @@ import * as PQP from "@microsoft/powerquery-parser";
 export type CommentCollectionMap = Map<number, CommentCollection>;
 
 export interface CommentCollection {
-    readonly prefixedComments: PQP.TComment[];
+    readonly prefixedComments: PQP.Language.TComment[];
     prefixedCommentsContainsNewline: boolean;
 }
 
 export function tryTraverseComment(
     localizationTemplates: PQP.ILocalizationTemplates,
-    root: PQP.Ast.TNode,
+    root: PQP.Language.Ast.TNode,
     nodeIdMapCollection: PQP.NodeIdMap.Collection,
-    comments: ReadonlyArray<PQP.TComment>,
+    comments: ReadonlyArray<PQP.Language.TComment>,
 ): PQP.Traverse.TriedTraverse<CommentCollectionMap> {
     const state: State = {
         localizationTemplates,
@@ -36,13 +36,13 @@ export function tryTraverseComment(
 }
 
 interface State extends PQP.Traverse.IState<CommentCollectionMap> {
-    readonly comments: ReadonlyArray<PQP.TComment>;
+    readonly comments: ReadonlyArray<PQP.Language.TComment>;
     commentsIndex: number;
-    maybeCurrentComment: PQP.TComment | undefined;
+    maybeCurrentComment: PQP.Language.TComment | undefined;
 }
 
-function earlyExit(state: State, node: PQP.Ast.TNode): boolean {
-    const maybeCurrentComment: PQP.TComment | undefined = state.maybeCurrentComment;
+function earlyExit(state: State, node: PQP.Language.Ast.TNode): boolean {
+    const maybeCurrentComment: PQP.Language.TComment | undefined = state.maybeCurrentComment;
     if (maybeCurrentComment === undefined) {
         return true;
     } else if (node.tokenRange.positionEnd.codeUnit < maybeCurrentComment.positionStart.codeUnit) {
@@ -52,14 +52,14 @@ function earlyExit(state: State, node: PQP.Ast.TNode): boolean {
     }
 }
 
-function visitNode(state: State, node: PQP.Ast.TNode): void {
+function visitNode(state: State, node: PQP.Language.Ast.TNode): void {
     if (!node.isLeaf) {
         return;
     }
 
-    let maybeCurrentComment: PQP.TComment | undefined = state.maybeCurrentComment;
+    let maybeCurrentComment: PQP.Language.TComment | undefined = state.maybeCurrentComment;
     while (maybeCurrentComment && maybeCurrentComment.positionStart.codeUnit < node.tokenRange.positionStart.codeUnit) {
-        const currentComment: PQP.TComment = maybeCurrentComment;
+        const currentComment: PQP.Language.TComment = maybeCurrentComment;
         const commentMap: CommentCollectionMap = state.result;
         const nodeId: number = node.id;
         const maybeCommentCollection: CommentCollection | undefined = commentMap.get(nodeId);

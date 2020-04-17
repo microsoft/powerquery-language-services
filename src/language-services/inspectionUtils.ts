@@ -4,8 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
-import { SignatureProviderContext } from "./providers";
 import { LanguageServiceUtils } from ".";
+import { SignatureProviderContext } from "./providers";
 
 export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): undefined | SignatureProviderContext {
     return inspected.maybeInvokeExpression !== undefined
@@ -31,21 +31,21 @@ export function getContextForInvokeExpression(
     }
 }
 
-export function getSymbolKindForLiteralExpression(node: PQP.Ast.LiteralExpression): SymbolKind {
+export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.LiteralExpression): SymbolKind {
     switch (node.literalKind) {
-        case PQP.Ast.LiteralKind.List:
+        case PQP.Language.Ast.LiteralKind.List:
             return SymbolKind.Array;
 
-        case PQP.Ast.LiteralKind.Logical:
+        case PQP.Language.Ast.LiteralKind.Logical:
             return SymbolKind.Boolean;
 
-        case PQP.Ast.LiteralKind.Null:
+        case PQP.Language.Ast.LiteralKind.Null:
             return SymbolKind.Null;
 
-        case PQP.Ast.LiteralKind.Numeric:
+        case PQP.Language.Ast.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Ast.LiteralKind.Text:
+        case PQP.Language.Ast.LiteralKind.Text:
             return SymbolKind.String;
 
         default:
@@ -53,26 +53,26 @@ export function getSymbolKindForLiteralExpression(node: PQP.Ast.LiteralExpressio
     }
 }
 
-export function getSymbolKindFromNode(node: PQP.Ast.INode | PQP.ParseContext.Node): SymbolKind {
+export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.ParseContext.Node): SymbolKind {
     switch (node.kind) {
-        case PQP.Ast.NodeKind.Constant:
+        case PQP.Language.Ast.NodeKind.Constant:
             return SymbolKind.Constant;
 
-        case PQP.Ast.NodeKind.FunctionExpression:
+        case PQP.Language.Ast.NodeKind.FunctionExpression:
             return SymbolKind.Function;
 
-        case PQP.Ast.NodeKind.ListExpression:
-        case PQP.Ast.NodeKind.ListLiteral:
+        case PQP.Language.Ast.NodeKind.ListExpression:
+        case PQP.Language.Ast.NodeKind.ListLiteral:
             return SymbolKind.Array;
 
-        case PQP.Ast.NodeKind.LiteralExpression:
-            return getSymbolKindForLiteralExpression(node as PQP.Ast.LiteralExpression);
+        case PQP.Language.Ast.NodeKind.LiteralExpression:
+            return getSymbolKindForLiteralExpression(node as PQP.Language.Ast.LiteralExpression);
 
-        case PQP.Ast.NodeKind.MetadataExpression:
+        case PQP.Language.Ast.NodeKind.MetadataExpression:
             return SymbolKind.TypeParameter;
 
-        case PQP.Ast.NodeKind.RecordExpression:
-        case PQP.Ast.NodeKind.RecordLiteral:
+        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case PQP.Language.Ast.NodeKind.RecordLiteral:
             return SymbolKind.Struct;
 
         default:
@@ -80,11 +80,11 @@ export function getSymbolKindFromNode(node: PQP.Ast.INode | PQP.ParseContext.Nod
     }
 }
 
-export function getSymbolsForLetExpression(expressionNode: PQP.Ast.LetExpression): DocumentSymbol[] {
+export function getSymbolsForLetExpression(expressionNode: PQP.Language.Ast.LetExpression): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const element of expressionNode.variableList.elements) {
-        const pairedExpression: PQP.Ast.ICsv<PQP.Ast.IdentifierPairedExpression> = element;
+        const pairedExpression: PQP.Language.Ast.ICsv<PQP.Language.Ast.IdentifierPairedExpression> = element;
         const memberSymbol: DocumentSymbol = getSymbolForIdentifierPairedExpression(pairedExpression.node);
         documentSymbols.push(memberSymbol);
     }
@@ -92,7 +92,7 @@ export function getSymbolsForLetExpression(expressionNode: PQP.Ast.LetExpression
     return documentSymbols;
 }
 
-export function getSymbolsForSection(sectionNode: PQP.Ast.Section): DocumentSymbol[] {
+export function getSymbolsForSection(sectionNode: PQP.Language.Ast.Section): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const member of sectionNode.sectionMembers.elements) {
@@ -104,7 +104,7 @@ export function getSymbolsForSection(sectionNode: PQP.Ast.Section): DocumentSymb
 }
 
 export function getSymbolForIdentifierPairedExpression(
-    identifierPairedExpressionNode: PQP.Ast.IdentifierPairedExpression,
+    identifierPairedExpressionNode: PQP.Language.Ast.IdentifierPairedExpression,
 ): DocumentSymbol {
     return {
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticSeverity, Position, TextDocument, Range } from "vscode-languageserver-types";
+import { Diagnostic, DiagnosticSeverity, Position, Range, TextDocument } from "vscode-languageserver-types";
 
 import { WorkspaceCache } from ".";
 
@@ -67,7 +67,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
 function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): undefined | Diagnostic {
     const innerError: PQP.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
-    let maybeErrorToken: undefined | PQP.Token;
+    let maybeErrorToken: undefined | PQP.Language.Token;
     if (
         (innerError instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
             innerError instanceof PQP.ParseError.ExpectedTokenKindError) &&
@@ -105,14 +105,14 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): undefine
             return undefined;
         }
 
-        const maybeLeaf: undefined | PQP.Ast.TNode = PQP.NodeIdMapUtils.maybeRightMostLeaf(
+        const maybeLeaf: undefined | PQP.Language.Ast.TNode = PQP.NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );
         if (maybeLeaf === undefined) {
             return undefined;
         }
-        const leafTokenRange: PQP.TokenRange = maybeLeaf.tokenRange;
+        const leafTokenRange: PQP.Language.TokenRange = maybeLeaf.tokenRange;
 
         range = {
             start: {

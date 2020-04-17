@@ -6,7 +6,7 @@ import { expectGetIsMultiline, IsMultilineMap, setIsMultiline } from "./common";
 
 export function tryTraverse(
     localizationTemplates: PQP.ILocalizationTemplates,
-    ast: PQP.Ast.TNode,
+    ast: PQP.Language.Ast.TNode,
     isMultilineMap: IsMultilineMap,
     nodeIdMapCollection: PQP.NodeIdMap.Collection,
 ): PQP.Traverse.TriedTraverse<IsMultilineMap> {
@@ -31,24 +31,24 @@ interface State extends PQP.Traverse.IState<IsMultilineMap> {
     readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
 }
 
-function visitNode(state: State, node: PQP.Ast.TNode): void {
+function visitNode(state: State, node: PQP.Language.Ast.TNode): void {
     // tslint:disable-next-line: switch-default
     switch (node.kind) {
         // TBinOpExpression
-        case PQP.Ast.NodeKind.ArithmeticExpression:
-        case PQP.Ast.NodeKind.AsExpression:
-        case PQP.Ast.NodeKind.EqualityExpression:
-        case PQP.Ast.NodeKind.IsExpression:
-        case PQP.Ast.NodeKind.LogicalExpression:
-        case PQP.Ast.NodeKind.RelationalExpression: {
+        case PQP.Language.Ast.NodeKind.ArithmeticExpression:
+        case PQP.Language.Ast.NodeKind.AsExpression:
+        case PQP.Language.Ast.NodeKind.EqualityExpression:
+        case PQP.Language.Ast.NodeKind.IsExpression:
+        case PQP.Language.Ast.NodeKind.LogicalExpression:
+        case PQP.Language.Ast.NodeKind.RelationalExpression: {
             const isMultilineMap: IsMultilineMap = state.result;
-            const maybeParent: PQP.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
+            const maybeParent: PQP.Language.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
                 state.nodeIdMapCollection,
                 node.id,
             );
             if (
                 maybeParent &&
-                PQP.AstUtils.isTBinOpExpression(maybeParent) &&
+                PQP.Language.AstUtils.isTBinOpExpression(maybeParent) &&
                 expectGetIsMultiline(isMultilineMap, maybeParent)
             ) {
                 setIsMultiline(isMultilineMap, node, true);
@@ -58,36 +58,36 @@ function visitNode(state: State, node: PQP.Ast.TNode): void {
 
         // If a list or record is a child node,
         // Then by default it should be considered multiline if it has one or more values
-        case PQP.Ast.NodeKind.ListExpression:
-        case PQP.Ast.NodeKind.ListLiteral:
-        case PQP.Ast.NodeKind.RecordExpression:
-        case PQP.Ast.NodeKind.RecordLiteral:
+        case PQP.Language.Ast.NodeKind.ListExpression:
+        case PQP.Language.Ast.NodeKind.ListLiteral:
+        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case PQP.Language.Ast.NodeKind.RecordLiteral:
             if (node.content.elements.length) {
                 const nodeIdMapCollection: PQP.NodeIdMap.Collection = state.nodeIdMapCollection;
 
-                let maybeParent: PQP.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
+                let maybeParent: PQP.Language.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeParentAstNode(
                     nodeIdMapCollection,
                     node.id,
                 );
-                let maybeCsv: PQP.Ast.TCsv | undefined;
-                let maybeArrayWrapper: PQP.Ast.TArrayWrapper | undefined;
-                if (maybeParent && maybeParent.kind === PQP.Ast.NodeKind.Csv) {
+                let maybeCsv: PQP.Language.Ast.TCsv | undefined;
+                let maybeArrayWrapper: PQP.Language.Ast.TArrayWrapper | undefined;
+                if (maybeParent && maybeParent.kind === PQP.Language.Ast.NodeKind.Csv) {
                     maybeCsv = maybeParent;
                     maybeParent = PQP.NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
-                if (maybeParent && maybeParent.kind === PQP.Ast.NodeKind.ArrayWrapper) {
+                if (maybeParent && maybeParent.kind === PQP.Language.Ast.NodeKind.ArrayWrapper) {
                     maybeArrayWrapper = maybeParent;
                     maybeParent = PQP.NodeIdMapUtils.maybeParentAstNode(nodeIdMapCollection, maybeParent.id);
                 }
 
                 if (maybeParent) {
-                    const parent: PQP.Ast.TNode = maybeParent;
+                    const parent: PQP.Language.Ast.TNode = maybeParent;
                     switch (parent.kind) {
-                        case PQP.Ast.NodeKind.ItemAccessExpression:
-                        case PQP.Ast.NodeKind.InvokeExpression:
-                        case PQP.Ast.NodeKind.FunctionExpression:
-                        case PQP.Ast.NodeKind.Section:
-                        case PQP.Ast.NodeKind.SectionMember:
+                        case PQP.Language.Ast.NodeKind.ItemAccessExpression:
+                        case PQP.Language.Ast.NodeKind.InvokeExpression:
+                        case PQP.Language.Ast.NodeKind.FunctionExpression:
+                        case PQP.Language.Ast.NodeKind.Section:
+                        case PQP.Language.Ast.NodeKind.SectionMember:
                             break;
 
                         default: {
