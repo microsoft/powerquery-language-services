@@ -90,7 +90,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
         throw new Error("Method not implemented.");
     }
 
-    private getMember(value: undefined | string): undefined | string {
+    private getMember(value: string | undefined): string | undefined {
         if (value === undefined) {
             return undefined;
         }

@@ -4,16 +4,16 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, DocumentSymbol, Hover, SignatureHelp } from "vscode-languageserver-types";
 
+import { InspectionUtils, LanguageServiceUtils } from ".";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
-import { LanguageServiceUtils, InspectionUtils } from ".";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
-    constructor(private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection) {}
+    constructor(private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());

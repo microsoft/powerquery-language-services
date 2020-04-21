@@ -7,7 +7,7 @@ import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 import { LanguageServiceUtils } from ".";
 import { SignatureProviderContext } from "./providers";
 
-export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): undefined | SignatureProviderContext {
+export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): SignatureProviderContext | undefined {
     return inspected.maybeInvokeExpression !== undefined
         ? getContextForInvokeExpression(inspected.maybeInvokeExpression)
         : undefined;
@@ -15,10 +15,10 @@ export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk):
 
 export function getContextForInvokeExpression(
     maybeExpression: PQP.Inspection.InvokeExpression,
-): undefined | SignatureProviderContext {
-    const functionName: undefined | string =
+): SignatureProviderContext | undefined {
+    const functionName: string | undefined =
         maybeExpression.maybeName !== undefined ? maybeExpression.maybeName : undefined;
-    const argumentOrdinal: undefined | number =
+    const argumentOrdinal: number | undefined =
         maybeExpression.maybeArguments !== undefined ? maybeExpression.maybeArguments.argumentOrdinal : undefined;
 
     if (functionName !== undefined || argumentOrdinal !== undefined) {

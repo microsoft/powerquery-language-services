@@ -14,7 +14,7 @@ const triedInspectionCache: Map<string, InspectionMap> = new Map();
 // then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
 // If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
 // or that we we couldn't do an inspection.
-type InspectionMap = WeakMap<Position, undefined | PQP.Task.TriedInspection>;
+type InspectionMap = WeakMap<Position, PQP.Task.TriedInspection | undefined>;
 
 const allCaches: Map<string, any>[] = [lexerSnapshotCache, lexerStateCache, triedLexParseCache, triedInspectionCache];
 
@@ -50,13 +50,13 @@ export function getTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexP
 export function maybeTriedInspection(
     textDocument: TextDocument,
     position: Position,
-): undefined | PQP.Task.TriedInspection {
+): PQP.Task.TriedInspection | undefined {
     const cacheKey: string = textDocument.uri;
     const maybePositionCache:
         | undefined
-        | WeakMap<Position, undefined | PQP.Task.TriedInspection> = triedInspectionCache.get(cacheKey);
+        | WeakMap<Position, PQP.Task.TriedInspection | undefined> = triedInspectionCache.get(cacheKey);
 
-    let positionCache: WeakMap<Position, undefined | PQP.Task.TriedInspection>;
+    let positionCache: WeakMap<Position, PQP.Task.TriedInspection | undefined>;
     // document has been inspected before
     if (maybePositionCache !== undefined) {
         positionCache = maybePositionCache;
@@ -68,7 +68,7 @@ export function maybeTriedInspection(
     if (positionCache.has(position)) {
         return positionCache.get(position);
     } else {
-        const value: undefined | PQP.Task.TriedInspection = createTriedInspection(textDocument, position);
+        const value: PQP.Task.TriedInspection | undefined = createTriedInspection(textDocument, position);
         positionCache.set(position, value);
         return value;
     }
@@ -80,7 +80,7 @@ function getOrCreate<T>(
     factoryFn: (textDocument: TextDocument) => T,
 ): T {
     const cacheKey: string = textDocument.uri;
-    const maybeValue: undefined | T = cache.get(cacheKey);
+    const maybeValue: T | undefined = cache.get(cacheKey);
 
     if (maybeValue === undefined) {
         const value: T = factoryFn(textDocument);
@@ -123,7 +123,7 @@ function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse
 
 // We're allowed to return undefined because if a document wasn't parsed
 // then there's no way to perform an inspection.
-function createTriedInspection(textDocument: TextDocument, position: Position): undefined | PQP.Task.TriedInspection {
+function createTriedInspection(textDocument: TextDocument, position: Position): PQP.Task.TriedInspection | undefined {
     const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument);
     if (
         PQP.ResultUtils.isErr(triedLexParse) &&
@@ -133,7 +133,7 @@ function createTriedInspection(textDocument: TextDocument, position: Position): 
         return undefined;
     }
 
-    const maybeTriedParse: undefined | PQP.TriedParse = PQP.Task.maybeTriedParseFromTriedLexParse(triedLexParse);
+    const maybeTriedParse: PQP.TriedParse | undefined = PQP.Task.maybeTriedParseFromTriedLexParse(triedLexParse);
     if (maybeTriedParse === undefined) {
         return undefined;
     }

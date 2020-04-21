@@ -23,7 +23,7 @@ export class KeywordProvider implements CompletionItemProvider {
         PQP.Language.KeywordKind.HashTime,
     ];
 
-    constructor(private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection) {}
+    constructor(private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
