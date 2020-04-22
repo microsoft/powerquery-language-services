@@ -17,12 +17,12 @@ export function validate(document: TextDocument): ValidationResult {
     if (PQP.ResultUtils.isErr(triedLexParse)) {
         const lexOrParseError: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
         if (lexOrParseError instanceof PQP.ParseError.ParseError) {
-            const maybeDiagnostic: undefined | Diagnostic = maybeParseErrorToDiagnostic(lexOrParseError);
+            const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(lexOrParseError);
             if (maybeDiagnostic !== undefined) {
                 diagnostics = [maybeDiagnostic];
             }
         } else if (PQP.LexError.isTInnerLexError(lexOrParseError.innerError)) {
-            const maybeLexerErrorDiagnostics: undefined | Diagnostic[] = maybeLexErrorToDiagnostics(
+            const maybeLexerErrorDiagnostics: Diagnostic[] | undefined = maybeLexErrorToDiagnostics(
                 lexOrParseError.innerError,
             );
             if (maybeLexerErrorDiagnostics !== undefined) {
@@ -36,7 +36,7 @@ export function validate(document: TextDocument): ValidationResult {
     };
 }
 
-function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefined | Diagnostic[] {
+function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnostic[] | undefined {
     const diagnostics: Diagnostic[] = [];
     // TODO: handle other types of lexer errors
     if (error instanceof PQP.LexError.ErrorLineMapError) {
@@ -64,10 +64,10 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): undefin
     return diagnostics.length ? diagnostics : undefined;
 }
 
-function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): undefined | Diagnostic {
+function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): Diagnostic | undefined {
     const innerError: PQP.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
-    let maybeErrorToken: undefined | PQP.Language.Token;
+    let maybeErrorToken: PQP.Language.Token | undefined;
     if (
         (innerError instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
             innerError instanceof PQP.ParseError.ExpectedTokenKindError) &&
@@ -100,12 +100,12 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): undefine
         };
     } else {
         const parseContextState: PQP.ParseContext.State = error.state.contextState;
-        const maybeRoot: undefined | PQP.ParseContext.Node = parseContextState.root.maybeNode;
+        const maybeRoot: PQP.ParseContext.Node | undefined = parseContextState.root.maybeNode;
         if (maybeRoot === undefined) {
             return undefined;
         }
 
-        const maybeLeaf: undefined | PQP.Language.Ast.TNode = PQP.NodeIdMapUtils.maybeRightMostLeaf(
+        const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );

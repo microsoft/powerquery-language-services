@@ -32,7 +32,7 @@ export function createAnalysisSession(document: TextDocument, position: Position
 }
 
 class DocumentAnalysis implements Analysis {
-    private readonly maybeTriedInspection: undefined | PQP.Task.TriedInspection;
+    private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined;
     private readonly environmentSymbolProvider: SymbolProvider;
     private readonly keywordProvider: KeywordProvider;
     private readonly librarySymbolProvider: LibrarySymbolProvider;
@@ -58,7 +58,7 @@ class DocumentAnalysis implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: undefined | PQP.Language.LineToken = maybeTokenAt(this.document, this.position);
+        const maybeToken: PQP.Language.LineToken | undefined = maybeTokenAt(this.document, this.position);
         if (maybeToken !== undefined) {
             context = {
                 range: getTokenRangeForPosition(maybeToken, this.position),
@@ -180,8 +180,8 @@ function getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition:
     };
 }
 
-function maybeIdentifierAt(document: TextDocument, position: Position): undefined | PQP.Language.LineToken {
-    const maybeToken: undefined | PQP.Language.LineToken = maybeTokenAt(document, position);
+function maybeIdentifierAt(document: TextDocument, position: Position): PQP.Language.LineToken | undefined {
+    const maybeToken: PQP.Language.LineToken | undefined = maybeTokenAt(document, position);
     if (maybeToken) {
         const token: PQP.Language.LineToken = maybeToken;
         if (token.kind === PQP.Language.LineTokenKind.Identifier) {
@@ -195,15 +195,15 @@ function maybeIdentifierAt(document: TextDocument, position: Position): undefine
 function maybeLineTokensAt(
     document: TextDocument,
     position: Position,
-): undefined | ReadonlyArray<PQP.Language.LineToken> {
+): ReadonlyArray<PQP.Language.LineToken> | undefined {
     const lexResult: PQP.Lexer.State = WorkspaceCache.getLexerState(document);
-    const maybeLine: undefined | PQP.Lexer.TLine = lexResult.lines[position.line];
+    const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[position.line];
 
     return maybeLine !== undefined ? maybeLine.tokens : undefined;
 }
 
-function maybeTokenAt(document: TextDocument, position: Position): undefined | PQP.Language.LineToken {
-    const maybeLineTokens: undefined | ReadonlyArray<PQP.Language.LineToken> = maybeLineTokensAt(document, position);
+function maybeTokenAt(document: TextDocument, position: Position): PQP.Language.LineToken | undefined {
+    const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = maybeLineTokensAt(document, position);
 
     if (maybeLineTokens === undefined) {
         return undefined;
