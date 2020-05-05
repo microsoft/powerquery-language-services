@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { FormattingOptions, Range, TextDocument, TextEdit } from "vscode-languageserver-types";
 
-export function tryFormatconnection(
+export function tryFormat(
     document: TextDocument,
     formattingOptions: FormattingOptions,
     localizationTemplates: PQP.ILocalizationTemplates,
