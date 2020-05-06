@@ -9,8 +9,8 @@ import { FormattingOptions, Range, TextDocument, TextEdit } from "vscode-languag
 export function tryFormat(
     document: TextDocument,
     formattingOptions: FormattingOptions,
-    localizationTemplates: PQP.ILocalizationTemplates,
-): PQP.Result<TextEdit[], string> {
+    locale: string,
+): PQP.Result<TextEdit[], string | undefined> {
     let indentationLiteral: PQF.IndentationLiteral;
     if (formattingOptions.insertSpaces) {
         indentationLiteral = PQF.IndentationLiteral.SpaceX4;
@@ -20,7 +20,7 @@ export function tryFormat(
 
     const pqfFormatSettings: PQF.FormatSettings = {
         ...PQP.DefaultSettings,
-        localizationTemplates,
+        locale,
         indentationLiteral,
         newlineLiteral: PQF.NewlineLiteral.Windows,
     };
@@ -29,12 +29,9 @@ export function tryFormat(
     if (PQP.ResultUtils.isOk(triedFormat)) {
         return PQP.ResultUtils.okFactory([TextEdit.replace(fullDocumentRange(document), triedFormat.value)]);
     } else {
-        let message: string;
-        if (PQF.FormatError.isTFormatError(triedFormat.error)) {
-            message = triedFormat.error.innerError.message;
-        } else {
-            message = "An unknown error occured during formatting.";
-        }
+        const message: string | undefined = PQF.FormatError.isTFormatError(triedFormat.error)
+            ? triedFormat.error.innerError.message
+            : undefined;
 
         return PQP.ResultUtils.errFactory(message);
     }
