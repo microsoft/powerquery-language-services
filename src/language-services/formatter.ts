@@ -6,11 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { FormattingOptions, Range, TextDocument, TextEdit } from "vscode-languageserver-types";
 
-export function tryFormat(
-    document: TextDocument,
-    formattingOptions: FormattingOptions,
-    locale: string,
-): PQP.Result<TextEdit[], string | undefined> {
+export function tryFormat(document: TextDocument, formattingOptions: FormattingOptions, locale: string): TextEdit[] {
     let indentationLiteral: PQF.IndentationLiteral;
     if (formattingOptions.insertSpaces) {
         indentationLiteral = PQF.IndentationLiteral.SpaceX4;
@@ -27,13 +23,13 @@ export function tryFormat(
     const triedFormat: PQF.TriedFormat = PQF.tryFormat(pqfFormatSettings, document.getText());
 
     if (PQP.ResultUtils.isOk(triedFormat)) {
-        return PQP.ResultUtils.okFactory([TextEdit.replace(fullDocumentRange(document), triedFormat.value)]);
+        return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];
     } else {
         const message: string | undefined = PQF.FormatError.isTFormatError(triedFormat.error)
             ? triedFormat.error.innerError.message
             : undefined;
 
-        return PQP.ResultUtils.errFactory(message);
+        throw new Error(message);
     }
 }
 
