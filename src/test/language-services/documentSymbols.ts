@@ -30,7 +30,7 @@ function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[])
     return expectedSymbols;
 }
 
-function expectSymbols(document: PQP.Language.Ast.TDocument, expectedSymbols: ExpectedDocumentSymbol[]): void {
+function expectSymbols(document: PQP.Language.Ast.TNode, expectedSymbols: ExpectedDocumentSymbol[]): void {
     let actualSymbols: ExpectedDocumentSymbol[];
 
     if (document.kind === PQP.Language.Ast.NodeKind.Section) {

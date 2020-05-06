@@ -2,12 +2,13 @@
 // Licensed under the MIT license.
 
 import { TextDocument } from "vscode-languageserver-types";
-import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 export { LanguageServiceUtils, InspectionUtils, WorkspaceCache };
 export * from "./analysis";
+export * from "./formatter";
 export * from "./providers";
 export * from "./validation";
 

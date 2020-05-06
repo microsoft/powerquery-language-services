@@ -5,15 +5,18 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
+import { Position } from "vscode-languageserver-types";
 import { SignatureProviderContext } from "../../language-services";
 import { InspectionUtils } from "../../language-services";
 import * as Utils from "./utils";
-import { Position } from "vscode-languageserver-types";
 
 // tslint:disable: no-unnecessary-type-assertion
 
 function expectScope(inspected: PQP.Task.InspectionOk, expected: string[]): void {
-    expect(inspected.scope).to.have.keys(expected);
+    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.scope.entries()]
+        .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].recursive === false)
+        .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
+    expect(inclusiveScopeKeys).to.have.members(expected);
 }
 
 // Unit testing for analysis operations related to power query parser inspection results.
