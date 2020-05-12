@@ -47,7 +47,7 @@
         "typescript": "^3.8.3"
     },
     "dependencies": {
-        "@microsoft/powerquery-parser": "0.1.53",
+        "@microsoft/powerquery-parser": "0.1.52",
         "@microsoft/powerquery-formatter": "0.0.3",
         "vscode-languageserver-types": "3.15.1"
     },
