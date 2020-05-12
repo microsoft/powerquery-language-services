@@ -149,7 +149,7 @@ class DocumentAnalysis implements Analysis {
         }
         const context: SignatureProviderContext = maybeContext;
 
-        if (context.maybeFunctionName === undefined) {
+        if (context.functionName === undefined) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
 

@@ -23,8 +23,8 @@ export function getContextForInvokeExpression(
 
     if (functionName !== undefined || argumentOrdinal !== undefined) {
         return {
-            maybeArgumentOrdinal: argumentOrdinal,
-            maybeFunctionName: functionName,
+            argumentOrdinal,
+            functionName,
         };
     } else {
         return undefined;
