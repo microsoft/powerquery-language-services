@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// TODO: Split this into a separate language-services-test package so it can be reused.
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import * as File from "fs";
@@ -68,7 +67,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp> {
-        const member: string | undefined = this.getMember(context.maybeFunctionName);
+        const member: string | undefined = this.getMember(context.functionName);
         if (member) {
             return {
                 signatures: [
@@ -78,7 +77,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
                     },
                 ],
                 // tslint:disable-next-line: no-null-keyword
-                activeParameter: context.maybeArgumentOrdinal ? context.maybeArgumentOrdinal : null,
+                activeParameter: context.argumentOrdinal ? context.argumentOrdinal : null,
                 activeSignature: 0,
             };
         }
