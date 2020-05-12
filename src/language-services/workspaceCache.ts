@@ -10,7 +10,7 @@ const triedLexParseCache: Map<string, PQP.Task.TriedLexParse> = new Map();
 const triedInspectionCache: Map<string, InspectionMap> = new Map();
 
 // Notice that the value type for WeakMap includes undefined.
-// Take thethe scenario where an inspection was requested on a document that was not parsable,
+// Take the scenario where an inspection was requested on a document that was not parsable,
 // then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
 // If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
 // or that we we couldn't do an inspection.
