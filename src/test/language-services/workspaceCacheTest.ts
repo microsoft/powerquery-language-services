@@ -6,7 +6,8 @@ import { assert, expect } from "chai";
 import "mocha";
 import { TextDocument } from "vscode-languageserver-types";
 
-import { documentClosed, documentUpdated, WorkspaceCache } from "../../language-services";
+import { documentClosed, documentUpdated } from "../../language-services";
+import * as WorkspaceCache from "../../language-services/workspaceCache";
 import * as Utils from "./utils";
 
 describe("workspaceCache", () => {

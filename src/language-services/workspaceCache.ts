@@ -2,7 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Position, TextDocument } from "vscode-languageserver-types";
+
+import type { TextDocument } from "vscode-languageserver-textdocument";
+import { Position } from "vscode-languageserver-types";
 
 const lexerStateCache: Map<string, PQP.Lexer.State> = new Map();
 const lexerSnapshotCache: Map<string, PQP.TriedLexerSnapshot> = new Map();

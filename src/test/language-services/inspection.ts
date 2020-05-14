@@ -7,7 +7,7 @@ import "mocha";
 
 import { Position } from "vscode-languageserver-types";
 import { SignatureProviderContext } from "../../language-services";
-import { InspectionUtils } from "../../language-services";
+import * as InspectionUtils from "../../language-services/inspectionUtils";
 import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion

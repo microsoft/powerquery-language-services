@@ -2,16 +2,13 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticSeverity, Position, Range, TextDocument } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
+import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-import { WorkspaceCache } from ".";
+import * as WorkspaceCache from "./workspaceCache";
 
-export interface ValidationResult {
-    readonly hasErrors: boolean;
-    readonly diagnostics: Diagnostic[];
-}
-
-export function validate(document: TextDocument): ValidationResult {
+export function validate(document: TextDocument): Diagnostic[] {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (PQP.ResultUtils.isErr(triedLexParse)) {
@@ -30,10 +27,8 @@ export function validate(document: TextDocument): ValidationResult {
             }
         }
     }
-    return {
-        hasErrors: diagnostics.length > 0,
-        diagnostics,
-    };
+
+    return diagnostics;
 }
 
 function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnostic[] | undefined {

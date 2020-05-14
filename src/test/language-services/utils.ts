@@ -21,13 +21,13 @@ import {
     Analysis,
     AnalysisOptions,
     CompletionItemProviderContext,
-    createAnalysisSession,
+    createDocumentAnalysisSession,
     HoverProviderContext,
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
-    WorkspaceCache,
 } from "../../language-services";
+import * as WorkspaceCache from "../../language-services/workspaceCache";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
@@ -331,12 +331,12 @@ const DefaultAnalysisOptions: AnalysisOptions = {};
 
 function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
-    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return createDocumentAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
     const document: MockDocument = documentFromText(readFile(fileName));
-    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return createDocumentAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function validateTextWithMarker(text: string): void {

@@ -1,16 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TextDocument } from "vscode-languageserver-types";
-import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import type { TextDocument } from "vscode-languageserver-textdocument";
 import * as WorkspaceCache from "./workspaceCache";
 
-export { LanguageServiceUtils, InspectionUtils, WorkspaceCache };
 export * from "./analysis";
 export * from "./formatter";
 export * from "./providers";
 export * from "./validation";
+
+// TODO: Add LSP exports required to use this library
 
 export function documentUpdated(document: TextDocument): void {
     WorkspaceCache.update(document);
