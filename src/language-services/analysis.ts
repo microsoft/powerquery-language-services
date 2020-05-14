@@ -6,6 +6,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import { IDisposable } from "./commonTypes";
+import { Configuration } from "./configuration";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
 import { KeywordProvider } from "./keywordProvider";
@@ -26,13 +27,7 @@ export interface Analysis extends IDisposable {
     getSignatureHelp(): Promise<SignatureHelp>;
 }
 
-export interface AnalysisOptions {
-    readonly environmentSymbolProvider?: SymbolProvider;
-    readonly librarySymbolProvider?: LibrarySymbolProvider;
-    readonly maintainWorkspaceCache?: boolean;
-}
-
-export function createAnalysisSession(document: TextDocument, position: Position, options: AnalysisOptions): Analysis {
+export function createAnalysisSession(document: TextDocument, position: Position, options: Configuration): Analysis {
     return new DocumentAnalysis(document, position, options);
 }
 
@@ -42,11 +37,11 @@ abstract class AnalysisBase implements Analysis {
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
-    protected readonly options: AnalysisOptions;
+    protected readonly options: Configuration;
     protected readonly position: Position;
     protected readonly triedInspection: PQP.Task.TriedInspection | undefined;
 
-    constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: AnalysisOptions) {
+    constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: Configuration) {
         this.triedInspection = triedInspection;
         this.options = options;
         this.position = position;
@@ -254,7 +249,7 @@ abstract class AnalysisBase implements Analysis {
 }
 
 class DocumentAnalysis extends AnalysisBase {
-    constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
+    constructor(private readonly document: TextDocument, position: Position, options: Configuration) {
         super(WorkspaceCache.maybeTriedInspection(document, position), position, options);
     }
 

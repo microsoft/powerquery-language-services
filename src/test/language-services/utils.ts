@@ -20,7 +20,6 @@ import {
 
 import {
     Analysis,
-    AnalysisOptions,
     CompletionItemProviderContext,
     createAnalysisSession,
     HoverProviderContext,
@@ -28,6 +27,7 @@ import {
     NullLibrarySymbolProvider,
     SignatureProviderContext,
 } from "../../language-services";
+import { Configuration } from "../../language-services/configuration";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
@@ -101,7 +101,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 }
 
-export const errorAnalysisOptions: AnalysisOptions = {
+export const errorAnalysisOptions: Configuration = {
     librarySymbolProvider: new ErrorLibraryProvider(),
 };
 
@@ -141,23 +141,23 @@ export function expectInspectionOk(document: MockDocument, position: Position): 
     }
 }
 
-export async function getCompletionItems(text: string, analysisOptions?: AnalysisOptions): Promise<CompletionItem[]> {
+export async function getCompletionItems(text: string, analysisOptions?: Configuration): Promise<CompletionItem[]> {
     return createAnalysis(text, analysisOptions).getCompletionItems();
 }
 
 export async function getCompletionItemsForFile(
     fileName: string,
     position: Position,
-    analysisOptions?: AnalysisOptions,
+    analysisOptions?: Configuration,
 ): Promise<CompletionItem[]> {
     return createAnalysisForFile(fileName, position, analysisOptions).getCompletionItems();
 }
 
-export async function getHover(text: string, analysisOptions?: AnalysisOptions): Promise<Hover> {
+export async function getHover(text: string, analysisOptions?: Configuration): Promise<Hover> {
     return createAnalysis(text, analysisOptions).getHover();
 }
 
-export async function getSignatureHelp(text: string, analysisOptions?: AnalysisOptions): Promise<SignatureHelp> {
+export async function getSignatureHelp(text: string, analysisOptions?: Configuration): Promise<SignatureHelp> {
     return createAnalysis(text, analysisOptions).getSignatureHelp();
 }
 
@@ -334,14 +334,14 @@ export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: stri
     File.writeFileSync(filePath, asJson);
 }
 
-const DefaultAnalysisOptions: AnalysisOptions = {};
+const DefaultAnalysisOptions: Configuration = {};
 
-function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
+function createAnalysis(text: string, analysisOptions?: Configuration): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
-function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
+function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: Configuration): Analysis {
     const document: MockDocument = documentFromText(readFile(fileName));
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
