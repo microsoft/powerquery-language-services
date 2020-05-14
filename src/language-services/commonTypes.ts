@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// TODO: Add LSP exports required to use this library
-
+import type { DocumentUri, TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 
-export type { Diagnostic, Position, Range };
+export type { Diagnostic, DocumentUri, Position, Range, TextDocument };
 
 export const enum DiagnosticSeverity {
     Error = 1,

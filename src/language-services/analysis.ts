@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import { IDisposable } from "./commonTypes";
 import { Configuration } from "./configuration";

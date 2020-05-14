@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import * as WorkspaceCache from "./workspaceCache";
 
 export * from "./analysis";
@@ -9,6 +9,10 @@ export * from "./commonTypes";
 export * from "./formatter";
 export * from "./providers";
 export * from "./validation";
+
+export function createTextDocument(id: string, version: number, content: string): TextDocument {
+    return TextDocument.create(id, "powerquery", version, content);
+}
 
 export function documentUpdated(
     document: TextDocument,
