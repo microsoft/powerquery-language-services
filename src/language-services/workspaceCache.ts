@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import { Position } from "vscode-languageserver-types";
 
 const lexerStateCache: Map<string, PQP.Lexer.State> = new Map();
@@ -28,7 +28,7 @@ export function close(textDocument: TextDocument): void {
     });
 }
 
-export function update(textDocument: TextDocument): void {
+export function update(textDocument: TextDocument, _changes: TextDocumentContentChangeEvent[], _version: number): void {
     // TODO: support incremental lexing
     // TODO: premptively prepare cache on background thread?
     // TODO: use document version

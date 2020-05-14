@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
+import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
 import { KeywordProvider } from "./keywordProvider";
@@ -19,7 +20,7 @@ import {
 } from "./providers";
 import * as WorkspaceCache from "./workspaceCache";
 
-export interface Analysis {
+export interface Analysis extends IDisposable {
     getCompletionItems(): Promise<CompletionItem[]>;
     getHover(): Promise<Hover>;
     getSignatureHelp(): Promise<SignatureHelp>;
@@ -28,6 +29,7 @@ export interface Analysis {
 export interface AnalysisOptions {
     readonly environmentSymbolProvider?: SymbolProvider;
     readonly librarySymbolProvider?: LibrarySymbolProvider;
+    readonly maintainWorkspaceCache?: boolean;
 }
 
 export function createDocumentAnalysisSession(
@@ -44,19 +46,21 @@ abstract class AnalysisBase implements Analysis {
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
+    protected readonly options: AnalysisOptions;
     protected readonly position: Position;
     protected readonly triedInspection: PQP.Task.TriedInspection | undefined;
 
     constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: AnalysisOptions) {
         this.triedInspection = triedInspection;
+        this.options = options;
         this.position = position;
 
-        this.environmentSymbolProvider = options.environmentSymbolProvider
-            ? options.environmentSymbolProvider
+        this.environmentSymbolProvider = this.options.environmentSymbolProvider
+            ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
         this.keywordProvider = new KeywordProvider(this.triedInspection);
-        this.librarySymbolProvider = options.librarySymbolProvider
-            ? options.librarySymbolProvider
+        this.librarySymbolProvider = this.options.librarySymbolProvider
+            ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.triedInspection);
     }
@@ -168,6 +172,8 @@ abstract class AnalysisBase implements Analysis {
         return libraryResponse ?? LanguageServiceUtils.EmptySignatureHelp;
     }
 
+    public abstract dispose(): void;
+
     protected abstract getLexerState(): PQP.Lexer.State;
     protected abstract getText(range?: Range): string;
 
@@ -254,6 +260,12 @@ abstract class AnalysisBase implements Analysis {
 class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
         super(WorkspaceCache.maybeTriedInspection(document, position), position, options);
+    }
+
+    public dispose(): void {
+        if (!this.options.maintainWorkspaceCache) {
+            WorkspaceCache.close(this.document);
+        }
     }
 
     protected getLexerState(): PQP.Lexer.State {
