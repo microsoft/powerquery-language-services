@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
+import { TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import {
     CompletionItem,
     CompletionItemKind,
@@ -239,6 +240,12 @@ export class MockDocument implements TextDocument {
         // or array.length if no line offset is larger than the current offset
         const line: number = low - 1;
         return Position.create(line, offset - lineOffsets[line]);
+    }
+
+    // Helper function
+    public update(text: string): TextDocumentContentChangeEvent[] {
+        this.setText(text);
+        return [{ text }];
     }
 
     public get lineCount(): number {

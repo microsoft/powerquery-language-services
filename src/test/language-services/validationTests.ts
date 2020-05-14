@@ -3,7 +3,7 @@
 
 import { expect } from "chai";
 import "mocha";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import { Diagnostic } from "vscode-languageserver-types";
 
 import { documentUpdated, validate } from "../../language-services";
@@ -31,8 +31,8 @@ describe("validation with workspace cache", () => {
         let diagnostics: Diagnostic[] = validate(document);
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
-        document.setText("1");
-        documentUpdated(document);
+        const changes: TextDocumentContentChangeEvent[] = document.update("1");
+        documentUpdated(document, changes, document.version);
 
         diagnostics = validate(document);
         expect(diagnostics.length).to.equal(0, "no diagnostics expected");
@@ -43,8 +43,8 @@ describe("validation with workspace cache", () => {
         let diagnostics: Diagnostic[] = validate(document);
         expect(diagnostics.length).to.equal(0, "no diagnostics expected");
 
-        document.setText(";;;;;;");
-        documentUpdated(document);
+        const changes: TextDocumentContentChangeEvent[] = document.update(";;;;;;");
+        documentUpdated(document, changes, document.version);
 
         diagnostics = validate(document);
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
