@@ -32,11 +32,7 @@ export interface AnalysisOptions {
     readonly maintainWorkspaceCache?: boolean;
 }
 
-export function createDocumentAnalysisSession(
-    document: TextDocument,
-    position: Position,
-    options: AnalysisOptions,
-): Analysis {
+export function createAnalysisSession(document: TextDocument, position: Position, options: AnalysisOptions): Analysis {
     return new DocumentAnalysis(document, position, options);
 }
 

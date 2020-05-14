@@ -21,7 +21,7 @@ import {
     Analysis,
     AnalysisOptions,
     CompletionItemProviderContext,
-    createDocumentAnalysisSession,
+    createAnalysisSession,
     HoverProviderContext,
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
@@ -331,12 +331,12 @@ const DefaultAnalysisOptions: AnalysisOptions = {};
 
 function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
-    return createDocumentAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
     const document: MockDocument = documentFromText(readFile(fileName));
-    return createDocumentAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function validateTextWithMarker(text: string): void {
