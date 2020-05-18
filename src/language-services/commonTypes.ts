@@ -3,15 +3,9 @@
 
 import type { DocumentUri, TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
+import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-export type { Diagnostic, DocumentUri, Position, Range, TextDocument };
-
-export const enum DiagnosticSeverity {
-    Error = 1,
-    Warning = 2,
-    Information = 3,
-    Hint = 4,
-}
+export type { Diagnostic, DiagnosticSeverity, DocumentUri, Position, Range, TextDocument };
 
 export interface IDisposable {
     dispose(): void;

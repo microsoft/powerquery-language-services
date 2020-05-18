@@ -228,18 +228,16 @@ abstract class AnalysisBase implements Analysis {
         if (this.getText(currentRange) === ".") {
             for (const token of lineTokens) {
                 if (
+                    token.kind === PQP.Language.LineTokenKind.Identifier &&
                     token.positionStart <= this.position.character - 1 &&
                     token.positionEnd >= this.position.character - 1
                 ) {
-                    if (token.kind === PQP.Language.LineTokenKind.Identifier) {
-                        // Use this token with an adjusted position
-                        return {
-                            data: `${token.data}.`,
-                            kind: token.kind,
-                            positionStart: token.positionStart,
-                            positionEnd: token.positionEnd + 1,
-                        };
-                    }
+                    // Use this token with an adjusted position
+                    return {
+                        ...token,
+                        data: `${token.data}.`,
+                        positionEnd: token.positionEnd + 1,
+                    };
                 }
             }
         }
