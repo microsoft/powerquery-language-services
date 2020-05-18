@@ -7,7 +7,7 @@ import "mocha";
 
 import { Position } from "vscode-languageserver-types";
 import { SignatureProviderContext } from "../../language-services";
-import { InspectionUtils } from "../../language-services";
+import * as InspectionUtils from "../../language-services/inspectionUtils";
 import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
@@ -33,8 +33,8 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.maybeFunctionName).to.equal("Date.AddDays");
-            expect(context.maybeArgumentOrdinal).to.equal(0);
+            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.argumentOrdinal).to.equal(0);
         });
 
         it("Date.AddDays(d,|", () => {
@@ -48,8 +48,8 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.maybeFunctionName).to.equal("Date.AddDays");
-            expect(context.maybeArgumentOrdinal).to.equal(1);
+            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.argumentOrdinal).to.equal(1);
         });
 
         it("Date.AddDays(d,1|", () => {
@@ -63,8 +63,8 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.maybeFunctionName).to.equal("Date.AddDays");
-            expect(context.maybeArgumentOrdinal).to.equal(1);
+            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.argumentOrdinal).to.equal(1);
         });
 
         describe("file", () => {

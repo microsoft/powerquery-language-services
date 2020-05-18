@@ -2,11 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { CompletionItem, Hover, Position, Range, SignatureHelp, TextDocument } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
+import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
-import { InspectionUtils, LanguageServiceUtils, WorkspaceCache } from ".";
+import { AnalysisOptions } from "./analysisOptions";
+import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
+import * as InspectionUtils from "./inspectionUtils";
 import { KeywordProvider } from "./keywordProvider";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
@@ -15,53 +19,50 @@ import {
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
+import * as WorkspaceCache from "./workspaceCache";
 
-export interface Analysis {
+export interface Analysis extends IDisposable {
     getCompletionItems(): Promise<CompletionItem[]>;
     getHover(): Promise<Hover>;
     getSignatureHelp(): Promise<SignatureHelp>;
-}
-
-export interface AnalysisOptions {
-    readonly environmentSymbolProvider?: SymbolProvider;
-    readonly librarySymbolProvider?: LibrarySymbolProvider;
 }
 
 export function createAnalysisSession(document: TextDocument, position: Position, options: AnalysisOptions): Analysis {
     return new DocumentAnalysis(document, position, options);
 }
 
-class DocumentAnalysis implements Analysis {
-    private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined;
-    private readonly environmentSymbolProvider: SymbolProvider;
-    private readonly keywordProvider: KeywordProvider;
-    private readonly librarySymbolProvider: LibrarySymbolProvider;
-    private readonly localSymbolProvider: SymbolProvider;
+abstract class AnalysisBase implements Analysis {
+    protected readonly environmentSymbolProvider: SymbolProvider;
+    protected readonly keywordProvider: KeywordProvider;
+    protected readonly librarySymbolProvider: LibrarySymbolProvider;
+    protected readonly localSymbolProvider: SymbolProvider;
 
-    constructor(
-        private readonly document: TextDocument,
-        private readonly position: Position,
-        options: AnalysisOptions,
-    ) {
-        this.maybeTriedInspection = WorkspaceCache.maybeTriedInspection(this.document, this.position);
+    protected readonly options: AnalysisOptions;
+    protected readonly position: Position;
+    protected readonly triedInspection: PQP.Task.TriedInspection | undefined;
 
-        this.environmentSymbolProvider = options.environmentSymbolProvider
-            ? options.environmentSymbolProvider
+    constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: AnalysisOptions) {
+        this.triedInspection = triedInspection;
+        this.options = options;
+        this.position = position;
+
+        this.environmentSymbolProvider = this.options.environmentSymbolProvider
+            ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.keywordProvider = new KeywordProvider(this.maybeTriedInspection);
-        this.librarySymbolProvider = options.librarySymbolProvider
-            ? options.librarySymbolProvider
+        this.keywordProvider = new KeywordProvider(this.triedInspection);
+        this.librarySymbolProvider = this.options.librarySymbolProvider
+            ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeTriedInspection);
+        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.triedInspection);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.LineToken | undefined = maybeTokenAt(this.document, this.position);
+        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
-                range: getTokenRangeForPosition(maybeToken, this.position),
+                range: AnalysisBase.getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -107,10 +108,10 @@ class DocumentAnalysis implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.LineToken | undefined = maybeIdentifierAt(this.document, this.position);
+        const identifierToken: PQP.Language.LineToken | undefined = this.maybeIdentifierAt();
         if (identifierToken) {
             const context: HoverProviderContext = {
-                range: getTokenRangeForPosition(identifierToken, this.position),
+                range: AnalysisBase.getTokenRangeForPosition(identifierToken, this.position),
                 identifier: identifierToken.data,
             };
 
@@ -132,14 +133,10 @@ class DocumentAnalysis implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        const triedInspection: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
-            this.document,
-            this.position,
-        );
-        if (triedInspection === undefined || PQP.ResultUtils.isErr(triedInspection)) {
+        if (this.triedInspection === undefined || PQP.ResultUtils.isErr(this.triedInspection)) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
-        const inspected: PQP.Task.InspectionOk = triedInspection.value;
+        const inspected: PQP.Task.InspectionOk = this.triedInspection.value;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
             inspected,
@@ -149,7 +146,7 @@ class DocumentAnalysis implements Analysis {
         }
         const context: SignatureProviderContext = maybeContext;
 
-        if (context.maybeFunctionName === undefined) {
+        if (context.functionName === undefined) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
 
@@ -165,82 +162,106 @@ class DocumentAnalysis implements Analysis {
 
         return libraryResponse ?? LanguageServiceUtils.EmptySignatureHelp;
     }
-}
 
-function getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
-    return {
-        start: {
-            line: cursorPosition.line,
-            character: token.positionStart,
-        },
-        end: {
-            line: cursorPosition.line,
-            character: token.positionEnd,
-        },
-    };
-}
+    public abstract dispose(): void;
 
-function maybeIdentifierAt(document: TextDocument, position: Position): PQP.Language.LineToken | undefined {
-    const maybeToken: PQP.Language.LineToken | undefined = maybeTokenAt(document, position);
-    if (maybeToken) {
-        const token: PQP.Language.LineToken = maybeToken;
-        if (token.kind === PQP.Language.LineTokenKind.Identifier) {
-            return token;
-        }
+    protected abstract getLexerState(): PQP.Lexer.State;
+    protected abstract getText(range?: Range): string;
+
+    private static getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
+        return {
+            start: {
+                line: cursorPosition.line,
+                character: token.positionStart,
+            },
+            end: {
+                line: cursorPosition.line,
+                character: token.positionEnd,
+            },
+        };
     }
 
-    return undefined;
-}
+    private maybeIdentifierAt(): PQP.Language.LineToken | undefined {
+        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
+        if (maybeToken) {
+            const token: PQP.Language.LineToken = maybeToken;
+            if (token.kind === PQP.Language.LineTokenKind.Identifier) {
+                return token;
+            }
+        }
 
-function maybeLineTokensAt(
-    document: TextDocument,
-    position: Position,
-): ReadonlyArray<PQP.Language.LineToken> | undefined {
-    const lexResult: PQP.Lexer.State = WorkspaceCache.getLexerState(document);
-    const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[position.line];
-
-    return maybeLine !== undefined ? maybeLine.tokens : undefined;
-}
-
-function maybeTokenAt(document: TextDocument, position: Position): PQP.Language.LineToken | undefined {
-    const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = maybeLineTokensAt(document, position);
-
-    if (maybeLineTokens === undefined) {
         return undefined;
     }
 
-    const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLineTokens;
+    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.LineToken> | undefined {
+        const lexResult: PQP.Lexer.State = this.getLexerState();
+        const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
 
-    for (const token of lineTokens) {
-        if (token.positionStart <= position.character && token.positionEnd >= position.character) {
-            return token;
-        }
+        return maybeLine !== undefined ? maybeLine.tokens : undefined;
     }
 
-    // Token wasn't found - check for special case where current position is a trailing "." on an identifier
-    const currentRange: Range = {
-        start: {
-            line: position.line,
-            character: position.character - 1,
-        },
-        end: position,
-    };
+    private maybeTokenAt(): PQP.Language.LineToken | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = this.maybeLineTokensAt();
 
-    if (document.getText(currentRange) === ".") {
+        if (maybeLineTokens === undefined) {
+            return undefined;
+        }
+
+        const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLineTokens;
+
         for (const token of lineTokens) {
-            if (token.positionStart <= position.character - 1 && token.positionEnd >= position.character - 1) {
-                if (token.kind === PQP.Language.LineTokenKind.Identifier) {
+            if (token.positionStart <= this.position.character && token.positionEnd >= this.position.character) {
+                return token;
+            }
+        }
+
+        // TODO: is this still needed with the latest parser?
+        // Token wasn't found - check for special case where current position is a trailing "." on an identifier
+        const currentRange: Range = {
+            start: {
+                line: this.position.line,
+                character: this.position.character - 1,
+            },
+            end: this.position,
+        };
+
+        if (this.getText(currentRange) === ".") {
+            for (const token of lineTokens) {
+                if (
+                    token.kind === PQP.Language.LineTokenKind.Identifier &&
+                    token.positionStart <= this.position.character - 1 &&
+                    token.positionEnd >= this.position.character - 1
+                ) {
                     // Use this token with an adjusted position
                     return {
+                        ...token,
                         data: `${token.data}.`,
-                        kind: token.kind,
-                        positionStart: token.positionStart,
                         positionEnd: token.positionEnd + 1,
                     };
                 }
             }
         }
+
+        return undefined;
+    }
+}
+
+class DocumentAnalysis extends AnalysisBase {
+    constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
+        super(WorkspaceCache.maybeTriedInspection(document, position), position, options);
     }
 
-    return undefined;
+    public dispose(): void {
+        if (!this.options.maintainWorkspaceCache) {
+            WorkspaceCache.close(this.document);
+        }
+    }
+
+    protected getLexerState(): PQP.Lexer.State {
+        return WorkspaceCache.getLexerState(this.document);
+    }
+
+    protected getText(range?: Range): string {
+        return this.document.getText(range);
+    }
 }

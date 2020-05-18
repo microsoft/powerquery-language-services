@@ -4,9 +4,11 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
-import { DocumentSymbol, SymbolKind, TextDocument } from "vscode-languageserver-types";
+import { TextDocument } from "vscode-languageserver-textdocument";
+import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
 
-import { InspectionUtils, WorkspaceCache } from "../../language-services";
+import * as InspectionUtils from "../../language-services/inspectionUtils";
+import * as WorkspaceCache from "../../language-services/workspaceCache";
 import * as Utils from "./utils";
 
 function getLexAndParseOk(document: TextDocument): PQP.Task.LexParseOk {

@@ -4,7 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, DocumentSymbol, Hover, SignatureHelp } from "vscode-languageserver-types";
 
-import { InspectionUtils, LanguageServiceUtils } from ".";
+import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,

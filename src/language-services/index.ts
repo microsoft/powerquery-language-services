@@ -1,19 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TextDocument } from "vscode-languageserver-types";
-import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import * as WorkspaceCache from "./workspaceCache";
 
-export { LanguageServiceUtils, InspectionUtils, WorkspaceCache };
 export * from "./analysis";
+export * from "./commonTypes";
 export * from "./formatter";
 export * from "./providers";
 export * from "./validation";
 
-export function documentUpdated(document: TextDocument): void {
-    WorkspaceCache.update(document);
+export function createTextDocument(id: string, version: number, content: string): TextDocument {
+    return TextDocument.create(id, "powerquery", version, content);
+}
+
+export function documentUpdated(
+    document: TextDocument,
+    changes: TextDocumentContentChangeEvent[],
+    version: number,
+): void {
+    WorkspaceCache.update(document, changes, version);
 }
 
 export function documentClosed(document: TextDocument): void {

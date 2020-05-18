@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
-import { LanguageServiceUtils } from ".";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import { SignatureProviderContext } from "./providers";
 
 export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): SignatureProviderContext | undefined {
@@ -23,8 +23,8 @@ export function getContextForInvokeExpression(
 
     if (functionName !== undefined || argumentOrdinal !== undefined) {
         return {
-            maybeArgumentOrdinal: argumentOrdinal,
-            maybeFunctionName: functionName,
+            argumentOrdinal,
+            functionName,
         };
     } else {
         return undefined;

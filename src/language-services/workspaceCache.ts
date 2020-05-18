@@ -2,7 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Position, TextDocument } from "vscode-languageserver-types";
+
+import type { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+import { Position } from "vscode-languageserver-types";
 
 const lexerStateCache: Map<string, PQP.Lexer.State> = new Map();
 const lexerSnapshotCache: Map<string, PQP.TriedLexerSnapshot> = new Map();
@@ -10,7 +12,7 @@ const triedLexParseCache: Map<string, PQP.Task.TriedLexParse> = new Map();
 const triedInspectionCache: Map<string, InspectionMap> = new Map();
 
 // Notice that the value type for WeakMap includes undefined.
-// Take thethe scenario where an inspection was requested on a document that was not parsable,
+// Take the scenario where an inspection was requested on a document that was not parsable,
 // then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
 // If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
 // or that we we couldn't do an inspection.
@@ -26,7 +28,7 @@ export function close(textDocument: TextDocument): void {
     });
 }
 
-export function update(textDocument: TextDocument): void {
+export function update(textDocument: TextDocument, _changes: TextDocumentContentChangeEvent[], _version: number): void {
     // TODO: support incremental lexing
     // TODO: premptively prepare cache on background thread?
     // TODO: use document version

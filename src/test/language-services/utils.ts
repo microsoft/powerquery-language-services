@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// TODO: Split this into a separate language-services-test package so it can be reused.
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
+import { TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import {
     CompletionItem,
     CompletionItemKind,
@@ -20,15 +20,15 @@ import {
 
 import {
     Analysis,
-    AnalysisOptions,
     CompletionItemProviderContext,
     createAnalysisSession,
     HoverProviderContext,
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
-    WorkspaceCache,
 } from "../../language-services";
+import { AnalysisOptions } from "../../language-services/analysisOptions";
+import * as WorkspaceCache from "../../language-services/workspaceCache";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
@@ -68,7 +68,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp> {
-        const member: string | undefined = this.getMember(context.maybeFunctionName);
+        const member: string | undefined = this.getMember(context.functionName);
         if (member) {
             return {
                 signatures: [
@@ -78,7 +78,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
                     },
                 ],
                 // tslint:disable-next-line: no-null-keyword
-                activeParameter: context.maybeArgumentOrdinal ? context.maybeArgumentOrdinal : null,
+                activeParameter: context.argumentOrdinal ? context.argumentOrdinal : null,
                 activeSignature: 0,
             };
         }
@@ -240,6 +240,12 @@ export class MockDocument implements TextDocument {
         // or array.length if no line offset is larger than the current offset
         const line: number = low - 1;
         return Position.create(line, offset - lineOffsets[line]);
+    }
+
+    // Helper function
+    public update(text: string): TextDocumentContentChangeEvent[] {
+        this.setText(text);
+        return [{ text }];
     }
 
     public get lineCount(): number {
