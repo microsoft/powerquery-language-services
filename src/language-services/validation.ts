@@ -9,7 +9,7 @@ import { DiagnosticSeverity } from "vscode-languageserver-types";
 import { AnalysisOptions } from "./analysisOptions";
 import * as WorkspaceCache from "./workspaceCache";
 
-export function validate(document: TextDocument, configuration?: AnalysisOptions): Diagnostic[] {
+export function validate(document: TextDocument, options?: AnalysisOptions): Diagnostic[] {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (PQP.ResultUtils.isErr(triedLexParse)) {
@@ -29,7 +29,7 @@ export function validate(document: TextDocument, configuration?: AnalysisOptions
         }
     }
 
-    if (!configuration?.maintainWorkspaceCache) {
+    if (!options?.maintainWorkspaceCache) {
         WorkspaceCache.close(document);
     }
 
