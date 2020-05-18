@@ -27,7 +27,7 @@ import {
     NullLibrarySymbolProvider,
     SignatureProviderContext,
 } from "../../language-services";
-import { Configuration } from "../../language-services/configuration";
+import { AnalysisOptions } from "../../language-services/analysisOptions";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
@@ -101,7 +101,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 }
 
-export const errorAnalysisOptions: Configuration = {
+export const errorAnalysisOptions: AnalysisOptions = {
     librarySymbolProvider: new ErrorLibraryProvider(),
 };
 
@@ -141,23 +141,23 @@ export function expectInspectionOk(document: MockDocument, position: Position): 
     }
 }
 
-export async function getCompletionItems(text: string, analysisOptions?: Configuration): Promise<CompletionItem[]> {
+export async function getCompletionItems(text: string, analysisOptions?: AnalysisOptions): Promise<CompletionItem[]> {
     return createAnalysis(text, analysisOptions).getCompletionItems();
 }
 
 export async function getCompletionItemsForFile(
     fileName: string,
     position: Position,
-    analysisOptions?: Configuration,
+    analysisOptions?: AnalysisOptions,
 ): Promise<CompletionItem[]> {
     return createAnalysisForFile(fileName, position, analysisOptions).getCompletionItems();
 }
 
-export async function getHover(text: string, analysisOptions?: Configuration): Promise<Hover> {
+export async function getHover(text: string, analysisOptions?: AnalysisOptions): Promise<Hover> {
     return createAnalysis(text, analysisOptions).getHover();
 }
 
-export async function getSignatureHelp(text: string, analysisOptions?: Configuration): Promise<SignatureHelp> {
+export async function getSignatureHelp(text: string, analysisOptions?: AnalysisOptions): Promise<SignatureHelp> {
     return createAnalysis(text, analysisOptions).getSignatureHelp();
 }
 
@@ -334,14 +334,14 @@ export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: stri
     File.writeFileSync(filePath, asJson);
 }
 
-const DefaultAnalysisOptions: Configuration = {};
+const DefaultAnalysisOptions: AnalysisOptions = {};
 
-function createAnalysis(text: string, analysisOptions?: Configuration): Analysis {
+function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
-function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: Configuration): Analysis {
+function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
     const document: MockDocument = documentFromText(readFile(fileName));
     return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }

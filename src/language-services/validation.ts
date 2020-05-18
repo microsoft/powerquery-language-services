@@ -6,10 +6,10 @@ import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-import { Configuration } from "./configuration";
+import { AnalysisOptions } from "./analysisOptions";
 import * as WorkspaceCache from "./workspaceCache";
 
-export function validate(document: TextDocument, configuration?: Configuration): Diagnostic[] {
+export function validate(document: TextDocument, configuration?: AnalysisOptions): Diagnostic[] {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (PQP.ResultUtils.isErr(triedLexParse)) {

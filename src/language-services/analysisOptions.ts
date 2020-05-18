@@ -3,7 +3,7 @@
 
 import { LibrarySymbolProvider, SymbolProvider } from "./providers";
 
-export interface Configuration {
+export interface AnalysisOptions {
     readonly environmentSymbolProvider?: SymbolProvider;
     readonly librarySymbolProvider?: LibrarySymbolProvider;
     readonly maintainWorkspaceCache?: boolean;
