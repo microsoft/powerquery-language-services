@@ -5,7 +5,8 @@ import type { DocumentUri, TextDocument } from "vscode-languageserver-textdocume
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-export type { Diagnostic, DiagnosticSeverity, DocumentUri, Position, Range, TextDocument };
+export type { Diagnostic, DocumentUri, Position, Range, TextDocument };
+export { DiagnosticSeverity };
 
 export interface IDisposable {
     dispose(): void;
