@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { DocumentUri, TextDocument } from "vscode-languageserver-textdocument";
+import type { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import type {
     CompletionItem,
     Diagnostic,
@@ -23,6 +23,7 @@ export type {
     Range,
     SignatureHelp,
     TextDocument,
+    TextDocumentContentChangeEvent,
 };
 export { CompletionItemKind, DiagnosticSeverity, SymbolKind };
 

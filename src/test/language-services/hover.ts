@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
 import { assert, expect } from "chai";
 import "mocha";
-import { Hover } from "vscode-languageserver-types";
+import { Hover } from "../../language-services";
 
 import * as Utils from "./utils";
 

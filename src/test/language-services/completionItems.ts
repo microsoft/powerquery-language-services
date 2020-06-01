@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
-import { CompletionItem, CompletionItemKind, Position } from "vscode-languageserver-types";
+import { CompletionItem, CompletionItemKind, Position } from "../../language-services";
 
 import * as Utils from "./utils";
 

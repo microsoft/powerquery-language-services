@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import * as File from "fs";
