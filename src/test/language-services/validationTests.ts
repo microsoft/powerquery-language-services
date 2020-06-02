@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
 import { expect } from "chai";
 import "mocha";
-import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-import { Diagnostic } from "vscode-languageserver-types";
+import { Diagnostic, TextDocument, TextDocumentContentChangeEvent } from "../../language-services";
 
 import { documentUpdated, validate } from "../../language-services";
 import * as Utils from "./utils";

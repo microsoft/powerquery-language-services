@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
+import { DocumentSymbol, SymbolKind, TextDocument } from "../../language-services";
 
 import * as InspectionUtils from "../../language-services/inspectionUtils";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
