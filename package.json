@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -51,6 +51,8 @@
         "vscode-languageserver-textdocument": "1.0.1"
     },
     "files": [
-        "lib/**/*"
+        "lib/*.js",
+        "lib/language-services/**/*.js",
+        "lib/language-services/**/*.d.ts"
     ]
 }
