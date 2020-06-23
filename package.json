@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -52,6 +52,7 @@
     },
     "files": [
         "lib/*.js",
+        "lib/*.d.js",
         "lib/language-services/**/*.js",
         "lib/language-services/**/*.d.ts"
     ]
