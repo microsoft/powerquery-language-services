@@ -14,7 +14,7 @@ import * as Utils from "./utils";
 
 function expectScope(inspected: PQP.Task.InspectionOk, expected: string[]): void {
     const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.scope.entries()]
-        .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].recursive === false)
+        .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].isRecursive === false)
         .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
     expect(inclusiveScopeKeys).to.have.members(expected);
 }

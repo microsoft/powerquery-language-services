@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -30,10 +30,10 @@
     "devDependencies": {
         "@types/chai": "^4.2.11",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^14.0.6",
+        "@types/node": "^14.0.13",
         "chai": "^4.2.0",
-        "mocha": "^7.2.0",
-        "mocha-junit-reporter": "^1.23.3",
+        "mocha": "^8.0.1",
+        "mocha-junit-reporter": "^2.0.0",
         "mocha-multi-reporters": "^1.1.7",
         "prettier": "^2.0.5",
         "ts-loader": "^7.0.5",
@@ -42,11 +42,11 @@
         "tslint-config-prettier": "^1.18.0",
         "tslint-microsoft-contrib": "^6.2.0",
         "tslint-plugin-prettier": "^2.3.0",
-        "typescript": "^3.9.3"
+        "typescript": "^3.9.5"
     },
     "dependencies": {
-        "@microsoft/powerquery-parser": "0.1.54",
-        "@microsoft/powerquery-formatter": "0.0.4",
+        "@microsoft/powerquery-parser": "0.1.56",
+        "@microsoft/powerquery-formatter": "0.0.6",
         "vscode-languageserver-types": "3.15.1",
         "vscode-languageserver-textdocument": "1.0.1"
     },
