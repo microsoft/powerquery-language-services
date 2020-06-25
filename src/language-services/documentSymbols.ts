@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { AnalysisOptions } from "./analysisOptions";
-import { DocumentSymbol, Range, TextDocument } from "./commonTypes";
+import { DocumentSymbol, Range, SymbolKind, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
@@ -78,8 +78,6 @@ function tryTraverse(
 }
 
 function visitNode(state: TraversalState, node: PQP.Language.Ast.TNode): void {
-    let currentSymbol: DocumentSymbol | undefined;
-
     switch (node.kind) {
         case PQP.Language.Ast.NodeKind.Section:
             // TODO: should the section declaration be the root symbol?
@@ -95,28 +93,41 @@ function visitNode(state: TraversalState, node: PQP.Language.Ast.TNode): void {
             break;
 
         case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
-            currentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(node);
+            const currentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(node);
+            addDocumentSymbols(node.id, state, currentSymbol);
+            state.parentSymbolMap.set(node.id, currentSymbol);
+            break;
+
+        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case PQP.Language.Ast.NodeKind.RecordLiteral:
+            // Process the record if the immediate parent is a Struct
+            const parentId: number | undefined = state.nodeIdMapCollection.parentIdById.get(node.id);
+            const parentSymbol: DocumentSymbol | undefined = parentId ? state.parentSymbolMap.get(parentId) : undefined;
+            if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
+                const fieldSymbols: DocumentSymbol[] = InspectionUtils.getSymbolsForRecord(node);
+                if (fieldSymbols.length > 0) {
+                    addDocumentSymbols(node.id, state, ...fieldSymbols);
+                }
+            }
             break;
 
         default:
-            currentSymbol = undefined;
     }
+}
 
-    if (currentSymbol) {
-        const parentSymbol: DocumentSymbol | undefined = findParentSymbol(node.id, state);
-        if (parentSymbol) {
-            if (!parentSymbol.children) {
-                parentSymbol.children = [];
-            }
-
-            parentSymbol.children.push(currentSymbol);
-        } else {
-            // Add to the top level
-            state.result.symbols.push(currentSymbol);
+function addDocumentSymbols(nodeId: number, state: TraversalState, ...symbols: DocumentSymbol[]): void {
+    const parentSymbol: DocumentSymbol | undefined = findParentSymbol(nodeId, state);
+    if (parentSymbol) {
+        if (!parentSymbol.children) {
+            parentSymbol.children = [];
         }
 
-        state.parentSymbolMap.set(node.id, currentSymbol);
+        parentSymbol.children.push(...symbols);
+        return;
     }
+
+    // Add to the top level
+    state.result.symbols.push(...symbols);
 }
 
 function findParentSymbol(nodeId: number, state: TraversalState): DocumentSymbol | undefined {

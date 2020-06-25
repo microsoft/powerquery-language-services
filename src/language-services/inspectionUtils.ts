@@ -95,6 +95,24 @@ export function getSymbolsForLetExpression(expressionNode: PQP.Language.Ast.LetE
     return documentSymbols;
 }
 
+export function getSymbolsForRecord(
+    recordNode: PQP.Language.Ast.RecordExpression | PQP.Language.Ast.RecordLiteral,
+): DocumentSymbol[] {
+    const documentSymbols: DocumentSymbol[] = [];
+
+    for (const element of recordNode.content.elements) {
+        documentSymbols.push({
+            kind: SymbolKind.Field,
+            deprecated: false,
+            name: element.node.key.literal,
+            range: LanguageServiceUtils.tokenRangeToRange(element.node.tokenRange),
+            selectionRange: LanguageServiceUtils.tokenRangeToRange(element.node.key.tokenRange),
+        });
+    }
+
+    return documentSymbols;
+}
+
 export function getSymbolsForSection(sectionNode: PQP.Language.Ast.Section): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
