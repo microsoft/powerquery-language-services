@@ -75,6 +75,9 @@ export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.ParseCo
         case PQP.Language.Ast.NodeKind.RecordLiteral:
             return SymbolKind.Struct;
 
+        case PQP.Language.Ast.NodeKind.Section:
+            return SymbolKind.Module;
+
         default:
             return SymbolKind.Variable;
     }

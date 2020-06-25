@@ -7,6 +7,7 @@ import { assert, expect } from "chai";
 import "mocha";
 import { DocumentSymbol, SymbolKind, TextDocument } from "../../language-services";
 
+import * as DocumentSymbols from "../../language-services/documentSymbols";
 import * as InspectionUtils from "../../language-services/inspectionUtils";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
 import * as Utils from "./utils";
@@ -32,14 +33,15 @@ function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[])
     return expectedSymbols;
 }
 
-function expectSymbols(document: PQP.Language.Ast.TNode, expectedSymbols: ExpectedDocumentSymbol[]): void {
+// Used to test symbols at a specific level of inspection
+function expectSymbolsForNode(node: PQP.Language.Ast.TNode, expectedSymbols: ExpectedDocumentSymbol[]): void {
     let actualSymbols: ExpectedDocumentSymbol[];
 
-    if (document.kind === PQP.Language.Ast.NodeKind.Section) {
-        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForSection(document);
+    if (node.kind === PQP.Language.Ast.NodeKind.Section) {
+        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForSection(node);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
-    } else if (document.kind === PQP.Language.Ast.NodeKind.LetExpression) {
-        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForLetExpression(document);
+    } else if (node.kind === PQP.Language.Ast.NodeKind.LetExpression) {
+        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForLetExpression(node);
         actualSymbols = documentSymbolArrayToExpectedSymbols(result);
     } else {
         throw new Error("unsupported code path");
@@ -50,14 +52,25 @@ function expectSymbols(document: PQP.Language.Ast.TNode, expectedSymbols: Expect
     expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.");
 }
 
-describe("Document symbols", () => {
+// Used to check entire symbol heirarchy returned by getDocumentSymbols()
+function expectSymbolsForDocument(document: TextDocument, expectedSymbols: ExpectedDocumentSymbol[]): void {
+    const actualSymbols: ExpectedDocumentSymbol[] = documentSymbolArrayToExpectedSymbols(
+        DocumentSymbols.getDocumentSymbols(document),
+    );
+
+    assert.isDefined(actualSymbols);
+
+    expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.");
+}
+
+describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1; b = "abc"; c = true;`);
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
-        expectSymbols(lexAndParseOk.ast, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
             { name: "c", kind: SymbolKind.Boolean },
@@ -70,7 +83,7 @@ describe("Document symbols", () => {
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
-        expectSymbols(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
+        expectSymbolsForNode(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
@@ -79,20 +92,20 @@ describe("Document symbols", () => {
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.LetExpression);
 
-        expectSymbols(lexAndParseOk.ast, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.Number },
             { name: "c", kind: SymbolKind.Number },
         ]);
     });
 
-    it("HelloWorldWithDocs file", () => {
+    it("HelloWorldWithDocs file section", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("HelloWorldWithDocs.pq");
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
-        expectSymbols(lexAndParseOk.ast, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
             { name: "HelloWorldImpl", kind: SymbolKind.Function },
@@ -101,17 +114,28 @@ describe("Document symbols", () => {
         ]);
     });
 
-    it("DirectQueryForSQL file", () => {
+    it("DirectQueryForSQL file section", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("DirectQueryForSQL.pq");
         const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
 
         expect(lexAndParseOk.ast.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
 
-        expectSymbols(lexAndParseOk.ast, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },
             { name: "DirectSQL", kind: SymbolKind.Struct },
             { name: "DirectSQL.UI", kind: SymbolKind.Struct },
             { name: "DirectSQL.Icons", kind: SymbolKind.Struct },
+        ]);
+    });
+});
+
+describe("getDocumentSymbols", () => {
+    it(`section foo; shared a = 1;`, () => {
+        const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1;`);
+
+        expectSymbolsForDocument(document, [
+            { name: "a", kind: SymbolKind.Number },
+            { name: "a", kind: SymbolKind.Variable },
         ]);
     });
 });
