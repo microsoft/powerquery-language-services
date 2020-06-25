@@ -23,12 +23,19 @@ function getLexAndParseOk(document: TextDocument): PQP.Task.LexParseOk {
 interface ExpectedDocumentSymbol {
     name: string;
     kind: SymbolKind;
+    children?: ExpectedDocumentSymbol[];
 }
 
 function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[]): ExpectedDocumentSymbol[] {
     const expectedSymbols: ExpectedDocumentSymbol[] = [];
     documentSymbols.forEach(element => {
-        expectedSymbols.push({ name: element.name, kind: element.kind });
+        let children: ExpectedDocumentSymbol[] | undefined;
+        if (element.children) {
+            children = documentSymbolArrayToExpectedSymbols(element.children);
+            expectedSymbols.push({ name: element.name, kind: element.kind, children });
+        } else {
+            expectedSymbols.push({ name: element.name, kind: element.kind });
+        }
     });
     return expectedSymbols;
 }
@@ -49,7 +56,7 @@ function expectSymbolsForNode(node: PQP.Language.Ast.TNode, expectedSymbols: Exp
 
     assert.isDefined(actualSymbols);
 
-    expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.");
+    expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.\n");
 }
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
@@ -60,7 +67,10 @@ function expectSymbolsForDocument(document: TextDocument, expectedSymbols: Expec
 
     assert.isDefined(actualSymbols);
 
-    expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.");
+    expect(actualSymbols).deep.equals(
+        expectedSymbols,
+        "Expected document symbols to match.\n" + JSON.stringify(actualSymbols),
+    );
 }
 
 describe("Document symbol base functions", () => {
@@ -134,8 +144,49 @@ describe("getDocumentSymbols", () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1;`);
 
         expectSymbolsForDocument(document, [
+            { name: "foo", kind: SymbolKind.Module },
             { name: "a", kind: SymbolKind.Number },
-            { name: "a", kind: SymbolKind.Variable },
+        ]);
+    });
+
+    it(`section foo; shared query = let a = 1 in a;`, () => {
+        const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared query = let a = 1 in a;`);
+
+        expectSymbolsForDocument(document, [
+            { name: "foo", kind: SymbolKind.Module },
+            { name: "query", kind: SymbolKind.Variable, children: [{ name: "a", kind: SymbolKind.Number }] },
+        ]);
+    });
+
+    it(`let a = 1, b = "hello", c = () => 1 in c`, () => {
+        const document: Utils.MockDocument = Utils.documentFromText(`let a = 1, b = "hello", c = () => 1 in c`);
+
+        expectSymbolsForDocument(document, [
+            { name: "a", kind: SymbolKind.Number },
+            { name: "b", kind: SymbolKind.String },
+            { name: "c", kind: SymbolKind.Function },
+        ]);
+    });
+
+    it(`HelloWorldWithDocs.pq`, () => {
+        const document: Utils.MockDocument = Utils.documentFromFile("HelloWorldWithDocs.pq");
+
+        expectSymbolsForDocument(document, [
+            { name: "HelloWorldWithDocs", kind: SymbolKind.Module },
+            // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType
+            { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
+            { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
+            {
+                name: "HelloWorldImpl",
+                kind: SymbolKind.Function,
+                children: [
+                    { name: "_count", kind: SymbolKind.Variable },
+                    { name: "listOfMessages", kind: SymbolKind.Variable },
+                    { name: "table", kind: SymbolKind.Variable },
+                ],
+            },
+            { name: "HelloWorldWithDocs", kind: SymbolKind.Struct },
+            { name: "HelloWorldWithDocs.Publish", kind: SymbolKind.Struct },
         ]);
     });
 });

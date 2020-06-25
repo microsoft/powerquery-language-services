@@ -4,9 +4,9 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { AnalysisOptions } from "./analysisOptions";
-import { DocumentSymbol, Range, SymbolKind, TextDocument } from "./commonTypes";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import { DocumentSymbol, Range, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 const DefaultLocale: string = PQP.Locale.en_US;
@@ -42,10 +42,12 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
 
 interface DocumentOutline {
     symbols: DocumentSymbol[];
-    currentParent?: DocumentSymbol;
 }
 
-interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {}
+interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
+    parentSymbolMap: Map<number, DocumentSymbol>;
+}
 
 function tryTraverse(
     ast: PQP.Language.Ast.TNode,
@@ -57,6 +59,8 @@ function tryTraverse(
 
     const traversalState: TraversalState = {
         localizationTemplates,
+        nodeIdMapCollection,
+        parentSymbolMap: new Map<number, DocumentSymbol>(),
         result: {
             symbols: [],
         },
@@ -66,7 +70,7 @@ function tryTraverse(
         traversalState,
         nodeIdMapCollection,
         ast,
-        PQP.Traverse.VisitNodeStrategy.DepthFirst,
+        PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         PQP.Traverse.expectExpandAllAstChildren,
         undefined,
@@ -78,7 +82,20 @@ function visitNode(state: TraversalState, node: PQP.Language.Ast.TNode): void {
 
     switch (node.kind) {
         case PQP.Language.Ast.NodeKind.Section:
-            currentSymbol = createDocumentSymbol(node.maybeName, node, node.maybeName?.tokenRange);
+            // TODO: should the section declaration be the root symbol?
+            const sectionSymbol: DocumentSymbol | undefined = createDocumentSymbol(
+                node.maybeName,
+                node,
+                node.maybeName?.tokenRange,
+            );
+
+            if (sectionSymbol) {
+                state.result.symbols.push(sectionSymbol);
+            }
+            break;
+
+        case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
+            currentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(node);
             break;
 
         default:
@@ -86,17 +103,36 @@ function visitNode(state: TraversalState, node: PQP.Language.Ast.TNode): void {
     }
 
     if (currentSymbol) {
-        if (state.result.currentParent) {
-            if (!state.result.currentParent.children) {
-                state.result.currentParent.children = [];
+        const parentSymbol: DocumentSymbol | undefined = findParentSymbol(node.id, state);
+        if (parentSymbol) {
+            if (!parentSymbol.children) {
+                parentSymbol.children = [];
             }
 
-            state.result.currentParent.children.push(currentSymbol);
+            parentSymbol.children.push(currentSymbol);
         } else {
-            // Add it to the root list of symbols
+            // Add to the top level
             state.result.symbols.push(currentSymbol);
         }
+
+        state.parentSymbolMap.set(node.id, currentSymbol);
     }
+}
+
+function findParentSymbol(nodeId: number, state: TraversalState): DocumentSymbol | undefined {
+    // Get parent for current node
+    const parentNodeId: number | undefined = state.nodeIdMapCollection.parentIdById.get(nodeId);
+    if (!parentNodeId) {
+        // No more parents to check
+        return undefined;
+    }
+
+    let parentSymbol: DocumentSymbol | undefined = state.parentSymbolMap.get(parentNodeId);
+    if (!parentSymbol) {
+        parentSymbol = findParentSymbol(parentNodeId, state);
+    }
+
+    return parentSymbol;
 }
 
 function createDocumentSymbol(
@@ -110,6 +146,7 @@ function createDocumentSymbol(
 
     const range: Range = LanguageServiceUtils.tokenRangeToRange(node.tokenRange);
     return {
+        deprecated: false,
         kind: InspectionUtils.getSymbolKindFromNode(node),
         name: name.literal,
         range: LanguageServiceUtils.tokenRangeToRange(node.tokenRange),
