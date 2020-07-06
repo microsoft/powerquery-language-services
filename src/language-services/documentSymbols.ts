@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { AnalysisOptions } from "./analysisOptions";
-import { DocumentSymbol, TextDocument } from "./commonTypes";
+import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
@@ -85,25 +85,37 @@ function tryTraverse(
 function earlyExit(_state: TraversalState, currentXorNode: PQP.TXorNode): boolean {
     return (
         currentXorNode.node.kind === PQP.Language.Ast.NodeKind.ErrorHandlingExpression ||
-        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression ||
-        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.RecordExpression
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression
     );
 }
 
 function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
+    // TODO: support processing context nodes
+    if (currentXorNode.kind === PQP.XorNodeKind.Context) {
+        return;
+    }
+
     switch (currentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
-            // TODO: support processing context nodes
-            if (currentXorNode.kind === PQP.XorNodeKind.Context) {
-                break;
-            }
-
             const identifierPairedExpressionNode: PQP.Language.Ast.IdentifierPairedExpression = currentXorNode.node as PQP.Language.Ast.IdentifierPairedExpression;
             const currentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(
                 identifierPairedExpressionNode,
             );
             addDocumentSymbols(identifierPairedExpressionNode.id, state, currentSymbol);
             state.parentSymbolMap.set(identifierPairedExpressionNode.id, currentSymbol);
+            break;
+
+        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case PQP.Language.Ast.NodeKind.RecordLiteral:
+            // Process the record if the immediate parent is a Struct
+            const parentId: number | undefined = state.nodeIdMapCollection.parentIdById.get(currentXorNode.node.id);
+            const parentSymbol: DocumentSymbol | undefined = parentId ? state.parentSymbolMap.get(parentId) : undefined;
+            if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
+                const fieldSymbols: DocumentSymbol[] = InspectionUtils.getSymbolsForRecord(currentXorNode.node);
+                if (fieldSymbols.length > 0) {
+                    addDocumentSymbols(currentXorNode.node.id, state, ...fieldSymbols);
+                }
+            }
             break;
 
         default:

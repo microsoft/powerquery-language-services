@@ -95,16 +95,16 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldWithDocs",
                 kind: SymbolKind.Struct,
-                // children: [{ name: "Authentication", kind: SymbolKind.Field }],
+                children: [{ name: "Authentication", kind: SymbolKind.Field }],
             },
             {
                 name: "HelloWorldWithDocs.Publish",
                 kind: SymbolKind.Struct,
-                // children: [
-                //     { name: "Beta", kind: SymbolKind.Field },
-                //     { name: "Category", kind: SymbolKind.Field },
-                //     { name: "ButtonText", kind: SymbolKind.Field },
-                // ],
+                children: [
+                    { name: "Beta", kind: SymbolKind.Field },
+                    { name: "Category", kind: SymbolKind.Field },
+                    { name: "ButtonText", kind: SymbolKind.Field },
+                ],
             },
         ]);
     });
