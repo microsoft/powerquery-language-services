@@ -14,19 +14,27 @@ export interface ValidationResult {
     readonly syntaxError: boolean;
 }
 
-export function validate(document: TextDocument, options?: AnalysisOptions): ValidationResult {
+export interface ValidationOptions extends AnalysisOptions {
+    readonly source?: string;
+}
+
+export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (PQP.ResultUtils.isErr(triedLexParse)) {
         const lexOrParseError: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
         if (lexOrParseError instanceof PQP.ParseError.ParseError) {
-            const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(lexOrParseError);
+            const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(
+                lexOrParseError,
+                options?.source,
+            );
             if (maybeDiagnostic !== undefined) {
                 diagnostics = [maybeDiagnostic];
             }
         } else if (PQP.LexError.isTInnerLexError(lexOrParseError.innerError)) {
             const maybeLexerErrorDiagnostics: Diagnostic[] | undefined = maybeLexErrorToDiagnostics(
                 lexOrParseError.innerError,
+                options?.source,
             );
             if (maybeLexerErrorDiagnostics !== undefined) {
                 diagnostics = maybeLexerErrorDiagnostics;
@@ -44,7 +52,7 @@ export function validate(document: TextDocument, options?: AnalysisOptions): Val
     };
 }
 
-function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnostic[] | undefined {
+function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError, source?: string): Diagnostic[] | undefined {
     const diagnostics: Diagnostic[] = [];
     // TODO: handle other types of lexer errors
     if (error instanceof PQP.LexError.ErrorLineMapError) {
@@ -61,6 +69,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnos
                 diagnostics.push({
                     message,
                     severity: DiagnosticSeverity.Error,
+                    source,
                     range: {
                         start: position,
                         end: position,
@@ -72,7 +81,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnos
     return diagnostics.length ? diagnostics : undefined;
 }
 
-function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): Diagnostic | undefined {
+function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: string): Diagnostic | undefined {
     const innerError: PQP.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
     let maybeErrorToken: PQP.Language.Token | undefined;
@@ -136,7 +145,8 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError): Diagnost
 
     return {
         message,
-        severity: DiagnosticSeverity.Error,
         range,
+        severity: DiagnosticSeverity.Error,
+        source,
     };
 }
