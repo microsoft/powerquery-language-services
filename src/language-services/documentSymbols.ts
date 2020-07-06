@@ -14,24 +14,26 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let result: DocumentSymbol[] = [];
 
+    let contextState: PQP.ParseContext.State | undefined = undefined;
     if (PQP.ResultUtils.isOk(triedLexParse)) {
-        const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
-        if (lexParseOk.state.contextState.root.maybeNode) {
-            const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(
-                lexParseOk.state.contextState.root.maybeNode,
-            );
-            const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
+        contextState = triedLexParse.value.state.contextState;
+    } else if (triedLexParse.error instanceof PQP.ParseError.ParseError) {
+        contextState = triedLexParse.error.state.contextState;
+    }
 
-            const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
-                rootNode,
-                nodeIdMapCollection,
-                options,
-            );
+    if (contextState && contextState.root.maybeNode) {
+        const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
+        const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
 
-            // TODO: Trace error case
-            if (PQP.ResultUtils.isOk(documentOutlineResult)) {
-                result = documentOutlineResult.value.symbols;
-            }
+        const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
+            rootNode,
+            nodeIdMapCollection,
+            options,
+        );
+
+        // TODO: Trace error case
+        if (PQP.ResultUtils.isOk(documentOutlineResult)) {
+            result = documentOutlineResult.value.symbols;
         }
     }
 
@@ -75,13 +77,27 @@ function tryTraverse(
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         PQP.Traverse.expectExpandAllXorChildren,
-        undefined,
+        earlyExit,
+    );
+}
+
+// TODO: Optimize this based on the symbols we want to expose in the tree
+function earlyExit(_state: TraversalState, currentXorNode: PQP.TXorNode): boolean {
+    return (
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.ErrorHandlingExpression ||
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression ||
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.RecordExpression
     );
 }
 
 function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
     switch (currentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
+            // TODO: support processing context nodes
+            if (currentXorNode.kind === PQP.XorNodeKind.Context) {
+                break;
+            }
+
             const identifierPairedExpressionNode: PQP.Language.Ast.IdentifierPairedExpression = currentXorNode.node as PQP.Language.Ast.IdentifierPairedExpression;
             const currentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(
                 identifierPairedExpressionNode,

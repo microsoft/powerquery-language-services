@@ -65,9 +65,9 @@ describe("getDocumentSymbols", () => {
     });
 
     // with syntax error
-    it(`shared foo; shared a = 1; b = "hello"; c = let a1`, () => {
+    it(`section foo; shared a = 1; b = "hello"; c = let a1`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(
-            `shared foo; shared a = 1; b = "hello"; c = let a1`,
+            `section foo; shared a = 1; b = "hello"; c = let a1`,
         );
 
         expectSymbolsForDocument(document, [
