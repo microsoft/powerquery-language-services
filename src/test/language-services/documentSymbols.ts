@@ -28,17 +28,13 @@ describe("getDocumentSymbols", () => {
     it(`section foo; shared a = 1;`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1;`);
 
-        expectSymbolsForDocument(document, [
-            { name: "foo", kind: SymbolKind.Module },
-            { name: "a", kind: SymbolKind.Number },
-        ]);
+        expectSymbolsForDocument(document, [{ name: "a", kind: SymbolKind.Number }]);
     });
 
     it(`section foo; shared query = let a = 1 in a;`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared query = let a = 1 in a;`);
 
         expectSymbolsForDocument(document, [
-            { name: "foo", kind: SymbolKind.Module },
             { name: "query", kind: SymbolKind.Variable, children: [{ name: "a", kind: SymbolKind.Number }] },
         ]);
     });
@@ -53,11 +49,37 @@ describe("getDocumentSymbols", () => {
         ]);
     });
 
+    it(`let a = let b = 1, c = let d = 1 in d in c in a`, () => {
+        const document: Utils.MockDocument = Utils.documentFromText(`let a = let b = 1, c = let d = 1 in d in c in a`);
+
+        expectSymbolsForDocument(document, [
+            {
+                name: "a",
+                kind: SymbolKind.Variable,
+                children: [
+                    { name: "b", kind: SymbolKind.Number },
+                    { name: "c", kind: SymbolKind.Variable, children: [{ name: "d", kind: SymbolKind.Number }] },
+                ],
+            },
+        ]);
+    });
+
+    // with syntax error
+    it(`shared foo; shared a = 1; b = "hello"; c = let a1`, () => {
+        const document: Utils.MockDocument = Utils.documentFromText(
+            `shared foo; shared a = 1; b = "hello"; c = let a1`,
+        );
+
+        expectSymbolsForDocument(document, [
+            { name: "a", kind: SymbolKind.Number },
+            { name: "b", kind: SymbolKind.String },
+        ]);
+    });
+
     it(`HelloWorldWithDocs.pq`, () => {
         const document: Utils.MockDocument = Utils.documentFromFile("HelloWorldWithDocs.pq");
 
         expectSymbolsForDocument(document, [
-            { name: "HelloWorldWithDocs", kind: SymbolKind.Module },
             // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
@@ -73,16 +95,16 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldWithDocs",
                 kind: SymbolKind.Struct,
-                children: [{ name: "Authentication", kind: SymbolKind.Field }],
+                // children: [{ name: "Authentication", kind: SymbolKind.Field }],
             },
             {
                 name: "HelloWorldWithDocs.Publish",
                 kind: SymbolKind.Struct,
-                children: [
-                    { name: "Beta", kind: SymbolKind.Field },
-                    { name: "Category", kind: SymbolKind.Field },
-                    { name: "ButtonText", kind: SymbolKind.Field },
-                ],
+                // children: [
+                //     { name: "Beta", kind: SymbolKind.Field },
+                //     { name: "Category", kind: SymbolKind.Field },
+                //     { name: "ButtonText", kind: SymbolKind.Field },
+                // ],
             },
         ]);
     });

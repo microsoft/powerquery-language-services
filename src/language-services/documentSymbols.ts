@@ -4,9 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { AnalysisOptions } from "./analysisOptions";
-import { DocumentSymbol, Range, SymbolKind, TextDocument } from "./commonTypes";
+import { DocumentSymbol, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 const DefaultLocale: string = PQP.Locale.en_US;
@@ -15,21 +14,24 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let result: DocumentSymbol[] = [];
 
-    // TODO: Can we get symbols even when there is a syntax error?
     if (PQP.ResultUtils.isOk(triedLexParse)) {
         const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
-        const ast: PQP.Language.Ast.TNode = lexParseOk.ast;
-        const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
+        if (lexParseOk.state.contextState.root.maybeNode) {
+            const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(
+                lexParseOk.state.contextState.root.maybeNode,
+            );
+            const nodeIdMapCollection: PQP.NodeIdMap.Collection = lexParseOk.state.contextState.nodeIdMapCollection;
 
-        const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
-            ast,
-            nodeIdMapCollection,
-            options,
-        );
+            const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
+                rootNode,
+                nodeIdMapCollection,
+                options,
+            );
 
-        // TODO: Trace error case
-        if (PQP.ResultUtils.isOk(documentOutlineResult)) {
-            result = documentOutlineResult.value.symbols;
+            // TODO: Trace error case
+            if (PQP.ResultUtils.isOk(documentOutlineResult)) {
+                result = documentOutlineResult.value.symbols;
+            }
         }
     }
 
@@ -50,7 +52,7 @@ interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {
 }
 
 function tryTraverse(
-    ast: PQP.Language.Ast.TNode,
+    root: PQP.TXorNode,
     nodeIdMapCollection: PQP.NodeIdMap.Collection,
     options?: AnalysisOptions,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
@@ -66,49 +68,26 @@ function tryTraverse(
         },
     };
 
-    return PQP.Traverse.tryTraverseAst(
+    return PQP.Traverse.tryTraverseXor(
         traversalState,
         nodeIdMapCollection,
-        ast,
+        root,
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        PQP.Traverse.expectExpandAllAstChildren,
+        PQP.Traverse.expectExpandAllXorChildren,
         undefined,
     );
 }
 
-function visitNode(state: TraversalState, node: PQP.Language.Ast.TNode): void {
-    switch (node.kind) {
-        case PQP.Language.Ast.NodeKind.Section:
-            // TODO: should the section declaration be the root symbol?
-            const sectionSymbol: DocumentSymbol | undefined = createDocumentSymbol(
-                node.maybeName,
-                node,
-                node.maybeName?.tokenRange,
-            );
-
-            if (sectionSymbol) {
-                state.result.symbols.push(sectionSymbol);
-            }
-            break;
-
+function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
+    switch (currentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
-            const currentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(node);
-            addDocumentSymbols(node.id, state, currentSymbol);
-            state.parentSymbolMap.set(node.id, currentSymbol);
-            break;
-
-        case PQP.Language.Ast.NodeKind.RecordExpression:
-        case PQP.Language.Ast.NodeKind.RecordLiteral:
-            // Process the record if the immediate parent is a Struct
-            const parentId: number | undefined = state.nodeIdMapCollection.parentIdById.get(node.id);
-            const parentSymbol: DocumentSymbol | undefined = parentId ? state.parentSymbolMap.get(parentId) : undefined;
-            if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
-                const fieldSymbols: DocumentSymbol[] = InspectionUtils.getSymbolsForRecord(node);
-                if (fieldSymbols.length > 0) {
-                    addDocumentSymbols(node.id, state, ...fieldSymbols);
-                }
-            }
+            const identifierPairedExpressionNode: PQP.Language.Ast.IdentifierPairedExpression = currentXorNode.node as PQP.Language.Ast.IdentifierPairedExpression;
+            const currentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(
+                identifierPairedExpressionNode,
+            );
+            addDocumentSymbols(identifierPairedExpressionNode.id, state, currentSymbol);
+            state.parentSymbolMap.set(identifierPairedExpressionNode.id, currentSymbol);
             break;
 
         default:
@@ -144,23 +123,4 @@ function findParentSymbol(nodeId: number, state: TraversalState): DocumentSymbol
     }
 
     return parentSymbol;
-}
-
-function createDocumentSymbol(
-    name: PQP.Language.Ast.Identifier | undefined,
-    node: PQP.Language.Ast.TNode,
-    selectionRange: PQP.Language.TokenRange | undefined,
-): DocumentSymbol | undefined {
-    if (!name) {
-        return undefined;
-    }
-
-    const range: Range = LanguageServiceUtils.tokenRangeToRange(node.tokenRange);
-    return {
-        deprecated: false,
-        kind: InspectionUtils.getSymbolKindFromNode(node),
-        name: name.literal,
-        range: LanguageServiceUtils.tokenRangeToRange(node.tokenRange),
-        selectionRange: selectionRange ? LanguageServiceUtils.tokenRangeToRange(selectionRange) : range,
-    };
 }
