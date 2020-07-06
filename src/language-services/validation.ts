@@ -9,7 +9,12 @@ import { DiagnosticSeverity } from "vscode-languageserver-types";
 import { AnalysisOptions } from "./analysisOptions";
 import * as WorkspaceCache from "./workspaceCache";
 
-export function validate(document: TextDocument, options?: AnalysisOptions): Diagnostic[] {
+export interface ValidationResult {
+    readonly diagnostics: Diagnostic[];
+    readonly syntaxError: boolean;
+}
+
+export function validate(document: TextDocument, options?: AnalysisOptions): ValidationResult {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
     if (PQP.ResultUtils.isErr(triedLexParse)) {
@@ -33,7 +38,10 @@ export function validate(document: TextDocument, options?: AnalysisOptions): Dia
         WorkspaceCache.close(document);
     }
 
-    return diagnostics;
+    return {
+        syntaxError: PQP.ResultUtils.isErr(triedLexParse),
+        diagnostics,
+    };
 }
 
 function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError): Diagnostic[] | undefined {
