@@ -10,11 +10,10 @@ import type {
     Position,
     Range,
 } from "vscode-languageserver-types";
-import { DiagnosticSeverity } from "vscode-languageserver-types";
+import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
-import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
@@ -58,7 +57,7 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
         contextState = triedLexParse.value.state.contextState;
     }
 
-    // TODO: Look for unknown identifiers used
+    // TODO: Look for unknown identifiers
 
     if (contextState && contextState.root.maybeNode) {
         const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
@@ -189,6 +188,7 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
 
 interface TraversalState extends PQP.Traverse.IState<Diagnostic[]> {
     readonly documentUri: string;
+    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
     readonly source?: string;
 }
 
@@ -204,6 +204,7 @@ function tryTraverse(
     const traversalState: TraversalState = {
         documentUri,
         localizationTemplates,
+        nodeIdMapCollection,
         result: [],
         source: options?.source,
     };
@@ -215,38 +216,60 @@ function tryTraverse(
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
         PQP.Traverse.expectExpandAllXorChildren,
-        earlyExit,
+        undefined,
     );
 }
 
-// TODO: Optimize this based on the symbols we want to expose in the tree
-function earlyExit(_state: TraversalState, currentXorNode: PQP.TXorNode): boolean {
-    return (
-        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.ErrorHandlingExpression ||
-        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression
-    );
+function keyValuePairsToSymbols(
+    keyValuePairs: ReadonlyArray<
+        PQP.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
+    >,
+): DocumentSymbol[] {
+    const symbols: DocumentSymbol[] = [];
+    keyValuePairs.forEach(value => {
+        const range: Range = LanguageServiceUtils.tokenRangeToRange(value.key.tokenRange);
+        symbols.push({
+            kind: SymbolKind.Variable,
+            name: value.keyLiteral,
+            range,
+            selectionRange: range,
+        });
+    });
+
+    return symbols;
 }
 
 function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
-    if (currentXorNode.kind === PQP.XorNodeKind.Context) {
-        return;
-    }
-
     let symbols: DocumentSymbol[] | undefined = undefined;
 
+    // TODO: Validate that "in" variable exists
     switch (currentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.LetExpression:
-            // TODO: Validate that "in" variable exists
-            symbols = InspectionUtils.getSymbolsForLetExpression(currentXorNode.node);
+            const letMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+                PQP.Language.Ast.Identifier
+            >> = PQP.NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            if (letMembers.length > 1) {
+                symbols = keyValuePairsToSymbols(letMembers);
+            }
             break;
 
         case PQP.Language.Ast.NodeKind.RecordExpression:
         case PQP.Language.Ast.NodeKind.RecordLiteral:
-            symbols = InspectionUtils.getSymbolsForRecord(currentXorNode.node);
+            const recordFields: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+                PQP.Language.Ast.GeneralizedIdentifier
+            >> = PQP.NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            if (recordFields.length > 1) {
+                symbols = keyValuePairsToSymbols(recordFields);
+            }
             break;
 
         case PQP.Language.Ast.NodeKind.Section:
-            symbols = InspectionUtils.getSymbolsForSection(currentXorNode.node);
+            const sectionMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+                PQP.Language.Ast.Identifier
+            >> = PQP.NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            if (sectionMembers.length > 1) {
+                symbols = keyValuePairsToSymbols(sectionMembers);
+            }
             break;
 
         default:
