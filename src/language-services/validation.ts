@@ -3,10 +3,19 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import type { TextDocument } from "vscode-languageserver-textdocument";
-import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
+import type {
+    Diagnostic,
+    DiagnosticRelatedInformation,
+    DocumentSymbol,
+    Position,
+    Range,
+} from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysisOptions";
+import { DiagnosticErrorCode } from "./diagnosticErrorCode";
+import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 export interface ValidationResult {
@@ -21,9 +30,14 @@ export interface ValidationOptions extends AnalysisOptions {
 export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
     let diagnostics: Diagnostic[] = [];
+
+    let contextState: PQP.ParseContext.State | undefined = undefined;
+
+    // Check for syntax errors
     if (PQP.ResultUtils.isErr(triedLexParse)) {
         const lexOrParseError: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
         if (lexOrParseError instanceof PQP.ParseError.ParseError) {
+            contextState = lexOrParseError.state.contextState;
             const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(
                 lexOrParseError,
                 options?.source,
@@ -39,6 +53,25 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
             if (maybeLexerErrorDiagnostics !== undefined) {
                 diagnostics = maybeLexerErrorDiagnostics;
             }
+        }
+    } else {
+        contextState = triedLexParse.value.state.contextState;
+    }
+
+    // TODO: Check for unknown identifiers
+    if (contextState && contextState.root.maybeNode) {
+        const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
+        const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
+        const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
+            document.uri,
+            rootNode,
+            nodeIdMapCollection,
+            options,
+        );
+
+        // TODO: Trace error case
+        if (PQP.ResultUtils.isOk(triedTraverse)) {
+            diagnostics.push(...triedTraverse.value);
         }
     }
 
@@ -67,6 +100,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError, source?:
                 };
                 // TODO: "lex" errors aren't that useful to display to end user. Should we make it more generic?
                 diagnostics.push({
+                    code: DiagnosticErrorCode.LexError,
                     message,
                     severity: DiagnosticSeverity.Error,
                     source,
@@ -144,9 +178,122 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
     }
 
     return {
+        code: DiagnosticErrorCode.ParserError,
         message,
         range,
         severity: DiagnosticSeverity.Error,
         source,
     };
+}
+
+interface TraversalState extends PQP.Traverse.IState<Diagnostic[]> {
+    readonly documentUri: string;
+    readonly source?: string;
+}
+
+function tryTraverse(
+    documentUri: string,
+    root: PQP.TXorNode,
+    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+    options?: ValidationOptions,
+): PQP.Traverse.TriedTraverse<Diagnostic[]> {
+    const locale: string = LanguageServiceUtils.getLocale(options);
+    const localizationTemplates: PQP.ILocalizationTemplates = PQP.getLocalizationTemplates(locale);
+
+    const traversalState: TraversalState = {
+        documentUri,
+        localizationTemplates,
+        result: [],
+        source: options?.source,
+    };
+
+    return PQP.Traverse.tryTraverseXor(
+        traversalState,
+        nodeIdMapCollection,
+        root,
+        PQP.Traverse.VisitNodeStrategy.BreadthFirst,
+        visitNode,
+        PQP.Traverse.expectExpandAllXorChildren,
+        earlyExit,
+    );
+}
+
+// TODO: Optimize this based on the symbols we want to expose in the tree
+function earlyExit(_state: TraversalState, currentXorNode: PQP.TXorNode): boolean {
+    return (
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.ErrorHandlingExpression ||
+        currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression
+    );
+}
+
+function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
+    if (currentXorNode.kind === PQP.XorNodeKind.Context) {
+        return;
+    }
+
+    let symbols: DocumentSymbol[] | undefined = undefined;
+
+    switch (currentXorNode.node.kind) {
+        case PQP.Language.Ast.NodeKind.LetExpression:
+            // TODO: Validate that "in" variable exists
+            symbols = InspectionUtils.getSymbolsForLetExpression(currentXorNode.node);
+            break;
+
+        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case PQP.Language.Ast.NodeKind.RecordLiteral:
+            symbols = InspectionUtils.getSymbolsForRecord(currentXorNode.node);
+            break;
+
+        case PQP.Language.Ast.NodeKind.Section:
+            symbols = InspectionUtils.getSymbolsForSection(currentXorNode.node);
+            break;
+
+        default:
+    }
+
+    if (symbols) {
+        // Look for duplicate member/variable/field names
+        state.result.push(...identifyDuplicateSymbols(state, symbols));
+    }
+}
+
+function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol[]): Diagnostic[] {
+    const result: Diagnostic[] = [];
+    const seenSymbols: Map<string, DocumentSymbol[]> = new Map<string, DocumentSymbol[]>();
+
+    symbols.forEach(symbol => {
+        if (seenSymbols.has(symbol.name)) {
+            seenSymbols.get(symbol.name)?.push(symbol);
+        } else {
+            seenSymbols.set(symbol.name, [symbol]);
+        }
+    });
+
+    seenSymbols.forEach(symbolArray => {
+        if (symbolArray.length > 0) {
+            const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
+            const relatedInfo: DiagnosticRelatedInformation[] = [];
+            duplicateSymbols.forEach(value => {
+                relatedInfo.push({
+                    location: {
+                        range: value.range,
+                        uri: state.documentUri,
+                    },
+                    // TODO: localization support
+                    message: `Duplicate identifier '${value.name}'`,
+                });
+            });
+
+            result.push({
+                code: DiagnosticErrorCode.DuplicateIdentifier,
+                // TODO: localization support
+                message: `Duplicate identifier '${symbolArray[0].name}'`,
+                range: symbolArray[0].range,
+                severity: DiagnosticSeverity.Error,
+                source: state.source,
+            });
+        }
+    });
+
+    return result;
 }
