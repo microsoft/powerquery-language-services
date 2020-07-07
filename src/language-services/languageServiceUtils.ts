@@ -12,6 +12,9 @@ import {
     SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
+import { AnalysisOptions } from "./analysisOptions";
+
+export const DefaultLocale: string = PQP.Locale.en_US;
 
 export const EmptyCompletionItems: CompletionItem[] = [];
 
@@ -26,6 +29,10 @@ export const EmptySignatureHelp: SignatureHelp = {
     activeParameter: null,
     activeSignature: 0,
 };
+
+export function getLocale(analysisOptions: AnalysisOptions | undefined): string {
+    return analysisOptions?.locale ?? DefaultLocale;
+}
 
 export function documentSymbolToCompletionItem(documentSymbols: DocumentSymbol[]): CompletionItem[] {
     const result: CompletionItem[] = [];
