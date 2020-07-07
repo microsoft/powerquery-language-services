@@ -24,6 +24,7 @@ export interface ValidationResult {
 
 export interface ValidationOptions extends AnalysisOptions {
     readonly source?: string;
+    readonly checkForDuplicateIdentifiers?: boolean;
 }
 
 export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
@@ -58,20 +59,21 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
     }
 
     // TODO: Look for unknown identifiers
+    if (options?.checkForDuplicateIdentifiers) {
+        if (contextState && contextState.root.maybeNode) {
+            const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
+            const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
+            const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
+                document.uri,
+                rootNode,
+                nodeIdMapCollection,
+                options,
+            );
 
-    if (contextState && contextState.root.maybeNode) {
-        const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
-        const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
-        const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
-            document.uri,
-            rootNode,
-            nodeIdMapCollection,
-            options,
-        );
-
-        // TODO: Trace error case
-        if (PQP.ResultUtils.isOk(triedTraverse)) {
-            diagnostics.push(...triedTraverse.value);
+            // TODO: Trace error case
+            if (PQP.ResultUtils.isOk(triedTraverse)) {
+                diagnostics.push(...triedTraverse.value);
+            }
         }
     }
 

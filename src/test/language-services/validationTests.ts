@@ -71,9 +71,18 @@ describe("validation with workspace cache", () => {
 describe("Duplicate identifiers", () => {
     it("let a = 1, a = 2 in a", () => {
         const document: Utils.MockDocument = Utils.documentFromText("let a = 1, a = 2 in a");
-        const diagnostics: Diagnostic[] = validate(document).diagnostics;
-
-        expect(diagnostics.length).to.equal(1, "TODO - should report duplicates");
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 4 },
+                relatedPositions: [
+                    {
+                        line: 0,
+                        character: 11,
+                    },
+                ],
+            },
+        ]);
     });
 
     it("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec", () => {
@@ -231,7 +240,12 @@ function validateDuplicateIdentifierDiagnostics(
     expected: DuplicateIdentifierError[],
     totalErrorCount?: number,
 ): void {
-    const diagnostics: Diagnostic[] = validate(document).diagnostics;
+    const errorSource: string = "UNIT-TESTS";
+    const diagnostics: Diagnostic[] = validate(document, {
+        maintainWorkspaceCache: false,
+        checkForDuplicateIdentifiers: true,
+        source: errorSource,
+    }).diagnostics;
     const actual: DuplicateIdentifierError[] = [];
     diagnostics.forEach(value => {
         if (value.code === DiagnosticErrorCode.DuplicateIdentifier) {
@@ -241,6 +255,8 @@ function validateDuplicateIdentifierDiagnostics(
             if (!value.relatedInformation) {
                 assert.fail("Duplicate Identifier error does not contain relatedInformation");
             }
+
+            expect(value.source).to.equal(errorSource, "Unexpected source value on diagnostic");
 
             actual.push({
                 name,
