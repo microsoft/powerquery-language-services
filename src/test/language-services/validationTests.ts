@@ -4,13 +4,23 @@
 // tslint:disable: no-implicit-dependencies
 import { expect } from "chai";
 import "mocha";
-import { Diagnostic, TextDocument, TextDocumentContentChangeEvent, ValidationResult } from "../../language-services";
+import {
+    Diagnostic,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    ValidationOptions,
+    ValidationResult,
+} from "../../language-services";
 
 import { documentUpdated, validate } from "../../language-services";
 import * as Utils from "./utils";
 
+const defaultValidationOptions: ValidationOptions = {
+    maintainWorkspaceCache: true,
+};
+
 function expectNoValidationErrors(document: TextDocument): void {
-    const validationResult: ValidationResult = validate(document);
+    const validationResult: ValidationResult = validate(document, defaultValidationOptions);
     expect(validationResult.syntaxError).to.equal(false, "syntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
@@ -23,7 +33,10 @@ describe("validation", () => {
     it("let 1", () => {
         const document: TextDocument = Utils.documentFromText("let 1");
         const errorSource: string = "powerquery";
-        const validationResult: ValidationResult = validate(document, { source: errorSource });
+        const validationResult: ValidationResult = validate(document, {
+            source: errorSource,
+            maintainWorkspaceCache: false,
+        });
         expect(validationResult.syntaxError).to.equal(true, "syntaxError flag should be true");
         expect(validationResult.diagnostics.length).to.equal(1);
         expect(validationResult.diagnostics[0].source).to.equal(errorSource);
@@ -42,7 +55,7 @@ describe("validation", () => {
 describe("validation with workspace cache", () => {
     it("no errors after update", () => {
         const document: Utils.MockDocument = Utils.documentFromText("let a = 1,");
-        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+        const diagnostics: Diagnostic[] = validate(document, defaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
         const changes: TextDocumentContentChangeEvent[] = document.update("1");
@@ -58,7 +71,7 @@ describe("validation with workspace cache", () => {
         const changes: TextDocumentContentChangeEvent[] = document.update(";;;;;;");
         documentUpdated(document, changes, document.version);
 
-        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+        const diagnostics: Diagnostic[] = validate(document, defaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
     });
 });
