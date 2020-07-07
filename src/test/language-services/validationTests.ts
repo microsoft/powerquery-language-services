@@ -25,7 +25,7 @@ function expectNoValidationErrors(document: TextDocument): void {
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
 
-describe("validation", () => {
+describe("Syntax validation", () => {
     it("no errors", () => {
         expectNoValidationErrors(Utils.documentFromText("let b = 1 in b"));
     });
@@ -73,5 +73,37 @@ describe("validation with workspace cache", () => {
 
         const diagnostics: Diagnostic[] = validate(document, defaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
+    });
+});
+
+describe("Duplicate identifiers", () => {
+    it("let a = 1, a = 2 in a", () => {
+        const document: Utils.MockDocument = Utils.documentFromText("let a = 1, a = 2 in a");
+        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+
+        expect(diagnostics.length).to.equal(0, "TODO - should report duplicates");
+    });
+
+    it("[ a = 1, b = 2, c = 3, a = 4 ]", () => {
+        const document: Utils.MockDocument = Utils.documentFromText("[ a = 1, b = 2, c = 3, a = 4]");
+        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+
+        expect(diagnostics.length).to.equal(0, "TODO - should report duplicates");
+    });
+
+    it('section foo; shared a = 1; a = "hello";', () => {
+        const document: Utils.MockDocument = Utils.documentFromText('section foo; shared a = 1; a = "hello";');
+        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+
+        expect(diagnostics.length).to.equal(0, "TODO - should report duplicates");
+    });
+
+    it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
+        const document: Utils.MockDocument = Utils.documentFromText(
+            "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;",
+        );
+        const diagnostics: Diagnostic[] = validate(document).diagnostics;
+
+        expect(diagnostics.length).to.equal(1, "TODO - check errors");
     });
 });

@@ -271,7 +271,7 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
     });
 
     seenSymbols.forEach(symbolArray => {
-        if (symbolArray.length > 0) {
+        if (symbolArray.length > 1) {
             const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
             const relatedInfo: DiagnosticRelatedInformation[] = [];
             duplicateSymbols.forEach(value => {
@@ -290,6 +290,7 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                 // TODO: localization support
                 message: `Duplicate identifier '${symbolArray[0].name}'`,
                 range: symbolArray[0].range,
+                relatedInformation: relatedInfo,
                 severity: DiagnosticSeverity.Error,
                 source: state.source,
             });
