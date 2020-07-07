@@ -58,7 +58,8 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
         contextState = triedLexParse.value.state.contextState;
     }
 
-    // TODO: Check for unknown identifiers
+    // TODO: Look for unknown identifiers used
+
     if (contextState && contextState.root.maybeNode) {
         const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
         const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
