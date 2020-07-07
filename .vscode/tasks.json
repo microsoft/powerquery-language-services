@@ -12,6 +12,13 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "npm",
+            "script": "preUnitTests",
+            "isBackground": true,
+            "problemMatcher": ["$tsc-watch"],
+            "label": "preUnitTests"
         }
     ]
 }
