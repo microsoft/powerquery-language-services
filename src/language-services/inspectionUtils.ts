@@ -75,6 +75,9 @@ export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.ParseCo
         case PQP.Language.Ast.NodeKind.RecordLiteral:
             return SymbolKind.Struct;
 
+        case PQP.Language.Ast.NodeKind.Section:
+            return SymbolKind.Module;
+
         default:
             return SymbolKind.Variable;
     }
@@ -87,6 +90,24 @@ export function getSymbolsForLetExpression(expressionNode: PQP.Language.Ast.LetE
         const pairedExpression: PQP.Language.Ast.ICsv<PQP.Language.Ast.IdentifierPairedExpression> = element;
         const memberSymbol: DocumentSymbol = getSymbolForIdentifierPairedExpression(pairedExpression.node);
         documentSymbols.push(memberSymbol);
+    }
+
+    return documentSymbols;
+}
+
+export function getSymbolsForRecord(
+    recordNode: PQP.Language.Ast.RecordExpression | PQP.Language.Ast.RecordLiteral,
+): DocumentSymbol[] {
+    const documentSymbols: DocumentSymbol[] = [];
+
+    for (const element of recordNode.content.elements) {
+        documentSymbols.push({
+            kind: SymbolKind.Field,
+            deprecated: false,
+            name: element.node.key.literal,
+            range: LanguageServiceUtils.tokenRangeToRange(element.node.tokenRange),
+            selectionRange: LanguageServiceUtils.tokenRangeToRange(element.node.key.tokenRange),
+        });
     }
 
     return documentSymbols;

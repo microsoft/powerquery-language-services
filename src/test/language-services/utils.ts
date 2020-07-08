@@ -23,10 +23,12 @@ import {
     Analysis,
     CompletionItemProviderContext,
     createAnalysisSession,
+    DocumentSymbol,
     HoverProviderContext,
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
     SignatureProviderContext,
+    SymbolKind,
 } from "../../language-services";
 import { AnalysisOptions } from "../../language-services/analysisOptions";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
@@ -333,6 +335,26 @@ export const emptySignatureHelp: SignatureHelp = {
 export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: string): void {
     const asJson: string = JSON.stringify(node);
     File.writeFileSync(filePath, asJson);
+}
+
+export interface ExpectedDocumentSymbol {
+    name: string;
+    kind: SymbolKind;
+    children?: ExpectedDocumentSymbol[];
+}
+
+export function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[]): ExpectedDocumentSymbol[] {
+    const expectedSymbols: ExpectedDocumentSymbol[] = [];
+    documentSymbols.forEach(element => {
+        let children: ExpectedDocumentSymbol[] | undefined;
+        if (element.children) {
+            children = documentSymbolArrayToExpectedSymbols(element.children);
+            expectedSymbols.push({ name: element.name, kind: element.kind, children });
+        } else {
+            expectedSymbols.push({ name: element.name, kind: element.kind });
+        }
+    });
+    return expectedSymbols;
 }
 
 const DefaultAnalysisOptions: AnalysisOptions = {};
