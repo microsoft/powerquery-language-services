@@ -228,7 +228,7 @@ function keyValuePairsToSymbols(
     >,
 ): DocumentSymbol[] {
     const symbols: DocumentSymbol[] = [];
-    keyValuePairs.forEach(value => {
+    for (const value of keyValuePairs) {
         const range: Range = LanguageServiceUtils.tokenRangeToRange(value.key.tokenRange);
         symbols.push({
             kind: SymbolKind.Variable,
@@ -236,7 +236,7 @@ function keyValuePairsToSymbols(
             range,
             selectionRange: range,
         });
-    });
+    }
 
     return symbols;
 }
@@ -287,19 +287,20 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
     const result: Diagnostic[] = [];
     const seenSymbols: Map<string, DocumentSymbol[]> = new Map<string, DocumentSymbol[]>();
 
-    symbols.forEach(symbol => {
-        if (seenSymbols.has(symbol.name)) {
-            seenSymbols.get(symbol.name)?.push(symbol);
+    for (const symbol of symbols) {
+        const symbolsForName: DocumentSymbol[] | undefined = seenSymbols.get(symbol.name);
+        if (symbolsForName) {
+            symbolsForName.push(symbol);
         } else {
             seenSymbols.set(symbol.name, [symbol]);
         }
-    });
+    }
 
-    seenSymbols.forEach(symbolArray => {
+    for (const symbolArray of seenSymbols.values()) {
         if (symbolArray.length > 1) {
             // Create related information diagnostic for each duplicate
             const relatedInfo: DiagnosticRelatedInformation[] = [];
-            symbolArray.forEach(value => {
+            for (const value of symbolArray) {
                 relatedInfo.push({
                     location: {
                         range: value.range,
@@ -308,11 +309,11 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                     // TODO: localization support
                     message: `Duplicate identifier '${value.name}'`,
                 });
-            });
+            }
 
             // Create separate diagnostics for each symbol after the first
             const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
-            duplicateSymbols.forEach(value => {
+            for (const value of duplicateSymbols) {
                 result.push({
                     code: DiagnosticErrorCode.DuplicateIdentifier,
                     // TODO: localization support
@@ -322,9 +323,9 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                     severity: DiagnosticSeverity.Error,
                     source: state.source,
                 });
-            });
+            }
         }
-    });
+    }
 
     return result;
 }
