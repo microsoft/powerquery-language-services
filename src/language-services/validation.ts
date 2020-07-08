@@ -180,7 +180,7 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
     }
 
     return {
-        code: DiagnosticErrorCode.ParserError,
+        code: DiagnosticErrorCode.ParseError,
         message,
         range,
         severity: DiagnosticSeverity.Error,

@@ -3,6 +3,6 @@
 
 export enum DiagnosticErrorCode {
     DuplicateIdentifier = "Error.DuplicateIndentifier",
-    ParserError = "Error.Parser",
+    ParseError = "Error.Parse",
     LexError = "Error.Lex",
 }
