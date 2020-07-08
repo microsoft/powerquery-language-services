@@ -318,7 +318,6 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                     // TODO: localization support
                     message: `Duplicate identifier '${value.name}'`,
                     range: value.range,
-                    // TODO: is it correct to include all instances in the relatedInformation array?
                     relatedInformation: relatedInfo,
                     severity: DiagnosticSeverity.Error,
                     source: state.source,
