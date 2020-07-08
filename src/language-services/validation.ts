@@ -297,9 +297,9 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
 
     seenSymbols.forEach(symbolArray => {
         if (symbolArray.length > 1) {
-            const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
+            // Create related information diagnostic for each duplicate
             const relatedInfo: DiagnosticRelatedInformation[] = [];
-            duplicateSymbols.forEach(value => {
+            symbolArray.forEach(value => {
                 relatedInfo.push({
                     location: {
                         range: value.range,
@@ -310,14 +310,19 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                 });
             });
 
-            result.push({
-                code: DiagnosticErrorCode.DuplicateIdentifier,
-                // TODO: localization support
-                message: `Duplicate identifier '${symbolArray[0].name}'`,
-                range: symbolArray[0].range,
-                relatedInformation: relatedInfo,
-                severity: DiagnosticSeverity.Error,
-                source: state.source,
+            // Create separate diagnostics for each symbol after the first
+            const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
+            duplicateSymbols.forEach(value => {
+                result.push({
+                    code: DiagnosticErrorCode.DuplicateIdentifier,
+                    // TODO: localization support
+                    message: `Duplicate identifier '${value.name}'`,
+                    range: value.range,
+                    // TODO: is it correct to include all instances in the relatedInformation array?
+                    relatedInformation: relatedInfo,
+                    severity: DiagnosticSeverity.Error,
+                    source: state.source,
+                });
             });
         }
     });
