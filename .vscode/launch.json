@@ -10,15 +10,13 @@
             "name": "Run unit tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "--debug",
+                "--inspect",
                 "--colors",
                 "--timeout",
                 "999999",
-                "-r",
-                "ts-node/register",
-                "${workspaceFolder}/src/test/language-services/**/*.ts"
+                "${workspaceFolder}/lib/test/language-services/**/*.js"
             ],
-            "preLaunchTask": "build",
+            "preLaunchTask": "preUnitTests",
             "internalConsoleOptions": "openOnSessionStart"
         }
     ]

@@ -286,6 +286,7 @@ export class MockDocument implements TextDocument {
 }
 
 export function validateError(diagnostic: Diagnostic, startPosition: Position): void {
+    assert.isDefined(diagnostic.code);
     assert.isDefined(diagnostic.message);
     assert.isDefined(diagnostic.range);
     expect(diagnostic.range.start).to.deep.equal(startPosition);

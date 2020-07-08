@@ -5,6 +5,7 @@ import type { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "
 import type {
     CompletionItem,
     Diagnostic,
+    DiagnosticRelatedInformation,
     DocumentSymbol,
     Hover,
     Position,
@@ -16,6 +17,7 @@ import { CompletionItemKind, DiagnosticSeverity, SymbolKind } from "vscode-langu
 export type {
     CompletionItem,
     Diagnostic,
+    DiagnosticRelatedInformation,
     DocumentSymbol,
     DocumentUri,
     Hover,

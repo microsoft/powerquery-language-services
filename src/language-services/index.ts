@@ -7,6 +7,7 @@ import * as WorkspaceCache from "./workspaceCache";
 export * from "./analysis";
 export * from "./analysisOptions";
 export * from "./commonTypes";
+export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
 export * from "./formatter";
 export * from "./providers";

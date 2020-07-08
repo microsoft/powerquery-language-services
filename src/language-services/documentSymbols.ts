@@ -6,9 +6,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { AnalysisOptions } from "./analysisOptions";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
-
-const DefaultLocale: string = PQP.Locale.en_US;
 
 export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
@@ -58,7 +57,7 @@ function tryTraverse(
     nodeIdMapCollection: PQP.NodeIdMap.Collection,
     options?: AnalysisOptions,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
-    const locale: string = options?.locale ?? DefaultLocale;
+    const locale: string = LanguageServiceUtils.getLocale(options);
     const localizationTemplates: PQP.ILocalizationTemplates = PQP.getLocalizationTemplates(locale);
 
     const traversalState: TraversalState = {
