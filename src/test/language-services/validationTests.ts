@@ -75,10 +75,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: "a",
                 position: { line: 0, character: 11 },
-                relatedPositions: [
-                    { line: 0, character: 4 },
-                    { line: 0, character: 11 },
-                ],
+                relatedPositions: [{ line: 0, character: 4 }],
             },
         ]);
     });
@@ -89,10 +86,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: "a",
                 position: { line: 0, character: 33 },
-                relatedPositions: [
-                    { line: 0, character: 12 },
-                    { line: 0, character: 33 },
-                ],
+                relatedPositions: [{ line: 0, character: 12 }],
             },
         ]);
     });
@@ -111,10 +105,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: "a",
                 position: { line: 0, character: 27 },
-                relatedPositions: [
-                    { line: 0, character: 20 },
-                    { line: 0, character: 27 },
-                ],
+                relatedPositions: [{ line: 0, character: 20 }],
             },
         ]);
     });
@@ -129,7 +120,6 @@ describe("Duplicate identifiers", () => {
                 position: { line: 0, character: 55 },
                 relatedPositions: [
                     { line: 0, character: 48 },
-                    { line: 0, character: 55 },
                     { line: 0, character: 62 },
                 ],
             },
@@ -139,7 +129,6 @@ describe("Duplicate identifiers", () => {
                 relatedPositions: [
                     { line: 0, character: 48 },
                     { line: 0, character: 55 },
-                    { line: 0, character: 62 },
                 ],
             },
         ]);
@@ -154,10 +143,7 @@ describe("Duplicate identifiers", () => {
                 {
                     name: "a",
                     position: { line: 0, character: 20 },
-                    relatedPositions: [
-                        { line: 0, character: 13 },
-                        { line: 0, character: 20 },
-                    ],
+                    relatedPositions: [{ line: 0, character: 13 }],
                 },
             ],
             2 /* additional parser error expected */,
@@ -170,10 +156,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: "abc",
                 position: { line: 0, character: 26 },
-                relatedPositions: [
-                    { line: 0, character: 17 },
-                    { line: 0, character: 26 },
-                ],
+                relatedPositions: [{ line: 0, character: 17 }],
             },
         ]);
     });
@@ -184,10 +167,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: "abc",
                 position: { line: 0, character: 21 },
-                relatedPositions: [
-                    { line: 0, character: 12 },
-                    { line: 0, character: 21 },
-                ],
+                relatedPositions: [{ line: 0, character: 12 }],
             },
         ]);
     });
@@ -200,10 +180,7 @@ describe("Duplicate identifiers", () => {
             {
                 name: '#"s p a c e"',
                 position: { line: 0, character: 39 },
-                relatedPositions: [
-                    { line: 0, character: 21 },
-                    { line: 0, character: 39 },
-                ],
+                relatedPositions: [{ line: 0, character: 21 }],
             },
         ]);
     });

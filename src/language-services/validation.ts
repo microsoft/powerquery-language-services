@@ -312,14 +312,18 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
             }
 
             // Create separate diagnostics for each symbol after the first
-            const duplicateSymbols: DocumentSymbol[] = symbolArray.slice(1);
-            for (const value of duplicateSymbols) {
+            for (let i: number = 1; i < symbolArray.length; i++) {
+                // Filtered related info to exclude the current symbol
+                const filteredRelatedInfo: DiagnosticRelatedInformation[] = relatedInfo.filter(
+                    (_v, index) => index !== i,
+                );
+
                 result.push({
                     code: DiagnosticErrorCode.DuplicateIdentifier,
                     // TODO: localization support
-                    message: `Duplicate identifier '${value.name}'`,
-                    range: value.range,
-                    relatedInformation: relatedInfo,
+                    message: `Duplicate identifier '${symbolArray[i].name}'`,
+                    range: symbolArray[i].range,
+                    relatedInformation: filteredRelatedInfo,
                     severity: DiagnosticSeverity.Error,
                     source: state.source,
                 });
