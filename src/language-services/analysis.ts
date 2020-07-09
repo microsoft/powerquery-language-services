@@ -6,6 +6,7 @@ import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysisOptions";
+import * as AnalysisUtils from "./analysisUtils";
 import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
@@ -62,7 +63,7 @@ abstract class AnalysisBase implements Analysis {
         const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
-                range: AnalysisBase.getTokenRangeForPosition(maybeToken, this.position),
+                range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -111,7 +112,7 @@ abstract class AnalysisBase implements Analysis {
         const identifierToken: PQP.Language.LineToken | undefined = this.maybeIdentifierAt();
         if (identifierToken) {
             const context: HoverProviderContext = {
-                range: AnalysisBase.getTokenRangeForPosition(identifierToken, this.position),
+                range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
                 identifier: identifierToken.data,
             };
 
@@ -168,19 +169,6 @@ abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): PQP.Lexer.State;
     protected abstract getText(range?: Range): string;
 
-    private static getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
-        return {
-            start: {
-                line: cursorPosition.line,
-                character: token.positionStart,
-            },
-            end: {
-                line: cursorPosition.line,
-                character: token.positionEnd,
-            },
-        };
-    }
-
     private maybeIdentifierAt(): PQP.Language.LineToken | undefined {
         const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken) {
@@ -196,53 +184,16 @@ abstract class AnalysisBase implements Analysis {
     private maybeLineTokensAt(): ReadonlyArray<PQP.Language.LineToken> | undefined {
         const lexResult: PQP.Lexer.State = this.getLexerState();
         const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
-
-        return maybeLine !== undefined ? maybeLine.tokens : undefined;
+        return maybeLine?.tokens;
     }
 
     private maybeTokenAt(): PQP.Language.LineToken | undefined {
         const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = this.maybeLineTokensAt();
-
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLineTokens;
-
-        for (const token of lineTokens) {
-            if (token.positionStart <= this.position.character && token.positionEnd >= this.position.character) {
-                return token;
-            }
-        }
-
-        // TODO: is this still needed with the latest parser?
-        // Token wasn't found - check for special case where current position is a trailing "." on an identifier
-        const currentRange: Range = {
-            start: {
-                line: this.position.line,
-                character: this.position.character - 1,
-            },
-            end: this.position,
-        };
-
-        if (this.getText(currentRange) === ".") {
-            for (const token of lineTokens) {
-                if (
-                    token.kind === PQP.Language.LineTokenKind.Identifier &&
-                    token.positionStart <= this.position.character - 1 &&
-                    token.positionEnd >= this.position.character - 1
-                ) {
-                    // Use this token with an adjusted position
-                    return {
-                        ...token,
-                        data: `${token.data}.`,
-                        positionEnd: token.positionEnd + 1,
-                    };
-                }
-            }
-        }
-
-        return undefined;
+        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position);
     }
 }
 
