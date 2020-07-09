@@ -184,53 +184,18 @@ abstract class AnalysisBase implements Analysis {
     private maybeLineTokensAt(): ReadonlyArray<PQP.Language.LineToken> | undefined {
         const lexResult: PQP.Lexer.State = this.getLexerState();
         const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
-
-        return maybeLine !== undefined ? maybeLine.tokens : undefined;
+        return maybeLine?.tokens;
     }
 
     private maybeTokenAt(): PQP.Language.LineToken | undefined {
         const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = this.maybeLineTokensAt();
-
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLineTokens;
-
-        for (const token of lineTokens) {
-            if (token.positionStart <= this.position.character && token.positionEnd >= this.position.character) {
-                return token;
-            }
-        }
-
-        // TODO: is this still needed with the latest parser?
-        // Token wasn't found - check for special case where current position is a trailing "." on an identifier
-        const currentRange: Range = {
-            start: {
-                line: this.position.line,
-                character: this.position.character - 1,
-            },
-            end: this.position,
-        };
-
-        if (this.getText(currentRange) === ".") {
-            for (const token of lineTokens) {
-                if (
-                    token.kind === PQP.Language.LineTokenKind.Identifier &&
-                    token.positionStart <= this.position.character - 1 &&
-                    token.positionEnd >= this.position.character - 1
-                ) {
-                    // Use this token with an adjusted position
-                    return {
-                        ...token,
-                        data: `${token.data}.`,
-                        positionEnd: token.positionEnd + 1,
-                    };
-                }
-            }
-        }
-
-        return undefined;
+        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position, (range?: Range | undefined) =>
+            this.getText(range),
+        );
     }
 }
 
