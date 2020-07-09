@@ -6,6 +6,7 @@ import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysisOptions";
+import * as AnalysisUtils from "./analysisUtils";
 import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
@@ -62,7 +63,7 @@ abstract class AnalysisBase implements Analysis {
         const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
-                range: AnalysisBase.getTokenRangeForPosition(maybeToken, this.position),
+                range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -111,7 +112,7 @@ abstract class AnalysisBase implements Analysis {
         const identifierToken: PQP.Language.LineToken | undefined = this.maybeIdentifierAt();
         if (identifierToken) {
             const context: HoverProviderContext = {
-                range: AnalysisBase.getTokenRangeForPosition(identifierToken, this.position),
+                range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
                 identifier: identifierToken.data,
             };
 
@@ -167,19 +168,6 @@ abstract class AnalysisBase implements Analysis {
 
     protected abstract getLexerState(): PQP.Lexer.State;
     protected abstract getText(range?: Range): string;
-
-    private static getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
-        return {
-            start: {
-                line: cursorPosition.line,
-                character: token.positionStart,
-            },
-            end: {
-                line: cursorPosition.line,
-                character: token.positionEnd,
-            },
-        };
-    }
 
     private maybeIdentifierAt(): PQP.Language.LineToken | undefined {
         const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
