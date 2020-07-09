@@ -193,9 +193,7 @@ abstract class AnalysisBase implements Analysis {
             return undefined;
         }
 
-        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position, (range?: Range | undefined) =>
-            this.getText(range),
-        );
+        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position);
     }
 }
 
