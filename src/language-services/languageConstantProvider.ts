@@ -6,7 +6,7 @@ import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types"
 
 import { CompletionItemProvider, CompletionItemProviderContext } from "./providers";
 
-export class KeywordProvider implements CompletionItemProvider {
+export class LanguageConstantProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.KeywordKind> = [
@@ -32,7 +32,10 @@ export class KeywordProvider implements CompletionItemProvider {
         const inspectionOk: PQP.Task.InspectionOk = this.maybeTriedInspection.value;
 
         return inspectionOk.autocomplete
-            .filter((keyword: PQP.Language.KeywordKind) => KeywordProvider.ExcludedKeywords.indexOf(keyword) === -1)
+            .filter(
+                (keyword: PQP.Language.KeywordKind) =>
+                    LanguageConstantProvider.ExcludedKeywords.indexOf(keyword) === -1,
+            )
             .map((keyword: PQP.Language.KeywordKind) => {
                 return {
                     kind: CompletionItemKind.Keyword,

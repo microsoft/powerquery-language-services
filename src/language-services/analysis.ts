@@ -10,7 +10,7 @@ import * as AnalysisUtils from "./analysisUtils";
 import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
-import { KeywordProvider } from "./keywordProvider";
+import { LanguageConstantProvider } from "./languageConstantProvider";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import {
     CompletionItemProviderContext,
@@ -34,7 +34,7 @@ export function createAnalysisSession(document: TextDocument, position: Position
 
 abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
-    protected readonly keywordProvider: KeywordProvider;
+    protected readonly languageConstantProvider: LanguageConstantProvider;
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
@@ -50,7 +50,7 @@ abstract class AnalysisBase implements Analysis {
         this.environmentSymbolProvider = this.options.environmentSymbolProvider
             ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.keywordProvider = new KeywordProvider(this.triedInspection);
+        this.languageConstantProvider = new LanguageConstantProvider(this.triedInspection);
         this.librarySymbolProvider = this.options.librarySymbolProvider
             ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
@@ -81,9 +81,11 @@ abstract class AnalysisBase implements Analysis {
             .catch(() => {
                 return LanguageServiceUtils.EmptyCompletionItems;
             });
-        const getKeywords: Promise<CompletionItem[]> = this.keywordProvider.getCompletionItems(context).catch(() => {
-            return LanguageServiceUtils.EmptyCompletionItems;
-        });
+        const getLanguageConstants: Promise<CompletionItem[]> = this.languageConstantProvider
+            .getCompletionItems(context)
+            .catch(() => {
+                return LanguageServiceUtils.EmptyCompletionItems;
+            });
         const getEnvironmentCompletionItems: Promise<
             CompletionItem[]
         > = this.environmentSymbolProvider.getCompletionItems(context).catch(() => {
@@ -97,7 +99,7 @@ abstract class AnalysisBase implements Analysis {
 
         const [libraryResponse, keywordResponse, environmentResponse, localResponse] = await Promise.all([
             getLibraryCompletionItems,
-            getKeywords,
+            getLanguageConstants,
             getEnvironmentCompletionItems,
             getLocalCompletionItems,
         ]);
