@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { CompletionItem, CompletionItemKind } from "vscode-languageserver-types";
 
+import { CompletionItem, CompletionItemKind } from "./commonTypes";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./providers";
 
 export class LanguageConstantProvider implements CompletionItemProvider {
@@ -23,9 +23,37 @@ export class LanguageConstantProvider implements CompletionItemProvider {
         PQP.Language.KeywordKind.HashTime,
     ];
 
+    private static readonly LanguageConstants: ReadonlyArray<CompletionItem> = [
+        { kind: CompletionItemKind.Keyword, label: PQP.Language.Ast.IdentifierConstantKind.Nullable },
+        { kind: CompletionItemKind.Keyword, label: PQP.Language.Ast.IdentifierConstantKind.Optional },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Action },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Any },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.AnyNonNull },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Binary },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Date },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.DateTime },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.DateTimeZone },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Duration },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Function },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.List },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Logical },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.None },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Null },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Number },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Record },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Table },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Text },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Time },
+        { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Ast.PrimitiveTypeConstantKind.Type },
+    ];
+
     constructor(private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
+        return [...LanguageConstantProvider.LanguageConstants, ...this.getKeywords()];
+    }
+
+    private getKeywords(): CompletionItem[] {
         if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
             return [];
         }
