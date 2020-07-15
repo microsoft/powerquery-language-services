@@ -134,6 +134,7 @@ export function expectInspectionOk(document: MockDocument, position: Position): 
     const maybeTriedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
         document,
         position,
+        undefined,
     );
     if (maybeTriedInspect === undefined) {
         throw new Error(`maybeTriedInspect is expected to be defined`);

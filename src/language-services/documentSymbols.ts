@@ -10,7 +10,7 @@ import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, options?.locale);
     let result: DocumentSymbol[] = [];
 
     let contextState: PQP.ParseContext.State | undefined = undefined;

@@ -28,7 +28,7 @@ export interface ValidationOptions extends AnalysisOptions {
 }
 
 export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, options?.locale);
     let diagnostics: Diagnostic[] = [];
 
     let contextState: PQP.ParseContext.State | undefined = undefined;

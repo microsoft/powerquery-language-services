@@ -2,9 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import type { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-import { Position } from "vscode-languageserver-types";
+import type { Position, TextDocument, TextDocumentContentChangeEvent } from "./commonTypes";
 
 const lexerStateCache: Map<string, PQP.Lexer.State> = new Map();
 const lexerSnapshotCache: Map<string, PQP.TriedLexerSnapshot> = new Map();
@@ -35,16 +33,16 @@ export function update(textDocument: TextDocument, _changes: TextDocumentContent
     close(textDocument);
 }
 
-export function getLexerState(textDocument: TextDocument): PQP.Lexer.State {
-    return getOrCreate(lexerStateCache, textDocument, createLexerState);
+export function getLexerState(textDocument: TextDocument, locale: string | undefined): PQP.Lexer.State {
+    return getOrCreate(lexerStateCache, textDocument, locale, createLexerState);
 }
 
-export function getTriedLexerSnapshot(textDocument: TextDocument): PQP.TriedLexerSnapshot {
-    return getOrCreate(lexerSnapshotCache, textDocument, createTriedLexerSnapshot);
+export function getTriedLexerSnapshot(textDocument: TextDocument, locale: string | undefined): PQP.TriedLexerSnapshot {
+    return getOrCreate(lexerSnapshotCache, textDocument, locale, createTriedLexerSnapshot);
 }
 
-export function getTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse {
-    return getOrCreate(triedLexParseCache, textDocument, createTriedLexParse);
+export function getTriedLexParse(textDocument: TextDocument, locale: string | undefined): PQP.Task.TriedLexParse {
+    return getOrCreate(triedLexParseCache, textDocument, locale, createTriedLexParse);
 }
 
 // We can't easily reuse getOrCreate because inspections require a position argument.
@@ -52,6 +50,7 @@ export function getTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexP
 export function maybeTriedInspection(
     textDocument: TextDocument,
     position: Position,
+    locale: string | undefined,
 ): PQP.Task.TriedInspection | undefined {
     const cacheKey: string = textDocument.uri;
     const maybePositionCache:
@@ -70,7 +69,7 @@ export function maybeTriedInspection(
     if (positionCache.has(position)) {
         return positionCache.get(position);
     } else {
-        const value: PQP.Task.TriedInspection | undefined = createTriedInspection(textDocument, position);
+        const value: PQP.Task.TriedInspection | undefined = createTriedInspection(textDocument, position, locale);
         positionCache.set(position, value);
         return value;
     }
@@ -79,13 +78,14 @@ export function maybeTriedInspection(
 function getOrCreate<T>(
     cache: Map<string, T>,
     textDocument: TextDocument,
-    factoryFn: (textDocument: TextDocument) => T,
+    locale: string | undefined,
+    factoryFn: (textDocument: TextDocument, locale: string | undefined) => T,
 ): T {
     const cacheKey: string = textDocument.uri;
     const maybeValue: T | undefined = cache.get(cacheKey);
 
     if (maybeValue === undefined) {
-        const value: T = factoryFn(textDocument);
+        const value: T = factoryFn(textDocument, locale);
         cache.set(cacheKey, value);
         return value;
     } else {
@@ -93,18 +93,17 @@ function getOrCreate<T>(
     }
 }
 
-function createLexerState(textDocument: TextDocument): PQP.Lexer.State {
-    // TODO (Localization): update settings based on locale
-    return PQP.Lexer.stateFrom(PQP.DefaultSettings, textDocument.getText());
+function createLexerState(textDocument: TextDocument, locale: string | undefined): PQP.Lexer.State {
+    return PQP.Lexer.stateFrom(getSettings(locale), textDocument.getText());
 }
 
-function createTriedLexerSnapshot(textDocument: TextDocument): PQP.TriedLexerSnapshot {
-    const lexerState: PQP.Lexer.State = getLexerState(textDocument);
+function createTriedLexerSnapshot(textDocument: TextDocument, locale: string | undefined): PQP.TriedLexerSnapshot {
+    const lexerState: PQP.Lexer.State = getLexerState(textDocument, locale);
     return PQP.LexerSnapshot.tryFrom(lexerState);
 }
 
-function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse {
-    const triedLexerSnapshot: PQP.TriedLexerSnapshot = getTriedLexerSnapshot(textDocument);
+function createTriedLexParse(textDocument: TextDocument, locale: string | undefined): PQP.Task.TriedLexParse {
+    const triedLexerSnapshot: PQP.TriedLexerSnapshot = getTriedLexerSnapshot(textDocument, locale);
     if (PQP.ResultUtils.isErr(triedLexerSnapshot)) {
         return triedLexerSnapshot;
     }
@@ -125,8 +124,12 @@ function createTriedLexParse(textDocument: TextDocument): PQP.Task.TriedLexParse
 
 // We're allowed to return undefined because if a document wasn't parsed
 // then there's no way to perform an inspection.
-function createTriedInspection(textDocument: TextDocument, position: Position): PQP.Task.TriedInspection | undefined {
-    const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument);
+function createTriedInspection(
+    textDocument: TextDocument,
+    position: Position,
+    locale: string | undefined,
+): PQP.Task.TriedInspection | undefined {
+    const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument, locale);
     if (
         PQP.ResultUtils.isErr(triedLexParse) &&
         (triedLexParse.error instanceof PQP.CommonError.CommonError ||
@@ -147,4 +150,8 @@ function createTriedInspection(textDocument: TextDocument, position: Position): 
     };
 
     return PQP.Task.tryInspection(PQP.DefaultSettings, triedParse, pqpPosition);
+}
+
+function getSettings(locale: string | undefined): PQP.CommonSettings {
+    return locale ? { locale } : PQP.DefaultSettings;
 }

@@ -13,7 +13,7 @@ import * as WorkspaceCache from "../../language-services/workspaceCache";
 import * as Utils from "./utils";
 
 function getLexAndParseOk(document: TextDocument): PQP.Task.LexParseOk {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, "en-US");
     if (PQP.ResultUtils.isErr(triedLexParse)) {
         throw new Error("AssertFailed: triedLexParse to be Ok");
     }
