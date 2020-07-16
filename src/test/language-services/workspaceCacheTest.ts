@@ -14,14 +14,14 @@ import * as Utils from "./utils";
 describe("workspaceCache", () => {
     it("getLexerState", () => {
         const document: TextDocument = Utils.documentFromText("let\n   b = 1\n   in b");
-        const state: PQP.Lexer.State = WorkspaceCache.getLexerState(document);
+        const state: PQP.Lexer.State = WorkspaceCache.getLexerState(document, undefined);
         assert.isDefined(state);
         expect(state.lines.length).to.equal(3);
     });
 
     it("getTriedLexerSnapshot", () => {
         const document: TextDocument = Utils.documentFromText("let a = 1 in a");
-        const triedSnapshot: PQP.TriedLexerSnapshot = WorkspaceCache.getTriedLexerSnapshot(document);
+        const triedSnapshot: PQP.TriedLexerSnapshot = WorkspaceCache.getTriedLexerSnapshot(document, undefined);
         assert.isDefined(triedSnapshot);
         if (PQP.ResultUtils.isOk(triedSnapshot)) {
             const snapshot: PQP.LexerSnapshot = triedSnapshot.value;
@@ -33,7 +33,7 @@ describe("workspaceCache", () => {
 
     it("getTriedLexParse", () => {
         const document: TextDocument = Utils.documentFromText("let c = 1 in c");
-        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, undefined);
         assert.isDefined(triedLexParse);
         if (PQP.ResultUtils.isOk(triedLexParse)) {
             const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
@@ -45,7 +45,7 @@ describe("workspaceCache", () => {
 
     it("getTriedLexParse with error", () => {
         const document: TextDocument = Utils.documentFromText("let c = 1, in c");
-        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document);
+        const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, undefined);
         assert.isDefined(triedLexParse);
         expect(triedLexParse.kind).to.equal(PQP.ResultKind.Err);
     });
@@ -55,6 +55,7 @@ describe("workspaceCache", () => {
         const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
             document,
             postion,
+            undefined,
         );
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);
@@ -68,6 +69,7 @@ describe("workspaceCache", () => {
         const triedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
             document,
             postion,
+            undefined,
         );
         if (triedInspect) {
             expect(triedInspect.kind).to.equal(PQP.ResultKind.Ok);

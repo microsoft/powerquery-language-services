@@ -201,7 +201,7 @@ abstract class AnalysisBase implements Analysis {
 
 class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.maybeTriedInspection(document, position), position, options);
+        super(WorkspaceCache.maybeTriedInspection(document, position, options.locale), position, options);
     }
 
     public dispose(): void {
@@ -211,7 +211,7 @@ class DocumentAnalysis extends AnalysisBase {
     }
 
     protected getLexerState(): PQP.Lexer.State {
-        return WorkspaceCache.getLexerState(this.document);
+        return WorkspaceCache.getLexerState(this.document, this.options.locale);
     }
 
     protected getText(range?: Range): string {
