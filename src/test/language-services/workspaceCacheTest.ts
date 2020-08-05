@@ -37,7 +37,7 @@ describe("workspaceCache", () => {
         assert.isDefined(triedLexParse);
         if (PQP.ResultUtils.isOk(triedLexParse)) {
             const lexParseOk: PQP.Task.LexParseOk = triedLexParse.value;
-            assert.isDefined(lexParseOk.ast);
+            assert.isDefined(lexParseOk.root);
         } else {
             assert.fail("triedLexParse should be OK");
         }

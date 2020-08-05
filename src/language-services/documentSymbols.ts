@@ -20,8 +20,8 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
         contextState = triedLexParse.error.state.contextState;
     }
 
-    if (contextState && contextState.root.maybeNode) {
-        const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
+    if (contextState && contextState.maybeRoot) {
+        const rootNode: PQP.TXorNode = PQP.XorNodeUtils.contextFactory(contextState.maybeRoot);
         const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
 
         const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(

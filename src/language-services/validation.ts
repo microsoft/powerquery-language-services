@@ -60,8 +60,8 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
 
     // TODO: Look for unknown identifiers
     if (options?.checkForDuplicateIdentifiers) {
-        if (contextState && contextState.root.maybeNode) {
-            const rootNode: PQP.TXorNode = PQP.NodeIdMapUtils.xorNodeFromContext(contextState.root.maybeNode);
+        if (contextState && contextState.maybeRoot) {
+            const rootNode: PQP.TXorNode = PQP.XorNodeUtils.contextFactory(contextState.maybeRoot);
             const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
             const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
                 document.uri,
@@ -153,7 +153,7 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
         };
     } else {
         const parseContextState: PQP.ParseContext.State = error.state.contextState;
-        const maybeRoot: PQP.ParseContext.Node | undefined = parseContextState.root.maybeNode;
+        const maybeRoot: PQP.ParseContext.Node | undefined = parseContextState.maybeRoot;
         if (maybeRoot === undefined) {
             return undefined;
         }
