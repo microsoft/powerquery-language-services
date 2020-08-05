@@ -49,7 +49,7 @@ export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.Literal
             return SymbolKind.String;
 
         default:
-            return PQP.isNever(node.literalKind);
+            return PQP.Assert.isNever(node.literalKind);
     }
 }
 
@@ -187,7 +187,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): 
             }
 
             default:
-                throw PQP.isNever(scopeItem);
+                throw PQP.Assert.isNever(scopeItem);
         }
 
         documentSymbols.push({
