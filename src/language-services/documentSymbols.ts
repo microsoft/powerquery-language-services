@@ -75,7 +75,7 @@ function tryTraverse(
         root,
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        PQP.Traverse.expectExpandAllXorChildren,
+        PQP.Traverse.assertExpandAllXorChildren,
         earlyExit,
     );
 }
