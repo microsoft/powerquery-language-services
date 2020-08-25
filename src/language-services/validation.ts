@@ -217,7 +217,7 @@ function tryTraverse(
         root,
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        PQP.Traverse.expectExpandAllXorChildren,
+        PQP.Traverse.assertExpandAllXorChildren,
         undefined,
     );
 }
@@ -249,7 +249,7 @@ function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
         case PQP.Language.Ast.NodeKind.LetExpression:
             const letMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.Identifier
-            >> = PQP.NodeIdMapIterator.letKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, currentXorNode);
             if (letMembers.length > 1) {
                 symbols = keyValuePairsToSymbols(letMembers);
             }
@@ -259,7 +259,7 @@ function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
         case PQP.Language.Ast.NodeKind.RecordLiteral:
             const recordFields: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.GeneralizedIdentifier
-            >> = PQP.NodeIdMapIterator.recordKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, currentXorNode);
             if (recordFields.length > 1) {
                 symbols = keyValuePairsToSymbols(recordFields);
             }
@@ -268,7 +268,7 @@ function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
         case PQP.Language.Ast.NodeKind.Section:
             const sectionMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.Identifier
-            >> = PQP.NodeIdMapIterator.sectionMemberKeyValuePairs(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.NodeIdMapIterator.iterSection(state.nodeIdMapCollection, currentXorNode);
             if (sectionMembers.length > 1) {
                 symbols = keyValuePairsToSymbols(sectionMembers);
             }
