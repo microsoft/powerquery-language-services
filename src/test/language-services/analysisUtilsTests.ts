@@ -49,14 +49,17 @@ describe("getTokenAtPosition", () => {
 
 function expectToken(textWithPosition: string, tokenData: string | undefined): void {
     const [document, position]: [MockDocument, Position] = Utils.documentAndPositionFrom(textWithPosition);
-    const lexerState: PQP.Lexer.State = PQP.Lexer.stateFrom(PQP.DefaultSettings, document.getText());
-    const maybeLine: PQP.Lexer.TLine | undefined = lexerState.lines[position.line];
+    const triedLex: PQP.Lexer.TriedLex = PQP.Lexer.tryLex(PQP.DefaultSettings, document.getText());
+    if (PQP.ResultUtils.isErr(triedLex)) {
+        assert.fail(`expected triedLex to be an Ok`);
+    }
+    const maybeLine: PQP.Lexer.TLine | undefined = triedLex.value.lines[position.line];
     if (!maybeLine) {
         assert.fail("expected PQP.Lexer.TLine !== undefined");
     }
 
-    const lineTokens: ReadonlyArray<PQP.Language.LineToken> = maybeLine.tokens;
-    const token: PQP.Language.LineToken | undefined = AnalysisUtils.getTokenAtPosition(lineTokens, position);
+    const lineTokens: ReadonlyArray<PQP.Language.Token.LineToken> = maybeLine.tokens;
+    const token: PQP.Language.Token.LineToken | undefined = AnalysisUtils.getTokenAtPosition(lineTokens, position);
 
     expect(token?.data).to.equal(tokenData, "Unexpected token data");
 }

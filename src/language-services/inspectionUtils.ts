@@ -33,19 +33,19 @@ export function getContextForInvokeExpression(
 
 export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.LiteralExpression): SymbolKind {
     switch (node.literalKind) {
-        case PQP.Language.Ast.LiteralKind.List:
+        case PQP.Language.Constant.LiteralKind.List:
             return SymbolKind.Array;
 
-        case PQP.Language.Ast.LiteralKind.Logical:
+        case PQP.Language.Constant.LiteralKind.Logical:
             return SymbolKind.Boolean;
 
-        case PQP.Language.Ast.LiteralKind.Null:
+        case PQP.Language.Constant.LiteralKind.Null:
             return SymbolKind.Null;
 
-        case PQP.Language.Ast.LiteralKind.Numeric:
+        case PQP.Language.Constant.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Language.Ast.LiteralKind.Text:
+        case PQP.Language.Constant.LiteralKind.Text:
             return SymbolKind.String;
 
         default:

@@ -60,7 +60,7 @@ abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
                 range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
@@ -111,7 +111,7 @@ abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.LineToken | undefined = this.maybeIdentifierAt();
+        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
         if (identifierToken) {
             const context: HoverProviderContext = {
                 range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
@@ -171,11 +171,11 @@ abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): PQP.Lexer.State;
     protected abstract getText(range?: Range): string;
 
-    private maybeIdentifierAt(): PQP.Language.LineToken | undefined {
-        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
+    private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken) {
-            const token: PQP.Language.LineToken = maybeToken;
-            if (token.kind === PQP.Language.LineTokenKind.Identifier) {
+            const token: PQP.Language.Token.LineToken = maybeToken;
+            if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
                 return token;
             }
         }
@@ -183,14 +183,14 @@ abstract class AnalysisBase implements Analysis {
         return undefined;
     }
 
-    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.LineToken> | undefined {
+    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
         const lexResult: PQP.Lexer.State = this.getLexerState();
         const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): PQP.Language.LineToken | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = this.maybeLineTokensAt();
+    private maybeTokenAt(): PQP.Language.Token.LineToken | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
         if (maybeLineTokens === undefined) {
             return undefined;
         }

@@ -120,7 +120,7 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError, source?:
 function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: string): Diagnostic | undefined {
     const innerError: PQP.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
-    let maybeErrorToken: PQP.Language.Token | undefined;
+    let maybeErrorToken: PQP.Language.Token.Token | undefined;
     if (
         (innerError instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
             innerError instanceof PQP.ParseError.ExpectedTokenKindError) &&
@@ -165,7 +165,7 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
         if (maybeLeaf === undefined) {
             return undefined;
         }
-        const leafTokenRange: PQP.Language.TokenRange = maybeLeaf.tokenRange;
+        const leafTokenRange: PQP.Language.Token.TokenRange = maybeLeaf.tokenRange;
 
         range = {
             start: {
@@ -217,7 +217,7 @@ function tryTraverse(
         root,
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        PQP.Traverse.assertExpandAllXorChildren,
+        PQP.Traverse.assertGetAllXorChildren,
         undefined,
     );
 }
