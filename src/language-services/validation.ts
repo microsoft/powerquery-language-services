@@ -31,12 +31,12 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
     const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, options?.locale);
     let diagnostics: Diagnostic[] = [];
 
-    let contextState: PQP.ParseContext.State | undefined = undefined;
+    let contextState: PQP.Parser.ParseContext.State | undefined = undefined;
 
     // Check for syntax errors
     if (PQP.ResultUtils.isErr(triedLexParse)) {
-        const lexOrParseError: PQP.LexError.TLexError | PQP.ParseError.TParseError = triedLexParse.error;
-        if (lexOrParseError instanceof PQP.ParseError.ParseError) {
+        const lexOrParseError: PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError = triedLexParse.error;
+        if (lexOrParseError instanceof PQP.Parser.ParseError.ParseError) {
             contextState = lexOrParseError.state.contextState;
             const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(
                 lexOrParseError,
@@ -45,7 +45,7 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
             if (maybeDiagnostic !== undefined) {
                 diagnostics = [maybeDiagnostic];
             }
-        } else if (PQP.LexError.isTInnerLexError(lexOrParseError.innerError)) {
+        } else if (PQP.Lexer.LexError.isTInnerLexError(lexOrParseError.innerError)) {
             const maybeLexerErrorDiagnostics: Diagnostic[] | undefined = maybeLexErrorToDiagnostics(
                 lexOrParseError.innerError,
                 options?.source,
@@ -61,8 +61,8 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
     // TODO: Look for unknown identifiers
     if (options?.checkForDuplicateIdentifiers) {
         if (contextState && contextState.maybeRoot) {
-            const rootNode: PQP.TXorNode = PQP.XorNodeUtils.contextFactory(contextState.maybeRoot);
-            const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
+            const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
+            const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = contextState.nodeIdMapCollection;
             const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
                 document.uri,
                 rootNode,
@@ -87,12 +87,15 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
     };
 }
 
-function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError, source?: string): Diagnostic[] | undefined {
+function maybeLexErrorToDiagnostics(
+    error: PQP.Lexer.LexError.TInnerLexError,
+    source?: string,
+): Diagnostic[] | undefined {
     const diagnostics: Diagnostic[] = [];
     // TODO: handle other types of lexer errors
-    if (error instanceof PQP.LexError.ErrorLineMapError) {
+    if (error instanceof PQP.Lexer.LexError.ErrorLineMapError) {
         for (const errorLine of error.errorLineMap.values()) {
-            const innerError: PQP.LexError.TInnerLexError = errorLine.error.innerError;
+            const innerError: PQP.Lexer.LexError.TInnerLexError = errorLine.error.innerError;
             if ((innerError as any).graphemePosition) {
                 const graphemePosition: PQP.StringUtils.GraphemePosition = (innerError as any).graphemePosition;
                 const message: string = innerError.message;
@@ -117,23 +120,23 @@ function maybeLexErrorToDiagnostics(error: PQP.LexError.TInnerLexError, source?:
     return diagnostics.length ? diagnostics : undefined;
 }
 
-function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: string): Diagnostic | undefined {
-    const innerError: PQP.ParseError.TInnerParseError = error.innerError;
+function maybeParseErrorToDiagnostic(error: PQP.Parser.ParseError.ParseError, source?: string): Diagnostic | undefined {
+    const innerError: PQP.Parser.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
     let maybeErrorToken: PQP.Language.Token.Token | undefined;
     if (
-        (innerError instanceof PQP.ParseError.ExpectedAnyTokenKindError ||
-            innerError instanceof PQP.ParseError.ExpectedTokenKindError) &&
+        (innerError instanceof PQP.Parser.ParseError.ExpectedAnyTokenKindError ||
+            innerError instanceof PQP.Parser.ParseError.ExpectedTokenKindError) &&
         innerError.maybeFoundToken !== undefined
     ) {
         maybeErrorToken = innerError.maybeFoundToken.token;
-    } else if (innerError instanceof PQP.ParseError.InvalidPrimitiveTypeError) {
+    } else if (innerError instanceof PQP.Parser.ParseError.InvalidPrimitiveTypeError) {
         maybeErrorToken = innerError.token;
-    } else if (innerError instanceof PQP.ParseError.UnterminatedBracketError) {
+    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedBracketError) {
         maybeErrorToken = innerError.openBracketToken;
-    } else if (innerError instanceof PQP.ParseError.UnterminatedParenthesesError) {
+    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedParenthesesError) {
         maybeErrorToken = innerError.openParenthesesToken;
-    } else if (innerError instanceof PQP.ParseError.UnusedTokensRemainError) {
+    } else if (innerError instanceof PQP.Parser.ParseError.UnusedTokensRemainError) {
         maybeErrorToken = innerError.firstUnusedToken;
     } else {
         maybeErrorToken = undefined;
@@ -152,13 +155,13 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
             },
         };
     } else {
-        const parseContextState: PQP.ParseContext.State = error.state.contextState;
-        const maybeRoot: PQP.ParseContext.Node | undefined = parseContextState.maybeRoot;
+        const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
+        const maybeRoot: PQP.Parser.ParseContext.Node | undefined = parseContextState.maybeRoot;
         if (maybeRoot === undefined) {
             return undefined;
         }
 
-        const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.NodeIdMapUtils.maybeRightMostLeaf(
+        const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );
@@ -190,14 +193,14 @@ function maybeParseErrorToDiagnostic(error: PQP.ParseError.ParseError, source?: 
 
 interface TraversalState extends PQP.Traverse.IState<Diagnostic[]> {
     readonly documentUri: string;
-    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
+    readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
     readonly source?: string;
 }
 
 function tryTraverse(
     documentUri: string,
-    root: PQP.TXorNode,
-    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+    root: PQP.Parser.TXorNode,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     options?: ValidationOptions,
 ): PQP.Traverse.TriedTraverse<Diagnostic[]> {
     const locale: string = LanguageServiceUtils.getLocale(options);
@@ -224,7 +227,7 @@ function tryTraverse(
 
 function keyValuePairsToSymbols(
     keyValuePairs: ReadonlyArray<
-        PQP.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
+        PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
     >,
 ): DocumentSymbol[] {
     const symbols: DocumentSymbol[] = [];
@@ -241,15 +244,15 @@ function keyValuePairsToSymbols(
     return symbols;
 }
 
-function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
+function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): void {
     let symbols: DocumentSymbol[] | undefined = undefined;
 
     // TODO: Validate that "in" variable exists
     switch (currentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.LetExpression:
-            const letMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+            const letMembers: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.Identifier
-            >> = PQP.NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.Parser.NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, currentXorNode);
             if (letMembers.length > 1) {
                 symbols = keyValuePairsToSymbols(letMembers);
             }
@@ -257,18 +260,18 @@ function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
 
         case PQP.Language.Ast.NodeKind.RecordExpression:
         case PQP.Language.Ast.NodeKind.RecordLiteral:
-            const recordFields: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+            const recordFields: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.GeneralizedIdentifier
-            >> = PQP.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.Parser.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, currentXorNode);
             if (recordFields.length > 1) {
                 symbols = keyValuePairsToSymbols(recordFields);
             }
             break;
 
         case PQP.Language.Ast.NodeKind.Section:
-            const sectionMembers: ReadonlyArray<PQP.NodeIdMapIterator.KeyValuePair<
+            const sectionMembers: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<
                 PQP.Language.Ast.Identifier
-            >> = PQP.NodeIdMapIterator.iterSection(state.nodeIdMapCollection, currentXorNode);
+            >> = PQP.Parser.NodeIdMapIterator.iterSection(state.nodeIdMapCollection, currentXorNode);
             if (sectionMembers.length > 1) {
                 symbols = keyValuePairsToSymbols(sectionMembers);
             }

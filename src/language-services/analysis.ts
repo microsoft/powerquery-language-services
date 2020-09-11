@@ -40,9 +40,13 @@ abstract class AnalysisBase implements Analysis {
 
     protected readonly options: AnalysisOptions;
     protected readonly position: Position;
-    protected readonly triedInspection: PQP.Task.TriedInspection | undefined;
+    protected readonly triedInspection: PQP.Inspection.TriedInspection | undefined;
 
-    constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: AnalysisOptions) {
+    constructor(
+        triedInspection: PQP.Inspection.TriedInspection | undefined,
+        position: Position,
+        options: AnalysisOptions,
+    ) {
         this.triedInspection = triedInspection;
         this.options = options;
         this.position = position;

@@ -2,21 +2,25 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import type { Position, TextDocument, TextDocumentContentChangeEvent } from "./commonTypes";
+import type { TextDocument, TextDocumentContentChangeEvent } from "./commonTypes";
 
 const lexerStateCache: Map<string, LexerCacheItem> = new Map();
 const lexerSnapshotCache: Map<string, TLexerSnapshotCacheItem> = new Map();
 const triedLexParseCache: Map<string, TParserCacheItem> = new Map();
 const triedInspectionCache: Map<string, InspectionMap> = new Map();
 
-// Notice that the value type for WeakMap includes undefined.
-// Take the scenario where an inspection was requested on a document that was not parsable,
-// then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
-// If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
-// or that we we couldn't do an inspection.
-type InspectionMap = WeakMap<Position, TInspectionCacheItem>;
+export type TCacheItem = LexerCacheItem | LexerSnapshotCacheItem;
 
-const allCaches: Map<string, any>[] = [lexerSnapshotCache, lexerStateCache, triedLexParseCache, triedInspectionCache];
+export type LexerCacheItem = CacheItem<PQP.Lexer.TriedLex, CacheStageKind.Lexer>;
+
+export type TLexerSnapshotCacheItem = LexerSnapshotCacheItem | LexerCacheItem;
+export type LexerSnapshotCacheItem = CacheItem<PQP.Lexer.TriedLexerSnapshot, CacheStageKind.LexerSnapshot>;
+
+export type TParserCacheItem = ParserCacheItem | TLexerSnapshotCacheItem;
+export type ParserCacheItem = CacheItem<PQP.Parser.TriedParse, CacheStageKind.Parser>;
+
+export type TInspectionCacheItem = InspectionCacheItem | TLexerSnapshotCacheItem;
+export type InspectionCacheItem = CacheItem<PQP.Inspection.TriedInspection, CacheStageKind.Inspection>;
 
 // TODO: is the position key valid for a single intellisense operation,
 // or would it be the same for multiple invocations?
@@ -49,13 +53,13 @@ export function getTriedLexParse(textDocument: TextDocument, locale: string | un
 // This results in a double layer cache.
 export function getTriedInspection(
     textDocument: TextDocument,
-    position: Position,
+    position: PQP.Inspection.Position,
     locale: string | undefined,
 ): TInspectionCacheItem | undefined {
     const cacheKey: string = textDocument.uri;
     const maybePositionCache: undefined | InspectionMap = triedInspectionCache.get(cacheKey);
 
-    let positionCache: WeakMap<Position, TInspectionCacheItem>;
+    let positionCache: WeakMap<PQP.Inspection.Position, TInspectionCacheItem>;
     // document has been inspected before
     if (maybePositionCache !== undefined) {
         positionCache = maybePositionCache;
@@ -65,30 +69,22 @@ export function getTriedInspection(
     }
 
     if (positionCache.has(position)) {
-        return {
-            result: positionCache.get(position),
-            kind: CacheStageKind.Inspection,
-        };
+        return positionCache.get(position);
     } else {
-        const value: PQP.Task.TriedInspection | undefined = createTriedInspection(textDocument, position, locale);
+        const value: TInspectionCacheItem | undefined = createTriedInspection(textDocument, position, locale);
         positionCache.set(position, value);
         return value;
     }
 }
 
-// type TCacheItem = LexerCacheItem | LexerSnapshotCacheItem;
+// Notice that the value type for WeakMap includes undefined.
+// Take the scenario where an inspection was requested on a document that was not parsable,
+// then createTriedInspection would return undefined as you can't inspect something that wasn't parsed.
+// If we used WeakMap.get(...) we wouldn't know if an undefined was returned because of a cache miss
+// or that we we couldn't do an inspection.
+type InspectionMap = WeakMap<PQP.Inspection.Position, TInspectionCacheItem>;
 
-type LexerCacheItem = CacheItem<PQP.Lexer.TriedLex, CacheStageKind.Lexer>;
-
-type TLexerSnapshotCacheItem = LexerSnapshotCacheItem | LexerCacheItem;
-type LexerSnapshotCacheItem = CacheItem<PQP.TriedLexerSnapshot, CacheStageKind.LexerSnapshot>;
-
-type TParserCacheItem = ParserCacheItem | TLexerSnapshotCacheItem;
-type ParserCacheItem = CacheItem<PQP.TriedParse, CacheStageKind.Parser>;
-
-type TInspectionCacheItem = InspectionCacheItem | TLexerSnapshotCacheItem;
-type InspectionCacheItem = CacheItem<TriedInspection, CacheStageKind.Inspection>;
-
+const allCaches: Map<string, any>[] = [lexerSnapshotCache, lexerStateCache, triedLexParseCache, triedInspectionCache];
 interface CacheItem<T, Stage extends CacheStageKind> {
     readonly result: T;
     readonly stage: Stage;
@@ -135,7 +131,7 @@ function createLexerSnapshotCacheItem(textDocument: TextDocument, locale: string
     const lexerState: PQP.Lexer.State = triedLex.value;
 
     return {
-        result: PQP.LexerSnapshot.tryFrom(lexerState),
+        result: PQP.Lexer.trySnapshot(lexerState),
         stage: CacheStageKind.LexerSnapshot,
     };
 }
@@ -149,15 +145,15 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
     ) {
         return lexerSnapshotCacheItem;
     }
-    const lexerSnapshot: PQP.LexerSnapshot = lexerSnapshotCacheItem.result.value;
+    const lexerSnapshot: PQP.Lexer.LexerSnapshot = lexerSnapshotCacheItem.result.value;
 
     const settings: PQP.ParseSettings = {
         ...PQP.DefaultSettings,
         ...getSettings(locale),
     };
-    const triedParse: PQP.TriedParse = PQP.Task.tryParse(
-        settings,
-        PQP.IParserStateUtils.stateFactory(settings, lexerSnapshot),
+    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(
+        PQP.Parser.IParserStateUtils.stateFactory(settings, lexerSnapshot),
+        settings.parser,
     );
     return {
         result: triedParse,
@@ -169,32 +165,23 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
 // then there's no way to perform an inspection.
 function createTriedInspection(
     textDocument: TextDocument,
-    position: Position,
+    position: PQP.Inspection.Position,
     locale: string | undefined,
-): PQP.Task.TriedInspection | undefined {
-    const triedLexParse: PQP.Task.TriedLexParse = getTriedLexParse(textDocument, locale);
-    if (
-        PQP.ResultUtils.isErr(triedLexParse) &&
-        (triedLexParse.error instanceof PQP.CommonError.CommonError ||
-            triedLexParse.error instanceof PQP.LexError.LexError)
-    ) {
-        return undefined;
+): TInspectionCacheItem {
+    const parserCacheItem: TParserCacheItem = getTriedLexParse(textDocument, locale);
+    if (parserCacheItem.stage !== CacheStageKind.Parser) {
+        return parserCacheItem;
     }
 
-    const maybeTriedParse: PQP.TriedParse | undefined = PQP.Task.maybeTriedParseFromTriedLexParse(triedLexParse);
-    if (maybeTriedParse === undefined) {
-        return undefined;
-    }
-
-    const triedParse: PQP.TriedParse = maybeTriedParse;
-    const pqpPosition: PQP.Inspection.Position = {
-        lineNumber: position.line,
-        lineCodeUnit: position.character,
+    return {
+        result: PQP.Task.tryInspection(getSettings(locale), parserCacheItem.result, position),
+        stage: CacheStageKind.Inspection,
     };
-
-    return PQP.Task.tryInspection(PQP.DefaultSettings, triedParse, pqpPosition);
 }
 
 function getSettings(locale: string | undefined): PQP.CommonSettings {
-    return locale ? { locale } : PQP.DefaultSettings;
+    return {
+        ...PQP.DefaultSettings,
+        locale: locale != undefined ? locale : PQP.DefaultSettings.locale,
+    };
 }
