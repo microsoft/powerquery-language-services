@@ -205,7 +205,7 @@ abstract class AnalysisBase implements Analysis {
 
 class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.maybeTriedInspection(document, position, options.locale), position, options);
+        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
     }
 
     public dispose(): void {

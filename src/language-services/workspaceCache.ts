@@ -4,12 +4,14 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import type { TextDocument, TextDocumentContentChangeEvent } from "./commonTypes";
 
-const lexerStateCache: Map<string, LexerCacheItem> = new Map();
-const lexerSnapshotCache: Map<string, TLexerSnapshotCacheItem> = new Map();
-const triedLexParseCache: Map<string, TParserCacheItem> = new Map();
-const triedInspectionCache: Map<string, InspectionMap> = new Map();
+export const enum CacheStageKind {
+    Lexer,
+    LexerSnapshot,
+    Parser,
+    Inspection,
+}
 
-export type TCacheItem = LexerCacheItem | LexerSnapshotCacheItem;
+export type TCacheItem = LexerCacheItem | LexerSnapshotCacheItem | ParserCacheItem | InspectionCacheItem;
 
 export type LexerCacheItem = CacheItem<PQP.Lexer.TriedLex, CacheStageKind.Lexer>;
 
@@ -19,13 +21,13 @@ export type LexerSnapshotCacheItem = CacheItem<PQP.Lexer.TriedLexerSnapshot, Cac
 export type TParserCacheItem = ParserCacheItem | TLexerSnapshotCacheItem;
 export type ParserCacheItem = CacheItem<PQP.Parser.TriedParse, CacheStageKind.Parser>;
 
-export type TInspectionCacheItem = InspectionCacheItem | TLexerSnapshotCacheItem;
+export type TInspectionCacheItem = InspectionCacheItem | TParserCacheItem;
 export type InspectionCacheItem = CacheItem<PQP.Inspection.TriedInspection, CacheStageKind.Inspection>;
 
 // TODO: is the position key valid for a single intellisense operation,
 // or would it be the same for multiple invocations?
 export function close(textDocument: TextDocument): void {
-    allCaches.forEach(map => {
+    AllCaches.forEach(map => {
         map.delete(textDocument.uri);
     });
 }
@@ -38,15 +40,15 @@ export function update(textDocument: TextDocument, _changes: TextDocumentContent
 }
 
 export function getLexerState(textDocument: TextDocument, locale: string | undefined): LexerCacheItem {
-    return getOrCreate(lexerStateCache, textDocument, locale, createLexerCacheItem);
+    return getOrCreate(LexerStateCache, textDocument, locale, createLexerCacheItem);
 }
 
 export function getTriedLexerSnapshot(textDocument: TextDocument, locale: string | undefined): TLexerSnapshotCacheItem {
-    return getOrCreate(lexerSnapshotCache, textDocument, locale, createLexerSnapshotCacheItem);
+    return getOrCreate(LexerSnapshotCache, textDocument, locale, createLexerSnapshotCacheItem);
 }
 
-export function getTriedLexParse(textDocument: TextDocument, locale: string | undefined): TParserCacheItem {
-    return getOrCreate(triedLexParseCache, textDocument, locale, createParserCacheItem);
+export function getTriedParse(textDocument: TextDocument, locale: string | undefined): TParserCacheItem {
+    return getOrCreate(ParserCache, textDocument, locale, createParserCacheItem);
 }
 
 // We can't easily reuse getOrCreate because inspections require a position argument.
@@ -57,7 +59,7 @@ export function getTriedInspection(
     locale: string | undefined,
 ): TInspectionCacheItem | undefined {
     const cacheKey: string = textDocument.uri;
-    const maybePositionCache: undefined | InspectionMap = triedInspectionCache.get(cacheKey);
+    const maybePositionCache: undefined | InspectionMap = InspectionCache.get(cacheKey);
 
     let positionCache: WeakMap<PQP.Inspection.Position, TInspectionCacheItem>;
     // document has been inspected before
@@ -65,7 +67,7 @@ export function getTriedInspection(
         positionCache = maybePositionCache;
     } else {
         positionCache = new WeakMap();
-        triedInspectionCache.set(textDocument.uri, positionCache);
+        InspectionCache.set(textDocument.uri, positionCache);
     }
 
     if (positionCache.has(position)) {
@@ -84,17 +86,15 @@ export function getTriedInspection(
 // or that we we couldn't do an inspection.
 type InspectionMap = WeakMap<PQP.Inspection.Position, TInspectionCacheItem>;
 
-const allCaches: Map<string, any>[] = [lexerSnapshotCache, lexerStateCache, triedLexParseCache, triedInspectionCache];
+const LexerStateCache: Map<string, LexerCacheItem> = new Map();
+const LexerSnapshotCache: Map<string, TLexerSnapshotCacheItem> = new Map();
+const ParserCache: Map<string, TParserCacheItem> = new Map();
+const InspectionCache: Map<string, InspectionMap> = new Map();
+
+const AllCaches: Map<string, any>[] = [LexerSnapshotCache, LexerStateCache, ParserCache, InspectionCache];
 interface CacheItem<T, Stage extends CacheStageKind> {
     readonly result: T;
     readonly stage: Stage;
-}
-
-const enum CacheStageKind {
-    Lexer,
-    LexerSnapshot,
-    Parser,
-    Inspection,
 }
 
 function getOrCreate<T>(
@@ -141,7 +141,6 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
     if (
         lexerSnapshotCacheItem.stage !== CacheStageKind.LexerSnapshot ||
         PQP.ResultUtils.isErr(lexerSnapshotCacheItem.result)
-        // PQP.ResultUtils.isErr(lexerSnapshotCacheItem.result)
     ) {
         return lexerSnapshotCacheItem;
     }
@@ -168,7 +167,7 @@ function createTriedInspection(
     position: PQP.Inspection.Position,
     locale: string | undefined,
 ): TInspectionCacheItem {
-    const parserCacheItem: TParserCacheItem = getTriedLexParse(textDocument, locale);
+    const parserCacheItem: TParserCacheItem = getTriedParse(textDocument, locale);
     if (parserCacheItem.stage !== CacheStageKind.Parser) {
         return parserCacheItem;
     }

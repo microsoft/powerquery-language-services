@@ -28,41 +28,18 @@ export interface ValidationOptions extends AnalysisOptions {
 }
 
 export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, options?.locale);
-    let diagnostics: Diagnostic[] = [];
-
-    let contextState: PQP.Parser.ParseContext.State | undefined = undefined;
-
-    // Check for syntax errors
-    if (PQP.ResultUtils.isErr(triedLexParse)) {
-        const lexOrParseError: PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError = triedLexParse.error;
-        if (lexOrParseError instanceof PQP.Parser.ParseError.ParseError) {
-            contextState = lexOrParseError.state.contextState;
-            const maybeDiagnostic: Diagnostic | undefined = maybeParseErrorToDiagnostic(
-                lexOrParseError,
-                options?.source,
-            );
-            if (maybeDiagnostic !== undefined) {
-                diagnostics = [maybeDiagnostic];
-            }
-        } else if (PQP.Lexer.LexError.isTInnerLexError(lexOrParseError.innerError)) {
-            const maybeLexerErrorDiagnostics: Diagnostic[] | undefined = maybeLexErrorToDiagnostics(
-                lexOrParseError.innerError,
-                options?.source,
-            );
-            if (maybeLexerErrorDiagnostics !== undefined) {
-                diagnostics = maybeLexerErrorDiagnostics;
-            }
-        }
-    } else {
-        contextState = triedLexParse.value.state.contextState;
-    }
+    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
+    const checked: DiagnosticCheck = diagnosticsCheck(cacheItem);
+    const diagnostics: Diagnostic[] = checked.diagnostics;
 
     // TODO: Look for unknown identifiers
     if (options?.checkForDuplicateIdentifiers) {
-        if (contextState && contextState.maybeRoot) {
-            const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
-            const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = contextState.nodeIdMapCollection;
+        if (checked.maybeParserContextState !== undefined && checked.maybeParserContextState.maybeRoot !== undefined) {
+            const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(
+                checked.maybeParserContextState.maybeRoot,
+            );
+            const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection =
+                checked.maybeParserContextState.nodeIdMapCollection;
             const triedTraverse: PQP.Traverse.TriedTraverse<Diagnostic[]> = tryTraverse(
                 document.uri,
                 rootNode,
@@ -82,15 +59,46 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
     }
 
     return {
-        syntaxError: PQP.ResultUtils.isErr(triedLexParse),
+        // TODO: figure out why TypeScript isn't allowing PQP.ResultUtils.isErr(cacheItem)
+        syntaxError: cacheItem.result.kind === PQP.ResultKind.Err,
         diagnostics,
     };
 }
 
-function maybeLexErrorToDiagnostics(
-    error: PQP.Lexer.LexError.TInnerLexError,
-    source?: string,
-): Diagnostic[] | undefined {
+interface DiagnosticCheck {
+    readonly diagnostics: Diagnostic[];
+    readonly maybeParserContextState: PQP.Parser.ParseContext.State | undefined;
+}
+
+const EmptyDiagnosticCheck: DiagnosticCheck = {
+    diagnostics: [],
+    maybeParserContextState: undefined,
+};
+
+function diagnosticsCheck(parserCacheItem: WorkspaceCache.TParserCacheItem): DiagnosticCheck {
+    switch (parserCacheItem.stage) {
+        case WorkspaceCache.CacheStageKind.Lexer:
+            return lexerDiagnosticCheck(parserCacheItem.result);
+
+        case WorkspaceCache.CacheStageKind.LexerSnapshot:
+            return EmptyDiagnosticCheck;
+
+        case WorkspaceCache.CacheStageKind.Parser:
+            return parserDiagnosticCheck(parserCacheItem.result);
+
+        default:
+            throw PQP.Assert.isNever(parserCacheItem);
+    }
+}
+
+function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options?: ValidationOptions): DiagnosticCheck {
+    if (PQP.ResultUtils.isOk(triedLex)) {
+        return EmptyDiagnosticCheck;
+    } else if (!PQP.Lexer.LexError.isLexError(triedLex)) {
+        return EmptyDiagnosticCheck;
+    }
+
+    const error: PQP.Lexer.LexError.LexError = triedLex.error;
     const diagnostics: Diagnostic[] = [];
     // TODO: handle other types of lexer errors
     if (error instanceof PQP.Lexer.LexError.ErrorLineMapError) {
@@ -108,7 +116,7 @@ function maybeLexErrorToDiagnostics(
                     code: DiagnosticErrorCode.LexError,
                     message,
                     severity: DiagnosticSeverity.Error,
-                    source,
+                    source: options?.source,
                     range: {
                         start: position,
                         end: position,
@@ -117,12 +125,28 @@ function maybeLexErrorToDiagnostics(
             }
         }
     }
-    return diagnostics.length ? diagnostics : undefined;
+
+    return {
+        diagnostics: diagnostics.length !== 0 ? diagnostics : diagnostics,
+        maybeParserContextState: undefined,
+    };
 }
 
-function maybeParseErrorToDiagnostic(error: PQP.Parser.ParseError.ParseError, source?: string): Diagnostic | undefined {
+function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options?: ValidationOptions): DiagnosticCheck {
+    if (PQP.ResultUtils.isOk(triedParse)) {
+        return {
+            diagnostics: [],
+            maybeParserContextState: triedParse.value.state.contextState,
+        };
+    } else if (!PQP.Parser.ParseError.isParseError(triedParse)) {
+        return EmptyDiagnosticCheck;
+    }
+
+    const error: PQP.Parser.ParseError.ParseError = triedParse.error as PQP.Parser.ParseError.ParseError;
     const innerError: PQP.Parser.ParseError.TInnerParseError = error.innerError;
     const message: string = error.message;
+    const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
+
     let maybeErrorToken: PQP.Language.Token.Token | undefined;
     if (
         (innerError instanceof PQP.Parser.ParseError.ExpectedAnyTokenKindError ||
@@ -155,10 +179,9 @@ function maybeParseErrorToDiagnostic(error: PQP.Parser.ParseError.ParseError, so
             },
         };
     } else {
-        const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
         const maybeRoot: PQP.Parser.ParseContext.Node | undefined = parseContextState.maybeRoot;
         if (maybeRoot === undefined) {
-            return undefined;
+            return EmptyDiagnosticCheck;
         }
 
         const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
@@ -166,7 +189,7 @@ function maybeParseErrorToDiagnostic(error: PQP.Parser.ParseError.ParseError, so
             maybeRoot.id,
         );
         if (maybeLeaf === undefined) {
-            return undefined;
+            return EmptyDiagnosticCheck;
         }
         const leafTokenRange: PQP.Language.Token.TokenRange = maybeLeaf.tokenRange;
 
@@ -183,11 +206,16 @@ function maybeParseErrorToDiagnostic(error: PQP.Parser.ParseError.ParseError, so
     }
 
     return {
-        code: DiagnosticErrorCode.ParseError,
-        message,
-        range,
-        severity: DiagnosticSeverity.Error,
-        source,
+        diagnostics: [
+            {
+                code: DiagnosticErrorCode.ParseError,
+                message,
+                range,
+                severity: DiagnosticSeverity.Error,
+                source: options?.source,
+            },
+        ],
+        maybeParserContextState: parseContextState,
     };
 }
 
