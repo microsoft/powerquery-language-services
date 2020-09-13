@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { CompletionItem, CompletionItemKind } from "./commonTypes";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./providers";
+import * as WorkspaceCache from "./workspaceCache";
 
 export class LanguageConstantProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
@@ -47,17 +48,22 @@ export class LanguageConstantProvider implements CompletionItemProvider {
         { kind: CompletionItemKind.TypeParameter, label: PQP.Language.Constant.PrimitiveTypeConstantKind.Type },
     ];
 
-    constructor(private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined) {}
+    constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         return [...LanguageConstantProvider.LanguageConstants, ...this.getKeywords()];
     }
 
     private getKeywords(): CompletionItem[] {
-        if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
+        if (
+            this.maybeTriedInspection === undefined ||
+            this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
+            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
+        ) {
             return [];
         }
-        const inspectionOk: PQP.Task.InspectionOk = this.maybeTriedInspection.value;
+
+        const inspectionOk: PQP.Inspection.InspectionOk = this.maybeTriedInspection.value;
 
         return inspectionOk.autocomplete
             .filter(

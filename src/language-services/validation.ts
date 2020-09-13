@@ -60,7 +60,7 @@ export function validate(document: TextDocument, options?: ValidationOptions): V
 
     return {
         // TODO: figure out why TypeScript isn't allowing PQP.ResultUtils.isErr(cacheItem)
-        syntaxError: cacheItem.result.kind === PQP.ResultKind.Err,
+        syntaxError: cacheItem.kind === PQP.ResultKind.Err,
         diagnostics,
     };
 }
@@ -78,13 +78,13 @@ const EmptyDiagnosticCheck: DiagnosticCheck = {
 function diagnosticsCheck(parserCacheItem: WorkspaceCache.TParserCacheItem): DiagnosticCheck {
     switch (parserCacheItem.stage) {
         case WorkspaceCache.CacheStageKind.Lexer:
-            return lexerDiagnosticCheck(parserCacheItem.result);
+            return lexerDiagnosticCheck(parserCacheItem);
 
         case WorkspaceCache.CacheStageKind.LexerSnapshot:
             return EmptyDiagnosticCheck;
 
         case WorkspaceCache.CacheStageKind.Parser:
-            return parserDiagnosticCheck(parserCacheItem.result);
+            return parserDiagnosticCheck(parserCacheItem);
 
         default:
             throw PQP.Assert.isNever(parserCacheItem);

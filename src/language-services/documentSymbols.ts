@@ -21,10 +21,10 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
             break;
 
         case WorkspaceCache.CacheStageKind.Parser:
-            if (PQP.ResultUtils.isOk(cacheItem.result)) {
-                contextState = cacheItem.result.value.state.contextState;
-            } else if (PQP.Parser.ParseError.isParseError(cacheItem.result.error)) {
-                contextState = cacheItem.result.error.state.contextState;
+            if (PQP.ResultUtils.isOk(cacheItem)) {
+                contextState = cacheItem.value.state.contextState;
+            } else if (PQP.Parser.ParseError.isParseError(cacheItem.error)) {
+                contextState = cacheItem.error.state.contextState;
             } else {
                 contextState = undefined;
             }

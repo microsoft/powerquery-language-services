@@ -38,27 +38,19 @@ abstract class AnalysisBase implements Analysis {
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
-    protected readonly options: AnalysisOptions;
-    protected readonly position: Position;
-    protected readonly triedInspection: PQP.Inspection.TriedInspection | undefined;
-
     constructor(
-        triedInspection: PQP.Inspection.TriedInspection | undefined,
-        position: Position,
-        options: AnalysisOptions,
+        protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
+        protected position: Position,
+        protected options: AnalysisOptions,
     ) {
-        this.triedInspection = triedInspection;
-        this.options = options;
-        this.position = position;
-
         this.environmentSymbolProvider = this.options.environmentSymbolProvider
             ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.languageConstantProvider = new LanguageConstantProvider(this.triedInspection);
+        this.languageConstantProvider = new LanguageConstantProvider(this.maybeInspectionCacheItem);
         this.librarySymbolProvider = this.options.librarySymbolProvider
             ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.triedInspection);
+        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
@@ -140,10 +132,14 @@ abstract class AnalysisBase implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        if (this.triedInspection === undefined || PQP.ResultUtils.isErr(this.triedInspection)) {
+        if (
+            this.maybeInspectionCacheItem === undefined ||
+            this.maybeInspectionCacheItem.kind !== PQP.ResultKind.Ok ||
+            this.maybeInspectionCacheItem.stage !== WorkspaceCache.CacheStageKind.Inspection
+        ) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
-        const inspected: PQP.Task.InspectionOk = this.triedInspection.value;
+        const inspected: PQP.Inspection.InspectionOk = this.maybeInspectionCacheItem.value;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
             inspected,
@@ -172,7 +168,7 @@ abstract class AnalysisBase implements Analysis {
 
     public abstract dispose(): void;
 
-    protected abstract getLexerState(): PQP.Lexer.State;
+    protected abstract getLexerState(): WorkspaceCache.LexerCacheItem;
     protected abstract getText(range?: Range): string;
 
     private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
@@ -188,8 +184,12 @@ abstract class AnalysisBase implements Analysis {
     }
 
     private maybeLineTokensAt(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
-        const lexResult: PQP.Lexer.State = this.getLexerState();
-        const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
+        const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
+        if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
+            return undefined;
+        }
+
+        const maybeLine: PQP.Lexer.TLine | undefined = cacheItem.value.lines[this.position.line];
         return maybeLine?.tokens;
     }
 
@@ -214,7 +214,7 @@ class DocumentAnalysis extends AnalysisBase {
         }
     }
 
-    protected getLexerState(): PQP.Lexer.State {
+    protected getLexerState(): WorkspaceCache.LexerCacheItem {
         return WorkspaceCache.getLexerState(this.document, this.options.locale);
     }
 

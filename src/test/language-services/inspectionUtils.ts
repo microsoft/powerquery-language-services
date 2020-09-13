@@ -5,20 +5,12 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
-import { DocumentSymbol, SymbolKind, TextDocument } from "../../language-services";
+import { DocumentSymbol, SymbolKind } from "../../language-services";
 import { ExpectedDocumentSymbol } from "./utils";
 
 import * as InspectionUtils from "../../language-services/inspectionUtils";
 import * as WorkspaceCache from "../../language-services/workspaceCache";
 import * as Utils from "./utils";
-
-function getLexAndParseOk(document: TextDocument): PQP.Task.LexParseOk {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedParse(document, "en-US");
-    if (PQP.ResultUtils.isErr(triedLexParse)) {
-        throw new Error("AssertFailed: triedLexParse to be Ok");
-    }
-    return triedLexParse.value;
-}
 
 // Used to test symbols at a specific level of inspection
 function expectSymbolsForNode(node: PQP.Language.Ast.TNode, expectedSymbols: ExpectedDocumentSymbol[]): void {
@@ -42,11 +34,10 @@ function expectSymbolsForNode(node: PQP.Language.Ast.TNode, expectedSymbols: Exp
 describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared a = 1; b = "abc"; c = true;`);
-        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        Utils.assertParserCacheItemOk(lexAndParseOk);
 
-        expect(lexAndParseOk.root.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
-
-        expectSymbolsForNode(lexAndParseOk.root, [
+        expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
             { name: "c", kind: SymbolKind.Boolean },
@@ -55,20 +46,18 @@ describe("Document symbol base functions", () => {
 
     it(`section foo; a = {1,2};`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; a = {1,2};`);
-        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        Utils.assertParserCacheItemOk(lexAndParseOk);
 
-        expect(lexAndParseOk.root.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
-
-        expectSymbolsForNode(lexAndParseOk.root, [{ name: "a", kind: SymbolKind.Array }]);
+        expectSymbolsForNode(lexAndParseOk.value.root, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
         const document: Utils.MockDocument = Utils.documentFromText(`let a = 1, b = 2, c = 3 in c`);
-        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        Utils.assertParserCacheItemOk(lexAndParseOk);
 
-        expect(lexAndParseOk.root.kind).to.equal(PQP.Language.Ast.NodeKind.LetExpression);
-
-        expectSymbolsForNode(lexAndParseOk.root, [
+        expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.Number },
             { name: "c", kind: SymbolKind.Number },
@@ -77,11 +66,10 @@ describe("Document symbol base functions", () => {
 
     it("HelloWorldWithDocs file section", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("HelloWorldWithDocs.pq");
-        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        Utils.assertParserCacheItemOk(lexAndParseOk);
 
-        expect(lexAndParseOk.root.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
-
-        expectSymbolsForNode(lexAndParseOk.root, [
+        expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
             { name: "HelloWorldImpl", kind: SymbolKind.Function },
@@ -92,11 +80,10 @@ describe("Document symbol base functions", () => {
 
     it("DirectQueryForSQL file section", () => {
         const document: Utils.MockDocument = Utils.documentFromFile("DirectQueryForSQL.pq");
-        const lexAndParseOk: PQP.Task.LexParseOk = getLexAndParseOk(document);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        Utils.assertParserCacheItemOk(lexAndParseOk);
 
-        expect(lexAndParseOk.root.kind).to.equal(PQP.Language.Ast.NodeKind.Section);
-
-        expectSymbolsForNode(lexAndParseOk.root, [
+        expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },
             { name: "DirectSQL", kind: SymbolKind.Struct },
             { name: "DirectSQL.UI", kind: SymbolKind.Struct },
