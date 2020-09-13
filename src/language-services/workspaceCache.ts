@@ -5,10 +5,10 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { Position, TextDocument, TextDocumentContentChangeEvent } from "./commonTypes";
 
 export const enum CacheStageKind {
-    Lexer,
-    LexerSnapshot,
-    Parser,
-    Inspection,
+    Lexer = "Lexer",
+    LexerSnapshot = "LexerSnapshot",
+    Parser = "Parser",
+    Inspection = "Inspection",
 }
 
 export type TCacheItem = LexerCacheItem | LexerSnapshotCacheItem | ParserCacheItem | InspectionCacheItem;

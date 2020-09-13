@@ -29,7 +29,7 @@ export interface ValidationOptions extends AnalysisOptions {
 
 export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
     const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
-    const checked: DiagnosticCheck = diagnosticsCheck(cacheItem);
+    const checked: DiagnosticCheck = diagnosticsCheck(cacheItem, options);
     const diagnostics: Diagnostic[] = checked.diagnostics;
 
     // TODO: Look for unknown identifiers
@@ -75,16 +75,19 @@ const EmptyDiagnosticCheck: DiagnosticCheck = {
     maybeParserContextState: undefined,
 };
 
-function diagnosticsCheck(parserCacheItem: WorkspaceCache.TParserCacheItem): DiagnosticCheck {
+function diagnosticsCheck(
+    parserCacheItem: WorkspaceCache.TParserCacheItem,
+    options?: ValidationOptions,
+): DiagnosticCheck {
     switch (parserCacheItem.stage) {
         case WorkspaceCache.CacheStageKind.Lexer:
-            return lexerDiagnosticCheck(parserCacheItem);
+            return lexerDiagnosticCheck(parserCacheItem, options);
 
         case WorkspaceCache.CacheStageKind.LexerSnapshot:
             return EmptyDiagnosticCheck;
 
         case WorkspaceCache.CacheStageKind.Parser:
-            return parserDiagnosticCheck(parserCacheItem);
+            return parserDiagnosticCheck(parserCacheItem, options);
 
         default:
             throw PQP.Assert.isNever(parserCacheItem);
@@ -94,7 +97,7 @@ function diagnosticsCheck(parserCacheItem: WorkspaceCache.TParserCacheItem): Dia
 function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options?: ValidationOptions): DiagnosticCheck {
     if (PQP.ResultUtils.isOk(triedLex)) {
         return EmptyDiagnosticCheck;
-    } else if (!PQP.Lexer.LexError.isLexError(triedLex)) {
+    } else if (!PQP.Lexer.LexError.isLexError(triedLex.error)) {
         return EmptyDiagnosticCheck;
     }
 
@@ -138,7 +141,7 @@ function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options?: Vali
             diagnostics: [],
             maybeParserContextState: triedParse.value.state.contextState,
         };
-    } else if (!PQP.Parser.ParseError.isParseError(triedParse)) {
+    } else if (!PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return EmptyDiagnosticCheck;
     }
 

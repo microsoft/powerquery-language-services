@@ -59,7 +59,7 @@ describe("workspaceCache", () => {
             undefined,
         );
         Utils.assertIsDefined(cacheItem);
-        Utils.assertParserCacheItemErr(cacheItem);
+        Utils.assertInspectionCacheItemOk(cacheItem);
     });
 });
 
