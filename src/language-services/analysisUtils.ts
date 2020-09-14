@@ -6,9 +6,9 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Position, Range } from "./commonTypes";
 
 export function getTokenAtPosition(
-    lineTokens: ReadonlyArray<PQP.Language.LineToken>,
+    lineTokens: ReadonlyArray<PQP.Language.Token.LineToken>,
     position: Position,
-): PQP.Language.LineToken | undefined {
+): PQP.Language.Token.LineToken | undefined {
     for (const token of lineTokens) {
         if (token.positionStart < position.character && token.positionEnd >= position.character) {
             return token;
@@ -18,7 +18,7 @@ export function getTokenAtPosition(
     return undefined;
 }
 
-export function getTokenRangeForPosition(token: PQP.Language.LineToken, cursorPosition: Position): Range {
+export function getTokenRangeForPosition(token: PQP.Language.Token.LineToken, cursorPosition: Position): Range {
     return {
         start: {
             line: cursorPosition.line,

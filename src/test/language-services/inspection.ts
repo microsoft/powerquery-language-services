@@ -12,7 +12,7 @@ import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
 
-function expectScope(inspected: PQP.Task.InspectionOk, expected: string[]): void {
+function expectScope(inspected: PQP.Inspection.InspectionOk, expected: string[]): void {
     const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.scope.entries()]
         .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].isRecursive === false)
         .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
@@ -26,7 +26,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d|,",
             );
-            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -41,7 +41,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d,|",
             );
-            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -56,7 +56,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d,1|",
             );
-            const inspected: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -74,9 +74,9 @@ describe("InspectedInvokeExpression", () => {
                     line: 68,
                     character: 23,
                 };
-                const inspectionOk: PQP.Task.InspectionOk = Utils.expectInspectionOk(document, position);
+                const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
 
-                expectScope(inspectionOk, [
+                expectScope(inspected, [
                     "ConnectionString",
                     "Credential",
                     "CredentialConnectionString",
@@ -88,19 +88,17 @@ describe("InspectedInvokeExpression", () => {
                     "server",
                 ]);
 
-                assert.isDefined(
-                    inspectionOk.maybeActiveNode?.maybeIdentifierUnderPosition,
-                    "position identifier should be defined",
-                );
+                Utils.assertIsDefined(inspected.maybeActiveNode);
+                Utils.assertIsDefined(inspected.maybeActiveNode.maybeIdentifierUnderPosition);
 
-                expect(inspectionOk.maybeActiveNode?.maybeIdentifierUnderPosition?.kind).equals(
+                expect(inspected.maybeActiveNode.maybeIdentifierUnderPosition.kind).equals(
                     PQP.Language.Ast.NodeKind.Identifier,
                     "expecting identifier",
                 );
 
                 const identifier:
                     | PQP.Language.Ast.GeneralizedIdentifier
-                    | PQP.Language.Ast.Identifier = inspectionOk.maybeActiveNode!.maybeIdentifierUnderPosition!;
+                    | PQP.Language.Ast.Identifier = inspected.maybeActiveNode!.maybeIdentifierUnderPosition!;
                 expect(identifier.literal).equals("OdbcDataSource");
                 expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });

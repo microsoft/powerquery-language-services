@@ -10,37 +10,37 @@ import * as Utils from "./utils";
 
 const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
 const ExpressionKeywordWhitelist: string[] = [
-    PQP.Language.KeywordKind.Each,
-    PQP.Language.KeywordKind.Error,
-    PQP.Language.KeywordKind.False,
-    PQP.Language.KeywordKind.If,
-    PQP.Language.KeywordKind.Let,
-    PQP.Language.KeywordKind.Not,
-    PQP.Language.KeywordKind.True,
-    PQP.Language.KeywordKind.Try,
-    PQP.Language.KeywordKind.Type,
+    PQP.Language.Keyword.KeywordKind.Each,
+    PQP.Language.Keyword.KeywordKind.Error,
+    PQP.Language.Keyword.KeywordKind.False,
+    PQP.Language.Keyword.KeywordKind.If,
+    PQP.Language.Keyword.KeywordKind.Let,
+    PQP.Language.Keyword.KeywordKind.Not,
+    PQP.Language.Keyword.KeywordKind.True,
+    PQP.Language.Keyword.KeywordKind.Try,
+    PQP.Language.Keyword.KeywordKind.Type,
 ];
 
 const AllPrimitiveTypes: string[] = [
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Action,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Any,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.AnyNonNull,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Binary,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Date,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.DateTime,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.DateTimeZone,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Duration,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Function,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.List,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Logical,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.None,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Null,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Number,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Record,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Table,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Text,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Time,
-    PQP.Language.Ast.PrimitiveTypeConstantKind.Type,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Action,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Any,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.AnyNonNull,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Binary,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Date,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.DateTime,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.DateTimeZone,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Duration,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Function,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.List,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Logical,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.None,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Null,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Number,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Record,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Table,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Text,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Time,
+    PQP.Language.Constant.PrimitiveTypeConstantKind.Type,
 ];
 
 describe("Completion Items (null provider)", () => {
@@ -54,8 +54,11 @@ describe("Completion Items (null provider)", () => {
         // });
 
         // TODO: use equals instead of contains when we have fully context sensitive language constants
-        // Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.Language.KeywordKind.Section]);
-        Utils.containsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.Language.KeywordKind.Section]);
+        // Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.Language.Keyword.KeywordKind.Section]);
+        Utils.containsCompletionItemLabels(result, [
+            ...ExpressionKeywordWhitelist,
+            PQP.Language.Keyword.KeywordKind.Section,
+        ]);
     });
 
     it("simple document", async () => {
@@ -74,7 +77,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.Language.KeywordKind.Section,
+            PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
@@ -86,7 +89,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.Language.KeywordKind.Section,
+            PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
@@ -99,7 +102,7 @@ describe("Completion Items (Simple provider)", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
-            PQP.Language.KeywordKind.Section,
+            PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
         ]);
     });
@@ -141,7 +144,7 @@ describe("Other language constants", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
-            PQP.Language.Ast.IdentifierConstantKind.Nullable,
+            PQP.Language.Constant.IdentifierConstantKind.Nullable,
         ]);
     });
 
@@ -150,19 +153,19 @@ describe("Other language constants", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
-            PQP.Language.Ast.IdentifierConstantKind.Nullable,
+            PQP.Language.Constant.IdentifierConstantKind.Nullable,
         ]);
     });
 
     it("(a, |", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems(`(a, |`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Ast.IdentifierConstantKind.Optional]);
+        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.IdentifierConstantKind.Optional]);
     });
 
     it("(a, op|", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems(`(a, op|`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Ast.IdentifierConstantKind.Optional]);
+        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.IdentifierConstantKind.Optional]);
     });
 });

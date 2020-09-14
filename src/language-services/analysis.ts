@@ -38,29 +38,25 @@ abstract class AnalysisBase implements Analysis {
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
-    protected readonly options: AnalysisOptions;
-    protected readonly position: Position;
-    protected readonly triedInspection: PQP.Task.TriedInspection | undefined;
-
-    constructor(triedInspection: PQP.Task.TriedInspection | undefined, position: Position, options: AnalysisOptions) {
-        this.triedInspection = triedInspection;
-        this.options = options;
-        this.position = position;
-
+    constructor(
+        protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
+        protected position: Position,
+        protected options: AnalysisOptions,
+    ) {
         this.environmentSymbolProvider = this.options.environmentSymbolProvider
             ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.languageConstantProvider = new LanguageConstantProvider(this.triedInspection);
+        this.languageConstantProvider = new LanguageConstantProvider(this.maybeInspectionCacheItem);
         this.librarySymbolProvider = this.options.librarySymbolProvider
             ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.triedInspection);
+        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
                 range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
@@ -111,7 +107,7 @@ abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.LineToken | undefined = this.maybeIdentifierAt();
+        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
         if (identifierToken) {
             const context: HoverProviderContext = {
                 range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
@@ -136,10 +132,14 @@ abstract class AnalysisBase implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        if (this.triedInspection === undefined || PQP.ResultUtils.isErr(this.triedInspection)) {
+        if (
+            this.maybeInspectionCacheItem === undefined ||
+            this.maybeInspectionCacheItem.kind !== PQP.ResultKind.Ok ||
+            this.maybeInspectionCacheItem.stage !== WorkspaceCache.CacheStageKind.Inspection
+        ) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
-        const inspected: PQP.Task.InspectionOk = this.triedInspection.value;
+        const inspected: PQP.Inspection.InspectionOk = this.maybeInspectionCacheItem.value;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
             inspected,
@@ -168,14 +168,14 @@ abstract class AnalysisBase implements Analysis {
 
     public abstract dispose(): void;
 
-    protected abstract getLexerState(): PQP.Lexer.State;
+    protected abstract getLexerState(): WorkspaceCache.LexerCacheItem;
     protected abstract getText(range?: Range): string;
 
-    private maybeIdentifierAt(): PQP.Language.LineToken | undefined {
-        const maybeToken: PQP.Language.LineToken | undefined = this.maybeTokenAt();
+    private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken) {
-            const token: PQP.Language.LineToken = maybeToken;
-            if (token.kind === PQP.Language.LineTokenKind.Identifier) {
+            const token: PQP.Language.Token.LineToken = maybeToken;
+            if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
                 return token;
             }
         }
@@ -183,14 +183,18 @@ abstract class AnalysisBase implements Analysis {
         return undefined;
     }
 
-    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.LineToken> | undefined {
-        const lexResult: PQP.Lexer.State = this.getLexerState();
-        const maybeLine: PQP.Lexer.TLine | undefined = lexResult.lines[this.position.line];
+    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
+        const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
+        if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
+            return undefined;
+        }
+
+        const maybeLine: PQP.Lexer.TLine | undefined = cacheItem.value.lines[this.position.line];
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): PQP.Language.LineToken | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.LineToken> | undefined = this.maybeLineTokensAt();
+    private maybeTokenAt(): PQP.Language.Token.LineToken | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
@@ -201,7 +205,7 @@ abstract class AnalysisBase implements Analysis {
 
 class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.maybeTriedInspection(document, position, options.locale), position, options);
+        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
     }
 
     public dispose(): void {
@@ -210,7 +214,7 @@ class DocumentAnalysis extends AnalysisBase {
         }
     }
 
-    protected getLexerState(): PQP.Lexer.State {
+    protected getLexerState(): WorkspaceCache.LexerCacheItem {
         return WorkspaceCache.getLexerState(this.document, this.options.locale);
     }
 

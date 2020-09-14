@@ -7,7 +7,9 @@ import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import { SignatureProviderContext } from "./providers";
 
-export function maybeSignatureProviderContext(inspected: PQP.Task.InspectionOk): SignatureProviderContext | undefined {
+export function maybeSignatureProviderContext(
+    inspected: PQP.Inspection.InspectionOk,
+): SignatureProviderContext | undefined {
     return inspected.maybeInvokeExpression !== undefined
         ? getContextForInvokeExpression(inspected.maybeInvokeExpression)
         : undefined;
@@ -33,19 +35,19 @@ export function getContextForInvokeExpression(
 
 export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.LiteralExpression): SymbolKind {
     switch (node.literalKind) {
-        case PQP.Language.Ast.LiteralKind.List:
+        case PQP.Language.Constant.LiteralKind.List:
             return SymbolKind.Array;
 
-        case PQP.Language.Ast.LiteralKind.Logical:
+        case PQP.Language.Constant.LiteralKind.Logical:
             return SymbolKind.Boolean;
 
-        case PQP.Language.Ast.LiteralKind.Null:
+        case PQP.Language.Constant.LiteralKind.Null:
             return SymbolKind.Null;
 
-        case PQP.Language.Ast.LiteralKind.Numeric:
+        case PQP.Language.Constant.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Language.Ast.LiteralKind.Text:
+        case PQP.Language.Constant.LiteralKind.Text:
             return SymbolKind.String;
 
         default:
@@ -53,7 +55,7 @@ export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.Literal
     }
 }
 
-export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.ParseContext.Node): SymbolKind {
+export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.Parser.ParseContext.Node): SymbolKind {
     switch (node.kind) {
         case PQP.Language.Ast.NodeKind.Constant:
             return SymbolKind.Constant;
@@ -136,7 +138,7 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): DocumentSymbol[] {
+export function getSymbolsForInspectionScope(inspected: PQP.Inspection.InspectionOk): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const [key, scopeItem] of inspected.scope.entries()) {
@@ -145,7 +147,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): 
 
         switch (scopeItem.kind) {
             case PQP.Inspection.ScopeItemKind.Each: {
-                if (scopeItem.eachExpression.kind !== PQP.XorNodeKind.Ast) {
+                if (scopeItem.eachExpression.kind !== PQP.Parser.XorNodeKind.Ast) {
                     continue;
                 }
 
@@ -177,7 +179,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Task.InspectionOk): 
             }
 
             case PQP.Inspection.ScopeItemKind.Undefined: {
-                if (scopeItem.xorNode.kind !== PQP.XorNodeKind.Ast) {
+                if (scopeItem.xorNode.kind !== PQP.Parser.XorNodeKind.Ast) {
                     continue;
                 }
 

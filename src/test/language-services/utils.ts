@@ -130,19 +130,89 @@ export function documentAndPositionFrom(text: string): [MockDocument, Position] 
     return [document, position];
 }
 
-export function expectInspectionOk(document: MockDocument, position: Position): PQP.Task.InspectionOk {
-    const maybeTriedInspect: PQP.Task.TriedInspection | undefined = WorkspaceCache.maybeTriedInspection(
+export function assertIsDefined<T>(maybeValue: T | undefined): asserts maybeValue is NonNullable<T> {
+    if (maybeValue === undefined) {
+        throw new Error(`assert failed, expected value to be defined`);
+    }
+}
+
+function assertIsCacheItemStageEqual<T, Stage>(
+    cacheItem: WorkspaceCache.TCacheItem,
+    expectedStage: WorkspaceCache.CacheStageKind,
+): asserts cacheItem is WorkspaceCache.TCacheItem & WorkspaceCache.CacheItemOk<T, Stage> {
+    if (cacheItem.stage !== expectedStage) {
+        throw assert.fail(`cacheItem.stage !== expectedStage`);
+    }
+}
+
+function assertCacheItemOk<T, Stage>(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.CacheItemOk<T, Stage> & WorkspaceCache.TCacheItem {
+    if (cacheItem.kind !== PQP.ResultKind.Ok) {
+        throw assert.fail(`cacheItem was expected to be an Ok`);
+    }
+}
+
+export function assertCacheItemErr<E, Stage>(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.CacheItemErr<E, Stage> & WorkspaceCache.TCacheItem {
+    if (cacheItem.kind !== PQP.ResultKind.Err) {
+        throw assert.fail(`cacheItem was expected to be an Err`);
+    }
+}
+
+export function assertLexerCacheItemOk(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.LexerCacheItem &
+    WorkspaceCache.CacheItemOk<PQP.Lexer.State, WorkspaceCache.CacheStageKind.Lexer> {
+    assertCacheItemOk(cacheItem);
+    assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Lexer);
+}
+
+export function assertLexerSnapshotCacheItemOk(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.LexerSnapshotCacheItem &
+    WorkspaceCache.CacheItemOk<PQP.Lexer.LexerSnapshot, WorkspaceCache.CacheStageKind.LexerSnapshot> {
+    assertCacheItemOk(cacheItem);
+    assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.LexerSnapshot);
+}
+
+export function assertParserCacheItemOk(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.ParserCacheItem &
+    WorkspaceCache.CacheItemOk<PQP.Parser.ParseOk, WorkspaceCache.CacheStageKind.Parser> {
+    assertCacheItemOk(cacheItem);
+    assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Parser);
+}
+
+export function assertParserCacheItemErr(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.ParserCacheItem &
+    WorkspaceCache.CacheItemErr<PQP.Parser.ParseError.TParseError, WorkspaceCache.CacheStageKind.Parser> {
+    assertCacheItemErr(cacheItem);
+    assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Parser);
+}
+
+export function assertInspectionCacheItemOk(
+    cacheItem: WorkspaceCache.TCacheItem,
+): asserts cacheItem is WorkspaceCache.InspectionCacheItem &
+    WorkspaceCache.CacheItemOk<PQP.Inspection.InspectionOk, WorkspaceCache.CacheStageKind.Inspection> {
+    assertCacheItemOk(cacheItem);
+    assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Inspection);
+}
+
+export function assertGetInspectionCacheItemOk(
+    document: MockDocument,
+    position: Position,
+): PQP.Inspection.InspectionOk {
+    const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
         document,
         position,
         undefined,
     );
-    if (maybeTriedInspect === undefined) {
-        throw new Error(`maybeTriedInspect is expected to be defined`);
-    } else if (PQP.ResultUtils.isErr(maybeTriedInspect)) {
-        throw new Error(`maybeTriedInspect is expected to be Ok`);
-    } else {
-        return maybeTriedInspect.value;
-    }
+    assertIsDefined(cacheItem);
+    assertInspectionCacheItemOk(cacheItem);
+    return cacheItem.value;
 }
 
 export async function getCompletionItems(text: string, analysisOptions?: AnalysisOptions): Promise<CompletionItem[]> {

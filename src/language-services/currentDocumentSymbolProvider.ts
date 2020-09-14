@@ -12,9 +12,10 @@ import {
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
+import * as WorkspaceCache from "./workspaceCache";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
-    constructor(private readonly maybeTriedInspection: PQP.Task.TriedInspection | undefined) {}
+    constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());
@@ -33,7 +34,11 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
     }
 
     private getDocumentSymbols(): DocumentSymbol[] {
-        if (this.maybeTriedInspection === undefined || PQP.ResultUtils.isErr(this.maybeTriedInspection)) {
+        if (
+            this.maybeTriedInspection === undefined ||
+            this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
+            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
+        ) {
             return [];
         }
         return InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value);

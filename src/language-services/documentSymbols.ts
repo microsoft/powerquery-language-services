@@ -10,19 +10,35 @@ import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
-    const triedLexParse: PQP.Task.TriedLexParse = WorkspaceCache.getTriedLexParse(document, options?.locale);
-    let result: DocumentSymbol[] = [];
+    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
 
-    let contextState: PQP.ParseContext.State | undefined = undefined;
-    if (PQP.ResultUtils.isOk(triedLexParse)) {
-        contextState = triedLexParse.value.state.contextState;
-    } else if (triedLexParse.error instanceof PQP.ParseError.ParseError) {
-        contextState = triedLexParse.error.state.contextState;
+    let contextState: PQP.Parser.ParseContext.State | undefined;
+
+    switch (cacheItem.stage) {
+        case WorkspaceCache.CacheStageKind.Lexer:
+        case WorkspaceCache.CacheStageKind.LexerSnapshot:
+            contextState = undefined;
+            break;
+
+        case WorkspaceCache.CacheStageKind.Parser:
+            if (PQP.ResultUtils.isOk(cacheItem)) {
+                contextState = cacheItem.value.state.contextState;
+            } else if (PQP.Parser.ParseError.isParseError(cacheItem.error)) {
+                contextState = cacheItem.error.state.contextState;
+            } else {
+                contextState = undefined;
+            }
+            break;
+
+        default:
+            throw PQP.Assert.isNever(cacheItem);
     }
 
+    let result: DocumentSymbol[] = [];
+
     if (contextState && contextState.maybeRoot) {
-        const rootNode: PQP.TXorNode = PQP.XorNodeUtils.contextFactory(contextState.maybeRoot);
-        const nodeIdMapCollection: PQP.NodeIdMap.Collection = contextState.nodeIdMapCollection;
+        const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = contextState.nodeIdMapCollection;
 
         const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
             rootNode,
@@ -48,13 +64,13 @@ interface DocumentOutline {
 }
 
 interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {
-    readonly nodeIdMapCollection: PQP.NodeIdMap.Collection;
+    readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
     parentSymbolMap: Map<number, DocumentSymbol>;
 }
 
 function tryTraverse(
-    root: PQP.TXorNode,
-    nodeIdMapCollection: PQP.NodeIdMap.Collection,
+    root: PQP.Parser.TXorNode,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     options?: AnalysisOptions,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
     const locale: string = LanguageServiceUtils.getLocale(options);
@@ -75,22 +91,22 @@ function tryTraverse(
         root,
         PQP.Traverse.VisitNodeStrategy.BreadthFirst,
         visitNode,
-        PQP.Traverse.assertExpandAllXorChildren,
+        PQP.Traverse.assertGetAllXorChildren,
         earlyExit,
     );
 }
 
 // TODO: Optimize this based on the symbols we want to expose in the tree
-function earlyExit(_state: TraversalState, currentXorNode: PQP.TXorNode): boolean {
+function earlyExit(_state: TraversalState, currentXorNode: PQP.Parser.TXorNode): boolean {
     return (
         currentXorNode.node.kind === PQP.Language.Ast.NodeKind.ErrorHandlingExpression ||
         currentXorNode.node.kind === PQP.Language.Ast.NodeKind.MetadataExpression
     );
 }
 
-function visitNode(state: TraversalState, currentXorNode: PQP.TXorNode): void {
+function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): void {
     // TODO: support processing context nodes
-    if (currentXorNode.kind === PQP.XorNodeKind.Context) {
+    if (currentXorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return;
     }
 
