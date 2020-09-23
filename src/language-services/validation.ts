@@ -15,6 +15,7 @@ import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 import { AnalysisOptions } from "./analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
 import * as LanguageServiceUtils from "./languageServiceUtils";
+import { getLocalizationTemplates } from "./localization/templates";
 import * as WorkspaceCache from "./workspaceCache";
 
 export interface ValidationResult {
@@ -27,7 +28,7 @@ export interface ValidationOptions extends AnalysisOptions {
     readonly checkForDuplicateIdentifiers?: boolean;
 }
 
-export function validate(document: TextDocument, options?: ValidationOptions): ValidationResult {
+export function validate(document: TextDocument, options: ValidationOptions): ValidationResult {
     const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
     const checked: DiagnosticCheck = diagnosticsCheck(cacheItem, options);
     const diagnostics: Diagnostic[] = checked.diagnostics;
@@ -77,7 +78,7 @@ const EmptyDiagnosticCheck: DiagnosticCheck = {
 
 function diagnosticsCheck(
     parserCacheItem: WorkspaceCache.TParserCacheItem,
-    options?: ValidationOptions,
+    options: ValidationOptions,
 ): DiagnosticCheck {
     switch (parserCacheItem.stage) {
         case WorkspaceCache.CacheStageKind.Lexer:
@@ -94,7 +95,7 @@ function diagnosticsCheck(
     }
 }
 
-function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options?: ValidationOptions): DiagnosticCheck {
+function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options: ValidationOptions): DiagnosticCheck {
     if (PQP.ResultUtils.isOk(triedLex)) {
         return EmptyDiagnosticCheck;
     } else if (!PQP.Lexer.LexError.isLexError(triedLex.error)) {
@@ -135,7 +136,7 @@ function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options?: Validation
     };
 }
 
-function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options?: ValidationOptions): DiagnosticCheck {
+function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options: ValidationOptions): DiagnosticCheck {
     if (PQP.ResultUtils.isOk(triedParse)) {
         return {
             diagnostics: [],
@@ -225,6 +226,7 @@ function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options?: Vali
 interface TraversalState extends PQP.Traverse.IState<Diagnostic[]> {
     readonly documentUri: string;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
+    readonly options: ValidationOptions;
     readonly source?: string;
 }
 
@@ -232,7 +234,7 @@ function tryTraverse(
     documentUri: string,
     root: PQP.Parser.TXorNode,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    options?: ValidationOptions,
+    options: ValidationOptions,
 ): PQP.Traverse.TriedTraverse<Diagnostic[]> {
     const locale: string = LanguageServiceUtils.getLocale(options);
     const localizationTemplates: PQP.ILocalizationTemplates = PQP.getLocalizationTemplates(locale);
@@ -243,6 +245,7 @@ function tryTraverse(
         nodeIdMapCollection,
         result: [],
         source: options?.source,
+        options,
     };
 
     return PQP.Traverse.tryTraverseXor(
@@ -340,8 +343,7 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
                         range: value.range,
                         uri: state.documentUri,
                     },
-                    // TODO: localization support
-                    message: `Duplicate identifier '${value.name}'`,
+                    message: duplicateSymbolMessage(value.name, state.options),
                 });
             }
 
@@ -354,8 +356,7 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
 
                 result.push({
                     code: DiagnosticErrorCode.DuplicateIdentifier,
-                    // TODO: localization support
-                    message: `Duplicate identifier '${symbolArray[i].name}'`,
+                    message: duplicateSymbolMessage(symbolArray[i].name, state.options),
                     range: symbolArray[i].range,
                     relatedInformation: filteredRelatedInfo,
                     severity: DiagnosticSeverity.Error,
@@ -366,4 +367,10 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
     }
 
     return result;
+}
+
+function duplicateSymbolMessage(identifier: string, options: ValidationOptions): string {
+    const locale: string = options?.locale ?? PQP.DefaultLocale;
+    const template: string = getLocalizationTemplates(locale).error_validation_duplicate_identifier;
+    return PQP.StringUtils.assertGetFormatted(template, new Map([["identifier", identifier]]));
 }
