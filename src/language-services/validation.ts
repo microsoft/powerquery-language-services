@@ -160,10 +160,8 @@ function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options: Valid
         maybeErrorToken = innerError.maybeFoundToken.token;
     } else if (innerError instanceof PQP.Parser.ParseError.InvalidPrimitiveTypeError) {
         maybeErrorToken = innerError.token;
-    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedBracketError) {
-        maybeErrorToken = innerError.openBracketToken;
-    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedParenthesesError) {
-        maybeErrorToken = innerError.openParenthesesToken;
+    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedSequence) {
+        maybeErrorToken = innerError.startToken;
     } else if (innerError instanceof PQP.Parser.ParseError.UnusedTokensRemainError) {
         maybeErrorToken = innerError.firstUnusedToken;
     } else {
@@ -237,7 +235,9 @@ function tryTraverse(
     options: ValidationOptions,
 ): PQP.Traverse.TriedTraverse<Diagnostic[]> {
     const locale: string = LanguageServiceUtils.getLocale(options);
-    const localizationTemplates: PQP.ILocalizationTemplates = PQP.getLocalizationTemplates(locale);
+    const localizationTemplates: PQP.Templates.ILocalizationTemplates = PQP.LocalizationUtils.getLocalizationTemplates(
+        locale,
+    );
 
     const traversalState: TraversalState = {
         documentUri,

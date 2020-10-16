@@ -58,17 +58,16 @@ export class LanguageConstantProvider implements CompletionItemProvider {
         if (
             this.maybeTriedInspection === undefined ||
             this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
+            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection ||
+            PQP.ResultUtils.isErr(this.maybeTriedInspection.value.autocomplete.triedKeyword)
         ) {
             return [];
         }
 
-        const inspectionOk: PQP.Inspection.InspectionOk = this.maybeTriedInspection.value;
-
-        return inspectionOk.autocomplete
+        return this.maybeTriedInspection.value.autocomplete.triedKeyword.value
             .filter(
                 // TODO: next parser update should include `PQP.Language.KeywordUtils.isKeyword`.
-                (option: PQP.Inspection.AutocompleteOption) => {
+                (option: PQP.Language.Keyword.KeywordKind) => {
                     if (PQP.Language.Keyword.KeywordKinds.includes(option as PQP.Language.Keyword.KeywordKind)) {
                         return !LanguageConstantProvider.ExcludedKeywords.includes(
                             option as PQP.Language.Keyword.KeywordKind,
@@ -78,7 +77,7 @@ export class LanguageConstantProvider implements CompletionItemProvider {
                     }
                 },
             )
-            .map((option: PQP.Inspection.AutocompleteOption) => {
+            .map((option: PQP.Language.Keyword.KeywordKind) => {
                 return {
                     kind: CompletionItemKind.Keyword,
                     label: option,

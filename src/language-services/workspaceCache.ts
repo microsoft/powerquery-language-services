@@ -153,14 +153,7 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
     }
     const lexerSnapshot: PQP.Lexer.LexerSnapshot = lexerSnapshotCacheItem.value;
 
-    const settings: PQP.ParseSettings = {
-        ...PQP.DefaultSettings,
-        ...getSettings(locale),
-    };
-    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(
-        PQP.Parser.IParserStateUtils.stateFactory(settings, lexerSnapshot),
-        settings.parser,
-    );
+    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(getSettings(locale), lexerSnapshot);
     return {
         ...triedParse,
         stage: CacheStageKind.Parser,
@@ -188,7 +181,7 @@ function createTriedInspection(
     };
 }
 
-function getSettings(locale: string | undefined): PQP.CommonSettings {
+function getSettings(locale: string | undefined): PQP.Settings {
     return {
         ...PQP.DefaultSettings,
         locale: locale != undefined ? locale : PQP.DefaultSettings.locale,

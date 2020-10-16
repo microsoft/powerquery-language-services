@@ -13,7 +13,7 @@ import * as Utils from "./utils";
 // tslint:disable: no-unnecessary-type-assertion
 
 function expectScope(inspected: PQP.Inspection.InspectionOk, expected: string[]): void {
-    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.scope.entries()]
+    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.nodeScope.entries()]
         .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].isRecursive === false)
         .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
     expect(inclusiveScopeKeys).to.have.members(expected);

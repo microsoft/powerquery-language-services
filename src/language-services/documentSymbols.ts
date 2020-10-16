@@ -74,7 +74,9 @@ function tryTraverse(
     options?: AnalysisOptions,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
     const locale: string = LanguageServiceUtils.getLocale(options);
-    const localizationTemplates: PQP.ILocalizationTemplates = PQP.getLocalizationTemplates(locale);
+    const localizationTemplates: PQP.Templates.ILocalizationTemplates = PQP.LocalizationUtils.getLocalizationTemplates(
+        locale,
+    );
 
     const traversalState: TraversalState = {
         localizationTemplates,

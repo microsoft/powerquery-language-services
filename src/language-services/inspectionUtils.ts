@@ -141,7 +141,7 @@ export function getSymbolForIdentifierPairedExpression(
 export function getSymbolsForInspectionScope(inspected: PQP.Inspection.InspectionOk): DocumentSymbol[] {
     const documentSymbols: DocumentSymbol[] = [];
 
-    for (const [key, scopeItem] of inspected.scope.entries()) {
+    for (const [key, scopeItem] of inspected.nodeScope.entries()) {
         let kind: SymbolKind;
         let range: Range;
 

@@ -15,13 +15,12 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
         indentationLiteral = PQF.IndentationLiteral.Tab;
     }
 
-    const pqfFormatSettings: PQF.FormatSettings = {
-        ...PQP.DefaultSettings,
+    const formatSettings: PQF.FormatSettings = {
+        ...PQF.DefaultSettings,
         locale,
         indentationLiteral,
-        newlineLiteral: PQF.NewlineLiteral.Windows,
     };
-    const triedFormat: PQF.TriedFormat = PQF.tryFormat(pqfFormatSettings, document.getText());
+    const triedFormat: PQF.TriedFormat = PQF.tryFormat(formatSettings, document.getText());
 
     if (PQP.ResultUtils.isOk(triedFormat)) {
         return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];
