@@ -1,5 +1,5 @@
 import * as PQP from "@microsoft/powerquery-parser";
-import * as en_US from "./templates/en-US.json";
+import * as en_US from "./templates/templates.json";
 
 export interface ILocalizationTemplates {
     readonly error_validation_duplicate_identifier: string;
