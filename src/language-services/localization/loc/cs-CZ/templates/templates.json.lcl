@@ -13,11 +13,11 @@
       <Item ItemId=";error_validation_duplicate_identifier" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Duplicate identifier '{identifier}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Duplicitní identifikátor {identifier}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[A common error where the user declared two values using the same name. Expected to be user facing.]]></Cmt>
-        </Cmts>
       </Item>
     </Item>
   </Item>
