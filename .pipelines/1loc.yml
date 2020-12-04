@@ -5,7 +5,6 @@ trigger:
 
 pr:
     - master
-    - loc
 
 schedules:
     - cron: "0 0 * * *"
@@ -13,7 +12,6 @@ schedules:
       branches:
           include:
               - master
-              - loc
 
 stages:
     - stage: __default
