@@ -6,7 +6,7 @@ import { expect } from "chai";
 import "mocha";
 
 // We should only import from the library index
-import * as LanguageServices from "../../language-services";
+import * as LanguageServices from "../../powerquery-language-services";
 import {
     Analysis,
     AnalysisOptions,
@@ -16,7 +16,7 @@ import {
     Position,
     SymbolKind,
     TextDocument,
-} from "../../language-services";
+} from "../../powerquery-language-services";
 
 describe("External consumption", () => {
     it("Analysis", async () => {

@@ -6,8 +6,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { Position } from "../../language-services";
-import * as AnalysisUtils from "../../language-services/analysisUtils";
+import { Position } from "../../powerquery-language-services";
+import * as AnalysisUtils from "../../powerquery-language-services/analysisUtils";
 import * as Utils from "./utils";
 import { MockDocument } from "./utils";
 

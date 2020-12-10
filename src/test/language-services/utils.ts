@@ -29,9 +29,9 @@ import {
     NullLibrarySymbolProvider,
     SignatureProviderContext,
     SymbolKind,
-} from "../../language-services";
-import { AnalysisOptions } from "../../language-services/analysisOptions";
-import * as WorkspaceCache from "../../language-services/workspaceCache";
+} from "../../powerquery-language-services";
+import { AnalysisOptions } from "../../powerquery-language-services/analysisOptions";
+import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {

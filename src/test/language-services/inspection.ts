@@ -6,8 +6,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { Position, SignatureProviderContext } from "../../language-services";
-import * as InspectionUtils from "../../language-services/inspectionUtils";
+import { Position, SignatureProviderContext } from "../../powerquery-language-services";
+import * as InspectionUtils from "../../powerquery-language-services/inspectionUtils";
 import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion

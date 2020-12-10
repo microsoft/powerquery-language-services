@@ -4,10 +4,10 @@
 // tslint:disable: no-implicit-dependencies
 import { assert, expect } from "chai";
 import "mocha";
-import { SymbolKind, TextDocument } from "../../language-services";
+import { SymbolKind, TextDocument } from "../../powerquery-language-services";
 import { ExpectedDocumentSymbol } from "./utils";
 
-import * as DocumentSymbols from "../../language-services/documentSymbols";
+import * as DocumentSymbols from "../../powerquery-language-services/documentSymbols";
 import * as Utils from "./utils";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()

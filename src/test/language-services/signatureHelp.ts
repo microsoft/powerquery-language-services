@@ -4,7 +4,7 @@
 // tslint:disable: no-implicit-dependencies
 import { expect } from "chai";
 import "mocha";
-import { SignatureHelp } from "../../language-services";
+import { SignatureHelp } from "../../powerquery-language-services";
 
 import * as Utils from "./utils";
 

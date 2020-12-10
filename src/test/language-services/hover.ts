@@ -4,7 +4,7 @@
 // tslint:disable: no-implicit-dependencies
 import { assert, expect } from "chai";
 import "mocha";
-import { Hover } from "../../language-services";
+import { Hover } from "../../powerquery-language-services";
 
 import * as Utils from "./utils";
 

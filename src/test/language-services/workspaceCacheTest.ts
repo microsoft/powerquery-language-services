@@ -5,9 +5,9 @@ import { expect } from "chai";
 import "mocha";
 
 import { Position } from "vscode-languageserver-types";
-import * as LanguageServices from "../../language-services";
-import { TextDocument } from "../../language-services";
-import * as WorkspaceCache from "../../language-services/workspaceCache";
+import * as LanguageServices from "../../powerquery-language-services";
+import { TextDocument } from "../../powerquery-language-services";
+import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
 import * as Utils from "./utils";
 
 describe("workspaceCache", () => {

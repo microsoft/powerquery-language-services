@@ -4,7 +4,7 @@
 // tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
 import "mocha";
-import { CompletionItem, Position } from "../../language-services";
+import { CompletionItem, Position } from "../../powerquery-language-services";
 
 import * as Utils from "./utils";
 

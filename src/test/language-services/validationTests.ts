@@ -12,9 +12,9 @@ import {
     TextDocumentContentChangeEvent,
     ValidationOptions,
     ValidationResult,
-} from "../../language-services";
+} from "../../powerquery-language-services";
 
-import { documentUpdated, validate } from "../../language-services";
+import { documentUpdated, validate } from "../../powerquery-language-services";
 import * as Utils from "./utils";
 
 describe("Syntax validation", () => {

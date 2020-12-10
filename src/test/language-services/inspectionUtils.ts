@@ -5,11 +5,11 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
-import { DocumentSymbol, SymbolKind } from "../../language-services";
+import { DocumentSymbol, SymbolKind } from "../../powerquery-language-services";
 import { ExpectedDocumentSymbol } from "./utils";
 
-import * as InspectionUtils from "../../language-services/inspectionUtils";
-import * as WorkspaceCache from "../../language-services/workspaceCache";
+import * as InspectionUtils from "../../powerquery-language-services/inspectionUtils";
+import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
 import * as Utils from "./utils";
 
 // Used to test symbols at a specific level of inspection
