@@ -4,32 +4,40 @@
 #
 # Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location.
 
-schedules:
-- cron: "0 0 * * *"
-  displayName: Daily midnight build
-  branches:
-    include:
+name: 1loc_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
     - master
-  always: true
+
+pr:
+    - master
+
+schedules:
+    - cron: "0 0 * * *"
+      displayName: Daily midnight build
+      branches:
+          include:
+              - master
+      always: true
 
 resources:
-  repositories:
-  - repository: self
-    type: git
-    ref: master
+    repositories:
+        - repository: self
+          type: git
+          ref: master
 
 jobs:
-- job: Job_1
-  displayName: Agent job 1
-  pool:
-    vmImage: windows-latest
-  steps:
-  - checkout: self
-  - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
-    displayName: 'Localization Build: src/powerquery-parser-localization/LocProject.json'
-    inputs:
-      locProj: src/powerquery-parser/localization/LocProject.json
-      packageSourceAuth: patAuth
-      patVariable: $(OneLocBuildPAT)
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: drop'
+    - job: Job_1
+      displayName: Agent job 1
+      pool:
+          vmImage: windows-latest
+      steps:
+          - checkout: self
+          - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
+            displayName: "Localization Build: src/powerquery-language-services-localization/LocProject.json"
+            inputs:
+                locProj: src/powerquery-language-services/localization/LocProject.json
+                packageSourceAuth: patAuth
+                patVariable: $(OneLocBuildPAT)
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifact: drop"
