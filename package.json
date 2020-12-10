@@ -22,8 +22,8 @@
         "url": "https://github.com/microsoft/powerquery-language-services/issues"
     },
     "description": "Language services for the Power Query/M formula language.",
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "lib/powerquery-language-servicesindex.js",
+    "types": "lib/powerquery-language-servicesindex.d.ts",
     "keywords": [
         "power query",
         "power bi"
@@ -53,9 +53,6 @@
         "vscode-languageserver-types": "3.15.1"
     },
     "files": [
-        "lib/*.js",
-        "lib/*.d.ts",
-        "lib/language-services/**/*.js",
-        "lib/language-services/**/*.d.ts"
+        "lib/powerquery-language-services/**/*"
     ]
 }
