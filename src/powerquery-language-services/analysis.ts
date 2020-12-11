@@ -10,13 +10,16 @@ import * as AnalysisUtils from "./analysisUtils";
 import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
 import * as InspectionUtils from "./inspectionUtils";
-import { LanguageConstantProvider } from "./languageConstantProvider";
+import { LanguageProvider } from "./languageProvider";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import {
+    CompletionItemProvider,
     CompletionItemProviderContext,
+    HoverProvider,
     HoverProviderContext,
     LibrarySymbolProvider,
     NullLibrarySymbolProvider,
+    SignatureHelpProvider,
     SignatureProviderContext,
     SymbolProvider,
 } from "./providers";
@@ -34,7 +37,7 @@ export function createAnalysisSession(document: TextDocument, position: Position
 
 abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
-    protected readonly languageConstantProvider: LanguageConstantProvider;
+    protected readonly languageProvider: LanguageProvider;
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
@@ -46,7 +49,7 @@ abstract class AnalysisBase implements Analysis {
         this.environmentSymbolProvider = this.options.environmentSymbolProvider
             ? this.options.environmentSymbolProvider
             : new NullLibrarySymbolProvider();
-        this.languageConstantProvider = new LanguageConstantProvider(this.maybeInspectionCacheItem);
+        this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
         this.librarySymbolProvider = this.options.librarySymbolProvider
             ? this.options.librarySymbolProvider
             : new NullLibrarySymbolProvider();
@@ -71,64 +74,45 @@ abstract class AnalysisBase implements Analysis {
         // - only include current query name after @
         // - don't return completion items when on lefthand side of assignment
 
-        // TODO: add tracing/logging to the catch()
-        const getLibraryCompletionItems: Promise<CompletionItem[]> = this.librarySymbolProvider
-            .getCompletionItems(context)
-            .catch(() => {
-                return LanguageServiceUtils.EmptyCompletionItems;
-            });
-        const getLanguageConstants: Promise<CompletionItem[]> = this.languageConstantProvider
-            .getCompletionItems(context)
-            .catch(() => {
-                return LanguageServiceUtils.EmptyCompletionItems;
-            });
-        const getEnvironmentCompletionItems: Promise<
-            CompletionItem[]
-        > = this.environmentSymbolProvider.getCompletionItems(context).catch(() => {
-            return LanguageServiceUtils.EmptyCompletionItems;
-        });
-        const getLocalCompletionItems: Promise<CompletionItem[]> = this.localSymbolProvider
-            .getCompletionItems(context)
-            .catch(() => {
-                return LanguageServiceUtils.EmptyCompletionItems;
-            });
+        const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
+            AnalysisBase.createCompletionItemCalls(context, [
+                this.librarySymbolProvider,
+                this.languageProvider,
+                this.environmentSymbolProvider,
+                this.localSymbolProvider,
+            ]),
+        );
 
-        const [libraryResponse, keywordResponse, environmentResponse, localResponse] = await Promise.all([
-            getLibraryCompletionItems,
-            getLanguageConstants,
-            getEnvironmentCompletionItems,
-            getLocalCompletionItems,
-        ]);
-
-        let completionItems: CompletionItem[] = Array.isArray(keywordResponse) ? keywordResponse : [keywordResponse];
-        completionItems = completionItems.concat(libraryResponse, environmentResponse, localResponse);
+        // TODO: Should we filter out duplicates?
+        const completionItems: CompletionItem[] = localResponse.concat(
+            environmentResponse,
+            libraryResponse,
+            parserResponse,
+        );
 
         return completionItems;
     }
 
     public async getHover(): Promise<Hover> {
         const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
-        if (identifierToken) {
-            const context: HoverProviderContext = {
-                range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
-                identifier: identifierToken.data,
-            };
-
-            // TODO: add tracing/logging to the catch()
-            const getLibraryHover: Promise<Hover | null> = this.librarySymbolProvider.getHover(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            });
-
-            // TODO: use other providers
-            // TODO: define priority when multiple providers return results
-            const [libraryResponse] = await Promise.all([getLibraryHover]);
-            if (libraryResponse) {
-                return libraryResponse;
-            }
+        if (!identifierToken) {
+            return LanguageServiceUtils.EmptyHover;
         }
 
-        return LanguageServiceUtils.EmptyHover;
+        const context: HoverProviderContext = {
+            range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
+            identifier: identifierToken.data,
+        };
+
+        // Result priority is based on the order of the symbol providers
+        return AnalysisBase.resolveProviders(
+            AnalysisBase.createHoverCalls(context, [
+                this.localSymbolProvider,
+                this.environmentSymbolProvider,
+                this.librarySymbolProvider,
+            ]),
+            LanguageServiceUtils.EmptyHover,
+        );
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
@@ -139,7 +123,7 @@ abstract class AnalysisBase implements Analysis {
         ) {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
-        const inspected: PQP.Inspection.InspectionOk = this.maybeInspectionCacheItem.value;
+        const inspected: PQP.Inspection.Inspection = this.maybeInspectionCacheItem.value;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
             inspected,
@@ -153,23 +137,71 @@ abstract class AnalysisBase implements Analysis {
             return LanguageServiceUtils.EmptySignatureHelp;
         }
 
-        // TODO: add tracing/logging to the catch()
-        const librarySignatureHelp: Promise<SignatureHelp | null> = this.librarySymbolProvider
-            .getSignatureHelp(context)
-            .catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            });
-
-        const [libraryResponse] = await Promise.all([librarySignatureHelp]);
-
-        return libraryResponse ?? LanguageServiceUtils.EmptySignatureHelp;
+        // Result priority is based on the order of the symbol providers
+        return AnalysisBase.resolveProviders(
+            AnalysisBase.createSignatureHelpCalls(context, [
+                this.localSymbolProvider,
+                this.environmentSymbolProvider,
+                this.librarySymbolProvider,
+            ]),
+            LanguageServiceUtils.EmptySignatureHelp,
+        );
     }
 
     public abstract dispose(): void;
 
     protected abstract getLexerState(): WorkspaceCache.LexerCacheItem;
     protected abstract getText(range?: Range): string;
+
+    private static createCompletionItemCalls(
+        context: CompletionItemProviderContext,
+        providers: CompletionItemProvider[],
+    ): Promise<CompletionItem[]>[] {
+        // TODO: add tracing to the catch case
+        return providers.map(provider =>
+            provider.getCompletionItems(context).catch(() => {
+                return LanguageServiceUtils.EmptyCompletionItems;
+            }),
+        );
+    }
+
+    private static createHoverCalls(
+        context: HoverProviderContext,
+        providers: HoverProvider[],
+    ): Promise<Hover | null>[] {
+        // TODO: add tracing to the catch case
+        return providers.map(provider =>
+            provider.getHover(context).catch(() => {
+                // tslint:disable-next-line: no-null-keyword
+                return null;
+            }),
+        );
+    }
+
+    private static createSignatureHelpCalls(
+        context: SignatureProviderContext,
+        providers: SignatureHelpProvider[],
+    ): Promise<SignatureHelp | null>[] {
+        // TODO: add tracing to the catch case
+        return providers.map(provider =>
+            provider.getSignatureHelp(context).catch(() => {
+                // tslint:disable-next-line: no-null-keyword
+                return null;
+            }),
+        );
+    }
+
+    private static async resolveProviders<T>(calls: Promise<T | null>[], defaultReturnValue: T): Promise<T> {
+        const results: (T | null)[] = await Promise.all(calls);
+
+        for (let i: number = 0; i < results.length; i++) {
+            if (results[i] !== null) {
+                return results[i]!;
+            }
+        }
+
+        return defaultReturnValue;
+    }
 
     private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();

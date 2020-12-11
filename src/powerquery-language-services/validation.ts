@@ -235,13 +235,10 @@ function tryTraverse(
     options: ValidationOptions,
 ): PQP.Traverse.TriedTraverse<Diagnostic[]> {
     const locale: string = LanguageServiceUtils.getLocale(options);
-    const localizationTemplates: PQP.Templates.ILocalizationTemplates = PQP.LocalizationUtils.getLocalizationTemplates(
-        locale,
-    );
 
     const traversalState: TraversalState = {
         documentUri,
-        localizationTemplates,
+        locale,
         nodeIdMapCollection,
         result: [],
         source: options?.source,

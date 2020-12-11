@@ -27,7 +27,7 @@ export type ParserCacheItem = CacheItem<PQP.Parser.ParseOk, PQP.Parser.ParseErro
 
 export type TInspectionCacheItem = InspectionCacheItem | TParserCacheItem;
 export type InspectionCacheItem = CacheItem<
-    PQP.Inspection.InspectionOk,
+    PQP.Inspection.Inspection,
     PQP.CommonError.CommonError,
     CacheStageKind.Inspection
 >;

@@ -12,11 +12,23 @@ import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
 
-function expectScope(inspected: PQP.Inspection.InspectionOk, expected: string[]): void {
-    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.nodeScope.entries()]
+function expectScope(inspected: PQP.Inspection.Inspection, expected: string[]): void {
+    if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
+        throw new Error(`expected inspected.triedNodeScope to be Ok`);
+    }
+
+    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.triedNodeScope.value.entries()]
         .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].isRecursive === false)
         .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
     expect(inclusiveScopeKeys).to.have.members(expected);
+}
+
+function assertIsPostionInBounds(
+    maybeActiveNode: PQP.Inspection.TMaybeActiveNode,
+): asserts maybeActiveNode is PQP.Inspection.ActiveNode {
+    if (!PQP.Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        throw new Error(`expected maybeActiveNode to be an ActiveNode`);
+    }
 }
 
 // Unit testing for analysis operations related to power query parser inspection results.
@@ -26,7 +38,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d|,",
             );
-            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -41,7 +53,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d,|",
             );
-            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -56,7 +68,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
                 "Date.AddDays(d,1|",
             );
-            const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -74,7 +86,7 @@ describe("InspectedInvokeExpression", () => {
                     line: 68,
                     character: 23,
                 };
-                const inspected: PQP.Inspection.InspectionOk = Utils.assertGetInspectionCacheItemOk(document, position);
+                const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
 
                 expectScope(inspected, [
                     "ConnectionString",
@@ -88,17 +100,17 @@ describe("InspectedInvokeExpression", () => {
                     "server",
                 ]);
 
-                Utils.assertIsDefined(inspected.maybeActiveNode);
-                Utils.assertIsDefined(inspected.maybeActiveNode.maybeIdentifierUnderPosition);
+                const activeNode: PQP.Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
+                assertIsPostionInBounds(activeNode);
 
-                expect(inspected.maybeActiveNode.maybeIdentifierUnderPosition.kind).equals(
+                Utils.assertIsDefined(activeNode.maybeIdentifierUnderPosition);
+                expect(activeNode.maybeIdentifierUnderPosition.kind).equals(
                     PQP.Language.Ast.NodeKind.Identifier,
                     "expecting identifier",
                 );
 
-                const identifier:
-                    | PQP.Language.Ast.GeneralizedIdentifier
-                    | PQP.Language.Ast.Identifier = inspected.maybeActiveNode!.maybeIdentifierUnderPosition!;
+                const identifier: PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier =
+                    activeNode.maybeIdentifierUnderPosition;
                 expect(identifier.literal).equals("OdbcDataSource");
                 expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });

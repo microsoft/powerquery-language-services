@@ -22,8 +22,8 @@
         "url": "https://github.com/microsoft/powerquery-language-services/issues"
     },
     "description": "Language services for the Power Query/M formula language.",
-    "main": "lib/powerquery-language-servicesindex.js",
-    "types": "lib/powerquery-language-servicesindex.d.ts",
+    "main": "lib/powerquery-language-services/index.js",
+    "types": "lib/powerquery-language-services/index.d.ts",
     "keywords": [
         "power query",
         "power bi"
@@ -47,8 +47,8 @@
         "typescript": "^3.9.6"
     },
     "dependencies": {
-        "@microsoft/powerquery-parser": "0.2.10",
-        "@microsoft/powerquery-formatter": "0.0.16",
+        "@microsoft/powerquery-parser": "0.2.12",
+        "@microsoft/powerquery-formatter": "0.0.18",
         "vscode-languageserver-textdocument": "1.0.1",
         "vscode-languageserver-types": "3.15.1"
     },

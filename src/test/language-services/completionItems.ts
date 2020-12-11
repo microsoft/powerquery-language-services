@@ -3,8 +3,9 @@
 
 // tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 import "mocha";
-import { CompletionItem, Position } from "../../powerquery-language-services";
+import { CompletionItem, CompletionItemKind, Position } from "../../powerquery-language-services";
 
 import * as Utils from "./utils";
 
@@ -47,25 +48,32 @@ describe("Completion Items (null provider)", () => {
     it("blank document keywords", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("|");
 
-        // TODO: uncomment when we have fully context sensitive language constants
-        // expect(result.length).to.equal(10);
-        // result.forEach(item => {
-        //     expect(item.kind).to.equal(CompletionItemKind.Keyword);
-        // });
+        expect(result.length).to.equal(10);
+        result.forEach(item => {
+            expect(item.kind).to.equal(CompletionItemKind.Keyword);
+        });
 
-        // TODO: use equals instead of contains when we have fully context sensitive language constants
-        // Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, PQP.Language.Keyword.KeywordKind.Section]);
-        Utils.containsCompletionItemLabels(result, [
+        Utils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
         ]);
     });
 
-    it("simple document", async () => {
+    it("after in", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("let a = 1, b = 2, c = 3 in |c");
-        // TODO: use equals instead of contains when we have context sensitive language constants
-        // Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
-        Utils.containsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
+    });
+
+    it("section after equals", async () => {
+        const result: CompletionItem[] = await Utils.getCompletionItems("section pq; a = |");
+
+        // TODO: Is it correct for the current identifier to come back as possible keyword without the use of @?
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a"]);
+    });
+
+    it("expression after equals", async () => {
+        const result: CompletionItem[] = await Utils.getCompletionItems("let a = |");
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
     });
 });
 
@@ -75,7 +83,7 @@ describe("Completion Items (Simple provider)", () => {
             librarySymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, [
+        Utils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
@@ -87,7 +95,7 @@ describe("Completion Items (Simple provider)", () => {
             environmentSymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, [
+        Utils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
@@ -100,9 +108,11 @@ describe("Completion Items (Simple provider)", () => {
             environmentSymbolProvider: LibraryProvider,
         });
 
-        Utils.containsCompletionItemLabels(result, [
+        // TODO: completion item provider doesn't filter out duplicates
+        Utils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
+            "Text.NewGuid",
             "Text.NewGuid",
         ]);
     });
@@ -144,7 +154,7 @@ describe("Other language constants", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
-            PQP.Language.Constant.IdentifierConstantKind.Nullable,
+            PQP.Language.Constant.LanguageConstantKind.Nullable,
         ]);
     });
 
@@ -153,19 +163,19 @@ describe("Other language constants", () => {
 
         Utils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
-            PQP.Language.Constant.IdentifierConstantKind.Nullable,
+            PQP.Language.Constant.LanguageConstantKind.Nullable,
         ]);
     });
 
     it("(a, |", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems(`(a, |`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.IdentifierConstantKind.Optional]);
+        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
     });
 
     it("(a, op|", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems(`(a, op|`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.IdentifierConstantKind.Optional]);
+        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
     });
 });

@@ -74,13 +74,10 @@ function tryTraverse(
     options?: AnalysisOptions,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
     const locale: string = LanguageServiceUtils.getLocale(options);
-    const localizationTemplates: PQP.Templates.ILocalizationTemplates = PQP.LocalizationUtils.getLocalizationTemplates(
-        locale,
-    );
 
     const traversalState: TraversalState = {
-        localizationTemplates,
         nodeIdMapCollection,
+        locale,
         parentSymbolMap: new Map<number, DocumentSymbol>(),
         result: {
             symbols: [],
