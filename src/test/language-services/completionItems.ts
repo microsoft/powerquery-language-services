@@ -66,9 +66,7 @@ describe("Completion Items (null provider)", () => {
 
     it("section after equals", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("section pq; a = |");
-
-        // TODO: Is it correct for the current identifier to come back as possible keyword without the use of @?
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a"]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
     });
 
     it("expression after equals", async () => {

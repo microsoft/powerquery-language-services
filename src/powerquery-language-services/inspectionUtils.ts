@@ -182,7 +182,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspectio
             }
 
             case PQP.Inspection.ScopeItemKind.SectionMember: {
-                name = key;
+                name = scopeItem.isRecursive ? `@${key}` : key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
