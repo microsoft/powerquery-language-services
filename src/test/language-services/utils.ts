@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
-import { TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import {
     CompletionItem,
     CompletionItemKind,
@@ -16,7 +16,6 @@ import {
     Position,
     Range,
     SignatureHelp,
-    TextDocument,
 } from "vscode-languageserver-types";
 
 import {
@@ -58,7 +57,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
         return result;
     }
 
-    public async getHover(context: HoverProviderContext): Promise<Hover> {
+    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         const member: string | undefined = this.getMember(context.identifier);
         if (member) {
             return {
@@ -67,10 +66,11 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
             };
         }
 
-        return emptyHover;
+        // tslint:disable-next-line: no-null-keyword
+        return null;
     }
 
-    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp> {
+    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const member: string | undefined = this.getMember(context.functionName);
         if (member) {
             return {
@@ -86,7 +86,8 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
             };
         }
 
-        return emptySignatureHelp;
+        // tslint:disable-next-line: no-null-keyword
+        return null;
     }
 
     public includeModules(_modules: string[]): void {
@@ -196,15 +197,12 @@ export function assertParserCacheItemErr(
 export function assertInspectionCacheItemOk(
     cacheItem: WorkspaceCache.TCacheItem,
 ): asserts cacheItem is WorkspaceCache.InspectionCacheItem &
-    WorkspaceCache.CacheItemOk<PQP.Inspection.InspectionOk, WorkspaceCache.CacheStageKind.Inspection> {
+    WorkspaceCache.CacheItemOk<PQP.Inspection.Inspection, WorkspaceCache.CacheStageKind.Inspection> {
     assertCacheItemOk(cacheItem);
     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Inspection);
 }
 
-export function assertGetInspectionCacheItemOk(
-    document: MockDocument,
-    position: Position,
-): PQP.Inspection.InspectionOk {
+export function assertGetInspectionCacheItemOk(document: MockDocument, position: Position): PQP.Inspection.Inspection {
     const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
         document,
         position,
@@ -383,11 +381,15 @@ export function containsCompletionItemLabels(actualCompletionItems: CompletionIt
 }
 
 export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
-    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems.map(value => {
-        return value.label;
-    });
+    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems
+        .map(value => {
+            return value.label;
+        })
+        .sort();
 
-    expect(actualCompletionItemLabels).deep.equals(labels);
+    const sortedExpectedLabels: ReadonlyArray<string> = labels.sort();
+
+    expect(actualCompletionItemLabels).deep.equals(sortedExpectedLabels);
 }
 
 export const emptyCompletionItems: CompletionItem[] = [];

@@ -8,11 +8,13 @@ import * as LanguageServiceUtils from "./languageServiceUtils";
 import { SignatureProviderContext } from "./providers";
 
 export function maybeSignatureProviderContext(
-    inspected: PQP.Inspection.InspectionOk,
+    inspected: PQP.Inspection.Inspection,
 ): SignatureProviderContext | undefined {
-    return inspected.maybeInvokeExpression !== undefined
-        ? getContextForInvokeExpression(inspected.maybeInvokeExpression)
-        : undefined;
+    if (PQP.ResultUtils.isErr(inspected.triedInvokeExpression) || inspected.triedInvokeExpression.value === undefined) {
+        return undefined;
+    }
+
+    return getContextForInvokeExpression(inspected.triedInvokeExpression.value);
 }
 
 export function getContextForInvokeExpression(
@@ -35,19 +37,19 @@ export function getContextForInvokeExpression(
 
 export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.LiteralExpression): SymbolKind {
     switch (node.literalKind) {
-        case PQP.Language.Constant.LiteralKind.List:
+        case PQP.Language.Ast.LiteralKind.List:
             return SymbolKind.Array;
 
-        case PQP.Language.Constant.LiteralKind.Logical:
+        case PQP.Language.Ast.LiteralKind.Logical:
             return SymbolKind.Boolean;
 
-        case PQP.Language.Constant.LiteralKind.Null:
+        case PQP.Language.Ast.LiteralKind.Null:
             return SymbolKind.Null;
 
-        case PQP.Language.Constant.LiteralKind.Numeric:
+        case PQP.Language.Ast.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Language.Constant.LiteralKind.Text:
+        case PQP.Language.Ast.LiteralKind.Text:
             return SymbolKind.String;
 
         default:
@@ -138,12 +140,16 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Inspection.InspectionOk): DocumentSymbol[] {
-    const documentSymbols: DocumentSymbol[] = [];
+export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspection): DocumentSymbol[] {
+    if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
+        return [];
+    }
 
-    for (const [key, scopeItem] of inspected.nodeScope.entries()) {
+    const documentSymbols: DocumentSymbol[] = [];
+    for (const [key, scopeItem] of inspected.triedNodeScope.value.entries()) {
         let kind: SymbolKind;
         let range: Range;
+        let name: string;
 
         switch (scopeItem.kind) {
             case PQP.Inspection.ScopeItemKind.Each: {
@@ -151,6 +157,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspectio
                     continue;
                 }
 
+                name = key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.eachExpression.node.tokenRange);
                 break;
@@ -161,18 +168,21 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspectio
                     continue;
                 }
 
+                name = scopeItem.isRecursive ? `@${key}` : key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
             }
 
             case PQP.Inspection.ScopeItemKind.Parameter: {
+                name = key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.name.tokenRange);
                 break;
             }
 
             case PQP.Inspection.ScopeItemKind.SectionMember: {
+                name = scopeItem.isRecursive ? `@${key}` : key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
@@ -183,6 +193,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspectio
                     continue;
                 }
 
+                name = key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.xorNode.node.tokenRange);
                 break;
@@ -193,7 +204,7 @@ export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspectio
         }
 
         documentSymbols.push({
-            name: key,
+            name,
             kind,
             deprecated: false,
             range,
