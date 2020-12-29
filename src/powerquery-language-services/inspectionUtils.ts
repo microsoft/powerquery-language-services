@@ -140,7 +140,7 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(triedNodeScope: PQP.Inspection.TriedNodeScope): DocumentSymbol[] {
+export function getSymbolsForTriedNodeScope(triedNodeScope: PQP.Inspection.TriedNodeScope): DocumentSymbol[] {
     if (PQP.ResultUtils.isErr(triedNodeScope)) {
         return [];
     }
