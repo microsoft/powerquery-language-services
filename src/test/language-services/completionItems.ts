@@ -10,7 +10,7 @@ import { CompletionItem, CompletionItemKind, Position } from "../../powerquery-l
 import * as Utils from "./utils";
 
 const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
-const ExpressionKeywordWhitelist: string[] = [
+const ExpressionKeywordWhitelist: ReadonlyArray<string> = [
     PQP.Language.Keyword.KeywordKind.Each,
     PQP.Language.Keyword.KeywordKind.Error,
     PQP.Language.Keyword.KeywordKind.False,
@@ -22,7 +22,7 @@ const ExpressionKeywordWhitelist: string[] = [
     PQP.Language.Keyword.KeywordKind.Type,
 ];
 
-const AllPrimitiveTypes: string[] = [
+const AllPrimitiveTypes: ReadonlyArray<string> = [
     PQP.Language.Constant.PrimitiveTypeConstantKind.Action,
     PQP.Language.Constant.PrimitiveTypeConstantKind.Any,
     PQP.Language.Constant.PrimitiveTypeConstantKind.AnyNonNull,

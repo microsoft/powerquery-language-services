@@ -124,6 +124,7 @@ function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): 
             // Process the record if the immediate parent is a Struct
             const parentId: number | undefined = state.nodeIdMapCollection.parentIdById.get(currentXorNode.node.id);
             const parentSymbol: DocumentSymbol | undefined = parentId ? state.parentSymbolMap.get(parentId) : undefined;
+
             if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
                 const fieldSymbols: DocumentSymbol[] = InspectionUtils.getSymbolsForRecord(currentXorNode.node);
                 if (fieldSymbols.length > 0) {

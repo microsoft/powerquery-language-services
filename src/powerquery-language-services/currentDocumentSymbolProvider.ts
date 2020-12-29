@@ -41,6 +41,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
         ) {
             return [];
         }
-        return InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value);
+
+        return [...InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value.triedNodeScope)];
     }
 }

@@ -57,7 +57,7 @@ export function getSymbolKindForLiteralExpression(node: PQP.Language.Ast.Literal
     }
 }
 
-export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.Parser.ParseContext.Node): SymbolKind {
+export function getSymbolKindFromNode(node: PQP.Language.Ast.TNode | PQP.Parser.ParseContext.Node): SymbolKind {
     switch (node.kind) {
         case PQP.Language.Ast.NodeKind.Constant:
             return SymbolKind.Constant;
@@ -140,13 +140,13 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspection): DocumentSymbol[] {
-    if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
+export function getSymbolsForInspectionScope(triedNodeScope: PQP.Inspection.TriedNodeScope): DocumentSymbol[] {
+    if (PQP.ResultUtils.isErr(triedNodeScope)) {
         return [];
     }
 
     const documentSymbols: DocumentSymbol[] = [];
-    for (const [key, scopeItem] of inspected.triedNodeScope.value.entries()) {
+    for (const [key, scopeItem] of triedNodeScope.value.entries()) {
         let kind: SymbolKind;
         let range: Range;
         let name: string;
