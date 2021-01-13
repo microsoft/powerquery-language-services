@@ -5,13 +5,15 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
+import * as InspectionUtils from "./inspectionUtils";
+import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as LineTokenAtPositionUtils from "./lineTokenAtPosition/lineTokenAtPositionUtils";
+
 import { AnalysisOptions } from "./analysisOptions";
-import * as AnalysisUtils from "./analysisUtils";
 import { IDisposable } from "./commonTypes";
 import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
-import * as InspectionUtils from "./inspectionUtils";
 import { LanguageProvider } from "./languageProvider";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import { LineTokenAtPosition } from "./lineTokenAtPosition/lineTokenAtPosition";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
@@ -62,7 +64,7 @@ abstract class AnalysisBase implements Analysis {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
-                range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
+                range: LineTokenAtPositionUtils.getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -95,12 +97,11 @@ abstract class AnalysisBase implements Analysis {
 
     public async getHover(): Promise<Hover> {
         const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
-        if (!identifierToken) {
+        if (identifierToken === undefined) {
             return LanguageServiceUtils.EmptyHover;
         }
-
         const context: HoverProviderContext = {
-            range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
+            range: LineTokenAtPositionUtils.getTokenRangeForPosition(identifierToken, this.position),
             identifier: identifierToken.data,
         };
 
@@ -205,13 +206,18 @@ abstract class AnalysisBase implements Analysis {
 
     private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
-        if (maybeToken) {
-            const token: PQP.Language.Token.LineToken = maybeToken;
-            if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
-                return token;
-            }
+        if (maybeToken === undefined) {
+            console.log(`maybeIdentifierAt - maybeToken falsy`);
+            return undefined;
         }
 
+        const token: PQP.Language.Token.LineToken = maybeToken;
+        if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
+            console.log(`maybeIdentifierAt - token.kind IS Identifier`);
+            return token;
+        }
+
+        console.log(`maybeIdentifierAt - token.kind ISN'T identifier ${token.kind}`);
         return undefined;
     }
 
@@ -225,13 +231,13 @@ abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): PQP.Language.Token.LineToken | undefined {
+    private maybeTokenAt(): LineTokenAtPosition | undefined {
         const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position);
+        return LineTokenAtPositionUtils.getTokenAtPosition(maybeLineTokens, this.position);
     }
 }
 

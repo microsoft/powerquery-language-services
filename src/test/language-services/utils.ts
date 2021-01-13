@@ -381,12 +381,7 @@ export function containsCompletionItemLabels(actualCompletionItems: CompletionIt
 }
 
 export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
-    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems
-        .map(value => {
-            return value.label;
-        })
-        .sort();
-
+    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems.map(value => value.label).sort();
     const sortedExpectedLabels: ReadonlyArray<string> = labels.sort();
 
     expect(actualCompletionItemLabels).deep.equals(sortedExpectedLabels);

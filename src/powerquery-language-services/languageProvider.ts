@@ -55,7 +55,7 @@ export class LanguageProvider implements CompletionItemProvider {
         return triedFieldAccessAutocomplete.value.autocompleteItems.map(
             (autocompleteItem: PQP.Inspection.AutocompleteItem) => {
                 return {
-                    kind: CompletionItemKind.Keyword,
+                    kind: CompletionItemKind.Field,
                     label: autocompleteItem.key,
                 };
             },

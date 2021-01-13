@@ -144,6 +144,11 @@ describe("Completion Items (Current Document Provider)", () => {
 
         Utils.containsCompletionItemLabels(result, ["a", "b", "c", "let"]);
     });
+
+    it("WIP field access", async () => {
+        const result: CompletionItem[] = await Utils.getCompletionItems("let fn = () => [cat = 1, car = 2] in fn()[|");
+        Utils.equalsCompletionItemLabels(result, ["abc"]);
+    });
 });
 
 describe("Other language constants", () => {
