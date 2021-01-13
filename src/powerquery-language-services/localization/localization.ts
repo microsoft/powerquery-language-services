@@ -1,4 +1,5 @@
 import * as PQP from "@microsoft/powerquery-parser";
+
 import { ILocalizationTemplates } from "./templates";
 
 interface ILocalization {

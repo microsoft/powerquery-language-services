@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { AnalysisOptions } from "./analysisOptions";
+import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";

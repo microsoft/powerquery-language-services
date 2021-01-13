@@ -3,9 +3,10 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, CompletionItemKind } from "./commonTypes";
-import { CompletionItemProvider, CompletionItemProviderContext } from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
+import * as WorkspaceCache from "../workspaceCache";
+
+import { CompletionItem, CompletionItemKind } from "../commonTypes";
+import { CompletionItemProvider, CompletionItemProviderContext } from "../providers";
 
 export class LanguageProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want

@@ -3,9 +3,10 @@
 
 // tslint:disable: no-implicit-dependencies
 import * as PQP from "@microsoft/powerquery-parser";
-import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
+
+import { assert, expect } from "chai";
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import {
     CompletionItem,
@@ -18,10 +19,12 @@ import {
     SignatureHelp,
 } from "vscode-languageserver-types";
 
+import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
+import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
+
 import {
     Analysis,
     CompletionItemProviderContext,
-    createAnalysisSession,
     DocumentSymbol,
     HoverProviderContext,
     LibrarySymbolProvider,
@@ -29,8 +32,7 @@ import {
     SignatureProviderContext,
     SymbolKind,
 } from "../../powerquery-language-services";
-import { AnalysisOptions } from "../../powerquery-language-services/analysisOptions";
-import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
+import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
@@ -222,7 +224,7 @@ export async function getCompletionItemsForFile(
     position: Position,
     analysisOptions?: AnalysisOptions,
 ): Promise<CompletionItem[]> {
-    return createAnalysisForFile(fileName, position, analysisOptions).getCompletionItems();
+    return createFileAnalysis(fileName, position, analysisOptions).getCompletionItems();
 }
 
 export async function getHover(text: string, analysisOptions?: AnalysisOptions): Promise<Hover> {
@@ -430,12 +432,12 @@ const DefaultAnalysisOptions: AnalysisOptions = {};
 
 function createAnalysis(text: string, analysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
-    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return AnalysisUtils.createAnalysis(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
-function createAnalysisForFile(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
+function createFileAnalysis(fileName: string, position: Position, analysisOptions?: AnalysisOptions): Analysis {
     const document: MockDocument = documentFromText(readFile(fileName));
-    return createAnalysisSession(document, position, analysisOptions ?? DefaultAnalysisOptions);
+    return AnalysisUtils.createAnalysis(document, position, analysisOptions ?? DefaultAnalysisOptions);
 }
 
 function validateTextWithMarker(text: string): void {

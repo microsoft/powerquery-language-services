@@ -2,18 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
-import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
-import * as LineTokenAtPositionUtils from "./lineTokenAtPosition/lineTokenAtPositionUtils";
+import * as InspectionUtils from "../inspectionUtils";
+import * as LanguageServiceUtils from "../languageServiceUtils";
+import * as LineTokenAtPositionUtils from "../lineTokenAtPosition/lineTokenAtPositionUtils";
+import * as WorkspaceCache from "../workspaceCache";
 
-import { AnalysisOptions } from "./analysisOptions";
-import { IDisposable } from "./commonTypes";
-import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
-import { LanguageProvider } from "./languageProvider";
-import { LineTokenAtPosition } from "./lineTokenAtPosition/lineTokenAtPosition";
+import { LineTokenAtPosition } from "../lineTokenAtPosition/lineTokenAtPosition";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
@@ -24,20 +20,13 @@ import {
     SignatureHelpProvider,
     SignatureProviderContext,
     SymbolProvider,
-} from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
+} from "../providers";
+import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
+import { LanguageProvider } from "../providers/languageProvider";
+import { Analysis } from "./analysis";
+import { AnalysisOptions } from "./analysisOptions";
 
-export interface Analysis extends IDisposable {
-    getCompletionItems(): Promise<CompletionItem[]>;
-    getHover(): Promise<Hover>;
-    getSignatureHelp(): Promise<SignatureHelp>;
-}
-
-export function createAnalysisSession(document: TextDocument, position: Position, options: AnalysisOptions): Analysis {
-    return new DocumentAnalysis(document, position, options);
-}
-
-abstract class AnalysisBase implements Analysis {
+export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
     protected readonly languageProvider: LanguageProvider;
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
@@ -207,17 +196,14 @@ abstract class AnalysisBase implements Analysis {
     private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken === undefined) {
-            console.log(`maybeIdentifierAt - maybeToken falsy`);
             return undefined;
         }
 
         const token: PQP.Language.Token.LineToken = maybeToken;
         if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
-            console.log(`maybeIdentifierAt - token.kind IS Identifier`);
             return token;
         }
 
-        console.log(`maybeIdentifierAt - token.kind ISN'T identifier ${token.kind}`);
         return undefined;
     }
 
@@ -238,25 +224,5 @@ abstract class AnalysisBase implements Analysis {
         }
 
         return LineTokenAtPositionUtils.getTokenAtPosition(maybeLineTokens, this.position);
-    }
-}
-
-class DocumentAnalysis extends AnalysisBase {
-    constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
-    }
-
-    public dispose(): void {
-        if (!this.options.maintainWorkspaceCache) {
-            WorkspaceCache.close(this.document);
-        }
-    }
-
-    protected getLexerState(): WorkspaceCache.LexerCacheItem {
-        return WorkspaceCache.getLexerState(this.document, this.options.locale);
-    }
-
-    protected getText(range?: Range): string {
-        return this.document.getText(range);
     }
 }

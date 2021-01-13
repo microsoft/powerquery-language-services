@@ -12,7 +12,7 @@ import type {
 } from "vscode-languageserver-types";
 import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
-import { AnalysisOptions } from "./analysisOptions";
+import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import { getLocalizationTemplates } from "./localization/templates";

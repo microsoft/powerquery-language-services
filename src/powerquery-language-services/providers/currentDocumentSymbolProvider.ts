@@ -4,15 +4,16 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, DocumentSymbol, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
-import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as InspectionUtils from "../inspectionUtils";
+import * as LanguageServiceUtils from "../languageServiceUtils";
+import * as WorkspaceCache from "../workspaceCache";
+
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
     SignatureProviderContext,
     SymbolProvider,
-} from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
+} from "../providers";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}
