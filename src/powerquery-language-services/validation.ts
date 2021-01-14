@@ -12,11 +12,12 @@ import type {
 } from "vscode-languageserver-types";
 import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
+import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as LocalizationUtils from "./localization/localizationUtils";
+import * as WorkspaceCache from "./workspaceCache";
+
 import { AnalysisOptions } from "./analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
-import * as LanguageServiceUtils from "./languageServiceUtils";
-import { getLocalizationTemplates } from "./localization/templates";
-import * as WorkspaceCache from "./workspaceCache";
 
 export interface ValidationResult {
     readonly diagnostics: Diagnostic[];
@@ -368,6 +369,6 @@ function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol
 
 function duplicateSymbolMessage(identifier: string, options: ValidationOptions): string {
     const locale: string = options?.locale ?? PQP.DefaultLocale;
-    const template: string = getLocalizationTemplates(locale).error_validation_duplicate_identifier;
+    const template: string = LocalizationUtils.getLocalizationTemplates(locale).error_validation_duplicate_identifier;
     return PQP.StringUtils.assertGetFormatted(template, new Map([["identifier", identifier]]));
 }
