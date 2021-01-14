@@ -6,12 +6,6 @@
 
 name: 1loc_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 
-trigger:
-    - master
-
-pr:
-    - master
-
 schedules:
     - cron: "0 0 * * *"
       displayName: Daily midnight build
@@ -33,11 +27,16 @@ jobs:
           vmImage: windows-latest
       steps:
           - checkout: self
-          - task: cesve.one-loc-build.one-loc-build.OneLocBuild@1
-            displayName: "Localization Build: src/powerquery-language-services-localization/LocProject.json"
+          - task: cesve.one-loc-build.one-loc-build.OneLocBuild@2
+            displayName: "Localization Build: src/powerquery-language-services/localization/LocProject.json"
             inputs:
-                locProj: src/powerquery-language-services/localization/LocProject.json
+                locProj: "src/powerquery-parser/localization/LocProject.json"
+                isCreatePrSelected: true
+                repoType: gitHub
+                gitHubPatVariable: "$(GitHubPat)"
                 packageSourceAuth: patAuth
-                patVariable: $(OneLocBuildPAT)
+                patVariable: "$(OneLocBuildPat)"
+            env:
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           - task: PublishBuildArtifacts@1
             displayName: "Publish Artifact: drop"
