@@ -30,7 +30,7 @@ jobs:
           - task: cesve.one-loc-build.one-loc-build.OneLocBuild@2
             displayName: "Localization Build: src/powerquery-language-services/localization/LocProject.json"
             inputs:
-                locProj: "src/powerquery-parser/localization/LocProject.json"
+                locProj: "src/powerquery-language-services/localization/LocProject.json"
                 isCreatePrSelected: true
                 repoType: gitHub
                 gitHubPatVariable: "$(GitHubPat)"
