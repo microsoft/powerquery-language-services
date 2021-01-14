@@ -138,7 +138,3 @@ export interface ILocalizationTemplates {
 }
 
 export const DefaultTemplates: ILocalizationTemplates = en_US;
-
-export function getLocalizationTemplates(locale: string): ILocalizationTemplates {
-    return TemplatesByLocale.get(locale.toLowerCase()) ?? DefaultTemplates;
-}
