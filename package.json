@@ -48,7 +48,7 @@
     },
     "dependencies": {
         "@microsoft/powerquery-parser": "0.2.16",
-        "@microsoft/powerquery-formatter": "0.0.19",
+        "@microsoft/powerquery-formatter": "0.0.21",
         "vscode-languageserver-textdocument": "1.0.1",
         "vscode-languageserver-types": "3.15.1"
     },

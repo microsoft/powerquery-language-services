@@ -10,7 +10,8 @@ import { CompletionItem, CompletionItemKind, Position } from "../../powerquery-l
 import * as Utils from "./utils";
 
 const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
-const ExpressionKeywordWhitelist: string[] = [
+
+const ExpressionKeywordWhitelist: ReadonlyArray<string> = [
     PQP.Language.Keyword.KeywordKind.Each,
     PQP.Language.Keyword.KeywordKind.Error,
     PQP.Language.Keyword.KeywordKind.False,
@@ -22,7 +23,7 @@ const ExpressionKeywordWhitelist: string[] = [
     PQP.Language.Keyword.KeywordKind.Type,
 ];
 
-const AllPrimitiveTypes: string[] = [
+const AllPrimitiveTypes: ReadonlyArray<string> = [
     PQP.Language.Constant.PrimitiveTypeConstantKind.Action,
     PQP.Language.Constant.PrimitiveTypeConstantKind.Any,
     PQP.Language.Constant.PrimitiveTypeConstantKind.AnyNonNull,
@@ -147,7 +148,7 @@ describe("Completion Items (Current Document Provider)", () => {
 
     it("field access", async () => {
         const result: CompletionItem[] = await Utils.getCompletionItems("let fn = () => [cat = 1, car = 2] in fn()[|");
-        Utils.equalsCompletionItemLabels(result, [...PQP.Language.Keyword.ExpressionKeywordKinds, "cat", "car"]);
+        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "fn", "cat", "car"]);
     });
 });
 
