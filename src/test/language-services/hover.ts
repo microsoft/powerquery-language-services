@@ -16,8 +16,6 @@ const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProv
     "Text.NewGuid",
 ]);
 
-const EmptySymbolProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider([]);
-
 async function expectHoverContents(hover: Hover): Promise<string> {
     const contents: MarkupContent | MarkedString | MarkedString[] = hover.contents;
 
@@ -59,15 +57,6 @@ async function expectUnknownHover(text: string, analysisOptions?: AnalysisOption
     assert.isTrue(contents.endsWith(": unknown"), `"${contents}".endsWith(": unknown" failed`);
 }
 
-async function expectEmpty(text: string, analysisOptions?: AnalysisOptions): Promise<void> {
-    const options: AnalysisOptions = analysisOptions ?? {
-        librarySymbolProvider: libraryProvider,
-    };
-
-    const hover: Hover = await Utils.getHover(text, options);
-    expect(hover).deep.equals(Utils.emptyHover);
-}
-
 describe("Hover", () => {
     describe(`local scope`, () => {
         it(`each`, async () => {
@@ -83,7 +72,7 @@ describe("Hover", () => {
             await expectHover("section green; eggs = 1; ham = e|ggs", `[section-member] eggs: number`);
         });
         it(`unknown`, async () => {
-            await expectHover(`f|oo`, `[unknown] foo: unknown`);
+            await expectUnknownHover(`f|oo`);
         });
     });
 });
