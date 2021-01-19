@@ -7,6 +7,8 @@ import "mocha";
 
 // We should only import from the library index
 import * as LanguageServices from "../../powerquery-language-services";
+import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
+
 import {
     Analysis,
     AnalysisOptions,
@@ -32,7 +34,7 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = LanguageServices.createAnalysisSession(textDocument, position, options);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, options);
         const hover: Hover = await analysis.getHover();
 
         expect(hover.range === undefined);

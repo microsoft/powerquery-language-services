@@ -12,7 +12,7 @@ import {
     SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
-import { AnalysisOptions } from "./analysisOptions";
+import { AnalysisOptions } from "./analysis/analysisOptions";
 
 export const DefaultLocale: string = PQP.Locale.en_US;
 

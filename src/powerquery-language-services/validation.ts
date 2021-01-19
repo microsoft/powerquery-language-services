@@ -16,7 +16,7 @@ import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as LocalizationUtils from "./localization/localizationUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
-import { AnalysisOptions } from "./analysisOptions";
+import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
 
 export interface ValidationResult {

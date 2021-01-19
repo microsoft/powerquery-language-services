@@ -2,16 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
-import { AnalysisOptions } from "./analysisOptions";
-import * as AnalysisUtils from "./analysisUtils";
-import { IDisposable } from "./commonTypes";
-import { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
-import * as InspectionUtils from "./inspectionUtils";
-import { LanguageProvider } from "./languageProvider";
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as InspectionUtils from "../inspectionUtils";
+import * as LanguageServiceUtils from "../languageServiceUtils";
+import * as LineTokenAtPositionUtils from "../lineTokenAtPosition/lineTokenAtPositionUtils";
+import * as WorkspaceCache from "../workspaceCache";
+
+import { LineTokenAtPosition } from "../lineTokenAtPosition/lineTokenAtPosition";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
@@ -22,20 +20,13 @@ import {
     SignatureHelpProvider,
     SignatureProviderContext,
     SymbolProvider,
-} from "./providers";
-import * as WorkspaceCache from "./workspaceCache";
+} from "../providers";
+import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
+import { LanguageProvider } from "../providers/languageProvider";
+import { Analysis } from "./analysis";
+import { AnalysisOptions } from "./analysisOptions";
 
-export interface Analysis extends IDisposable {
-    getCompletionItems(): Promise<CompletionItem[]>;
-    getHover(): Promise<Hover>;
-    getSignatureHelp(): Promise<SignatureHelp>;
-}
-
-export function createAnalysisSession(document: TextDocument, position: Position, options: AnalysisOptions): Analysis {
-    return new DocumentAnalysis(document, position, options);
-}
-
-abstract class AnalysisBase implements Analysis {
+export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
     protected readonly languageProvider: LanguageProvider;
     protected readonly librarySymbolProvider: LibrarySymbolProvider;
@@ -46,13 +37,9 @@ abstract class AnalysisBase implements Analysis {
         protected position: Position,
         protected options: AnalysisOptions,
     ) {
-        this.environmentSymbolProvider = this.options.environmentSymbolProvider
-            ? this.options.environmentSymbolProvider
-            : new NullLibrarySymbolProvider();
+        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibrarySymbolProvider.singleton();
         this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
-        this.librarySymbolProvider = this.options.librarySymbolProvider
-            ? this.options.librarySymbolProvider
-            : new NullLibrarySymbolProvider();
+        this.librarySymbolProvider = options.librarySymbolProvider ?? NullLibrarySymbolProvider.singleton();
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
@@ -62,7 +49,7 @@ abstract class AnalysisBase implements Analysis {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
         if (maybeToken !== undefined) {
             context = {
-                range: AnalysisUtils.getTokenRangeForPosition(maybeToken, this.position),
+                range: LineTokenAtPositionUtils.getTokenRangeForPosition(maybeToken, this.position),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -95,12 +82,11 @@ abstract class AnalysisBase implements Analysis {
 
     public async getHover(): Promise<Hover> {
         const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
-        if (!identifierToken) {
+        if (identifierToken === undefined) {
             return LanguageServiceUtils.EmptyHover;
         }
-
         const context: HoverProviderContext = {
-            range: AnalysisUtils.getTokenRangeForPosition(identifierToken, this.position),
+            range: LineTokenAtPositionUtils.getTokenRangeForPosition(identifierToken, this.position),
             identifier: identifierToken.data,
         };
 
@@ -205,11 +191,13 @@ abstract class AnalysisBase implements Analysis {
 
     private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
-        if (maybeToken) {
-            const token: PQP.Language.Token.LineToken = maybeToken;
-            if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
-                return token;
-            }
+        if (maybeToken === undefined) {
+            return undefined;
+        }
+
+        const token: PQP.Language.Token.LineToken = maybeToken;
+        if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
+            return token;
         }
 
         return undefined;
@@ -225,32 +213,12 @@ abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): PQP.Language.Token.LineToken | undefined {
+    private maybeTokenAt(): LineTokenAtPosition | undefined {
         const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        return AnalysisUtils.getTokenAtPosition(maybeLineTokens, this.position);
-    }
-}
-
-class DocumentAnalysis extends AnalysisBase {
-    constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
-    }
-
-    public dispose(): void {
-        if (!this.options.maintainWorkspaceCache) {
-            WorkspaceCache.close(this.document);
-        }
-    }
-
-    protected getLexerState(): WorkspaceCache.LexerCacheItem {
-        return WorkspaceCache.getLexerState(this.document, this.options.locale);
-    }
-
-    protected getText(range?: Range): string {
-        return this.document.getText(range);
+        return LineTokenAtPositionUtils.getTokenAtPosition(maybeLineTokens, this.position);
     }
 }

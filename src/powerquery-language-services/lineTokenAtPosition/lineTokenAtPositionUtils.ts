@@ -3,15 +3,23 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Position, Range } from "./commonTypes";
+import { Position, Range } from "../commonTypes";
+import { LineTokenAtPosition } from "./lineTokenAtPosition";
 
 export function getTokenAtPosition(
     lineTokens: ReadonlyArray<PQP.Language.Token.LineToken>,
     position: Position,
-): PQP.Language.Token.LineToken | undefined {
-    for (const token of lineTokens) {
+): LineTokenAtPosition | undefined {
+    const numTokens: number = lineTokens.length;
+
+    for (let index: number = 0; index < numTokens; index += 1) {
+        const token: PQP.Language.Token.LineToken = lineTokens[index];
         if (token.positionStart < position.character && token.positionEnd >= position.character) {
-            return token;
+            return {
+                ...token,
+                ...position,
+                tokenIndex: 0,
+            };
         }
     }
 
