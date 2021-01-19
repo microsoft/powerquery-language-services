@@ -43,6 +43,16 @@ export interface SymbolProvider extends CompletionItemProvider, HoverProvider, S
 // TODO: providers for record fields and table columns
 
 export class NullLibrarySymbolProvider implements LibrarySymbolProvider {
+    private static instance: NullLibrarySymbolProvider | undefined;
+
+    public static singleton(): NullLibrarySymbolProvider {
+        if (NullLibrarySymbolProvider.instance === undefined) {
+            NullLibrarySymbolProvider.instance = new NullLibrarySymbolProvider();
+        }
+
+        return NullLibrarySymbolProvider.instance;
+    }
+
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
         return [];
     }

@@ -33,17 +33,13 @@ export abstract class AnalysisBase implements Analysis {
     protected readonly localSymbolProvider: SymbolProvider;
 
     constructor(
+        options: AnalysisOptions,
         protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
         protected position: Position,
-        protected options: AnalysisOptions,
     ) {
-        this.environmentSymbolProvider = this.options.environmentSymbolProvider
-            ? this.options.environmentSymbolProvider
-            : new NullLibrarySymbolProvider();
+        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibrarySymbolProvider.singleton();
         this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
-        this.librarySymbolProvider = this.options.librarySymbolProvider
-            ? this.options.librarySymbolProvider
-            : new NullLibrarySymbolProvider();
+        this.librarySymbolProvider = options.librarySymbolProvider ?? NullLibrarySymbolProvider.singleton();
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
