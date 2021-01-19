@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Position, Range } from "../commonTypes";
