@@ -14,9 +14,7 @@
                 "--colors",
                 "--timeout",
                 "999999",
-                "${workspaceFolder}/lib/test/language-services/**/*.js",
-                "-g",
-                "WIP"
+                "${workspaceFolder}/lib/test/language-services/**/*.js"
             ],
             "preLaunchTask": "preUnitTests",
             "internalConsoleOptions": "openOnSessionStart"
