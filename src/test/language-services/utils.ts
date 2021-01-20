@@ -34,29 +34,38 @@ import {
 } from "../../powerquery-language-services";
 import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 
+export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
+
+export const EmptyHover: Hover = {
+    range: undefined,
+    contents: [],
+};
+
+export const EmptySignatureHelp: SignatureHelp = {
+    signatures: [],
+    // tslint:disable-next-line: no-null-keyword
+    activeParameter: null,
+    activeSignature: 0,
+};
+
 class ErrorLibraryProvider extends NullLibrarySymbolProvider {
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
+    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
         throw new Error("error provider always errors");
     }
 }
 
 export class SimpleLibraryProvider implements LibrarySymbolProvider {
-    private readonly members: string[];
-
-    constructor(members: string[]) {
+    constructor(private readonly members: ReadonlyArray<string>) {
         this.members = members;
     }
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
-        const result: CompletionItem[] = [];
-        this.members.forEach(member => {
-            result.push({
+    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+        return this.members.map((member: string) => {
+            return {
                 kind: CompletionItemKind.Function,
                 label: member,
-            });
+            };
         });
-
-        return result;
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
@@ -92,7 +101,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
         return null;
     }
 
-    public includeModules(_modules: string[]): void {
+    public includeModules(_modules: ReadonlyArray<string>): void {
         throw new Error("Method not implemented.");
     }
 
@@ -107,7 +116,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
     }
 }
 
-export const errorAnalysisOptions: AnalysisOptions = {
+export const ErrorAnalysisOptions: AnalysisOptions = {
     librarySymbolProvider: new ErrorLibraryProvider(),
 };
 
@@ -215,7 +224,10 @@ export function assertGetInspectionCacheItemOk(document: MockDocument, position:
     return cacheItem.value;
 }
 
-export async function getCompletionItems(text: string, analysisOptions?: AnalysisOptions): Promise<CompletionItem[]> {
+export async function getCompletionItems(
+    text: string,
+    analysisOptions?: AnalysisOptions,
+): Promise<ReadonlyArray<CompletionItem>> {
     return createAnalysis(text, analysisOptions).getCompletionItems();
 }
 
@@ -223,7 +235,7 @@ export async function getCompletionItemsForFile(
     fileName: string,
     position: Position,
     analysisOptions?: AnalysisOptions,
-): Promise<CompletionItem[]> {
+): Promise<ReadonlyArray<CompletionItem>> {
     return createFileAnalysis(fileName, position, analysisOptions).getCompletionItems();
 }
 
@@ -317,7 +329,7 @@ export class MockDocument implements TextDocument {
     }
 
     // Helper function
-    public update(text: string): TextDocumentContentChangeEvent[] {
+    public update(text: string): ReadonlyArray<TextDocumentContentChangeEvent> {
         this.setText(text);
         return [{ text }];
     }
@@ -336,6 +348,7 @@ export class MockDocument implements TextDocument {
             const lineOffsets: number[] = [];
             const text: string = this._content;
             let isLineStart: boolean = true;
+
             for (let i: number = 0; i < text.length; i += 1) {
                 if (isLineStart) {
                     lineOffsets.push(i);
@@ -364,7 +377,7 @@ export function validateError(diagnostic: Diagnostic, startPosition: Position): 
     expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
 }
 
-export function containsCompletionItem(completionItems: CompletionItem[], label: string): void {
+export function containsCompletionItem(completionItems: ReadonlyArray<CompletionItem>, label: string): void {
     for (const item of completionItems) {
         if (item.label === label) {
             return;
@@ -374,34 +387,27 @@ export function containsCompletionItem(completionItems: CompletionItem[], label:
     assert.fail(`completion item '${label}' not found in array. Items: ${JSON.stringify(completionItems)}`);
 }
 
-export function containsCompletionItemLabels(actualCompletionItems: CompletionItem[], expectedLabels: string[]): void {
-    const actualCompletionItemLabels: string[] = actualCompletionItems.map(value => {
+export function containsCompletionItemLabels(
+    actualCompletionItems: ReadonlyArray<CompletionItem>,
+    expectedLabels: ReadonlyArray<string>,
+): void {
+    const actualCompletionItemLabels: ReadonlyArray<string> = actualCompletionItems.map(value => {
         return value.label;
     });
 
     expect(actualCompletionItemLabels).to.include.members(expectedLabels);
 }
 
-export function equalsCompletionItemLabels(completionItems: CompletionItem[], labels: string[]): void {
-    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems.map(value => value.label).sort();
-    const sortedExpectedLabels: ReadonlyArray<string> = labels.sort();
-
-    expect(actualCompletionItemLabels).deep.equals(sortedExpectedLabels);
+export function equalsCompletionItemLabels(
+    completionItems: ReadonlyArray<CompletionItem>,
+    labels: ReadonlyArray<string>,
+): void {
+    const actualCompletionItemLabels: ReadonlyArray<string> = completionItems
+        .map((value: CompletionItem) => value.label)
+        .sort();
+    expect(actualCompletionItemLabels.length).equals(labels.length);
+    expect(actualCompletionItemLabels).contains.members(labels);
 }
-
-export const emptyCompletionItems: CompletionItem[] = [];
-
-export const emptyHover: Hover = {
-    range: undefined,
-    contents: [],
-};
-
-export const emptySignatureHelp: SignatureHelp = {
-    signatures: [],
-    // tslint:disable-next-line: no-null-keyword
-    activeParameter: null,
-    activeSignature: 0,
-};
 
 export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: string): void {
     const asJson: string = JSON.stringify(node);
@@ -411,21 +417,26 @@ export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: stri
 export interface ExpectedDocumentSymbol {
     name: string;
     kind: SymbolKind;
-    children?: ExpectedDocumentSymbol[];
+    maybeChildren?: ReadonlyArray<ExpectedDocumentSymbol>;
 }
 
-export function documentSymbolArrayToExpectedSymbols(documentSymbols: DocumentSymbol[]): ExpectedDocumentSymbol[] {
-    const expectedSymbols: ExpectedDocumentSymbol[] = [];
-    documentSymbols.forEach(element => {
-        let children: ExpectedDocumentSymbol[] | undefined;
-        if (element.children) {
-            children = documentSymbolArrayToExpectedSymbols(element.children);
-            expectedSymbols.push({ name: element.name, kind: element.kind, children });
+export function documentSymbolArrayToExpectedSymbols(
+    documentSymbols: ReadonlyArray<DocumentSymbol>,
+): ReadonlyArray<ExpectedDocumentSymbol> {
+    return documentSymbols.map((documentSymbol: DocumentSymbol) => {
+        if (documentSymbol.children !== undefined && documentSymbol.children.length > 0) {
+            return {
+                name: documentSymbol.name,
+                kind: documentSymbol.kind,
+                maybeChildren: documentSymbolArrayToExpectedSymbols(documentSymbol.children),
+            };
         } else {
-            expectedSymbols.push({ name: element.name, kind: element.kind });
+            return {
+                name: documentSymbol.name,
+                kind: documentSymbol.kind,
+            };
         }
     });
-    return expectedSymbols;
 }
 
 const DefaultAnalysisOptions: AnalysisOptions = {};

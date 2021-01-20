@@ -4,7 +4,7 @@
 import { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 
 export interface CompletionItemProvider {
-    getCompletionItems(context: CompletionItemProviderContext): Promise<CompletionItem[]>;
+    getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>>;
 }
 
 export interface CompletionItemProviderContext extends ProviderContext {
@@ -22,7 +22,7 @@ export interface HoverProviderContext extends ProviderContext {
 
 // Lookup provider for built-in and external libaries/modules.
 export interface LibrarySymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider {
-    includeModules(modules: string[]): void;
+    includeModules(modules: ReadonlyArray<string>): void;
 }
 
 export interface ProviderContext {

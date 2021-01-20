@@ -18,7 +18,7 @@ import {
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
+    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());
     }
 
@@ -107,7 +107,7 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
             : undefined;
     }
 
-    private getDocumentSymbols(): DocumentSymbol[] {
+    private getDocumentSymbols(): ReadonlyArray<DocumentSymbol> {
         if (
             this.maybeTriedInspection === undefined ||
             this.maybeTriedInspection.kind === PQP.ResultKind.Err ||

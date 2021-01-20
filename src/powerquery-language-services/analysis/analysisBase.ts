@@ -42,7 +42,7 @@ export abstract class AnalysisBase implements Analysis {
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
-    public async getCompletionItems(): Promise<CompletionItem[]> {
+    public async getCompletionItems(): Promise<ReadonlyArray<CompletionItem>> {
         let context: CompletionItemProviderContext = {};
 
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
@@ -70,7 +70,7 @@ export abstract class AnalysisBase implements Analysis {
         );
 
         // TODO: Should we filter out duplicates?
-        const completionItems: CompletionItem[] = localResponse.concat(
+        const completionItems: ReadonlyArray<CompletionItem> = localResponse.concat(
             environmentResponse,
             libraryResponse,
             parserResponse,
@@ -141,7 +141,7 @@ export abstract class AnalysisBase implements Analysis {
     private static createCompletionItemCalls(
         context: CompletionItemProviderContext,
         providers: CompletionItemProvider[],
-    ): Promise<CompletionItem[]>[] {
+    ): ReadonlyArray<Promise<ReadonlyArray<CompletionItem>>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getCompletionItems(context).catch(() => {
@@ -153,7 +153,7 @@ export abstract class AnalysisBase implements Analysis {
     private static createHoverCalls(
         context: HoverProviderContext,
         providers: HoverProvider[],
-    ): Promise<Hover | null>[] {
+    ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getHover(context).catch(() => {
@@ -166,7 +166,7 @@ export abstract class AnalysisBase implements Analysis {
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
-    ): Promise<SignatureHelp | null>[] {
+    ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getSignatureHelp(context).catch(() => {
@@ -176,7 +176,10 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private static async resolveProviders<T>(calls: Promise<T | null>[], defaultReturnValue: T): Promise<T> {
+    private static async resolveProviders<T>(
+        calls: ReadonlyArray<Promise<T | null>>,
+        defaultReturnValue: T,
+    ): Promise<T> {
         const results: (T | null)[] = await Promise.all(calls);
 
         for (let i: number = 0; i < results.length; i++) {

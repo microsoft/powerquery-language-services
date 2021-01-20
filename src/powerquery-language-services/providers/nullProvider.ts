@@ -20,7 +20,7 @@ export class NullLibrarySymbolProvider implements LibrarySymbolProvider {
         return NullLibrarySymbolProvider.instance;
     }
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
+    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
         return [];
     }
 
@@ -34,7 +34,7 @@ export class NullLibrarySymbolProvider implements LibrarySymbolProvider {
         return null;
     }
 
-    public includeModules(_modules: string[]): void {
+    public includeModules(_modules: ReadonlyArray<string>): void {
         // No impact
     }
 }

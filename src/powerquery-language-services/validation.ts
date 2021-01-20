@@ -13,11 +13,11 @@ import type {
 import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
-import * as LocalizationUtils from "./localization/localizationUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
 import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
+import { LocalizationUtils } from "./localization";
 
 export interface ValidationResult {
     readonly diagnostics: Diagnostic[];
@@ -261,23 +261,26 @@ function keyValuePairsToSymbols(
     keyValuePairs: ReadonlyArray<
         PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
     >,
-): DocumentSymbol[] {
-    const symbols: DocumentSymbol[] = [];
-    for (const value of keyValuePairs) {
-        const range: Range = LanguageServiceUtils.tokenRangeToRange(value.key.tokenRange);
-        symbols.push({
-            kind: SymbolKind.Variable,
-            name: value.keyLiteral,
-            range,
-            selectionRange: range,
-        });
-    }
-
-    return symbols;
+): ReadonlyArray<DocumentSymbol> {
+    return keyValuePairs.map(
+        (
+            kvp: PQP.Parser.NodeIdMapIterator.KeyValuePair<
+                PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier
+            >,
+        ) => {
+            const range: Range = LanguageServiceUtils.tokenRangeToRange(kvp.key.tokenRange);
+            return {
+                kind: SymbolKind.Variable,
+                name: kvp.keyLiteral,
+                range: LanguageServiceUtils.tokenRangeToRange(kvp.key.tokenRange),
+                selectionRange: range,
+            };
+        },
+    );
 }
 
 function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): void {
-    let symbols: DocumentSymbol[] | undefined = undefined;
+    let symbols: ReadonlyArray<DocumentSymbol> | undefined;
 
     // TODO: Validate that "in" variable exists
     switch (currentXorNode.node.kind) {
@@ -312,20 +315,23 @@ function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): 
         default:
     }
 
-    if (symbols) {
+    if (symbols !== undefined) {
         // Look for duplicate member/variable/field names
         state.result.push(...identifyDuplicateSymbols(state, symbols));
     }
 }
 
-function identifyDuplicateSymbols(state: TraversalState, symbols: DocumentSymbol[]): Diagnostic[] {
+function identifyDuplicateSymbols(
+    state: TraversalState,
+    symbols: ReadonlyArray<DocumentSymbol>,
+): ReadonlyArray<Diagnostic> {
     const result: Diagnostic[] = [];
     const seenSymbols: Map<string, DocumentSymbol[]> = new Map<string, DocumentSymbol[]>();
 
     for (const symbol of symbols) {
-        const symbolsForName: DocumentSymbol[] | undefined = seenSymbols.get(symbol.name);
-        if (symbolsForName) {
-            symbolsForName.push(symbol);
+        const maybeSymbolsForName: DocumentSymbol[] | undefined = seenSymbols.get(symbol.name);
+        if (maybeSymbolsForName) {
+            maybeSymbolsForName.push(symbol);
         } else {
             seenSymbols.set(symbol.name, [symbol]);
         }

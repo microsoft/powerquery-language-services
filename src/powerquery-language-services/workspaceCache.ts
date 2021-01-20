@@ -40,7 +40,11 @@ export function close(textDocument: TextDocument): void {
     });
 }
 
-export function update(textDocument: TextDocument, _changes: TextDocumentContentChangeEvent[], _version: number): void {
+export function update(
+    textDocument: TextDocument,
+    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
+    _version: number,
+): void {
     // TODO: support incremental lexing
     // TODO: premptively prepare cache on background thread?
     // TODO: use document version

@@ -7,7 +7,11 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types";
 
-export function tryFormat(document: TextDocument, formattingOptions: FormattingOptions, locale: string): TextEdit[] {
+export function tryFormat(
+    document: TextDocument,
+    formattingOptions: FormattingOptions,
+    locale: string,
+): ReadonlyArray<TextEdit> {
     let indentationLiteral: PQF.IndentationLiteral;
     if (formattingOptions.insertSpaces) {
         indentationLiteral = PQF.IndentationLiteral.SpaceX4;

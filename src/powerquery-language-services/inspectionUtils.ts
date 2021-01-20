@@ -88,7 +88,9 @@ export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.Parser.
     }
 }
 
-export function getSymbolsForLetExpression(expressionNode: PQP.Language.Ast.LetExpression): DocumentSymbol[] {
+export function getSymbolsForLetExpression(
+    expressionNode: PQP.Language.Ast.LetExpression,
+): ReadonlyArray<DocumentSymbol> {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const element of expressionNode.variableList.elements) {
@@ -102,7 +104,7 @@ export function getSymbolsForLetExpression(expressionNode: PQP.Language.Ast.LetE
 
 export function getSymbolsForRecord(
     recordNode: PQP.Language.Ast.RecordExpression | PQP.Language.Ast.RecordLiteral,
-): DocumentSymbol[] {
+): ReadonlyArray<DocumentSymbol> {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const element of recordNode.content.elements) {
@@ -118,15 +120,10 @@ export function getSymbolsForRecord(
     return documentSymbols;
 }
 
-export function getSymbolsForSection(sectionNode: PQP.Language.Ast.Section): DocumentSymbol[] {
-    const documentSymbols: DocumentSymbol[] = [];
-
-    for (const member of sectionNode.sectionMembers.elements) {
-        const memberSymbol: DocumentSymbol = getSymbolForIdentifierPairedExpression(member.namePairedExpression);
-        documentSymbols.push(memberSymbol);
-    }
-
-    return documentSymbols;
+export function getSymbolsForSection(sectionNode: PQP.Language.Ast.Section): ReadonlyArray<DocumentSymbol> {
+    return sectionNode.sectionMembers.elements.map((sectionMember: PQP.Language.Ast.SectionMember) =>
+        getSymbolForIdentifierPairedExpression(sectionMember.namePairedExpression),
+    );
 }
 
 export function getSymbolForIdentifierPairedExpression(
@@ -141,7 +138,7 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspection): DocumentSymbol[] {
+export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspection): ReadonlyArray<DocumentSymbol> {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
         return [];
     }

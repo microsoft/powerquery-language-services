@@ -18,7 +18,7 @@ export function createTextDocument(id: string, version: number, content: string)
 
 export function documentUpdated(
     document: TextDocument,
-    changes: TextDocumentContentChangeEvent[],
+    changes: ReadonlyArray<TextDocumentContentChangeEvent>,
     version: number,
 ): void {
     WorkspaceCache.update(document, changes, version);
