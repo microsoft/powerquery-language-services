@@ -42,7 +42,7 @@ export abstract class AnalysisBase implements Analysis {
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
-    public async getCompletionItems(): Promise<ReadonlyArray<CompletionItem>> {
+    public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
         const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
@@ -70,7 +70,7 @@ export abstract class AnalysisBase implements Analysis {
         );
 
         // TODO: Should we filter out duplicates?
-        const completionItems: ReadonlyArray<CompletionItem> = localResponse.concat(
+        const completionItems: CompletionItem[] = localResponse.concat(
             environmentResponse,
             libraryResponse,
             parserResponse,

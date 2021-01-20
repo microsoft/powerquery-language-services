@@ -30,7 +30,6 @@ export class CurrentDocumentSymbolProvider implements SymbolProvider {
         }
 
         const identifier: string = context.identifier;
-
         const maybeScopeItem: PQP.Inspection.TScopeItem | undefined = maybeNodeScope.get(identifier);
         const scopeItemText: string =
             maybeScopeItem !== undefined

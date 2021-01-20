@@ -9,7 +9,7 @@ import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
-export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): ReadonlyArray<DocumentSymbol> {
+export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
     const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
 
     let contextState: PQP.Parser.ParseContext.State | undefined;
@@ -34,7 +34,7 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
             throw PQP.Assert.isNever(cacheItem);
     }
 
-    let result: ReadonlyArray<DocumentSymbol> | undefined;
+    let result: DocumentSymbol[] | undefined;
 
     if (contextState && contextState.maybeRoot) {
         const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
