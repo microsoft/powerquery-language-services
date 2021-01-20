@@ -9,7 +9,7 @@ import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";
 import * as WorkspaceCache from "./workspaceCache";
 
-export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
+export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): ReadonlyArray<DocumentSymbol> {
     const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
 
     let contextState: PQP.Parser.ParseContext.State | undefined;
@@ -34,7 +34,7 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
             throw PQP.Assert.isNever(cacheItem);
     }
 
-    let result: DocumentSymbol[] = [];
+    let result: ReadonlyArray<DocumentSymbol> | undefined;
 
     if (contextState && contextState.maybeRoot) {
         const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
@@ -56,11 +56,11 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
         WorkspaceCache.close(document);
     }
 
-    return result;
+    return result !== undefined ? result : [];
 }
 
 interface DocumentOutline {
-    symbols: DocumentSymbol[];
+    readonly symbols: DocumentSymbol[];
 }
 
 interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {
@@ -125,7 +125,9 @@ function visitNode(state: TraversalState, currentXorNode: PQP.Parser.TXorNode): 
             const parentId: number | undefined = state.nodeIdMapCollection.parentIdById.get(currentXorNode.node.id);
             const parentSymbol: DocumentSymbol | undefined = parentId ? state.parentSymbolMap.get(parentId) : undefined;
             if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
-                const fieldSymbols: DocumentSymbol[] = InspectionUtils.getSymbolsForRecord(currentXorNode.node);
+                const fieldSymbols: ReadonlyArray<DocumentSymbol> = InspectionUtils.getSymbolsForRecord(
+                    currentXorNode.node,
+                );
                 if (fieldSymbols.length > 0) {
                     addDocumentSymbols(currentXorNode.node.id, state, ...fieldSymbols);
                 }

@@ -11,8 +11,11 @@ import * as DocumentSymbols from "../../powerquery-language-services/documentSym
 import * as Utils from "./utils";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
-function expectSymbolsForDocument(document: TextDocument, expectedSymbols: ExpectedDocumentSymbol[]): void {
-    const actualSymbols: ExpectedDocumentSymbol[] = Utils.documentSymbolArrayToExpectedSymbols(
+function expectSymbolsForDocument(
+    document: TextDocument,
+    expectedSymbols: ReadonlyArray<ExpectedDocumentSymbol>,
+): void {
+    const actualSymbols: ReadonlyArray<ExpectedDocumentSymbol> = Utils.documentSymbolArrayToExpectedSymbols(
         DocumentSymbols.getDocumentSymbols(document),
     );
 
@@ -35,7 +38,7 @@ describe("getDocumentSymbols", () => {
         const document: Utils.MockDocument = Utils.documentFromText(`section foo; shared query = let a = 1 in a;`);
 
         expectSymbolsForDocument(document, [
-            { name: "query", kind: SymbolKind.Variable, children: [{ name: "a", kind: SymbolKind.Number }] },
+            { name: "query", kind: SymbolKind.Variable, maybeChildren: [{ name: "a", kind: SymbolKind.Number }] },
         ]);
     });
 
@@ -56,9 +59,9 @@ describe("getDocumentSymbols", () => {
             {
                 name: "a",
                 kind: SymbolKind.Variable,
-                children: [
+                maybeChildren: [
                     { name: "b", kind: SymbolKind.Number },
-                    { name: "c", kind: SymbolKind.Variable, children: [{ name: "d", kind: SymbolKind.Number }] },
+                    { name: "c", kind: SymbolKind.Variable, maybeChildren: [{ name: "d", kind: SymbolKind.Number }] },
                 ],
             },
         ]);
@@ -86,7 +89,7 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldImpl",
                 kind: SymbolKind.Function,
-                children: [
+                maybeChildren: [
                     { name: "_count", kind: SymbolKind.Variable },
                     { name: "listOfMessages", kind: SymbolKind.Variable },
                     { name: "table", kind: SymbolKind.Variable },
@@ -95,12 +98,12 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldWithDocs",
                 kind: SymbolKind.Struct,
-                children: [{ name: "Authentication", kind: SymbolKind.Field }],
+                maybeChildren: [{ name: "Authentication", kind: SymbolKind.Field }],
             },
             {
                 name: "HelloWorldWithDocs.Publish",
                 kind: SymbolKind.Struct,
-                children: [
+                maybeChildren: [
                     { name: "Beta", kind: SymbolKind.Field },
                     { name: "Category", kind: SymbolKind.Field },
                     { name: "ButtonText", kind: SymbolKind.Field },

@@ -6,9 +6,9 @@ import { assert, expect } from "chai";
 import "mocha";
 import { MarkedString, MarkupContent } from "vscode-languageserver-types";
 
-import * as Utils from "./utils";
+import * as Utils from "../utils";
 
-import { AnalysisOptions, Hover } from "../../powerquery-language-services";
+import { AnalysisOptions, Hover } from "../../../powerquery-language-services";
 
 const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider([
     "DateTime.FixedLocalNow",

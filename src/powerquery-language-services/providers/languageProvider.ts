@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import * as WorkspaceCache from "../workspaceCache";
 
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
-import { CompletionItemProvider, CompletionItemProviderContext } from "../providers";
+import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
 export class LanguageProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
@@ -27,7 +27,7 @@ export class LanguageProvider implements CompletionItemProvider {
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
+    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
         if (
             this.maybeTriedInspection === undefined ||
             this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
@@ -48,7 +48,7 @@ export class LanguageProvider implements CompletionItemProvider {
 
     private getFieldAccess(
         triedFieldAccessAutocomplete: PQP.Inspection.TriedAutocompleteFieldAccess,
-    ): CompletionItem[] {
+    ): ReadonlyArray<CompletionItem> {
         if (PQP.ResultUtils.isErr(triedFieldAccessAutocomplete) || triedFieldAccessAutocomplete.value === undefined) {
             return [];
         }
@@ -63,7 +63,9 @@ export class LanguageProvider implements CompletionItemProvider {
         );
     }
 
-    private getKeywords(triedKeywordAutocomplete: PQP.Inspection.TriedAutocompleteKeyword): CompletionItem[] {
+    private getKeywords(
+        triedKeywordAutocomplete: PQP.Inspection.TriedAutocompleteKeyword,
+    ): ReadonlyArray<CompletionItem> {
         if (PQP.ResultUtils.isErr(triedKeywordAutocomplete)) {
             return [];
         }
@@ -83,7 +85,7 @@ export class LanguageProvider implements CompletionItemProvider {
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: PQP.Inspection.TriedAutocompleteLanguageConstant,
-    ): CompletionItem[] {
+    ): ReadonlyArray<CompletionItem> {
         if (
             PQP.ResultUtils.isErr(triedLanguageConstantAutocomplete) ||
             triedLanguageConstantAutocomplete.value === undefined
@@ -101,7 +103,7 @@ export class LanguageProvider implements CompletionItemProvider {
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: PQP.Inspection.TriedAutocompletePrimitiveType,
-    ): CompletionItem[] {
+    ): ReadonlyArray<CompletionItem> {
         if (PQP.ResultUtils.isErr(triedPrimitiveTypeAutocomplete)) {
             return [];
         }

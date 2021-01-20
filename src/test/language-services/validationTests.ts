@@ -47,10 +47,10 @@ describe("Syntax validation", () => {
 describe("validation with workspace cache", () => {
     it("no errors after update", () => {
         const document: Utils.MockDocument = Utils.documentFromText("let a = 1,");
-        const diagnostics: Diagnostic[] = validate(document, defaultValidationOptions).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
-        const changes: TextDocumentContentChangeEvent[] = document.update("1");
+        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update("1");
         documentUpdated(document, changes, document.version);
 
         expectNoValidationErrors(document);
@@ -60,10 +60,10 @@ describe("validation with workspace cache", () => {
         const document: Utils.MockDocument = Utils.documentFromText("let a = 1 in a");
         expectNoValidationErrors(document);
 
-        const changes: TextDocumentContentChangeEvent[] = document.update(";;;;;;");
+        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
         documentUpdated(document, changes, document.version);
 
-        const diagnostics: Diagnostic[] = validate(document, defaultValidationOptions).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
     });
 });
@@ -94,7 +94,7 @@ describe("Duplicate identifiers", () => {
     // TODO: Figure out why this doesn't hit visitNode() record processing
     // it("[ a = 1, b = 2, c = 3, a = 4]", () => {
     //     const document: Utils.MockDocument = Utils.documentFromText("[ a = 1, b = 2, c = 3, a = 4]");
-    //     const diagnostics: Diagnostic[] = validate(document).diagnostics;
+    //     const diagnostics: ReadonlyArray<Diagnostic> = validate(document).diagnostics;
 
     //     expect(diagnostics.length).to.equal(1, "");
     // });
@@ -199,21 +199,22 @@ function expectNoValidationErrors(document: TextDocument): void {
 interface DuplicateIdentifierError {
     readonly name: string;
     readonly position: Position;
-    readonly relatedPositions: Position[];
+    readonly relatedPositions: ReadonlyArray<Position>;
 }
 
 function validateDuplicateIdentifierDiagnostics(
     document: TextDocument,
-    expected: DuplicateIdentifierError[],
+    expected: ReadonlyArray<DuplicateIdentifierError>,
     totalErrorCount?: number,
 ): void {
     const errorSource: string = "UNIT-TESTS";
-    const diagnostics: Diagnostic[] = validate(document, {
+    const diagnostics: ReadonlyArray<Diagnostic> = validate(document, {
         maintainWorkspaceCache: false,
         checkForDuplicateIdentifiers: true,
         source: errorSource,
     }).diagnostics;
     const actual: DuplicateIdentifierError[] = [];
+
     diagnostics.forEach(value => {
         if (value.code === DiagnosticErrorCode.DuplicateIdentifier) {
             const match: RegExpMatchArray | null = value.message.match(/'(.*?)'/);

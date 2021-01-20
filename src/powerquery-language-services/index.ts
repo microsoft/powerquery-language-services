@@ -4,8 +4,7 @@
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import * as WorkspaceCache from "./workspaceCache";
 
-export * from "./analysis/analysis";
-export * from "./analysis/analysisOptions";
+export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
@@ -19,7 +18,7 @@ export function createTextDocument(id: string, version: number, content: string)
 
 export function documentUpdated(
     document: TextDocument,
-    changes: TextDocumentContentChangeEvent[],
+    changes: ReadonlyArray<TextDocumentContentChangeEvent>,
     version: number,
 ): void {
     WorkspaceCache.update(document, changes, version);

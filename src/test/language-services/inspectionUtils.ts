@@ -5,23 +5,25 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
-import { DocumentSymbol, SymbolKind } from "../../powerquery-language-services";
-import { ExpectedDocumentSymbol } from "./utils";
 
 import * as InspectionUtils from "../../powerquery-language-services/inspectionUtils";
 import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
 import * as Utils from "./utils";
 
+import { SymbolKind } from "../../powerquery-language-services";
+import { ExpectedDocumentSymbol } from "./utils";
+
 // Used to test symbols at a specific level of inspection
-function expectSymbolsForNode(node: PQP.Language.Ast.TNode, expectedSymbols: ExpectedDocumentSymbol[]): void {
-    let actualSymbols: ExpectedDocumentSymbol[];
+function expectSymbolsForNode(
+    node: PQP.Language.Ast.TNode,
+    expectedSymbols: ReadonlyArray<ExpectedDocumentSymbol>,
+): void {
+    let actualSymbols: ReadonlyArray<ExpectedDocumentSymbol>;
 
     if (node.kind === PQP.Language.Ast.NodeKind.Section) {
-        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForSection(node);
-        actualSymbols = Utils.documentSymbolArrayToExpectedSymbols(result);
+        actualSymbols = Utils.documentSymbolArrayToExpectedSymbols(InspectionUtils.getSymbolsForSection(node));
     } else if (node.kind === PQP.Language.Ast.NodeKind.LetExpression) {
-        const result: DocumentSymbol[] = InspectionUtils.getSymbolsForLetExpression(node);
-        actualSymbols = Utils.documentSymbolArrayToExpectedSymbols(result);
+        actualSymbols = Utils.documentSymbolArrayToExpectedSymbols(InspectionUtils.getSymbolsForLetExpression(node));
     } else {
         throw new Error("unsupported code path");
     }

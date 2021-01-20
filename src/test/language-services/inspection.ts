@@ -12,7 +12,7 @@ import * as Utils from "./utils";
 
 // tslint:disable: no-unnecessary-type-assertion
 
-function expectScope(inspected: PQP.Inspection.Inspection, expected: string[]): void {
+function expectScope(inspected: PQP.Inspection.Inspection, expected: ReadonlyArray<string>): void {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
         throw new Error(`expected inspected.triedNodeScope to be Ok`);
     }

@@ -16,7 +16,7 @@ import { AnalysisOptions } from "./analysis/analysisOptions";
 
 export const DefaultLocale: string = PQP.Locale.en_US;
 
-export const EmptyCompletionItems: CompletionItem[] = [];
+export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 
 export const EmptyHover: Hover = {
     range: undefined,
@@ -34,18 +34,17 @@ export function getLocale(analysisOptions: AnalysisOptions | undefined): string 
     return analysisOptions?.locale ?? DefaultLocale;
 }
 
-export function documentSymbolToCompletionItem(documentSymbols: DocumentSymbol[]): CompletionItem[] {
-    const result: CompletionItem[] = [];
-    documentSymbols.forEach(sym => {
-        result.push({
-            deprecated: sym.deprecated,
-            detail: sym.detail,
-            label: sym.name,
-            kind: symbolKindToCompletionItemKind(sym.kind),
-        });
+export function documentSymbolToCompletionItem(
+    documentSymbols: ReadonlyArray<DocumentSymbol>,
+): ReadonlyArray<CompletionItem> {
+    return documentSymbols.map((symbol: DocumentSymbol) => {
+        return {
+            deprecated: symbol.deprecated,
+            detail: symbol.detail,
+            label: symbol.name,
+            kind: symbolKindToCompletionItemKind(symbol.kind),
+        };
     });
-
-    return result;
 }
 
 export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): CompletionItemKind | undefined {

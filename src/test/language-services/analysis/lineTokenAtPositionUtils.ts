@@ -6,11 +6,11 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import * as LineTokenAtPositionUtils from "../../powerquery-language-services/lineTokenAtPosition/lineTokenAtPositionUtils";
-import * as Utils from "./utils";
+import { LineTokenAtPositionUtils } from "../../../";
+import * as Utils from "../utils";
 
-import { Position } from "../../powerquery-language-services";
-import { MockDocument } from "./utils";
+import { Position } from "../../../powerquery-language-services";
+import { MockDocument } from "../utils";
 
 describe("getTokenAtPosition", () => {
     it(`| Table.AddColumn()`, () => {

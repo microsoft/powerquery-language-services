@@ -4,7 +4,7 @@
 import { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 
 export interface CompletionItemProvider {
-    getCompletionItems(context: CompletionItemProviderContext): Promise<CompletionItem[]>;
+    getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>>;
 }
 
 export interface CompletionItemProviderContext extends ProviderContext {
@@ -22,7 +22,7 @@ export interface HoverProviderContext extends ProviderContext {
 
 // Lookup provider for built-in and external libaries/modules.
 export interface LibrarySymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider {
-    includeModules(modules: string[]): void;
+    includeModules(modules: ReadonlyArray<string>): void;
 }
 
 export interface ProviderContext {
@@ -39,35 +39,3 @@ export interface SignatureProviderContext extends ProviderContext {
 }
 
 export interface SymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider {}
-
-// TODO: providers for record fields and table columns
-
-export class NullLibrarySymbolProvider implements LibrarySymbolProvider {
-    private static instance: NullLibrarySymbolProvider | undefined;
-
-    public static singleton(): NullLibrarySymbolProvider {
-        if (NullLibrarySymbolProvider.instance === undefined) {
-            NullLibrarySymbolProvider.instance = new NullLibrarySymbolProvider();
-        }
-
-        return NullLibrarySymbolProvider.instance;
-    }
-
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<CompletionItem[]> {
-        return [];
-    }
-
-    public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
-        // tslint:disable-next-line: no-null-keyword
-        return null;
-    }
-
-    public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        // tslint:disable-next-line: no-null-keyword
-        return null;
-    }
-
-    public includeModules(_modules: string[]): void {
-        // No impact
-    }
-}
