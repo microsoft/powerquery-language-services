@@ -13,7 +13,7 @@ import {
     HoverProviderContext,
     SignatureProviderContext,
     SymbolProvider,
-} from "../providers";
+} from "./commonTypes";
 
 export class CurrentDocumentSymbolProvider implements SymbolProvider {
     constructor(private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined) {}

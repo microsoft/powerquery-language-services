@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Position, Range } from "../commonTypes";
+import { Position, Range } from "../../commonTypes";
 import { LineTokenAtPosition } from "./lineTokenAtPosition";
 
 export function getTokenAtPosition(

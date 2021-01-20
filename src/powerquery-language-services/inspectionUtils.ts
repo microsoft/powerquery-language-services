@@ -5,7 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
-import { SignatureProviderContext } from "./providers";
+
+import { SignatureProviderContext } from "./providers/commonTypes";
 
 export function maybeSignatureProviderContext(
     inspected: PQP.Inspection.Inspection,

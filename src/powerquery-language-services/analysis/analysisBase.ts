@@ -6,25 +6,24 @@ import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vsco
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
-import * as LineTokenAtPositionUtils from "../lineTokenAtPosition/lineTokenAtPositionUtils";
 import * as WorkspaceCache from "../workspaceCache";
 
-import { LineTokenAtPosition } from "../lineTokenAtPosition/lineTokenAtPosition";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
     HoverProvider,
     HoverProviderContext,
     LibrarySymbolProvider,
-    NullLibrarySymbolProvider,
     SignatureHelpProvider,
     SignatureProviderContext,
     SymbolProvider,
-} from "../providers";
+} from "../providers/commonTypes";
 import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
 import { LanguageProvider } from "../providers/languageProvider";
+import { NullLibrarySymbolProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
+import { LineTokenAtPosition, LineTokenAtPositionUtils } from "./lineTokenAtPosition";
 
 export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
