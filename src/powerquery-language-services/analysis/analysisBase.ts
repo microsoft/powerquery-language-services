@@ -23,7 +23,7 @@ import { LanguageProvider } from "../providers/languageProvider";
 import { NullLibrarySymbolProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
-import { LineTokenAtPosition, LineTokenAtPositionUtils } from "./lineTokenAtPosition";
+import { PositionLineToken, PositionLineTokenUtils } from "./positionLineToken";
 
 export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
@@ -45,10 +45,10 @@ export abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionLineToken();
         if (maybeToken !== undefined) {
             context = {
-                range: LineTokenAtPositionUtils.getTokenRangeForPosition(maybeToken, this.position),
+                range: PositionLineTokenUtils.positionTokenLineRange(this.position, maybeToken),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -80,12 +80,12 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
+        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionIdentifier();
         if (identifierToken === undefined) {
             return LanguageServiceUtils.EmptyHover;
         }
         const context: HoverProviderContext = {
-            range: LineTokenAtPositionUtils.getTokenRangeForPosition(identifierToken, this.position),
+            range: PositionLineTokenUtils.positionTokenLineRange(this.position, identifierToken),
             identifier: identifierToken.data,
         };
 
@@ -191,8 +191,8 @@ export abstract class AnalysisBase implements Analysis {
         return defaultReturnValue;
     }
 
-    private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
+    private maybeGetPositionIdentifier(): PQP.Language.Token.LineToken | undefined {
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionLineToken();
         if (maybeToken === undefined) {
             return undefined;
         }
@@ -205,7 +205,7 @@ export abstract class AnalysisBase implements Analysis {
         return undefined;
     }
 
-    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
+    private maybeGetLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
         const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
         if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
             return undefined;
@@ -215,12 +215,12 @@ export abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): LineTokenAtPosition | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
+    private maybeGetPositionLineToken(): PositionLineToken | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeGetLineTokens();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        return LineTokenAtPositionUtils.getTokenAtPosition(maybeLineTokens, this.position);
+        return PositionLineTokenUtils.maybePositionLineToken(this.position, maybeLineTokens);
     }
 }

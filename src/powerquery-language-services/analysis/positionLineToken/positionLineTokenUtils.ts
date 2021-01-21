@@ -4,12 +4,12 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Position, Range } from "../../commonTypes";
-import { LineTokenAtPosition } from "./lineTokenAtPosition";
+import { PositionLineToken } from "./positionLineToken";
 
-export function getTokenAtPosition(
-    lineTokens: ReadonlyArray<PQP.Language.Token.LineToken>,
+export function maybePositionLineToken(
     position: Position,
-): LineTokenAtPosition | undefined {
+    lineTokens: ReadonlyArray<PQP.Language.Token.LineToken>,
+): PositionLineToken | undefined {
     const numTokens: number = lineTokens.length;
 
     for (let index: number = 0; index < numTokens; index += 1) {
@@ -26,7 +26,7 @@ export function getTokenAtPosition(
     return undefined;
 }
 
-export function getTokenRangeForPosition(token: PQP.Language.Token.LineToken, cursorPosition: Position): Range {
+export function positionTokenLineRange(cursorPosition: Position, token: PQP.Language.Token.LineToken): Range {
     return {
         start: {
             line: cursorPosition.line,

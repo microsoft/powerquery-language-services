@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { LineTokenAtPositionUtils } from "../../../";
+import { PositionLineTokenUtils } from "../../..";
 import * as Utils from "../utils";
 
 import { Position } from "../../../powerquery-language-services";
@@ -60,9 +60,9 @@ function expectToken(textWithPosition: string, tokenData: string | undefined): v
     }
 
     const lineTokens: ReadonlyArray<PQP.Language.Token.LineToken> = maybeLine.tokens;
-    const token: PQP.Language.Token.LineToken | undefined = LineTokenAtPositionUtils.getTokenAtPosition(
-        lineTokens,
+    const token: PQP.Language.Token.LineToken | undefined = PositionLineTokenUtils.maybePositionLineToken(
         position,
+        lineTokens,
     );
 
     expect(token?.data).to.equal(tokenData, "Unexpected token data");
