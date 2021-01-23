@@ -45,7 +45,7 @@ export abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionLineToken();
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.getMaybePositionLineToken();
         if (maybeToken !== undefined) {
             context = {
                 range: PositionLineTokenUtils.positionTokenLineRange(this.position, maybeToken),
@@ -80,10 +80,16 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionIdentifier();
+        const identifierToken: PQP.Language.Token.LineToken | undefined = this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return LanguageServiceUtils.EmptyHover;
         }
+
+        const maybeActiveNode: PQP.Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
+        if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
+            return LanguageServiceUtils.EmptyHover;
+        }
+
         const context: HoverProviderContext = {
             range: PositionLineTokenUtils.positionTokenLineRange(this.position, identifierToken),
             identifier: identifierToken.data,
@@ -163,6 +169,30 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
+    private static isValidHoverIdentifier(activeNode: PQP.Inspection.ActiveNode): boolean {
+        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+        if (ancestry.length <= 1) {
+            return true;
+        }
+
+        const leaf: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[0]);
+        if (leaf.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier) {
+            return false;
+        }
+
+        const followingNode: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[1]);
+        if (followingNode.node.kind === PQP.Language.Ast.NodeKind.Parameter) {
+            return false;
+        } else if (
+            followingNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierPairedExpression &&
+            leaf.node.maybeAttributeIndex !== 2
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
@@ -191,8 +221,8 @@ export abstract class AnalysisBase implements Analysis {
         return defaultReturnValue;
     }
 
-    private maybeGetPositionIdentifier(): PQP.Language.Token.LineToken | undefined {
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeGetPositionLineToken();
+    private getMaybePositionIdentifier(): PQP.Language.Token.LineToken | undefined {
+        const maybeToken: PQP.Language.Token.LineToken | undefined = this.getMaybePositionLineToken();
         if (maybeToken === undefined) {
             return undefined;
         }
@@ -205,7 +235,7 @@ export abstract class AnalysisBase implements Analysis {
         return undefined;
     }
 
-    private maybeGetLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
+    private getMaybeLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
         const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
         if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
             return undefined;
@@ -215,12 +245,20 @@ export abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private maybeGetPositionLineToken(): PositionLineToken | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeGetLineTokens();
+    private getMaybePositionLineToken(): PositionLineToken | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
         return PositionLineTokenUtils.maybePositionLineToken(this.position, maybeLineTokens);
+    }
+
+    private getMaybeActiveNode(): PQP.Inspection.ActiveNode | undefined {
+        return this.maybeInspectionCacheItem?.stage === WorkspaceCache.CacheStageKind.Inspection &&
+            PQP.ResultUtils.isOk(this.maybeInspectionCacheItem) &&
+            PQP.Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.value.maybeActiveNode)
+            ? this.maybeInspectionCacheItem.value.maybeActiveNode
+            : undefined;
     }
 }
