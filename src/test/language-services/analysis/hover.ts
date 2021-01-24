@@ -75,9 +75,6 @@ describe("Hover", () => {
         it(`unknown`, async () => {
             await expectUnknownHover(`f|oo`);
         });
-        it(`unknown`, async () => {
-            await expectUnknownHover(`f|oo`);
-        });
     });
 
     describe(`hover should be empty on non-value identifiers`, async () => {
