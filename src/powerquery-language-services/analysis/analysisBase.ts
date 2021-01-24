@@ -56,9 +56,7 @@ export abstract class AnalysisBase implements Analysis {
 
         // TODO: intellisense improvements
         // - honor expected data type
-        // - get inspection for current scope
         // - only include current query name after @
-        // - don't return completion items when on lefthand side of assignment
 
         const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
