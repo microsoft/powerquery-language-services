@@ -80,7 +80,7 @@ describe("Hover", () => {
         });
     });
 
-    describe(`hover should return empty`, async () => {
+    describe(`hover should be empty on non-value identifiers`, async () => {
         it(`let f|oo = 1 in 1`, async () => {
             await expectEmptyHover(`let f|oo = 1 in 1`);
         });
