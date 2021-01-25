@@ -4,21 +4,21 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Position, Range } from "../../commonTypes";
-import { PositionLineToken } from "./positionLineToken";
+import { LineTokenWithPosition } from "./lineTokenWithPosition";
 
-export function maybePositionLineToken(
+export function maybeFrom(
     position: Position,
     lineTokens: ReadonlyArray<PQP.Language.Token.LineToken>,
-): PositionLineToken | undefined {
+): LineTokenWithPosition | undefined {
     const numTokens: number = lineTokens.length;
 
-    for (let index: number = 0; index < numTokens; index += 1) {
-        const token: PQP.Language.Token.LineToken = lineTokens[index];
+    for (let tokenIndex: number = 0; tokenIndex < numTokens; tokenIndex += 1) {
+        const token: PQP.Language.Token.LineToken = lineTokens[tokenIndex];
         if (token.positionStart < position.character && token.positionEnd >= position.character) {
             return {
                 ...token,
                 ...position,
-                tokenIndex: 0,
+                tokenIndex,
             };
         }
     }
@@ -26,15 +26,15 @@ export function maybePositionLineToken(
     return undefined;
 }
 
-export function positionTokenLineRange(cursorPosition: Position, token: PQP.Language.Token.LineToken): Range {
+export function tokenRange(lineTokenWithPosition: LineTokenWithPosition): Range {
     return {
         start: {
-            line: cursorPosition.line,
-            character: token.positionStart,
+            line: lineTokenWithPosition.line,
+            character: lineTokenWithPosition.positionStart,
         },
         end: {
-            line: cursorPosition.line,
-            character: token.positionEnd,
+            line: lineTokenWithPosition.line,
+            character: lineTokenWithPosition.positionEnd,
         },
     };
 }
