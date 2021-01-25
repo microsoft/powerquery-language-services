@@ -45,7 +45,7 @@ export abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWIthPosition();
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
         if (maybeToken !== undefined) {
             context = {
                 range: LineTokenWithPositionUtils.tokenRange(maybeToken),
@@ -220,7 +220,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private getMaybePositionIdentifier(): LineTokenWithPosition | undefined {
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWIthPosition();
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
         if (maybeToken === undefined) {
             return undefined;
         }
@@ -243,7 +243,7 @@ export abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private getMaybeLineTokenWIthPosition(): LineTokenWithPosition | undefined {
+    private getMaybeLineTokenWithPosition(): LineTokenWithPosition | undefined {
         const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
         if (maybeLineTokens === undefined) {
             return undefined;
