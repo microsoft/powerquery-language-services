@@ -23,7 +23,7 @@ import { LanguageProvider } from "../providers/languageProvider";
 import { NullLibrarySymbolProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
-import { LineTokenAtPosition, LineTokenAtPositionUtils } from "./lineTokenAtPosition";
+import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
@@ -42,13 +42,13 @@ export abstract class AnalysisBase implements Analysis {
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
-    public async getCompletionItems(): Promise<ReadonlyArray<CompletionItem>> {
+    public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
         if (maybeToken !== undefined) {
             context = {
-                range: LineTokenAtPositionUtils.getTokenRangeForPosition(maybeToken, this.position),
+                range: LineTokenWithPositionUtils.tokenRange(maybeToken),
                 text: maybeToken.data,
                 tokenKind: maybeToken.kind,
             };
@@ -56,9 +56,7 @@ export abstract class AnalysisBase implements Analysis {
 
         // TODO: intellisense improvements
         // - honor expected data type
-        // - get inspection for current scope
         // - only include current query name after @
-        // - don't return completion items when on lefthand side of assignment
 
         const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
@@ -70,7 +68,7 @@ export abstract class AnalysisBase implements Analysis {
         );
 
         // TODO: Should we filter out duplicates?
-        const completionItems: ReadonlyArray<CompletionItem> = localResponse.concat(
+        const completionItems: CompletionItem[] = localResponse.concat(
             environmentResponse,
             libraryResponse,
             parserResponse,
@@ -80,12 +78,18 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: PQP.Language.Token.LineToken | undefined = this.maybeIdentifierAt();
+        const identifierToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return LanguageServiceUtils.EmptyHover;
         }
+
+        const maybeActiveNode: PQP.Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
+        if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
+            return LanguageServiceUtils.EmptyHover;
+        }
+
         const context: HoverProviderContext = {
-            range: LineTokenAtPositionUtils.getTokenRangeForPosition(identifierToken, this.position),
+            range: LineTokenWithPositionUtils.tokenRange(identifierToken),
             identifier: identifierToken.data,
         };
 
@@ -163,6 +167,30 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
+    private static isValidHoverIdentifier(activeNode: PQP.Inspection.ActiveNode): boolean {
+        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+        if (ancestry.length <= 1) {
+            return true;
+        }
+
+        const leaf: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[0]);
+        if (leaf.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier) {
+            return false;
+        }
+
+        const followingNode: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[1]);
+        if (followingNode.node.kind === PQP.Language.Ast.NodeKind.Parameter) {
+            return false;
+        } else if (
+            followingNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierPairedExpression &&
+            leaf.node.maybeAttributeIndex !== 2
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
@@ -191,13 +219,13 @@ export abstract class AnalysisBase implements Analysis {
         return defaultReturnValue;
     }
 
-    private maybeIdentifierAt(): PQP.Language.Token.LineToken | undefined {
-        const maybeToken: PQP.Language.Token.LineToken | undefined = this.maybeTokenAt();
+    private getMaybePositionIdentifier(): LineTokenWithPosition | undefined {
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
         if (maybeToken === undefined) {
             return undefined;
         }
 
-        const token: PQP.Language.Token.LineToken = maybeToken;
+        const token: LineTokenWithPosition = maybeToken;
         if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
             return token;
         }
@@ -205,7 +233,7 @@ export abstract class AnalysisBase implements Analysis {
         return undefined;
     }
 
-    private maybeLineTokensAt(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
+    private getMaybeLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
         const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
         if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
             return undefined;
@@ -215,12 +243,20 @@ export abstract class AnalysisBase implements Analysis {
         return maybeLine?.tokens;
     }
 
-    private maybeTokenAt(): LineTokenAtPosition | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.maybeLineTokensAt();
+    private getMaybeLineTokenWithPosition(): LineTokenWithPosition | undefined {
+        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
         if (maybeLineTokens === undefined) {
             return undefined;
         }
 
-        return LineTokenAtPositionUtils.getTokenAtPosition(maybeLineTokens, this.position);
+        return LineTokenWithPositionUtils.maybeFrom(this.position, maybeLineTokens);
+    }
+
+    private getMaybeActiveNode(): PQP.Inspection.ActiveNode | undefined {
+        return this.maybeInspectionCacheItem?.stage === WorkspaceCache.CacheStageKind.Inspection &&
+            PQP.ResultUtils.isOk(this.maybeInspectionCacheItem) &&
+            PQP.Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.value.maybeActiveNode)
+            ? this.maybeInspectionCacheItem.value.maybeActiveNode
+            : undefined;
     }
 }

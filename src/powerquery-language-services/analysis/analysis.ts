@@ -6,7 +6,7 @@ import type { CompletionItem, Hover, SignatureHelp } from "vscode-languageserver
 import { IDisposable } from "../commonTypes";
 
 export interface Analysis extends IDisposable {
-    getCompletionItems(): Promise<ReadonlyArray<CompletionItem>>;
+    getCompletionItems(): Promise<CompletionItem[]>;
     getHover(): Promise<Hover>;
     getSignatureHelp(): Promise<SignatureHelp>;
 }
