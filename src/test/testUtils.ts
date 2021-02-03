@@ -19,8 +19,8 @@ import {
     SignatureHelp,
 } from "vscode-languageserver-types";
 
-import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
-import * as WorkspaceCache from "../../powerquery-language-services/workspaceCache";
+import * as AnalysisUtils from "../powerquery-language-services/analysis/analysisUtils";
+import * as WorkspaceCache from "../powerquery-language-services/workspaceCache";
 
 import {
     Analysis,
@@ -31,8 +31,8 @@ import {
     NullLibrarySymbolProvider,
     SignatureProviderContext,
     SymbolKind,
-} from "../../powerquery-language-services";
-import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
+} from "../powerquery-language-services";
+import { AnalysisOptions } from "../powerquery-language-services/analysis/analysisOptions";
 
 export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 
