@@ -3,6 +3,6 @@
 
 import { Library } from "./library";
 
-export abstract class LibraryProvider {
+export abstract class ILibraryProvider {
     public abstract standardLibrary(): Library;
 }
