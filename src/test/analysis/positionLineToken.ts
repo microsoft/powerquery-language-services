@@ -6,11 +6,11 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { LineTokenWithPositionUtils } from "../../..";
-import * as Utils from "../utils";
+import { LineTokenWithPositionUtils } from "../..";
+import * as Utils from "../testUtils";
 
-import { LineTokenWithPosition, Position } from "../../../powerquery-language-services";
-import { MockDocument } from "../utils";
+import { LineTokenWithPosition, Position } from "../../powerquery-language-services";
+import { MockDocument } from "../testUtils";
 
 function expectToken(textWithPosition: string, tokenData: string | undefined): void {
     const [document, position]: [MockDocument, Position] = Utils.documentAndPositionFrom(textWithPosition);

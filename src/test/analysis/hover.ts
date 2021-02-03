@@ -6,9 +6,9 @@ import { assert, expect } from "chai";
 import "mocha";
 import { MarkedString, MarkupContent } from "vscode-languageserver-types";
 
-import * as Utils from "../utils";
+import * as Utils from "../testUtils";
 
-import { AnalysisOptions, Hover } from "../../../powerquery-language-services";
+import { AnalysisOptions, Hover } from "../../powerquery-language-services";
 
 const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider([
     "DateTime.FixedLocalNow",
@@ -64,13 +64,13 @@ describe("Hover", () => {
             await expectHover("each _|", "[each] _: unknown");
         });
         it(`key`, async () => {
-            await expectHover("let foo = 1 in f|oo", "[key] foo: number");
+            await expectHover("let foo = 1 in f|oo", "[key] foo: 1");
         });
         it(`parameter`, async () => {
             await expectHover("let fn = (foo as number) => fo|o in fn(1)", "[parameter] foo: number");
         });
         it(`section-member`, async () => {
-            await expectHover("section green; eggs = 1; ham = e|ggs", `[section-member] eggs: number`);
+            await expectHover("section green; eggs = 1; ham = e|ggs", `[section-member] eggs: 1`);
         });
         it(`unknown`, async () => {
             await expectUnknownHover(`f|oo`);

@@ -5,11 +5,11 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
-import { CompletionItem, CompletionItemKind, Position } from "../../powerquery-language-services";
+import { CompletionItem, CompletionItemKind, Position } from "../powerquery-language-services";
 
-import * as Utils from "./utils";
+import * as TestUtils from "./testUtils";
 
-const LibraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProvider(["Text.NewGuid"]);
+const LibraryProvider: TestUtils.SimpleLibraryProvider = new TestUtils.SimpleLibraryProvider(["Text.NewGuid"]);
 
 const ExpressionKeywordWhitelist: ReadonlyArray<string> = [
     PQP.Language.Keyword.KeywordKind.Each,
@@ -47,42 +47,44 @@ const AllPrimitiveTypes: ReadonlyArray<string> = [
 
 describe("Completion Items (null provider)", () => {
     it("blank document keywords", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("|");
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|");
 
         expect(result.length).to.equal(10);
         result.forEach(item => {
             expect(item.kind).to.equal(CompletionItemKind.Keyword);
         });
 
-        Utils.equalsCompletionItemLabels(result, [
+        TestUtils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
         ]);
     });
 
     it("after in", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("let a = 1, b = 2, c = 3 in |c");
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(
+            "let a = 1, b = 2, c = 3 in |c",
+        );
+        TestUtils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "a", "b", "c"]);
     });
 
     it("section after equals", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("section pq; a = |");
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("section pq; a = |");
+        TestUtils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
     });
 
     it("expression after equals", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("let a = |");
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("let a = |");
+        TestUtils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "@a"]);
     });
 });
 
 describe("Completion Items (Simple provider)", () => {
     it("keywords still work with library provider", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("|", {
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|", {
             librarySymbolProvider: LibraryProvider,
         });
 
-        Utils.equalsCompletionItemLabels(result, [
+        TestUtils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
@@ -90,11 +92,11 @@ describe("Completion Items (Simple provider)", () => {
     });
 
     it("keywords still work with environment provider", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("|", {
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|", {
             environmentSymbolProvider: LibraryProvider,
         });
 
-        Utils.equalsCompletionItemLabels(result, [
+        TestUtils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
@@ -102,13 +104,13 @@ describe("Completion Items (Simple provider)", () => {
     });
 
     it("keywords still work with library and environment", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems("|", {
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|", {
             librarySymbolProvider: LibraryProvider,
             environmentSymbolProvider: LibraryProvider,
         });
 
         // TODO: completion item provider doesn't filter out duplicates
-        Utils.equalsCompletionItemLabels(result, [
+        TestUtils.equalsCompletionItemLabels(result, [
             ...ExpressionKeywordWhitelist,
             PQP.Language.Keyword.KeywordKind.Section,
             "Text.NewGuid",
@@ -123,12 +125,12 @@ describe("Completion Items (Current Document Provider)", () => {
             line: 40,
             character: 25,
         };
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItemsForFile(
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItemsForFile(
             "DirectQueryForSQL.pq",
             postion,
         );
 
-        Utils.containsCompletionItemLabels(result, [
+        TestUtils.containsCompletionItemLabels(result, [
             "ConnectionString",
             "Credential",
             "CredentialConnectionString",
@@ -142,49 +144,49 @@ describe("Completion Items (Current Document Provider)", () => {
     });
 
     it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(
             `section foo; a = () => true; b = "string"; c = 1; d = |;`,
         );
 
-        Utils.containsCompletionItemLabels(result, ["a", "b", "c", "let"]);
+        TestUtils.containsCompletionItemLabels(result, ["a", "b", "c", "let"]);
     });
 
     it("field access", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(
             "let fn = () => [cat = 1, car = 2] in fn()[|",
         );
-        Utils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "fn", "cat", "car"]);
+        TestUtils.equalsCompletionItemLabels(result, [...ExpressionKeywordWhitelist, "fn", "cat", "car"]);
     });
 });
 
 describe("Other language constants", () => {
     it("(a as |", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(`(a as |`);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(`(a as |`);
 
-        Utils.containsCompletionItemLabels(result, [
+        TestUtils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
             PQP.Language.Constant.LanguageConstantKind.Nullable,
         ]);
     });
 
     it("let a = 1 is |", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(`let a = 1 is |`);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(`let a = 1 is |`);
 
-        Utils.containsCompletionItemLabels(result, [
+        TestUtils.containsCompletionItemLabels(result, [
             ...AllPrimitiveTypes,
             PQP.Language.Constant.LanguageConstantKind.Nullable,
         ]);
     });
 
     it("(a, |", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(`(a, |`);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(`(a, |`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
+        TestUtils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
     });
 
     it("(a, op|", async () => {
-        const result: ReadonlyArray<CompletionItem> = await Utils.getCompletionItems(`(a, op|`);
+        const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems(`(a, op|`);
 
-        Utils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
+        TestUtils.containsCompletionItemLabels(result, [PQP.Language.Constant.LanguageConstantKind.Optional]);
     });
 });

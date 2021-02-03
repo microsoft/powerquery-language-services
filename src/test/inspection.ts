@@ -6,9 +6,9 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { Position, SignatureProviderContext } from "../../powerquery-language-services";
-import * as InspectionUtils from "../../powerquery-language-services/inspectionUtils";
-import * as Utils from "./utils";
+import { Position, SignatureProviderContext } from "../powerquery-language-services";
+import * as InspectionUtils from "../powerquery-language-services/inspectionUtils";
+import * as TestUtils from "./testUtils";
 
 // tslint:disable: no-unnecessary-type-assertion
 
@@ -35,10 +35,10 @@ function assertIsPostionInBounds(
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
-            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
                 "Date.AddDays(d|,",
             );
-            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -50,10 +50,10 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,|", () => {
-            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
                 "Date.AddDays(d,|",
             );
-            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -65,10 +65,10 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,1|", () => {
-            const [document, position]: [Utils.MockDocument, Position] = Utils.documentAndPositionFrom(
+            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
                 "Date.AddDays(d,1|",
             );
-            const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
             const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
                 inspected,
             );
@@ -81,12 +81,15 @@ describe("InspectedInvokeExpression", () => {
 
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
-                const document: Utils.MockDocument = Utils.documentFromFile("DirectQueryForSQL.pq");
+                const document: TestUtils.MockDocument = TestUtils.documentFromFile("DirectQueryForSQL.pq");
                 const position: Position = {
                     line: 68,
                     character: 23,
                 };
-                const inspected: PQP.Inspection.Inspection = Utils.assertGetInspectionCacheItemOk(document, position);
+                const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(
+                    document,
+                    position,
+                );
 
                 expectScope(inspected, [
                     "ConnectionString",
@@ -103,7 +106,7 @@ describe("InspectedInvokeExpression", () => {
                 const activeNode: PQP.Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
                 assertIsPostionInBounds(activeNode);
 
-                Utils.assertIsDefined(activeNode.maybeIdentifierUnderPosition);
+                TestUtils.assertIsDefined(activeNode.maybeIdentifierUnderPosition);
                 expect(activeNode.maybeIdentifierUnderPosition.kind).equals(
                     PQP.Language.Ast.NodeKind.Identifier,
                     "expecting identifier",
