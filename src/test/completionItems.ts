@@ -81,7 +81,7 @@ describe("Completion Items (null provider)", () => {
 describe("Completion Items (Simple provider)", () => {
     it("keywords still work with library provider", async () => {
         const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|", {
-            librarySymbolProvider: LibraryProvider,
+            libraryProvider: LibraryProvider,
         });
 
         TestUtils.equalsCompletionItemLabels(result, [
@@ -105,7 +105,7 @@ describe("Completion Items (Simple provider)", () => {
 
     it("keywords still work with library and environment", async () => {
         const result: ReadonlyArray<CompletionItem> = await TestUtils.getCompletionItems("|", {
-            librarySymbolProvider: LibraryProvider,
+            libraryProvider: LibraryProvider,
             environmentSymbolProvider: LibraryProvider,
         });
 

@@ -27,12 +27,13 @@ import {
     CompletionItemProviderContext,
     DocumentSymbol,
     HoverProviderContext,
-    LibrarySymbolProvider,
-    NullLibrarySymbolProvider,
+    LibraryProvider,
+    NullLibraryProvider,
     SignatureProviderContext,
     SymbolKind,
 } from "../powerquery-language-services";
 import { AnalysisOptions } from "../powerquery-language-services/analysis/analysisOptions";
+import { Library } from "../powerquery-language-services/library";
 
 export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 
@@ -48,13 +49,15 @@ export const EmptySignatureHelp: SignatureHelp = {
     activeSignature: 0,
 };
 
-class ErrorLibraryProvider extends NullLibrarySymbolProvider {
+class ErrorLibraryProvider extends NullLibraryProvider {
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
         throw new Error("error provider always errors");
     }
 }
 
-export class SimpleLibraryProvider implements LibrarySymbolProvider {
+export class SimpleLibraryProvider implements LibraryProvider {
+    public readonly library: Library = new Map();
+
     constructor(private readonly members: ReadonlyArray<string>) {
         this.members = members;
     }
@@ -117,7 +120,7 @@ export class SimpleLibraryProvider implements LibrarySymbolProvider {
 }
 
 export const ErrorAnalysisOptions: AnalysisOptions = {
-    librarySymbolProvider: new ErrorLibraryProvider(),
+    libraryProvider: new ErrorLibraryProvider(),
 };
 
 export function documentFromText(text: string): MockDocument {

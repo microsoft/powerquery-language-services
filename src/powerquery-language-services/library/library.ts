@@ -33,7 +33,7 @@ export const enum LibraryDefinitionKind {
 export interface ILibraryDefinition {
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
-    readonly name: string;
+    readonly label: string;
     readonly primitiveType: PQP.Language.Type.TPrimitiveType;
 }
 
@@ -43,6 +43,8 @@ export interface LibraryConstant extends ILibraryDefinition {
 
 export interface LibraryConstructor extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Constructor;
+    readonly primitiveType: PQP.Language.Type.TPrimitiveType;
+    readonly signatures: ReadonlyArray<LibraryFunctionSignature>;
 }
 
 export interface LibraryFunction extends ILibraryDefinition {
@@ -52,12 +54,18 @@ export interface LibraryFunction extends ILibraryDefinition {
 }
 
 export interface LibraryFunctionSignature {
-    readonly name: string;
+    readonly label: string;
     readonly parameters: ReadonlyArray<LibraryParameter>;
 }
 
-export interface LibraryParameter extends PQP.Language.Type.FunctionParameter {
+export interface LibraryParameter {
+    readonly isOptional: boolean;
+    readonly isNullable: boolean;
+    readonly label: string;
     readonly maybeDocumentation: string | undefined;
+    readonly typeKind: PQP.Language.Type.TypeKind;
+    readonly signatureLabelEnd: number;
+    readonly signatureLabelOffset: number;
 }
 
 export interface LibraryType extends ILibraryDefinition {

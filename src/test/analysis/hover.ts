@@ -18,7 +18,7 @@ const libraryProvider: Utils.SimpleLibraryProvider = new Utils.SimpleLibraryProv
 
 async function expectHoverText(text: string, analysisOptions?: AnalysisOptions): Promise<string> {
     const options: AnalysisOptions = analysisOptions ?? {
-        librarySymbolProvider: libraryProvider,
+        libraryProvider: libraryProvider,
     };
 
     const hover: Hover = await Utils.getHover(text, options);

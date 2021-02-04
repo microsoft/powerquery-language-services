@@ -13,14 +13,14 @@ import {
     CompletionItemProviderContext,
     HoverProvider,
     HoverProviderContext,
-    LibrarySymbolProvider,
+    LibraryProvider,
     SignatureHelpProvider,
     SignatureProviderContext,
     SymbolProvider,
 } from "../providers/commonTypes";
 import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
 import { LanguageProvider } from "../providers/languageProvider";
-import { NullLibrarySymbolProvider } from "../providers/nullProvider";
+import { NullLibraryProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
@@ -28,7 +28,7 @@ import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWi
 export abstract class AnalysisBase implements Analysis {
     protected readonly environmentSymbolProvider: SymbolProvider;
     protected readonly languageProvider: LanguageProvider;
-    protected readonly librarySymbolProvider: LibrarySymbolProvider;
+    protected readonly libraryProvider: LibraryProvider;
     protected readonly localSymbolProvider: SymbolProvider;
 
     constructor(
@@ -36,9 +36,9 @@ export abstract class AnalysisBase implements Analysis {
         protected position: Position,
         protected options: AnalysisOptions,
     ) {
-        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibrarySymbolProvider.singleton();
+        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibraryProvider.singleton();
         this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
-        this.librarySymbolProvider = options.librarySymbolProvider ?? NullLibrarySymbolProvider.singleton();
+        this.libraryProvider = options.libraryProvider ?? NullLibraryProvider.singleton();
         this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
     }
 
@@ -60,7 +60,7 @@ export abstract class AnalysisBase implements Analysis {
 
         const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
-                this.librarySymbolProvider,
+                this.libraryProvider,
                 this.languageProvider,
                 this.environmentSymbolProvider,
                 this.localSymbolProvider,
@@ -98,7 +98,7 @@ export abstract class AnalysisBase implements Analysis {
             AnalysisBase.createHoverCalls(context, [
                 this.localSymbolProvider,
                 this.environmentSymbolProvider,
-                this.librarySymbolProvider,
+                this.libraryProvider,
             ]),
             LanguageServiceUtils.EmptyHover,
         );
@@ -131,7 +131,7 @@ export abstract class AnalysisBase implements Analysis {
             AnalysisBase.createSignatureHelpCalls(context, [
                 this.localSymbolProvider,
                 this.environmentSymbolProvider,
-                this.librarySymbolProvider,
+                this.libraryProvider,
             ]),
             LanguageServiceUtils.EmptySignatureHelp,
         );

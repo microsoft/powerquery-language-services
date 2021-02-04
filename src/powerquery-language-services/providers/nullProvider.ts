@@ -2,22 +2,25 @@
 // Licensed under the MIT license.
 
 import { CompletionItem, Hover, SignatureHelp } from "../commonTypes";
+import { Library } from "../library/library";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
-    LibrarySymbolProvider,
+    LibraryProvider,
     SignatureProviderContext,
 } from "./commonTypes";
 
-export class NullLibrarySymbolProvider implements LibrarySymbolProvider {
-    private static instance: NullLibrarySymbolProvider | undefined;
+export class NullLibraryProvider implements LibraryProvider {
+    public readonly library: Library = new Map();
 
-    public static singleton(): NullLibrarySymbolProvider {
-        if (NullLibrarySymbolProvider.instance === undefined) {
-            NullLibrarySymbolProvider.instance = new NullLibrarySymbolProvider();
+    private static instance: NullLibraryProvider | undefined;
+
+    public static singleton(): NullLibraryProvider {
+        if (NullLibraryProvider.instance === undefined) {
+            NullLibraryProvider.instance = new NullLibraryProvider();
         }
 
-        return NullLibrarySymbolProvider.instance;
+        return NullLibraryProvider.instance;
     }
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
