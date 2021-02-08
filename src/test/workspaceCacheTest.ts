@@ -48,6 +48,7 @@ describe("workspaceCache", () => {
             document,
             postion,
             undefined,
+            undefined,
         );
         TestUtils.assertIsDefined(cacheItem);
         TestUtils.assertInspectionCacheItemOk(cacheItem);
@@ -60,6 +61,7 @@ describe("workspaceCache", () => {
         const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
             document,
             postion,
+            undefined,
             undefined,
         );
         TestUtils.assertIsDefined(cacheItem);

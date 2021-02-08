@@ -11,7 +11,16 @@ import { AnalysisOptions } from "./analysisOptions";
 
 export class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
+        super(
+            WorkspaceCache.getTriedInspection(
+                document,
+                position,
+                options.locale,
+                options.libraryProvider?.externalTypeResolver,
+            ),
+            position,
+            options,
+        );
     }
 
     public dispose(): void {

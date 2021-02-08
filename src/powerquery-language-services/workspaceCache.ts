@@ -51,16 +51,19 @@ export function update(
     close(textDocument);
 }
 
-export function getLexerState(textDocument: TextDocument, locale: string | undefined): LexerCacheItem {
-    return getOrCreate(LexerStateCache, textDocument, locale, createLexerCacheItem);
+export function getLexerState(textDocument: TextDocument, maybeLocale: string | undefined): LexerCacheItem {
+    return getOrCreate(LexerStateCache, textDocument, maybeLocale, createLexerCacheItem);
 }
 
-export function getTriedLexerSnapshot(textDocument: TextDocument, locale: string | undefined): TLexerSnapshotCacheItem {
-    return getOrCreate(LexerSnapshotCache, textDocument, locale, createLexerSnapshotCacheItem);
+export function getTriedLexerSnapshot(
+    textDocument: TextDocument,
+    maybeLocale: string | undefined,
+): TLexerSnapshotCacheItem {
+    return getOrCreate(LexerSnapshotCache, textDocument, maybeLocale, createLexerSnapshotCacheItem);
 }
 
-export function getTriedParse(textDocument: TextDocument, locale: string | undefined): TParserCacheItem {
-    return getOrCreate(ParserCache, textDocument, locale, createParserCacheItem);
+export function getTriedParse(textDocument: TextDocument, maybeLocale: string | undefined): TParserCacheItem {
+    return getOrCreate(ParserCache, textDocument, maybeLocale, createParserCacheItem);
 }
 
 // We can't easily reuse getOrCreate because inspections require a position argument.
@@ -68,7 +71,8 @@ export function getTriedParse(textDocument: TextDocument, locale: string | undef
 export function getTriedInspection(
     textDocument: TextDocument,
     position: Position,
-    locale: string | undefined,
+    maybeLocale: string | undefined,
+    maybeExternalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn | undefined,
 ): TInspectionCacheItem | undefined {
     const cacheKey: string = textDocument.uri;
     const maybePositionCache: undefined | InspectionMap = InspectionCache.get(cacheKey);
@@ -85,7 +89,12 @@ export function getTriedInspection(
     if (positionCache.has(position)) {
         return positionCache.get(position);
     } else {
-        const value: TInspectionCacheItem | undefined = createTriedInspection(textDocument, position, locale);
+        const value: TInspectionCacheItem | undefined = createTriedInspection(
+            textDocument,
+            position,
+            maybeLocale,
+            maybeExternalTypeResolver,
+        );
         positionCache.set(position, value);
         return value;
     }
@@ -112,14 +121,14 @@ export type CacheItemErr<E, Stage> = PQP.Err<E> & { readonly stage: Stage };
 function getOrCreate<T>(
     cache: Map<string, T>,
     textDocument: TextDocument,
-    locale: string | undefined,
-    factoryFn: (textDocument: TextDocument, locale: string | undefined) => T,
+    maybeLocale: string | undefined,
+    factoryFn: (textDocument: TextDocument, maybeLocale: string | undefined) => T,
 ): T {
     const cacheKey: string = textDocument.uri;
     const maybeValue: T | undefined = cache.get(cacheKey);
 
     if (maybeValue === undefined) {
-        const value: T = factoryFn(textDocument, locale);
+        const value: T = factoryFn(textDocument, maybeLocale);
         cache.set(cacheKey, value);
         return value;
     } else {
@@ -127,15 +136,18 @@ function getOrCreate<T>(
     }
 }
 
-function createLexerCacheItem(textDocument: TextDocument, locale: string | undefined): LexerCacheItem {
+function createLexerCacheItem(textDocument: TextDocument, maybeLocale: string | undefined): LexerCacheItem {
     return {
-        ...PQP.Lexer.tryLex(getSettings(locale), textDocument.getText()),
+        ...PQP.Lexer.tryLex(getSettings(maybeLocale, undefined), textDocument.getText()),
         stage: CacheStageKind.Lexer,
     };
 }
 
-function createLexerSnapshotCacheItem(textDocument: TextDocument, locale: string | undefined): TLexerSnapshotCacheItem {
-    const lexerCacheItem: LexerCacheItem = getLexerState(textDocument, locale);
+function createLexerSnapshotCacheItem(
+    textDocument: TextDocument,
+    maybeLocale: string | undefined,
+): TLexerSnapshotCacheItem {
+    const lexerCacheItem: LexerCacheItem = getLexerState(textDocument, maybeLocale);
     if (PQP.ResultUtils.isErr(lexerCacheItem)) {
         return lexerCacheItem;
     }
@@ -147,8 +159,8 @@ function createLexerSnapshotCacheItem(textDocument: TextDocument, locale: string
     };
 }
 
-function createParserCacheItem(textDocument: TextDocument, locale: string | undefined): TParserCacheItem {
-    const lexerSnapshotCacheItem: TLexerSnapshotCacheItem = getTriedLexerSnapshot(textDocument, locale);
+function createParserCacheItem(textDocument: TextDocument, maybeLocale: string | undefined): TParserCacheItem {
+    const lexerSnapshotCacheItem: TLexerSnapshotCacheItem = getTriedLexerSnapshot(textDocument, maybeLocale);
     if (
         lexerSnapshotCacheItem.stage !== CacheStageKind.LexerSnapshot ||
         PQP.ResultUtils.isErr(lexerSnapshotCacheItem)
@@ -157,7 +169,7 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
     }
     const lexerSnapshot: PQP.Lexer.LexerSnapshot = lexerSnapshotCacheItem.value;
 
-    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(getSettings(locale), lexerSnapshot);
+    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(getSettings(maybeLocale, undefined), lexerSnapshot);
     return {
         ...triedParse,
         stage: CacheStageKind.Parser,
@@ -169,15 +181,16 @@ function createParserCacheItem(textDocument: TextDocument, locale: string | unde
 function createTriedInspection(
     textDocument: TextDocument,
     position: Position,
-    locale: string | undefined,
+    maybeLocale: string | undefined,
+    maybeExternalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn | undefined,
 ): TInspectionCacheItem {
-    const parserCacheItem: TParserCacheItem = getTriedParse(textDocument, locale);
+    const parserCacheItem: TParserCacheItem = getTriedParse(textDocument, maybeLocale);
     if (parserCacheItem.stage !== CacheStageKind.Parser) {
         return parserCacheItem;
     }
 
     return {
-        ...PQP.Task.tryInspection(getSettings(locale), parserCacheItem, {
+        ...PQP.Task.tryInspection(getSettings(maybeLocale, maybeExternalTypeResolver), parserCacheItem, {
             lineCodeUnit: position.character,
             lineNumber: position.line,
         }),
@@ -185,9 +198,13 @@ function createTriedInspection(
     };
 }
 
-function getSettings(locale: string | undefined): PQP.Settings {
+function getSettings(
+    maybeLocale: string | undefined,
+    maybeExternalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn | undefined,
+): PQP.Settings {
     return {
         ...PQP.DefaultSettings,
-        locale: locale != undefined ? locale : PQP.DefaultSettings.locale,
+        locale: maybeLocale ?? PQP.DefaultSettings.locale,
+        maybeExternalTypeResolver,
     };
 }

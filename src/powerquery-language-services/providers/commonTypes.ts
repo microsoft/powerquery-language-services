@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
-import { Library } from "..";
+import { ILibrary } from "../library";
 
 export interface CompletionItemProvider {
     getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>>;
@@ -22,9 +22,7 @@ export interface HoverProviderContext extends ProviderContext {
 }
 
 // Lookup provider for built-in and external libaries/modules.
-export interface LibraryProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider {
-    readonly library: Library.Library;
-}
+export interface LibraryProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}
 
 export interface ProviderContext {
     readonly range?: Range;

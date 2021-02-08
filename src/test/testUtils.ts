@@ -27,13 +27,13 @@ import {
     CompletionItemProviderContext,
     DocumentSymbol,
     HoverProviderContext,
+    Library,
     LibraryProvider,
     NullLibraryProvider,
     SignatureProviderContext,
     SymbolKind,
 } from "../powerquery-language-services";
 import { AnalysisOptions } from "../powerquery-language-services/analysis/analysisOptions";
-import { Library } from "../powerquery-language-services/library";
 
 export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 
@@ -56,7 +56,9 @@ class ErrorLibraryProvider extends NullLibraryProvider {
 }
 
 export class SimpleLibraryProvider implements LibraryProvider {
-    public readonly library: Library = new Map();
+    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn =
+        PQP.Language.ExternalType.noOpExternalTypeResolver;
+    public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
 
     constructor(private readonly members: ReadonlyArray<string>) {
         this.members = members;
@@ -220,6 +222,7 @@ export function assertGetInspectionCacheItemOk(document: MockDocument, position:
     const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
         document,
         position,
+        undefined,
         undefined,
     );
     assertIsDefined(cacheItem);

@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
+
 import {
+    ILibrary,
     LibraryConstant,
     LibraryConstructor,
     LibraryDefinitionKind,
@@ -9,6 +12,12 @@ import {
     LibraryType,
     TLibraryDefinition,
 } from "./library";
+
+// A null/no-op library for when one is required but shouldn't resolve anything, eg. for test mocks.
+export const NoOpLibrary: ILibrary = {
+    externalTypeResolver: PQP.Language.ExternalType.noOpExternalTypeResolver,
+    libraryDefinitions: new Map(),
+};
 
 export function assertAsConstant(definition: TLibraryDefinition): LibraryConstant {
     assertIsConstant(definition);

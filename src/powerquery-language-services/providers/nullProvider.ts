@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { CompletionItem, Hover, SignatureHelp } from "../commonTypes";
-import { Library } from "../library/library";
+import { LibraryDefinitions } from "../library";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
@@ -11,7 +13,9 @@ import {
 } from "./commonTypes";
 
 export class NullLibraryProvider implements LibraryProvider {
-    public readonly library: Library = new Map();
+    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn =
+        PQP.Language.ExternalType.noOpExternalTypeResolver;
+    public readonly libraryDefinitions: LibraryDefinitions = new Map();
 
     private static instance: NullLibraryProvider | undefined;
 

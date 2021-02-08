@@ -3,23 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-export type Library = Map<string, TLibraryDefinition>;
-
-export interface Module {
-    readonly name: string;
-    readonly maybeVersion: string | undefined;
-    readonly visibility: Visibility;
-}
-
-export interface Visibility {
-    readonly isInternal: boolean;
-    readonly isSdkOnly: boolean;
-    readonly isSdkVisible: boolean;
-}
-
-// ----------------------------------------
-// ---------- ILibraryDefinition ----------
-// ----------------------------------------
+export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 
 export type TLibraryDefinition = LibraryConstant | LibraryConstructor | LibraryFunction | LibraryType;
 
@@ -30,11 +14,17 @@ export const enum LibraryDefinitionKind {
     Type = "Type",
 }
 
+export interface ILibrary {
+    readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
+    readonly libraryDefinitions: LibraryDefinitions;
+}
+
 export interface ILibraryDefinition {
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;
     readonly primitiveType: PQP.Language.Type.TPrimitiveType;
+    readonly asType: PQP.Language.Type.TType;
 }
 
 export interface LibraryConstant extends ILibraryDefinition {
