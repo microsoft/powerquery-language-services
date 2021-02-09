@@ -4,20 +4,21 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Library } from "..";
-import { CompletionItem, CompletionItemKind } from "../commonTypes";
-import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
+import type { CompletionItem } from "../commonTypes";
+import { CompletionItemKind } from "../commonTypes";
+import type { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
 export class LibraryCompletionItemProvider implements CompletionItemProvider {
-    constructor(private readonly maybeLibrary: Library.ILibrary | undefined) {}
+    constructor(private readonly library: Library.ILibrary) {}
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        if (this.maybeLibrary === undefined || !context.text) {
+        if (!context.text) {
             return [];
         }
         const text: string = context.text;
 
         const completionItems: CompletionItem[] = [];
-        for (const [key, value] of this.maybeLibrary.libraryDefinitions.entries()) {
+        for (const [key, value] of this.library.libraryDefinitions.entries()) {
             if (key.startsWith(text)) {
                 completionItems.push({
                     label: key,

@@ -3,9 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import * as WorkspaceCache from "../workspaceCache";
-
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
+import { WorkspaceCache } from "../workspaceCache";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
 export class LocalCompletionItemProvider implements CompletionItemProvider {

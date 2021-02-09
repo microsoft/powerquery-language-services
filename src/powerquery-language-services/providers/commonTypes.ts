@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 import { ILibrary } from "../library/library";
 
 export interface CompletionItemProvider {

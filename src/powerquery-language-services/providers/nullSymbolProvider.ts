@@ -12,19 +12,19 @@ import {
     SignatureProviderContext,
 } from "./commonTypes";
 
-export class NullLibraryProvider implements ISymbolProvider {
+export class NullSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn =
         PQP.Language.ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
 
-    private static instance: NullLibraryProvider | undefined;
+    private static instance: NullSymbolProvider | undefined;
 
-    public static singleton(): NullLibraryProvider {
-        if (NullLibraryProvider.instance === undefined) {
-            NullLibraryProvider.instance = new NullLibraryProvider();
+    public static singleton(): NullSymbolProvider {
+        if (NullSymbolProvider.instance === undefined) {
+            NullSymbolProvider.instance = new NullSymbolProvider();
         }
 
-        return NullLibraryProvider.instance;
+        return NullSymbolProvider.instance;
     }
 
     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {

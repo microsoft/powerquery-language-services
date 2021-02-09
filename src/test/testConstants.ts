@@ -3,8 +3,17 @@
 
 import { Assert } from "@microsoft/powerquery-parser";
 import { ExternalType, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Library, LibraryUtils, AnalysisOptions, CompletionItemProvider } from "../powerquery-language-services";
-import { LibraryCompletionItemProvider } from "../powerquery-language-services/providers/libraryCompletionItemProviderr";
+import {
+    AnalysisOptions,
+    Hover,
+    Library,
+    LibraryUtils,
+    LocalDocumentSymbolProvider,
+    SignatureHelp,
+    WorkspaceCache,
+} from "../powerquery-language-services";
+import { ILibrary } from "../powerquery-language-services/library/library";
+import { LibraryCompletionItemProvider } from "../powerquery-language-services/providers/libraryCompletionItemProvider";
 
 export const NoOpLibrary: Library.ILibrary = {
     externalTypeResolver: ExternalType.noOpExternalTypeResolver,
@@ -146,9 +155,13 @@ export const SimpleLibrary: Library.ILibrary = {
     libraryDefinitions: SimpleLibraryDefinitions,
 };
 
-export const SimpleLibraryCompletionItemProvider: CompletionItemProvider = new LibraryCompletionItemProvider(
-    SimpleLibrary,
-);
+export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
+    createLibraryCompletionItemProviderFn: (library: ILibrary) => new LibraryCompletionItemProvider(library),
+    createLocalDocumentSymbolProviderFn: (
+        library: ILibrary,
+        maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
+    ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),
+};
 
 export const enum TestFunctionName {
     CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
@@ -156,3 +169,15 @@ export const enum TestFunctionName {
     Number = "Test.Number",
     NumberOne = "Test.NumberOne",
 }
+
+export const EmptyHover: Hover = {
+    range: undefined,
+    contents: [],
+};
+
+export const EmptySignatureHelp: SignatureHelp = {
+    signatures: [],
+    // tslint:disable-next-line: no-null-keyword
+    activeParameter: null,
+    activeSignature: 0,
+};

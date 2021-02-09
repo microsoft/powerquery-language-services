@@ -3,5 +3,7 @@
 
 export * from "./commonTypes";
 
-export { CurrentDocumentSymbolProvider } from "./currentDocumentSymbolProvider";
-export { NullLibraryProvider } from "./nullProvider";
+export { LibraryCompletionItemProvider } from "./libraryCompletionItemProvider";
+export { LocalCompletionItemProvider } from "./localCompletionItemProvider";
+export { LocalDocumentSymbolProvider } from "./localDocumentSymbolProvider";
+export { NullSymbolProvider } from "./nullSymbolProvider";

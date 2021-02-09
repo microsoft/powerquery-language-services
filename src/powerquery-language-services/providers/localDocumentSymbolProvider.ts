@@ -7,9 +7,9 @@ import { CompletionItem, DocumentSymbol, Hover, MarkupKind, SignatureHelp } from
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
-import * as WorkspaceCache from "../workspaceCache";
 
 import { Library, LibraryUtils } from "..";
+import { WorkspaceCache } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,

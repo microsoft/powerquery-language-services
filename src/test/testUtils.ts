@@ -1,53 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
-import * as TestConstants from "./testConstants";
-import { assert, expect } from "chai";
-import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-import {
-    CompletionItem,
-    CompletionItemKind,
-    Diagnostic,
-    DiagnosticSeverity,
-    Hover,
-    Position,
-    Range,
-    SignatureHelp,
-} from "vscode-languageserver-types";
+import { CompletionItem, Hover, Position, DiagnosticSeverity, Diagnostic } from "vscode-languageserver-types";
 
 import * as AnalysisUtils from "../powerquery-language-services/analysis/analysisUtils";
-import * as WorkspaceCache from "../powerquery-language-services/workspaceCache";
 
-import {
-    Analysis,
-    CompletionItemProviderContext,
-    DocumentSymbol,
-    HoverProviderContext,
-    Library,
-    NullLibraryProvider,
-    SignatureProviderContext,
-    SymbolKind,
-} from "../powerquery-language-services";
+import { Assert } from "@microsoft/powerquery-parser";
+import { Analysis } from "../powerquery-language-services";
 import { AnalysisOptions } from "../powerquery-language-services/analysis/analysisOptions";
+import { ILibrary } from "../powerquery-language-services/library/library";
 import { MockDocument } from "./mockDocument";
-import { LibraryCompletionItemProvider } from "../powerquery-language-services/providers/libraryCompletionItemProviderr";
 
 export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
-
-// export const EmptyHover: Hover = {
-//     range: undefined,
-//     contents: [],
-// };
-
-// export const EmptySignatureHelp: SignatureHelp = {
-//     signatures: [],
-//     // tslint:disable-next-line: no-null-keyword
-//     activeParameter: null,
-//     activeSignature: 0,
-// };
 
 // class ErrorLibraryProvider extends NullLibraryProvider {
 //     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
@@ -125,6 +92,10 @@ export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 //     libraryProvider: new ErrorLibraryProvider(),
 // };
 
+export function assertIsDefined<T>(maybeValue: T | undefined): asserts maybeValue is NonNullable<T> {
+    Assert.isDefined(maybeValue);
+}
+
 export function documentFromFile(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
 }
@@ -147,89 +118,6 @@ export function readFile(fileName: string): string {
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
-// export function assertIsDefined<T>(maybeValue: T | undefined): asserts maybeValue is NonNullable<T> {
-//     if (maybeValue === undefined) {
-//         throw new Error(`assert failed, expected value to be defined`);
-//     }
-// }
-
-// function assertIsCacheItemStageEqual<T, Stage>(
-//     cacheItem: WorkspaceCache.TCacheItem,
-//     expectedStage: WorkspaceCache.CacheStageKind,
-// ): asserts cacheItem is WorkspaceCache.TCacheItem & WorkspaceCache.CacheItemOk<T, Stage> {
-//     if (cacheItem.stage !== expectedStage) {
-//         throw assert.fail(`cacheItem.stage !== expectedStage`);
-//     }
-// }
-
-// function assertCacheItemOk<T, Stage>(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.CacheItemOk<T, Stage> & WorkspaceCache.TCacheItem {
-//     if (cacheItem.kind !== PQP.ResultKind.Ok) {
-//         throw assert.fail(`cacheItem was expected to be an Ok`);
-//     }
-// }
-
-// export function assertCacheItemErr<E, Stage>(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.CacheItemErr<E, Stage> & WorkspaceCache.TCacheItem {
-//     if (cacheItem.kind !== PQP.ResultKind.Err) {
-//         throw assert.fail(`cacheItem was expected to be an Err`);
-//     }
-// }
-
-// export function assertLexerCacheItemOk(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.LexerCacheItem &
-//     WorkspaceCache.CacheItemOk<PQP.Lexer.State, WorkspaceCache.CacheStageKind.Lexer> {
-//     assertCacheItemOk(cacheItem);
-//     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Lexer);
-// }
-
-// export function assertLexerSnapshotCacheItemOk(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.LexerSnapshotCacheItem &
-//     WorkspaceCache.CacheItemOk<PQP.Lexer.LexerSnapshot, WorkspaceCache.CacheStageKind.LexerSnapshot> {
-//     assertCacheItemOk(cacheItem);
-//     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.LexerSnapshot);
-// }
-
-// export function assertParserCacheItemOk(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.ParserCacheItem &
-//     WorkspaceCache.CacheItemOk<PQP.Parser.ParseOk, WorkspaceCache.CacheStageKind.Parser> {
-//     assertCacheItemOk(cacheItem);
-//     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Parser);
-// }
-
-// export function assertParserCacheItemErr(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.ParserCacheItem &
-//     WorkspaceCache.CacheItemErr<PQP.Parser.ParseError.TParseError, WorkspaceCache.CacheStageKind.Parser> {
-//     assertCacheItemErr(cacheItem);
-//     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Parser);
-// }
-
-// export function assertInspectionCacheItemOk(
-//     cacheItem: WorkspaceCache.TCacheItem,
-// ): asserts cacheItem is WorkspaceCache.InspectionCacheItem &
-//     WorkspaceCache.CacheItemOk<PQP.Inspection.Inspection, WorkspaceCache.CacheStageKind.Inspection> {
-//     assertCacheItemOk(cacheItem);
-//     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Inspection);
-// }
-
-// export function assertGetInspectionCacheItemOk(document: MockDocument, position: Position): PQP.Inspection.Inspection {
-//     const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
-//         document,
-//         position,
-//         undefined,
-//         undefined,
-//     );
-//     assertIsDefined(cacheItem);
-//     assertInspectionCacheItemOk(cacheItem);
-//     return cacheItem.value;
-// }
-
 // export async function getCompletionItems(
 //     text: string,
 //     maybeAnalysisOptions?: AnalysisOptions,
@@ -245,8 +133,12 @@ export function readFile(fileName: string): string {
 //     return createFileAnalysis(fileName, position, analysisOptions).getCompletionItems();
 // }
 
-export async function getHover(text: string, maybeAnalysisOptions?: AnalysisOptions): Promise<Hover> {
-    return createAnalysis(text, maybeAnalysisOptions).getHover();
+export async function getHover(
+    text: string,
+    library: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Promise<Hover> {
+    return createAnalysis(text, library, maybeAnalysisOptions).getHover();
 }
 
 // export async function getSignatureHelp(text: string, maybeAnalysisOptions?: AnalysisOptions): Promise<SignatureHelp> {
@@ -255,13 +147,13 @@ export async function getHover(text: string, maybeAnalysisOptions?: AnalysisOpti
 
 // // Adapted from vscode-languageserver-code implementation
 
-// export function validateError(diagnostic: Diagnostic, startPosition: Position): void {
-//     assert.isDefined(diagnostic.code);
-//     assert.isDefined(diagnostic.message);
-//     assert.isDefined(diagnostic.range);
-//     expect(diagnostic.range.start).to.deep.equal(startPosition);
-//     expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
-// }
+export function validateError(diagnostic: Diagnostic, startPosition: Position): void {
+    assert.isDefined(diagnostic.code);
+    assert.isDefined(diagnostic.message);
+    assert.isDefined(diagnostic.range);
+    expect(diagnostic.range.start).to.deep.equal(startPosition);
+    expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
+}
 
 // export function containsCompletionItem(completionItems: ReadonlyArray<CompletionItem>, label: string): void {
 //     for (const item of completionItems) {
@@ -325,21 +217,13 @@ export async function getHover(text: string, maybeAnalysisOptions?: AnalysisOpti
 //     });
 // }
 
-function createAnalysis(text: string, maybeAnalysisOptions?: AnalysisOptions): Analysis {
+function createAnalysis(text: string, library: ILibrary, maybeAnalysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
-    return AnalysisUtils.createAnalysis(document, position, createAnalysisOptions(maybeAnalysisOptions));
-}
-
-function createFileAnalysis(fileName: string, position: Position, maybeAnalysisOptions?: AnalysisOptions): Analysis {
-    const document: MockDocument = documentFromText(readFile(fileName));
-    return AnalysisUtils.createAnalysis(document, position, createAnalysisOptions(maybeAnalysisOptions));
+    return AnalysisUtils.createAnalysis(document, position, library, createAnalysisOptions(maybeAnalysisOptions));
 }
 
 function createAnalysisOptions(maybeAnalysisOptions?: AnalysisOptions): AnalysisOptions {
-    return {
-        libraryCompletionItemProvider:
-            maybeAnalysisOptions?.libraryCompletionItemProvider ?? TestConstants.SimpleLibraryCompletionItemProvider,
-    };
+    return maybeAnalysisOptions ?? {};
 }
 
 function validateTextWithMarker(text: string): void {

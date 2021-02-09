@@ -14,11 +14,11 @@ import type {
 import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
-import * as WorkspaceCache from "./workspaceCache";
 
 import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DiagnosticErrorCode } from "./diagnosticErrorCode";
 import { LocalizationUtils } from "./localization";
+import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
 export interface ValidationResult {
     readonly diagnostics: Diagnostic[];
@@ -31,7 +31,7 @@ export interface ValidationOptions extends AnalysisOptions {
 }
 
 export function validate(document: TextDocument, options: ValidationOptions): ValidationResult {
-    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
+    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
     const checked: DiagnosticCheck = diagnosticsCheck(cacheItem, options);
     const diagnostics: Diagnostic[] = checked.diagnostics;
 
@@ -58,7 +58,7 @@ export function validate(document: TextDocument, options: ValidationOptions): Va
     }
 
     if (!options?.maintainWorkspaceCache) {
-        WorkspaceCache.close(document);
+        WorkspaceCacheUtils.close(document);
     }
 
     return {

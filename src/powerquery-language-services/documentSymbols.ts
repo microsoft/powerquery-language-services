@@ -5,13 +5,13 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import * as InspectionUtils from "./inspectionUtils";
 import * as LanguageServiceUtils from "./languageServiceUtils";
-import * as WorkspaceCache from "./workspaceCache";
 
 import { AnalysisOptions } from "./analysis/analysisOptions";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
+import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
 export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
-    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, options?.locale);
+    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
 
     let contextState: PQP.Parser.ParseContext.State | undefined;
 
@@ -54,7 +54,7 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
     }
 
     if (!options?.maintainWorkspaceCache) {
-        WorkspaceCache.close(document);
+        WorkspaceCacheUtils.close(document);
     }
 
     return result !== undefined ? result : [];

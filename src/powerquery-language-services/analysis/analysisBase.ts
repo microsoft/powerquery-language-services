@@ -6,8 +6,8 @@ import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vsco
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
-import * as WorkspaceCache from "../workspaceCache";
 
+import { ILibrary } from "../library/library";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
@@ -16,7 +16,8 @@ import {
     SignatureProviderContext,
 } from "../providers/commonTypes";
 import { LocalCompletionItemProvider } from "../providers/localCompletionItemProvider";
-import { NullLibraryProvider } from "../providers/nullProvider";
+import { NullSymbolProvider } from "../providers/nullSymbolProvider";
+import { WorkspaceCache } from "../workspaceCache";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
@@ -29,11 +30,20 @@ export abstract class AnalysisBase implements Analysis {
     constructor(
         protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
         protected position: Position,
+        library: ILibrary,
         protected options: AnalysisOptions,
     ) {
-        this.libraryCompletionItemProvider = options.libraryCompletionItemProvider ?? NullLibraryProvider.singleton();
         this.localCompletionItemProvider = new LocalCompletionItemProvider(this.maybeInspectionCacheItem);
-        this.localDocumentSymbolProvider = options.localDocumentSymbolProvider ?? NullLibraryProvider.singleton();
+
+        this.libraryCompletionItemProvider =
+            options.createLibraryCompletionItemProviderFn !== undefined
+                ? options.createLibraryCompletionItemProviderFn(library)
+                : NullSymbolProvider.singleton();
+
+        this.localDocumentSymbolProvider =
+            options.createLocalDocumentSymbolProviderFn !== undefined
+                ? options.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
+                : NullSymbolProvider.singleton();
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
