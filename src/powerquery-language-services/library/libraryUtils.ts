@@ -75,3 +75,20 @@ export function isFunction(definition: TLibraryDefinition): definition is Librar
 export function isType(definition: TLibraryDefinition): definition is LibraryType {
     return definition.kind === LibraryDefinitionKind.Type;
 }
+
+export function nameOf(kind: LibraryDefinitionKind): string {
+    switch (kind) {
+        case LibraryDefinitionKind.Constructor:
+        case LibraryDefinitionKind.Function:
+            return "library function";
+
+        case LibraryDefinitionKind.Constant:
+            return "library constant";
+
+        case LibraryDefinitionKind.Type:
+            return "library type";
+
+        default:
+            throw PQP.Assert.isNever(kind);
+    }
+}

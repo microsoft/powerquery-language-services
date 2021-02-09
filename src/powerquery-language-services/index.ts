@@ -4,7 +4,7 @@
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import * as WorkspaceCache from "./workspaceCache";
 
-export * as Library from "./library";
+export * from "./library";
 export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";

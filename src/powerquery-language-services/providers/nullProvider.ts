@@ -3,19 +3,19 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Library } from "..";
 import { CompletionItem, Hover, SignatureHelp } from "../commonTypes";
-import { LibraryDefinitions } from "../library";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
-    LibraryProvider,
+    ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
 
-export class NullLibraryProvider implements LibraryProvider {
+export class NullLibraryProvider implements ISymbolProvider {
     public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn =
         PQP.Language.ExternalType.noOpExternalTypeResolver;
-    public readonly libraryDefinitions: LibraryDefinitions = new Map();
+    public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
 
     private static instance: NullLibraryProvider | undefined;
 

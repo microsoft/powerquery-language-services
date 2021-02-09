@@ -1,5 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export * from "./library";
-export * from "./libraryUtils";
+export * as Library from "./library";
+export * as LibraryUtils from "./libraryUtils";

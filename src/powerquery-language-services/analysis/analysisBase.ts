@@ -11,35 +11,29 @@ import * as WorkspaceCache from "../workspaceCache";
 import {
     CompletionItemProvider,
     CompletionItemProviderContext,
-    HoverProvider,
     HoverProviderContext,
-    LibraryProvider,
-    SignatureHelpProvider,
+    ISymbolProvider,
     SignatureProviderContext,
-    SymbolProvider,
 } from "../providers/commonTypes";
-import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
-import { LanguageProvider } from "../providers/languageProvider";
+import { LocalAutocompleteProvider } from "../providers/localAutocompleteProvider";
 import { NullLibraryProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
-    protected readonly environmentSymbolProvider: SymbolProvider;
-    protected readonly languageProvider: LanguageProvider;
-    protected readonly libraryProvider: LibraryProvider;
-    protected readonly localSymbolProvider: SymbolProvider;
+    protected libraryCompletionProvider: CompletionItemProvider;
+    protected localAutocompleteProvider: LocalAutocompleteProvider;
+    protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
         protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
         protected position: Position,
         protected options: AnalysisOptions,
     ) {
-        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibraryProvider.singleton();
-        this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
-        this.libraryProvider = options.libraryProvider ?? NullLibraryProvider.singleton();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
+        this.libraryCompletionProvider = options.libraryCompletionProvider ?? NullLibraryProvider.singleton();
+        this.localAutocompleteProvider = new LocalAutocompleteProvider(this.maybeInspectionCacheItem);
+        this.localDocumentSymbolProvider = options.localDocumentSymbolProvider ?? NullLibraryProvider.singleton();
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
@@ -57,21 +51,18 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-
-        const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
+        const [libraryResponse, localAutocompleteResponse, localDocumentResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
-                this.libraryProvider,
-                this.languageProvider,
-                this.environmentSymbolProvider,
-                this.localSymbolProvider,
+                this.libraryCompletionProvider,
+                this.localAutocompleteProvider,
+                this.localDocumentSymbolProvider,
             ]),
         );
 
         // TODO: Should we filter out duplicates?
-        const completionItems: CompletionItem[] = localResponse.concat(
-            environmentResponse,
-            libraryResponse,
-            parserResponse,
+        const completionItems: CompletionItem[] = libraryResponse.concat(
+            localAutocompleteResponse,
+            localDocumentResponse,
         );
 
         return completionItems;
@@ -93,15 +84,7 @@ export abstract class AnalysisBase implements Analysis {
             identifier: identifierToken.data,
         };
 
-        // Result priority is based on the order of the symbol providers
-        return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [
-                this.localSymbolProvider,
-                this.environmentSymbolProvider,
-                this.libraryProvider,
-            ]),
-            LanguageServiceUtils.EmptyHover,
-        );
+        return (await this.localDocumentSymbolProvider.getHover(context)) || LanguageServiceUtils.EmptyHover;
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
@@ -127,13 +110,10 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         // Result priority is based on the order of the symbol providers
-        return AnalysisBase.resolveProviders(
-            AnalysisBase.createSignatureHelpCalls(context, [
-                this.localSymbolProvider,
-                this.environmentSymbolProvider,
-                this.libraryProvider,
-            ]),
-            LanguageServiceUtils.EmptySignatureHelp,
+
+        return (
+            (await this.localDocumentSymbolProvider.getSignatureHelp(context)) ??
+            LanguageServiceUtils.EmptySignatureHelp
         );
     }
 
@@ -150,19 +130,6 @@ export abstract class AnalysisBase implements Analysis {
         return providers.map(provider =>
             provider.getCompletionItems(context).catch(() => {
                 return LanguageServiceUtils.EmptyCompletionItems;
-            }),
-        );
-    }
-
-    private static createHoverCalls(
-        context: HoverProviderContext,
-        providers: HoverProvider[],
-    ): ReadonlyArray<Promise<Hover | null>> {
-        // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getHover(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
             }),
         );
     }
@@ -189,34 +156,6 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         return true;
-    }
-
-    private static createSignatureHelpCalls(
-        context: SignatureProviderContext,
-        providers: SignatureHelpProvider[],
-    ): ReadonlyArray<Promise<SignatureHelp | null>> {
-        // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getSignatureHelp(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
-        );
-    }
-
-    private static async resolveProviders<T>(
-        calls: ReadonlyArray<Promise<T | null>>,
-        defaultReturnValue: T,
-    ): Promise<T> {
-        const results: (T | null)[] = await Promise.all(calls);
-
-        for (let i: number = 0; i < results.length; i++) {
-            if (results[i] !== null) {
-                return results[i]!;
-            }
-        }
-
-        return defaultReturnValue;
     }
 
     private getMaybePositionIdentifier(): LineTokenWithPosition | undefined {

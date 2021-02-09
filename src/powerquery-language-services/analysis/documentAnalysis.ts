@@ -16,7 +16,7 @@ export class DocumentAnalysis extends AnalysisBase {
                 document,
                 position,
                 options.locale,
-                options.libraryProvider?.externalTypeResolver,
+                options.localDocumentSymbolProvider?.externalTypeResolver,
             ),
             position,
             options,

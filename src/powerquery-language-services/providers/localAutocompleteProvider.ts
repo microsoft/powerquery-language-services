@@ -8,7 +8,7 @@ import * as WorkspaceCache from "../workspaceCache";
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
-export class LanguageProvider implements CompletionItemProvider {
+export class LocalAutocompleteProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = [
@@ -73,7 +73,7 @@ export class LanguageProvider implements CompletionItemProvider {
         return triedKeywordAutocomplete.value
             .filter(
                 (keywordKind: PQP.Language.Keyword.KeywordKind) =>
-                    LanguageProvider.ExcludedKeywords.includes(keywordKind) === false,
+                    LocalAutocompleteProvider.ExcludedKeywords.includes(keywordKind) === false,
             )
             .map((keywordKind: PQP.Language.Keyword.KeywordKind) => {
                 return {

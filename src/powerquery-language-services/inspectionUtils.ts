@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
