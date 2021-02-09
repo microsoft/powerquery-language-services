@@ -15,15 +15,15 @@ import {
     ISymbolProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { LocalAutocompleteProvider } from "../providers/localAutocompleteProvider";
+import { LocalCompletionItemProvider } from "../providers/localCompletionItemProvider";
 import { NullLibraryProvider } from "../providers/nullProvider";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
-    protected libraryCompletionProvider: CompletionItemProvider;
-    protected localAutocompleteProvider: LocalAutocompleteProvider;
+    protected libraryCompletionItemProvider: CompletionItemProvider;
+    protected localCompletionItemProvider: LocalCompletionItemProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
@@ -31,8 +31,8 @@ export abstract class AnalysisBase implements Analysis {
         protected position: Position,
         protected options: AnalysisOptions,
     ) {
-        this.libraryCompletionProvider = options.libraryCompletionProvider ?? NullLibraryProvider.singleton();
-        this.localAutocompleteProvider = new LocalAutocompleteProvider(this.maybeInspectionCacheItem);
+        this.libraryCompletionItemProvider = options.libraryCompletionItemProvider ?? NullLibraryProvider.singleton();
+        this.localCompletionItemProvider = new LocalCompletionItemProvider(this.maybeInspectionCacheItem);
         this.localDocumentSymbolProvider = options.localDocumentSymbolProvider ?? NullLibraryProvider.singleton();
     }
 
@@ -53,8 +53,8 @@ export abstract class AnalysisBase implements Analysis {
         // - only include current query name after @
         const [libraryResponse, localAutocompleteResponse, localDocumentResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
-                this.libraryCompletionProvider,
-                this.localAutocompleteProvider,
+                this.libraryCompletionItemProvider,
+                this.localCompletionItemProvider,
                 this.localDocumentSymbolProvider,
             ]),
         );

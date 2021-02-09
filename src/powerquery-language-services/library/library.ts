@@ -20,11 +20,11 @@ export interface ILibrary {
 }
 
 export interface ILibraryDefinition {
+    readonly asType: PQP.Language.Type.TType;
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;
     readonly primitiveType: PQP.Language.Type.TPrimitiveType;
-    readonly asType: PQP.Language.Type.TType;
 }
 
 export interface LibraryConstant extends ILibraryDefinition {
@@ -33,13 +33,11 @@ export interface LibraryConstant extends ILibraryDefinition {
 
 export interface LibraryConstructor extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Constructor;
-    readonly primitiveType: PQP.Language.Type.TPrimitiveType;
     readonly signatures: ReadonlyArray<LibraryFunctionSignature>;
 }
 
 export interface LibraryFunction extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Function;
-    readonly primitiveType: PQP.Language.Type.TPrimitiveType;
     readonly signatures: ReadonlyArray<LibraryFunctionSignature>;
 }
 

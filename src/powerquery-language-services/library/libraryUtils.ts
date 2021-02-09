@@ -4,20 +4,14 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import {
-    ILibrary,
     LibraryConstant,
     LibraryConstructor,
     LibraryDefinitionKind,
     LibraryFunction,
     LibraryType,
     TLibraryDefinition,
+    LibraryFunctionSignature,
 } from "./library";
-
-// A null/no-op library for when one is required but shouldn't resolve anything, eg. for test mocks.
-export const NoOpLibrary: ILibrary = {
-    externalTypeResolver: PQP.Language.ExternalType.noOpExternalTypeResolver,
-    libraryDefinitions: new Map(),
-};
 
 export function assertAsConstant(definition: TLibraryDefinition): LibraryConstant {
     assertIsConstant(definition);
@@ -59,6 +53,72 @@ export function assertIsType(definition: TLibraryDefinition): asserts definition
     if (!isType(definition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Type}`);
     }
+}
+
+export function createConstantDefinition(
+    asType: PQP.Language.Type.TType,
+    description: string,
+    label: string,
+    primitiveType: PQP.Language.Type.TPrimitiveType,
+): LibraryConstant {
+    return {
+        kind: LibraryDefinitionKind.Constant,
+        asType,
+        description,
+        label,
+        primitiveType,
+    };
+}
+
+export function createConstructorDefinition(
+    asType: PQP.Language.Type.TType,
+    description: string,
+    label: string,
+    primitiveType: PQP.Language.Type.TPrimitiveType,
+    signatures: ReadonlyArray<LibraryFunctionSignature>,
+): LibraryConstructor {
+    return {
+        kind: LibraryDefinitionKind.Constructor,
+        asType,
+        description,
+        label,
+        primitiveType,
+        signatures,
+    };
+}
+
+export function createFunctionDefinition(
+    asType: PQP.Language.Type.TType,
+    description: string,
+    label: string,
+    primitiveType: PQP.Language.Type.TPrimitiveType,
+    signatures: ReadonlyArray<LibraryFunctionSignature>,
+): LibraryFunction {
+    return {
+        kind: LibraryDefinitionKind.Function,
+        asType,
+        description,
+        label,
+        primitiveType,
+        signatures,
+    };
+}
+
+export function createLibraryType(
+    asType: PQP.Language.Type.TType,
+    description: string,
+    label: string,
+    primitiveType: PQP.Language.Type.TPrimitiveType,
+    signatures: ReadonlyArray<LibraryFunctionSignature>,
+): LibraryFunction {
+    return {
+        kind: LibraryDefinitionKind.Function,
+        asType,
+        description,
+        label,
+        primitiveType,
+        signatures,
+    };
 }
 
 export function isConstant(definition: TLibraryDefinition): definition is LibraryConstant {

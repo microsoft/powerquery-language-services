@@ -7,7 +7,7 @@ import { Library } from "..";
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
-export class LibraryAutocompleteProvider implements CompletionItemProvider {
+export class LibraryCompletionItemProvider implements CompletionItemProvider {
     constructor(private readonly maybeLibrary: Library.ILibrary | undefined) {}
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
@@ -21,7 +21,7 @@ export class LibraryAutocompleteProvider implements CompletionItemProvider {
             if (key.startsWith(text)) {
                 completionItems.push({
                     label: key,
-                    kind: LibraryAutocompleteProvider.getCompletionItemKind(value.kind),
+                    kind: LibraryCompletionItemProvider.getCompletionItemKind(value.kind),
                 });
             }
         }
