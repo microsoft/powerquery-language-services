@@ -25,8 +25,8 @@ import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
-    protected languageCompletionItemProvider: LanguageCompletionItemProvider;
-    protected libraryCompletionItemProvider: ISymbolProvider;
+    protected languageCompletionItemProvider: CompletionItemProvider;
+    protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
@@ -35,9 +35,12 @@ export abstract class AnalysisBase implements Analysis {
         library: ILibrary,
         protected options: AnalysisOptions,
     ) {
-        this.languageCompletionItemProvider = new LanguageCompletionItemProvider(this.maybeInspectionCacheItem);
+        this.languageCompletionItemProvider =
+            options.createLanguageCompletionItemProviderFn !== undefined
+                ? options.createLanguageCompletionItemProviderFn()
+                : NullSymbolProvider.singleton();
 
-        this.libraryCompletionItemProvider =
+        this.librarySymbolProvider =
             options.createLibrarySymbolProviderFn !== undefined
                 ? options.createLibrarySymbolProviderFn(library)
                 : NullSymbolProvider.singleton();
@@ -67,7 +70,7 @@ export abstract class AnalysisBase implements Analysis {
             AnalysisBase.createCompletionItemCalls(context, [
                 this.localDocumentSymbolProvider,
                 this.languageCompletionItemProvider,
-                this.libraryCompletionItemProvider,
+                this.librarySymbolProvider,
             ]),
         );
 
@@ -98,10 +101,7 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [
-                this.localDocumentSymbolProvider,
-                this.libraryCompletionItemProvider,
-            ]),
+            AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
             EmptyHover,
         );
     }
@@ -134,7 +134,7 @@ export abstract class AnalysisBase implements Analysis {
         return AnalysisBase.resolveProviders(
             AnalysisBase.createSignatureHelpCalls(context, [
                 this.localDocumentSymbolProvider,
-                this.libraryCompletionItemProvider,
+                this.librarySymbolProvider,
             ]),
             EmptySignatureHelp,
         );

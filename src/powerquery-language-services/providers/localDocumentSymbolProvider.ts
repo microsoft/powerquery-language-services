@@ -3,14 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import {
-    CompletionItem,
-    CompletionItemKind,
-    DocumentSymbol,
-    Hover,
-    MarkupKind,
-    SignatureHelp,
-} from "vscode-languageserver-types";
+import { CompletionItem, CompletionItemKind, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
@@ -36,8 +29,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        return LanguageServiceUtils.documentSymbolToCompletionItem(this.getDocumentSymbols());
+    public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+        return [...this.getFieldAccessCompletionItems(context), ...this.getScopeCompletionItems(context)];
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
@@ -76,23 +69,6 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
         // tslint:disable-next-line: no-null-keyword
         return null;
-    }
-
-    private static getFieldAccessCompletionItems(
-        triedFieldAccessAutocomplete: PQP.Inspection.TriedAutocompleteFieldAccess,
-    ): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isErr(triedFieldAccessAutocomplete) || triedFieldAccessAutocomplete.value === undefined) {
-            return [];
-        }
-
-        return triedFieldAccessAutocomplete.value.autocompleteItems.map(
-            (autocompleteItem: PQP.Inspection.AutocompleteItem) => {
-                return {
-                    kind: CompletionItemKind.Field,
-                    label: autocompleteItem.key,
-                };
-            },
-        );
     }
 
     private static getScopeItemKindText(scopeItemKind: PQP.Inspection.ScopeItemKind): string {
@@ -145,7 +121,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private getDocumentSymbols(): ReadonlyArray<DocumentSymbol> {
+    private getScopeCompletionItems(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
         if (
             this.maybeTriedInspection === undefined ||
             this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
@@ -153,6 +129,33 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         ) {
             return [];
         }
-        return InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value);
+        return LanguageServiceUtils.documentSymbolToCompletionItem(
+            InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value, context.text),
+        );
+    }
+
+    private getFieldAccessCompletionItems(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.maybeInspection();
+        if (maybeInspection === undefined) {
+            return [];
+        }
+        const triedAutocompleteFieldAccess: PQP.Inspection.TriedAutocompleteFieldAccess =
+            maybeInspection.autocomplete.triedFieldAccess;
+        if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
+            return [];
+        }
+
+        const text: string | null | undefined = context.text;
+        const completionItems: CompletionItem[] = [];
+        for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
+            if (!text || autocompleteItem.key.startsWith(text)) {
+                completionItems.push({
+                    kind: CompletionItemKind.Field,
+                    label: autocompleteItem.key,
+                });
+            }
+        }
+
+        return completionItems;
     }
 }

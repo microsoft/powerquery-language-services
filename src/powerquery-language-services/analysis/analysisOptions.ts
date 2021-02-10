@@ -2,10 +2,11 @@
 // Licensed under the MIT license.
 
 import { ILibrary } from "../library/library";
-import { ISymbolProvider } from "../providers/commonTypes";
+import { CompletionItemProvider, ISymbolProvider } from "../providers/commonTypes";
 import { WorkspaceCache } from "../workspaceCache";
 
 export interface AnalysisOptions {
+    readonly createLanguageCompletionItemProviderFn?: () => CompletionItemProvider;
     readonly createLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly createLocalDocumentSymbolProviderFn?: (
         library: ILibrary,

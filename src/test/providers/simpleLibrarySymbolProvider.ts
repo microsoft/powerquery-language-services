@@ -5,19 +5,18 @@ import { expect } from "chai";
 import "mocha";
 import {
     AnalysisOptions,
-    WorkspaceCache,
-    NullSymbolProvider,
     CompletionItem,
-    Hover,
-    SignatureHelp,
     EmptyHover,
     EmptySignatureHelp,
+    Hover,
+    NullSymbolProvider,
+    SignatureHelp,
+    WorkspaceCache,
 } from "../../powerquery-language-services";
 
+import { ILibrary } from "../../powerquery-language-services/library/library";
 import * as TestConstants from "../testConstants";
 import * as TestUtils from "../testUtils";
-import { ILibrary } from "../../powerquery-language-services/library/library";
-import { createSign } from "crypto";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,

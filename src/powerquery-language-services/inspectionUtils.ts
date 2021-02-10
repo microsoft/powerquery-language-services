@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
+import { CompletionItem, CompletionItemKind, DocumentSymbol, Range, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
@@ -17,6 +17,26 @@ export function maybeSignatureProviderContext(
     }
 
     return getContextForInvokeExpression(inspected.triedInvokeExpression.value);
+}
+
+export function getCompletionItemsForInspectionFieldAccess(
+    inspected: PQP.Inspection.Inspection,
+): ReadonlyArray<CompletionItem> {
+    if (
+        PQP.ResultUtils.isErr(inspected.autocomplete.triedFieldAccess) ||
+        inspected.autocomplete.triedFieldAccess.value === undefined
+    ) {
+        return [];
+    }
+
+    return inspected.autocomplete.triedFieldAccess.value.autocompleteItems.map(
+        (autocompleteItem: PQP.Inspection.AutocompleteItem) => {
+            return {
+                kind: CompletionItemKind.Field,
+                label: autocompleteItem.key,
+            };
+        },
+    );
 }
 
 export function getContextForInvokeExpression(
@@ -139,13 +159,24 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(inspected: PQP.Inspection.Inspection): ReadonlyArray<DocumentSymbol> {
+export function getSymbolKindFromAutocompleteItem(autocompleteItem: PQP.Inspection.AutocompleteItem): any {
+    return 1;
+}
+
+export function getSymbolsForInspectionScope(
+    inspected: PQP.Inspection.Inspection,
+    positionIdentifier: string | undefined,
+): ReadonlyArray<DocumentSymbol> {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
         return [];
     }
 
     const documentSymbols: DocumentSymbol[] = [];
     for (const [key, scopeItem] of inspected.triedNodeScope.value.entries()) {
+        if (positionIdentifier && !key.startsWith(positionIdentifier)) {
+            continue;
+        }
+
         let kind: SymbolKind;
         let range: Range;
         let name: string;
