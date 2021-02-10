@@ -31,6 +31,11 @@ export interface AbridgedDocumentSymbol {
     readonly maybeChildren?: ReadonlyArray<AbridgedDocumentSymbol>;
 }
 
+export interface AbridgedSignatureHelp {
+    readonly activeParameter: number | null;
+    readonly activeSignature: number | null;
+}
+
 // class ErrorLibraryProvider extends NullLibraryProvider {
 //     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
 //         throw new Error("error provider always errors");
@@ -122,14 +127,21 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     }
 }
 
-export function assertCompletionItemLabels(expected: ReadonlyArray<string>, actual: ReadonlyArray<CompletionItem>) {
+export function assertHover(expected: string, actual: Hover): void {
+    const contents: string = assertAsMarkupContent(actual.contents).value;
+    expect(contents).to.equal(expected);
+}
+
+export function assertSignatureHelp(expected: AbridgedSignatureHelp, actual: SignatureHelp): void {
+    expect(createAbridgedSignatureHelp(actual)).deep.equals(expected);
+}
+
+export function assertCompletionItemLabels(
+    expected: ReadonlyArray<string>,
+    actual: ReadonlyArray<CompletionItem>,
+): void {
     const actualLabels: ReadonlyArray<string> = actual.map((item: CompletionItem) => item.label);
-
-    const extranous: ReadonlyArray<string> = expected.filter;
-    const missing: string[] = [];
-
-    for (const item of actual) {
-    }
+    expect(actualLabels).to.have.members(expected);
 }
 
 export function documentFromFile(fileName: string): MockDocument {
@@ -171,6 +183,13 @@ export function createAbridgedDocumentSymbols(
             };
         }
     });
+}
+
+export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSignatureHelp {
+    return {
+        activeParameter: value.activeParameter,
+        activeSignature: value.activeSignature,
+    };
 }
 
 export async function createCompletionItems(
