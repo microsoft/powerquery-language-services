@@ -4,6 +4,6 @@
 export * from "./commonTypes";
 
 export { LibrarySymbolProvider } from "./librarySymbolProvider";
-export { LocalCompletionItemProvider } from "./localCompletionItemProvider";
+export { LanguageCompletionItemProvider } from "./languageCompletionItemProvider";
 export { LocalDocumentSymbolProvider } from "./localDocumentSymbolProvider";
 export { NullSymbolProvider } from "./nullSymbolProvider";

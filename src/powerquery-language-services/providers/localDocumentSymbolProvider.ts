@@ -3,7 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, DocumentSymbol, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import {
+    CompletionItem,
+    CompletionItemKind,
+    DocumentSymbol,
+    Hover,
+    MarkupKind,
+    SignatureHelp,
+} from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
@@ -69,6 +76,23 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
         // tslint:disable-next-line: no-null-keyword
         return null;
+    }
+
+    private static getFieldAccessCompletionItems(
+        triedFieldAccessAutocomplete: PQP.Inspection.TriedAutocompleteFieldAccess,
+    ): ReadonlyArray<CompletionItem> {
+        if (PQP.ResultUtils.isErr(triedFieldAccessAutocomplete) || triedFieldAccessAutocomplete.value === undefined) {
+            return [];
+        }
+
+        return triedFieldAccessAutocomplete.value.autocompleteItems.map(
+            (autocompleteItem: PQP.Inspection.AutocompleteItem) => {
+                return {
+                    kind: CompletionItemKind.Field,
+                    label: autocompleteItem.key,
+                };
+            },
+        );
     }
 
     private static getScopeItemKindText(scopeItemKind: PQP.Inspection.ScopeItemKind): string {

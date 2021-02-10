@@ -17,7 +17,7 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { LocalCompletionItemProvider } from "../providers/localCompletionItemProvider";
+import { LanguageCompletionItemProvider } from "../providers/languageCompletionItemProvider";
 import { NullSymbolProvider } from "../providers/nullSymbolProvider";
 import { WorkspaceCache } from "../workspaceCache";
 import { Analysis } from "./analysis";
@@ -25,8 +25,8 @@ import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
+    protected languageCompletionItemProvider: LanguageCompletionItemProvider;
     protected libraryCompletionItemProvider: ISymbolProvider;
-    protected localCompletionItemProvider: LocalCompletionItemProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
@@ -35,7 +35,7 @@ export abstract class AnalysisBase implements Analysis {
         library: ILibrary,
         protected options: AnalysisOptions,
     ) {
-        this.localCompletionItemProvider = new LocalCompletionItemProvider(this.maybeInspectionCacheItem);
+        this.languageCompletionItemProvider = new LanguageCompletionItemProvider(this.maybeInspectionCacheItem);
 
         this.libraryCompletionItemProvider =
             options.createLibrarySymbolProviderFn !== undefined
@@ -65,9 +65,9 @@ export abstract class AnalysisBase implements Analysis {
         // - only include current query name after @
         const [libraryResponse, localAutocompleteResponse, localDocumentResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
-                this.libraryCompletionItemProvider,
-                this.localCompletionItemProvider,
                 this.localDocumentSymbolProvider,
+                this.languageCompletionItemProvider,
+                this.libraryCompletionItemProvider,
             ]),
         );
 
