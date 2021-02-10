@@ -122,6 +122,16 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     }
 }
 
+export function assertCompletionItemLabels(expected: ReadonlyArray<string>, actual: ReadonlyArray<CompletionItem>) {
+    const actualLabels: ReadonlyArray<string> = actual.map((item: CompletionItem) => item.label);
+
+    const extranous: ReadonlyArray<string> = expected.filter;
+    const missing: string[] = [];
+
+    for (const item of actual) {
+    }
+}
+
 export function documentFromFile(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
 }

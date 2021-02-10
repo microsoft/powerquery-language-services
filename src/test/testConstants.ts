@@ -5,11 +5,9 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { ExternalType, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AnalysisOptions,
-    Hover,
     Library,
     LibraryUtils,
     LocalDocumentSymbolProvider,
-    SignatureHelp,
     WorkspaceCache,
 } from "../powerquery-language-services";
 import { ILibrary } from "../powerquery-language-services/library/library";
