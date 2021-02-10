@@ -3,14 +3,17 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import {
     LibraryConstant,
     LibraryConstructor,
     LibraryDefinitionKind,
     LibraryFunction,
-    LibraryType,
-    TLibraryDefinition,
     LibraryFunctionSignature,
+    LibraryParameter,
+    LibraryType,
+    TInvocable,
+    TLibraryDefinition,
 } from "./library";
 
 export function assertAsConstant(definition: TLibraryDefinition): LibraryConstant {
@@ -22,8 +25,14 @@ export function assertAsConstructor(definition: TLibraryDefinition): LibraryCons
     assertIsConstructor(definition);
     return definition;
 }
+
 export function assertAsFunction(definition: TLibraryDefinition): LibraryFunction {
     assertIsFunction(definition);
+    return definition;
+}
+
+export function assertAsInvocable(definition: TLibraryDefinition): TInvocable {
+    assertIsInvocable(definition);
     return definition;
 }
 
@@ -43,9 +52,18 @@ export function assertIsConstructor(definition: TLibraryDefinition): asserts def
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Constructor}`);
     }
 }
+
 export function assertIsFunction(definition: TLibraryDefinition): asserts definition is LibraryFunction {
     if (!isFunction(definition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Function}`);
+    }
+}
+
+export function assertIsInvocable(definition: TLibraryDefinition): asserts definition is TInvocable {
+    if (!isFunction(definition)) {
+        throw new Error(
+            `expected definition to be ${LibraryDefinitionKind.Constructor} or ${LibraryDefinitionKind.Function}`,
+        );
     }
 }
 
@@ -128,12 +146,32 @@ export function isConstant(definition: TLibraryDefinition): definition is Librar
 export function isConstructor(definition: TLibraryDefinition): definition is LibraryConstructor {
     return definition.kind === LibraryDefinitionKind.Constructor;
 }
+
 export function isFunction(definition: TLibraryDefinition): definition is LibraryFunction {
     return definition.kind === LibraryDefinitionKind.Function;
 }
 
+export function isInvocable(definition: TLibraryDefinition): definition is TInvocable {
+    return isFunction(definition) || isConstructor(definition);
+}
+
 export function isType(definition: TLibraryDefinition): definition is LibraryType {
     return definition.kind === LibraryDefinitionKind.Type;
+}
+
+export function createSignatureInformation(libraryFunctionSignature: LibraryFunctionSignature): SignatureInformation {
+    return {
+        label: libraryFunctionSignature.label,
+        documentation: undefined,
+        parameters: libraryFunctionSignature.parameters.map(createParameterInformation),
+    };
+}
+
+export function createParameterInformation(libraryParameter: LibraryParameter): ParameterInformation {
+    return {
+        label: libraryParameter.label,
+        documentation: undefined,
+    };
 }
 
 export function nameOf(kind: LibraryDefinitionKind): string {

@@ -6,29 +6,11 @@ import {
     CompletionItem,
     CompletionItemKind,
     DocumentSymbol,
-    Hover,
     Position,
     Range,
-    SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
 import { AnalysisOptions } from "./analysis/analysisOptions";
-
-export const DefaultLocale: string = PQP.Locale.en_US;
-
-export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
-
-export const EmptyHover: Hover = {
-    range: undefined,
-    contents: [],
-};
-
-export const EmptySignatureHelp: SignatureHelp = {
-    signatures: [],
-    // tslint:disable-next-line: no-null-keyword
-    activeParameter: null,
-    activeSignature: 0,
-};
 
 export function getLocale(analysisOptions: AnalysisOptions | undefined): string {
     return analysisOptions?.locale ?? DefaultLocale;
@@ -104,3 +86,5 @@ export function tokenPositionToRange(
 export function tokenRangeToRange(tokenRange: PQP.Language.Token.TokenRange): Range {
     return tokenPositionToRange(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
+
+const DefaultLocale: string = PQP.Locale.en_US;

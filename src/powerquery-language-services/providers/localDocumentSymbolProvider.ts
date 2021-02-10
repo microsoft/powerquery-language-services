@@ -8,7 +8,7 @@ import { CompletionItem, DocumentSymbol, Hover, MarkupKind, SignatureHelp } from
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
 
-import { Library, LibraryUtils } from "..";
+import { Library } from "..";
 import { WorkspaceCache } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
@@ -48,7 +48,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             maybeScopeItemType === undefined ||
             maybeScopeItem.kind === PQP.Inspection.ScopeItemKind.Undefined
         ) {
-            return this.getExternalHover(identifierLiteral);
+            // tslint:disable-next-line: no-null-keyword
+            return null;
         }
 
         const scopeItemText: string = LocalDocumentSymbolProvider.getScopeItemKindText(maybeScopeItem.kind);
@@ -90,30 +91,6 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             default:
                 throw PQP.Assert.isNever(scopeItemKind);
         }
-    }
-
-    private async getExternalHover(identifierLiteral: string): Promise<Hover | null> {
-        const maybeLibraryDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(
-            identifierLiteral,
-        );
-
-        if (maybeLibraryDefinition === undefined) {
-            // tslint:disable-next-line: no-null-keyword
-            return null;
-        }
-        const libraryDefinition: Library.TLibraryDefinition = maybeLibraryDefinition;
-
-        const definitionKindText: string = LibraryUtils.nameOf(libraryDefinition.kind);
-        const libraryDefinitionTypeText: string = PQP.Language.TypeUtils.nameOf(libraryDefinition.asType);
-
-        return {
-            contents: {
-                kind: MarkupKind.PlainText,
-                language: "powerquery",
-                value: `[${definitionKindText}] ${identifierLiteral}: ${libraryDefinitionTypeText}`,
-            },
-            range: undefined,
-        };
     }
 
     private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TType | undefined {

@@ -7,6 +7,8 @@ export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 
 export type TLibraryDefinition = LibraryConstant | LibraryConstructor | LibraryFunction | LibraryType;
 
+export type TInvocable = LibraryConstructor | LibraryFunction;
+
 export const enum LibraryDefinitionKind {
     Constant = "Constant",
     Constructor = "Constructor",

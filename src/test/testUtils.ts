@@ -4,7 +4,17 @@
 import { assert, expect } from "chai";
 import * as File from "fs";
 import * as Path from "path";
-import { CompletionItem, Hover, Position, DiagnosticSeverity, Diagnostic } from "vscode-languageserver-types";
+import {
+    CompletionItem,
+    Diagnostic,
+    DiagnosticSeverity,
+    DocumentSymbol,
+    Hover,
+    MarkupContent,
+    Position,
+    SignatureHelp,
+    SymbolKind,
+} from "vscode-languageserver-types";
 
 import * as AnalysisUtils from "../powerquery-language-services/analysis/analysisUtils";
 
@@ -13,8 +23,13 @@ import { Analysis } from "../powerquery-language-services";
 import { AnalysisOptions } from "../powerquery-language-services/analysis/analysisOptions";
 import { ILibrary } from "../powerquery-language-services/library/library";
 import { MockDocument } from "./mockDocument";
+import * as TestConstants from "./testConstants";
 
-export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
+export interface AbridgedDocumentSymbol {
+    readonly name: string;
+    readonly kind: SymbolKind;
+    readonly maybeChildren?: ReadonlyArray<AbridgedDocumentSymbol>;
+}
 
 // class ErrorLibraryProvider extends NullLibraryProvider {
 //     public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
@@ -92,8 +107,19 @@ export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
 //     libraryProvider: new ErrorLibraryProvider(),
 // };
 
+export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
+    assertIsMarkupContent(value);
+    return value;
+}
+
 export function assertIsDefined<T>(maybeValue: T | undefined): asserts maybeValue is NonNullable<T> {
     Assert.isDefined(maybeValue);
+}
+
+export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
+    if (!MarkupContent.is(value)) {
+        throw new Error(`expected value to be MarkupContent`);
+    }
 }
 
 export function documentFromFile(fileName: string): MockDocument {
@@ -118,34 +144,57 @@ export function readFile(fileName: string): string {
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
-// export async function getCompletionItems(
-//     text: string,
-//     maybeAnalysisOptions?: AnalysisOptions,
-// ): Promise<ReadonlyArray<CompletionItem>> {
-//     return createAnalysis(text, analysisOptions).getCompletionItems();
-// }
-
-// export async function getCompletionItemsForFile(
-//     fileName: string,
-//     position: Position,
-//     maybeAnalysisOptions?: AnalysisOptions,
-// ): Promise<ReadonlyArray<CompletionItem>> {
-//     return createFileAnalysis(fileName, position, analysisOptions).getCompletionItems();
-// }
-
-export async function getHover(
-    text: string,
-    library: ILibrary,
-    maybeAnalysisOptions?: AnalysisOptions,
-): Promise<Hover> {
-    return createAnalysis(text, library, maybeAnalysisOptions).getHover();
+export function createAbridgedDocumentSymbols(
+    documentSymbols: ReadonlyArray<DocumentSymbol>,
+): ReadonlyArray<AbridgedDocumentSymbol> {
+    return documentSymbols.map((documentSymbol: DocumentSymbol) => {
+        if (documentSymbol.children !== undefined && documentSymbol.children.length > 0) {
+            return {
+                name: documentSymbol.name,
+                kind: documentSymbol.kind,
+                maybeChildren: createAbridgedDocumentSymbols(documentSymbol.children),
+            };
+        } else {
+            return {
+                name: documentSymbol.name,
+                kind: documentSymbol.kind,
+            };
+        }
+    });
 }
 
-// export async function getSignatureHelp(text: string, maybeAnalysisOptions?: AnalysisOptions): Promise<SignatureHelp> {
-//     return createAnalysis(text, analysisOptions).getSignatureHelp();
-// }
+export async function createCompletionItems(
+    text: string,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Promise<ReadonlyArray<CompletionItem>> {
+    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getCompletionItems();
+}
 
-// // Adapted from vscode-languageserver-code implementation
+export async function createCompletionItemsForFile(
+    fileName: string,
+    position: Position,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Promise<ReadonlyArray<CompletionItem>> {
+    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisOptions).getCompletionItems();
+}
+
+export async function createHover(
+    text: string,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Promise<Hover> {
+    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getHover();
+}
+
+export async function createSignatureHelp(
+    text: string,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Promise<SignatureHelp> {
+    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getSignatureHelp();
+}
 
 export function validateError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);
@@ -155,75 +204,41 @@ export function validateError(diagnostic: Diagnostic, startPosition: Position): 
     expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
 }
 
-// export function containsCompletionItem(completionItems: ReadonlyArray<CompletionItem>, label: string): void {
-//     for (const item of completionItems) {
-//         if (item.label === label) {
-//             return;
-//         }
-//     }
-
-//     assert.fail(`completion item '${label}' not found in array. Items: ${JSON.stringify(completionItems)}`);
-// }
-
-// export function containsCompletionItemLabels(
-//     actualCompletionItems: ReadonlyArray<CompletionItem>,
-//     expectedLabels: ReadonlyArray<string>,
-// ): void {
-//     const actualCompletionItemLabels: ReadonlyArray<string> = actualCompletionItems.map(value => {
-//         return value.label;
-//     });
-
-//     expect(actualCompletionItemLabels).to.include.members(expectedLabels);
-// }
-
-// export function equalsCompletionItemLabels(
-//     completionItems: ReadonlyArray<CompletionItem>,
-//     labels: ReadonlyArray<string>,
-// ): void {
-//     const actualCompletionItemLabels: ReadonlyArray<string> = completionItems
-//         .map((value: CompletionItem) => value.label)
-//         .sort();
-//     expect(actualCompletionItemLabels.length).equals(labels.length);
-//     expect(actualCompletionItemLabels).contains.members(labels);
-// }
-
 // export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: string): void {
 //     const asJson: string = JSON.stringify(node);
 //     File.writeFileSync(filePath, asJson);
 // }
 
-// export interface ExpectedDocumentSymbol {
-//     name: string;
-//     kind: SymbolKind;
-//     maybeChildren?: ReadonlyArray<ExpectedDocumentSymbol>;
-// }
-
-// export function documentSymbolArrayToExpectedSymbols(
-//     documentSymbols: ReadonlyArray<DocumentSymbol>,
-// ): ReadonlyArray<ExpectedDocumentSymbol> {
-//     return documentSymbols.map((documentSymbol: DocumentSymbol) => {
-//         if (documentSymbol.children !== undefined && documentSymbol.children.length > 0) {
-//             return {
-//                 name: documentSymbol.name,
-//                 kind: documentSymbol.kind,
-//                 maybeChildren: documentSymbolArrayToExpectedSymbols(documentSymbol.children),
-//             };
-//         } else {
-//             return {
-//                 name: documentSymbol.name,
-//                 kind: documentSymbol.kind,
-//             };
-//         }
-//     });
-// }
-
-function createAnalysis(text: string, library: ILibrary, maybeAnalysisOptions?: AnalysisOptions): Analysis {
+function createAnalysis(text: string, maybeLibrary?: ILibrary, maybeAnalysisOptions?: AnalysisOptions): Analysis {
     const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
-    return AnalysisUtils.createAnalysis(document, position, library, createAnalysisOptions(maybeAnalysisOptions));
+    return AnalysisUtils.createAnalysis(
+        document,
+        position,
+        maybeLibrary ?? TestConstants.SimpleLibrary,
+        createAnalysisOptions(maybeAnalysisOptions),
+    );
+}
+
+function createFileAnalysis(
+    fileName: string,
+    position: Position,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Analysis {
+    const document: MockDocument = documentFromText(readFile(fileName));
+    return AnalysisUtils.createAnalysis(
+        document,
+        position,
+        maybeLibrary ?? TestConstants.SimpleLibrary,
+        createAnalysisOptions(maybeAnalysisOptions),
+    );
 }
 
 function createAnalysisOptions(maybeAnalysisOptions?: AnalysisOptions): AnalysisOptions {
-    return maybeAnalysisOptions ?? {};
+    return {
+        ...TestConstants.SimpleLibraryAnalysisOptions,
+        ...(maybeAnalysisOptions ?? {}),
+    };
 }
 
 function validateTextWithMarker(text: string): void {

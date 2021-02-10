@@ -13,7 +13,7 @@ import {
     WorkspaceCache,
 } from "../powerquery-language-services";
 import { ILibrary } from "../powerquery-language-services/library/library";
-import { LibraryCompletionItemProvider } from "../powerquery-language-services/providers/libraryCompletionItemProvider";
+import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
 export const NoOpLibrary: Library.ILibrary = {
     externalTypeResolver: ExternalType.noOpExternalTypeResolver,
@@ -22,39 +22,39 @@ export const NoOpLibrary: Library.ILibrary = {
 
 export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<string, Library.TLibraryDefinition>([
     [
-        TestFunctionName.CreateFooAndBarRecord,
+        TestLibraryName.CreateFooAndBarRecord,
         LibraryUtils.createFunctionDefinition(
             Type.FunctionInstance,
-            `The name is ${TestFunctionName.CreateFooAndBarRecord}`,
-            TestFunctionName.CreateFooAndBarRecord,
+            `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
+            TestLibraryName.CreateFooAndBarRecord,
             Type.RecordInstance,
             [],
         ),
     ],
     [
-        TestFunctionName.Number,
+        TestLibraryName.Number,
         LibraryUtils.createConstantDefinition(
             Type.NumberInstance,
-            `The name is ${TestFunctionName.Number}`,
-            TestFunctionName.Number,
+            `The name is ${TestLibraryName.Number}`,
+            TestLibraryName.Number,
             Type.NumberInstance,
         ),
     ],
     [
-        TestFunctionName.NumberOne,
+        TestLibraryName.NumberOne,
         LibraryUtils.createConstantDefinition(
             TypeUtils.numberLiteralFactory(false, "1"),
-            `The name is ${TestFunctionName.NumberOne}`,
-            TestFunctionName.NumberOne,
+            `The name is ${TestLibraryName.NumberOne}`,
+            TestLibraryName.NumberOne,
             Type.NumberInstance,
         ),
     ],
     [
-        TestFunctionName.SquareIfNumber,
+        TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
             TypeUtils.numberLiteralFactory(false, "1"),
-            `The name is ${TestFunctionName.SquareIfNumber}`,
-            TestFunctionName.SquareIfNumber,
+            `The name is ${TestLibraryName.SquareIfNumber}`,
+            TestLibraryName.SquareIfNumber,
             Type.NumberInstance,
             [
                 {
@@ -82,7 +82,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
     switch (request.kind) {
         case ExternalType.ExternalTypeRequestKind.Invocation:
             switch (request.identifierLiteral) {
-                case TestFunctionName.SquareIfNumber: {
+                case TestLibraryName.SquareIfNumber: {
                     if (request.args.length !== 1) {
                         return Type.NoneInstance;
                     }
@@ -107,7 +107,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
 
         case ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
-                case TestFunctionName.CreateFooAndBarRecord:
+                case TestLibraryName.CreateFooAndBarRecord:
                     return TypeUtils.definedFunctionFactory(
                         false,
                         [],
@@ -121,13 +121,13 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                         ),
                     );
 
-                case TestFunctionName.Number:
+                case TestLibraryName.Number:
                     return Type.NumberInstance;
 
-                case TestFunctionName.NumberOne:
+                case TestLibraryName.NumberOne:
                     return TypeUtils.numberLiteralFactory(false, "1");
 
-                case TestFunctionName.SquareIfNumber:
+                case TestLibraryName.SquareIfNumber:
                     return TypeUtils.definedFunctionFactory(
                         false,
                         [
@@ -156,28 +156,16 @@ export const SimpleLibrary: Library.ILibrary = {
 };
 
 export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
-    createLibraryCompletionItemProviderFn: (library: ILibrary) => new LibraryCompletionItemProvider(library),
+    createLibrarySymbolProviderFn: (library: ILibrary) => new LibrarySymbolProvider(library),
     createLocalDocumentSymbolProviderFn: (
         library: ILibrary,
         maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
     ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),
 };
 
-export const enum TestFunctionName {
+export const enum TestLibraryName {
     CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
     SquareIfNumber = "Test.SquareIfNumber",
     Number = "Test.Number",
     NumberOne = "Test.NumberOne",
 }
-
-export const EmptyHover: Hover = {
-    range: undefined,
-    contents: [],
-};
-
-export const EmptySignatureHelp: SignatureHelp = {
-    signatures: [],
-    // tslint:disable-next-line: no-null-keyword
-    activeParameter: null,
-    activeSignature: 0,
-};
