@@ -54,7 +54,7 @@ export abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
         if (maybeToken !== undefined) {
             context = {
                 range: LineTokenWithPositionUtils.tokenRange(maybeToken),

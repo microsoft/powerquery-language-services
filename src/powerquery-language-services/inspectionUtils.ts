@@ -182,18 +182,9 @@ export function getSymbolsForInspectionScope(
         let name: string;
 
         switch (scopeItem.kind) {
-            case PQP.Inspection.ScopeItemKind.Each: {
-                if (scopeItem.eachExpression.kind !== PQP.Parser.XorNodeKind.Ast) {
-                    continue;
-                }
-
-                name = key;
-                kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.eachExpression.node.tokenRange);
-                break;
-            }
-
-            case PQP.Inspection.ScopeItemKind.KeyValuePair: {
+            case PQP.Inspection.ScopeItemKind.LetVariable:
+            case PQP.Inspection.ScopeItemKind.RecordField:
+            case PQP.Inspection.ScopeItemKind.SectionMember: {
                 if (scopeItem.maybeValue === undefined) {
                     continue;
                 }
@@ -204,17 +195,13 @@ export function getSymbolsForInspectionScope(
                 break;
             }
 
+            case PQP.Inspection.ScopeItemKind.Each:
+                continue;
+
             case PQP.Inspection.ScopeItemKind.Parameter: {
                 name = key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.name.tokenRange);
-                break;
-            }
-
-            case PQP.Inspection.ScopeItemKind.SectionMember: {
-                name = scopeItem.isRecursive ? `@${key}` : key;
-                kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
                 break;
             }
 

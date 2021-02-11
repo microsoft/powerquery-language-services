@@ -48,6 +48,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             maybeScopeItemType === undefined ||
             maybeScopeItem.kind === PQP.Inspection.ScopeItemKind.Undefined
         ) {
+            return {
+                contents: {
+                    kind: MarkupKind.PlainText,
+                    language: "powerquery",
+                    value: `[undefined] ${identifierLiteral}: ${PQP.Language.TypeUtils.nameOf(
+                        PQP.Language.Type.UnknownInstance,
+                    )}`,
+                },
+            };
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
@@ -76,11 +85,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             case PQP.Inspection.ScopeItemKind.Each:
                 return "each";
 
-            case PQP.Inspection.ScopeItemKind.KeyValuePair:
-                return "key";
+            case PQP.Inspection.ScopeItemKind.LetVariable:
+                return "let-variable";
 
             case PQP.Inspection.ScopeItemKind.Parameter:
                 return "parameter";
+
+            case PQP.Inspection.ScopeItemKind.RecordField:
+                return "record-field";
 
             case PQP.Inspection.ScopeItemKind.SectionMember:
                 return "section-member";
