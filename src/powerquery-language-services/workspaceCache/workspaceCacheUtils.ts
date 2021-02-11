@@ -4,7 +4,15 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import type { Position, TextDocument, TextDocumentContentChangeEvent } from "../commonTypes";
-import type { LexerCacheItem, TInspectionCacheItem, TLexerSnapshotCacheItem, TParserCacheItem } from "./workspaceCache";
+import type {
+    InspectionCacheItem,
+    LexerCacheItem,
+    LexerSnapshotCacheItem,
+    ParserCacheItem,
+    TInspectionCacheItem,
+    TLexerSnapshotCacheItem,
+    TParserCacheItem,
+} from "./workspaceCache";
 import { CacheStageKind } from "./workspaceCache";
 
 // TODO: is the position key valid for a single intellisense operation,
@@ -15,15 +23,22 @@ export function close(textDocument: TextDocument): void {
     });
 }
 
-export function update(
-    textDocument: TextDocument,
-    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
-    _version: number,
-): void {
-    // TODO: support incremental lexing
-    // TODO: premptively prepare cache on background thread?
-    // TODO: use document version
-    close(textDocument);
+export function isLexerCacheItem(maybeValue: LexerCacheItem | undefined): maybeValue is LexerCacheItem {
+    return maybeValue?.stage === CacheStageKind.Lexer;
+}
+
+export function isLexerSnapshotCacheItem(
+    maybeValue: TLexerSnapshotCacheItem | undefined,
+): maybeValue is LexerSnapshotCacheItem {
+    return maybeValue?.stage === CacheStageKind.LexerSnapshot;
+}
+
+export function isParserCacheItem(maybeValue: TParserCacheItem | undefined): maybeValue is ParserCacheItem {
+    return maybeValue?.stage === CacheStageKind.Parser;
+}
+
+export function isInspectionItem(maybeValue: TInspectionCacheItem | undefined): maybeValue is InspectionCacheItem {
+    return maybeValue?.stage === CacheStageKind.Inspection;
 }
 
 export function getLexerState(textDocument: TextDocument, maybeLocale: string | undefined): LexerCacheItem {
@@ -73,6 +88,17 @@ export function getTriedInspection(
         positionCache.set(position, value);
         return value;
     }
+}
+
+export function update(
+    textDocument: TextDocument,
+    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
+    _version: number,
+): void {
+    // TODO: support incremental lexing
+    // TODO: premptively prepare cache on background thread?
+    // TODO: use document version
+    close(textDocument);
 }
 
 // Notice that the value type for WeakMap includes undefined.

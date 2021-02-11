@@ -116,7 +116,7 @@ export abstract class AnalysisBase implements Analysis {
         }
         const inspected: PQP.Inspection.Inspection = this.maybeInspectionCacheItem.value;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
+        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
             inspected,
         );
         if (maybeContext === undefined) {

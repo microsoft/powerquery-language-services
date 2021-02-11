@@ -30,7 +30,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        return [...this.getFieldAccessCompletionItems(context), ...this.getScopeCompletionItems(context)];
+        return [...this.getCompletionItemsFromFieldAccess(context), ...this.getCompletionItemsFromScope(context)];
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
@@ -61,7 +61,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return null;
         }
 
-        const scopeItemText: string = LocalDocumentSymbolProvider.getScopeItemKindText(maybeScopeItem.kind);
+        const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
         const scopeItemTypeText: string =
             maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 
@@ -75,33 +75,23 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         };
     }
 
-    public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
+    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
         // tslint:disable-next-line: no-null-keyword
-        return null;
+        return maybeInspection !== undefined ? InspectionUtils.getMaybeSignatureHelp(context, maybeInspection) : null;
     }
 
-    private static getScopeItemKindText(scopeItemKind: PQP.Inspection.ScopeItemKind): string {
-        switch (scopeItemKind) {
-            case PQP.Inspection.ScopeItemKind.Each:
-                return "each";
+    private getMaybeInspection(): PQP.Inspection.Inspection | undefined {
+        const maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined = this.maybeTriedInspection;
 
-            case PQP.Inspection.ScopeItemKind.LetVariable:
-                return "let-variable";
-
-            case PQP.Inspection.ScopeItemKind.Parameter:
-                return "parameter";
-
-            case PQP.Inspection.ScopeItemKind.RecordField:
-                return "record-field";
-
-            case PQP.Inspection.ScopeItemKind.SectionMember:
-                return "section-member";
-
-            case PQP.Inspection.ScopeItemKind.Undefined:
-                return "unknown";
-
-            default:
-                throw PQP.Assert.isNever(scopeItemKind);
+        if (
+            maybeTriedInspection === undefined ||
+            maybeTriedInspection.kind === PQP.ResultKind.Err ||
+            maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
+        ) {
+            return undefined;
+        } else {
+            return maybeTriedInspection.value;
         }
     }
 
@@ -133,41 +123,23 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private getScopeCompletionItems(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
-        if (
-            this.maybeTriedInspection === undefined ||
-            this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
-            return [];
-        }
-        return LanguageServiceUtils.documentSymbolToCompletionItem(
-            InspectionUtils.getSymbolsForInspectionScope(this.maybeTriedInspection.value, context.text),
-        );
-    }
-
-    private getFieldAccessCompletionItems(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.maybeInspection();
+    private getCompletionItemsFromScope(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
         if (maybeInspection === undefined) {
             return [];
         }
-        const triedAutocompleteFieldAccess: PQP.Inspection.TriedAutocompleteFieldAccess =
-            maybeInspection.autocomplete.triedFieldAccess;
-        if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
+
+        return LanguageServiceUtils.documentSymbolToCompletionItem(
+            InspectionUtils.getSymbolsForInspectionScope(maybeInspection, context.text),
+        );
+    }
+
+    private getCompletionItemsFromFieldAccess(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+        if (maybeInspection === undefined) {
             return [];
         }
 
-        const text: string | null | undefined = context.text;
-        const completionItems: CompletionItem[] = [];
-        for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
-            if (!text || autocompleteItem.key.startsWith(text)) {
-                completionItems.push({
-                    kind: CompletionItemKind.Field,
-                    label: autocompleteItem.key,
-                });
-            }
-        }
-
-        return completionItems;
+        return InspectionUtils.getCompletionItems(context, maybeInspection);
     }
 }

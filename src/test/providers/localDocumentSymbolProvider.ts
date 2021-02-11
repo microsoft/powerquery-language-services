@@ -183,15 +183,15 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    // describe(`getSignatureHelp`, async () => {
-    //     it(`match, no parameter`, async () => {
-    //         const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
-    //         const expected: TestUtils.AbridgedSignatureHelp = {
-    //             // tslint:disable-next-line: no-null-keyword
-    //             activeParameter: null,
-    //             activeSignature: 0,
-    //         };
-    //         TestUtils.assertSignatureHelp(expected, actual);
-    //     });
-    // });
+    describe(`getSignatureHelp`, async () => {
+        it(`signature`, async () => {
+            const actual: SignatureHelp = await createSignatureHelp("let fn = (x as number, ");
+            const expected: TestUtils.AbridgedSignatureHelp = {
+                // tslint:disable-next-line: no-null-keyword
+                activeParameter: null,
+                activeSignature: 0,
+            };
+            TestUtils.assertSignatureHelp(expected, actual);
+        });
+    });
 });
