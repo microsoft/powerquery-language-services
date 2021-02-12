@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, CompletionItemKind, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { CompletionItem, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
@@ -30,7 +30,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        return [...this.getCompletionItemsFromFieldAccess(context), ...this.getCompletionItemsFromScope(context)];
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+        if (maybeInspection === undefined) {
+            return [];
+        }
+
+        return [
+            ...this.getCompletionItemsFromFieldAccess(context, maybeInspection),
+            ...this.getCompletionItemsFromScope(context, maybeInspection),
+        ];
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
@@ -77,6 +85,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+
         // tslint:disable-next-line: no-null-keyword
         return maybeInspection !== undefined ? InspectionUtils.getMaybeSignatureHelp(context, maybeInspection) : null;
     }
@@ -123,23 +132,19 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private getCompletionItemsFromScope(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
-        if (maybeInspection === undefined) {
-            return [];
-        }
-
+    private getCompletionItemsFromScope(
+        context: CompletionItemProviderContext,
+        inspection: PQP.Inspection.Inspection,
+    ): ReadonlyArray<CompletionItem> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(
-            InspectionUtils.getSymbolsForInspectionScope(maybeInspection, context.text),
+            InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
         );
     }
 
-    private getCompletionItemsFromFieldAccess(context: CompletionItemProviderContext): ReadonlyArray<CompletionItem> {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
-        if (maybeInspection === undefined) {
-            return [];
-        }
-
-        return InspectionUtils.getCompletionItems(context, maybeInspection);
+    private getCompletionItemsFromFieldAccess(
+        context: CompletionItemProviderContext,
+        inspection: PQP.Inspection.Inspection,
+    ): ReadonlyArray<CompletionItem> {
+        return InspectionUtils.getCompletionItems(context, inspection);
     }
 }

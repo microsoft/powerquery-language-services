@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
 import "mocha";
 import {
     AnalysisOptions,
@@ -9,8 +10,8 @@ import {
     NullSymbolProvider,
     SignatureHelp,
 } from "../../powerquery-language-services";
-import * as PQP from "@microsoft/powerquery-parser";
 
+import { expect } from "chai";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import * as TestConstants from "../testConstants";
 import * as TestUtils from "../testUtils";
@@ -184,14 +185,27 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     });
 
     describe(`getSignatureHelp`, async () => {
-        it(`signature`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("let fn = (x as number, ");
-            const expected: TestUtils.AbridgedSignatureHelp = {
+        it(`WIP signature`, async () => {
+            const actual: SignatureHelp = await createSignatureHelp("let fn = (x as number, y as text) in fn(1|");
+            const expected: SignatureHelp = {
                 // tslint:disable-next-line: no-null-keyword
                 activeParameter: null,
                 activeSignature: 0,
+                signatures: [
+                    {
+                        label: "fn",
+                        parameters: [
+                            {
+                                label: "x",
+                            },
+                            {
+                                label: "y",
+                            },
+                        ],
+                    },
+                ],
             };
-            TestUtils.assertSignatureHelp(expected, actual);
+            expect(actual).to.deep.equal(expected);
         });
     });
 });

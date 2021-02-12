@@ -8,14 +8,13 @@ import {
     CompletionItemKind,
     DocumentSymbol,
     Range,
-    SymbolKind,
     SignatureHelp,
+    SymbolKind,
 } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
-import { WorkspaceCache } from "./workspaceCache";
 
 export function getMaybeContextForSignatureProvider(
     inspected: PQP.Inspection.Inspection,
