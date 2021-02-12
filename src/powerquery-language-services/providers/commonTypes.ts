@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
 import type { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 import { ILibrary } from "../library/library";
 
@@ -32,6 +33,7 @@ export interface SignatureHelpProvider {
 export interface SignatureProviderContext extends ProviderContext {
     readonly argumentOrdinal: number | undefined;
     readonly functionName: string | undefined;
+    readonly type: PQP.Language.Type.TType;
 }
 
 export interface ISymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

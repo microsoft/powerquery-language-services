@@ -33,28 +33,19 @@ export function getMaybeContextForSignatureProvider(
         return {
             argumentOrdinal,
             functionName,
+            type: invokeExpression.type,
         };
     } else {
         return undefined;
     }
 }
 
-export function getMaybeSignatureHelp(
-    context: SignatureProviderContext,
-    inspection: PQP.Inspection.Inspection,
-): SignatureHelp | null {
+export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
-    if (identifierLiteral === undefined) {
+    if (identifierLiteral === undefined || !PQP.Language.TypeUtils.isDefinedFunction(context.type)) {
         // tslint:disable-next-line: no-null-keyword
         return null;
     }
-
-    const maybeScopeItemType: PQP.Language.Type.TType | undefined = getMaybeType(inspection, identifierLiteral);
-    if (maybeScopeItemType === undefined || !PQP.Language.TypeUtils.isDefinedFunction(maybeScopeItemType)) {
-        // tslint:disable-next-line: no-null-keyword
-        return null;
-    }
-    const definedFunction: PQP.Language.Type.DefinedFunction = maybeScopeItemType;
 
     return {
         // tslint:disable-next-line: no-null-keyword
@@ -63,7 +54,7 @@ export function getMaybeSignatureHelp(
         signatures: [
             {
                 label: identifierLiteral,
-                parameters: definedFunction.parameters.map((parameter: PQP.Language.Type.FunctionParameter) => {
+                parameters: context.type.parameters.map((parameter: PQP.Language.Type.FunctionParameter) => {
                     return {
                         label: parameter.nameLiteral,
                     };

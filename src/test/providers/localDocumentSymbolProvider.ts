@@ -186,10 +186,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
 
     describe(`getSignatureHelp`, async () => {
         it(`WIP signature`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("let fn = (x as number, y as text) in fn(1|");
+            const actual: SignatureHelp = await createSignatureHelp(
+                "let fn = (x as number, y as number) => x + y in fn(1|",
+            );
             const expected: SignatureHelp = {
                 // tslint:disable-next-line: no-null-keyword
-                activeParameter: null,
+                activeParameter: 0,
                 activeSignature: 0,
                 signatures: [
                     {

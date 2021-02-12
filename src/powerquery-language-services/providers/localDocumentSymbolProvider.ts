@@ -87,7 +87,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
 
         // tslint:disable-next-line: no-null-keyword
-        return maybeInspection !== undefined ? InspectionUtils.getMaybeSignatureHelp(context, maybeInspection) : null;
+        return maybeInspection !== undefined ? InspectionUtils.getMaybeSignatureHelp(context) : null;
     }
 
     private getMaybeInspection(): PQP.Inspection.Inspection | undefined {
