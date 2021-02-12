@@ -16,59 +16,67 @@ import {
     TLibraryDefinition,
 } from "./library";
 
-export function assertAsConstant(definition: TLibraryDefinition): LibraryConstant {
-    assertIsConstant(definition);
-    return definition;
+export function assertAsConstant(maybeDefinition: TLibraryDefinition | undefined): LibraryConstant {
+    assertIsConstant(maybeDefinition);
+    return maybeDefinition;
 }
 
-export function assertAsConstructor(definition: TLibraryDefinition): LibraryConstructor {
-    assertIsConstructor(definition);
-    return definition;
+export function assertAsConstructor(maybeDefinition: TLibraryDefinition | undefined): LibraryConstructor {
+    assertIsConstructor(maybeDefinition);
+    return maybeDefinition;
 }
 
-export function assertAsFunction(definition: TLibraryDefinition): LibraryFunction {
-    assertIsFunction(definition);
-    return definition;
+export function assertAsFunction(maybeDefinition: TLibraryDefinition | undefined): LibraryFunction {
+    assertIsFunction(maybeDefinition);
+    return maybeDefinition;
 }
 
-export function assertAsInvocable(definition: TLibraryDefinition): TInvocable {
-    assertIsInvocable(definition);
-    return definition;
+export function assertAsInvocable(maybeDefinition: TLibraryDefinition | undefined): TInvocable {
+    assertIsInvocable(maybeDefinition);
+    return maybeDefinition;
 }
 
-export function assertAsType(definition: TLibraryDefinition): LibraryType {
-    assertIsType(definition);
-    return definition;
+export function assertAsType(maybeDefinition: TLibraryDefinition | undefined): LibraryType {
+    assertIsType(maybeDefinition);
+    return maybeDefinition;
 }
 
-export function assertIsConstant(definition: TLibraryDefinition): asserts definition is LibraryConstant {
-    if (!isConstant(definition)) {
+export function assertIsConstant(
+    maybeDefinition: TLibraryDefinition | undefined,
+): asserts maybeDefinition is LibraryConstant {
+    if (!isConstant(maybeDefinition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Constant}`);
     }
 }
 
-export function assertIsConstructor(definition: TLibraryDefinition): asserts definition is LibraryConstructor {
-    if (!isConstructor(definition)) {
+export function assertIsConstructor(
+    maybeDefinition: TLibraryDefinition | undefined,
+): asserts maybeDefinition is LibraryConstructor {
+    if (!isConstructor(maybeDefinition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Constructor}`);
     }
 }
 
-export function assertIsFunction(definition: TLibraryDefinition): asserts definition is LibraryFunction {
-    if (!isFunction(definition)) {
+export function assertIsFunction(
+    maybeDefinition: TLibraryDefinition | undefined,
+): asserts maybeDefinition is LibraryFunction {
+    if (!isFunction(maybeDefinition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Function}`);
     }
 }
 
-export function assertIsInvocable(definition: TLibraryDefinition): asserts definition is TInvocable {
-    if (!isFunction(definition)) {
+export function assertIsInvocable(
+    maybeDefinition: TLibraryDefinition | undefined,
+): asserts maybeDefinition is TInvocable {
+    if (!isFunction(maybeDefinition)) {
         throw new Error(
             `expected definition to be ${LibraryDefinitionKind.Constructor} or ${LibraryDefinitionKind.Function}`,
         );
     }
 }
 
-export function assertIsType(definition: TLibraryDefinition): asserts definition is LibraryType {
-    if (!isType(definition)) {
+export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): asserts maybeDefinition is LibraryType {
+    if (!isType(maybeDefinition)) {
         throw new Error(`expected definition to be ${LibraryDefinitionKind.Type}`);
     }
 }
@@ -139,24 +147,24 @@ export function createLibraryType(
     };
 }
 
-export function isConstant(definition: TLibraryDefinition): definition is LibraryConstant {
-    return definition.kind === LibraryDefinitionKind.Constant;
+export function isConstant(maybeDefinition: TLibraryDefinition | undefined): maybeDefinition is LibraryConstant {
+    return maybeDefinition?.kind === LibraryDefinitionKind.Constant;
 }
 
-export function isConstructor(definition: TLibraryDefinition): definition is LibraryConstructor {
-    return definition.kind === LibraryDefinitionKind.Constructor;
+export function isConstructor(maybeDefinition: TLibraryDefinition | undefined): maybeDefinition is LibraryConstructor {
+    return maybeDefinition?.kind === LibraryDefinitionKind.Constructor;
 }
 
-export function isFunction(definition: TLibraryDefinition): definition is LibraryFunction {
-    return definition.kind === LibraryDefinitionKind.Function;
+export function isFunction(maybeDefinition: TLibraryDefinition | undefined): maybeDefinition is LibraryFunction {
+    return maybeDefinition?.kind === LibraryDefinitionKind.Function;
 }
 
-export function isInvocable(definition: TLibraryDefinition): definition is TInvocable {
-    return isFunction(definition) || isConstructor(definition);
+export function isInvocable(maybeDefinition: TLibraryDefinition | undefined): maybeDefinition is TInvocable {
+    return isFunction(maybeDefinition) || isConstructor(maybeDefinition);
 }
 
-export function isType(definition: TLibraryDefinition): definition is LibraryType {
-    return definition.kind === LibraryDefinitionKind.Type;
+export function isType(maybeDefinition: TLibraryDefinition | undefined): maybeDefinition is LibraryType {
+    return maybeDefinition?.kind === LibraryDefinitionKind.Type;
 }
 
 export function createSignatureInformation(libraryFunctionSignature: LibraryFunctionSignature): SignatureInformation {
