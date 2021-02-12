@@ -17,7 +17,6 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { LanguageCompletionItemProvider } from "../providers/languageCompletionItemProvider";
 import { NullSymbolProvider } from "../providers/nullSymbolProvider";
 import { WorkspaceCache } from "../workspaceCache";
 import { Analysis } from "./analysis";

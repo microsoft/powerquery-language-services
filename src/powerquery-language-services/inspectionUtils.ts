@@ -224,10 +224,6 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolKindFromAutocompleteItem(autocompleteItem: PQP.Inspection.AutocompleteItem): any {
-    return 1;
-}
-
 export function getSymbolsForInspectionScope(
     inspected: PQP.Inspection.Inspection,
     positionIdentifier: string | undefined,
