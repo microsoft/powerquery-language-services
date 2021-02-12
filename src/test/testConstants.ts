@@ -52,10 +52,21 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
-            TypeUtils.numberLiteralFactory(false, "1"),
+            TypeUtils.definedFunctionFactory(
+                false,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        maybeType: Type.TypeKind.Any,
+                        nameLiteral: "x",
+                    },
+                ],
+                TypeUtils.anyUnionFactory([Type.NumberInstance, Type.AnyInstance]),
+            ),
             `The name is ${TestLibraryName.SquareIfNumber}`,
             TestLibraryName.SquareIfNumber,
-            Type.NumberInstance,
+            Type.AnyInstance,
             [
                 {
                     label: "x",
@@ -67,7 +78,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                             maybeDocumentation: undefined,
                             signatureLabelEnd: -1,
                             signatureLabelOffset: -1,
-                            typeKind: Type.TypeKind.Number,
+                            typeKind: Type.TypeKind.Any,
                         },
                     ],
                 },
@@ -97,7 +108,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                     } else if (TypeUtils.isNumber(arg)) {
                         return Type.NumberInstance;
                     } else {
-                        return Type.NoneInstance;
+                        return Type.AnyInstance;
                     }
                 }
 

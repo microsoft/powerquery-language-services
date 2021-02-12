@@ -44,6 +44,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
                 result.push({
                     label: key,
                     kind: LibrarySymbolProvider.getCompletionItemKind(value.kind),
+                    documentation: value.description,
                 });
             }
         }
@@ -90,9 +91,9 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         return {
-            // tslint:disable-next-line: no-null-keyword
-            activeParameter: context.argumentOrdinal !== undefined ? context.argumentOrdinal : null,
+            activeParameter: context.argumentOrdinal ?? 0,
             // TODO: support more than the first signature.
             activeSignature: 0,
             signatures: this.getOrCreateSignatureInformation(identifierLiteral),
@@ -134,7 +135,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     }
 
     private getOrCreateSignatureInformation(key: string): SignatureInformation[] {
-        if (!this.libraryDefinitions.has(key)) {
+        if (!this.signatureInformationByLabel.has(key)) {
             const definition: Library.TInvocable = LibraryUtils.assertAsInvocable(this.libraryDefinitions.get(key));
             this.signatureInformationByLabel.set(
                 key,

@@ -129,8 +129,6 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         // Result priority is based on the order of the symbol providers
-
-        // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
             AnalysisBase.createSignatureHelpCalls(context, [
                 this.localDocumentSymbolProvider,

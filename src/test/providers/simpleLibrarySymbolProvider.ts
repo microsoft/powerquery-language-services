@@ -64,9 +64,14 @@ describe(`SimpleLibraryProvider`, async () => {
     });
 
     describe(`getHover`, async () => {
-        it(`match`, async () => {
+        it(`match constant`, async () => {
             const hover: Hover = await createHover("Test.Num|ber");
             TestUtils.assertHover("[library constant] Test.Number: number", hover);
+        });
+
+        it(`match function`, async () => {
+            const hover: Hover = await createHover("Test.Square|IfNumber");
+            TestUtils.assertHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
         });
 
         it(`no match`, async () => {
