@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
+
 import { expect } from "chai";
 import "mocha";
 import {
@@ -14,9 +16,8 @@ import {
     WorkspaceCache,
 } from "../../powerquery-language-services";
 
+import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
-import * as TestConstants from "../testConstants";
-import * as TestUtils from "../testUtils";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,

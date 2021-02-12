@@ -1,20 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+// tslint:disable: no-implicit-dependencies
+
 import * as PQP from "@microsoft/powerquery-parser";
+
 import "mocha";
 import {
     AnalysisOptions,
     CompletionItem,
     Hover,
     NullSymbolProvider,
+    Position,
     SignatureHelp,
 } from "../../powerquery-language-services";
 
 import { expect } from "chai";
+import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
-import * as TestConstants from "../testConstants";
-import * as TestUtils from "../testUtils";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,
@@ -185,7 +188,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     });
 
     describe(`getSignatureHelp`, async () => {
-        it(`WIP signature`, async () => {
+        it(`signature`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
@@ -208,6 +211,32 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 ],
             };
             expect(actual).to.deep.equal(expected);
+        });
+    });
+
+    describe(`.pq tests`, async () => {
+        it("DirectQueryForSQL file", async () => {
+            const postion: Position = {
+                line: 40,
+                character: 25,
+            };
+            const actual: ReadonlyArray<CompletionItem> = await TestUtils.createCompletionItemsForFile(
+                "DirectQueryForSQL.pq",
+                postion,
+            );
+            const expected: ReadonlyArray<string> = [
+                "ConnectionString",
+                "Credential",
+                "CredentialConnectionString",
+                "Database",
+                "DirectSQL",
+                "DirectSQL.UI",
+                "DirectSQL.Icons",
+                "server",
+                "database",
+            ];
+
+            TestUtils.assertCompletionItemLabels(expected, actual);
         });
     });
 });

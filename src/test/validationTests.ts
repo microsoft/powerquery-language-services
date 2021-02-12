@@ -2,21 +2,90 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import { assert, expect } from "chai";
 import "mocha";
+
+import { TestUtils } from ".";
 import {
     Diagnostic,
     DiagnosticErrorCode,
+    DiagnosticSeverity,
+    documentUpdated,
     Position,
     TextDocument,
     TextDocumentContentChangeEvent,
+    validate,
     ValidationOptions,
     ValidationResult,
 } from "../powerquery-language-services";
-
-import { documentUpdated, validate } from "../powerquery-language-services";
-import * as TestUtils from "./testUtils";
 import { MockDocument } from "./mockDocument";
+
+const DefaultValidationOptions: ValidationOptions = {
+    maintainWorkspaceCache: true,
+};
+
+function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
+    assert.isDefined(diagnostic.code);
+    assert.isDefined(diagnostic.message);
+    assert.isDefined(diagnostic.range);
+    expect(diagnostic.range.start).to.deep.equal(startPosition);
+    expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
+}
+
+function expectNoValidationErrors(document: TextDocument): void {
+    const validationResult: ValidationResult = validate(document, DefaultValidationOptions);
+    expect(validationResult.syntaxError).to.equal(false, "syntaxError flag should be false");
+    expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
+}
+
+interface DuplicateIdentifierError {
+    readonly name: string;
+    readonly position: Position;
+    readonly relatedPositions: ReadonlyArray<Position>;
+}
+
+function validateDuplicateIdentifierDiagnostics(
+    document: TextDocument,
+    expected: ReadonlyArray<DuplicateIdentifierError>,
+    totalErrorCount?: number,
+): void {
+    const errorSource: string = "UNIT-TESTS";
+    const diagnostics: ReadonlyArray<Diagnostic> = validate(document, {
+        maintainWorkspaceCache: false,
+        checkForDuplicateIdentifiers: true,
+        source: errorSource,
+    }).diagnostics;
+    const actual: DuplicateIdentifierError[] = [];
+
+    diagnostics.forEach(value => {
+        if (value.code === DiagnosticErrorCode.DuplicateIdentifier) {
+            const match: RegExpMatchArray | null = value.message.match(/'(.*?)'/);
+            const name: string = match ? match[1] : "";
+
+            if (!value.relatedInformation) {
+                assert.fail("Duplicate Identifier error does not contain relatedInformation");
+            }
+
+            expect(value.source).to.equal(errorSource, "Unexpected source value on diagnostic");
+
+            actual.push({
+                name,
+                position: value.range.start,
+                relatedPositions: value.relatedInformation.map(relatedInfo => relatedInfo.location.range.start),
+            });
+        }
+    });
+
+    if (totalErrorCount) {
+        expect(diagnostics.length).to.equal(totalErrorCount, "Total expected error count does not match");
+    }
+
+    expect(actual).deep.equals(
+        expected,
+        "Expected errors to match.\nactual:" + JSON.stringify(actual) + "\nexpected:" + JSON.stringify(expected),
+    );
+}
 
 describe("Syntax validation", () => {
     it("no errors", () => {
@@ -33,7 +102,7 @@ describe("Syntax validation", () => {
         expect(validationResult.syntaxError).to.equal(true, "syntaxError flag should be true");
         expect(validationResult.diagnostics.length).to.equal(1);
         expect(validationResult.diagnostics[0].source).to.equal(errorSource);
-        TestUtils.validateError(validationResult.diagnostics[0], { line: 0, character: 4 });
+        assertValidationError(validationResult.diagnostics[0], { line: 0, character: 4 });
     });
 
     it("HelloWorldWithDocs.pq", () => {
@@ -48,7 +117,7 @@ describe("Syntax validation", () => {
 describe("validation with workspace cache", () => {
     it("no errors after update", () => {
         const document: MockDocument = TestUtils.documentFromText("let a = 1,");
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, DefaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
         const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update("1");
@@ -64,7 +133,7 @@ describe("validation with workspace cache", () => {
         const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
         documentUpdated(document, changes, document.version);
 
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, DefaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
     });
 });
@@ -186,61 +255,3 @@ describe("Duplicate identifiers", () => {
         ]);
     });
 });
-
-const defaultValidationOptions: ValidationOptions = {
-    maintainWorkspaceCache: true,
-};
-
-function expectNoValidationErrors(document: TextDocument): void {
-    const validationResult: ValidationResult = validate(document, defaultValidationOptions);
-    expect(validationResult.syntaxError).to.equal(false, "syntaxError flag should be false");
-    expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
-}
-
-interface DuplicateIdentifierError {
-    readonly name: string;
-    readonly position: Position;
-    readonly relatedPositions: ReadonlyArray<Position>;
-}
-
-function validateDuplicateIdentifierDiagnostics(
-    document: TextDocument,
-    expected: ReadonlyArray<DuplicateIdentifierError>,
-    totalErrorCount?: number,
-): void {
-    const errorSource: string = "UNIT-TESTS";
-    const diagnostics: ReadonlyArray<Diagnostic> = validate(document, {
-        maintainWorkspaceCache: false,
-        checkForDuplicateIdentifiers: true,
-        source: errorSource,
-    }).diagnostics;
-    const actual: DuplicateIdentifierError[] = [];
-
-    diagnostics.forEach(value => {
-        if (value.code === DiagnosticErrorCode.DuplicateIdentifier) {
-            const match: RegExpMatchArray | null = value.message.match(/'(.*?)'/);
-            const name: string = match ? match[1] : "";
-
-            if (!value.relatedInformation) {
-                assert.fail("Duplicate Identifier error does not contain relatedInformation");
-            }
-
-            expect(value.source).to.equal(errorSource, "Unexpected source value on diagnostic");
-
-            actual.push({
-                name,
-                position: value.range.start,
-                relatedPositions: value.relatedInformation.map(relatedInfo => relatedInfo.location.range.start),
-            });
-        }
-    });
-
-    if (totalErrorCount) {
-        expect(diagnostics.length).to.equal(totalErrorCount, "Total expected error count does not match");
-    }
-
-    expect(actual).deep.equals(
-        expected,
-        "Expected errors to match.\nactual:" + JSON.stringify(actual) + "\nexpected:" + JSON.stringify(expected),
-    );
-}
