@@ -3,7 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, CompletionItemKind, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import {
+    CompletionItem,
+    CompletionItemKind,
+    Hover,
+    MarkupKind,
+    SignatureHelp,
+    SignatureInformation,
+} from "vscode-languageserver-types";
 
 import { Library } from "..";
 import { LibraryUtils } from "../library";
@@ -17,10 +24,12 @@ import {
 export class LibrarySymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
+    protected readonly signatureInformationByLabel: Map<string, SignatureInformation[]>;
 
     constructor(library: Library.ILibrary) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
+        this.signatureInformationByLabel = new Map();
     }
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
@@ -77,18 +86,16 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
-        if (maybeDefinition === undefined || !LibraryUtils.isInvocable(maybeDefinition)) {
+        if (!LibraryUtils.isInvocable(maybeDefinition)) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
-        const definition: Library.TInvocable = maybeDefinition;
-
         return {
             // tslint:disable-next-line: no-null-keyword
             activeParameter: context.argumentOrdinal !== undefined ? context.argumentOrdinal : null,
             // TODO: support more than the first signature.
             activeSignature: 0,
-            signatures: definition.signatures.map(LibraryUtils.createSignatureInformation),
+            signatures: this.getOrCreateSignatureInformation(identifierLiteral),
         };
     }
 
@@ -124,5 +131,17 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             default:
                 throw PQP.Assert.isNever(kind);
         }
+    }
+
+    private getOrCreateSignatureInformation(key: string): SignatureInformation[] {
+        if (!this.libraryDefinitions.has(key)) {
+            const definition: Library.TInvocable = LibraryUtils.assertAsInvocable(this.libraryDefinitions.get(key));
+            this.signatureInformationByLabel.set(
+                key,
+                definition.signatures.map(LibraryUtils.createSignatureInformation),
+            );
+        }
+
+        return PQP.Assert.asDefined(this.signatureInformationByLabel.get(key));
     }
 }
