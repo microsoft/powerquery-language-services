@@ -2,12 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
 
 import { EmptyCompletionItems, EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { ILibrary } from "../library/library";
+import { LanguageCompletionItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
     CompletionItemProvider,
     CompletionItemProviderContext,
@@ -17,7 +19,6 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { NullSymbolProvider } from "../providers/nullSymbolProvider";
 import { WorkspaceCache } from "../workspaceCache";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
@@ -37,17 +38,17 @@ export abstract class AnalysisBase implements Analysis {
         this.languageCompletionItemProvider =
             options.createLanguageCompletionItemProviderFn !== undefined
                 ? options.createLanguageCompletionItemProviderFn()
-                : NullSymbolProvider.singleton();
+                : new LanguageCompletionItemProvider(maybeInspectionCacheItem);
 
         this.librarySymbolProvider =
             options.createLibrarySymbolProviderFn !== undefined
                 ? options.createLibrarySymbolProviderFn(library)
-                : NullSymbolProvider.singleton();
+                : new LibrarySymbolProvider(library);
 
         this.localDocumentSymbolProvider =
             options.createLocalDocumentSymbolProviderFn !== undefined
                 ? options.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
-                : NullSymbolProvider.singleton();
+                : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
