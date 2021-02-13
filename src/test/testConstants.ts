@@ -70,6 +70,8 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
             [
                 {
                     label: "x",
+                    description:
+                        "If the argument is a number then multiply it by itself, otehrwise return argument as-is.",
                     parameters: [
                         {
                             isNullable: false,
@@ -100,10 +102,11 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                     const arg: Type.TType = Assert.asDefined(request.args[0]);
 
                     if (TypeUtils.isNumberLiteral(arg)) {
+                        const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
                         return {
                             ...arg,
-                            literal: (arg.normalizedLiteral * 2).toString(),
-                            normalizedLiteral: arg.normalizedLiteral * 2,
+                            literal: newNormalizedLiteral.toString(),
+                            normalizedLiteral: newNormalizedLiteral,
                         };
                     } else if (TypeUtils.isNumber(arg)) {
                         return Type.NumberInstance;

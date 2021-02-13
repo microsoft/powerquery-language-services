@@ -64,12 +64,12 @@ describe(`SimpleLibraryProvider`, async () => {
     });
 
     describe(`getHover`, async () => {
-        it(`match constant`, async () => {
+        it(`constant`, async () => {
             const hover: Hover = await createHover("Test.Num|ber");
             TestUtils.assertHover("[library constant] Test.Number: number", hover);
         });
 
-        it(`match function`, async () => {
+        it(`function`, async () => {
             const hover: Hover = await createHover("Test.Square|IfNumber");
             TestUtils.assertHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
         });
@@ -81,17 +81,12 @@ describe(`SimpleLibraryProvider`, async () => {
     });
 
     describe(`getSignatureHelp`, async () => {
-        it(`match, no parameter`, async () => {
+        it(`unknown identifier`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
-            const expected: TestUtils.AbridgedSignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
-                activeParameter: null,
-                activeSignature: 0,
-            };
-            TestUtils.assertSignatureHelp(expected, actual);
+            expect(actual).to.equal(EmptySignatureHelp);
         });
 
-        it(`match, first parameter, no literal`, async () => {
+        it(`first parameter, no literal`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(|");
             const expected: TestUtils.AbridgedSignatureHelp = {
                 // tslint:disable-next-line: no-null-keyword
@@ -101,7 +96,7 @@ describe(`SimpleLibraryProvider`, async () => {
             TestUtils.assertSignatureHelp(expected, actual);
         });
 
-        it(`match, first parameter, literal, no comma`, async () => {
+        it(`first parameter, literal, no comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1|");
             const expected: TestUtils.AbridgedSignatureHelp = {
                 // tslint:disable-next-line: no-null-keyword
@@ -111,7 +106,7 @@ describe(`SimpleLibraryProvider`, async () => {
             TestUtils.assertSignatureHelp(expected, actual);
         });
 
-        it(`match, first parameter, literal, comma`, async () => {
+        it(`first parameter, literal, comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1,|");
             const expected: TestUtils.AbridgedSignatureHelp = {
                 // tslint:disable-next-line: no-null-keyword
@@ -119,11 +114,6 @@ describe(`SimpleLibraryProvider`, async () => {
                 activeSignature: 0,
             };
             TestUtils.assertSignatureHelp(expected, actual);
-        });
-
-        it(`no match`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
-            expect(actual).to.equal(EmptySignatureHelp);
         });
     });
 });

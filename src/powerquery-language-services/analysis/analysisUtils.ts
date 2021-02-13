@@ -13,7 +13,7 @@ export function createAnalysis(
     document: TextDocument,
     position: Position,
     library: ILibrary,
-    options: AnalysisOptions,
+    options?: AnalysisOptions,
 ): Analysis {
-    return new DocumentAnalysis(document, position, library, options);
+    return new DocumentAnalysis(document, position, library, options ?? {});
 }
