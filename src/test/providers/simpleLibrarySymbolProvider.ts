@@ -18,6 +18,7 @@ import {
 
 import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
+import { Assert } from "@microsoft/powerquery-parser";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,
@@ -94,6 +95,7 @@ describe(`SimpleLibraryProvider`, async () => {
                 activeSignature: 0,
             };
             TestUtils.assertSignatureHelp(expected, actual);
+            Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, no comma`, async () => {
@@ -104,6 +106,7 @@ describe(`SimpleLibraryProvider`, async () => {
                 activeSignature: 0,
             };
             TestUtils.assertSignatureHelp(expected, actual);
+            Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, comma`, async () => {
@@ -114,6 +117,7 @@ describe(`SimpleLibraryProvider`, async () => {
                 activeSignature: 0,
             };
             TestUtils.assertSignatureHelp(expected, actual);
+            Assert.isDefined(actual.signatures[0].documentation);
         });
     });
 });

@@ -30,10 +30,7 @@ export interface AbridgedDocumentSymbol {
     readonly maybeChildren?: ReadonlyArray<AbridgedDocumentSymbol>;
 }
 
-export interface AbridgedSignatureHelp {
-    readonly activeParameter: number | null;
-    readonly activeSignature: number | null;
-}
+export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
 
 export function documentFromFile(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");

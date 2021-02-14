@@ -84,10 +84,19 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+        const maybeInspection: PQP.Inspection.InvokeExpression | undefined = this.getMaybeInspectionInvokeExpression();
+        if (maybeInspection === undefined) {
+            // tslint:disable-next-line: no-null-keyword
+            return null;
+        }
+        const inspection: PQP.Inspection.InvokeExpression = maybeInspection;
 
-        // tslint:disable-next-line: no-null-keyword
-        return maybeInspection !== undefined ? InspectionUtils.getMaybeSignatureHelp(context) : null;
+        if (inspection.maybeName && !inspection.isNameInLocalScope) {
+            // tslint:disable-next-line: no-null-keyword
+            return null;
+        }
+
+        return InspectionUtils.getMaybeSignatureHelp(context);
     }
 
     private getMaybeInspection(): PQP.Inspection.Inspection | undefined {
@@ -102,6 +111,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         } else {
             return maybeTriedInspection.value;
         }
+    }
+
+    private getMaybeInspectionInvokeExpression(): PQP.Inspection.InvokeExpression | undefined {
+        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+
+        return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedInvokeExpression)
+            ? maybeInspection.triedInvokeExpression.value
+            : undefined;
     }
 
     private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TType | undefined {

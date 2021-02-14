@@ -170,7 +170,7 @@ export function isType(maybeDefinition: TLibraryDefinition | undefined): maybeDe
 export function createSignatureInformation(libraryFunctionSignature: LibraryFunctionSignature): SignatureInformation {
     return {
         label: libraryFunctionSignature.label,
-        documentation: undefined,
+        documentation: libraryFunctionSignature.description,
         parameters: libraryFunctionSignature.parameters.map(createParameterInformation),
     };
 }

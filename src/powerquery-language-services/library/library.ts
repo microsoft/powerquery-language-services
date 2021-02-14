@@ -45,7 +45,7 @@ export interface LibraryFunction extends ILibraryDefinition {
 
 export interface LibraryFunctionSignature {
     readonly label: string;
-    readonly description: string;
+    readonly description: string | undefined;
     readonly parameters: ReadonlyArray<LibraryParameter>;
 }
 

@@ -14,7 +14,6 @@ import * as TestConstants from "../testConstants";
 
 import { WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
-import { AbridgedSignatureHelp } from "./testUtils";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
@@ -121,6 +120,6 @@ export function assertParserCacheItemErr(
     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Parser);
 }
 
-export function assertSignatureHelp(expected: AbridgedSignatureHelp, actual: SignatureHelp): void {
+export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
     expect(TestUtils.createAbridgedSignatureHelp(actual)).deep.equals(expected);
 }

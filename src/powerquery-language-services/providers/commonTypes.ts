@@ -33,7 +33,8 @@ export interface SignatureHelpProvider {
 export interface SignatureProviderContext extends ProviderContext {
     readonly argumentOrdinal: number | undefined;
     readonly functionName: string | undefined;
-    readonly type: PQP.Language.Type.TType;
+    readonly isNameInLocalScope: boolean;
+    readonly functionExpressionType: PQP.Language.Type.TType;
 }
 
 export interface ISymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

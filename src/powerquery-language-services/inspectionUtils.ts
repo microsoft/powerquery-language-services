@@ -33,7 +33,8 @@ export function getMaybeContextForSignatureProvider(
         return {
             argumentOrdinal,
             functionName,
-            type: invokeExpression.type,
+            isNameInLocalScope: invokeExpression.isNameInLocalScope,
+            functionExpressionType: invokeExpression.type,
         };
     } else {
         return undefined;
@@ -42,7 +43,7 @@ export function getMaybeContextForSignatureProvider(
 
 export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
-    if (identifierLiteral === undefined || !PQP.Language.TypeUtils.isDefinedFunction(context.type)) {
+    if (identifierLiteral === undefined || !PQP.Language.TypeUtils.isDefinedFunction(context.functionExpressionType)) {
         // tslint:disable-next-line: no-null-keyword
         return null;
     }
@@ -54,11 +55,13 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
         signatures: [
             {
                 label: identifierLiteral,
-                parameters: context.type.parameters.map((parameter: PQP.Language.Type.FunctionParameter) => {
-                    return {
-                        label: parameter.nameLiteral,
-                    };
-                }),
+                parameters: context.functionExpressionType.parameters.map(
+                    (parameter: PQP.Language.Type.FunctionParameter) => {
+                        return {
+                            label: parameter.nameLiteral,
+                        };
+                    },
+                ),
             },
         ],
     };
