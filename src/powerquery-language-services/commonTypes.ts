@@ -44,5 +44,6 @@ export const EmptySignatureHelp: SignatureHelp = {
     signatures: [],
     // tslint:disable-next-line: no-null-keyword
     activeParameter: null,
-    activeSignature: 0,
+    // tslint:disable-next-line: no-null-keyword
+    activeSignature: null,
 };

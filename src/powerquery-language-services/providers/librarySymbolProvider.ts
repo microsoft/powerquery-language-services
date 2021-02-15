@@ -13,8 +13,7 @@ import {
     SignatureInformation,
 } from "vscode-languageserver-types";
 
-import { Library } from "..";
-import { LibraryUtils } from "../library";
+import { Library, LibraryUtils } from "../library";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
