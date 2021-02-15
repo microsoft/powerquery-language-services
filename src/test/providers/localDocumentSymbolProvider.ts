@@ -13,6 +13,7 @@ import {
     NullSymbolProvider,
     Position,
     SignatureHelp,
+    EmptyHover,
 } from "../../powerquery-language-services";
 
 import { expect } from "chai";
@@ -183,7 +184,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
 
         it(`undefined`, async () => {
             const hover: Hover = await createHover("x|");
-            TestUtils.assertHover("[undefined] x: unknown", hover);
+            expect(hover).to.equal(EmptyHover);
         });
     });
 
