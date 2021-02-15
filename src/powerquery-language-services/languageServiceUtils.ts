@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import {
     CompletionItem,
     CompletionItemKind,
@@ -10,6 +11,7 @@ import {
     Range,
     SymbolKind,
 } from "vscode-languageserver-types";
+
 import { AnalysisOptions } from "./analysis/analysisOptions";
 
 export function getLocale(analysisOptions: AnalysisOptions | undefined): string {
@@ -18,6 +20,7 @@ export function getLocale(analysisOptions: AnalysisOptions | undefined): string 
 
 export function documentSymbolToCompletionItem(
     documentSymbols: ReadonlyArray<DocumentSymbol>,
+    range: Range,
 ): ReadonlyArray<CompletionItem> {
     return documentSymbols.map((symbol: DocumentSymbol) => {
         return {
@@ -25,6 +28,10 @@ export function documentSymbolToCompletionItem(
             detail: symbol.detail,
             label: symbol.name,
             kind: symbolKindToCompletionItemKind(symbol.kind),
+            textEdit: {
+                newText: symbol.name,
+                range,
+            },
         };
     });
 }

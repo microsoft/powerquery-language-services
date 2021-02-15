@@ -8,6 +8,7 @@ import {
     CompletionItemKind,
     Hover,
     MarkupKind,
+    Range,
     SignatureHelp,
     SignatureInformation,
 } from "vscode-languageserver-types";
@@ -33,10 +34,11 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     }
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        if (!context.text) {
+        if (!context.text || !context.range) {
             return [];
         }
         const identifierLiteral: string = context.text;
+        const range: Range = context.range;
 
         const result: CompletionItem[] = [];
         for (const [key, value] of this.libraryDefinitions.entries()) {
@@ -45,6 +47,10 @@ export class LibrarySymbolProvider implements ISymbolProvider {
                     label: key,
                     kind: LibrarySymbolProvider.getCompletionItemKind(value.kind),
                     documentation: value.description,
+                    textEdit: {
+                        newText: key,
+                        range,
+                    },
                 });
             }
         }

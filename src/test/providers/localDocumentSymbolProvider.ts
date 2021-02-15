@@ -5,20 +5,25 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 import "mocha";
+
+import { TestConstants, TestUtils } from "..";
 import {
     AnalysisOptions,
+    AnalysisUtils,
     CompletionItem,
+    EmptyHover,
     Hover,
     NullSymbolProvider,
     Position,
     SignatureHelp,
-    EmptyHover,
+    TextDocument,
 } from "../../powerquery-language-services";
-
-import { expect } from "chai";
-import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
+import { MockDocument } from "../mockDocument";
+import { SimpleLibrary } from "../testConstants";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,
@@ -238,6 +243,29 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             ];
 
             TestUtils.assertCompletionItemLabels(expected, actual);
+        });
+    });
+
+    describe(`Completionitem`, async () => {
+        it(`TODO`, async () => {
+            const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
+                "let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|",
+            );
+            const document: TextDocument = pair[0];
+            const position: Position = pair[1];
+
+            const completionItems: CompletionItem[] = await AnalysisUtils.createAnalysis(
+                document,
+                position,
+                SimpleLibrary,
+            ).getCompletionItems();
+            expect(completionItems.length).to.equal(2);
+
+            const firstOption: CompletionItem = TestUtils.assertGetCompletionItem("Test.Foo", completionItems);
+            const secondOption: CompletionItem = TestUtils.assertGetCompletionItem("Test.FooBar", completionItems);
+
+            Assert.isDefined(firstOption.textEdit, "expected firstOption to have a textEdit");
+            Assert.isDefined(secondOption.textEdit, "expected secondOption to have a textEdit");
         });
     });
 });

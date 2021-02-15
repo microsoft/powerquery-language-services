@@ -23,6 +23,7 @@ import { Analysis } from "../../powerquery-language-services";
 import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
+import { Assert } from "@microsoft/powerquery-parser";
 
 export interface AbridgedDocumentSymbol {
     readonly name: string;
@@ -31,6 +32,14 @@ export interface AbridgedDocumentSymbol {
 }
 
 export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
+
+export function assertGetCompletionItem(label: string, completionItems: ReadonlyArray<CompletionItem>): CompletionItem {
+    return Assert.asDefined(
+        completionItems.find((completionitem: CompletionItem) => completionitem.label === "Test.Foo"),
+        `did not find the expected completion item`,
+        { label, completionItemLabels: completionItems.map((completionItem: CompletionItem) => completionItem.label) },
+    );
+}
 
 export function createFileMockDocument(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
@@ -80,6 +89,20 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
     };
 }
 
+export function createAnalysis(
+    text: string,
+    maybeLibrary?: ILibrary,
+    maybeAnalysisOptions?: AnalysisOptions,
+): Analysis {
+    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
+    return AnalysisUtils.createAnalysis(
+        document,
+        position,
+        maybeLibrary ?? TestConstants.SimpleLibrary,
+        createAnalysisOptions(maybeAnalysisOptions),
+    );
+}
+
 export async function createCompletionItems(
     text: string,
     maybeLibrary?: ILibrary,
@@ -117,16 +140,6 @@ export async function createSignatureHelp(
 //     const asJson: string = JSON.stringify(node);
 //     File.writeFileSync(filePath, asJson);
 // }
-
-function createAnalysis(text: string, maybeLibrary?: ILibrary, maybeAnalysisOptions?: AnalysisOptions): Analysis {
-    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
-    return AnalysisUtils.createAnalysis(
-        document,
-        position,
-        maybeLibrary ?? TestConstants.SimpleLibrary,
-        createAnalysisOptions(maybeAnalysisOptions),
-    );
-}
 
 function createFileAnalysis(
     fileName: string,

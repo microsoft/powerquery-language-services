@@ -81,9 +81,10 @@ export function getCompletionItems(
 ): ReadonlyArray<CompletionItem> {
     const triedAutocompleteFieldAccess: PQP.Inspection.TriedAutocompleteFieldAccess =
         inspection.autocomplete.triedFieldAccess;
-    if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
+    if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value || !context.range) {
         return [];
     }
+    const range: Range = context.range;
 
     const text: string | null | undefined = context.text;
     const completionItems: CompletionItem[] = [];
@@ -92,6 +93,10 @@ export function getCompletionItems(
             completionItems.push({
                 kind: CompletionItemKind.Field,
                 label: autocompleteItem.key,
+                textEdit: {
+                    newText: autocompleteItem.key,
+                    range,
+                },
             });
         }
     }
