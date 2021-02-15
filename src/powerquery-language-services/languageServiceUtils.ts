@@ -10,6 +10,7 @@ import {
     Position,
     Range,
     SymbolKind,
+    TextEdit,
 } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysis/analysisOptions";
@@ -20,13 +21,25 @@ export function getLocale(analysisOptions: AnalysisOptions | undefined): string 
 
 export function documentSymbolToCompletionItem(
     documentSymbols: ReadonlyArray<DocumentSymbol>,
+    maybeTextEditRange: Range | undefined,
 ): ReadonlyArray<CompletionItem> {
     return documentSymbols.map((symbol: DocumentSymbol) => {
+        let textEdit: TextEdit | undefined;
+        if (maybeTextEditRange === undefined) {
+            textEdit = undefined;
+        } else {
+            textEdit = {
+                newText: symbol.name,
+                range: maybeTextEditRange,
+            };
+        }
+
         return {
             deprecated: symbol.deprecated,
             detail: symbol.detail,
             label: symbol.name,
             kind: symbolKindToCompletionItemKind(symbol.kind),
+            textEdit,
         };
     });
 }

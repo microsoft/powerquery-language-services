@@ -143,6 +143,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     ): ReadonlyArray<CompletionItem> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(
             InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
+            context.range,
         );
     }
 

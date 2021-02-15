@@ -10,12 +10,12 @@ import {
     Range,
     SignatureHelp,
     SymbolKind,
+    TextEdit,
 } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
-import { TextEdit } from "vscode-languageserver-textdocument";
 
 export function getMaybeContextForSignatureProvider(
     inspected: PQP.Inspection.Inspection,
