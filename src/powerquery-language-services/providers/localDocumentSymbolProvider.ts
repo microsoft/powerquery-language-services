@@ -50,26 +50,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const identifierLiteral: string = context.identifier;
         const maybeScopeItem: PQP.Inspection.TScopeItem | undefined = maybeNodeScope.get(identifierLiteral);
-        const maybeScopeItemType: PQP.Language.Type.TType | undefined = this.maybeTypeFromIdentifier(identifierLiteral);
-        if (
-            maybeScopeItem === undefined ||
-            maybeScopeItemType === undefined ||
-            maybeScopeItem.kind === PQP.Inspection.ScopeItemKind.Undefined
-        ) {
-            return {
-                contents: {
-                    kind: MarkupKind.PlainText,
-                    language: "powerquery",
-                    value: `[undefined] ${identifierLiteral}: ${PQP.Language.TypeUtils.nameOf(
-                        PQP.Language.Type.UnknownInstance,
-                    )}`,
-                },
-            };
+        if (maybeScopeItem === undefined || maybeScopeItem.kind === PQP.Inspection.ScopeItemKind.Undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
+
+        const maybeScopeItemType: PQP.Language.Type.TType | undefined = this.maybeTypeFromIdentifier(identifierLiteral);
         const scopeItemTypeText: string =
             maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 
