@@ -6,6 +6,7 @@
 import * as File from "fs";
 import * as Path from "path";
 
+import { Assert } from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import {
     CompletionItem,
@@ -23,7 +24,6 @@ import { Analysis } from "../../powerquery-language-services";
 import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
-import { Assert } from "@microsoft/powerquery-parser";
 
 export interface AbridgedDocumentSymbol {
     readonly name: string;

@@ -15,6 +15,7 @@ import {
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
+import { TextEdit } from "vscode-languageserver-textdocument";
 
 export function getMaybeContextForSignatureProvider(
     inspected: PQP.Inspection.Inspection,
@@ -81,22 +82,30 @@ export function getCompletionItems(
 ): ReadonlyArray<CompletionItem> {
     const triedAutocompleteFieldAccess: PQP.Inspection.TriedAutocompleteFieldAccess =
         inspection.autocomplete.triedFieldAccess;
-    if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value || !context.range) {
+    if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
         return [];
     }
-    const range: Range = context.range;
 
     const text: string | null | undefined = context.text;
     const completionItems: CompletionItem[] = [];
     for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
-        if (!text || autocompleteItem.key.startsWith(text)) {
+        const autocompleteItemKey: string = autocompleteItem.key;
+
+        if (!text || autocompleteItemKey.startsWith(text)) {
+            let textEdit: TextEdit | undefined;
+            if (context.range !== undefined) {
+                textEdit = {
+                    newText: autocompleteItemKey,
+                    range: context.range,
+                };
+            } else {
+                textEdit = undefined;
+            }
+
             completionItems.push({
                 kind: CompletionItemKind.Field,
-                label: autocompleteItem.key,
-                textEdit: {
-                    newText: autocompleteItem.key,
-                    range,
-                },
+                label: autocompleteItemKey,
+                textEdit,
             });
         }
     }

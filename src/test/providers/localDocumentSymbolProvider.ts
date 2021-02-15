@@ -47,7 +47,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     describe(`getCompletionItems`, async () => {
         describe(`scope`, async () => {
             describe(`${PQP.Inspection.ScopeItemKind.LetVariable}`, async () => {
-                it(`match all`, async () => {
+                it(`WIP match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
                     const actual: ReadonlyArray<CompletionItem> = await createCompletionItems(
                         "let foo = 1, bar = 2, foobar = 3 in |",
