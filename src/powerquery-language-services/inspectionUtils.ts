@@ -89,22 +89,20 @@ export function getCompletionItems(
     const text: string | null | undefined = context.text;
     const completionItems: CompletionItem[] = [];
     for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
-        const autocompleteItemKey: string = autocompleteItem.key;
-
-        if (!text || autocompleteItemKey.startsWith(text)) {
+        if (!text || autocompleteItem.key.startsWith(text)) {
             let textEdit: TextEdit | undefined;
-            if (context.range !== undefined) {
-                textEdit = {
-                    newText: autocompleteItemKey,
-                    range: context.range,
-                };
-            } else {
+            if (!context.range) {
                 textEdit = undefined;
+            } else {
+                textEdit = {
+                    range: context.range,
+                    newText: autocompleteItem.key,
+                };
             }
 
             completionItems.push({
                 kind: CompletionItemKind.Field,
-                label: autocompleteItemKey,
+                label: autocompleteItem.key,
                 textEdit,
             });
         }
