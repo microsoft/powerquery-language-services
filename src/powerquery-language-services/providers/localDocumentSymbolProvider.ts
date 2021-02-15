@@ -141,13 +141,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         context: CompletionItemProviderContext,
         inspection: PQP.Inspection.Inspection,
     ): ReadonlyArray<CompletionItem> {
-        if (context.range === undefined) {
-            return [];
-        }
-
         return LanguageServiceUtils.documentSymbolToCompletionItem(
             InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
-            context.range,
         );
     }
 
