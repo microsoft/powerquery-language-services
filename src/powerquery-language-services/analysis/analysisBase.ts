@@ -66,21 +66,24 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-        const [libraryResponse, localAutocompleteResponse, localDocumentResponse] = await Promise.all(
+        const [languageCompletionItemProvider, libraryResponse, localDocumentResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
-                this.localDocumentSymbolProvider,
                 this.languageCompletionItemProvider,
                 this.librarySymbolProvider,
+                this.localDocumentSymbolProvider,
             ]),
         );
 
-        // TODO: Should we filter out duplicates?
-        const completionItems: CompletionItem[] = libraryResponse.concat(
-            localAutocompleteResponse,
-            localDocumentResponse,
-        );
+        const partial: CompletionItem[] = [];
+        for (const collection of [localDocumentResponse, languageCompletionItemProvider, libraryResponse]) {
+            for (const item of collection) {
+                if (partial.find((partialItem: CompletionItem) => partialItem.label === item.label) === undefined) {
+                    partial.push(item);
+                }
+            }
+        }
 
-        return completionItems;
+        return partial;
     }
 
     public async getHover(): Promise<Hover> {
