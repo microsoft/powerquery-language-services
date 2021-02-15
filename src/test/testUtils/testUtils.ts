@@ -32,17 +32,17 @@ export interface AbridgedDocumentSymbol {
 
 export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
 
-export function documentFromFile(fileName: string): MockDocument {
+export function createFileMockDocument(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
 }
 
-export function documentFromText(text: string): MockDocument {
+export function createTextMockDocument(text: string): MockDocument {
     return new MockDocument(text, "powerquery");
 }
 
-export function documentAndPositionFrom(text: string): [MockDocument, Position] {
+export function createMockDocumentAndPosition(text: string): [MockDocument, Position] {
     validateTextWithMarker(text);
-    const document: MockDocument = documentFromText(text.replace("|", ""));
+    const document: MockDocument = createTextMockDocument(text.replace("|", ""));
     const position: Position = document.positionAt(text.indexOf("|"));
 
     return [document, position];
@@ -119,7 +119,7 @@ export async function createSignatureHelp(
 // }
 
 function createAnalysis(text: string, maybeLibrary?: ILibrary, maybeAnalysisOptions?: AnalysisOptions): Analysis {
-    const [document, position]: [MockDocument, Position] = documentAndPositionFrom(text);
+    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
     return AnalysisUtils.createAnalysis(
         document,
         position,
@@ -134,7 +134,7 @@ function createFileAnalysis(
     maybeLibrary?: ILibrary,
     maybeAnalysisOptions?: AnalysisOptions,
 ): Analysis {
-    const document: MockDocument = documentFromText(readFile(fileName));
+    const document: MockDocument = createTextMockDocument(readFile(fileName));
     return AnalysisUtils.createAnalysis(
         document,
         position,

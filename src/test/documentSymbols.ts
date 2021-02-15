@@ -32,13 +32,13 @@ function expectSymbolsForDocument(
 
 describe("getDocumentSymbols", () => {
     it(`section foo; shared a = 1;`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`section foo; shared a = 1;`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared a = 1;`);
 
         expectSymbolsForDocument(document, [{ name: "a", kind: SymbolKind.Number }]);
     });
 
     it(`section foo; shared query = let a = 1 in a;`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`section foo; shared query = let a = 1 in a;`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared query = let a = 1 in a;`);
 
         expectSymbolsForDocument(document, [
             { name: "query", kind: SymbolKind.Variable, maybeChildren: [{ name: "a", kind: SymbolKind.Number }] },
@@ -46,7 +46,7 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`let a = 1, b = "hello", c = () => 1 in c`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`let a = 1, b = "hello", c = () => 1 in c`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = "hello", c = () => 1 in c`);
 
         expectSymbolsForDocument(document, [
             { name: "a", kind: SymbolKind.Number },
@@ -56,7 +56,9 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`let a = let b = 1, c = let d = 1 in d in c in a`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`let a = let b = 1, c = let d = 1 in d in c in a`);
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            `let a = let b = 1, c = let d = 1 in d in c in a`,
+        );
 
         expectSymbolsForDocument(document, [
             {
@@ -72,7 +74,9 @@ describe("getDocumentSymbols", () => {
 
     // with syntax error
     it(`section foo; shared a = 1; b = "hello"; c = let a1`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`section foo; shared a = 1; b = "hello"; c = let a1`);
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            `section foo; shared a = 1; b = "hello"; c = let a1`,
+        );
 
         expectSymbolsForDocument(document, [
             { name: "a", kind: SymbolKind.Number },
@@ -81,7 +85,7 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`HelloWorldWithDocs.pq`, () => {
-        const document: MockDocument = TestUtils.documentFromFile("HelloWorldWithDocs.pq");
+        const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
 
         expectSymbolsForDocument(document, [
             // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType

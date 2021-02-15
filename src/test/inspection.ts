@@ -34,7 +34,7 @@ function assertIsPostionInBounds(
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d|,",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
@@ -49,7 +49,7 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,|", () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,|",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
@@ -64,7 +64,7 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,1|", () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,1|",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
@@ -80,7 +80,7 @@ describe("InspectedInvokeExpression", () => {
 
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
-                const document: MockDocument = TestUtils.documentFromFile("DirectQueryForSQL.pq");
+                const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
                 const position: Position = {
                     line: 68,
                     character: 23,

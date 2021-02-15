@@ -89,11 +89,11 @@ function validateDuplicateIdentifierDiagnostics(
 
 describe("Syntax validation", () => {
     it("no errors", () => {
-        expectNoValidationErrors(TestUtils.documentFromText("let b = 1 in b"));
+        expectNoValidationErrors(TestUtils.createTextMockDocument("let b = 1 in b"));
     });
 
     it("let 1", () => {
-        const document: TextDocument = TestUtils.documentFromText("let 1");
+        const document: TextDocument = TestUtils.createTextMockDocument("let 1");
         const errorSource: string = "powerquery";
         const validationResult: ValidationResult = validate(document, {
             source: errorSource,
@@ -106,17 +106,17 @@ describe("Syntax validation", () => {
     });
 
     it("HelloWorldWithDocs.pq", () => {
-        expectNoValidationErrors(TestUtils.documentFromFile("HelloWorldWithDocs.pq"));
+        expectNoValidationErrors(TestUtils.createFileMockDocument("HelloWorldWithDocs.pq"));
     });
 
     it("DirectQueryForSQL.pq", () => {
-        expectNoValidationErrors(TestUtils.documentFromFile("DirectQueryForSQL.pq"));
+        expectNoValidationErrors(TestUtils.createFileMockDocument("DirectQueryForSQL.pq"));
     });
 });
 
 describe("validation with workspace cache", () => {
     it("no errors after update", () => {
-        const document: MockDocument = TestUtils.documentFromText("let a = 1,");
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1,");
         const diagnostics: ReadonlyArray<Diagnostic> = validate(document, DefaultValidationOptions).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
@@ -127,7 +127,7 @@ describe("validation with workspace cache", () => {
     });
 
     it("errors after update", () => {
-        const document: MockDocument = TestUtils.documentFromText("let a = 1 in a");
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1 in a");
         expectNoValidationErrors(document);
 
         const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
@@ -140,7 +140,7 @@ describe("validation with workspace cache", () => {
 
 describe("Duplicate identifiers", () => {
     it("let a = 1, a = 2 in a", () => {
-        const document: MockDocument = TestUtils.documentFromText("let a = 1, a = 2 in a");
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1, a = 2 in a");
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "a",
@@ -151,7 +151,9 @@ describe("Duplicate identifiers", () => {
     });
 
     it("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec", () => {
-        const document: MockDocument = TestUtils.documentFromText("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec");
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            "let rec = [ a = 1, b = 2, c = 3, a = 4] in rec",
+        );
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "a",
@@ -170,7 +172,7 @@ describe("Duplicate identifiers", () => {
     // });
 
     it('section foo; shared a = 1; a = "hello";', () => {
-        const document: MockDocument = TestUtils.documentFromText('section foo; shared a = 1; a = "hello";');
+        const document: MockDocument = TestUtils.createTextMockDocument('section foo; shared a = 1; a = "hello";');
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "a",
@@ -181,7 +183,7 @@ describe("Duplicate identifiers", () => {
     });
 
     it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
-        const document: MockDocument = TestUtils.documentFromText(
+        const document: MockDocument = TestUtils.createTextMockDocument(
             "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;",
         );
         validateDuplicateIdentifierDiagnostics(document, [
@@ -206,7 +208,7 @@ describe("Duplicate identifiers", () => {
 
     // TODO: Should the final a = 4 entry also show up as a duplicate?
     it("duplicates with syntax errors", () => {
-        const document: MockDocument = TestUtils.documentFromText("section foo; a = 1; a = 2; b = let 1; a = 4;");
+        const document: MockDocument = TestUtils.createTextMockDocument("section foo; a = 1; a = 2; b = let 1; a = 4;");
         validateDuplicateIdentifierDiagnostics(
             document,
             [
@@ -221,7 +223,7 @@ describe("Duplicate identifiers", () => {
     });
 
     it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
-        const document: MockDocument = TestUtils.documentFromText("let a = 1 meta [ abc = 1, abc = 3 ] in a");
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1 meta [ abc = 1, abc = 3 ] in a");
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "abc",
@@ -232,7 +234,9 @@ describe("Duplicate identifiers", () => {
     });
 
     it("let a = let abc = 1, abc = 2, b = 3 in b in a", () => {
-        const document: MockDocument = TestUtils.documentFromText("let a = let abc = 1, abc = 2, b = 3 in b in a");
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            "let a = let abc = 1, abc = 2, b = 3 in b in a",
+        );
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "abc",
@@ -243,7 +247,7 @@ describe("Duplicate identifiers", () => {
     });
 
     it('section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;', () => {
-        const document: MockDocument = TestUtils.documentFromText(
+        const document: MockDocument = TestUtils.createTextMockDocument(
             'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;',
         );
         validateDuplicateIdentifierDiagnostics(document, [

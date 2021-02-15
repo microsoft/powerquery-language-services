@@ -37,7 +37,9 @@ function expectSymbolsForNode(
 
 describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`section foo; shared a = 1; b = "abc"; c = true;`);
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            `section foo; shared a = 1; b = "abc"; c = true;`,
+        );
         const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         assertParserCacheItemOk(lexAndParseOk);
 
@@ -49,7 +51,7 @@ describe("Document symbol base functions", () => {
     });
 
     it(`section foo; a = {1,2};`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`section foo; a = {1,2};`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; a = {1,2};`);
         const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         assertParserCacheItemOk(lexAndParseOk);
 
@@ -57,7 +59,7 @@ describe("Document symbol base functions", () => {
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
-        const document: MockDocument = TestUtils.documentFromText(`let a = 1, b = 2, c = 3 in c`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = 2, c = 3 in c`);
         const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         assertParserCacheItemOk(lexAndParseOk);
 
@@ -69,7 +71,7 @@ describe("Document symbol base functions", () => {
     });
 
     it("HelloWorldWithDocs file section", () => {
-        const document: MockDocument = TestUtils.documentFromFile("HelloWorldWithDocs.pq");
+        const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
         const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         assertParserCacheItemOk(lexAndParseOk);
 
@@ -83,7 +85,7 @@ describe("Document symbol base functions", () => {
     });
 
     it("DirectQueryForSQL file section", () => {
-        const document: MockDocument = TestUtils.documentFromFile("DirectQueryForSQL.pq");
+        const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
         const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         assertParserCacheItemOk(lexAndParseOk);
 
