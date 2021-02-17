@@ -40,8 +40,4 @@ export class NullSymbolProvider implements ISymbolProvider {
         // tslint:disable-next-line: no-null-keyword
         return null;
     }
-
-    public includeModules(_modules: ReadonlyArray<string>): void {
-        // No impact
-    }
 }

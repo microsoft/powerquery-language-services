@@ -38,7 +38,6 @@ describe("Analysis", () => {
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
             const expected: SignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
                 activeParameter: 0,
                 activeSignature: 0,
                 signatures: [

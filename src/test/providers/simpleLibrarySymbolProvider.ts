@@ -90,7 +90,6 @@ describe(`SimpleLibraryProvider`, async () => {
         it(`first parameter, no literal`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(|");
             const expected: TestUtils.AbridgedSignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
                 activeParameter: 0,
                 activeSignature: 0,
             };
@@ -101,7 +100,6 @@ describe(`SimpleLibraryProvider`, async () => {
         it(`first parameter, literal, no comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1|");
             const expected: TestUtils.AbridgedSignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
                 activeParameter: 0,
                 activeSignature: 0,
             };
@@ -112,7 +110,6 @@ describe(`SimpleLibraryProvider`, async () => {
         it(`first parameter, literal, comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1,|");
             const expected: TestUtils.AbridgedSignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
                 activeParameter: 1,
                 activeSignature: 0,
             };

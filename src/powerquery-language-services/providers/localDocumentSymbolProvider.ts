@@ -72,12 +72,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const maybeInspection: PQP.Inspection.InvokeExpression | undefined = this.getMaybeInspectionInvokeExpression();
-        if (maybeInspection === undefined) {
+        const maybeInvokeInspection:
+            | PQP.Inspection.InvokeExpression
+            | undefined = this.getMaybeInspectionInvokeExpression();
+        if (maybeInvokeInspection === undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
-        const inspection: PQP.Inspection.InvokeExpression = maybeInspection;
+        const inspection: PQP.Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
             // tslint:disable-next-line: no-null-keyword
