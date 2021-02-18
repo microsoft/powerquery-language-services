@@ -220,7 +220,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
             const expected: SignatureHelp = {
-                // tslint:disable-next-line: no-null-keyword
                 activeParameter: 0,
                 activeSignature: 0,
                 signatures: [
