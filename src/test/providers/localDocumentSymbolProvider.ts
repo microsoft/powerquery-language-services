@@ -215,7 +215,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     });
 
     describe(`getSignatureHelp`, async () => {
-        it(`signature`, async () => {
+        it(`no closing bracket`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
@@ -224,7 +224,31 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 activeSignature: 0,
                 signatures: [
                     {
-                        label: "fn",
+                        label: "fn(x: number, y: number)",
+                        parameters: [
+                            {
+                                label: "x",
+                            },
+                            {
+                                label: "y",
+                            },
+                        ],
+                    },
+                ],
+            };
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`closing bracket`, async () => {
+            const actual: SignatureHelp = await createSignatureHelp(
+                "let fn = (x as number, y as number) => x + y in fn(1|)",
+            );
+            const expected: SignatureHelp = {
+                activeParameter: 0,
+                activeSignature: 0,
+                signatures: [
+                    {
+                        label: "fn(x: number, y: number)",
                         parameters: [
                             {
                                 label: "x",

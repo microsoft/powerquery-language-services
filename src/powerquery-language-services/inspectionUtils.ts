@@ -48,6 +48,10 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
         // tslint:disable-next-line: no-null-keyword
         return null;
     }
+    const nameOfParameters: string = context.functionType.parameters
+        .map(PQP.Language.TypeUtils.nameOfFunctionParameter)
+        .join(", ");
+    const label: string = `${identifierLiteral}(${nameOfParameters})`;
 
     const parameters: ReadonlyArray<PQP.Language.Type.FunctionParameter> = context.functionType.parameters;
     return {
@@ -56,7 +60,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
         activeSignature: 0,
         signatures: [
             {
-                label: identifierLiteral,
+                label,
                 parameters: parameters.map((parameter: PQP.Language.Type.FunctionParameter) => {
                     return {
                         label: parameter.nameLiteral,

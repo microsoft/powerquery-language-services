@@ -42,7 +42,7 @@ describe("Analysis", () => {
                 activeSignature: 0,
                 signatures: [
                     {
-                        label: TestConstants.TestLibraryName.SquareIfNumber,
+                        label: `${TestConstants.TestLibraryName.SquareIfNumber}(str: text)`,
                         parameters: [
                             {
                                 label: "str",
