@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { Position, SignatureProviderContext } from "../powerquery-language-services";
-import * as InspectionUtils from "../powerquery-language-services/inspectionUtils";
-import * as TestUtils from "./testUtils";
-
-// tslint:disable: no-unnecessary-type-assertion
+import { TestUtils } from ".";
+import { InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
+import { MockDocument } from "./mockDocument";
 
 function expectScope(inspected: PQP.Inspection.Inspection, expected: ReadonlyArray<string>): void {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
@@ -35,13 +34,13 @@ function assertIsPostionInBounds(
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
         it("Date.AddDays(d|,", () => {
-            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d|,",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
-                inspected,
-            );
+            const maybeContext:
+                | SignatureProviderContext
+                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -50,13 +49,13 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,|", () => {
-            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,|",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
-                inspected,
-            );
+            const maybeContext:
+                | SignatureProviderContext
+                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -65,13 +64,13 @@ describe("InspectedInvokeExpression", () => {
         });
 
         it("Date.AddDays(d,1|", () => {
-            const [document, position]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
+            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,1|",
             );
             const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
-            const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
-                inspected,
-            );
+            const maybeContext:
+                | SignatureProviderContext
+                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -81,7 +80,7 @@ describe("InspectedInvokeExpression", () => {
 
         describe("file", () => {
             it("DirectQueryForSQL file", () => {
-                const document: TestUtils.MockDocument = TestUtils.documentFromFile("DirectQueryForSQL.pq");
+                const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
                 const position: Position = {
                     line: 68,
                     character: 23,

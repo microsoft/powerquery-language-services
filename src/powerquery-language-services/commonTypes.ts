@@ -32,3 +32,18 @@ export { CompletionItemKind, DiagnosticSeverity, SymbolKind };
 export interface IDisposable {
     dispose(): void;
 }
+
+export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
+
+export const EmptyHover: Hover = {
+    range: undefined,
+    contents: [],
+};
+
+export const EmptySignatureHelp: SignatureHelp = {
+    signatures: [],
+    // tslint:disable-next-line: no-null-keyword
+    activeParameter: null,
+    // tslint:disable-next-line: no-null-keyword
+    activeSignature: null,
+};

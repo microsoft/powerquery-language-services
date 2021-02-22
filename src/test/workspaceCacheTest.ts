@@ -3,24 +3,26 @@
 
 import { expect } from "chai";
 import "mocha";
-
 import { Position } from "vscode-languageserver-types";
-import * as LanguageServices from "../powerquery-language-services";
-import { TextDocument } from "../powerquery-language-services";
-import * as WorkspaceCache from "../powerquery-language-services/workspaceCache";
-import * as TestUtils from "./testUtils";
+
+import * as PQLS from "../powerquery-language-services";
+
+import { TestUtils } from ".";
+import { TextDocument, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
+import { MockDocument } from "./mockDocument";
+import { SimpleLibrary } from "./testConstants";
 
 describe("workspaceCache", () => {
     it("getLexerState", () => {
-        const document: TextDocument = TestUtils.documentFromText("let\n   b = 1\n   in b");
-        const cacheItem: WorkspaceCache.LexerCacheItem = WorkspaceCache.getLexerState(document, undefined);
+        const document: TextDocument = TestUtils.createTextMockDocument("let\n   b = 1\n   in b");
+        const cacheItem: WorkspaceCache.LexerCacheItem = WorkspaceCacheUtils.getLexerState(document, undefined);
         TestUtils.assertLexerCacheItemOk(cacheItem);
         expect(cacheItem.value.lines.length).to.equal(3);
     });
 
     it("getTriedLexerSnapshot", () => {
-        const document: TextDocument = TestUtils.documentFromText("let a = 1 in a");
-        const cacheItem: WorkspaceCache.TLexerSnapshotCacheItem = WorkspaceCache.getTriedLexerSnapshot(
+        const document: TextDocument = TestUtils.createTextMockDocument("let a = 1 in a");
+        const cacheItem: WorkspaceCache.TLexerSnapshotCacheItem = WorkspaceCacheUtils.getTriedLexerSnapshot(
             document,
             undefined,
         );
@@ -29,24 +31,25 @@ describe("workspaceCache", () => {
     });
 
     it("getTriedLexParse", () => {
-        const document: TextDocument = TestUtils.documentFromText("let c = 1 in c");
-        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        const document: TextDocument = TestUtils.createTextMockDocument("let c = 1 in c");
+        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         TestUtils.assertParserCacheItemOk(cacheItem);
     });
 
     it("getTriedLexParse with error", () => {
-        const document: TextDocument = TestUtils.documentFromText("let c = 1, in c");
-        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
+        const document: TextDocument = TestUtils.createTextMockDocument("let c = 1, in c");
+        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         TestUtils.assertParserCacheItemErr(cacheItem);
     });
 
     it("getInspection", () => {
-        const [document, postion]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
+        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
             "let c = 1 in |c",
         );
-        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
+        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
             document,
             postion,
+            SimpleLibrary.externalTypeResolver,
             undefined,
         );
         TestUtils.assertIsDefined(cacheItem);
@@ -54,12 +57,13 @@ describe("workspaceCache", () => {
     });
 
     it("getInspection with parser error", () => {
-        const [document, postion]: [TestUtils.MockDocument, Position] = TestUtils.documentAndPositionFrom(
+        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
             "let c = 1, in |",
         );
-        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCache.getTriedInspection(
+        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
             document,
             postion,
+            SimpleLibrary.externalTypeResolver,
             undefined,
         );
         TestUtils.assertIsDefined(cacheItem);
@@ -69,11 +73,11 @@ describe("workspaceCache", () => {
 
 describe("top level workspace functions", () => {
     it("document operations", () => {
-        const document: TextDocument = TestUtils.documentFromText("let c = 1 in c");
-        LanguageServices.documentUpdated(document, [], document.version + 1);
-        LanguageServices.documentUpdated(document, [], document.version + 2);
-        LanguageServices.documentClosed(document);
-        LanguageServices.documentClosed(document);
-        LanguageServices.documentUpdated(document, [], document.version);
+        const document: TextDocument = TestUtils.createTextMockDocument("let c = 1 in c");
+        PQLS.documentUpdated(document, [], document.version + 1);
+        PQLS.documentUpdated(document, [], document.version + 2);
+        PQLS.documentClosed(document);
+        PQLS.documentClosed(document);
+        PQLS.documentUpdated(document, [], document.version);
     });
 });

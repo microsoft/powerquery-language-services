@@ -2,202 +2,39 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import { assert, expect } from "chai";
 import "mocha";
+
+import { TestUtils } from ".";
 import {
     Diagnostic,
     DiagnosticErrorCode,
+    DiagnosticSeverity,
+    documentUpdated,
     Position,
     TextDocument,
     TextDocumentContentChangeEvent,
+    validate,
     ValidationOptions,
     ValidationResult,
 } from "../powerquery-language-services";
+import { MockDocument } from "./mockDocument";
 
-import { documentUpdated, validate } from "../powerquery-language-services";
-import * as TestUtils from "./testUtils";
-
-describe("Syntax validation", () => {
-    it("no errors", () => {
-        expectNoValidationErrors(TestUtils.documentFromText("let b = 1 in b"));
-    });
-
-    it("let 1", () => {
-        const document: TextDocument = TestUtils.documentFromText("let 1");
-        const errorSource: string = "powerquery";
-        const validationResult: ValidationResult = validate(document, {
-            source: errorSource,
-            maintainWorkspaceCache: false,
-        });
-        expect(validationResult.syntaxError).to.equal(true, "syntaxError flag should be true");
-        expect(validationResult.diagnostics.length).to.equal(1);
-        expect(validationResult.diagnostics[0].source).to.equal(errorSource);
-        TestUtils.validateError(validationResult.diagnostics[0], { line: 0, character: 4 });
-    });
-
-    it("HelloWorldWithDocs.pq", () => {
-        expectNoValidationErrors(TestUtils.documentFromFile("HelloWorldWithDocs.pq"));
-    });
-
-    it("DirectQueryForSQL.pq", () => {
-        expectNoValidationErrors(TestUtils.documentFromFile("DirectQueryForSQL.pq"));
-    });
-});
-
-describe("validation with workspace cache", () => {
-    it("no errors after update", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText("let a = 1,");
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
-        expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
-
-        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update("1");
-        documentUpdated(document, changes, document.version);
-
-        expectNoValidationErrors(document);
-    });
-
-    it("errors after update", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText("let a = 1 in a");
-        expectNoValidationErrors(document);
-
-        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
-        documentUpdated(document, changes, document.version);
-
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, defaultValidationOptions).diagnostics;
-        expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
-    });
-});
-
-describe("Duplicate identifiers", () => {
-    it("let a = 1, a = 2 in a", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText("let a = 1, a = 2 in a");
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "a",
-                position: { line: 0, character: 11 },
-                relatedPositions: [{ line: 0, character: 4 }],
-            },
-        ]);
-    });
-
-    it("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            "let rec = [ a = 1, b = 2, c = 3, a = 4] in rec",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "a",
-                position: { line: 0, character: 33 },
-                relatedPositions: [{ line: 0, character: 12 }],
-            },
-        ]);
-    });
-
-    // TODO: Figure out why this doesn't hit visitNode() record processing
-    // it("[ a = 1, b = 2, c = 3, a = 4]", () => {
-    //     const document: Utils.MockDocument = Utils.documentFromText("[ a = 1, b = 2, c = 3, a = 4]");
-    //     const diagnostics: ReadonlyArray<Diagnostic> = validate(document).diagnostics;
-
-    //     expect(diagnostics.length).to.equal(1, "");
-    // });
-
-    it('section foo; shared a = 1; a = "hello";', () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText('section foo; shared a = 1; a = "hello";');
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "a",
-                position: { line: 0, character: 27 },
-                relatedPositions: [{ line: 0, character: 20 }],
-            },
-        ]);
-    });
-
-    it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "b",
-                position: { line: 0, character: 55 },
-                relatedPositions: [
-                    { line: 0, character: 48 },
-                    { line: 0, character: 62 },
-                ],
-            },
-            {
-                name: "b",
-                position: { line: 0, character: 62 },
-                relatedPositions: [
-                    { line: 0, character: 48 },
-                    { line: 0, character: 55 },
-                ],
-            },
-        ]);
-    });
-
-    // TODO: Should the final a = 4 entry also show up as a duplicate?
-    it("duplicates with syntax errors", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            "section foo; a = 1; a = 2; b = let 1; a = 4;",
-        );
-        validateDuplicateIdentifierDiagnostics(
-            document,
-            [
-                {
-                    name: "a",
-                    position: { line: 0, character: 20 },
-                    relatedPositions: [{ line: 0, character: 13 }],
-                },
-            ],
-            2 /* additional parser error expected */,
-        );
-    });
-
-    it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText("let a = 1 meta [ abc = 1, abc = 3 ] in a");
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "abc",
-                position: { line: 0, character: 26 },
-                relatedPositions: [{ line: 0, character: 17 }],
-            },
-        ]);
-    });
-
-    it("let a = let abc = 1, abc = 2, b = 3 in b in a", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            "let a = let abc = 1, abc = 2, b = 3 in b in a",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: "abc",
-                position: { line: 0, character: 21 },
-                relatedPositions: [{ line: 0, character: 12 }],
-            },
-        ]);
-    });
-
-    it('section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;', () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;',
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
-            {
-                name: '#"s p a c e"',
-                position: { line: 0, character: 39 },
-                relatedPositions: [{ line: 0, character: 21 }],
-            },
-        ]);
-    });
-});
-
-const defaultValidationOptions: ValidationOptions = {
+const DefaultValidationOptions: ValidationOptions = {
     maintainWorkspaceCache: true,
 };
 
+function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
+    assert.isDefined(diagnostic.code);
+    assert.isDefined(diagnostic.message);
+    assert.isDefined(diagnostic.range);
+    expect(diagnostic.range.start).to.deep.equal(startPosition);
+    expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
+}
+
 function expectNoValidationErrors(document: TextDocument): void {
-    const validationResult: ValidationResult = validate(document, defaultValidationOptions);
+    const validationResult: ValidationResult = validate(document, DefaultValidationOptions);
     expect(validationResult.syntaxError).to.equal(false, "syntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
@@ -249,3 +86,176 @@ function validateDuplicateIdentifierDiagnostics(
         "Expected errors to match.\nactual:" + JSON.stringify(actual) + "\nexpected:" + JSON.stringify(expected),
     );
 }
+
+describe("Syntax validation", () => {
+    it("no errors", () => {
+        expectNoValidationErrors(TestUtils.createTextMockDocument("let b = 1 in b"));
+    });
+
+    it("let 1", () => {
+        const document: TextDocument = TestUtils.createTextMockDocument("let 1");
+        const errorSource: string = "powerquery";
+        const validationResult: ValidationResult = validate(document, {
+            source: errorSource,
+            maintainWorkspaceCache: false,
+        });
+        expect(validationResult.syntaxError).to.equal(true, "syntaxError flag should be true");
+        expect(validationResult.diagnostics.length).to.equal(1);
+        expect(validationResult.diagnostics[0].source).to.equal(errorSource);
+        assertValidationError(validationResult.diagnostics[0], { line: 0, character: 4 });
+    });
+
+    it("HelloWorldWithDocs.pq", () => {
+        expectNoValidationErrors(TestUtils.createFileMockDocument("HelloWorldWithDocs.pq"));
+    });
+
+    it("DirectQueryForSQL.pq", () => {
+        expectNoValidationErrors(TestUtils.createFileMockDocument("DirectQueryForSQL.pq"));
+    });
+});
+
+describe("validation with workspace cache", () => {
+    it("no errors after update", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1,");
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, DefaultValidationOptions).diagnostics;
+        expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
+
+        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update("1");
+        documentUpdated(document, changes, document.version);
+
+        expectNoValidationErrors(document);
+    });
+
+    it("errors after update", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1 in a");
+        expectNoValidationErrors(document);
+
+        const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
+        documentUpdated(document, changes, document.version);
+
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(document, DefaultValidationOptions).diagnostics;
+        expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
+    });
+});
+
+describe("Duplicate identifiers", () => {
+    it("let a = 1, a = 2 in a", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1, a = 2 in a");
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 11 },
+                relatedPositions: [{ line: 0, character: 4 }],
+            },
+        ]);
+    });
+
+    it("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            "let rec = [ a = 1, b = 2, c = 3, a = 4] in rec",
+        );
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 33 },
+                relatedPositions: [{ line: 0, character: 12 }],
+            },
+        ]);
+    });
+
+    // TODO: Figure out why this doesn't hit visitNode() record processing
+    // it("[ a = 1, b = 2, c = 3, a = 4]", () => {
+    //     const document: Utils.MockDocument = Utils.documentFromText("[ a = 1, b = 2, c = 3, a = 4]");
+    //     const diagnostics: ReadonlyArray<Diagnostic> = validate(document).diagnostics;
+
+    //     expect(diagnostics.length).to.equal(1, "");
+    // });
+
+    it('section foo; shared a = 1; a = "hello";', () => {
+        const document: MockDocument = TestUtils.createTextMockDocument('section foo; shared a = 1; a = "hello";');
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 27 },
+                relatedPositions: [{ line: 0, character: 20 }],
+            },
+        ]);
+    });
+
+    it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;",
+        );
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "b",
+                position: { line: 0, character: 55 },
+                relatedPositions: [
+                    { line: 0, character: 48 },
+                    { line: 0, character: 62 },
+                ],
+            },
+            {
+                name: "b",
+                position: { line: 0, character: 62 },
+                relatedPositions: [
+                    { line: 0, character: 48 },
+                    { line: 0, character: 55 },
+                ],
+            },
+        ]);
+    });
+
+    // TODO: Should the final a = 4 entry also show up as a duplicate?
+    it("duplicates with syntax errors", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("section foo; a = 1; a = 2; b = let 1; a = 4;");
+        validateDuplicateIdentifierDiagnostics(
+            document,
+            [
+                {
+                    name: "a",
+                    position: { line: 0, character: 20 },
+                    relatedPositions: [{ line: 0, character: 13 }],
+                },
+            ],
+            2 /* additional parser error expected */,
+        );
+    });
+
+    it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("let a = 1 meta [ abc = 1, abc = 3 ] in a");
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "abc",
+                position: { line: 0, character: 26 },
+                relatedPositions: [{ line: 0, character: 17 }],
+            },
+        ]);
+    });
+
+    it("let a = let abc = 1, abc = 2, b = 3 in b in a", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            "let a = let abc = 1, abc = 2, b = 3 in b in a",
+        );
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "abc",
+                position: { line: 0, character: 21 },
+                relatedPositions: [{ line: 0, character: 12 }],
+            },
+        ]);
+    });
+
+    it('section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;', () => {
+        const document: MockDocument = TestUtils.createTextMockDocument(
+            'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;',
+        );
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: '#"s p a c e"',
+                position: { line: 0, character: 39 },
+                relatedPositions: [{ line: 0, character: 21 }],
+            },
+        ]);
+    });
+});

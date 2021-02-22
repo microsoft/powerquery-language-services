@@ -3,12 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import * as WorkspaceCache from "../workspaceCache";
-
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
+import { WorkspaceCache } from "../workspaceCache";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
-export class LanguageProvider implements CompletionItemProvider {
+export class LanguageCompletionItemProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = [
@@ -39,28 +38,10 @@ export class LanguageProvider implements CompletionItemProvider {
         const autocomplete: PQP.Inspection.Autocomplete = this.maybeTriedInspection.value.autocomplete;
 
         return [
-            ...this.getFieldAccess(autocomplete.triedFieldAccess),
             ...this.getKeywords(autocomplete.triedKeyword),
             ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
             ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
         ];
-    }
-
-    private getFieldAccess(
-        triedFieldAccessAutocomplete: PQP.Inspection.TriedAutocompleteFieldAccess,
-    ): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isErr(triedFieldAccessAutocomplete) || triedFieldAccessAutocomplete.value === undefined) {
-            return [];
-        }
-
-        return triedFieldAccessAutocomplete.value.autocompleteItems.map(
-            (autocompleteItem: PQP.Inspection.AutocompleteItem) => {
-                return {
-                    kind: CompletionItemKind.Field,
-                    label: autocompleteItem.key,
-                };
-            },
-        );
     }
 
     private getKeywords(
@@ -73,7 +54,7 @@ export class LanguageProvider implements CompletionItemProvider {
         return triedKeywordAutocomplete.value
             .filter(
                 (keywordKind: PQP.Language.Keyword.KeywordKind) =>
-                    LanguageProvider.ExcludedKeywords.includes(keywordKind) === false,
+                    LanguageCompletionItemProvider.ExcludedKeywords.includes(keywordKind) === false,
             )
             .map((keywordKind: PQP.Language.Keyword.KeywordKind) => {
                 return {

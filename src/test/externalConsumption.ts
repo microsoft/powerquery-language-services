@@ -2,23 +2,23 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import { expect } from "chai";
 import "mocha";
-
-// We should only import from the library index
-import * as LanguageServices from "../powerquery-language-services";
-import * as AnalysisUtils from "../powerquery-language-services/analysis/analysisUtils";
 
 import {
     Analysis,
     AnalysisOptions,
+    AnalysisUtils,
     CompletionItemKind,
+    createTextDocument,
     DiagnosticSeverity,
     Hover,
     Position,
     SymbolKind,
     TextDocument,
 } from "../powerquery-language-services";
+import { SimpleLibrary } from "./testConstants";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
@@ -27,14 +27,14 @@ describe("External consumption", () => {
             maintainWorkspaceCache: false,
         };
 
-        const textDocument: TextDocument = LanguageServices.createTextDocument("id", 1, "let a = 1 in a");
+        const textDocument: TextDocument = createTextDocument("id", 1, "let a = 1 in a");
 
         const position: Position = {
             character: 1,
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, options);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, SimpleLibrary, options);
         const hover: Hover = await analysis.getHover();
 
         expect(hover.range === undefined);

@@ -2,30 +2,30 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import * as PQP from "@microsoft/powerquery-parser";
+
 import { assert, expect } from "chai";
 import "mocha";
 
-import * as InspectionUtils from "../powerquery-language-services/inspectionUtils";
-import * as WorkspaceCache from "../powerquery-language-services/workspaceCache";
 import * as TestUtils from "./testUtils";
 
-import { SymbolKind } from "../powerquery-language-services";
-import { ExpectedDocumentSymbol } from "./testUtils";
+import { InspectionUtils, SymbolKind, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
+import { MockDocument } from "../mockDocument";
+import { assertParserCacheItemOk } from "./assert";
+import { AbridgedDocumentSymbol } from "./testUtils";
 
 // Used to test symbols at a specific level of inspection
 function expectSymbolsForNode(
     node: PQP.Language.Ast.TNode,
-    expectedSymbols: ReadonlyArray<ExpectedDocumentSymbol>,
+    expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): void {
-    let actualSymbols: ReadonlyArray<ExpectedDocumentSymbol>;
+    let actualSymbols: ReadonlyArray<AbridgedDocumentSymbol>;
 
     if (node.kind === PQP.Language.Ast.NodeKind.Section) {
-        actualSymbols = TestUtils.documentSymbolArrayToExpectedSymbols(InspectionUtils.getSymbolsForSection(node));
+        actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForSection(node));
     } else if (node.kind === PQP.Language.Ast.NodeKind.LetExpression) {
-        actualSymbols = TestUtils.documentSymbolArrayToExpectedSymbols(
-            InspectionUtils.getSymbolsForLetExpression(node),
-        );
+        actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForLetExpression(node));
     } else {
         throw new Error("unsupported code path");
     }
@@ -37,11 +37,11 @@ function expectSymbolsForNode(
 
 describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
+        const document: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "a", kind: SymbolKind.Number },
@@ -51,17 +51,17 @@ describe("Document symbol base functions", () => {
     });
 
     it(`section foo; a = {1,2};`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(`section foo; a = {1,2};`);
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemOk(lexAndParseOk);
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; a = {1,2};`);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.value.root, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(`let a = 1, b = 2, c = 3 in c`);
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemOk(lexAndParseOk);
+        const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = 2, c = 3 in c`);
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "a", kind: SymbolKind.Number },
@@ -71,9 +71,9 @@ describe("Document symbol base functions", () => {
     });
 
     it("HelloWorldWithDocs file section", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromFile("HelloWorldWithDocs.pq");
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemOk(lexAndParseOk);
+        const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
@@ -85,9 +85,9 @@ describe("Document symbol base functions", () => {
     });
 
     it("DirectQueryForSQL file section", () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromFile("DirectQueryForSQL.pq");
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCache.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemOk(lexAndParseOk);
+        const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
+        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.value.root, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },

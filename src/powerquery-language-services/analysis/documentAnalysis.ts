@@ -4,24 +4,34 @@
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position, Range } from "vscode-languageserver-types";
 
-import * as WorkspaceCache from "../workspaceCache";
-
+import { ILibrary } from "../library/library";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AnalysisBase } from "./analysisBase";
 import { AnalysisOptions } from "./analysisOptions";
 
 export class DocumentAnalysis extends AnalysisBase {
-    constructor(private readonly document: TextDocument, position: Position, options: AnalysisOptions) {
-        super(WorkspaceCache.getTriedInspection(document, position, options.locale), position, options);
+    constructor(
+        private readonly document: TextDocument,
+        position: Position,
+        library: ILibrary,
+        options: AnalysisOptions,
+    ) {
+        super(
+            WorkspaceCacheUtils.getTriedInspection(document, position, library.externalTypeResolver, options.locale),
+            position,
+            library,
+            options,
+        );
     }
 
     public dispose(): void {
         if (!this.options.maintainWorkspaceCache) {
-            WorkspaceCache.close(this.document);
+            WorkspaceCacheUtils.close(this.document);
         }
     }
 
     protected getLexerState(): WorkspaceCache.LexerCacheItem {
-        return WorkspaceCache.getLexerState(this.document, this.options.locale);
+        return WorkspaceCacheUtils.getLexerState(this.document, this.options.locale);
     }
 
     protected getText(range?: Range): string {

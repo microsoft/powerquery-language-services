@@ -2,33 +2,18 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import {
     CompletionItem,
     CompletionItemKind,
     DocumentSymbol,
-    Hover,
     Position,
     Range,
-    SignatureHelp,
     SymbolKind,
+    TextEdit,
 } from "vscode-languageserver-types";
+
 import { AnalysisOptions } from "./analysis/analysisOptions";
-
-export const DefaultLocale: string = PQP.Locale.en_US;
-
-export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
-
-export const EmptyHover: Hover = {
-    range: undefined,
-    contents: [],
-};
-
-export const EmptySignatureHelp: SignatureHelp = {
-    signatures: [],
-    // tslint:disable-next-line: no-null-keyword
-    activeParameter: null,
-    activeSignature: 0,
-};
 
 export function getLocale(analysisOptions: AnalysisOptions | undefined): string {
     return analysisOptions?.locale ?? DefaultLocale;
@@ -36,13 +21,25 @@ export function getLocale(analysisOptions: AnalysisOptions | undefined): string 
 
 export function documentSymbolToCompletionItem(
     documentSymbols: ReadonlyArray<DocumentSymbol>,
+    maybeTextEditRange: Range | undefined,
 ): ReadonlyArray<CompletionItem> {
     return documentSymbols.map((symbol: DocumentSymbol) => {
+        let textEdit: TextEdit | undefined;
+        if (maybeTextEditRange === undefined) {
+            textEdit = undefined;
+        } else {
+            textEdit = {
+                newText: symbol.name,
+                range: maybeTextEditRange,
+            };
+        }
+
         return {
             deprecated: symbol.deprecated,
             detail: symbol.detail,
             label: symbol.name,
             kind: symbolKindToCompletionItemKind(symbol.kind),
+            textEdit,
         };
     });
 }
@@ -104,3 +101,5 @@ export function tokenPositionToRange(
 export function tokenRangeToRange(tokenRange: PQP.Language.Token.TokenRange): Range {
     return tokenPositionToRange(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
+
+const DefaultLocale: string = PQP.Locale.en_US;

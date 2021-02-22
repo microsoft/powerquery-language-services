@@ -2,20 +2,23 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
+
 import { assert, expect } from "chai";
 import "mocha";
-import { SymbolKind, TextDocument } from "../powerquery-language-services";
-import { ExpectedDocumentSymbol } from "./testUtils";
 
 import * as DocumentSymbols from "../powerquery-language-services/documentSymbols";
-import * as TestUtils from "./testUtils";
+
+import { TestUtils } from ".";
+import { SymbolKind, TextDocument } from "../powerquery-language-services";
+import { MockDocument } from "./mockDocument";
+import { AbridgedDocumentSymbol } from "./testUtils";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
 function expectSymbolsForDocument(
     document: TextDocument,
-    expectedSymbols: ReadonlyArray<ExpectedDocumentSymbol>,
+    expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): void {
-    const actualSymbols: ReadonlyArray<ExpectedDocumentSymbol> = TestUtils.documentSymbolArrayToExpectedSymbols(
+    const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
         DocumentSymbols.getDocumentSymbols(document),
     );
 
@@ -29,15 +32,13 @@ function expectSymbolsForDocument(
 
 describe("getDocumentSymbols", () => {
     it(`section foo; shared a = 1;`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(`section foo; shared a = 1;`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared a = 1;`);
 
         expectSymbolsForDocument(document, [{ name: "a", kind: SymbolKind.Number }]);
     });
 
     it(`section foo; shared query = let a = 1 in a;`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
-            `section foo; shared query = let a = 1 in a;`,
-        );
+        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared query = let a = 1 in a;`);
 
         expectSymbolsForDocument(document, [
             { name: "query", kind: SymbolKind.Variable, maybeChildren: [{ name: "a", kind: SymbolKind.Number }] },
@@ -45,7 +46,7 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`let a = 1, b = "hello", c = () => 1 in c`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(`let a = 1, b = "hello", c = () => 1 in c`);
+        const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = "hello", c = () => 1 in c`);
 
         expectSymbolsForDocument(document, [
             { name: "a", kind: SymbolKind.Number },
@@ -55,7 +56,7 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`let a = let b = 1, c = let d = 1 in d in c in a`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
+        const document: MockDocument = TestUtils.createTextMockDocument(
             `let a = let b = 1, c = let d = 1 in d in c in a`,
         );
 
@@ -73,7 +74,7 @@ describe("getDocumentSymbols", () => {
 
     // with syntax error
     it(`section foo; shared a = 1; b = "hello"; c = let a1`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromText(
+        const document: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "hello"; c = let a1`,
         );
 
@@ -84,7 +85,7 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`HelloWorldWithDocs.pq`, () => {
-        const document: TestUtils.MockDocument = TestUtils.documentFromFile("HelloWorldWithDocs.pq");
+        const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
 
         expectSymbolsForDocument(document, [
             // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType

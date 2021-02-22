@@ -2,50 +2,59 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
-import * as LanguageServiceUtils from "../languageServiceUtils";
-import * as WorkspaceCache from "../workspaceCache";
 
-import {
+import { EmptyCompletionItems, EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { ILibrary } from "../library/library";
+import { LanguageCompletionItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
+import type {
     CompletionItemProvider,
     CompletionItemProviderContext,
     HoverProvider,
     HoverProviderContext,
-    LibrarySymbolProvider,
+    ISymbolProvider,
     SignatureHelpProvider,
     SignatureProviderContext,
-    SymbolProvider,
 } from "../providers/commonTypes";
-import { CurrentDocumentSymbolProvider } from "../providers/currentDocumentSymbolProvider";
-import { LanguageProvider } from "../providers/languageProvider";
-import { NullLibrarySymbolProvider } from "../providers/nullProvider";
+import { WorkspaceCache } from "../workspaceCache";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
 import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
-    protected readonly environmentSymbolProvider: SymbolProvider;
-    protected readonly languageProvider: LanguageProvider;
-    protected readonly librarySymbolProvider: LibrarySymbolProvider;
-    protected readonly localSymbolProvider: SymbolProvider;
+    protected languageCompletionItemProvider: CompletionItemProvider;
+    protected librarySymbolProvider: ISymbolProvider;
+    protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
         protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
         protected position: Position,
+        library: ILibrary,
         protected options: AnalysisOptions,
     ) {
-        this.environmentSymbolProvider = options.environmentSymbolProvider ?? NullLibrarySymbolProvider.singleton();
-        this.languageProvider = new LanguageProvider(this.maybeInspectionCacheItem);
-        this.librarySymbolProvider = options.librarySymbolProvider ?? NullLibrarySymbolProvider.singleton();
-        this.localSymbolProvider = new CurrentDocumentSymbolProvider(this.maybeInspectionCacheItem);
+        this.languageCompletionItemProvider =
+            options.createLanguageCompletionItemProviderFn !== undefined
+                ? options.createLanguageCompletionItemProviderFn()
+                : new LanguageCompletionItemProvider(maybeInspectionCacheItem);
+
+        this.librarySymbolProvider =
+            options.createLibrarySymbolProviderFn !== undefined
+                ? options.createLibrarySymbolProviderFn(library)
+                : new LibrarySymbolProvider(library);
+
+        this.localDocumentSymbolProvider =
+            options.createLocalDocumentSymbolProviderFn !== undefined
+                ? options.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
+                : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
     }
 
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
+        const maybeToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
         if (maybeToken !== undefined) {
             context = {
                 range: LineTokenWithPositionUtils.tokenRange(maybeToken),
@@ -57,35 +66,35 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-
-        const [libraryResponse, parserResponse, environmentResponse, localResponse] = await Promise.all(
+        const [languageCompletionItemProvider, libraryResponse, localDocumentResponse] = await Promise.all(
             AnalysisBase.createCompletionItemCalls(context, [
+                this.languageCompletionItemProvider,
                 this.librarySymbolProvider,
-                this.languageProvider,
-                this.environmentSymbolProvider,
-                this.localSymbolProvider,
+                this.localDocumentSymbolProvider,
             ]),
         );
 
-        // TODO: Should we filter out duplicates?
-        const completionItems: CompletionItem[] = localResponse.concat(
-            environmentResponse,
-            libraryResponse,
-            parserResponse,
-        );
+        const partial: CompletionItem[] = [];
+        for (const collection of [localDocumentResponse, languageCompletionItemProvider, libraryResponse]) {
+            for (const item of collection) {
+                if (partial.find((partialItem: CompletionItem) => partialItem.label === item.label) === undefined) {
+                    partial.push(item);
+                }
+            }
+        }
 
-        return completionItems;
+        return partial;
     }
 
     public async getHover(): Promise<Hover> {
         const identifierToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
-            return LanguageServiceUtils.EmptyHover;
+            return EmptyHover;
         }
 
         const maybeActiveNode: PQP.Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
         if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
-            return LanguageServiceUtils.EmptyHover;
+            return EmptyHover;
         }
 
         const context: HoverProviderContext = {
@@ -95,12 +104,8 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [
-                this.localSymbolProvider,
-                this.environmentSymbolProvider,
-                this.librarySymbolProvider,
-            ]),
-            LanguageServiceUtils.EmptyHover,
+            AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
+            EmptyHover,
         );
     }
 
@@ -110,30 +115,29 @@ export abstract class AnalysisBase implements Analysis {
             this.maybeInspectionCacheItem.kind !== PQP.ResultKind.Ok ||
             this.maybeInspectionCacheItem.stage !== WorkspaceCache.CacheStageKind.Inspection
         ) {
-            return LanguageServiceUtils.EmptySignatureHelp;
+            return EmptySignatureHelp;
         }
         const inspected: PQP.Inspection.Inspection = this.maybeInspectionCacheItem.value;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.maybeSignatureProviderContext(
+        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
             inspected,
         );
         if (maybeContext === undefined) {
-            return LanguageServiceUtils.EmptySignatureHelp;
+            return EmptySignatureHelp;
         }
         const context: SignatureProviderContext = maybeContext;
 
         if (context.functionName === undefined) {
-            return LanguageServiceUtils.EmptySignatureHelp;
+            return EmptySignatureHelp;
         }
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
             AnalysisBase.createSignatureHelpCalls(context, [
-                this.localSymbolProvider,
-                this.environmentSymbolProvider,
+                this.localDocumentSymbolProvider,
                 this.librarySymbolProvider,
             ]),
-            LanguageServiceUtils.EmptySignatureHelp,
+            EmptySignatureHelp,
         );
     }
 
@@ -142,14 +146,29 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): WorkspaceCache.LexerCacheItem;
     protected abstract getText(range?: Range): string;
 
+    private static async resolveProviders<T>(
+        calls: ReadonlyArray<Promise<T | null>>,
+        defaultReturnValue: T,
+    ): Promise<T> {
+        const results: (T | null)[] = await Promise.all(calls);
+
+        for (let i: number = 0; i < results.length; i++) {
+            if (results[i] !== null) {
+                return results[i]!;
+            }
+        }
+
+        return defaultReturnValue;
+    }
+
     private static createCompletionItemCalls(
         context: CompletionItemProviderContext,
-        providers: CompletionItemProvider[],
+        providers: ReadonlyArray<CompletionItemProvider>,
     ): ReadonlyArray<Promise<ReadonlyArray<CompletionItem>>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getCompletionItems(context).catch(() => {
-                return LanguageServiceUtils.EmptyCompletionItems;
+                return EmptyCompletionItems;
             }),
         );
     }
@@ -161,6 +180,19 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getHover(context).catch(() => {
+                // tslint:disable-next-line: no-null-keyword
+                return null;
+            }),
+        );
+    }
+
+    private static createSignatureHelpCalls(
+        context: SignatureProviderContext,
+        providers: SignatureHelpProvider[],
+    ): ReadonlyArray<Promise<SignatureHelp | null>> {
+        // TODO: add tracing to the catch case
+        return providers.map(provider =>
+            provider.getSignatureHelp(context).catch(() => {
                 // tslint:disable-next-line: no-null-keyword
                 return null;
             }),
@@ -189,34 +221,6 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         return true;
-    }
-
-    private static createSignatureHelpCalls(
-        context: SignatureProviderContext,
-        providers: SignatureHelpProvider[],
-    ): ReadonlyArray<Promise<SignatureHelp | null>> {
-        // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getSignatureHelp(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
-        );
-    }
-
-    private static async resolveProviders<T>(
-        calls: ReadonlyArray<Promise<T | null>>,
-        defaultReturnValue: T,
-    ): Promise<T> {
-        const results: (T | null)[] = await Promise.all(calls);
-
-        for (let i: number = 0; i < results.length; i++) {
-            if (results[i] !== null) {
-                return results[i]!;
-            }
-        }
-
-        return defaultReturnValue;
     }
 
     private getMaybePositionIdentifier(): LineTokenWithPosition | undefined {
