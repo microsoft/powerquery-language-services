@@ -33,14 +33,6 @@ export interface AbridgedDocumentSymbol {
 
 export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
 
-export function assertGetCompletionItem(label: string, completionItems: ReadonlyArray<CompletionItem>): CompletionItem {
-    return Assert.asDefined(
-        completionItems.find((completionitem: CompletionItem) => completionitem.label === "Test.Foo"),
-        `did not find the expected completion item`,
-        { label, completionItemLabels: completionItems.map((completionItem: CompletionItem) => completionItem.label) },
-    );
-}
-
 export function createFileMockDocument(fileName: string): MockDocument {
     return new MockDocument(readFile(fileName), "powerquery");
 }

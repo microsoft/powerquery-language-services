@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
-import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
@@ -16,6 +12,7 @@ import {
     CompletionItem,
     EmptyHover,
     Hover,
+    Inspection,
     NullSymbolProvider,
     Position,
     SignatureHelp,
@@ -46,7 +43,7 @@ async function createSignatureHelp(text: string): Promise<SignatureHelp> {
 describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     describe(`getCompletionItems`, async () => {
         describe(`scope`, async () => {
-            describe(`${PQP.Inspection.ScopeItemKind.LetVariable}`, async () => {
+            describe(`${Inspection.ScopeItemKind.LetVariable}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
                     const actual: ReadonlyArray<CompletionItem> = await createCompletionItems(
@@ -64,7 +61,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${PQP.Inspection.ScopeItemKind.Parameter}`, async () => {
+            describe(`${Inspection.ScopeItemKind.Parameter}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
                     const actual: ReadonlyArray<CompletionItem> = await createCompletionItems(
@@ -82,7 +79,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${PQP.Inspection.ScopeItemKind.RecordField}`, async () => {
+            describe(`${Inspection.ScopeItemKind.RecordField}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
                     const actual: ReadonlyArray<CompletionItem> = await createCompletionItems(
@@ -100,7 +97,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${PQP.Inspection.ScopeItemKind.SectionMember}`, async () => {
+            describe(`${Inspection.ScopeItemKind.SectionMember}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
                     const actual: ReadonlyArray<CompletionItem> = await createCompletionItems(

@@ -8,6 +8,7 @@ export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
+export * as Inspection from "./inspection";
 export * as InspectionUtils from "./inspectionUtils";
 export * from "./formatter";
 export * from "./library";

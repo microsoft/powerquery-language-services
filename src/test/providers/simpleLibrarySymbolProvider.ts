@@ -16,9 +16,9 @@ import {
     WorkspaceCache,
 } from "../../powerquery-language-services";
 
+import { Assert } from "@microsoft/powerquery-parser";
 import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
-import { Assert } from "@microsoft/powerquery-parser";
 
 const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,

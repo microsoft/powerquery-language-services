@@ -7,12 +7,13 @@ import * as PQP from "@microsoft/powerquery-parser";
 import * as TestUtils from "./testUtils";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { assertIsParseErr, assertIsParseOk } from "@microsoft/powerquery-parser/lib/powerquery-parser/task/taskUtils";
 import { assert, expect } from "chai";
 import { CompletionItem, Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 
 import * as TestConstants from "../testConstants";
 
-import { WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
+import { Inspection, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -20,7 +21,15 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
-export function assertGetInspectionCacheItemOk(document: MockDocument, position: Position): PQP.Inspection.Inspection {
+export function assertGetCompletionItem(label: string, completionItems: ReadonlyArray<CompletionItem>): CompletionItem {
+    return Assert.asDefined(
+        completionItems.find((completionitem: CompletionItem) => completionitem.label === "Test.Foo"),
+        `did not find the expected completion item`,
+        { label, completionItemLabels: completionItems.map((completionItem: CompletionItem) => completionItem.label) },
+    );
+}
+
+export function assertGetInspectionCacheItemOk(document: MockDocument, position: Position): Inspection.Inspection {
     const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
         document,
         position,
@@ -30,6 +39,41 @@ export function assertGetInspectionCacheItemOk(document: MockDocument, position:
     assertIsDefined(cacheItem);
     assertInspectionCacheItemOk(cacheItem);
     return cacheItem.value;
+}
+
+export function assertGetLexParseOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: PQP.Settings<S>,
+    text: string,
+): PQP.Task.ParseTaskOk<S> {
+    const triedLexParseOk: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+    assertIsParseOk<S>(triedLexParseOk);
+
+    return triedLexParseOk;
+}
+
+export function assertGetLexParseErr<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: PQP.Settings<S>,
+    text: string,
+): PQP.Task.ParseTaskParseErr<S> {
+    const triedLexParseOk: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+    assertIsParseErr<S>(triedLexParseOk);
+
+    return triedLexParseOk;
+}
+
+// Only works with single line expressions
+export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {
+    const indexOfPipe: number = text.indexOf("|");
+
+    expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
+    expect(indexOfPipe).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
+
+    const position: Inspection.Position = {
+        lineNumber: 0,
+        lineCodeUnit: indexOfPipe,
+    };
+
+    return [text.replace("|", ""), position];
 }
 
 export function assertHover(expected: string, actual: Hover): void {
@@ -74,7 +118,7 @@ export function assertCacheItemErr<E, Stage>(
 export function assertInspectionCacheItemOk(
     cacheItem: WorkspaceCache.TCacheItem,
 ): asserts cacheItem is WorkspaceCache.InspectionCacheItem &
-    WorkspaceCache.CacheItemOk<PQP.Inspection.Inspection, WorkspaceCache.CacheStageKind.Inspection> {
+    WorkspaceCache.CacheItemOk<Inspection.Inspection, WorkspaceCache.CacheStageKind.Inspection> {
     assertCacheItemOk(cacheItem);
     assertIsCacheItemStageEqual(cacheItem, WorkspaceCache.CacheStageKind.Inspection);
 }
