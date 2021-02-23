@@ -1,35 +1,39 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
-import { TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeIfExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IfExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.IfExpression);
 
-    const conditionType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
-    if (conditionType.kind === Type.TypeKind.Unknown) {
-        return Type.UnknownInstance;
+    const conditionType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    if (conditionType.kind === PQP.Language.Type.TypeKind.Unknown) {
+        return PQP.Language.Type.UnknownInstance;
     }
     // Any is allowed so long as AnyUnion only contains Any or Logical.
-    else if (conditionType.kind === Type.TypeKind.Any) {
+    else if (conditionType.kind === PQP.Language.Type.TypeKind.Any) {
         if (
-            conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
+            conditionType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion &&
             !allForAnyUnion(
                 conditionType,
-                (type: Type.TType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,
+                (type: PQP.Language.Type.TType) =>
+                    type.kind === PQP.Language.Type.TypeKind.Logical || type.kind === PQP.Language.Type.TypeKind.Any,
             )
         ) {
-            return Type.NoneInstance;
+            return PQP.Language.Type.NoneInstance;
         }
-    } else if (conditionType.kind !== Type.TypeKind.Logical) {
-        return Type.NoneInstance;
+    } else if (conditionType.kind !== PQP.Language.Type.TypeKind.Logical) {
+        return PQP.Language.Type.NoneInstance;
     }
 
-    const trueExprType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
-    const falseExprType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
+    const trueExprType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const falseExprType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
 
-    return TypeUtils.anyUnionFactory([trueExprType, falseExprType]);
+    return PQP.Language.TypeUtils.anyUnionFactory([trueExprType, falseExprType]);
 }

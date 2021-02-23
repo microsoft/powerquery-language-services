@@ -1,57 +1,59 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, MapUtils } from "../../../common";
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeFieldProjection(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FieldProjection);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
 
-    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
+    const projectedFieldNames: ReadonlyArray<string> = PQP.Parser.NodeIdMapIterator.iterFieldProjectionNames(
         state.nodeIdMapCollection,
         xorNode,
     );
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousSibling: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: Type.TType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.TType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
-            Ast.NodeKind.Constant,
+        PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+            PQP.Language.Ast.NodeKind.Constant,
         ]) !== undefined;
 
     return inspectFieldProjectionHelper(previousSiblingType, projectedFieldNames, isOptional);
 }
 
 function inspectFieldProjectionHelper(
-    previousSiblingType: Type.TType,
+    previousSiblingType: PQP.Language.Type.TType,
     projectedFieldNames: ReadonlyArray<string>,
     isOptional: boolean,
-): Type.TType {
+): PQP.Language.Type.TType {
     switch (previousSiblingType.kind) {
-        case Type.TypeKind.Any: {
-            const newFields: Map<string, Type.Any> = new Map(
-                projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
+        case PQP.Language.Type.TypeKind.Any: {
+            const newFields: Map<string, PQP.Language.Type.Any> = new Map(
+                projectedFieldNames.map((fieldName: string) => [fieldName, PQP.Language.Type.AnyInstance]),
             );
             return {
-                kind: Type.TypeKind.Any,
-                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                kind: PQP.Language.Type.TypeKind.Any,
+                maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.AnyUnion,
                 isNullable: previousSiblingType.isNullable,
                 unionedTypePairs: [
                     {
-                        kind: Type.TypeKind.Record,
-                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                        kind: PQP.Language.Type.TypeKind.Record,
+                        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.DefinedRecord,
                         isNullable: previousSiblingType.isNullable,
                         fields: newFields,
                         isOpen: false,
                     },
                     {
-                        kind: Type.TypeKind.Table,
-                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                        kind: PQP.Language.Type.TypeKind.Table,
+                        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.DefinedTable,
                         isNullable: previousSiblingType.isNullable,
                         fields: newFields,
                         isOpen: false,
@@ -60,44 +62,44 @@ function inspectFieldProjectionHelper(
             };
         }
 
-        case Type.TypeKind.Record:
-        case Type.TypeKind.Table: {
+        case PQP.Language.Type.TypeKind.Record:
+        case PQP.Language.Type.TypeKind.Table: {
             // All we know is previousSibling was a Record/Table.
             // Create a DefinedRecord/DefinedTable with the projected fields.
             if (previousSiblingType.maybeExtendedKind === undefined) {
-                const newFields: Map<string, Type.Any> = new Map(
-                    projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
+                const newFields: Map<string, PQP.Language.Type.Any> = new Map(
+                    projectedFieldNames.map((fieldName: string) => [fieldName, PQP.Language.Type.AnyInstance]),
                 );
-                return previousSiblingType.kind === Type.TypeKind.Record
-                    ? TypeUtils.definedRecordFactory(false, newFields, false)
-                    : TypeUtils.definedTableFactory(false, newFields, false);
+                return previousSiblingType.kind === PQP.Language.Type.TypeKind.Record
+                    ? PQP.Language.TypeUtils.definedRecordFactory(false, newFields, false)
+                    : PQP.Language.TypeUtils.definedTableFactory(false, newFields, false);
             } else {
                 return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional);
             }
         }
 
         default:
-            return Type.NoneInstance;
+            return PQP.Language.Type.NoneInstance;
     }
 }
 
 // Returns a subset of `current` using `keys`.
 // If a mismatch is found it either returns Null if isOptional, else None.
 function reducedFieldsToKeys(
-    current: Type.DefinedRecord | Type.DefinedTable,
+    current: PQP.Language.Type.DefinedRecord | PQP.Language.Type.DefinedTable,
     keys: ReadonlyArray<string>,
     isOptional: boolean,
-): Type.DefinedRecord | Type.DefinedTable | Type.None | Type.Null {
-    const currentFields: Map<string, Type.TType> = current.fields;
+): PQP.Language.Type.DefinedRecord | PQP.Language.Type.DefinedTable | PQP.Language.Type.None | PQP.Language.Type.Null {
+    const currentFields: Map<string, PQP.Language.Type.TType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
 
-    if (current.isOpen === false && ArrayUtils.isSubset(currentFieldNames, keys) === false) {
-        return isOptional ? Type.NullInstance : Type.NoneInstance;
+    if (current.isOpen === false && PQP.ArrayUtils.isSubset(currentFieldNames, keys) === false) {
+        return isOptional ? PQP.Language.Type.NullInstance : PQP.Language.Type.NoneInstance;
     }
 
     return {
         ...current,
-        fields: MapUtils.pick(currentFields, keys),
+        fields: PQP.MapUtils.pick(currentFields, keys),
         isOpen: false,
     };
 }

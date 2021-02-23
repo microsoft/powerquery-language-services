@@ -1,29 +1,38 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeNullCoalescingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeNullCoalescingExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.NullCoalescingExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
 
-    const maybeLeftType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeLeftType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeNullCoalescingOperator:
-        | Ast.TNode
-        | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
-        Ast.NodeKind.Constant,
-    ]);
+        | PQP.Language.Ast.TNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        [PQP.Language.Ast.NodeKind.Constant],
+    );
     // '??' isn't present, treat it as an Expression.
     if (maybeNullCoalescingOperator === undefined) {
         return maybeLeftType;
     }
 
-    const maybeRightType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
-    if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
-        return Type.NoneInstance;
+    const maybeRightType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    if (
+        maybeLeftType.kind === PQP.Language.Type.TypeKind.None ||
+        maybeRightType.kind === PQP.Language.Type.TypeKind.None
+    ) {
+        return PQP.Language.Type.NoneInstance;
     }
 
-    return TypeUtils.anyUnionFactory([maybeLeftType, maybeRightType]);
+    return PQP.Language.TypeUtils.anyUnionFactory([maybeLeftType, maybeRightType]);
 }

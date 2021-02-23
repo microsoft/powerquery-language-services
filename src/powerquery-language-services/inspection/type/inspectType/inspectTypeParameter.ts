@@ -1,21 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeParameter(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Parameter);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant:
-        | Ast.TNode
-        | undefined = NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 0, [
-        Ast.NodeKind.Constant,
-    ]);
+        | PQP.Language.Ast.TNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        0,
+        [PQP.Language.Ast.NodeKind.Constant],
+    );
 
-    const maybeParameterType: Type.TType | undefined = TypeUtils.assertAsTPrimitiveType(
+    const maybeParameterType: PQP.Language.Type.TType | undefined = PQP.Language.TypeUtils.assertAsTPrimitiveType(
         inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );
 

@@ -1,19 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
-import { TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
+import { Assert } from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeEachExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeEachExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.EachExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.EachExpression);
 
-    const expressionType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const expressionType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
 
-    return TypeUtils.definedFunctionFactory(
+    return PQP.Language.TypeUtils.definedFunctionFactory(
         false,
-        [{ isNullable: false, isOptional: false, maybeType: Type.TypeKind.Any, nameLiteral: "_" }],
+        [
+            {
+                isNullable: false,
+                isOptional: false,
+                maybeType: PQP.Language.Type.TypeKind.Any,
+                nameLiteral: "_",
+            },
+        ],
         expressionType,
     );
 }

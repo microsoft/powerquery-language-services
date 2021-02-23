@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
 import { WorkspaceCache } from "../workspaceCache";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
+import { Inspection } from "..";
 
 export class LanguageCompletionItemProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
@@ -35,7 +36,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
             return [];
         }
 
-        const autocomplete: PQP.Inspection.Autocomplete = this.maybeTriedInspection.value.autocomplete;
+        const autocomplete: Inspection.Autocomplete = this.maybeTriedInspection.value.autocomplete;
 
         return [
             ...this.getKeywords(autocomplete.triedKeyword),
@@ -44,9 +45,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
         ];
     }
 
-    private getKeywords(
-        triedKeywordAutocomplete: PQP.Inspection.TriedAutocompleteKeyword,
-    ): ReadonlyArray<CompletionItem> {
+    private getKeywords(triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword): ReadonlyArray<CompletionItem> {
         if (PQP.ResultUtils.isErr(triedKeywordAutocomplete)) {
             return [];
         }
@@ -65,7 +64,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
     }
 
     private getLanguageConstants(
-        triedLanguageConstantAutocomplete: PQP.Inspection.TriedAutocompleteLanguageConstant,
+        triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
     ): ReadonlyArray<CompletionItem> {
         if (
             PQP.ResultUtils.isErr(triedLanguageConstantAutocomplete) ||
@@ -83,7 +82,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
     }
 
     private getPrimitiveTypes(
-        triedPrimitiveTypeAutocomplete: PQP.Inspection.TriedAutocompletePrimitiveType,
+        triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
     ): ReadonlyArray<CompletionItem> {
         if (PQP.ResultUtils.isErr(triedPrimitiveTypeAutocomplete)) {
             return [];

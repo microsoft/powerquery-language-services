@@ -170,7 +170,11 @@ function createParserCacheItem(textDocument: TextDocument, maybeLocale: string |
     }
     const lexerSnapshot: PQP.Lexer.LexerSnapshot = lexerSnapshotCacheItem.value;
 
-    const triedParse: PQP.Parser.TriedParse = PQP.Task.tryParse(getSettings(undefined, maybeLocale), lexerSnapshot);
+    const triedParse: PQP.Task.TriedParseTask = PQP.TaskUtils.tryParse(
+        getSettings(undefined, maybeLocale),
+        lexerSnapshot,
+    );
+
     return {
         ...triedParse,
         stage: CacheStageKind.Parser,

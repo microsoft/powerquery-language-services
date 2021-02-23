@@ -1,19 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
+import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
-import { ExternalType, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+
 import {
     AnalysisOptions,
+    Inspection,
     Library,
     LibraryUtils,
     LocalDocumentSymbolProvider,
     WorkspaceCache,
 } from "../powerquery-language-services";
+import { ExternalType } from "../powerquery-language-services/inspection";
 import { ILibrary } from "../powerquery-language-services/library/library";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
+
+export const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
+    ...PQP.DefaultSettings,
+    maybeExternalTypeResolver: undefined,
+};
 
 export const NoOpLibrary: Library.ILibrary = {
     externalTypeResolver: ExternalType.noOpExternalTypeResolver,
@@ -24,49 +31,52 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.CreateFooAndBarRecord,
         LibraryUtils.createFunctionDefinition(
-            Type.FunctionInstance,
+            PQP.Language.Type.FunctionInstance,
             `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
             TestLibraryName.CreateFooAndBarRecord,
-            Type.RecordInstance,
+            PQP.Language.Type.RecordInstance,
             [],
         ),
     ],
     [
         TestLibraryName.Number,
         LibraryUtils.createConstantDefinition(
-            Type.NumberInstance,
+            PQP.Language.Type.NumberInstance,
             `The name is ${TestLibraryName.Number}`,
             TestLibraryName.Number,
-            Type.NumberInstance,
+            PQP.Language.Type.NumberInstance,
         ),
     ],
     [
         TestLibraryName.NumberOne,
         LibraryUtils.createConstantDefinition(
-            TypeUtils.numberLiteralFactory(false, "1"),
+            PQP.Language.TypeUtils.numberLiteralFactory(false, "1"),
             `The name is ${TestLibraryName.NumberOne}`,
             TestLibraryName.NumberOne,
-            Type.NumberInstance,
+            PQP.Language.Type.NumberInstance,
         ),
     ],
     [
         TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
-            TypeUtils.definedFunctionFactory(
+            PQP.Language.TypeUtils.definedFunctionFactory(
                 false,
                 [
                     {
                         isNullable: false,
                         isOptional: false,
-                        maybeType: Type.TypeKind.Any,
+                        maybeType: PQP.Language.Type.TypeKind.Any,
                         nameLiteral: "x",
                     },
                 ],
-                TypeUtils.anyUnionFactory([Type.NumberInstance, Type.AnyInstance]),
+                PQP.Language.TypeUtils.anyUnionFactory([
+                    PQP.Language.Type.NumberInstance,
+                    PQP.Language.Type.AnyInstance,
+                ]),
             ),
             `The name is ${TestLibraryName.SquareIfNumber}`,
             TestLibraryName.SquareIfNumber,
-            Type.AnyInstance,
+            PQP.Language.Type.AnyInstance,
             [
                 {
                     label: "x",
@@ -80,7 +90,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                             maybeDocumentation: undefined,
                             signatureLabelEnd: -1,
                             signatureLabelOffset: -1,
-                            typeKind: Type.TypeKind.Any,
+                            typeKind: PQP.Language.Type.TypeKind.Any,
                         },
                     ],
                 },
@@ -97,21 +107,21 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
             switch (request.identifierLiteral) {
                 case TestLibraryName.SquareIfNumber: {
                     if (request.args.length !== 1) {
-                        return Type.NoneInstance;
+                        return PQP.Language.Type.NoneInstance;
                     }
-                    const arg: Type.TType = Assert.asDefined(request.args[0]);
+                    const arg: PQP.Language.Type.TType = Assert.asDefined(request.args[0]);
 
-                    if (TypeUtils.isNumberLiteral(arg)) {
+                    if (PQP.Language.TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
                         return {
                             ...arg,
                             literal: newNormalizedLiteral.toString(),
                             normalizedLiteral: newNormalizedLiteral,
                         };
-                    } else if (TypeUtils.isNumber(arg)) {
-                        return Type.NumberInstance;
+                    } else if (PQP.Language.TypeUtils.isNumber(arg)) {
+                        return PQP.Language.Type.NumberInstance;
                     } else {
-                        return Type.AnyInstance;
+                        return PQP.Language.Type.AnyInstance;
                     }
                 }
 
@@ -122,27 +132,27 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
         case ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
                 case TestLibraryName.CreateFooAndBarRecord:
-                    return TypeUtils.definedFunctionFactory(
+                    return PQP.Language.TypeUtils.definedFunctionFactory(
                         false,
                         [],
-                        TypeUtils.definedRecordFactory(
+                        PQP.Language.TypeUtils.definedRecordFactory(
                             false,
-                            new Map<string, Type.TType>([
-                                ["foo", TypeUtils.textLiteralFactory(false, `"fooString"`)],
-                                ["bar", TypeUtils.textLiteralFactory(false, `"barString"`)],
+                            new Map<string, PQP.Language.Type.TType>([
+                                ["foo", PQP.Language.TypeUtils.textLiteralFactory(false, `"fooString"`)],
+                                ["bar", PQP.Language.TypeUtils.textLiteralFactory(false, `"barString"`)],
                             ]),
                             false,
                         ),
                     );
 
                 case TestLibraryName.Number:
-                    return Type.NumberInstance;
+                    return PQP.Language.Type.NumberInstance;
 
                 case TestLibraryName.NumberOne:
-                    return TypeUtils.numberLiteralFactory(false, "1");
+                    return PQP.Language.TypeUtils.numberLiteralFactory(false, "1");
 
                 case TestLibraryName.SquareIfNumber:
-                    return TypeUtils.definedFunctionFactory(
+                    return PQP.Language.TypeUtils.definedFunctionFactory(
                         false,
                         [
                             {
@@ -152,7 +162,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                                 nameLiteral: "x",
                             },
                         ],
-                        Type.AnyInstance,
+                        PQP.Language.Type.AnyInstance,
                     );
 
                 default:

@@ -1,45 +1,52 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TypeScriptUtils } from "../../../common";
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
+export function inspectTypeFunctionType(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.FunctionType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.FunctionType);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
 
     const maybeParameters:
-        | TXorNode
-        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
-        Ast.NodeKind.ParameterList,
-    ]);
+        | PQP.Parser.TXorNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        [PQP.Language.Ast.NodeKind.ParameterList],
+    );
     if (maybeParameters === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const maybeArrayWrapper: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
         state.nodeIdMapCollection,
         maybeParameters,
-        Ast.NodeKind.ArrayWrapper,
+        PQP.Language.Ast.NodeKind.ArrayWrapper,
     );
     if (maybeArrayWrapper === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
+    const parameterTypes: ReadonlyArray<PQP.Language.Type.FunctionParameter> = PQP.Parser.NodeIdMapIterator.iterArrayWrapper(
         state.nodeIdMapCollection,
         maybeArrayWrapper,
     )
-        .map((parameter: TXorNode) => TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter))
-        .filter(TypeScriptUtils.isDefined);
+        .map((parameter: PQP.Parser.TXorNode) =>
+            PQP.Language.TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter),
+        )
+        .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
-        kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
+        kind: PQP.Language.Type.TypeKind.Type,
+        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.FunctionType,
         isNullable: false,
         parameters: parameterTypes,
         returnType,

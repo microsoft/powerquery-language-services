@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Token } from "../../language";
-import { IParseState, NodeIdMap, ParseError } from "../../parser";
-import { InspectionSettings } from "../../settings";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { TMaybeActiveNode } from "../activeNode";
+import { InspectionSettings } from "../settings";
 import { TypeCache } from "../typeCache";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
@@ -20,19 +20,21 @@ import {
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 
-export function autocomplete<S extends IParseState = IParseState>(
+export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings,
     parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
-    maybeParseError: ParseError.ParseError<S> | undefined,
+    maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
 ): Autocomplete {
-    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
     const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
-        const maybeParseErrorToken: Token.Token | undefined = ParseError.maybeTokenFrom(maybeParseError.innerError);
+        const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(
+            maybeParseError.innerError,
+        );
         if (maybeParseErrorToken !== undefined) {
             maybeTrailingToken = trailingTokenFactory(maybeActiveNode.position, maybeParseErrorToken);
         }

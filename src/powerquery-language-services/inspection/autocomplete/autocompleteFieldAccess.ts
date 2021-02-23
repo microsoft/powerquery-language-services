@@ -1,22 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, ResultUtils, StringUtils } from "../../common";
-import { Ast, Token, Type } from "../../language";
-import { LexerSnapshot } from "../../lexer";
-import {
-    AncestryUtils,
-    IParseState,
-    NodeIdMap,
-    NodeIdMapIterator,
-    NodeIdMapUtils,
-    TXorNode,
-    XorNodeKind,
-    XorNodeUtils,
-} from "../../parser";
-import { InspectionSettings } from "../../settings";
+import * as PQP from "@microsoft/powerquery-parser";
+
+import { Assert } from "@microsoft/powerquery-parser";
+
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
+import { InspectionSettings } from "../settings";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../typeCache";
 import {
@@ -26,30 +17,33 @@ import {
     TriedAutocompleteFieldAccess,
 } from "./commonTypes";
 
-export function tryAutocompleteFieldAccess<S extends IParseState = IParseState>(
+export function tryAutocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings,
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
 ): TriedAutocompleteFieldAccess {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.okFactory(undefined);
+        return PQP.ResultUtils.okFactory(undefined);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () => {
+    return PQP.ResultUtils.ensureResult(settings.locale, () => {
         return autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache);
     });
 }
 
-const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKind> = [
-    Type.ExtendedTypeKind.AnyUnion,
-    Type.ExtendedTypeKind.DefinedRecord,
-    Type.ExtendedTypeKind.DefinedTable,
+const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<PQP.Language.Type.ExtendedTypeKind> = [
+    PQP.Language.Type.ExtendedTypeKind.AnyUnion,
+    PQP.Language.Type.ExtendedTypeKind.DefinedRecord,
+    PQP.Language.Type.ExtendedTypeKind.DefinedTable,
 ];
 
-const FieldAccessNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.FieldSelector, Ast.NodeKind.FieldProjection];
+const FieldAccessNodeKinds: ReadonlyArray<PQP.Language.Ast.NodeKind> = [
+    PQP.Language.Ast.NodeKind.FieldSelector,
+    PQP.Language.Ast.NodeKind.FieldProjection,
+];
 
-function autocompleteFieldAccess<S extends IParseState = IParseState>(
+function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings,
     parseState: S,
     activeNode: ActiveNode,
@@ -58,7 +52,7 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
     let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
     // Option 1: Find a field access node in the ancestry.
-    let maybeFieldAccessAncestor: TXorNode | undefined;
+    let maybeFieldAccessAncestor: PQP.Parser.TXorNode | undefined;
     for (const ancestor of activeNode.ancestry) {
         if (FieldAccessNodeKinds.includes(ancestor.node.kind)) {
             maybeFieldAccessAncestor = ancestor;
@@ -86,15 +80,15 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
         return undefined;
     }
 
-    // After a field access was found then find the field it's accessing and inspect the field's type.
+    // After a field access was found then find the field it's accessing and inspect the field's PQP.Language.type.
     // This is delayed until after the field access because running static type analysis on an
     // arbitrary field could be costly.
-    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(nodeIdMapCollection, activeNode);
+    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const maybeField: PQP.Parser.TXorNode | undefined = maybeTypablePrimaryExpression(nodeIdMapCollection, activeNode);
     if (maybeField === undefined) {
         return undefined;
     }
-    const field: TXorNode = maybeField;
+    const field: PQP.Parser.TXorNode = maybeField;
 
     const triedFieldType: TriedType = tryType(
         settings,
@@ -103,13 +97,13 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
         field.node.id,
         typeCache,
     );
-    if (ResultUtils.isErr(triedFieldType)) {
+    if (PQP.ResultUtils.isErr(triedFieldType)) {
         throw triedFieldType.error;
     }
-    const fieldType: Type.TType = triedFieldType.value;
+    const fieldType: PQP.Language.Type.TType = triedFieldType.value;
 
     // We can only autocomplete a field access if we know what fields are present.
-    const fieldEntries: ReadonlyArray<[string, Type.TType]> = fieldEntriesFromFieldType(fieldType);
+    const fieldEntries: ReadonlyArray<[string, PQP.Language.Type.TType]> = fieldEntriesFromFieldType(fieldType);
     if (fieldEntries.length === 0) {
         return undefined;
     }
@@ -122,10 +116,10 @@ function autocompleteFieldAccess<S extends IParseState = IParseState>(
     };
 }
 
-function fieldEntriesFromFieldType(type: Type.TType): ReadonlyArray<[string, Type.TType]> {
+function fieldEntriesFromFieldType(type: PQP.Language.Type.TType): ReadonlyArray<[string, PQP.Language.Type.TType]> {
     switch (type.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.AnyUnion: {
-            let fields: [string, Type.TType][] = [];
+        case PQP.Language.Type.ExtendedTypeKind.AnyUnion: {
+            let fields: [string, PQP.Language.Type.TType][] = [];
             for (const field of type.unionedTypePairs) {
                 if (
                     field.maybeExtendedKind &&
@@ -138,8 +132,8 @@ function fieldEntriesFromFieldType(type: Type.TType): ReadonlyArray<[string, Typ
             return fields;
         }
 
-        case Type.ExtendedTypeKind.DefinedRecord:
-        case Type.ExtendedTypeKind.DefinedTable:
+        case PQP.Language.Type.ExtendedTypeKind.DefinedRecord:
+        case PQP.Language.Type.ExtendedTypeKind.DefinedTable:
             return [...type.fields.entries()];
 
         default:
@@ -148,16 +142,16 @@ function fieldEntriesFromFieldType(type: Type.TType): ReadonlyArray<[string, Typ
 }
 
 function inspectFieldAccess(
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    lexerSnapshot: PQP.Lexer.LexerSnapshot,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    fieldAccess: TXorNode,
+    fieldAccess: PQP.Parser.TXorNode,
 ): InspectedFieldAccess {
     switch (fieldAccess.node.kind) {
-        case Ast.NodeKind.FieldProjection:
+        case PQP.Language.Ast.NodeKind.FieldProjection:
             return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
 
-        case Ast.NodeKind.FieldSelector:
+        case PQP.Language.Ast.NodeKind.FieldSelector:
             return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
 
         default:
@@ -165,24 +159,27 @@ function inspectFieldAccess(
                 nodeId: fieldAccess.node.id,
                 nodeKind: fieldAccess.node.kind,
             };
-            throw new CommonError.InvariantError(
-                `fieldAccess should be either ${Ast.NodeKind.FieldProjection} or ${Ast.NodeKind.FieldSelector}`,
+            throw new PQP.CommonError.InvariantError(
+                `fieldAccess should be either ${PQP.Language.Ast.NodeKind.FieldProjection} or ${PQP.Language.Ast.NodeKind.FieldSelector}`,
                 details,
             );
     }
 }
 
 function inspectFieldProjection(
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    lexerSnapshot: PQP.Lexer.LexerSnapshot,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    fieldProjection: TXorNode,
+    fieldProjection: PQP.Parser.TXorNode,
 ): InspectedFieldAccess {
     let isAutocompleteAllowed: boolean = false;
     let maybeIdentifierUnderPosition: string | undefined;
     const fieldNames: string[] = [];
 
-    for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
+    for (const fieldSelector of PQP.Parser.NodeIdMapIterator.iterFieldProjection(
+        nodeIdMapCollection,
+        fieldProjection,
+    )) {
         const inspectedFieldSelector: InspectedFieldAccess = inspectFieldSelector(
             lexerSnapshot,
             nodeIdMapCollection,
@@ -215,10 +212,10 @@ function inspectedFieldAccessFactory(isAutocompleteAllowed: boolean): InspectedF
 }
 
 function inspectFieldSelector(
-    lexerSnapshot: LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    lexerSnapshot: PQP.Lexer.LexerSnapshot,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    fieldSelector: TXorNode,
+    fieldSelector: PQP.Parser.TXorNode,
 ): InspectedFieldAccess {
     const children: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
     if (children === undefined) {
@@ -228,18 +225,18 @@ function inspectFieldSelector(
     }
 
     const generalizedIdentifierId: number = children[1];
-    const generalizedIdentifierXor: TXorNode = NodeIdMapUtils.assertGetXor(
+    const generalizedIdentifierXor: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetXor(
         nodeIdMapCollection,
         generalizedIdentifierId,
     );
     Assert.isTrue(
-        generalizedIdentifierXor.node.kind === Ast.NodeKind.GeneralizedIdentifier,
-        "generalizedIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier",
+        generalizedIdentifierXor.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
+        "generalizedIdentifier.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier",
     );
 
     switch (generalizedIdentifierXor.kind) {
-        case XorNodeKind.Ast: {
-            const generalizedIdentifier: Ast.GeneralizedIdentifier = generalizedIdentifierXor.node as Ast.GeneralizedIdentifier;
+        case PQP.Parser.XorNodeKind.Ast: {
+            const generalizedIdentifier: PQP.Language.Ast.GeneralizedIdentifier = generalizedIdentifierXor.node as PQP.Language.Ast.GeneralizedIdentifier;
             const isPositionInIdentifier: boolean = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
@@ -249,17 +246,17 @@ function inspectFieldSelector(
             };
         }
 
-        case XorNodeKind.Context: {
+        case PQP.Parser.XorNodeKind.Context: {
             // TODO [Autocomplete]:
             // This doesn't take into account of generalized identifiers consisting of multiple tokens.
             // Eg. `foo[bar baz]` or `foo[#"bar baz"].
-            const openBracketConstant: Ast.TNode = NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+            const openBracketConstant: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetChildAstByAttributeIndex(
                 nodeIdMapCollection,
                 fieldSelector.node.id,
                 0,
-                [Ast.NodeKind.Constant],
+                [PQP.Language.Ast.NodeKind.Constant],
             );
-            const maybeNextTokenPosition: Token.TokenPosition =
+            const maybeNextTokenPosition: PQP.Language.Token.TokenPosition =
                 lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;
 
             const isAutocompleteAllowed: boolean =
@@ -276,12 +273,12 @@ function inspectFieldSelector(
         }
 
         default:
-            throw Assert.isNever(generalizedIdentifierXor);
+            throw PQP.Assert.isNever(generalizedIdentifierXor);
     }
 }
 
 function autoCompleteItemsFactory(
-    fieldEntries: ReadonlyArray<[string, Type.TType]>,
+    fieldEntries: ReadonlyArray<[string, PQP.Language.Type.TType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
@@ -297,8 +294,8 @@ function autoCompleteItemsFactory(
         }
 
         // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-        const identifierKind: StringUtils.IdentifierKind = StringUtils.identifierKind(key, false);
-        const normalizedKey: string = identifierKind === StringUtils.IdentifierKind.Quote ? key.slice(2, -1) : key;
+        const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(key, false);
+        const normalizedKey: string = identifierKind === PQP.StringUtils.IdentifierKind.Quote ? key.slice(2, -1) : key;
 
         autocompleteItems.push({
             key: normalizedKey,
@@ -310,20 +307,23 @@ function autoCompleteItemsFactory(
 }
 
 function maybeTypablePrimaryExpression(
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     activeNode: ActiveNode,
-): TXorNode | undefined {
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+): PQP.Parser.TXorNode | undefined {
+    const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
 
-    let maybeContiguousPrimaryExpression: TXorNode | undefined;
+    let maybeContiguousPrimaryExpression: PQP.Parser.TXorNode | undefined;
     let matchingContiguousPrimaryExpression: boolean = true;
     for (let index: number = 0; index < numAncestors; index += 1) {
-        const xorNode: TXorNode = ancestry[index];
+        const xorNode: PQP.Parser.TXorNode = ancestry[index];
 
-        if (xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression) {
+        if (xorNode.node.kind === PQP.Language.Ast.NodeKind.RecursivePrimaryExpression) {
             // The previous ancestor must be an attribute of Rpe, which is either its head or ArrrayWrapper.
-            const xorNodeBeforeRpe: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index);
+            const xorNodeBeforeRpe: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetNthPreviousXor(
+                ancestry,
+                index,
+            );
 
             // If we're coming from the head node,
             // then return undefined as there can be no nodes before the head ode.
@@ -333,21 +333,25 @@ function maybeTypablePrimaryExpression(
             // Else if we're coming from the ArrayWrapper,
             // then grab the previous sibling.
             else if (xorNodeBeforeRpe.node.maybeAttributeIndex === 1) {
-                const rpeChild: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index, 2);
-                return NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+                const rpeChild: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetNthPreviousXor(
+                    ancestry,
+                    index,
+                    2,
+                );
+                return PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
                     nodeIdMapCollection,
                     rpeChild.node.id,
                 );
             } else {
-                throw new CommonError.InvariantError(
-                    `the child of a ${Ast.NodeKind.RecursivePrimaryExpression} should have an attribute index of either 1 or 2`,
+                throw new PQP.CommonError.InvariantError(
+                    `the child of a ${PQP.Language.Ast.NodeKind.RecursivePrimaryExpression} should have an attribute index of either 1 or 2`,
                     {
                         parentId: xorNode.node.id,
                         childId: xorNodeBeforeRpe.node.id,
                     },
                 );
             }
-        } else if (matchingContiguousPrimaryExpression && XorNodeUtils.isTPrimaryExpression(xorNode)) {
+        } else if (matchingContiguousPrimaryExpression && PQP.Parser.XorNodeUtils.isTPrimaryExpression(xorNode)) {
             maybeContiguousPrimaryExpression = xorNode;
         } else {
             matchingContiguousPrimaryExpression = false;

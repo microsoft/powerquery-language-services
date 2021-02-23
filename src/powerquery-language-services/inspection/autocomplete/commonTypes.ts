@@ -1,26 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "../../common";
-import { Constant, Keyword, Token, Type } from "../../language";
-import { TXorNode } from "../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
 
-export type TriedAutocompleteFieldAccess = Result<AutocompleteFieldAccess | undefined, CommonError.CommonError>;
+export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | undefined, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteKeyword = Result<AutocompleteKeyword, CommonError.CommonError>;
+export type TriedAutocompleteKeyword = PQP.Result<AutocompleteKeyword, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteLanguageConstant = Result<
+export type TriedAutocompleteLanguageConstant = PQP.Result<
     AutocompleteLanguageConstant | undefined,
-    CommonError.CommonError
+    PQP.CommonError.CommonError
 >;
 
-export type TriedAutocompletePrimitiveType = Result<AutocompletePrimitiveType, CommonError.CommonError>;
+export type TriedAutocompletePrimitiveType = PQP.Result<AutocompletePrimitiveType, PQP.CommonError.CommonError>;
 
-export type AutocompleteKeyword = ReadonlyArray<Keyword.KeywordKind>;
+export type AutocompleteKeyword = ReadonlyArray<PQP.Language.Keyword.KeywordKind>;
 
-export type AutocompleteLanguageConstant = Constant.LanguageConstantKind;
+export type AutocompleteLanguageConstant = PQP.Language.Constant.LanguageConstantKind;
 
-export type AutocompletePrimitiveType = ReadonlyArray<Constant.PrimitiveTypeConstantKind>;
+export type AutocompletePrimitiveType = ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind>;
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
@@ -31,12 +29,12 @@ export interface Autocomplete {
 
 export interface AutocompleteItem {
     readonly key: string;
-    readonly type: Type.TType;
+    readonly type: PQP.Language.Type.TType;
 }
 
 export interface AutocompleteFieldAccess {
-    readonly field: TXorNode;
-    readonly fieldType: Type.TType;
+    readonly field: PQP.Parser.TXorNode;
+    readonly fieldType: PQP.Language.Type.TType;
     readonly inspectedFieldAccess: InspectedFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }
@@ -47,6 +45,6 @@ export interface InspectedFieldAccess {
     readonly fieldNames: ReadonlyArray<string>;
 }
 
-export interface TrailingToken extends Token.Token {
+export interface TrailingToken extends PQP.Language.Token.Token {
     readonly isInOrOnPosition: boolean;
 }

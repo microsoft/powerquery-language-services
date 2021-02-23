@@ -1,80 +1,89 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "../../../common";
-import { Ast, Constant, Type, TypeUtils } from "../../../language";
-import { NodeIdMap, NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
+import { Assert } from "@microsoft/powerquery-parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeUnaryExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
 
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeUnaryOperatorWrapper:
-        | TXorNode
-        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
-        Ast.NodeKind.ArrayWrapper,
+        | PQP.Parser.TXorNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        PQP.Language.Ast.NodeKind.ArrayWrapper,
     ]);
     if (maybeUnaryOperatorWrapper === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
-    const unaryOperatorWrapper: TXorNode | undefined = maybeUnaryOperatorWrapper;
+    const unaryOperatorWrapper: PQP.Parser.TXorNode | undefined = maybeUnaryOperatorWrapper;
 
-    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeExpression: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
         undefined,
     );
     if (maybeExpression === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
-    const expression: TXorNode = maybeExpression;
+    const expression: PQP.Parser.TXorNode = maybeExpression;
 
-    const expressionType: Type.TType = inspectXor(state, expression);
-    if (expressionType.kind === Type.TypeKind.Number) {
+    const expressionType: PQP.Language.Type.TType = inspectXor(state, expression);
+    if (expressionType.kind === PQP.Language.Type.TypeKind.Number) {
         return inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
-    } else if (expressionType.kind === Type.TypeKind.Logical) {
+    } else if (expressionType.kind === PQP.Language.Type.TypeKind.Logical) {
         return inspectTypeUnaryLogical(state, expressionType, unaryOperatorWrapper.node.id);
     } else {
-        return Type.NoneInstance;
+        return PQP.Language.Type.NoneInstance;
     }
 }
 
-type NumberUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperatorKind.Negative | Constant.UnaryOperatorKind.Positive>;
-type LogicalUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperatorKind.Not>;
+type NumberUnaryNodeOperator = PQP.Language.Ast.IConstant<
+    PQP.Language.Constant.UnaryOperatorKind.Negative | PQP.Language.Constant.UnaryOperatorKind.Positive
+>;
+type LogicalUnaryNodeOperator = PQP.Language.Ast.IConstant<PQP.Language.Constant.UnaryOperatorKind.Not>;
 
 function inspectTypeUnaryNumber(
     state: InspectTypeState,
-    unaryExpressionType: Type.TNumber,
+    unaryExpressionType: PQP.Language.Type.TNumber,
     unaryOperatorWrapperId: number,
-): Type.TNumber | Type.None {
-    const unaryNodeOperators: ReadonlyArray<NumberUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
+): PQP.Language.Type.TNumber | PQP.Language.Type.None {
+    const unaryNodeOperators: ReadonlyArray<NumberUnaryNodeOperator> = PQP.Assert.asDefined(
+        PQP.Parser.NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<NumberUnaryNodeOperator>;
 
-    const expectedUnaryOperatorKinds: ReadonlyArray<Constant.UnaryOperatorKind> = [
-        Constant.UnaryOperatorKind.Positive,
-        Constant.UnaryOperatorKind.Negative,
+    const expectedUnaryOperatorKinds: ReadonlyArray<PQP.Language.Constant.UnaryOperatorKind> = [
+        PQP.Language.Constant.UnaryOperatorKind.Positive,
+        PQP.Language.Constant.UnaryOperatorKind.Negative,
     ];
-    const unaryOperators: (Constant.UnaryOperatorKind.Negative | Constant.UnaryOperatorKind.Positive)[] = [];
+    const unaryOperators: (
+        | PQP.Language.Constant.UnaryOperatorKind.Negative
+        | PQP.Language.Constant.UnaryOperatorKind.Positive
+    )[] = [];
     let isPositive: boolean = true;
 
     for (const operator of unaryNodeOperators) {
         if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
-            return Type.NoneInstance;
+            return PQP.Language.Type.NoneInstance;
         }
 
         unaryOperators.push(operator.constantKind);
-        if (operator.constantKind === Constant.UnaryOperatorKind.Negative) {
+        if (operator.constantKind === PQP.Language.Constant.UnaryOperatorKind.Negative) {
             isPositive = !isPositive;
         }
     }
 
     switch (unaryExpressionType.maybeExtendedKind) {
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return TypeUtils.numberLiteralFactory(
+        case PQP.Language.Type.ExtendedTypeKind.NumberLiteral:
+            return PQP.Language.TypeUtils.numberLiteralFactory(
                 unaryExpressionType.isNullable,
                 [...unaryOperators, unaryExpressionType.literal].join(""),
             );
@@ -89,16 +98,16 @@ function inspectTypeUnaryNumber(
 
 function inspectTypeUnaryLogical(
     state: InspectTypeState,
-    unaryExpressionType: Type.Logical,
+    unaryExpressionType: PQP.Language.Type.Logical,
     unaryOperatorWrapperId: number,
-): Type.Logical | Type.None {
+): PQP.Language.Type.Logical | PQP.Language.Type.None {
     const unaryNodeOperators: ReadonlyArray<LogicalUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
+        PQP.Parser.NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<LogicalUnaryNodeOperator>;
 
     for (const operator of unaryNodeOperators) {
-        if (operator.constantKind !== Constant.UnaryOperatorKind.Not) {
-            return Type.NoneInstance;
+        if (operator.constantKind !== PQP.Language.Constant.UnaryOperatorKind.Not) {
+            return PQP.Language.Type.NoneInstance;
         }
     }
 

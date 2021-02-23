@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
-import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
-export function inspectTypeIdentifierExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeIdentifierExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.IdentifierExpression);
 
-    if (xorNode.kind === XorNodeKind.Context) {
-        return Type.UnknownInstance;
+    if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const dereferencedType: Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
-    return dereferencedType ?? Type.UnknownInstance;
+    const dereferencedType: PQP.Language.Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
+    return dereferencedType ?? PQP.Language.Type.UnknownInstance;
 }

@@ -6,7 +6,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import * as TestUtils from "./testUtils";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
 import { assertIsParseErr, assertIsParseOk } from "@microsoft/powerquery-parser/lib/powerquery-parser/task/taskUtils";
 import { assert, expect } from "chai";
 import { CompletionItem, Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
@@ -14,11 +14,53 @@ import { CompletionItem, Hover, MarkupContent, Position, SignatureHelp } from "v
 import * as TestConstants from "../testConstants";
 
 import { Inspection, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
+import { ActiveNodeUtils, InspectionSettings } from "../../powerquery-language-services/inspection";
 import { MockDocument } from "../mockDocument";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
     return value;
+}
+
+export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: PQP.LexSettings & PQP.ParseSettings<S> & InspectionSettings,
+    text: string,
+    position: Inspection.Position,
+): Inspection.Autocomplete {
+    const triedLexParseTask: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+    TaskUtils.assertIsParseStage(triedLexParseTask);
+
+    if (PQP.TaskUtils.isParseOk(triedLexParseTask)) {
+        return Inspection.autocomplete(
+            settings,
+            triedLexParseTask.parseState,
+            Inspection.createTypeCache(),
+            ActiveNodeUtils.maybeActiveNode(
+                triedLexParseTask.nodeIdMapCollection,
+                triedLexParseTask.leafNodeIds,
+                position,
+            ),
+            undefined,
+        );
+    } else if (PQP.TaskUtils.isParseErr(triedLexParseTask)) {
+        if (triedLexParseTask.isCommonError) {
+            throw triedLexParseTask.error;
+        }
+
+        return Inspection.autocomplete(
+            settings,
+            triedLexParseTask.parseState,
+            Inspection.createTypeCache(),
+            ActiveNodeUtils.maybeActiveNode(
+                triedLexParseTask.nodeIdMapCollection,
+                triedLexParseTask.leafNodeIds,
+                position,
+            ),
+            undefined,
+        );
+    } else {
+        throw new Error("should never be reached");
+    }
 }
 
 export function assertGetCompletionItem(label: string, completionItems: ReadonlyArray<CompletionItem>): CompletionItem {

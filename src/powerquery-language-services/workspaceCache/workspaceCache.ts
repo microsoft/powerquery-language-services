@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Inspection } from "..";
+
 export const enum CacheStageKind {
     Lexer = "Lexer",
     LexerSnapshot = "LexerSnapshot",
@@ -30,7 +32,7 @@ export type ParserCacheItem = CacheItem<PQP.Parser.ParseOk, PQP.Parser.ParseErro
 
 export type TInspectionCacheItem = InspectionCacheItem | TParserCacheItem;
 export type InspectionCacheItem = CacheItem<
-    PQP.Inspection.Inspection,
+    Inspection.Inspection,
     PQP.CommonError.CommonError,
     CacheStageKind.Inspection
 >;

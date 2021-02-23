@@ -1,24 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "../../../language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeErrorHandlingExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression:
-        | TXorNode
-        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 2, [
-        Ast.NodeKind.OtherwiseExpression,
-    ]);
+        | PQP.Parser.TXorNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        2,
+        [PQP.Language.Ast.NodeKind.OtherwiseExpression],
+    );
 
-    return TypeUtils.anyUnionFactory([
+    return PQP.Language.TypeUtils.anyUnionFactory([
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXor(state, maybeOtherwiseExpression)
-            : TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record),
+            : PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Record),
     ]);
 }

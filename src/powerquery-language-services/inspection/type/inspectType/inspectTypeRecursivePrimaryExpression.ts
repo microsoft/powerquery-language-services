@@ -1,49 +1,57 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "../../../language";
-import { NodeIdMapIterator, NodeIdMapUtils, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeRecursivePrimaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeRecursivePrimaryExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
 
-    const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeHead: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
         undefined,
     );
     if (maybeHead === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const headType: Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
-    if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
+    const headType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    if (headType.kind === PQP.Language.Type.TypeKind.None || headType.kind === PQP.Language.Type.TypeKind.Unknown) {
         return headType;
     }
 
     const maybeArrayWrapper:
-        | TXorNode
-        | undefined = NodeIdMapUtils.maybeChildXorByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 1, [
-        Ast.NodeKind.ArrayWrapper,
-    ]);
+        | PQP.Parser.TXorNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        [PQP.Language.Ast.NodeKind.ArrayWrapper],
+    );
     if (maybeArrayWrapper === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
+    const maybeExpressions:
+        | ReadonlyArray<PQP.Parser.TXorNode>
+        | undefined = PQP.Parser.NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
         maybeArrayWrapper.node.id,
     );
     if (maybeExpressions === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    let leftType: Type.TType = headType;
+    let leftType: PQP.Language.Type.TType = headType;
     for (const right of maybeExpressions) {
-        const rightType: Type.TType = inspectXor(state, right);
+        const rightType: PQP.Language.Type.TType = inspectXor(state, right);
         leftType = rightType;
     }
 

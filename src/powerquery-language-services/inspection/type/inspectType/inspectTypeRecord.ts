@@ -1,26 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "../../../language";
-import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): Type.DefinedRecord {
+export function inspectTypeRecord(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.DefinedRecord {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsRecord(xorNode);
+    PQP.Parser.XorNodeUtils.assertIsRecord(xorNode);
 
-    const fields: Map<string, Type.TType> = new Map();
-    for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
+    const fields: Map<string, PQP.Language.Type.TType> = new Map();
+    for (const keyValuePair of PQP.Parser.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
             fields.set(keyValuePair.keyLiteral, inspectXor(state, keyValuePair.maybeValue));
         } else {
-            fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
+            fields.set(keyValuePair.keyLiteral, PQP.Language.Type.UnknownInstance);
         }
     }
 
     return {
-        kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+        kind: PQP.Language.Type.TypeKind.Record,
+        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.DefinedRecord,
         isNullable: false,
         fields,
         isOpen: false,

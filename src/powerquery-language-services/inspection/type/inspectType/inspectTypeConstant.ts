@@ -1,76 +1,75 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant, Type, TypeUtils } from "../../../language";
-import { TXorNode, XorNodeKind, XorNodeUtils } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
 
-export function inspectTypeConstant(xorNode: TXorNode): Type.TType {
-    XorNodeUtils.assertAstNodeKind(xorNode, Ast.NodeKind.Constant);
+export function inspectTypeConstant(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TType {
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Constant);
 
-    if (xorNode.kind === XorNodeKind.Context) {
-        return Type.UnknownInstance;
+    if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
+        return PQP.Language.Type.UnknownInstance;
     }
 
-    const constant: Ast.TConstant = xorNode.node as Ast.TConstant;
+    const constant: PQP.Language.Ast.TConstant = xorNode.node as PQP.Language.Ast.TConstant;
     switch (constant.constantKind) {
-        case Constant.PrimitiveTypeConstantKind.Action:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Action);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Action:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Action);
 
-        case Constant.PrimitiveTypeConstantKind.Any:
-            return Type.AnyInstance;
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Any:
+            return PQP.Language.Type.AnyInstance;
 
-        case Constant.PrimitiveTypeConstantKind.AnyNonNull:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.AnyNonNull);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.AnyNonNull:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.AnyNonNull);
 
-        case Constant.PrimitiveTypeConstantKind.Binary:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Binary);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Binary:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Binary);
 
-        case Constant.PrimitiveTypeConstantKind.Date:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Date);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Date:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Date);
 
-        case Constant.PrimitiveTypeConstantKind.DateTime:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.DateTime);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.DateTime:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.DateTime);
 
-        case Constant.PrimitiveTypeConstantKind.DateTimeZone:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.DateTimeZone);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.DateTimeZone:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.DateTimeZone);
 
-        case Constant.PrimitiveTypeConstantKind.Duration:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Duration);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Duration:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Duration);
 
-        case Constant.PrimitiveTypeConstantKind.Function:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Function);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Function:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Function);
 
-        case Constant.PrimitiveTypeConstantKind.List:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.List);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.List:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.List);
 
-        case Constant.PrimitiveTypeConstantKind.Logical:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Logical);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Logical:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Logical);
 
-        case Constant.PrimitiveTypeConstantKind.None:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.None);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.None:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.None);
 
-        case Constant.PrimitiveTypeConstantKind.Null:
-            return Type.NoneInstance;
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Null:
+            return PQP.Language.Type.NoneInstance;
 
-        case Constant.PrimitiveTypeConstantKind.Number:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Number);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Number:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Number);
 
-        case Constant.PrimitiveTypeConstantKind.Record:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Record);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Record:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Record);
 
-        case Constant.PrimitiveTypeConstantKind.Table:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Table);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Table:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Table);
 
-        case Constant.PrimitiveTypeConstantKind.Text:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Text);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Text:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Text);
 
-        case Constant.PrimitiveTypeConstantKind.Time:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Time);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Time:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Time);
 
-        case Constant.PrimitiveTypeConstantKind.Type:
-            return TypeUtils.primitiveTypeFactory(false, Type.TypeKind.Type);
+        case PQP.Language.Constant.PrimitiveTypeConstantKind.Type:
+            return PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Type);
 
         default:
-            return Type.UnknownInstance;
+            return PQP.Language.Type.UnknownInstance;
     }
 }

@@ -1,54 +1,66 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "../../../common";
-import { Ast, AstUtils, Constant, Type, TypeUtils } from "../../../language";
-import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
+import { Assert } from "@microsoft/powerquery-parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
-type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
+type TRecordOrTable =
+    | PQP.Language.Type.Record
+    | PQP.Language.Type.Table
+    | PQP.Language.Type.DefinedRecord
+    | PQP.Language.Type.DefinedTable;
 
-export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TXorNode): Type.TType {
+export function inspectTypeTBinOpExpression(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.TType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
+    Assert.isTrue(PQP.Language.AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
         nodeKind: xorNode.node.kind,
     });
 
     const parentId: number = xorNode.node.id;
-    const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
+    const children: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
         parentId,
     );
 
-    const maybeLeft: TXorNode | undefined = children[0];
-    const maybeOperatorKind: Constant.TBinOpExpressionOperator | undefined =
-        children[1] === undefined || children[1].kind === XorNodeKind.Context
+    const maybeLeft: PQP.Parser.TXorNode | undefined = children[0];
+    const maybeOperatorKind: PQP.Language.Constant.TBinOpExpressionOperator | undefined =
+        children[1] === undefined || children[1].kind === PQP.Parser.XorNodeKind.Context
             ? undefined
-            : (children[1].node as Ast.IConstant<Constant.TBinOpExpressionOperator>).constantKind;
-    const maybeRight: TXorNode | undefined = children[2];
+            : (children[1].node as PQP.Language.Ast.IConstant<PQP.Language.Constant.TBinOpExpressionOperator>)
+                  .constantKind;
+    const maybeRight: PQP.Parser.TXorNode | undefined = children[2];
 
     // ''
     if (maybeLeft === undefined) {
-        return Type.UnknownInstance;
+        return PQP.Language.Type.UnknownInstance;
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
         return inspectXor(state, maybeLeft);
     }
     // '1 +'
-    else if (maybeRight === undefined || maybeRight.kind === XorNodeKind.Context) {
-        const leftType: Type.TType = inspectXor(state, maybeLeft);
-        const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
+    else if (maybeRight === undefined || maybeRight.kind === PQP.Parser.XorNodeKind.Context) {
+        const leftType: PQP.Language.Type.TType = inspectXor(state, maybeLeft);
+        const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
-        const maybeAllowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = PartialLookup.get(key);
+        const maybeAllowedTypeKinds: ReadonlySet<PQP.Language.Type.TypeKind> | undefined = PartialLookup.get(key);
         if (maybeAllowedTypeKinds === undefined) {
-            return Type.NoneInstance;
+            return PQP.Language.Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.primitiveTypeFactory(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
+            return PQP.Language.TypeUtils.primitiveTypeFactory(
+                leftType.isNullable,
+                maybeAllowedTypeKinds.values().next().value,
+            );
         } else {
-            const unionedTypePairs: Type.TType[] = [];
+            const unionedTypePairs: PQP.Language.Type.TType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
@@ -56,45 +68,49 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
                     isNullable: true,
                 });
             }
-            return TypeUtils.anyUnionFactory(unionedTypePairs);
+            return PQP.Language.TypeUtils.anyUnionFactory(unionedTypePairs);
         }
     }
     // '1 + 1'
     else {
-        const leftType: Type.TType = inspectXor(state, maybeLeft);
-        const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TType = inspectXor(state, maybeRight);
+        const leftType: PQP.Language.Type.TType = inspectXor(state, maybeLeft);
+        const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
+        const rightType: PQP.Language.Type.TType = inspectXor(state, maybeRight);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
-        const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
+        const maybeResultTypeKind: PQP.Language.Type.TypeKind | undefined = Lookup.get(key);
         if (maybeResultTypeKind === undefined) {
-            return Type.NoneInstance;
+            return PQP.Language.Type.NoneInstance;
         }
-        const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+        const resultTypeKind: PQP.Language.Type.TypeKind = maybeResultTypeKind;
 
         // '[foo = 1] & [bar = 2]'
         if (
-            operatorKind === Constant.ArithmeticOperatorKind.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
+            operatorKind === PQP.Language.Constant.ArithmeticOperatorKind.And &&
+            (resultTypeKind === PQP.Language.Type.TypeKind.Record ||
+                resultTypeKind === PQP.Language.Type.TypeKind.Table)
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            return TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            return PQP.Language.TypeUtils.primitiveTypeFactory(
+                leftType.isNullable || rightType.isNullable,
+                resultTypeKind,
+            );
         }
     }
 }
 
-function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TType {
+function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): PQP.Language.Type.TType {
     if (leftType.kind !== rightType.kind) {
         const details: {} = {
             leftTypeKind: leftType.kind,
             rightTypeKind: rightType.kind,
         };
-        throw new CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
+        throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
-        return TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, leftType.kind);
+        return PQP.Language.TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
@@ -103,8 +119,10 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined)
     ) {
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
-        const extendedType: Type.DefinedRecord | Type.DefinedTable =
-            leftType.maybeExtendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
+        const extendedType: PQP.Language.Type.DefinedRecord | PQP.Language.Type.DefinedTable =
+            leftType.maybeExtendedKind !== undefined
+                ? leftType
+                : (rightType as PQP.Language.Type.DefinedRecord | PQP.Language.Type.DefinedTable);
         return {
             ...extendedType,
             isOpen: true,
@@ -115,17 +133,19 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         // The cast should be safe since the first if statement tests their the same kind,
         // and the above checks if they're the same extended kind.
         return unionFields([leftType, rightType] as
-            | [Type.DefinedRecord, Type.DefinedRecord]
-            | [Type.DefinedTable, Type.DefinedTable]);
+            | [PQP.Language.Type.DefinedRecord, PQP.Language.Type.DefinedRecord]
+            | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]);
     } else {
         throw Assert.shouldNeverBeReachedTypescript();
     }
 }
 
 function unionFields([leftType, rightType]:
-    | [Type.DefinedRecord, Type.DefinedRecord]
-    | [Type.DefinedTable, Type.DefinedTable]): Type.DefinedRecord | Type.DefinedTable {
-    const combinedFields: Map<string, Type.TType> = new Map(leftType.fields);
+    | [PQP.Language.Type.DefinedRecord, PQP.Language.Type.DefinedRecord]
+    | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]):
+    | PQP.Language.Type.DefinedRecord
+    | PQP.Language.Type.DefinedTable {
+    const combinedFields: Map<string, PQP.Language.Type.TType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
@@ -140,98 +160,164 @@ function unionFields([leftType, rightType]:
 
 // Keys: <first operand> <operator> <second operand>
 // Values: the resulting type of the binary operation expression.
-// Eg. '1 > 3' -> Type.TypeKind.Number
-export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
-    ...lookupsForRelationalFactory(Type.TypeKind.Null),
-    ...lookupsForEqualityFactory(Type.TypeKind.Null),
+// Eg. '1 > 3' -> PQP.Language.Type.TypeKind.Number
+export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Null),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Null),
 
-    ...lookupsForRelationalFactory(Type.TypeKind.Logical),
-    ...lookupsForEqualityFactory(Type.TypeKind.Logical),
-    ...lookupsForLogicalFactory(Type.TypeKind.Logical),
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Logical),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Logical),
+    ...lookupsForLogicalFactory(PQP.Language.Type.TypeKind.Logical),
 
-    ...lookupsForRelationalFactory(Type.TypeKind.Number),
-    ...lookupsForEqualityFactory(Type.TypeKind.Number),
-    ...lookupsForArithmeticFactory(Type.TypeKind.Number),
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Number),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Number),
+    ...lookupsForArithmeticFactory(PQP.Language.Type.TypeKind.Number),
 
-    ...lookupsForRelationalFactory(Type.TypeKind.Time),
-    ...lookupsForEqualityFactory(Type.TypeKind.Time),
-    ...lookupsForClockKindFactory(Type.TypeKind.Time),
-    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
-
-    ...lookupsForRelationalFactory(Type.TypeKind.Date),
-    ...lookupsForEqualityFactory(Type.TypeKind.Date),
-    ...lookupsForClockKindFactory(Type.TypeKind.Date),
-    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
-
-    ...lookupsForRelationalFactory(Type.TypeKind.DateTime),
-    ...lookupsForEqualityFactory(Type.TypeKind.DateTime),
-    ...lookupsForClockKindFactory(Type.TypeKind.DateTime),
-
-    ...lookupsForRelationalFactory(Type.TypeKind.DateTimeZone),
-    ...lookupsForEqualityFactory(Type.TypeKind.DateTimeZone),
-    ...lookupsForClockKindFactory(Type.TypeKind.DateTimeZone),
-
-    ...lookupsForRelationalFactory(Type.TypeKind.Duration),
-    ...lookupsForEqualityFactory(Type.TypeKind.Duration),
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Time),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Time),
+    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.Time),
     [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration),
-        Type.TypeKind.Duration,
-    ],
-    [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration),
-        Type.TypeKind.Duration,
-    ],
-    [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Multiplication, Type.TypeKind.Number),
-        Type.TypeKind.Duration,
-    ],
-    [
-        lookupKey(Type.TypeKind.Number, Constant.ArithmeticOperatorKind.Multiplication, Type.TypeKind.Duration),
-        Type.TypeKind.Duration,
-    ],
-    [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Division, Type.TypeKind.Number),
-        Type.TypeKind.Duration,
+        lookupKey(
+            PQP.Language.Type.TypeKind.Date,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.Time,
+        ),
+        PQP.Language.Type.TypeKind.DateTime,
     ],
 
-    ...lookupsForRelationalFactory(Type.TypeKind.Text),
-    ...lookupsForEqualityFactory(Type.TypeKind.Text),
-    [lookupKey(Type.TypeKind.Text, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Text), Type.TypeKind.Text],
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Date),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Date),
+    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.Date),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Date,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.Time,
+        ),
+        PQP.Language.Type.TypeKind.DateTime,
+    ],
 
-    ...lookupsForRelationalFactory(Type.TypeKind.Binary),
-    ...lookupsForEqualityFactory(Type.TypeKind.Binary),
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.DateTime),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.DateTime),
+    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.DateTime),
 
-    ...lookupsForEqualityFactory(Type.TypeKind.List),
-    [lookupKey(Type.TypeKind.List, Constant.ArithmeticOperatorKind.And, Type.TypeKind.List), Type.TypeKind.List],
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.DateTimeZone),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.DateTimeZone),
+    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.DateTimeZone),
 
-    ...lookupsForEqualityFactory(Type.TypeKind.Record),
-    [lookupKey(Type.TypeKind.Record, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Record), Type.TypeKind.Record],
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Duration),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Duration),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Duration,
+            PQP.Language.Constant.ArithmeticOperatorKind.Addition,
+            PQP.Language.Type.TypeKind.Duration,
+        ),
+        PQP.Language.Type.TypeKind.Duration,
+    ],
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Duration,
+            PQP.Language.Constant.ArithmeticOperatorKind.Subtraction,
+            PQP.Language.Type.TypeKind.Duration,
+        ),
+        PQP.Language.Type.TypeKind.Duration,
+    ],
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Duration,
+            PQP.Language.Constant.ArithmeticOperatorKind.Multiplication,
+            PQP.Language.Type.TypeKind.Number,
+        ),
+        PQP.Language.Type.TypeKind.Duration,
+    ],
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Number,
+            PQP.Language.Constant.ArithmeticOperatorKind.Multiplication,
+            PQP.Language.Type.TypeKind.Duration,
+        ),
+        PQP.Language.Type.TypeKind.Duration,
+    ],
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Duration,
+            PQP.Language.Constant.ArithmeticOperatorKind.Division,
+            PQP.Language.Type.TypeKind.Number,
+        ),
+        PQP.Language.Type.TypeKind.Duration,
+    ],
 
-    ...lookupsForEqualityFactory(Type.TypeKind.Table),
-    [lookupKey(Type.TypeKind.Table, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Table), Type.TypeKind.Table],
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Text),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Text),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Text,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.Text,
+        ),
+        PQP.Language.Type.TypeKind.Text,
+    ],
+
+    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Binary),
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Binary),
+
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.List),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.List,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.List,
+        ),
+        PQP.Language.Type.TypeKind.List,
+    ],
+
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Record),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Record,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.Record,
+        ),
+        PQP.Language.Type.TypeKind.Record,
+    ],
+
+    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Table),
+    [
+        lookupKey(
+            PQP.Language.Type.TypeKind.Table,
+            PQP.Language.Constant.ArithmeticOperatorKind.And,
+            PQP.Language.Type.TypeKind.Table,
+        ),
+        PQP.Language.Type.TypeKind.Table,
+    ],
 ]);
 
 // Keys: <first operand> <operator>
 // Values: a set of types that are allowed for <second operand>
 // Eg. '1 + ' ->
-export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = new Map(
+export const PartialLookup: ReadonlyMap<string, ReadonlySet<PQP.Language.Type.TypeKind>> = new Map(
     // Grab the keys
     [...Lookup.keys()]
         .reduce(
             (
-                binaryExpressionPartialLookup: Map<string, Set<Type.TypeKind>>,
+                binaryExpressionPartialLookup: Map<string, Set<PQP.Language.Type.TypeKind>>,
                 key: string,
                 _currentIndex,
                 _array,
-            ): Map<string, Set<Type.TypeKind>> => {
+            ): Map<string, Set<PQP.Language.Type.TypeKind>> => {
                 const lastDeliminatorIndex: number = key.lastIndexOf(",");
                 // Grab '<first operand> , <operator>'.
                 const partialKey: string = key.slice(0, lastDeliminatorIndex);
                 // Grab '<second operand>'.
-                const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
+                const potentialNewValue: PQP.Language.Type.TypeKind = key.slice(
+                    lastDeliminatorIndex + 1,
+                ) as PQP.Language.Type.TypeKind;
 
-                // Add the potentialNewValue if it's a new type.
-                const maybeValues: Set<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(partialKey);
+                // Add the potentialNewValue if it's a new PQP.Language.type.
+                const maybeValues: Set<PQP.Language.Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(
+                    partialKey,
+                );
                 // First occurance of '<first operand> , <operator>'
                 if (maybeValues === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, new Set([potentialNewValue]));
@@ -247,57 +333,114 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
 );
 
 export function lookupKey(
-    leftTypeKind: Type.TypeKind,
-    operatorKind: Constant.TBinOpExpressionOperator,
-    rightTypeKind: Type.TypeKind,
+    leftTypeKind: PQP.Language.Type.TypeKind,
+    operatorKind: PQP.Language.Constant.TBinOpExpressionOperator,
+    rightTypeKind: PQP.Language.Type.TypeKind,
 ): string {
     return `${leftTypeKind},${operatorKind},${rightTypeKind}`;
 }
 
-export function partialLookupKey(leftTypeKind: Type.TypeKind, operatorKind: Constant.TBinOpExpressionOperator): string {
+export function partialLookupKey(
+    leftTypeKind: PQP.Language.Type.TypeKind,
+    operatorKind: PQP.Language.Constant.TBinOpExpressionOperator,
+): string {
     return `${leftTypeKind},${operatorKind}`;
 }
 
-function lookupsForRelationalFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForRelationalFactory(
+    typeKind: PQP.Language.Type.TypeKind,
+): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThan, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThanEqualTo, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.LessThan, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.LessThanEqualTo, typeKind), Type.TypeKind.Logical],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.RelationalOperatorKind.GreaterThan, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.RelationalOperatorKind.GreaterThanEqualTo, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.RelationalOperatorKind.LessThan, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.RelationalOperatorKind.LessThanEqualTo, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
     ];
 }
 
-function lookupsForEqualityFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForEqualityFactory(
+    typeKind: PQP.Language.Type.TypeKind,
+): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.EqualityOperatorKind.EqualTo, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.EqualityOperatorKind.NotEqualTo, typeKind), Type.TypeKind.Logical],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.EqualityOperatorKind.EqualTo, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.EqualityOperatorKind.NotEqualTo, typeKind),
+            PQP.Language.Type.TypeKind.Logical,
+        ],
     ];
 }
 
 // Note: does not include the and <'&'> Constant.
-function lookupsForArithmeticFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForArithmeticFactory(
+    typeKind: PQP.Language.Type.TypeKind,
+): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Division, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Multiplication, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.ArithmeticOperatorKind.Division, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.ArithmeticOperatorKind.Multiplication, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.ArithmeticOperatorKind.Subtraction, typeKind), typeKind],
     ];
 }
 
-function lookupsForLogicalFactory(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
+function lookupsForLogicalFactory(
+    typeKind: PQP.Language.Type.TypeKind,
+): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.LogicalOperatorKind.And, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.LogicalOperatorKind.Or, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.LogicalOperatorKind.And, typeKind), typeKind],
+        [lookupKey(typeKind, PQP.Language.Constant.LogicalOperatorKind.Or, typeKind), typeKind],
     ];
 }
 
 function lookupsForClockKindFactory(
-    typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
-): ReadonlyArray<[string, Type.TypeKind]> {
+    typeKind:
+        | PQP.Language.Type.TypeKind.Date
+        | PQP.Language.Type.TypeKind.DateTime
+        | PQP.Language.Type.TypeKind.DateTimeZone
+        | PQP.Language.Type.TypeKind.Time,
+): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration), typeKind],
-        [lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, typeKind), Type.TypeKind.Duration],
+        [
+            lookupKey(
+                typeKind,
+                PQP.Language.Constant.ArithmeticOperatorKind.Addition,
+                PQP.Language.Type.TypeKind.Duration,
+            ),
+            typeKind,
+        ],
+        [
+            lookupKey(
+                PQP.Language.Type.TypeKind.Duration,
+                PQP.Language.Constant.ArithmeticOperatorKind.Addition,
+                typeKind,
+            ),
+            typeKind,
+        ],
+        [
+            lookupKey(
+                typeKind,
+                PQP.Language.Constant.ArithmeticOperatorKind.Subtraction,
+                PQP.Language.Type.TypeKind.Duration,
+            ),
+            typeKind,
+        ],
+        [
+            lookupKey(typeKind, PQP.Language.Constant.ArithmeticOperatorKind.Subtraction, typeKind),
+            PQP.Language.Type.TypeKind.Duration,
+        ],
     ];
 }
