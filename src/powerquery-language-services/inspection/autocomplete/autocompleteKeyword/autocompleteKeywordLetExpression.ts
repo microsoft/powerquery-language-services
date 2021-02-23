@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Keyword } from "../../../language";
-import { NodeIdMapIterator, TXorNode, XorNodeKind } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { PositionUtils } from "../../position";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
@@ -11,25 +11,25 @@ import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordLetExpression(
     state: InspectAutocompleteKeywordState,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
-    const child: TXorNode = state.child;
-    let maybeInspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
+    const child: PQP.Parser.TXorNode = state.child;
+    let maybeInspected: ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined;
 
     // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
     // `let x = 1 |`
-    if (child.node.maybeAttributeIndex === 2 && child.kind === XorNodeKind.Context) {
+    if (child.node.maybeAttributeIndex === 2 && child.kind === PQP.Parser.XorNodeKind.Context) {
         maybeInspected = autocompleteLastKeyValuePair(
             state,
-            NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
+            PQP.Parser.NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, state.parent),
         );
         if (state.maybeTrailingToken !== undefined) {
             if (state.maybeTrailingToken.isInOrOnPosition === true) {
                 // We don't want maybeInspected to be zero legnth.
                 // It's either undefined or non-zero length.
                 maybeInspected = autocompleteKeywordTrailingText(maybeInspected ?? [], state.maybeTrailingToken, [
-                    Keyword.KeywordKind.In,
+                    PQP.Language.Keyword.KeywordKind.In,
                 ]);
                 return maybeInspected.length ? maybeInspected : undefined;
             } else if (
@@ -39,12 +39,14 @@ export function autocompleteKeywordLetExpression(
                     true,
                 )
             ) {
-                return maybeInspected !== undefined ? [...maybeInspected, Keyword.KeywordKind.In] : maybeInspected;
+                return maybeInspected !== undefined
+                    ? [...maybeInspected, PQP.Language.Keyword.KeywordKind.In]
+                    : maybeInspected;
             }
         } else {
             return maybeInspected !== undefined
-                ? [...maybeInspected, Keyword.KeywordKind.In]
-                : [Keyword.KeywordKind.In];
+                ? [...maybeInspected, PQP.Language.Keyword.KeywordKind.In]
+                : [PQP.Language.Keyword.KeywordKind.In];
         }
     }
 
@@ -53,14 +55,16 @@ export function autocompleteKeywordLetExpression(
 
 function autocompleteLastKeyValuePair(
     state: InspectAutocompleteKeywordState,
-    keyValuePairs: ReadonlyArray<NodeIdMapIterator.KeyValuePair<Ast.GeneralizedIdentifier | Ast.Identifier>>,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+    keyValuePairs: ReadonlyArray<
+        PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
+    >,
+): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
     if (keyValuePairs.length === 0) {
         return undefined;
     }
 
     // Grab the last value (if one exists)
-    const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
+    const maybeLastValue: PQP.Parser.TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
     if (maybeLastValue === undefined) {
         return undefined;
     }

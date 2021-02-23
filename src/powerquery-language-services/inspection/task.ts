@@ -6,13 +6,13 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
+import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { Position } from "./position";
 import { TriedNodeScope, tryNodeScope } from "./scope";
 import { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";
 import { createTypeCache, TypeCache } from "./typeCache";
-import { TriedExpectedType } from "./expectedType";
 
 export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: PQP.ParseSettings<S> & InspectionSettings,
@@ -53,14 +53,14 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
             typeCache.scopeById,
         );
 
-        const ancestryLeaf: TXorNode = AncestryUtils.assertGetLeaf(activeNode.ancestry);
+        const ancestryLeaf: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
         triedScopeType = tryScopeType(settings, nodeIdMapCollection, leafNodeIds, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = ResultUtils.okFactory(new Map());
-        triedScopeType = ResultUtils.okFactory(new Map());
-        triedExpectedType = ResultUtils.okFactory(undefined);
+        triedNodeScope = PQP.ResultUtils.okFactory(new Map());
+        triedScopeType = PQP.ResultUtils.okFactory(new Map());
+        triedExpectedType = PQP.ResultUtils.okFactory(undefined);
     }
 
     return {

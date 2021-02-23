@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "../../../common";
-import { Ast, Keyword } from "../../../language";
-import { AncestryUtils, NodeIdMapUtils, TXorNode } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
+import { Assert } from "@microsoft/powerquery-parser";
+
 import { ActiveNode } from "../../activeNode";
 import { autocompleteKeyword } from "./autocompleteKeyword";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
@@ -11,19 +12,17 @@ import { InspectAutocompleteKeywordState } from "./commonTypes";
 export function autocompleteKeywordRightMostLeaf(
     state: InspectAutocompleteKeywordState,
     xorNodeId: number,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
     // Grab the right-most Ast node in the last value.
-    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
-        state.nodeIdMapCollection,
-        xorNodeId,
-        undefined,
-    );
+    const maybeRightMostAstLeafForLastValue:
+        | PQP.Language.Ast.TNode
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(state.nodeIdMapCollection, xorNodeId, undefined);
     if (maybeRightMostAstLeafForLastValue === undefined) {
         return undefined;
     }
 
     // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
-    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(
+    const shiftedAncestry: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.AncestryUtils.assertGetAncestry(
         state.nodeIdMapCollection,
         maybeRightMostAstLeafForLastValue.id,
     );
@@ -32,7 +31,7 @@ export function autocompleteKeywordRightMostLeaf(
         ...state.activeNode,
         ancestry: shiftedAncestry,
     };
-    const inspected: ReadonlyArray<Keyword.KeywordKind> = autocompleteKeyword(
+    const inspected: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = autocompleteKeyword(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,

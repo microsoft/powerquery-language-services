@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword } from "../../../language";
-import { NodeIdMap, TXorNode } from "../../../parser";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { ActiveNode } from "../../activeNode";
 import { TrailingToken } from "../commonTypes";
 
 export interface InspectAutocompleteKeywordState {
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
     readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
     readonly maybeTrailingToken: TrailingToken | undefined;
-    parent: TXorNode;
-    child: TXorNode;
+    parent: PQP.Parser.TXorNode;
+    child: PQP.Parser.TXorNode;
     ancestryIndex: number;
 }
 
-export const ExpressionAutocomplete: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+export const ExpressionAutocomplete: ReadonlyArray<PQP.Language.Keyword.KeywordKind> =
+    PQP.Language.Keyword.ExpressionKeywordKinds;

@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection } from "..";
-import { CommonError, Result } from "../common";
-import { ExpectedType } from "../language";
-import { TMaybeActiveNode } from "./activeNode";
+import * as PQP from "@microsoft/powerquery-parser";
 
-export type TriedInspection = Result<Inspection, CommonError.CommonError>;
+import { Inspection } from "..";
+import { TMaybeActiveNode } from "./activeNode";
+import { TriedExpectedType } from "./expectedType";
+
+export type TriedInspection = PQP.Result<Inspection, PQP.CommonError.CommonError>;
 
 export interface Inspection {
     readonly maybeActiveNode: TMaybeActiveNode;
@@ -14,5 +15,5 @@ export interface Inspection {
     readonly triedInvokeExpression: Inspection.TriedInvokeExpression;
     readonly triedNodeScope: Inspection.TriedNodeScope;
     readonly triedScopeType: Inspection.TriedScopeType;
-    readonly triedExpectedType: ExpectedType.TriedExpectedType;
+    readonly triedExpectedType: TriedExpectedType;
 }

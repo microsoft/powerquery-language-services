@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "../../common";
+import * as PQP from "@microsoft/powerquery-parser";
+
 import { Autocomplete, AutocompleteItem } from "./commonTypes";
 
 export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
     let result: string[] = [];
 
-    if (ResultUtils.isOk(autocomplete.triedFieldAccess) && autocomplete.triedFieldAccess.value !== undefined) {
+    if (PQP.ResultUtils.isOk(autocomplete.triedFieldAccess) && autocomplete.triedFieldAccess.value !== undefined) {
         result = result.concat(
             autocomplete.triedFieldAccess.value.autocompleteItems.map(
                 (autocompleteItem: AutocompleteItem) => autocompleteItem.key,
@@ -15,11 +16,11 @@ export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
         );
     }
 
-    if (ResultUtils.isOk(autocomplete.triedKeyword)) {
+    if (PQP.ResultUtils.isOk(autocomplete.triedKeyword)) {
         result = result.concat(autocomplete.triedKeyword.value);
     }
 
-    if (ResultUtils.isOk(autocomplete.triedPrimitiveType) && autocomplete.triedPrimitiveType.value !== undefined) {
+    if (PQP.ResultUtils.isOk(autocomplete.triedPrimitiveType) && autocomplete.triedPrimitiveType.value !== undefined) {
         result = result.concat(autocomplete.triedPrimitiveType.value);
     }
 
