@@ -1287,7 +1287,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: false,
                     isOptional: false,
-                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Number,
+                    maybeType: PQP.Language.Constant.PrimitiveTypeConstantKind.Number,
                 },
                 {
                     identifier: "c",
@@ -1295,7 +1295,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Function,
+                    maybeType: PQP.Language.Constant.PrimitiveTypeConstantKind.Function,
                 },
                 {
                     identifier: "d",
@@ -1311,7 +1311,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: false,
                     isOptional: true,
-                    maybeType: Language.Constant.PrimitiveTypeConstantKind.Table,
+                    maybeType: PQP.Language.Constant.PrimitiveTypeConstantKind.Table,
                 },
             ];
             const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedParametersFactory(

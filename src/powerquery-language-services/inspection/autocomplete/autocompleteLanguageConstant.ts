@@ -122,7 +122,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     const maybeParameter:
         | PQP.Parser.TXorNode
         | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, fnExprAncestryIndex, 4, [
-        Ast.NodeKind.Parameter,
+        PQP.Language.Ast.NodeKind.Parameter,
     ]);
     if (maybeParameter === undefined) {
         return false;

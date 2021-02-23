@@ -7,6 +7,7 @@ import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vsco
 
 import * as InspectionUtils from "../inspectionUtils";
 
+import { Inspection } from "..";
 import { EmptyCompletionItems, EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { ILibrary } from "../library/library";
 import { LanguageCompletionItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
@@ -92,7 +93,7 @@ export abstract class AnalysisBase implements Analysis {
             return EmptyHover;
         }
 
-        const maybeActiveNode: PQP.Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
+        const maybeActiveNode: Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
         if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
             return EmptyHover;
         }
@@ -117,7 +118,7 @@ export abstract class AnalysisBase implements Analysis {
         ) {
             return EmptySignatureHelp;
         }
-        const inspected: PQP.Inspection.Inspection = this.maybeInspectionCacheItem.value;
+        const inspected: Inspection.Inspection = this.maybeInspectionCacheItem.value;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
             inspected,
@@ -199,7 +200,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private static isValidHoverIdentifier(activeNode: PQP.Inspection.ActiveNode): boolean {
+    private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
         if (ancestry.length <= 1) {
             return true;
@@ -256,10 +257,10 @@ export abstract class AnalysisBase implements Analysis {
         return LineTokenWithPositionUtils.maybeFrom(this.position, maybeLineTokens);
     }
 
-    private getMaybeActiveNode(): PQP.Inspection.ActiveNode | undefined {
+    private getMaybeActiveNode(): Inspection.ActiveNode | undefined {
         return this.maybeInspectionCacheItem?.stage === WorkspaceCache.CacheStageKind.Inspection &&
             PQP.ResultUtils.isOk(this.maybeInspectionCacheItem) &&
-            PQP.Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.value.maybeActiveNode)
+            Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.value.maybeActiveNode)
             ? this.maybeInspectionCacheItem.value.maybeActiveNode
             : undefined;
     }

@@ -6,7 +6,6 @@
 import * as File from "fs";
 import * as Path from "path";
 
-import { Assert } from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import {
     CompletionItem,
