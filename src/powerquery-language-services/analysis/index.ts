@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 export * as AnalysisUtils from "./analysisUtils";
-export * from "./lineTokenWithPosition";
 export { AnalysisBase } from "./analysisBase";
 export { Analysis } from "./analysis";
 export { DocumentAnalysis } from "./documentAnalysis";

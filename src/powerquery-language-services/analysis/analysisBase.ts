@@ -232,25 +232,6 @@ export abstract class AnalysisBase implements Analysis {
         return this.getMaybeActiveNode()?.maybeIdentifierUnderPosition;
     }
 
-    // private getMaybeLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
-    //     const cacheItem: WorkspaceCache.LexCacheItem = this.getLexerState();
-    //     if (!PQP.TaskUtils.isLexStageOk(cacheItem)) {
-    //         return undefined;
-    //     }
-
-    //     const maybeLine: PQP.Lexer.TLine | undefined = cacheItem.lexerSnapshot.lines[this.position.line];
-    //     return maybeLine?.tokens;
-    // }
-
-    // private getMaybeLineTokenWithPosition(): LineTokenWithPosition | undefined {
-    //     const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
-    //     if (maybeLineTokens === undefined) {
-    //         return undefined;
-    //     }
-
-    //     return LineTokenWithPositionUtils.maybeFrom(this.position, maybeLineTokens);
-    // }
-
     private getMaybeActiveNode(): Inspection.ActiveNode | undefined {
         return WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem) &&
             Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.maybeActiveNode)
