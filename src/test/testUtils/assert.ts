@@ -56,7 +56,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
                 triedLexParseTask.leafNodeIds,
                 position,
             ),
-            undefined,
+            triedLexParseTask.error,
         );
     } else {
         throw new Error("should never be reached");
