@@ -9,7 +9,7 @@ import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
 
 import { Inspection, Library } from "..";
-import { WorkspaceCache } from "../workspaceCache";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
@@ -18,13 +18,10 @@ import {
 } from "./commonTypes";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
-    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
+    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
-    constructor(
-        library: Library.ILibrary,
-        private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
-    ) {
+    constructor(library: Library.ILibrary, private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
     }
@@ -90,16 +87,12 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     private getMaybeInspection(): Inspection.Inspection | undefined {
-        const maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined = this.maybeTriedInspection;
+        const inspectionCacheItem: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
-        if (
-            maybeTriedInspection === undefined ||
-            maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
+        if (!WorkspaceCacheUtils.isInspectionTask(inspectionCacheItem)) {
             return undefined;
         } else {
-            return maybeTriedInspection.value;
+            return inspectionCacheItem;
         }
     }
 
@@ -112,27 +105,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TType | undefined {
-        const maybeInspection: Inspection.Inspection | undefined = this.maybeInspection();
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedScopeType)
             ? maybeInspection.triedScopeType.value.get(identifier)
             : undefined;
     }
 
-    private maybeInspection(): Inspection.Inspection | undefined {
-        if (
-            this.maybeTriedInspection === undefined ||
-            this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
-            return undefined;
-        } else {
-            return this.maybeTriedInspection.value;
-        }
-    }
-
     private maybeNodeScope(): Inspection.NodeScope | undefined {
-        const maybeInspection: Inspection.Inspection | undefined = this.maybeInspection();
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedNodeScope)
             ? maybeInspection.triedNodeScope.value

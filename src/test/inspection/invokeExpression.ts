@@ -52,7 +52,7 @@ function assertParseErrInvokeExpressionOk(
     text: string,
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {
-    const parseErr: PQP.Task.ParseTaskParseErr = TestUtils.assertGetLexParseErr(settings, text);
+    const parseErr: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(settings, text);
     return assertInvokeExpressionOk(settings, parseErr.nodeIdMapCollection, parseErr.leafNodeIds, position);
 }
 

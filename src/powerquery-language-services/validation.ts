@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { TaskUtils } from "@microsoft/powerquery-parser";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type {
     Diagnostic,
@@ -31,7 +32,7 @@ export interface ValidationOptions extends AnalysisOptions {
 }
 
 export function validate(document: TextDocument, options: ValidationOptions): ValidationResult {
-    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
     const checked: DiagnosticCheck = diagnosticsCheck(cacheItem, options);
     const diagnostics: Diagnostic[] = checked.diagnostics;
 
@@ -62,8 +63,7 @@ export function validate(document: TextDocument, options: ValidationOptions): Va
     }
 
     return {
-        // TODO: figure out why TypeScript isn't allowing PQP.ResultUtils.isErr(cacheItem)
-        syntaxError: cacheItem.kind === PQP.ResultKind.Err,
+        syntaxError: TaskUtils.isError(cacheItem),
         diagnostics,
     };
 }
@@ -78,18 +78,12 @@ const EmptyDiagnosticCheck: DiagnosticCheck = {
     maybeParserContextState: undefined,
 };
 
-function diagnosticsCheck(
-    parserCacheItem: WorkspaceCache.TParserCacheItem,
-    options: ValidationOptions,
-): DiagnosticCheck {
+function diagnosticsCheck(parserCacheItem: WorkspaceCache.ParseCacheItem, options: ValidationOptions): DiagnosticCheck {
     switch (parserCacheItem.stage) {
-        case WorkspaceCache.CacheStageKind.Lexer:
+        case PQP.Task.TaskStage.Lex:
             return lexerDiagnosticCheck(parserCacheItem, options);
 
-        case WorkspaceCache.CacheStageKind.LexerSnapshot:
-            return EmptyDiagnosticCheck;
-
-        case WorkspaceCache.CacheStageKind.Parser:
+        case PQP.Task.TaskStage.Parse:
             return parserDiagnosticCheck(parserCacheItem, options);
 
         default:
@@ -97,8 +91,8 @@ function diagnosticsCheck(
     }
 }
 
-function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options: ValidationOptions): DiagnosticCheck {
-    if (PQP.ResultUtils.isOk(triedLex)) {
+function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: ValidationOptions): DiagnosticCheck {
+    if (PQP.TaskUtils.isOk(triedLex)) {
         return EmptyDiagnosticCheck;
     } else if (!PQP.Lexer.LexError.isLexError(triedLex.error)) {
         return EmptyDiagnosticCheck;
@@ -138,11 +132,11 @@ function lexerDiagnosticCheck(triedLex: PQP.Lexer.TriedLex, options: ValidationO
     };
 }
 
-function parserDiagnosticCheck(triedParse: PQP.Parser.TriedParse, options: ValidationOptions): DiagnosticCheck {
-    if (PQP.ResultUtils.isOk(triedParse)) {
+function parserDiagnosticCheck(triedParse: PQP.Task.TriedParseTask, options: ValidationOptions): DiagnosticCheck {
+    if (PQP.TaskUtils.isOk(triedParse)) {
         return {
             diagnostics: [],
-            maybeParserContextState: triedParse.value.state.contextState,
+            maybeParserContextState: triedParse.parseState.contextState,
         };
     } else if (!PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return EmptyDiagnosticCheck;

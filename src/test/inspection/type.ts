@@ -10,11 +10,11 @@ import "mocha";
 import { TestUtils } from "..";
 import { Inspection } from "../../powerquery-language-services";
 
-const ExternalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn = (
-    request: PQP.Language.ExternalType.TExternalTypeRequest,
+const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
+    request: Inspection.ExternalType.TExternalTypeRequest,
 ) => {
     switch (request.kind) {
-        case PQP.Language.ExternalType.ExternalTypeRequestKind.Invocation: {
+        case Inspection.ExternalType.ExternalTypeRequestKind.Invocation: {
             if (request.identifierLiteral !== "foo") {
                 return undefined;
             }
@@ -22,7 +22,7 @@ const ExternalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn = 
             return request.args.length === 0 ? PQP.Language.Type.TextInstance : PQP.Language.Type.NumberInstance;
         }
 
-        case PQP.Language.ExternalType.ExternalTypeRequestKind.Value:
+        case Inspection.ExternalType.ExternalTypeRequestKind.Value:
             return request.identifierLiteral === "foo" ? PQP.Language.Type.FunctionInstance : undefined;
 
         default:
@@ -53,7 +53,7 @@ function assertParseOkNodeTypeEqual(
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.TType): void {
-    const parseErr: PQP.Task.ParseTaskParseErr = TestUtils.assertGetLexParseErr(TestSettings, text);
+    const parseErr: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(TestSettings, text);
 
     const actual: PQP.Language.Type.TType = assertGetParseNodeOk(
         TestSettings,

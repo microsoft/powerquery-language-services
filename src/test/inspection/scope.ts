@@ -175,7 +175,7 @@ export function assertGetParseErrScopeOk(
     text: string,
     position: Inspection.Position,
 ): Inspection.NodeScope {
-    const parseError: PQP.Task.ParseTaskParseErr = TestUtils.assertGetLexParseErr(settings, text);
+    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(settings, text);
     return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, parseError.leafNodeIds, position);
 }
 

@@ -13,8 +13,6 @@ import {
     LocalDocumentSymbolProvider,
     WorkspaceCache,
 } from "../powerquery-language-services";
-import { ExternalType } from "../powerquery-language-services/inspection";
-import { ILibrary } from "../powerquery-language-services/library/library";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
 export const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
@@ -23,7 +21,7 @@ export const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
 };
 
 export const NoOpLibrary: Library.ILibrary = {
-    externalTypeResolver: ExternalType.noOpExternalTypeResolver,
+    externalTypeResolver: Inspection.ExternalType.noOpExternalTypeResolver,
     libraryDefinitions: new Map(),
 };
 
@@ -99,11 +97,11 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
 ]);
 
-export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (
-    request: ExternalType.TExternalTypeRequest,
+export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
+    request: Inspection.ExternalType.TExternalTypeRequest,
 ) => {
     switch (request.kind) {
-        case ExternalType.ExternalTypeRequestKind.Invocation:
+        case Inspection.ExternalType.ExternalTypeRequestKind.Invocation:
             switch (request.identifierLiteral) {
                 case TestLibraryName.SquareIfNumber: {
                     if (request.args.length !== 1) {
@@ -129,7 +127,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                     return undefined;
             }
 
-        case ExternalType.ExternalTypeRequestKind.Value:
+        case Inspection.ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
                 case TestLibraryName.CreateFooAndBarRecord:
                     return PQP.Language.TypeUtils.definedFunctionFactory(
@@ -180,10 +178,10 @@ export const SimpleLibrary: Library.ILibrary = {
 };
 
 export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
-    createLibrarySymbolProviderFn: (library: ILibrary) => new LibrarySymbolProvider(library),
+    createLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     createLocalDocumentSymbolProviderFn: (
-        library: ILibrary,
-        maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
+        library: Library.ILibrary,
+        maybeTriedInspection: WorkspaceCache.InspectionCacheItem | undefined,
     ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),
 };
 

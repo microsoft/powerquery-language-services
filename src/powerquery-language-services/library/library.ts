@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { ExternalType } from "../inspection";
 
 export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 
@@ -17,7 +18,7 @@ export const enum LibraryDefinitionKind {
 }
 
 export interface ILibrary {
-    readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
+    readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
     readonly libraryDefinitions: LibraryDefinitions;
 }
 

@@ -7,7 +7,7 @@ import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vsco
 
 import * as InspectionUtils from "../inspectionUtils";
 
-import { Inspection } from "..";
+import { CommonTypesUtils, Inspection } from "..";
 import { EmptyCompletionItems, EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { ILibrary } from "../library/library";
 import { LanguageCompletionItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
@@ -20,10 +20,9 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { WorkspaceCache } from "../workspaceCache";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { Analysis } from "./analysis";
 import { AnalysisOptions } from "./analysisOptions";
-import { LineTokenWithPosition, LineTokenWithPositionUtils } from "./lineTokenWithPosition";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageCompletionItemProvider: CompletionItemProvider;
@@ -31,7 +30,7 @@ export abstract class AnalysisBase implements Analysis {
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
-        protected maybeInspectionCacheItem: WorkspaceCache.TInspectionCacheItem | undefined,
+        protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
         library: ILibrary,
         protected options: AnalysisOptions,
@@ -55,11 +54,14 @@ export abstract class AnalysisBase implements Analysis {
     public async getCompletionItems(): Promise<CompletionItem[]> {
         let context: CompletionItemProviderContext = {};
 
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
+        const maybeToken:
+            | PQP.Language.Ast.Identifier
+            | PQP.Language.Ast.GeneralizedIdentifier
+            | undefined = this.getMaybePositionIdentifier();
         if (maybeToken !== undefined) {
             context = {
-                range: LineTokenWithPositionUtils.tokenRange(maybeToken),
-                text: maybeToken.data,
+                range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
+                text: maybeToken.literal,
                 tokenKind: maybeToken.kind,
             };
         }
@@ -88,7 +90,10 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken: LineTokenWithPosition | undefined = this.getMaybePositionIdentifier();
+        const identifierToken:
+            | PQP.Language.Ast.Identifier
+            | PQP.Language.Ast.GeneralizedIdentifier
+            | undefined = this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return EmptyHover;
         }
@@ -99,8 +104,8 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         const context: HoverProviderContext = {
-            range: LineTokenWithPositionUtils.tokenRange(identifierToken),
-            identifier: identifierToken.data,
+            range: CommonTypesUtils.rangeFromTokenRange(identifierToken.tokenRange),
+            identifier: identifierToken.literal,
         };
 
         // Result priority is based on the order of the symbol providers
@@ -111,14 +116,10 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        if (
-            this.maybeInspectionCacheItem === undefined ||
-            this.maybeInspectionCacheItem.kind !== PQP.ResultKind.Ok ||
-            this.maybeInspectionCacheItem.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
+        if (!WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem)) {
             return EmptySignatureHelp;
         }
-        const inspected: Inspection.Inspection = this.maybeInspectionCacheItem.value;
+        const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
 
         const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
             inspected,
@@ -144,7 +145,7 @@ export abstract class AnalysisBase implements Analysis {
 
     public abstract dispose(): void;
 
-    protected abstract getLexerState(): WorkspaceCache.LexerCacheItem;
+    protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
     private static async resolveProviders<T>(
@@ -224,44 +225,36 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private getMaybePositionIdentifier(): LineTokenWithPosition | undefined {
-        const maybeToken: LineTokenWithPosition | undefined = this.getMaybeLineTokenWithPosition();
-        if (maybeToken === undefined) {
-            return undefined;
-        }
-
-        const token: LineTokenWithPosition = maybeToken;
-        if (token.kind === PQP.Language.Token.LineTokenKind.Identifier) {
-            return token;
-        }
-
-        return undefined;
+    private getMaybePositionIdentifier():
+        | PQP.Language.Ast.Identifier
+        | PQP.Language.Ast.GeneralizedIdentifier
+        | undefined {
+        return this.getMaybeActiveNode()?.maybeIdentifierUnderPosition;
     }
 
-    private getMaybeLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
-        const cacheItem: WorkspaceCache.LexerCacheItem = this.getLexerState();
-        if (cacheItem.kind !== PQP.ResultKind.Ok || cacheItem.stage !== WorkspaceCache.CacheStageKind.Lexer) {
-            return undefined;
-        }
+    // private getMaybeLineTokens(): ReadonlyArray<PQP.Language.Token.LineToken> | undefined {
+    //     const cacheItem: WorkspaceCache.LexCacheItem = this.getLexerState();
+    //     if (!PQP.TaskUtils.isLexStageOk(cacheItem)) {
+    //         return undefined;
+    //     }
 
-        const maybeLine: PQP.Lexer.TLine | undefined = cacheItem.value.lines[this.position.line];
-        return maybeLine?.tokens;
-    }
+    //     const maybeLine: PQP.Lexer.TLine | undefined = cacheItem.lexerSnapshot.lines[this.position.line];
+    //     return maybeLine?.tokens;
+    // }
 
-    private getMaybeLineTokenWithPosition(): LineTokenWithPosition | undefined {
-        const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
-        if (maybeLineTokens === undefined) {
-            return undefined;
-        }
+    // private getMaybeLineTokenWithPosition(): LineTokenWithPosition | undefined {
+    //     const maybeLineTokens: ReadonlyArray<PQP.Language.Token.LineToken> | undefined = this.getMaybeLineTokens();
+    //     if (maybeLineTokens === undefined) {
+    //         return undefined;
+    //     }
 
-        return LineTokenWithPositionUtils.maybeFrom(this.position, maybeLineTokens);
-    }
+    //     return LineTokenWithPositionUtils.maybeFrom(this.position, maybeLineTokens);
+    // }
 
     private getMaybeActiveNode(): Inspection.ActiveNode | undefined {
-        return this.maybeInspectionCacheItem?.stage === WorkspaceCache.CacheStageKind.Inspection &&
-            PQP.ResultUtils.isOk(this.maybeInspectionCacheItem) &&
-            Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.value.maybeActiveNode)
-            ? this.maybeInspectionCacheItem.value.maybeActiveNode
+        return WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem) &&
+            Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.maybeActiveNode)
+            ? this.maybeInspectionCacheItem.maybeActiveNode
             : undefined;
     }
 }

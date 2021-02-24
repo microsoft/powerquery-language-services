@@ -6,6 +6,7 @@ import { WorkspaceCacheUtils } from "./workspaceCache";
 
 export * from "./analysis";
 export * from "./commonTypes";
+export * as CommonTypesUtils from "./commonTypesUtils";
 export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
 export * as Inspection from "./inspection";

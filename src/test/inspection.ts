@@ -36,7 +36,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d|,",
             );
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -51,7 +51,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,|",
             );
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -66,7 +66,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,1|",
             );
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -84,7 +84,7 @@ describe("InspectedInvokeExpression", () => {
                     line: 68,
                     character: 23,
                 };
-                const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+                const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
 
                 expectScope(inspected, [
                     "ConnectionString",

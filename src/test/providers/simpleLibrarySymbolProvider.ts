@@ -24,7 +24,7 @@ const IsolatedAnalysisOptions: AnalysisOptions = {
     ...TestConstants.SimpleLibraryAnalysisOptions,
     createLocalDocumentSymbolProviderFn: (
         _library: ILibrary,
-        _maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
+        _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
     ) => NullSymbolProvider.singleton(),
 };
 
