@@ -4,13 +4,13 @@
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import { WorkspaceCacheUtils } from "./workspaceCache";
 
-export * from "./analysis";
-export * from "./commonTypes";
 export * as CommonTypesUtils from "./commonTypesUtils";
-export * from "./diagnosticErrorCode";
-export * from "./documentSymbols";
 export * as Inspection from "./inspection";
 export * as InspectionUtils from "./inspectionUtils";
+export * from "./analysis";
+export * from "./commonTypes";
+export * from "./diagnosticErrorCode";
+export * from "./documentSymbols";
 export * from "./formatter";
 export * from "./library";
 export * from "./providers";
