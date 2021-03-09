@@ -8,8 +8,8 @@ import { CompletionItem, Hover, MarkupKind, SignatureHelp } from "vscode-languag
 import * as InspectionUtils from "../inspectionUtils";
 import * as LanguageServiceUtils from "../languageServiceUtils";
 
-import { Library } from "..";
-import { WorkspaceCache } from "../workspaceCache";
+import { Inspection, Library } from "..";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
@@ -18,19 +18,16 @@ import {
 } from "./commonTypes";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
-    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
+    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
-    constructor(
-        library: Library.ILibrary,
-        private readonly maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
-    ) {
+    constructor(library: Library.ILibrary, private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
     public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
         if (maybeInspection === undefined) {
             return [];
         }
@@ -42,15 +39,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        const maybeNodeScope: PQP.Inspection.NodeScope | undefined = this.maybeNodeScope();
+        const maybeNodeScope: Inspection.NodeScope | undefined = this.maybeNodeScope();
         if (maybeNodeScope === undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
         const identifierLiteral: string = context.identifier;
-        const maybeScopeItem: PQP.Inspection.TScopeItem | undefined = maybeNodeScope.get(identifierLiteral);
-        if (maybeScopeItem === undefined || maybeScopeItem.kind === PQP.Inspection.ScopeItemKind.Undefined) {
+        const maybeScopeItem: Inspection.TScopeItem | undefined = maybeNodeScope.get(identifierLiteral);
+        if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
@@ -73,13 +70,13 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const maybeInvokeInspection:
-            | PQP.Inspection.InvokeExpression
+            | Inspection.InvokeExpression
             | undefined = this.getMaybeInspectionInvokeExpression();
         if (maybeInvokeInspection === undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
-        const inspection: PQP.Inspection.InvokeExpression = maybeInvokeInspection;
+        const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
             // tslint:disable-next-line: no-null-keyword
@@ -89,22 +86,18 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         return InspectionUtils.getMaybeSignatureHelp(context);
     }
 
-    private getMaybeInspection(): PQP.Inspection.Inspection | undefined {
-        const maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined = this.maybeTriedInspection;
+    private getMaybeInspection(): Inspection.Inspection | undefined {
+        const inspectionCacheItem: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
-        if (
-            maybeTriedInspection === undefined ||
-            maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
+        if (!WorkspaceCacheUtils.isInspectionTask(inspectionCacheItem)) {
             return undefined;
         } else {
-            return maybeTriedInspection.value;
+            return inspectionCacheItem;
         }
     }
 
-    private getMaybeInspectionInvokeExpression(): PQP.Inspection.InvokeExpression | undefined {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.getMaybeInspection();
+    private getMaybeInspectionInvokeExpression(): Inspection.InvokeExpression | undefined {
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedInvokeExpression)
             ? maybeInspection.triedInvokeExpression.value
@@ -112,27 +105,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TType | undefined {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.maybeInspection();
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedScopeType)
             ? maybeInspection.triedScopeType.value.get(identifier)
             : undefined;
     }
 
-    private maybeInspection(): PQP.Inspection.Inspection | undefined {
-        if (
-            this.maybeTriedInspection === undefined ||
-            this.maybeTriedInspection.kind === PQP.ResultKind.Err ||
-            this.maybeTriedInspection.stage !== WorkspaceCache.CacheStageKind.Inspection
-        ) {
-            return undefined;
-        } else {
-            return this.maybeTriedInspection.value;
-        }
-    }
-
-    private maybeNodeScope(): PQP.Inspection.NodeScope | undefined {
-        const maybeInspection: PQP.Inspection.Inspection | undefined = this.maybeInspection();
+    private maybeNodeScope(): Inspection.NodeScope | undefined {
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedNodeScope)
             ? maybeInspection.triedNodeScope.value
@@ -141,7 +122,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     private getCompletionItemsFromScope(
         context: CompletionItemProviderContext,
-        inspection: PQP.Inspection.Inspection,
+        inspection: Inspection.Inspection,
     ): ReadonlyArray<CompletionItem> {
         return LanguageServiceUtils.documentSymbolToCompletionItem(
             InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
@@ -151,7 +132,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     private getCompletionItemsFromFieldAccess(
         context: CompletionItemProviderContext,
-        inspection: PQP.Inspection.Inspection,
+        inspection: Inspection.Inspection,
     ): ReadonlyArray<CompletionItem> {
         return InspectionUtils.getCompletionItems(context, inspection);
     }

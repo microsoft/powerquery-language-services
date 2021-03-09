@@ -13,6 +13,7 @@ import {
     SignatureInformation,
 } from "vscode-languageserver-types";
 
+import { Inspection } from "..";
 import { Library, LibraryUtils } from "../library";
 import {
     CompletionItemProviderContext,
@@ -22,7 +23,7 @@ import {
 } from "./commonTypes";
 
 export class LibrarySymbolProvider implements ISymbolProvider {
-    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn;
+    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation[]>;
 

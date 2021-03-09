@@ -15,30 +15,20 @@ import { SimpleLibrary } from "./testConstants";
 describe("workspaceCache", () => {
     it("getLexerState", () => {
         const document: TextDocument = TestUtils.createTextMockDocument("let\n   b = 1\n   in b");
-        const cacheItem: WorkspaceCache.LexerCacheItem = WorkspaceCacheUtils.getLexerState(document, undefined);
+        const cacheItem: WorkspaceCache.LexCacheItem = WorkspaceCacheUtils.getLexerState(document, undefined);
         TestUtils.assertLexerCacheItemOk(cacheItem);
-        expect(cacheItem.value.lines.length).to.equal(3);
-    });
-
-    it("getTriedLexerSnapshot", () => {
-        const document: TextDocument = TestUtils.createTextMockDocument("let a = 1 in a");
-        const cacheItem: WorkspaceCache.TLexerSnapshotCacheItem = WorkspaceCacheUtils.getTriedLexerSnapshot(
-            document,
-            undefined,
-        );
-        TestUtils.assertLexerSnapshotCacheItemOk(cacheItem);
-        expect(cacheItem.value.tokens.length).to.equal(6);
+        expect(cacheItem.lexerSnapshot.lineTerminators.length).to.equal(3);
     });
 
     it("getTriedLexParse", () => {
         const document: TextDocument = TestUtils.createTextMockDocument("let c = 1 in c");
-        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         TestUtils.assertParserCacheItemOk(cacheItem);
     });
 
     it("getTriedLexParse with error", () => {
         const document: TextDocument = TestUtils.createTextMockDocument("let c = 1, in c");
-        const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
         TestUtils.assertParserCacheItemErr(cacheItem);
     });
 
@@ -46,7 +36,7 @@ describe("workspaceCache", () => {
         const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
             "let c = 1 in |c",
         );
-        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
+        const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
             document,
             postion,
             SimpleLibrary.externalTypeResolver,
@@ -60,7 +50,7 @@ describe("workspaceCache", () => {
         const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
             "let c = 1, in |",
         );
-        const cacheItem: WorkspaceCache.TInspectionCacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
+        const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getTriedInspection(
             document,
             postion,
             SimpleLibrary.externalTypeResolver,

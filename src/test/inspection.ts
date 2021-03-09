@@ -1,31 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
 import * as PQP from "@microsoft/powerquery-parser";
+
 import { assert, expect } from "chai";
 import "mocha";
 
 import { TestUtils } from ".";
-import { InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
+import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
 
-function expectScope(inspected: PQP.Inspection.Inspection, expected: ReadonlyArray<string>): void {
+function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): void {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
         throw new Error(`expected inspected.triedNodeScope to be Ok`);
     }
 
     const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.triedNodeScope.value.entries()]
-        .filter((pair: [string, PQP.Inspection.TScopeItem]) => pair[1].isRecursive === false)
-        .map((pair: [string, PQP.Inspection.TScopeItem]) => pair[0]);
+        .filter((pair: [string, Inspection.TScopeItem]) => pair[1].isRecursive === false)
+        .map((pair: [string, Inspection.TScopeItem]) => pair[0]);
     expect(inclusiveScopeKeys).to.have.members(expected);
 }
 
 function assertIsPostionInBounds(
-    maybeActiveNode: PQP.Inspection.TMaybeActiveNode,
-): asserts maybeActiveNode is PQP.Inspection.ActiveNode {
-    if (!PQP.Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+    maybeActiveNode: Inspection.TMaybeActiveNode,
+): asserts maybeActiveNode is Inspection.ActiveNode {
+    if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         throw new Error(`expected maybeActiveNode to be an ActiveNode`);
     }
 }
@@ -37,7 +36,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d|,",
             );
-            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -52,7 +51,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,|",
             );
-            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -67,7 +66,7 @@ describe("InspectedInvokeExpression", () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "Date.AddDays(d,1|",
             );
-            const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(document, position);
+            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
                 | SignatureProviderContext
                 | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -85,10 +84,7 @@ describe("InspectedInvokeExpression", () => {
                     line: 68,
                     character: 23,
                 };
-                const inspected: PQP.Inspection.Inspection = TestUtils.assertGetInspectionCacheItemOk(
-                    document,
-                    position,
-                );
+                const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
 
                 expectScope(inspected, [
                     "ConnectionString",
@@ -102,7 +98,7 @@ describe("InspectedInvokeExpression", () => {
                     "server",
                 ]);
 
-                const activeNode: PQP.Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
+                const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
                 assertIsPostionInBounds(activeNode);
 
                 TestUtils.assertIsDefined(activeNode.maybeIdentifierUnderPosition);

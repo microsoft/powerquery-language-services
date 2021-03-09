@@ -10,7 +10,7 @@ export interface AnalysisOptions {
     readonly createLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly createLocalDocumentSymbolProviderFn?: (
         library: ILibrary,
-        maybeTriedInspection: WorkspaceCache.TInspectionCacheItem | undefined,
+        maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
     ) => ISymbolProvider;
     readonly locale?: string;
     readonly maintainWorkspaceCache?: boolean;

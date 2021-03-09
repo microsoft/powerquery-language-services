@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { Library } from "..";
+import { Inspection, Library } from "..";
 import { CompletionItem, Hover, SignatureHelp } from "../commonTypes";
 import {
     CompletionItemProviderContext,
@@ -13,8 +11,8 @@ import {
 } from "./commonTypes";
 
 export class NullSymbolProvider implements ISymbolProvider {
-    public readonly externalTypeResolver: PQP.Language.ExternalType.TExternalTypeResolverFn =
-        PQP.Language.ExternalType.noOpExternalTypeResolver;
+    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
+        Inspection.ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
 
     private static instance: NullSymbolProvider | undefined;

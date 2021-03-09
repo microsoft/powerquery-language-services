@@ -30,7 +30,7 @@ export class DocumentAnalysis extends AnalysisBase {
         }
     }
 
-    protected getLexerState(): WorkspaceCache.LexerCacheItem {
+    protected getLexerState(): WorkspaceCache.LexCacheItem {
         return WorkspaceCacheUtils.getLexerState(this.document, this.options.locale);
     }
 

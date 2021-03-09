@@ -24,12 +24,14 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
 
     if (PQP.ResultUtils.isOk(triedFormat)) {
         return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];
-    } else {
-        const message: string | undefined = PQF.FormatError.isTFormatError(triedFormat.error)
-            ? triedFormat.error.innerError.message
-            : undefined;
-
-        throw new Error(message);
+    }
+    // If an unhandled exception was returned.
+    else if (PQP.CommonError.isCommonError(triedFormat.error)) {
+        throw triedFormat.error;
+    }
+    // Else a lexer or parser error was returned and should be ignored.
+    else {
+        return [];
     }
 }
 

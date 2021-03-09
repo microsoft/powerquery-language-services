@@ -11,24 +11,20 @@ import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
 export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
-    const cacheItem: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
 
     let contextState: PQP.Parser.ParseContext.State | undefined;
 
     switch (cacheItem.stage) {
-        case WorkspaceCache.CacheStageKind.Lexer:
-        case WorkspaceCache.CacheStageKind.LexerSnapshot:
+        case PQP.Task.TaskStage.Lex:
             contextState = undefined;
             break;
 
-        case WorkspaceCache.CacheStageKind.Parser:
-            if (PQP.ResultUtils.isOk(cacheItem)) {
-                contextState = cacheItem.value.state.contextState;
-            } else if (PQP.Parser.ParseError.isParseError(cacheItem.error)) {
-                contextState = cacheItem.error.state.contextState;
-            } else {
-                contextState = undefined;
+        case PQP.Task.TaskStage.Parse:
+            if (!PQP.TaskUtils.isParseStageCommonError(cacheItem)) {
+                contextState = cacheItem.parseState.contextState;
             }
+
             break;
 
         default:

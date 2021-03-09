@@ -15,16 +15,17 @@ import {
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
+import { Inspection } from ".";
 import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function getMaybeContextForSignatureProvider(
-    inspected: PQP.Inspection.Inspection,
+    inspected: Inspection.Inspection,
 ): SignatureProviderContext | undefined {
     if (PQP.ResultUtils.isErr(inspected.triedInvokeExpression) || inspected.triedInvokeExpression.value === undefined) {
         return undefined;
     }
 
-    const invokeExpression: PQP.Inspection.InvokeExpression = inspected.triedInvokeExpression.value;
+    const invokeExpression: Inspection.InvokeExpression = inspected.triedInvokeExpression.value;
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
     const argumentOrdinal: number | undefined =
@@ -72,7 +73,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
 }
 
 export function getMaybeType(
-    inspection: PQP.Inspection.Inspection,
+    inspection: Inspection.Inspection,
     identifier: string,
 ): PQP.Language.Type.TType | undefined {
     return PQP.ResultUtils.isOk(inspection.triedScopeType)
@@ -82,9 +83,9 @@ export function getMaybeType(
 
 export function getCompletionItems(
     context: CompletionItemProviderContext,
-    inspection: PQP.Inspection.Inspection,
+    inspection: Inspection.Inspection,
 ): ReadonlyArray<CompletionItem> {
-    const triedAutocompleteFieldAccess: PQP.Inspection.TriedAutocompleteFieldAccess =
+    const triedAutocompleteFieldAccess: Inspection.TriedAutocompleteFieldAccess =
         inspection.autocomplete.triedFieldAccess;
     if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
         return [];
@@ -115,24 +116,24 @@ export function getCompletionItems(
     return completionItems;
 }
 
-export function getScopeItemKindText(scopeItemKind: PQP.Inspection.ScopeItemKind): string {
+export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
     switch (scopeItemKind) {
-        case PQP.Inspection.ScopeItemKind.Each:
+        case Inspection.ScopeItemKind.Each:
             return "each";
 
-        case PQP.Inspection.ScopeItemKind.LetVariable:
+        case Inspection.ScopeItemKind.LetVariable:
             return "let-variable";
 
-        case PQP.Inspection.ScopeItemKind.Parameter:
+        case Inspection.ScopeItemKind.Parameter:
             return "parameter";
 
-        case PQP.Inspection.ScopeItemKind.RecordField:
+        case Inspection.ScopeItemKind.RecordField:
             return "record-field";
 
-        case PQP.Inspection.ScopeItemKind.SectionMember:
+        case Inspection.ScopeItemKind.SectionMember:
             return "section-member";
 
-        case PQP.Inspection.ScopeItemKind.Undefined:
+        case Inspection.ScopeItemKind.Undefined:
             return "unknown";
 
         default:
@@ -243,7 +244,7 @@ export function getSymbolForIdentifierPairedExpression(
 }
 
 export function getSymbolsForInspectionScope(
-    inspected: PQP.Inspection.Inspection,
+    inspected: Inspection.Inspection,
     positionIdentifier: string | undefined,
 ): ReadonlyArray<DocumentSymbol> {
     if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
@@ -261,9 +262,9 @@ export function getSymbolsForInspectionScope(
         let name: string;
 
         switch (scopeItem.kind) {
-            case PQP.Inspection.ScopeItemKind.LetVariable:
-            case PQP.Inspection.ScopeItemKind.RecordField:
-            case PQP.Inspection.ScopeItemKind.SectionMember: {
+            case Inspection.ScopeItemKind.LetVariable:
+            case Inspection.ScopeItemKind.RecordField:
+            case Inspection.ScopeItemKind.SectionMember: {
                 if (scopeItem.maybeValue === undefined) {
                     continue;
                 }
@@ -274,17 +275,17 @@ export function getSymbolsForInspectionScope(
                 break;
             }
 
-            case PQP.Inspection.ScopeItemKind.Each:
+            case Inspection.ScopeItemKind.Each:
                 continue;
 
-            case PQP.Inspection.ScopeItemKind.Parameter: {
+            case Inspection.ScopeItemKind.Parameter: {
                 name = key;
                 kind = SymbolKind.Variable;
                 range = LanguageServiceUtils.tokenRangeToRange(scopeItem.name.tokenRange);
                 break;
             }
 
-            case PQP.Inspection.ScopeItemKind.Undefined: {
+            case Inspection.ScopeItemKind.Undefined: {
                 if (scopeItem.xorNode.kind !== PQP.Parser.XorNodeKind.Ast) {
                     continue;
                 }

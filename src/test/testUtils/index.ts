@@ -3,4 +3,3 @@
 
 export * from "./assert";
 export * from "./testUtils";
-export * from "./inspectionUtils";

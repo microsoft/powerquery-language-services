@@ -10,9 +10,8 @@ import "mocha";
 
 import * as TestUtils from "./testUtils";
 
-import { InspectionUtils, SymbolKind, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
-import { MockDocument } from "../mockDocument";
-import { assertParserCacheItemOk } from "./assert";
+import { InspectionUtils, SymbolKind, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
+import { MockDocument } from "./mockDocument";
 import { AbridgedDocumentSymbol } from "./testUtils";
 
 // Used to test symbols at a specific level of inspection
@@ -40,10 +39,10 @@ describe("Document symbol base functions", () => {
         const document: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
-        expectSymbolsForNode(lexAndParseOk.value.root, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
             { name: "c", kind: SymbolKind.Boolean },
@@ -52,18 +51,18 @@ describe("Document symbol base functions", () => {
 
     it(`section foo; a = {1,2};`, () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`section foo; a = {1,2};`);
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
-        expectSymbolsForNode(lexAndParseOk.value.root, [{ name: "a", kind: SymbolKind.Array }]);
+        expectSymbolsForNode(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = 2, c = 3 in c`);
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
-        expectSymbolsForNode(lexAndParseOk.value.root, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.Number },
             { name: "c", kind: SymbolKind.Number },
@@ -72,10 +71,10 @@ describe("Document symbol base functions", () => {
 
     it("HelloWorldWithDocs file section", () => {
         const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
-        expectSymbolsForNode(lexAndParseOk.value.root, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
             { name: "HelloWorldImpl", kind: SymbolKind.Function },
@@ -86,10 +85,10 @@ describe("Document symbol base functions", () => {
 
     it("DirectQueryForSQL file section", () => {
         const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
-        const lexAndParseOk: WorkspaceCache.TParserCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        assertParserCacheItemOk(lexAndParseOk);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
-        expectSymbolsForNode(lexAndParseOk.value.root, [
+        expectSymbolsForNode(lexAndParseOk.ast, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },
             { name: "DirectSQL", kind: SymbolKind.Struct },
             { name: "DirectSQL.UI", kind: SymbolKind.Struct },
