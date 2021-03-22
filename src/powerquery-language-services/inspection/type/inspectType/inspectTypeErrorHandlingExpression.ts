@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 export function inspectTypeErrorHandlingExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
 

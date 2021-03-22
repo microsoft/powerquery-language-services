@@ -54,7 +54,9 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
 
-        const maybeScopeItemType: PQP.Language.Type.TType | undefined = this.maybeTypeFromIdentifier(identifierLiteral);
+        const maybeScopeItemType: PQP.Language.Type.PqType | undefined = this.maybeTypeFromIdentifier(
+            identifierLiteral,
+        );
         const scopeItemTypeText: string =
             maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 
@@ -104,7 +106,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TType | undefined {
+    private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.PqType | undefined {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedScopeType)

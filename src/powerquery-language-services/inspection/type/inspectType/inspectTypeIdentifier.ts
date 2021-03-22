@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
-export function inspectTypeIdentifier(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TType {
+export function inspectTypeIdentifier(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Identifier);
 
@@ -13,6 +13,6 @@ export function inspectTypeIdentifier(state: InspectTypeState, xorNode: PQP.Pars
         return PQP.Language.Type.UnknownInstance;
     }
 
-    const dereferencedType: PQP.Language.Type.TType | undefined = maybeDereferencedIdentifierType(state, xorNode);
+    const dereferencedType: PQP.Language.Type.PqType | undefined = maybeDereferencedIdentifierType(state, xorNode);
     return dereferencedType ?? PQP.Language.Type.UnknownInstance;
 }

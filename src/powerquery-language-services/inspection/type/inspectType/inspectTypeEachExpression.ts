@@ -8,11 +8,11 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeEachExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.EachExpression);
 
-    const expressionType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const expressionType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
 
     return PQP.Language.TypeUtils.definedFunctionFactory(
         false,

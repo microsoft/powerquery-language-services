@@ -7,7 +7,7 @@ import { InspectTypeState } from "./common";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 
 export interface ExaminedFieldSpecificationList {
-    readonly fields: Map<string, PQP.Language.Type.TType>;
+    readonly fields: Map<string, PQP.Language.Type.PqType>;
     readonly isOpen: boolean;
 }
 
@@ -20,7 +20,7 @@ export function examineFieldSpecificationList(
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
-    const fields: [string, PQP.Language.Type.TType][] = [];
+    const fields: [string, PQP.Language.Type.PqType][] = [];
 
     for (const fieldSpecification of PQP.Parser.NodeIdMapIterator.iterFieldSpecification(
         nodeIdMapCollection,
@@ -39,7 +39,7 @@ export function examineFieldSpecificationList(
             break;
         }
         const name: string = (maybeName as PQP.Language.Ast.GeneralizedIdentifier).literal;
-        const type: PQP.Language.Type.TType = inspectTypeFieldSpecification(state, fieldSpecification);
+        const type: PQP.Language.Type.PqType = inspectTypeFieldSpecification(state, fieldSpecification);
         fields.push([name, type]);
     }
 

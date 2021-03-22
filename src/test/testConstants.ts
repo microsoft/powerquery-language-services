@@ -107,7 +107,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     if (request.args.length !== 1) {
                         return PQP.Language.Type.NoneInstance;
                     }
-                    const arg: PQP.Language.Type.TType = Assert.asDefined(request.args[0]);
+                    const arg: PQP.Language.Type.PqType = Assert.asDefined(request.args[0]);
 
                     if (PQP.Language.TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
@@ -135,7 +135,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                         [],
                         PQP.Language.TypeUtils.definedRecordFactory(
                             false,
-                            new Map<string, PQP.Language.Type.TType>([
+                            new Map<string, PQP.Language.Type.PqType>([
                                 ["foo", PQP.Language.TypeUtils.textLiteralFactory(false, `"fooString"`)],
                                 ["bar", PQP.Language.TypeUtils.textLiteralFactory(false, `"barString"`)],
                             ]),

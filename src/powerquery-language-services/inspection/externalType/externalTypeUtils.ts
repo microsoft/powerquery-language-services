@@ -14,7 +14,7 @@ export function valueTypeRequestFactory(identifierLiteral: string): ExternalValu
 
 export function invocationTypeRequestFactory(
     identifierLiteral: string,
-    args: ReadonlyArray<PQP.Language.Type.TType>,
+    args: ReadonlyArray<PQP.Language.Type.PqType>,
 ): ExternalInvocationTypeRequest {
     return {
         kind: ExternalTypeRequestKind.Invocation,

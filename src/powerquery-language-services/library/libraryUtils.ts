@@ -82,7 +82,7 @@ export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): a
 }
 
 export function createConstantDefinition(
-    asType: PQP.Language.Type.TType,
+    asType: PQP.Language.Type.PqType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,
@@ -97,7 +97,7 @@ export function createConstantDefinition(
 }
 
 export function createConstructorDefinition(
-    asType: PQP.Language.Type.TType,
+    asType: PQP.Language.Type.PqType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,
@@ -114,7 +114,7 @@ export function createConstructorDefinition(
 }
 
 export function createFunctionDefinition(
-    asType: PQP.Language.Type.TType,
+    asType: PQP.Language.Type.PqType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,
@@ -131,7 +131,7 @@ export function createFunctionDefinition(
 }
 
 export function createLibraryType(
-    asType: PQP.Language.Type.TType,
+    asType: PQP.Language.Type.PqType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,

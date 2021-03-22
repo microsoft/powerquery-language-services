@@ -16,7 +16,7 @@ type TRecordOrTable =
 export function inspectTypeTBinOpExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     Assert.isTrue(PQP.Language.AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
@@ -47,7 +47,7 @@ export function inspectTypeTBinOpExpression(
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === PQP.Parser.XorNodeKind.Context) {
-        const leftType: PQP.Language.Type.TType = inspectXor(state, maybeLeft);
+        const leftType: PQP.Language.Type.PqType = inspectXor(state, maybeLeft);
         const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
@@ -60,7 +60,7 @@ export function inspectTypeTBinOpExpression(
                 maybeAllowedTypeKinds.values().next().value,
             );
         } else {
-            const unionedTypePairs: PQP.Language.Type.TType[] = [];
+            const unionedTypePairs: PQP.Language.Type.PqType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
@@ -73,9 +73,9 @@ export function inspectTypeTBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: PQP.Language.Type.TType = inspectXor(state, maybeLeft);
+        const leftType: PQP.Language.Type.PqType = inspectXor(state, maybeLeft);
         const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: PQP.Language.Type.TType = inspectXor(state, maybeRight);
+        const rightType: PQP.Language.Type.PqType = inspectXor(state, maybeRight);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: PQP.Language.Type.TypeKind | undefined = Lookup.get(key);
@@ -100,7 +100,7 @@ export function inspectTypeTBinOpExpression(
     }
 }
 
-function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): PQP.Language.Type.TType {
+function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): PQP.Language.Type.PqType {
     if (leftType.kind !== rightType.kind) {
         const details: {} = {
             leftTypeKind: leftType.kind,
@@ -145,7 +145,7 @@ function unionFields([leftType, rightType]:
     | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]):
     | PQP.Language.Type.DefinedRecord
     | PQP.Language.Type.DefinedTable {
-    const combinedFields: Map<string, PQP.Language.Type.TType> = new Map(leftType.fields);
+    const combinedFields: Map<string, PQP.Language.Type.PqType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }

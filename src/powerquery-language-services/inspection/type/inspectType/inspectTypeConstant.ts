@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-export function inspectTypeConstant(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TType {
+export function inspectTypeConstant(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PqType {
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Constant);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {

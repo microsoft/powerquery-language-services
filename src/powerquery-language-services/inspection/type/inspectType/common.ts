@@ -49,11 +49,11 @@ export interface InspectTypeState {
 // then calls all(...) on the mapped values.
 export function allForAnyUnion(
     anyUnion: PQP.Language.Type.AnyUnion,
-    conditionFn: (type: PQP.Language.Type.TType) => boolean,
+    conditionFn: (type: PQP.Language.Type.PqType) => boolean,
 ): boolean {
     return (
         anyUnion.unionedTypePairs
-            .map((type: PQP.Language.Type.TType) => {
+            .map((type: PQP.Language.Type.PqType) => {
                 return type.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type);
@@ -84,24 +84,24 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
     return tryNodeScope(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
 }
 
-export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.TType {
+export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PqType {
     const nodeId: number = scopeItem.id;
 
-    const maybeGivenType: PQP.Language.Type.TType | undefined = state.givenTypeById.get(nodeId);
+    const maybeGivenType: PQP.Language.Type.PqType | undefined = state.givenTypeById.get(nodeId);
     if (maybeGivenType !== undefined) {
         return maybeGivenType;
     }
 
-    const maybeDeltaType: PQP.Language.Type.TType | undefined = state.givenTypeById.get(nodeId);
+    const maybeDeltaType: PQP.Language.Type.PqType | undefined = state.givenTypeById.get(nodeId);
     if (maybeDeltaType !== undefined) {
         return maybeDeltaType;
     }
 
-    const scopeType: PQP.Language.Type.TType = inspectScopeItem(state, scopeItem);
+    const scopeType: PQP.Language.Type.PqType = inspectScopeItem(state, scopeItem);
     return scopeType;
 }
 
-export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.TType {
+export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
@@ -130,7 +130,7 @@ export function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
     parentXorNode: PQP.Parser.TXorNode,
     attributeIndex: number,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
@@ -142,17 +142,17 @@ export function inspectTypeFromChildAttributeIndex(
     return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : PQP.Language.Type.UnknownInstance;
 }
 
-export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TType {
+export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-    const maybeCached: PQP.Language.Type.TType | undefined =
+    const maybeCached: PQP.Language.Type.PqType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
-    let result: PQP.Language.Type.TType;
+    let result: PQP.Language.Type.PqType;
     switch (xorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.ArrayWrapper:
         case PQP.Language.Ast.NodeKind.FieldSpecificationList:
@@ -332,7 +332,7 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
 export function maybeDereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType | undefined {
+): PQP.Language.Type.PqType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const deferenced: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, xorNode);

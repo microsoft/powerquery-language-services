@@ -42,7 +42,7 @@ export function inspectTypeFunctionType(
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: PQP.Language.Type.TType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
         kind: PQP.Language.Type.TypeKind.Type,

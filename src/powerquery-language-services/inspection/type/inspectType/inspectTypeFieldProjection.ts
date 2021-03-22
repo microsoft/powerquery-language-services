@@ -8,7 +8,7 @@ import { InspectTypeState, inspectXor } from "./common";
 export function inspectTypeFieldProjection(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
 
@@ -20,7 +20,7 @@ export function inspectTypeFieldProjection(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.TType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.PqType = inspectXor(state, previousSibling);
     const isOptional: boolean =
         PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             PQP.Language.Ast.NodeKind.Constant,
@@ -30,10 +30,10 @@ export function inspectTypeFieldProjection(
 }
 
 function inspectFieldProjectionHelper(
-    previousSiblingType: PQP.Language.Type.TType,
+    previousSiblingType: PQP.Language.Type.PqType,
     projectedFieldNames: ReadonlyArray<string>,
     isOptional: boolean,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     switch (previousSiblingType.kind) {
         case PQP.Language.Type.TypeKind.Any: {
             const newFields: Map<string, PQP.Language.Type.Any> = new Map(
@@ -90,7 +90,7 @@ function reducedFieldsToKeys(
     keys: ReadonlyArray<string>,
     isOptional: boolean,
 ): PQP.Language.Type.DefinedRecord | PQP.Language.Type.DefinedTable | PQP.Language.Type.None | PQP.Language.Type.Null {
-    const currentFields: Map<string, PQP.Language.Type.TType> = current.fields;
+    const currentFields: Map<string, PQP.Language.Type.PqType> = current.fields;
     const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
 
     if (current.isOpen === false && PQP.ArrayUtils.isSubset(currentFieldNames, keys) === false) {
