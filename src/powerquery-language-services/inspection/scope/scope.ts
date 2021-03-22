@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 // Keys are identifier literals.
-export type ScopeTypeByKey = Map<string, PQP.Language.Type.TType>;
+export type ScopeTypeByKey = Map<string, PQP.Language.Type.PqType>;
 
 export type TriedScope = PQP.Result<ScopeById, PQP.CommonError.CommonError>;
 

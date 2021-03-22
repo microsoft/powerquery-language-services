@@ -11,7 +11,7 @@ import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./
 export function inspectTypeInvokeExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
 
@@ -20,7 +20,7 @@ export function inspectTypeInvokeExpression(
         xorNode,
     );
     if (maybeRequest !== undefined && state.settings.maybeExternalTypeResolver) {
-        const maybeType: PQP.Language.Type.TType | undefined = state.settings.maybeExternalTypeResolver(maybeRequest);
+        const maybeType: PQP.Language.Type.PqType | undefined = state.settings.maybeExternalTypeResolver(maybeRequest);
         if (maybeType !== undefined) {
             return maybeType;
         }
@@ -30,7 +30,7 @@ export function inspectTypeInvokeExpression(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.TType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.PqType = inspectXor(state, previousSibling);
     if (previousSiblingType.kind === PQP.Language.Type.TypeKind.Any) {
         return PQP.Language.Type.AnyInstance;
     } else if (previousSiblingType.kind !== PQP.Language.Type.TypeKind.Function) {
@@ -56,7 +56,7 @@ function maybeExternalInvokeRequest(
     }
     const deferencedIdentifier: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
 
-    const types: PQP.Language.Type.TType[] = [];
+    const types: PQP.Language.Type.PqType[] = [];
     for (const argument of PQP.Parser.NodeIdMapIterator.iterInvokeExpression(state.nodeIdMapCollection, xorNode)) {
         types.push(inspectXor(state, argument));
     }

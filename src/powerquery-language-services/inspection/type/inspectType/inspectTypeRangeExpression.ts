@@ -8,12 +8,12 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeRangeExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TType {
+): PQP.Language.Type.PqType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: PQP.Language.Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
-    const maybeRightType: PQP.Language.Type.TType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const maybeLeftType: PQP.Language.Type.PqType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeRightType: PQP.Language.Type.PqType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     if (maybeLeftType === undefined || maybeRightType === undefined) {
         return PQP.Language.Type.UnknownInstance;

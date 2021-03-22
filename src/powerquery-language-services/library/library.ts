@@ -23,7 +23,7 @@ export interface ILibrary {
 }
 
 export interface ILibraryDefinition {
-    readonly asType: PQP.Language.Type.TType;
+    readonly asType: PQP.Language.Type.PqType;
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;

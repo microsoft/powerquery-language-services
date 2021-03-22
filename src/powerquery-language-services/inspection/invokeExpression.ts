@@ -15,7 +15,7 @@ export type TriedInvokeExpression = PQP.Result<InvokeExpression | undefined, PQP
 
 export interface InvokeExpression {
     readonly xorNode: PQP.Parser.TXorNode;
-    readonly functionType: PQP.Language.Type.TType;
+    readonly functionType: PQP.Language.Type.PqType;
     readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
     readonly maybeArguments: InvokeExpressionArgs | undefined;
@@ -74,7 +74,7 @@ function inspectInvokeExpression(
                 previousNode.node.id,
                 typeCache,
             );
-            const functionType: PQP.Language.Type.TType = Assert.unwrapOk(triedPreviousNodeType);
+            const functionType: PQP.Language.Type.PqType = Assert.unwrapOk(triedPreviousNodeType);
             const maybeName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
                 nodeIdMapCollection,
                 xorNode.node.id,

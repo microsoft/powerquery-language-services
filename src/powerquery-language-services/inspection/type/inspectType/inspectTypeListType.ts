@@ -21,7 +21,7 @@ export function inspectTypeListType(
     if (maybeListItem === undefined) {
         return PQP.Language.Type.UnknownInstance;
     }
-    const itemType: PQP.Language.Type.TType = inspectXor(state, maybeListItem);
+    const itemType: PQP.Language.Type.PqType = inspectXor(state, maybeListItem);
 
     return {
         kind: PQP.Language.Type.TypeKind.Type,
