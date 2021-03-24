@@ -25,7 +25,7 @@ import {
 export class LibrarySymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
-    protected readonly signatureInformationByLabel: Map<string, SignatureInformation[]>;
+    protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
 
     constructor(library: Library.ILibrary) {
         this.externalTypeResolver = library.externalTypeResolver;
@@ -93,7 +93,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
-        if (!LibraryUtils.isInvocable(maybeDefinition)) {
+        if (!LibraryUtils.isFunction(maybeDefinition)) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
@@ -102,13 +102,12 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             activeParameter: context.argumentOrdinal ?? 0,
             // TODO: support more than the first signature.
             activeSignature: 0,
-            signatures: this.getOrCreateSignatureInformation(identifierLiteral),
+            signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
         };
     }
 
     private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
         switch (kind) {
-            case Library.LibraryDefinitionKind.Constructor:
             case Library.LibraryDefinitionKind.Function:
                 return "library function";
 
@@ -125,7 +124,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
     private static getCompletionItemKind(kind: Library.LibraryDefinitionKind): CompletionItemKind {
         switch (kind) {
-            case Library.LibraryDefinitionKind.Constructor:
             case Library.LibraryDefinitionKind.Function:
                 return CompletionItemKind.Function;
 
@@ -140,13 +138,10 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         }
     }
 
-    private getOrCreateSignatureInformation(key: string): SignatureInformation[] {
+    private getOrCreateSignatureInformation(key: string): SignatureInformation {
         if (!this.signatureInformationByLabel.has(key)) {
-            const definition: Library.TInvocable = LibraryUtils.assertAsInvocable(this.libraryDefinitions.get(key));
-            this.signatureInformationByLabel.set(
-                key,
-                definition.signatures.map(LibraryUtils.createSignatureInformation),
-            );
+            const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
+            this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
         }
 
         return PQP.Assert.asDefined(this.signatureInformationByLabel.get(key));
