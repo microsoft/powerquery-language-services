@@ -82,8 +82,6 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     label: "x",
                     maybeDocumentation:
                         "If the argument is a number then multiply it by itself, otehrwise return argument as-is.",
-                    signatureLabelEnd: -1,
-                    signatureLabelOffset: -1,
                     typeKind: PQP.Language.Type.TypeKind.Any,
                 },
             ],

@@ -42,8 +42,6 @@ export interface LibraryParameter {
     readonly label: string;
     readonly maybeDocumentation: string | undefined;
     readonly typeKind: PQP.Language.Type.TypeKind;
-    readonly signatureLabelEnd: number;
-    readonly signatureLabelOffset: number;
 }
 
 export interface LibraryType extends ILibraryDefinition {
