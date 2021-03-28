@@ -7,6 +7,11 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import { Inspection } from "../..";
 import {
+    PseduoFunctionExpressionType,
+    pseudoFunctionExpressionType,
+    PseudoFunctionParameterType,
+} from "../pseudoFunctionExpressionType";
+import {
     LetVariableScopeItem,
     NodeScope,
     ParameterScopeItem,
@@ -282,14 +287,10 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: PQP.Pars
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined);
+    const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
-    const inspectedFnExpr: PQP.Language.TypeInspector.InspectedFunctionExpression = PQP.Language.TypeInspector.inspectFunctionExpression(
-        state.nodeIdMapCollection,
-        fnExpr,
-    );
-
-    const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = inspectedFnExpr.parameters.map(
-        (parameter: PQP.Language.TypeInspector.InspectedFunctionParameter) => {
+    const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = pseudoType.parameters.map(
+        (parameter: PseudoFunctionParameterType) => {
             return [
                 parameter.name.literal,
                 {
