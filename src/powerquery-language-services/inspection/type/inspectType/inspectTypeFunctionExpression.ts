@@ -3,7 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { PseduoFunctionExpressionType, pseudoFunctionExpressionType } from "../../pseudoFunctionExpressionType";
+import {
+    PseduoFunctionExpressionType,
+    pseudoFunctionExpressionType,
+    PseudoFunctionParameterType,
+} from "../../pseudoFunctionExpressionType";
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionExpression(
@@ -56,12 +60,12 @@ export function inspectTypeFunctionExpression(
         kind: PQP.Language.Type.TypeKind.Function,
         maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.DefinedFunction,
         isNullable: false,
-        parameters: pseudoType.parameters.map((parameter: PQP.Language.TypeInspector.InspectedFunctionParameter) => {
+        parameters: pseudoType.parameters.map((pseudoParameter: PseudoFunctionParameterType) => {
             return {
-                nameLiteral: parameter.name.literal,
-                isNullable: parameter.isNullable,
-                isOptional: parameter.isOptional,
-                maybeType: parameter.maybeType,
+                nameLiteral: pseudoParameter.name.literal,
+                isNullable: pseudoParameter.isNullable,
+                isOptional: pseudoParameter.isOptional,
+                maybeType: pseudoParameter.maybeType,
             };
         }),
         returnType,

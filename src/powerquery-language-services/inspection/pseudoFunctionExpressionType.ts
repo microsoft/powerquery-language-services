@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+// A type for a potentially incomplete function expression.
 export interface PseduoFunctionExpressionType {
     readonly parameters: ReadonlyArray<PseudoFunctionParameterType>;
     readonly returnType: PQP.Language.Type.TPrimitiveType;
