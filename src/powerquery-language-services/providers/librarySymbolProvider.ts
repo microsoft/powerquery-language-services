@@ -100,7 +100,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
         return {
             activeParameter: context.argumentOrdinal ?? 0,
-            // TODO: support more than the first signature.
             activeSignature: 0,
             signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
         };
