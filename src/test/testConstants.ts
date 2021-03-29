@@ -77,20 +77,12 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
             PQP.Language.Type.AnyInstance,
             [
                 {
+                    isNullable: false,
+                    isOptional: false,
                     label: "x",
-                    description:
+                    maybeDocumentation:
                         "If the argument is a number then multiply it by itself, otehrwise return argument as-is.",
-                    parameters: [
-                        {
-                            isNullable: false,
-                            isOptional: false,
-                            label: "x",
-                            maybeDocumentation: undefined,
-                            signatureLabelEnd: -1,
-                            signatureLabelOffset: -1,
-                            typeKind: PQP.Language.Type.TypeKind.Any,
-                        },
-                    ],
+                    typeKind: PQP.Language.Type.TypeKind.Any,
                 },
             ],
         ),

@@ -6,13 +6,10 @@ import { ExternalType } from "../inspection";
 
 export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 
-export type TLibraryDefinition = LibraryConstant | LibraryConstructor | LibraryFunction | LibraryType;
-
-export type TInvocable = LibraryConstructor | LibraryFunction;
+export type TLibraryDefinition = LibraryConstant | LibraryFunction | LibraryType;
 
 export const enum LibraryDefinitionKind {
     Constant = "Constant",
-    Constructor = "Constructor",
     Function = "Function",
     Type = "Type",
 }
@@ -34,19 +31,8 @@ export interface LibraryConstant extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Constant;
 }
 
-export interface LibraryConstructor extends ILibraryDefinition {
-    readonly kind: LibraryDefinitionKind.Constructor;
-    readonly signatures: ReadonlyArray<LibraryFunctionSignature>;
-}
-
 export interface LibraryFunction extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Function;
-    readonly signatures: ReadonlyArray<LibraryFunctionSignature>;
-}
-
-export interface LibraryFunctionSignature {
-    readonly label: string;
-    readonly description: string | undefined;
     readonly parameters: ReadonlyArray<LibraryParameter>;
 }
 
@@ -56,8 +42,6 @@ export interface LibraryParameter {
     readonly label: string;
     readonly maybeDocumentation: string | undefined;
     readonly typeKind: PQP.Language.Type.TypeKind;
-    readonly signatureLabelEnd: number;
-    readonly signatureLabelOffset: number;
 }
 
 export interface LibraryType extends ILibraryDefinition {

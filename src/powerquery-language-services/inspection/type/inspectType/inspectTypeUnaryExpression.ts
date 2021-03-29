@@ -39,7 +39,7 @@ export function inspectTypeUnaryExpression(
     const expressionType: PQP.Language.Type.PqType = inspectXor(state, expression);
     if (expressionType.kind === PQP.Language.Type.TypeKind.Number) {
         return inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
-    } else if (expressionType.kind === PQP.Language.Type.TypeKind.Logical) {
+    } else if (PQP.Language.TypeUtils.isLogical(expressionType)) {
         return inspectTypeUnaryLogical(state, expressionType, unaryOperatorWrapper.node.id);
     } else {
         return PQP.Language.Type.NoneInstance;
@@ -98,9 +98,9 @@ function inspectTypeUnaryNumber(
 
 function inspectTypeUnaryLogical(
     state: InspectTypeState,
-    unaryExpressionType: PQP.Language.Type.Logical,
+    unaryExpressionType: PQP.Language.Type.TLogical,
     unaryOperatorWrapperId: number,
-): PQP.Language.Type.Logical | PQP.Language.Type.None {
+): PQP.Language.Type.TLogical | PQP.Language.Type.None {
     const unaryNodeOperators: ReadonlyArray<LogicalUnaryNodeOperator> = Assert.asDefined(
         PQP.Parser.NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<LogicalUnaryNodeOperator>;
