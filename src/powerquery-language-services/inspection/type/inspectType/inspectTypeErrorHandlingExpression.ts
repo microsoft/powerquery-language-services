@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 export function inspectTypeErrorHandlingExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
 
@@ -21,10 +21,10 @@ export function inspectTypeErrorHandlingExpression(
         [PQP.Language.Ast.NodeKind.OtherwiseExpression],
     );
 
-    return PQP.Language.TypeUtils.anyUnionFactory([
+    return PQP.Language.TypeUtils.createAnyUnion([
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXor(state, maybeOtherwiseExpression)
-            : PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Record),
+            : PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Record),
     ]);
 }

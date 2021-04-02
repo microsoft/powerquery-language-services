@@ -42,7 +42,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
     }
 
     private getKeywords(triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isErr(triedKeywordAutocomplete)) {
+        if (PQP.ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
 
@@ -63,7 +63,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
     ): ReadonlyArray<CompletionItem> {
         if (
-            PQP.ResultUtils.isErr(triedLanguageConstantAutocomplete) ||
+            PQP.ResultUtils.isError(triedLanguageConstantAutocomplete) ||
             triedLanguageConstantAutocomplete.value === undefined
         ) {
             return [];
@@ -80,7 +80,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
     ): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isErr(triedPrimitiveTypeAutocomplete)) {
+        if (PQP.ResultUtils.isError(triedPrimitiveTypeAutocomplete)) {
             return [];
         }
 

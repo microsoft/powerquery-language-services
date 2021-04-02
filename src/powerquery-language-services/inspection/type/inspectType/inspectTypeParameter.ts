@@ -5,7 +5,10 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeParameter(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PqType {
+export function inspectTypeParameter(
+    state: InspectTypeState,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
 
@@ -18,7 +21,9 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: PQP.Parse
         [PQP.Language.Ast.NodeKind.Constant],
     );
 
-    const maybeParameterType: PQP.Language.Type.PqType | undefined = PQP.Language.TypeUtils.assertAsTPrimitiveType(
+    const maybeParameterType:
+        | PQP.Language.Type.PowerQueryType
+        | undefined = PQP.Language.TypeUtils.assertAsTPrimitiveType(
         inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );
 

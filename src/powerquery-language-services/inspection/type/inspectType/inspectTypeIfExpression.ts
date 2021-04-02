@@ -8,11 +8,11 @@ import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } 
 export function inspectTypeIfExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.IfExpression);
 
-    const conditionType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const conditionType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
     if (conditionType.kind === PQP.Language.Type.TypeKind.Unknown) {
         return PQP.Language.Type.UnknownInstance;
     }
@@ -22,7 +22,7 @@ export function inspectTypeIfExpression(
             conditionType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion &&
             !allForAnyUnion(
                 conditionType,
-                (type: PQP.Language.Type.PqType) =>
+                (type: PQP.Language.Type.PowerQueryType) =>
                     type.kind === PQP.Language.Type.TypeKind.Logical || type.kind === PQP.Language.Type.TypeKind.Any,
             )
         ) {
@@ -32,8 +32,8 @@ export function inspectTypeIfExpression(
         return PQP.Language.Type.NoneInstance;
     }
 
-    const trueExprType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
-    const falseExprType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
+    const trueExprType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const falseExprType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
 
-    return PQP.Language.TypeUtils.anyUnionFactory([trueExprType, falseExprType]);
+    return PQP.Language.TypeUtils.createAnyUnion([trueExprType, falseExprType]);
 }

@@ -58,9 +58,9 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = PQP.ResultUtils.okFactory(new Map());
-        triedScopeType = PQP.ResultUtils.okFactory(new Map());
-        triedExpectedType = PQP.ResultUtils.okFactory(undefined);
+        triedNodeScope = PQP.ResultUtils.createOk(new Map());
+        triedScopeType = PQP.ResultUtils.createOk(new Map());
+        triedExpectedType = PQP.ResultUtils.createOk(undefined);
     }
 
     return {

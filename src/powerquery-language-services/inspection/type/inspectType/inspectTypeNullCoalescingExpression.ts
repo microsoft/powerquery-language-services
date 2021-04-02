@@ -8,11 +8,11 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeNullCoalescingExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
 
-    const maybeLeftType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeLeftType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeNullCoalescingOperator:
         | PQP.Language.Ast.TNode
         | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
@@ -26,7 +26,7 @@ export function inspectTypeNullCoalescingExpression(
         return maybeLeftType;
     }
 
-    const maybeRightType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const maybeRightType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
     if (
         maybeLeftType.kind === PQP.Language.Type.TypeKind.None ||
         maybeRightType.kind === PQP.Language.Type.TypeKind.None
@@ -34,5 +34,5 @@ export function inspectTypeNullCoalescingExpression(
         return PQP.Language.Type.NoneInstance;
     }
 
-    return PQP.Language.TypeUtils.anyUnionFactory([maybeLeftType, maybeRightType]);
+    return PQP.Language.TypeUtils.createAnyUnion([maybeLeftType, maybeRightType]);
 }

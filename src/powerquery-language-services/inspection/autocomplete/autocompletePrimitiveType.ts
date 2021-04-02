@@ -13,7 +13,7 @@ export function tryAutocompletePrimitiveType(
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return PQP.ResultUtils.okFactory([]);
+        return PQP.ResultUtils.createOk([]);
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => {

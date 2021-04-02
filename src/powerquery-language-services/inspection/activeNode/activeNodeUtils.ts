@@ -41,19 +41,19 @@ export function maybeActiveNode(
     //  * Context
     //  * Ast
     if (astSearch.maybeShiftedRightNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeShiftedRightNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
     } else if (
         astSearch.maybeBestOnOrBeforeNode !== undefined &&
         isAnchorNode(position, astSearch.maybeBestOnOrBeforeNode)
     ) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.contextFactory(maybeContextNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createContextNode(maybeContextNode);
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
         leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;

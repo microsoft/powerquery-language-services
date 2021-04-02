@@ -34,7 +34,7 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly argumentOrdinal: number | undefined;
     readonly functionName: string | undefined;
     readonly isNameInLocalScope: boolean;
-    readonly functionType: PQP.Language.Type.PqType;
+    readonly functionType: PQP.Language.Type.PowerQueryType;
 }
 
 export interface ISymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

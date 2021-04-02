@@ -16,7 +16,7 @@ type TRecordOrTable =
 export function inspectTypeTBinOpExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     Assert.isTrue(PQP.Language.AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
@@ -47,7 +47,7 @@ export function inspectTypeTBinOpExpression(
     }
     // '1 +'
     else if (maybeRight === undefined || maybeRight.kind === PQP.Parser.XorNodeKind.Context) {
-        const leftType: PQP.Language.Type.PqType = inspectXor(state, maybeLeft);
+        const leftType: PQP.Language.Type.PowerQueryType = inspectXor(state, maybeLeft);
         const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
@@ -55,12 +55,12 @@ export function inspectTypeTBinOpExpression(
         if (maybeAllowedTypeKinds === undefined) {
             return PQP.Language.Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return PQP.Language.TypeUtils.primitiveTypeFactory(
+            return PQP.Language.TypeUtils.createPrimitiveType(
                 leftType.isNullable,
                 maybeAllowedTypeKinds.values().next().value,
             );
         } else {
-            const unionedTypePairs: PQP.Language.Type.PqType[] = [];
+            const unionedTypePairs: PQP.Language.Type.PowerQueryType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
@@ -68,14 +68,14 @@ export function inspectTypeTBinOpExpression(
                     isNullable: true,
                 });
             }
-            return PQP.Language.TypeUtils.anyUnionFactory(unionedTypePairs);
+            return PQP.Language.TypeUtils.createAnyUnion(unionedTypePairs);
         }
     }
     // '1 + 1'
     else {
-        const leftType: PQP.Language.Type.PqType = inspectXor(state, maybeLeft);
+        const leftType: PQP.Language.Type.PowerQueryType = inspectXor(state, maybeLeft);
         const operatorKind: PQP.Language.Constant.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: PQP.Language.Type.PqType = inspectXor(state, maybeRight);
+        const rightType: PQP.Language.Type.PowerQueryType = inspectXor(state, maybeRight);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: PQP.Language.Type.TypeKind | undefined = Lookup.get(key);
@@ -92,7 +92,7 @@ export function inspectTypeTBinOpExpression(
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            return PQP.Language.TypeUtils.primitiveTypeFactory(
+            return PQP.Language.TypeUtils.createPrimitiveType(
                 leftType.isNullable || rightType.isNullable,
                 resultTypeKind,
             );
@@ -100,7 +100,10 @@ export function inspectTypeTBinOpExpression(
     }
 }
 
-function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): PQP.Language.Type.PqType {
+function inspectRecordOrTableUnion(
+    leftType: TRecordOrTable,
+    rightType: TRecordOrTable,
+): PQP.Language.Type.PowerQueryType {
     if (leftType.kind !== rightType.kind) {
         const details: {} = {
             leftTypeKind: leftType.kind,
@@ -110,7 +113,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
-        return PQP.Language.TypeUtils.primitiveTypeFactory(leftType.isNullable || rightType.isNullable, leftType.kind);
+        return PQP.Language.TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
@@ -145,7 +148,7 @@ function unionFields([leftType, rightType]:
     | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]):
     | PQP.Language.Type.DefinedRecord
     | PQP.Language.Type.DefinedTable {
-    const combinedFields: Map<string, PQP.Language.Type.PqType> = new Map(leftType.fields);
+    const combinedFields: Map<string, PQP.Language.Type.PowerQueryType> = new Map(leftType.fields);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }

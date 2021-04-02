@@ -73,11 +73,11 @@ export function assertGetOrCreateNodeScope(
     const scopeById: ScopeById = maybeScopeById ?? new Map();
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
-        return PQP.ResultUtils.okFactory(maybeScope);
+        return PQP.ResultUtils.createOk(maybeScope);
     }
 
     const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, leafNodeIds, nodeId, scopeById);
-    if (PQP.ResultUtils.isErr(triedNodeScope)) {
+    if (PQP.ResultUtils.isError(triedNodeScope)) {
         throw triedNodeScope.error;
     }
 
@@ -98,7 +98,7 @@ export function maybeDereferencedIdentifier(
     const scopeById: ScopeById = maybeScopeById ?? new Map();
 
     if (PQP.Parser.XorNodeUtils.isContext(xorNode)) {
-        return PQP.ResultUtils.okFactory(undefined);
+        return PQP.ResultUtils.createOk(undefined);
     }
     const identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.IdentifierExpression = xorNode.node as
         | PQP.Language.Ast.Identifier
@@ -129,7 +129,7 @@ export function maybeDereferencedIdentifier(
         xorNode.node.id,
         scopeById,
     );
-    if (PQP.ResultUtils.isErr(triedNodeScope)) {
+    if (PQP.ResultUtils.isError(triedNodeScope)) {
         return triedNodeScope;
     }
 
@@ -140,7 +140,7 @@ export function maybeDereferencedIdentifier(
         // then either the scope generation is incorrect or it's an external identifier.
         maybeScopeItem?.isRecursive !== isIdentifierRecurisve
     ) {
-        return PQP.ResultUtils.okFactory(undefined);
+        return PQP.ResultUtils.createOk(undefined);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
@@ -165,13 +165,13 @@ export function maybeDereferencedIdentifier(
     }
 
     if (maybeNextXorNode === undefined) {
-        return PQP.ResultUtils.okFactory(xorNode);
+        return PQP.ResultUtils.createOk(xorNode);
     } else if (
         PQP.Parser.XorNodeUtils.isContext(maybeNextXorNode) ||
         (maybeNextXorNode.node.kind !== PQP.Language.Ast.NodeKind.Identifier &&
             maybeNextXorNode.node.kind !== PQP.Language.Ast.NodeKind.IdentifierExpression)
     ) {
-        return PQP.ResultUtils.okFactory(xorNode);
+        return PQP.ResultUtils.createOk(xorNode);
     } else {
         return maybeDereferencedIdentifier(settings, nodeIdMapCollection, leafNodeIds, maybeNextXorNode, scopeById);
     }

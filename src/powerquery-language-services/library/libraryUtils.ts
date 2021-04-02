@@ -51,7 +51,7 @@ export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): a
 }
 
 export function createConstantDefinition(
-    asType: PQP.Language.Type.PqType,
+    asType: PQP.Language.Type.PowerQueryType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,
@@ -66,7 +66,7 @@ export function createConstantDefinition(
 }
 
 export function createFunctionDefinition(
-    asType: PQP.Language.Type.PqType,
+    asType: PQP.Language.Type.PowerQueryType,
     description: string,
     label: string,
     primitiveType: PQP.Language.Type.TPrimitiveType,

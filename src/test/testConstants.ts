@@ -48,7 +48,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.NumberOne,
         LibraryUtils.createConstantDefinition(
-            PQP.Language.TypeUtils.numberLiteralFactory(false, "1"),
+            PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
             `The name is ${TestLibraryName.NumberOne}`,
             TestLibraryName.NumberOne,
             PQP.Language.Type.NumberInstance,
@@ -57,7 +57,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
-            PQP.Language.TypeUtils.definedFunctionFactory(
+            PQP.Language.TypeUtils.createDefinedFunction(
                 false,
                 [
                     {
@@ -67,7 +67,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                         nameLiteral: "x",
                     },
                 ],
-                PQP.Language.TypeUtils.anyUnionFactory([
+                PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.Type.NumberInstance,
                     PQP.Language.Type.AnyInstance,
                 ]),
@@ -99,7 +99,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     if (request.args.length !== 1) {
                         return PQP.Language.Type.NoneInstance;
                     }
-                    const arg: PQP.Language.Type.PqType = Assert.asDefined(request.args[0]);
+                    const arg: PQP.Language.Type.PowerQueryType = Assert.asDefined(request.args[0]);
 
                     if (PQP.Language.TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
@@ -122,14 +122,14 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
         case Inspection.ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
                 case TestLibraryName.CreateFooAndBarRecord:
-                    return PQP.Language.TypeUtils.definedFunctionFactory(
+                    return PQP.Language.TypeUtils.createDefinedFunction(
                         false,
                         [],
-                        PQP.Language.TypeUtils.definedRecordFactory(
+                        PQP.Language.TypeUtils.createDefinedRecord(
                             false,
-                            new Map<string, PQP.Language.Type.PqType>([
-                                ["foo", PQP.Language.TypeUtils.textLiteralFactory(false, `"fooString"`)],
-                                ["bar", PQP.Language.TypeUtils.textLiteralFactory(false, `"barString"`)],
+                            new Map<string, PQP.Language.Type.PowerQueryType>([
+                                ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `"fooString"`)],
+                                ["bar", PQP.Language.TypeUtils.createTextLiteral(false, `"barString"`)],
                             ]),
                             false,
                         ),
@@ -139,10 +139,10 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     return PQP.Language.Type.NumberInstance;
 
                 case TestLibraryName.NumberOne:
-                    return PQP.Language.TypeUtils.numberLiteralFactory(false, "1");
+                    return PQP.Language.TypeUtils.createNumberLiteral(false, "1");
 
                 case TestLibraryName.SquareIfNumber:
-                    return PQP.Language.TypeUtils.definedFunctionFactory(
+                    return PQP.Language.TypeUtils.createDefinedFunction(
                         false,
                         [
                             {

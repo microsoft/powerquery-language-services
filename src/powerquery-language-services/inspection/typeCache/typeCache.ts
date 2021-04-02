@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ScopeById } from "../scope";
 
-export type TypeById = Map<number, PQP.Language.Type.PqType>;
+export type TypeById = Map<number, PQP.Language.Type.PowerQueryType>;
 
 // A cache that can be re-used for successive calls under the same document.
 export interface TypeCache {

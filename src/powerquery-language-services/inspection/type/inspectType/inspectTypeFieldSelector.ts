@@ -10,7 +10,7 @@ import { InspectTypeState, inspectXor } from "./common";
 export function inspectTypeFieldSelector(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
 
@@ -28,7 +28,7 @@ export function inspectTypeFieldSelector(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.PqType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.PowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
         PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             PQP.Language.Ast.NodeKind.Constant,
@@ -49,9 +49,9 @@ export function inspectTypeFieldSelector(
 
                 case PQP.Language.Type.ExtendedTypeKind.DefinedRecord:
                 case PQP.Language.Type.ExtendedTypeKind.DefinedTable: {
-                    const maybeNamedField: PQP.Language.Type.PqType | undefined = previousSiblingType.fields.get(
-                        fieldName,
-                    );
+                    const maybeNamedField:
+                        | PQP.Language.Type.PowerQueryType
+                        | undefined = previousSiblingType.fields.get(fieldName);
                     if (maybeNamedField !== undefined) {
                         return maybeNamedField;
                     } else if (previousSiblingType.isOpen) {

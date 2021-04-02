@@ -24,7 +24,7 @@ export function tryAutocompleteFieldAccess<S extends PQP.Parser.IParseState = PQ
     typeCache: TypeCache,
 ): TriedAutocompleteFieldAccess {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return PQP.ResultUtils.okFactory(undefined);
+        return PQP.ResultUtils.createOk(undefined);
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => {
@@ -97,13 +97,15 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
         field.node.id,
         typeCache,
     );
-    if (PQP.ResultUtils.isErr(triedFieldType)) {
+    if (PQP.ResultUtils.isError(triedFieldType)) {
         throw triedFieldType.error;
     }
-    const fieldType: PQP.Language.Type.PqType = triedFieldType.value;
+    const fieldType: PQP.Language.Type.PowerQueryType = triedFieldType.value;
 
     // We can only autocomplete a field access if we know what fields are present.
-    const fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PqType]> = fieldEntriesFromFieldType(fieldType);
+    const fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]> = fieldEntriesFromFieldType(
+        fieldType,
+    );
     if (fieldEntries.length === 0) {
         return undefined;
     }
@@ -116,10 +118,12 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
     };
 }
 
-function fieldEntriesFromFieldType(type: PQP.Language.Type.PqType): ReadonlyArray<[string, PQP.Language.Type.PqType]> {
+function fieldEntriesFromFieldType(
+    type: PQP.Language.Type.PowerQueryType,
+): ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]> {
     switch (type.maybeExtendedKind) {
         case PQP.Language.Type.ExtendedTypeKind.AnyUnion: {
-            let fields: [string, PQP.Language.Type.PqType][] = [];
+            let fields: [string, PQP.Language.Type.PowerQueryType][] = [];
             for (const field of type.unionedTypePairs) {
                 if (
                     field.maybeExtendedKind &&
@@ -278,7 +282,7 @@ function inspectFieldSelector(
 }
 
 function autoCompleteItemsFactory(
-    fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PqType]>,
+    fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;

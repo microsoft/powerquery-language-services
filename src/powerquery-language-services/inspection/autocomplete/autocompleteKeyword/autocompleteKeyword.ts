@@ -23,7 +23,7 @@ export function tryAutocompleteKeyword(
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteKeyword {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return PQP.ResultUtils.okFactory([...ExpressionAutocomplete, PQP.Language.Keyword.KeywordKind.Section]);
+        return PQP.ResultUtils.createOk([...ExpressionAutocomplete, PQP.Language.Keyword.KeywordKind.Section]);
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => {

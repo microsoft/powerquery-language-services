@@ -12,7 +12,7 @@ export function inspectTypeRecord(
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertIsRecord(xorNode);
 
-    const fields: Map<string, PQP.Language.Type.PqType> = new Map();
+    const fields: Map<string, PQP.Language.Type.PowerQueryType> = new Map();
     for (const keyValuePair of PQP.Parser.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
             fields.set(keyValuePair.keyLiteral, inspectXor(state, keyValuePair.maybeValue));
