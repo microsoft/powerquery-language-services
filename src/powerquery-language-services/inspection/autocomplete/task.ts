@@ -10,7 +10,7 @@ import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
-import { trailingTokenFactory } from "./common";
+import { createTrailingToken } from "./common";
 import {
     Autocomplete,
     TrailingToken,
@@ -36,7 +36,7 @@ export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IPars
             maybeParseError.innerError,
         );
         if (maybeParseErrorToken !== undefined) {
-            maybeTrailingToken = trailingTokenFactory(maybeActiveNode.position, maybeParseErrorToken);
+            maybeTrailingToken = createTrailingToken(maybeActiveNode.position, maybeParseErrorToken);
         }
     }
 

@@ -114,7 +114,7 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
         field,
         fieldType,
         inspectedFieldAccess,
-        autocompleteItems: autoCompleteItemsFactory(fieldEntries, inspectedFieldAccess),
+        autocompleteItems: createAutocompleteItems(fieldEntries, inspectedFieldAccess),
     };
 }
 
@@ -207,7 +207,7 @@ function inspectFieldProjection(
     };
 }
 
-function inspectedFieldAccessFactory(isAutocompleteAllowed: boolean): InspectedFieldAccess {
+function createInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
     return {
         isAutocompleteAllowed,
         maybeIdentifierUnderPosition: undefined,
@@ -223,9 +223,9 @@ function inspectFieldSelector(
 ): InspectedFieldAccess {
     const children: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
     if (children === undefined) {
-        return inspectedFieldAccessFactory(false);
+        return createInspectedFieldAccess(false);
     } else if (children.length === 1) {
-        return inspectedFieldAccessFactory(nodeIdMapCollection.astNodeById.has(children[0]));
+        return createInspectedFieldAccess(nodeIdMapCollection.astNodeById.has(children[0]));
     }
 
     const generalizedIdentifierId: number = children[1];
@@ -281,7 +281,7 @@ function inspectFieldSelector(
     }
 }
 
-function autoCompleteItemsFactory(
+function createAutocompleteItems(
     fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {

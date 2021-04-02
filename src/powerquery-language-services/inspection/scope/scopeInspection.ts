@@ -321,13 +321,13 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: PQP.Parser.T
         PQP.Language.Ast.Identifier
     >> = PQP.Parser.NodeIdMapIterator.iterLetExpression(state.nodeIdMapCollection, letExpr);
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, letVariableScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, createLetVariableScopeItem);
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemsFromKeyValuePairs(
         keyValuePairs,
         -1,
-        letVariableScopeItemFactory,
+        createLetVariableScopeItem,
     );
     expandChildScope(state, letExpr, [3], newEntries, nodeScope);
 }
@@ -341,7 +341,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
     const keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<
         PQP.Language.Ast.GeneralizedIdentifier
     >> = PQP.Parser.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, record);
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, recordMemberScopeItemFactory);
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, createRecordMemberScopeItem);
 }
 
 function inspectSection(state: ScopeInspectionState, section: PQP.Parser.TXorNode): void {
@@ -359,7 +359,7 @@ function inspectSection(state: ScopeInspectionState, section: PQP.Parser.TXorNod
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemsFromKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            sectionMemberScopeItemFactory,
+            createSectionMemberScopeItem,
         );
         if (newScopeItems.length !== 0) {
             expandScope(state, kvp.maybeValue, newScopeItems, new Map());
@@ -375,7 +375,7 @@ function inspectKeyValuePairs<
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<I>>,
-    factoryFn: (keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
+    createFn: (keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>, recursive: boolean) => T,
 ): void {
     for (const kvp of keyValuePairs) {
         if (kvp.maybeValue === undefined) {
@@ -385,7 +385,7 @@ function inspectKeyValuePairs<
         const newScopeItems: ReadonlyArray<[string, T]> = scopeItemsFromKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            factoryFn,
+            createFn,
         );
         if (newScopeItems.length !== 0) {
             expandScope(state, kvp.maybeValue, newScopeItems, parentScope);
@@ -492,16 +492,16 @@ function scopeItemsFromKeyValuePairs<
 >(
     keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.KeyValuePair<I>>,
     ancestorKeyNodeId: number,
-    factoryFn: (keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>, isRecursive: boolean) => T,
+    createFn: (keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     return keyValuePairs
         .filter((keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>) => keyValuePair.maybeValue !== undefined)
         .map((keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<I>) => {
-            return [keyValuePair.keyLiteral, factoryFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id)];
+            return [keyValuePair.keyLiteral, createFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id)];
         });
 }
 
-function sectionMemberScopeItemFactory(
+function createSectionMemberScopeItem(
     keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.Identifier>,
     isRecursive: boolean,
 ): SectionMemberScopeItem {
@@ -514,7 +514,7 @@ function sectionMemberScopeItemFactory(
     };
 }
 
-function letVariableScopeItemFactory(
+function createLetVariableScopeItem(
     keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.Identifier>,
     isRecursive: boolean,
 ): LetVariableScopeItem {
@@ -527,7 +527,7 @@ function letVariableScopeItemFactory(
     };
 }
 
-function recordMemberScopeItemFactory(
+function createRecordMemberScopeItem(
     keyValuePair: PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier>,
     isRecursive: boolean,
 ): RecordFieldScopeItem {

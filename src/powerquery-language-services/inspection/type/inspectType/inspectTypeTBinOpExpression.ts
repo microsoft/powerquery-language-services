@@ -165,20 +165,20 @@ function unionFields([leftType, rightType]:
 // Values: the resulting type of the binary operation expression.
 // Eg. '1 > 3' -> PQP.Language.Type.TypeKind.Number
 export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Null),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Null),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Null),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Null),
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Logical),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Logical),
-    ...lookupsForLogicalFactory(PQP.Language.Type.TypeKind.Logical),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Logical),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Logical),
+    ...createLookupsForLogical(PQP.Language.Type.TypeKind.Logical),
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Number),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Number),
-    ...lookupsForArithmeticFactory(PQP.Language.Type.TypeKind.Number),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Number),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Number),
+    ...createLookupsForArithmetic(PQP.Language.Type.TypeKind.Number),
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Time),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Time),
-    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.Time),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Time),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Time),
+    ...createLookupsForClockKind(PQP.Language.Type.TypeKind.Time),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Date,
@@ -188,9 +188,9 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.DateTime,
     ],
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Date),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Date),
-    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.Date),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Date),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Date),
+    ...createLookupsForClockKind(PQP.Language.Type.TypeKind.Date),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Date,
@@ -200,16 +200,16 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.DateTime,
     ],
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.DateTime),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.DateTime),
-    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.DateTime),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.DateTime),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.DateTime),
+    ...createLookupsForClockKind(PQP.Language.Type.TypeKind.DateTime),
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.DateTimeZone),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.DateTimeZone),
-    ...lookupsForClockKindFactory(PQP.Language.Type.TypeKind.DateTimeZone),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.DateTimeZone),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.DateTimeZone),
+    ...createLookupsForClockKind(PQP.Language.Type.TypeKind.DateTimeZone),
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Duration),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Duration),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Duration),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Duration),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Duration,
@@ -251,8 +251,8 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.Duration,
     ],
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Text),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Text),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Text),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Text),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Text,
@@ -262,10 +262,10 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.Text,
     ],
 
-    ...lookupsForRelationalFactory(PQP.Language.Type.TypeKind.Binary),
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Binary),
+    ...createLookupsForRelational(PQP.Language.Type.TypeKind.Binary),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Binary),
 
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.List),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.List),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.List,
@@ -275,7 +275,7 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.List,
     ],
 
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Record),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Record),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Record,
@@ -285,7 +285,7 @@ export const Lookup: ReadonlyMap<string, PQP.Language.Type.TypeKind> = new Map([
         PQP.Language.Type.TypeKind.Record,
     ],
 
-    ...lookupsForEqualityFactory(PQP.Language.Type.TypeKind.Table),
+    ...createLookupsForEquality(PQP.Language.Type.TypeKind.Table),
     [
         lookupKey(
             PQP.Language.Type.TypeKind.Table,
@@ -350,7 +350,7 @@ export function partialLookupKey(
     return `${leftTypeKind},${operatorKind}`;
 }
 
-function lookupsForRelationalFactory(
+function createLookupsForRelational(
     typeKind: PQP.Language.Type.TypeKind,
 ): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
@@ -373,7 +373,7 @@ function lookupsForRelationalFactory(
     ];
 }
 
-function lookupsForEqualityFactory(
+function createLookupsForEquality(
     typeKind: PQP.Language.Type.TypeKind,
 ): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
@@ -389,7 +389,7 @@ function lookupsForEqualityFactory(
 }
 
 // Note: does not include the and <'&'> Constant.
-function lookupsForArithmeticFactory(
+function createLookupsForArithmetic(
     typeKind: PQP.Language.Type.TypeKind,
 ): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
@@ -400,7 +400,7 @@ function lookupsForArithmeticFactory(
     ];
 }
 
-function lookupsForLogicalFactory(
+function createLookupsForLogical(
     typeKind: PQP.Language.Type.TypeKind,
 ): ReadonlyArray<[string, PQP.Language.Type.TypeKind]> {
     return [
@@ -409,7 +409,7 @@ function lookupsForLogicalFactory(
     ];
 }
 
-function lookupsForClockKindFactory(
+function createLookupsForClockKind(
     typeKind:
         | PQP.Language.Type.TypeKind.Date
         | PQP.Language.Type.TypeKind.DateTime

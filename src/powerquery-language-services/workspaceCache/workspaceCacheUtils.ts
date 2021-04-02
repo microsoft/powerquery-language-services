@@ -97,13 +97,13 @@ function getOrCreate<T>(
     cache: Map<string, T>,
     textDocument: TextDocument,
     maybeLocale: string | undefined,
-    factoryFn: (textDocument: TextDocument, maybeLocale: string | undefined) => T,
+    createFn: (textDocument: TextDocument, maybeLocale: string | undefined) => T,
 ): T {
     const cacheKey: string = textDocument.uri;
     const maybeValue: T | undefined = cache.get(cacheKey);
 
     if (maybeValue === undefined) {
-        const value: T = factoryFn(textDocument, maybeLocale);
+        const value: T = createFn(textDocument, maybeLocale);
         cache.set(cacheKey, value);
         return value;
     } else {

@@ -58,12 +58,12 @@ export function maybeActiveNode(
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
-        return outOfBoundPositionFactory(position);
+        return createOutOfBoundPosition(position);
     }
 
     const leaf: PQP.Parser.TXorNode = maybeLeaf;
 
-    return activeNodeFactory(
+    return createActiveNode(
         leafKind,
         position,
         PQP.Parser.AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
@@ -71,7 +71,7 @@ export function maybeActiveNode(
     );
 }
 
-export function activeNodeFactory(
+export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
     ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
@@ -86,7 +86,7 @@ export function activeNodeFactory(
     };
 }
 
-export function outOfBoundPositionFactory(position: Position): OutOfBoundPosition {
+export function createOutOfBoundPosition(position: Position): OutOfBoundPosition {
     return {
         kind: ActiveNodeKind.OutOfBoundPosition,
         position,

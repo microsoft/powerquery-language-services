@@ -63,7 +63,7 @@ function maybeExternalInvokeRequest(
         types.push(inspectXor(state, argument));
     }
 
-    return ExternalTypeUtils.invocationTypeRequestFactory(
+    return ExternalTypeUtils.createInvocationTypeRequest(
         Assert.asDefined(PQP.Parser.XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
         types,
     );

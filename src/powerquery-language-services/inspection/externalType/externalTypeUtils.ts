@@ -5,14 +5,14 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ExternalInvocationTypeRequest, ExternalTypeRequestKind, ExternalValueTypeRequest } from "./externalType";
 
-export function valueTypeRequestFactory(identifierLiteral: string): ExternalValueTypeRequest {
+export function createValueTypeRequest(identifierLiteral: string): ExternalValueTypeRequest {
     return {
         kind: ExternalTypeRequestKind.Value,
         identifierLiteral,
     };
 }
 
-export function invocationTypeRequestFactory(
+export function createInvocationTypeRequest(
     identifierLiteral: string,
     args: ReadonlyArray<PQP.Language.Type.PowerQueryType>,
 ): ExternalInvocationTypeRequest {
