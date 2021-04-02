@@ -8,12 +8,20 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeRangeExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: PQP.Language.Type.PqType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
-    const maybeRightType: PQP.Language.Type.PqType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const maybeLeftType: PQP.Language.Type.PowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
+        state,
+        xorNode,
+        0,
+    );
+    const maybeRightType: PQP.Language.Type.PowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
+        state,
+        xorNode,
+        2,
+    );
 
     if (maybeLeftType === undefined || maybeRightType === undefined) {
         return PQP.Language.Type.UnknownInstance;
@@ -25,7 +33,7 @@ export function inspectTypeRangeExpression(
         if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
             return PQP.Language.Type.NoneInstance;
         } else {
-            return PQP.Language.TypeUtils.primitiveTypeFactory(maybeLeftType.isNullable, maybeLeftType.kind);
+            return PQP.Language.TypeUtils.createPrimitiveType(maybeLeftType.isNullable, maybeLeftType.kind);
         }
     } else if (
         maybeLeftType.kind === PQP.Language.Type.TypeKind.None ||

@@ -20,7 +20,7 @@ export interface ILibrary {
 }
 
 export interface ILibraryDefinition {
-    readonly asType: PQP.Language.Type.PqType;
+    readonly asType: PQP.Language.Type.PowerQueryType;
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;

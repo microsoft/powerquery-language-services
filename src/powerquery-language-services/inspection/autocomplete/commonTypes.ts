@@ -29,12 +29,12 @@ export interface Autocomplete {
 
 export interface AutocompleteItem {
     readonly key: string;
-    readonly type: PQP.Language.Type.PqType;
+    readonly type: PQP.Language.Type.PowerQueryType;
 }
 
 export interface AutocompleteFieldAccess {
     readonly field: PQP.Parser.TXorNode;
-    readonly fieldType: PQP.Language.Type.PqType;
+    readonly fieldType: PQP.Language.Type.PowerQueryType;
     readonly inspectedFieldAccess: InspectedFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }

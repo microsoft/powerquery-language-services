@@ -20,13 +20,13 @@ export function inspectTypeLiteralExpression(
 
             switch (typeKind) {
                 case PQP.Language.Type.TypeKind.Number:
-                    return PQP.Language.TypeUtils.numberLiteralFactory(false, literalExpression.literal);
+                    return PQP.Language.TypeUtils.createNumberLiteral(false, literalExpression.literal);
 
                 case PQP.Language.Type.TypeKind.Text:
-                    return PQP.Language.TypeUtils.textLiteralFactory(false, literalExpression.literal);
+                    return PQP.Language.TypeUtils.createTextLiteral(false, literalExpression.literal);
 
                 default:
-                    return PQP.Language.TypeUtils.primitiveTypeFactory(
+                    return PQP.Language.TypeUtils.createPrimitiveType(
                         literalExpression.literalKind === PQP.Language.Ast.LiteralKind.Null,
                         typeKind,
                     );

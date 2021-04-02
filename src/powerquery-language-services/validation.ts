@@ -39,7 +39,7 @@ export function validate(document: TextDocument, options: ValidationOptions): Va
     // TODO: Look for unknown identifiers
     if (options?.checkForDuplicateIdentifiers) {
         if (checked.maybeParserContextState !== undefined && checked.maybeParserContextState.maybeRoot !== undefined) {
-            const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(
+            const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.createContextNode(
                 checked.maybeParserContextState.maybeRoot,
             );
             const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection =

@@ -13,19 +13,19 @@ import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } 
 export function inspectTypeFunctionExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
-    const pseudoReturnType: PQP.Language.Type.PqType = pseudoType.returnType;
-    const expressionType: PQP.Language.Type.PqType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const pseudoReturnType: PQP.Language.Type.PowerQueryType = pseudoType.returnType;
+    const expressionType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
 
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
     // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
 
-    let returnType: PQP.Language.Type.PqType;
+    let returnType: PQP.Language.Type.PowerQueryType;
     // If the stated return type is Any,
     // then it might as well be the expression's type as it can't be any wider than Any.
     if (pseudoReturnType.kind === PQP.Language.Type.TypeKind.Any) {
@@ -37,7 +37,7 @@ export function inspectTypeFunctionExpression(
         expressionType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion &&
         allForAnyUnion(
             expressionType,
-            (type: PQP.Language.Type.PqType) =>
+            (type: PQP.Language.Type.PowerQueryType) =>
                 type.kind === pseudoReturnType.kind || type.kind === PQP.Language.Type.TypeKind.Any,
         )
     ) {

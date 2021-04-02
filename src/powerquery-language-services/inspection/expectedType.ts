@@ -5,11 +5,11 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 
-export type TriedExpectedType = PQP.Result<PQP.Language.Type.PqType | undefined, PQP.CommonError.CommonError>;
+export type TriedExpectedType = PQP.Result<PQP.Language.Type.PowerQueryType | undefined, PQP.CommonError.CommonError>;
 
 export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return PQP.ResultUtils.okFactory(undefined);
+        return PQP.ResultUtils.createOk(undefined);
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => maybeExpectedType(maybeActiveNode));
@@ -18,10 +18,10 @@ export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: T
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
-export function maybeExpectedType(activeNode: ActiveNode): PQP.Language.Type.PqType | undefined {
+export function maybeExpectedType(activeNode: ActiveNode): PQP.Language.Type.PowerQueryType | undefined {
     const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
     const upperBound: number = ancestry.length - 1;
-    let bestMatch: PQP.Language.Type.PqType | undefined;
+    let bestMatch: PQP.Language.Type.PowerQueryType | undefined;
 
     for (let index: number = 0; index < upperBound; index += 1) {
         const parent: PQP.Parser.TXorNode = ancestry[index + 1];
@@ -37,7 +37,7 @@ export function maybeExpectedType(activeNode: ActiveNode): PQP.Language.Type.PqT
                 ? childAttributeIndex + 1
                 : childAttributeIndex;
 
-        const allowedType: PQP.Language.Type.PqType = expectedType(parent, attributeIndex);
+        const allowedType: PQP.Language.Type.PowerQueryType = expectedType(parent, attributeIndex);
         if (allowedType.kind !== PQP.Language.Type.TypeKind.NotApplicable) {
             bestMatch = allowedType;
         }
@@ -47,7 +47,7 @@ export function maybeExpectedType(activeNode: ActiveNode): PQP.Language.Type.PqT
 }
 
 // For a given parent node, what is the expected type for a child at a given index?
-export function expectedType(parentXorNode: PQP.Parser.TXorNode, childIndex: number): PQP.Language.Type.PqType {
+export function expectedType(parentXorNode: PQP.Parser.TXorNode, childIndex: number): PQP.Language.Type.PowerQueryType {
     switch (parentXorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.ArrayWrapper:
         case PQP.Language.Ast.NodeKind.Constant:

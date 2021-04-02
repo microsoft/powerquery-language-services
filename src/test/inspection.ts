@@ -11,7 +11,7 @@ import { Inspection, InspectionUtils, Position, SignatureProviderContext } from 
 import { MockDocument } from "./mockDocument";
 
 function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): void {
-    if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
+    if (PQP.ResultUtils.isError(inspected.triedNodeScope)) {
         throw new Error(`expected inspected.triedNodeScope to be Ok`);
     }
 

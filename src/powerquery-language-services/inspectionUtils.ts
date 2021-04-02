@@ -21,7 +21,10 @@ import { CompletionItemProviderContext, SignatureProviderContext } from "./provi
 export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
 ): SignatureProviderContext | undefined {
-    if (PQP.ResultUtils.isErr(inspected.triedInvokeExpression) || inspected.triedInvokeExpression.value === undefined) {
+    if (
+        PQP.ResultUtils.isError(inspected.triedInvokeExpression) ||
+        inspected.triedInvokeExpression.value === undefined
+    ) {
         return undefined;
     }
 
@@ -75,7 +78,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
 export function getMaybeType(
     inspection: Inspection.Inspection,
     identifier: string,
-): PQP.Language.Type.PqType | undefined {
+): PQP.Language.Type.PowerQueryType | undefined {
     return PQP.ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value.get(identifier)
         : undefined;
@@ -87,7 +90,7 @@ export function getCompletionItems(
 ): ReadonlyArray<CompletionItem> {
     const triedAutocompleteFieldAccess: Inspection.TriedAutocompleteFieldAccess =
         inspection.autocomplete.triedFieldAccess;
-    if (PQP.ResultUtils.isErr(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
+    if (PQP.ResultUtils.isError(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
         return [];
     }
 
@@ -247,7 +250,7 @@ export function getSymbolsForInspectionScope(
     inspected: Inspection.Inspection,
     positionIdentifier: string | undefined,
 ): ReadonlyArray<DocumentSymbol> {
-    if (PQP.ResultUtils.isErr(inspected.triedNodeScope)) {
+    if (PQP.ResultUtils.isError(inspected.triedNodeScope)) {
         return [];
     }
 

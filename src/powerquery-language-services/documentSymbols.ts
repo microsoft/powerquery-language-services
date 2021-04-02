@@ -34,7 +34,7 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
     let result: DocumentSymbol[] | undefined;
 
     if (contextState && contextState.maybeRoot) {
-        const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.contextFactory(contextState.maybeRoot);
+        const rootNode: PQP.Parser.TXorNode = PQP.Parser.XorNodeUtils.createContextNode(contextState.maybeRoot);
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = contextState.nodeIdMapCollection;
 
         const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(

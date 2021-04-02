@@ -13,7 +13,7 @@ import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState,
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
 
-export type TriedType = PQP.Result<PQP.Language.Type.PqType, PQP.CommonError.CommonError>;
+export type TriedType = PQP.Result<PQP.Language.Type.PowerQueryType, PQP.CommonError.CommonError>;
 
 export function tryScopeType(
     settings: InspectionSettings,
@@ -70,7 +70,7 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
 
     const result: ScopeTypeByKey = new Map();
     for (const [key, scopeItem] of nodeScope.entries()) {
-        const type: PQP.Language.Type.PqType = Assert.asDefined(
+        const type: PQP.Language.Type.PowerQueryType = Assert.asDefined(
             state.givenTypeById.get(scopeItem.id),
             `expected nodeId to be in givenTypeById`,
             { nodeId: scopeItem.id },

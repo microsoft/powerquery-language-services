@@ -10,7 +10,7 @@ import { InspectTypeState, inspectXor } from "./common";
 export function inspectTypeUnaryExpression(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
 
@@ -36,7 +36,7 @@ export function inspectTypeUnaryExpression(
     }
     const expression: PQP.Parser.TXorNode = maybeExpression;
 
-    const expressionType: PQP.Language.Type.PqType = inspectXor(state, expression);
+    const expressionType: PQP.Language.Type.PowerQueryType = inspectXor(state, expression);
     if (expressionType.kind === PQP.Language.Type.TypeKind.Number) {
         return inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
     } else if (PQP.Language.TypeUtils.isLogical(expressionType)) {
@@ -83,7 +83,7 @@ function inspectTypeUnaryNumber(
 
     switch (unaryExpressionType.maybeExtendedKind) {
         case PQP.Language.Type.ExtendedTypeKind.NumberLiteral:
-            return PQP.Language.TypeUtils.numberLiteralFactory(
+            return PQP.Language.TypeUtils.createNumberLiteral(
                 unaryExpressionType.isNullable,
                 [...unaryOperators, unaryExpressionType.literal].join(""),
             );

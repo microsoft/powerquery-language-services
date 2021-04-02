@@ -41,29 +41,29 @@ export function maybeActiveNode(
     //  * Context
     //  * Ast
     if (astSearch.maybeShiftedRightNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeShiftedRightNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
     } else if (
         astSearch.maybeBestOnOrBeforeNode !== undefined &&
         isAnchorNode(position, astSearch.maybeBestOnOrBeforeNode)
     ) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.contextFactory(maybeContextNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createContextNode(maybeContextNode);
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.astFactory(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
         leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
-        return outOfBoundPositionFactory(position);
+        return createOutOfBoundPosition(position);
     }
 
     const leaf: PQP.Parser.TXorNode = maybeLeaf;
 
-    return activeNodeFactory(
+    return createActiveNode(
         leafKind,
         position,
         PQP.Parser.AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
@@ -71,7 +71,7 @@ export function maybeActiveNode(
     );
 }
 
-export function activeNodeFactory(
+export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
     ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
@@ -86,7 +86,7 @@ export function activeNodeFactory(
     };
 }
 
-export function outOfBoundPositionFactory(position: Position): OutOfBoundPosition {
+export function createOutOfBoundPosition(position: Position): OutOfBoundPosition {
     return {
         kind: ActiveNodeKind.OutOfBoundPosition,
         position,

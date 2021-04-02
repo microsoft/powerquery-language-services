@@ -49,11 +49,11 @@ export interface InspectTypeState {
 // then calls all(...) on the mapped values.
 export function allForAnyUnion(
     anyUnion: PQP.Language.Type.AnyUnion,
-    conditionFn: (type: PQP.Language.Type.PqType) => boolean,
+    conditionFn: (type: PQP.Language.Type.PowerQueryType) => boolean,
 ): boolean {
     return (
         anyUnion.unionedTypePairs
-            .map((type: PQP.Language.Type.PqType) => {
+            .map((type: PQP.Language.Type.PowerQueryType) => {
                 return type.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type);
@@ -66,7 +66,7 @@ export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: numb
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
-    if (PQP.ResultUtils.isErr(triedGetOrCreateScope)) {
+    if (PQP.ResultUtils.isError(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope.error;
     }
 
@@ -78,30 +78,33 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
     if (maybeNodeScope !== undefined) {
-        return PQP.ResultUtils.okFactory(maybeNodeScope);
+        return PQP.ResultUtils.createOk(maybeNodeScope);
     }
 
     return tryNodeScope(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
 }
 
-export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PqType {
+export function getOrCreateScopeItemType(
+    state: InspectTypeState,
+    scopeItem: TScopeItem,
+): PQP.Language.Type.PowerQueryType {
     const nodeId: number = scopeItem.id;
 
-    const maybeGivenType: PQP.Language.Type.PqType | undefined = state.givenTypeById.get(nodeId);
+    const maybeGivenType: PQP.Language.Type.PowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeGivenType !== undefined) {
         return maybeGivenType;
     }
 
-    const maybeDeltaType: PQP.Language.Type.PqType | undefined = state.givenTypeById.get(nodeId);
+    const maybeDeltaType: PQP.Language.Type.PowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeDeltaType !== undefined) {
         return maybeDeltaType;
     }
 
-    const scopeType: PQP.Language.Type.PqType = inspectScopeItem(state, scopeItem);
+    const scopeType: PQP.Language.Type.PowerQueryType = inspectScopeItem(state, scopeItem);
     return scopeType;
 }
 
-export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PqType {
+export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
@@ -130,7 +133,7 @@ export function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
     parentXorNode: PQP.Parser.TXorNode,
     attributeIndex: number,
-): PQP.Language.Type.PqType {
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
@@ -142,17 +145,17 @@ export function inspectTypeFromChildAttributeIndex(
     return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : PQP.Language.Type.UnknownInstance;
 }
 
-export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PqType {
+export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-    const maybeCached: PQP.Language.Type.PqType | undefined =
+    const maybeCached: PQP.Language.Type.PowerQueryType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
-    let result: PQP.Language.Type.PqType;
+    let result: PQP.Language.Type.PowerQueryType;
     switch (xorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.ArrayWrapper:
         case PQP.Language.Ast.NodeKind.FieldSpecificationList:
@@ -258,7 +261,7 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
             break;
 
         case PQP.Language.Ast.NodeKind.IsExpression:
-            result = PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Logical);
+            result = PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical);
             break;
 
         case PQP.Language.Ast.NodeKind.InvokeExpression:
@@ -266,7 +269,7 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
             break;
 
         case PQP.Language.Ast.NodeKind.IsNullablePrimitiveType:
-            result = PQP.Language.TypeUtils.primitiveTypeFactory(false, PQP.Language.Type.TypeKind.Logical);
+            result = PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical);
             break;
 
         case PQP.Language.Ast.NodeKind.ItemAccessExpression:
@@ -332,7 +335,7 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
 export function maybeDereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PqType | undefined {
+): PQP.Language.Type.PowerQueryType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const deferenced: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, xorNode);
@@ -357,7 +360,7 @@ export function maybeDereferencedIdentifierType(
             return undefined;
         }
 
-        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequestFactory(
+        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.createValueTypeRequest(
             deferencedLiteral,
         );
         return maybeResolver(request);
