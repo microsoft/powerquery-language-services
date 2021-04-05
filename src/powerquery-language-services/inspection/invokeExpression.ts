@@ -18,13 +18,16 @@ export interface InvokeExpression {
     readonly functionType: PQP.Language.Type.PowerQueryType;
     readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
-    readonly maybeArguments: InvokeExpressionArgs | undefined;
+    readonly maybeArguments: InvokeExpressionArguments | undefined;
 }
 
-export interface InvokeExpressionArgs {
+export interface InvokeExpressionArguments {
+    readonly numMaxExpectedArguments: number;
+    readonly numMinExpectedArguments: number;
+    readonly givenArguments: ReadonlyArray<PQP.Parser.TXorNode>;
+    readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType>;
     readonly argumentOrdinal: number;
-    readonly maybeTypeCheck: PQP.Language.TypeUtils.CheckedInvocation | undefined;
-    readonly numArguments: number;
+    readonly typeCheck: PQP.Language.TypeUtils.CheckedInvocation;
 }
 
 export function tryInvokeExpression(
@@ -76,23 +79,35 @@ function inspectInvokeExpression(
                 xorNode.node.id,
             );
 
-            const argXorNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
-                nodeIdMapCollection,
-                xorNode,
-            );
+            let maybeInvokeExpressionArgs: InvokeExpressionArguments | undefined;
+            if (PQP.Language.TypeUtils.isDefinedFunction(functionType)) {
+                const iterableArguments: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
+                    nodeIdMapCollection,
+                    xorNode,
+                );
 
-            let maybeInvokeExpressionArgs: InvokeExpressionArgs | undefined;
-            if (argXorNodes.length) {
+                const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType> = getArgumentTypes(
+                    settings,
+                    nodeIdMapCollection,
+                    leafNodeIds,
+                    typeCache,
+                    iterableArguments,
+                );
+                const givenArguments: ReadonlyArray<PQP.Parser.TXorNode> = iterableArguments.slice(
+                    0,
+                    givenArgumentTypes.length,
+                );
+
+                const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
+
                 maybeInvokeExpressionArgs = {
                     argumentOrdinal: getArgumentOrdinal(activeNode, ancestryIndex),
-                    maybeTypeCheck: maybeTypeCheckedArguments(
-                        getArgumentTypes(settings, nodeIdMapCollection, leafNodeIds, typeCache, argXorNodes),
-                        functionType,
-                    ),
-                    numArguments: getArgumentCount(nodeIdMapCollection, activeNode, ancestryIndex),
+                    givenArguments,
+                    givenArgumentTypes,
+                    numMaxExpectedArguments,
+                    numMinExpectedArguments,
+                    typeCheck: PQP.Language.TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
                 };
-            } else {
-                maybeInvokeExpressionArgs = undefined;
             }
 
             return {
@@ -143,6 +158,17 @@ function getIsNameInLocalScope(
     }
 }
 
+function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction): [number, number] {
+    const nonOptionalArguments: ReadonlyArray<PQP.Language.Type.FunctionParameter> = functionType.parameters.filter(
+        (parameter: PQP.Language.Type.FunctionParameter) => !parameter.isOptional,
+    );
+
+    const numMinExpectedArguments: number = nonOptionalArguments.length;
+    const numMaxExpectedArguments: number = functionType.parameters.length;
+
+    return [numMinExpectedArguments, numMaxExpectedArguments];
+}
+
 function getArgumentTypes(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
@@ -150,53 +176,37 @@ function getArgumentTypes(
     typeCache: TypeCache,
     argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,
 ): ReadonlyArray<PQP.Language.Type.PowerQueryType> {
-    return argXorNodes.map((argXorNode: PQP.Parser.TXorNode) => {
-        const argTriedType: TriedType = tryType(
-            settings,
-            nodeIdMapCollection,
-            leafNodeIds,
-            argXorNode.node.id,
-            typeCache,
-        );
-        if (PQP.ResultUtils.isError(argTriedType)) {
-            throw argTriedType;
+    const result: PQP.Language.Type.PowerQueryType[] = [];
+
+    for (const xorNode of argXorNodes) {
+        const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, leafNodeIds, xorNode.node.id, typeCache);
+        if (PQP.ResultUtils.isError(triedArgType)) {
+            throw triedArgType;
+        }
+        const argType: PQP.Language.Type.PowerQueryType = triedArgType.value;
+
+        // Occurs when there's expected to be a trailing argument, but none exist.
+        // Eg. `foo(|` will iterate over an TXorNode which: contains no parsed elements, and evaluates to unknown.
+        if (
+            PQP.Language.TypeUtils.isUnknown(argType) &&
+            !PQP.Parser.NodeIdMapUtils.hasParsedToken(nodeIdMapCollection, xorNode.node.id)
+        ) {
+            Assert.isTrue(xorNode === argXorNodes[argXorNodes.length - 1]);
+            return result;
         }
 
-        return argTriedType.value;
-    });
+        result.push(argType);
+    }
+
+    return result;
 }
 
 function getArgumentOrdinal(activeNode: ActiveNode, ancestryIndex: number): number {
-    const ancestoryCsv: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetNthPreviousXor(
-        activeNode.ancestry,
-        ancestryIndex,
-        2,
-        [PQP.Language.Ast.NodeKind.Csv],
-    );
+    const maybeAncestoryCsv:
+        | PQP.Parser.TXorNode
+        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, ancestryIndex, 2, [
+        PQP.Language.Ast.NodeKind.Csv,
+    ]);
 
-    return ancestoryCsv.node.maybeAttributeIndex ?? 0;
-}
-
-function getArgumentCount(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    activeNode: ActiveNode,
-    ancestryIndex: number,
-): number {
-    const arrayWrapper: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetNthPreviousXor(
-        activeNode.ancestry,
-        ancestryIndex,
-        1,
-        [PQP.Language.Ast.NodeKind.ArrayWrapper],
-    );
-
-    return PQP.Parser.NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, arrayWrapper.node.id).length;
-}
-
-function maybeTypeCheckedArguments(
-    argTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType>,
-    functionType: PQP.Language.Type.PowerQueryType,
-): PQP.Language.TypeUtils.CheckedInvocation | undefined {
-    return PQP.Language.TypeUtils.isDefinedFunction(functionType)
-        ? PQP.Language.TypeUtils.typeCheckInvocation(argTypes, functionType)
-        : undefined;
+    return maybeAncestoryCsv?.node.maybeAttributeIndex ?? 0;
 }

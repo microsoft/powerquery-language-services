@@ -25,11 +25,69 @@ export const NoOpLibrary: Library.ILibrary = {
     libraryDefinitions: new Map(),
 };
 
+export const CreateFooAndBarRecordDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+    false,
+    [],
+    PQP.Language.TypeUtils.createDefinedRecord(
+        false,
+        new Map<string, PQP.Language.Type.PowerQueryType>([
+            ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `"fooString"`)],
+            ["bar", PQP.Language.TypeUtils.createTextLiteral(false, `"barString"`)],
+        ]),
+        false,
+    ),
+);
+
+export const CombineNumberAndOptionalTextDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+    false,
+    [
+        {
+            isNullable: false,
+            isOptional: false,
+            nameLiteral: "firstArg",
+            maybeType: PQP.Language.Type.TypeKind.Number,
+        },
+        {
+            isNullable: false,
+            isOptional: true,
+            nameLiteral: "secondArg",
+            maybeType: PQP.Language.Type.TypeKind.Text,
+        },
+    ],
+    PQP.Language.Type.NullInstance,
+);
+
+export const SquareIfNumberDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+    false,
+    [
+        {
+            isNullable: false,
+            isOptional: false,
+            maybeType: undefined,
+            nameLiteral: "x",
+        },
+    ],
+    PQP.Language.Type.AnyInstance,
+);
+
+export const DuplicateTextDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+    false,
+    [
+        {
+            isNullable: false,
+            isOptional: false,
+            maybeType: PQP.Language.Type.TypeKind.Text,
+            nameLiteral: "txt",
+        },
+    ],
+    PQP.Language.Type.TextInstance,
+);
+
 export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<string, Library.TLibraryDefinition>([
     [
         TestLibraryName.CreateFooAndBarRecord,
         LibraryUtils.createFunctionDefinition(
-            PQP.Language.Type.FunctionInstance,
+            CreateFooAndBarRecordDefinedFunction,
             `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
             TestLibraryName.CreateFooAndBarRecord,
             PQP.Language.Type.RecordInstance,
@@ -46,6 +104,31 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
         ),
     ],
     [
+        TestLibraryName.CombineNumberAndOptionalText,
+        LibraryUtils.createFunctionDefinition(
+            CombineNumberAndOptionalTextDefinedFunction,
+            `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
+            TestLibraryName.CombineNumberAndOptionalText,
+            PQP.Language.Type.NullInstance,
+            [
+                {
+                    isNullable: false,
+                    isOptional: false,
+                    label: "firstArg",
+                    maybeDocumentation: undefined,
+                    typeKind: PQP.Language.Type.TypeKind.Number,
+                },
+                {
+                    isNullable: false,
+                    isOptional: true,
+                    label: "secondArg",
+                    maybeDocumentation: undefined,
+                    typeKind: PQP.Language.Type.TypeKind.Text,
+                },
+            ],
+        ),
+    ],
+    [
         TestLibraryName.NumberOne,
         LibraryUtils.createConstantDefinition(
             PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
@@ -57,21 +140,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
-            PQP.Language.TypeUtils.createDefinedFunction(
-                false,
-                [
-                    {
-                        isNullable: false,
-                        isOptional: false,
-                        maybeType: PQP.Language.Type.TypeKind.Any,
-                        nameLiteral: "x",
-                    },
-                ],
-                PQP.Language.TypeUtils.createAnyUnion([
-                    PQP.Language.Type.NumberInstance,
-                    PQP.Language.Type.AnyInstance,
-                ]),
-            ),
+            SquareIfNumberDefinedFunction,
             `The name is ${TestLibraryName.SquareIfNumber}`,
             TestLibraryName.SquareIfNumber,
             PQP.Language.Type.AnyInstance,
@@ -81,7 +150,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isOptional: false,
                     label: "x",
                     maybeDocumentation:
-                        "If the argument is a number then multiply it by itself, otehrwise return argument as-is.",
+                        "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
                     typeKind: PQP.Language.Type.TypeKind.Any,
                 },
             ],
@@ -122,18 +191,13 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
         case Inspection.ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
                 case TestLibraryName.CreateFooAndBarRecord:
-                    return PQP.Language.TypeUtils.createDefinedFunction(
-                        false,
-                        [],
-                        PQP.Language.TypeUtils.createDefinedRecord(
-                            false,
-                            new Map<string, PQP.Language.Type.PowerQueryType>([
-                                ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `"fooString"`)],
-                                ["bar", PQP.Language.TypeUtils.createTextLiteral(false, `"barString"`)],
-                            ]),
-                            false,
-                        ),
-                    );
+                    return CreateFooAndBarRecordDefinedFunction;
+
+                case TestLibraryName.CombineNumberAndOptionalText:
+                    return CombineNumberAndOptionalTextDefinedFunction;
+
+                case TestLibraryName.DuplicateText:
+                    return DuplicateTextDefinedFunction;
 
                 case TestLibraryName.Number:
                     return PQP.Language.Type.NumberInstance;
@@ -142,18 +206,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     return PQP.Language.TypeUtils.createNumberLiteral(false, "1");
 
                 case TestLibraryName.SquareIfNumber:
-                    return PQP.Language.TypeUtils.createDefinedFunction(
-                        false,
-                        [
-                            {
-                                isNullable: false,
-                                isOptional: false,
-                                maybeType: undefined,
-                                nameLiteral: "x",
-                            },
-                        ],
-                        PQP.Language.Type.AnyInstance,
-                    );
+                    return SquareIfNumberDefinedFunction;
 
                 default:
                     return undefined;
@@ -162,6 +215,11 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
         default:
             throw Assert.isNever(request);
     }
+};
+
+export const SimpleSettings: PQP.Settings & Inspection.InspectionSettings = {
+    ...DefaultSettings,
+    maybeExternalTypeResolver: SimpleExternalTypeResolver,
 };
 
 export const SimpleLibrary: Library.ILibrary = {
@@ -179,7 +237,9 @@ export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
 
 export const enum TestLibraryName {
     CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
-    SquareIfNumber = "Test.SquareIfNumber",
+    CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
+    DuplicateText = "Test.DuplicateText",
     Number = "Test.Number",
     NumberOne = "Test.NumberOne",
+    SquareIfNumber = "Test.SquareIfNumber",
 }
