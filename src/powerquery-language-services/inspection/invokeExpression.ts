@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
@@ -18,12 +18,16 @@ export interface InvokeExpression {
     readonly functionType: PQP.Language.Type.PowerQueryType;
     readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
-    readonly maybeArguments: InvokeExpressionArgs | undefined;
+    readonly maybeArguments: InvokeExpressionArguments | undefined;
 }
 
-export interface InvokeExpressionArgs {
-    readonly numArguments: number;
+export interface InvokeExpressionArguments {
+    readonly numMaxExpectedArguments: number;
+    readonly numMinExpectedArguments: number;
+    readonly givenArguments: ReadonlyArray<PQP.Parser.TXorNode>;
+    readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType>;
     readonly argumentOrdinal: number;
+    readonly typeCheck: PQP.Language.TypeUtils.CheckedInvocation;
 }
 
 export function tryInvokeExpression(
@@ -67,46 +71,58 @@ function inspectInvokeExpression(
                 xorNode.node.id,
             );
 
-            const triedPreviousNodeType: TriedType = tryType(
-                settings,
-                nodeIdMapCollection,
-                leafNodeIds,
-                previousNode.node.id,
-                typeCache,
+            const functionType: PQP.Language.Type.PowerQueryType = Assert.unwrapOk(
+                tryType(settings, nodeIdMapCollection, leafNodeIds, previousNode.node.id, typeCache),
             );
-            const functionType: PQP.Language.Type.PowerQueryType = Assert.unwrapOk(triedPreviousNodeType);
             const maybeName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
                 nodeIdMapCollection,
                 xorNode.node.id,
             );
 
-            // Try to find out if the identifier is a local or external name.
-            let isNameInLocalScope: boolean;
-            if (maybeName !== undefined) {
-                // Seed local scope
-                const scope: NodeScope = Assert.unwrapOk(
-                    assertGetOrCreateNodeScope(
-                        settings,
-                        nodeIdMapCollection,
-                        leafNodeIds,
-                        xorNode.node.id,
-                        typeCache.scopeById,
-                    ),
+            let maybeInvokeExpressionArgs: InvokeExpressionArguments | undefined;
+            if (PQP.Language.TypeUtils.isDefinedFunction(functionType)) {
+                const iterableArguments: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
+                    nodeIdMapCollection,
+                    xorNode,
                 );
-                const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
 
-                isNameInLocalScope =
-                    maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
-            } else {
-                isNameInLocalScope = false;
+                const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType> = getArgumentTypes(
+                    settings,
+                    nodeIdMapCollection,
+                    leafNodeIds,
+                    typeCache,
+                    iterableArguments,
+                );
+                const givenArguments: ReadonlyArray<PQP.Parser.TXorNode> = iterableArguments.slice(
+                    0,
+                    givenArgumentTypes.length,
+                );
+
+                const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
+
+                maybeInvokeExpressionArgs = {
+                    argumentOrdinal: getArgumentOrdinal(nodeIdMapCollection, activeNode, ancestryIndex, xorNode),
+                    givenArguments,
+                    givenArgumentTypes,
+                    numMaxExpectedArguments,
+                    numMinExpectedArguments,
+                    typeCheck: PQP.Language.TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
+                };
             }
 
             return {
                 xorNode,
                 functionType,
-                isNameInLocalScope,
+                isNameInLocalScope: getIsNameInLocalScope(
+                    settings,
+                    nodeIdMapCollection,
+                    leafNodeIds,
+                    typeCache,
+                    xorNode,
+                    maybeName,
+                ),
                 maybeName,
-                maybeArguments: inspectInvokeExpressionArguments(nodeIdMapCollection, activeNode, ancestryIndex),
+                maybeArguments: maybeInvokeExpressionArgs,
             };
         }
     }
@@ -114,40 +130,133 @@ function inspectInvokeExpression(
     return undefined;
 }
 
-function inspectInvokeExpressionArguments(
+function getIsNameInLocalScope(
+    settings: InspectionSettings,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    typeCache: TypeCache,
+    invokeExpressionXorNode: PQP.Parser.TXorNode,
+    maybeName: string | undefined,
+): boolean {
+    // Try to find out if the identifier is a local or external name.
+    if (maybeName !== undefined) {
+        // Seed local scope
+        const scope: NodeScope = Assert.unwrapOk(
+            assertGetOrCreateNodeScope(
+                settings,
+                nodeIdMapCollection,
+                leafNodeIds,
+                invokeExpressionXorNode.node.id,
+                typeCache.scopeById,
+            ),
+        );
+        const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
+
+        return maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
+    } else {
+        return false;
+    }
+}
+
+function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction): [number, number] {
+    const nonOptionalArguments: ReadonlyArray<PQP.Language.Type.FunctionParameter> = functionType.parameters.filter(
+        (parameter: PQP.Language.Type.FunctionParameter) => !parameter.isOptional,
+    );
+
+    const numMinExpectedArguments: number = nonOptionalArguments.length;
+    const numMaxExpectedArguments: number = functionType.parameters.length;
+
+    return [numMinExpectedArguments, numMaxExpectedArguments];
+}
+
+function getArgumentTypes(
+    settings: InspectionSettings,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    leafNodeIds: ReadonlyArray<number>,
+    typeCache: TypeCache,
+    argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,
+): ReadonlyArray<PQP.Language.Type.PowerQueryType> {
+    const result: PQP.Language.Type.PowerQueryType[] = [];
+
+    for (const xorNode of argXorNodes) {
+        const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, leafNodeIds, xorNode.node.id, typeCache);
+        if (PQP.ResultUtils.isError(triedArgType)) {
+            throw triedArgType;
+        }
+        const argType: PQP.Language.Type.PowerQueryType = triedArgType.value;
+
+        // Occurs when there's expected to be a trailing argument, but none exist.
+        // Eg. `foo(|` will iterate over an TXorNode which: contains no parsed elements, and evaluates to unknown.
+        if (
+            PQP.Language.TypeUtils.isUnknown(argType) &&
+            !PQP.Parser.NodeIdMapUtils.hasParsedToken(nodeIdMapCollection, xorNode.node.id)
+        ) {
+            Assert.isTrue(xorNode === argXorNodes[argXorNodes.length - 1]);
+            return result;
+        }
+
+        result.push(argType);
+    }
+
+    return result;
+}
+
+function getArgumentOrdinal(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     activeNode: ActiveNode,
-    nodeIndex: number,
-): InvokeExpressionArgs | undefined {
-    // Grab arguments if they exist, else return early.
-    const maybeCsvArray:
+    ancestryIndex: number,
+    invokeExpressionXorNode: PQP.Parser.TXorNode,
+): number {
+    // `foo(1|)
+    const maybeAncestoryCsv:
         | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.AncestryUtils.maybePreviousXor(activeNode.ancestry, nodeIndex, [
-        PQP.Language.Ast.NodeKind.ArrayWrapper,
-    ]);
-    if (maybeCsvArray === undefined) {
-        return undefined;
-    }
-
-    const csvArray: PQP.Parser.TXorNode = maybeCsvArray;
-    const csvNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterChildrenXor(
-        nodeIdMapCollection,
-        csvArray.node.id,
-    );
-    const numArguments: number = csvNodes.length;
-    if (numArguments === 0) {
-        return undefined;
-    }
-
-    const maybeAncestorCsv:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, nodeIndex, 2, [
+        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, ancestryIndex, 2, [
         PQP.Language.Ast.NodeKind.Csv,
     ]);
-    const maybePositionArgumentIndex: number | undefined = maybeAncestorCsv?.node.maybeAttributeIndex;
+    if (maybeAncestoryCsv !== undefined) {
+        return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
+    }
 
-    return {
-        numArguments,
-        argumentOrdinal: maybePositionArgumentIndex !== undefined ? maybePositionArgumentIndex : 0,
-    };
+    const maybePreviousXor: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybePreviousXor(
+        activeNode.ancestry,
+        ancestryIndex,
+        [
+            // `foo(|)`
+            PQP.Language.Ast.NodeKind.ArrayWrapper,
+            // `foo(1|`
+            PQP.Language.Ast.NodeKind.Constant,
+        ],
+    );
+
+    let arrayWrapperXorNode: PQP.Parser.TXorNode;
+    switch (maybePreviousXor?.node.kind) {
+        case PQP.Language.Ast.NodeKind.Constant: {
+            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                nodeIdMapCollection,
+                invokeExpressionXorNode.node.id,
+                1,
+                [PQP.Language.Ast.NodeKind.ArrayWrapper],
+            );
+
+            break;
+        }
+
+        case PQP.Language.Ast.NodeKind.ArrayWrapper: {
+            arrayWrapperXorNode = maybePreviousXor;
+            break;
+        }
+
+        case undefined:
+        default:
+            throw new CommonError.InvariantError(`encountered an unknown scenario for getARgumentOrdinal`, {
+                ancestryIndex,
+                ancestryNodeKinds: activeNode.ancestry.map((xorNode: PQP.Parser.TXorNode) => xorNode.node.kind),
+            });
+    }
+
+    const maybeArrayWrapperChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
+        arrayWrapperXorNode.node.id,
+    );
+
+    return maybeArrayWrapperChildIds !== undefined ? maybeArrayWrapperChildIds.length - 1 : 0;
 }

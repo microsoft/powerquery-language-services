@@ -127,11 +127,6 @@ export async function createSignatureHelp(
     return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getSignatureHelp();
 }
 
-// export function dumpNodeToTraceFile(node: PQP.Language.Ast.INode, filePath: string): void {
-//     const asJson: string = JSON.stringify(node);
-//     File.writeFileSync(filePath, asJson);
-// }
-
 function createFileAnalysis(
     fileName: string,
     position: Position,
