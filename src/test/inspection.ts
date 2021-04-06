@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
-import { TestUtils } from ".";
+import { TestConstants, TestUtils } from ".";
 import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
 
@@ -32,9 +32,9 @@ function assertIsPostionInBounds(
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
-        it("Date.AddDays(d|,", () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                "Date.AddDays(d|,",
+                `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
@@ -43,13 +43,13 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
             expect(context.argumentOrdinal).to.equal(0);
         });
 
-        it("Date.AddDays(d,|", () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                "Date.AddDays(d,|",
+                `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
@@ -58,13 +58,13 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
             expect(context.argumentOrdinal).to.equal(1);
         });
 
-        it("Date.AddDays(d,1|", () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                "Date.AddDays(d,1|",
+                `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
             const maybeContext:
@@ -73,7 +73,7 @@ describe("InspectedInvokeExpression", () => {
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal("Date.AddDays");
+            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
             expect(context.argumentOrdinal).to.equal(1);
         });
 
