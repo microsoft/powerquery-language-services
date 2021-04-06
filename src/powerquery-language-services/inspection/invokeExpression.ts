@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
@@ -101,7 +101,7 @@ function inspectInvokeExpression(
                 const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
 
                 maybeInvokeExpressionArgs = {
-                    argumentOrdinal: getArgumentOrdinal(activeNode, ancestryIndex),
+                    argumentOrdinal: getArgumentOrdinal(nodeIdMapCollection, activeNode, ancestryIndex, xorNode),
                     givenArguments,
                     givenArgumentTypes,
                     numMaxExpectedArguments,
@@ -201,12 +201,62 @@ function getArgumentTypes(
     return result;
 }
 
-function getArgumentOrdinal(activeNode: ActiveNode, ancestryIndex: number): number {
+function getArgumentOrdinal(
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    activeNode: ActiveNode,
+    ancestryIndex: number,
+    invokeExpressionXorNode: PQP.Parser.TXorNode,
+): number {
+    // `foo(1|)
     const maybeAncestoryCsv:
         | PQP.Parser.TXorNode
         | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, ancestryIndex, 2, [
         PQP.Language.Ast.NodeKind.Csv,
     ]);
+    if (maybeAncestoryCsv !== undefined) {
+        return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
+    }
 
-    return maybeAncestoryCsv?.node.maybeAttributeIndex ?? 0;
+    const maybePreviousXor: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybePreviousXor(
+        activeNode.ancestry,
+        ancestryIndex,
+        [
+            // `foo(|)`
+            PQP.Language.Ast.NodeKind.ArrayWrapper,
+            // `foo(1|`
+            PQP.Language.Ast.NodeKind.Constant,
+        ],
+    );
+
+    let arrayWrapperXorNode: PQP.Parser.TXorNode;
+    switch (maybePreviousXor?.node.kind) {
+        case PQP.Language.Ast.NodeKind.Constant: {
+            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+                nodeIdMapCollection,
+                invokeExpressionXorNode.node.id,
+                1,
+                [PQP.Language.Ast.NodeKind.ArrayWrapper],
+            );
+
+            break;
+        }
+
+        case PQP.Language.Ast.NodeKind.ArrayWrapper: {
+            arrayWrapperXorNode = maybePreviousXor;
+            break;
+        }
+
+        case undefined:
+        default:
+            throw new CommonError.InvariantError(`encountered an unknown scenario for getARgumentOrdinal`, {
+                ancestryIndex,
+                ancestryNodeKinds: activeNode.ancestry.map((xorNode: PQP.Parser.TXorNode) => xorNode.node.kind),
+            });
+    }
+
+    const maybeArrayWrapperChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
+        arrayWrapperXorNode.node.id,
+    );
+
+    return maybeArrayWrapperChildIds !== undefined ? maybeArrayWrapperChildIds.length - 1 : 0;
 }

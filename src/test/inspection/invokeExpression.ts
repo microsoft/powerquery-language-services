@@ -436,7 +436,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectRequiredAndOptional_givenRequired(inspected);
         });
 
-        it("WIP expects required and optional, given required and optional", () => {
+        it("expects required and optional, given required and optional", () => {
             const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
@@ -487,7 +487,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNumber(inspected);
         });
 
-        it("nested invocations, expects no parameters, missing parameter", () => {
+        it("WIP nested invocations, expects no parameters, missing parameter", () => {
             const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
