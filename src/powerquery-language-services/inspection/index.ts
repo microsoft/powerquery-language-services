@@ -6,6 +6,7 @@ export * from "./autocomplete";
 export * from "./commonTypes";
 export * from "./externalType";
 export * from "./invokeExpression";
+export * from "./jaroWinkler";
 export * from "./position";
 export * from "./settings";
 export * from "./scope";
