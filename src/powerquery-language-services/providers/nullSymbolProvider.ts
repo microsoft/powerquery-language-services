@@ -3,7 +3,7 @@
 
 import { Inspection, Library } from "..";
 import { Hover, SignatureHelp } from "../commonTypes";
-import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
+import { AutocompleteItem } from "../inspection/autocomplete";
 import {
     CompletionItemProviderContext,
     HoverProviderContext,
