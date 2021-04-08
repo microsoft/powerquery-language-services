@@ -59,7 +59,7 @@ export function createFromPrimitiveTypeConstantKind(
 
     return {
         jaroWinklerScore,
-        kind: CompletionItemKind.Reference,
+        kind: CompletionItemKind.Keyword,
         label,
         powerQueryType: PQP.Language.TypeUtils.createPrimitiveType(
             false,
