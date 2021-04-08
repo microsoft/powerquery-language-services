@@ -3,12 +3,12 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
-import * as LanguageServiceUtils from "../languageServiceUtils";
 
 import { Inspection, Library } from "..";
+import { AutocompleteItemUtils } from "../inspection";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
@@ -26,14 +26,16 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
-    public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        context: CompletionItemProviderContext,
+    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
         if (maybeInspection === undefined) {
             return [];
         }
 
         return [
-            ...this.getCompletionItemsFromFieldAccess(context, maybeInspection),
+            ...this.getAutocompleteItemsFromFieldAccess(context, maybeInspection),
             ...this.getCompletionItemsFromScope(context, maybeInspection),
         ];
     }
@@ -125,17 +127,43 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     private getCompletionItemsFromScope(
         context: CompletionItemProviderContext,
         inspection: Inspection.Inspection,
-    ): ReadonlyArray<CompletionItem> {
-        return LanguageServiceUtils.documentSymbolToCompletionItem(
-            InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
-            context.range,
-        );
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        if (PQP.ResultUtils.isError(inspection.triedNodeScope)) {
+            return [];
+        }
+        const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+        const scopeTypeByKey: Inspection.ScopeTypeByKey = PQP.ResultUtils.isOk(inspection.triedScopeType)
+            ? inspection.triedScopeType.value
+            : new Map();
+
+        const partial: Inspection.AutocompleteItem[] = [];
+
+        for (const [label, scopeItem] of nodeScope.entries()) {
+            const maybeAutocompleteItem:
+                | Inspection.AutocompleteItem
+                | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
+                label,
+                scopeItem,
+                scopeTypeByKey.get(label) ?? PQP.Language.Type.UnknownInstance,
+                context.text,
+            );
+
+            if (maybeAutocompleteItem) {
+                partial.push(maybeAutocompleteItem);
+            }
+        }
+
+        return partial;
     }
 
-    private getCompletionItemsFromFieldAccess(
-        context: CompletionItemProviderContext,
+    private getAutocompleteItemsFromFieldAccess(
+        _context: CompletionItemProviderContext,
         inspection: Inspection.Inspection,
-    ): ReadonlyArray<CompletionItem> {
-        return InspectionUtils.getCompletionItems(context, inspection);
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
+
+        return PQP.ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
+            ? triedFieldAccess.value.autocompleteItems
+            : [];
     }
 }

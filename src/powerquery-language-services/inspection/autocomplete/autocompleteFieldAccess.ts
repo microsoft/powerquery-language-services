@@ -10,12 +10,8 @@ import { Position, PositionUtils } from "../position";
 import { InspectionSettings } from "../settings";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../typeCache";
-import {
-    AutocompleteFieldAccess,
-    AutocompleteItem,
-    InspectedFieldAccess,
-    TriedAutocompleteFieldAccess,
-} from "./commonTypes";
+import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 
 export function tryAutocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings,
@@ -75,7 +71,7 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
     const inspectedFieldAccess: InspectedFieldAccess = maybeInspectedFieldAccess;
 
     // Don't waste time on type analysis if the field access
-    // reports inspection it's in an invalid autocomplete location.
+    // reports it's in an invalid location for an autocomplete.
     if (inspectedFieldAccess.isAutocompleteAllowed === false) {
         return undefined;
     }
@@ -177,7 +173,7 @@ function inspectFieldProjection(
     fieldProjection: PQP.Parser.TXorNode,
 ): InspectedFieldAccess {
     let isAutocompleteAllowed: boolean = false;
-    let maybeIdentifierUnderPosition: string | undefined;
+    let maybeIdentifierUnderPosition: PQP.Language.Ast.GeneralizedIdentifier | undefined;
     const fieldNames: string[] = [];
 
     for (const fieldSelector of PQP.Parser.NodeIdMapIterator.iterFieldProjection(
@@ -190,10 +186,7 @@ function inspectFieldProjection(
             position,
             fieldSelector,
         );
-        if (
-            inspectedFieldSelector.isAutocompleteAllowed === true ||
-            inspectedFieldSelector.maybeIdentifierUnderPosition !== undefined
-        ) {
+        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.maybeIdentifierUnderPosition) {
             isAutocompleteAllowed = true;
             maybeIdentifierUnderPosition = inspectedFieldSelector.maybeIdentifierUnderPosition;
         }
@@ -221,14 +214,14 @@ function inspectFieldSelector(
     position: Position,
     fieldSelector: PQP.Parser.TXorNode,
 ): InspectedFieldAccess {
-    const children: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
-    if (children === undefined) {
+    const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
+    if (childIds === undefined) {
         return createInspectedFieldAccess(false);
-    } else if (children.length === 1) {
-        return createInspectedFieldAccess(nodeIdMapCollection.astNodeById.has(children[0]));
+    } else if (childIds.length === 1) {
+        return createInspectedFieldAccess(nodeIdMapCollection.astNodeById.has(childIds[0]));
     }
 
-    const generalizedIdentifierId: number = children[1];
+    const generalizedIdentifierId: number = childIds[1];
     const generalizedIdentifierXor: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetXor(
         nodeIdMapCollection,
         generalizedIdentifierId,
@@ -244,8 +237,7 @@ function inspectFieldSelector(
             const isPositionInIdentifier: boolean = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
-                maybeIdentifierUnderPosition:
-                    isPositionInIdentifier === true ? generalizedIdentifier.literal : undefined,
+                maybeIdentifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
                 fieldNames: [generalizedIdentifier.literal],
             };
         }
@@ -287,24 +279,17 @@ function createAutocompleteItems(
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
     const autocompleteItems: AutocompleteItem[] = [];
+    const maybeIdentifierUnderPositionLiteral: string | undefined =
+        inspectedFieldAccess.maybeIdentifierUnderPosition?.literal;
 
-    const maybeIdentifierUnderPosition: string | undefined = inspectedFieldAccess.maybeIdentifierUnderPosition;
-    for (const [key, type] of fieldEntries) {
-        if (
-            (fieldAccessNames.includes(key) && key !== maybeIdentifierUnderPosition) ||
-            (maybeIdentifierUnderPosition && !key.startsWith(maybeIdentifierUnderPosition))
-        ) {
+    for (const [label, powerQueryType] of fieldEntries) {
+        if (fieldAccessNames.includes(label)) {
             continue;
         }
 
-        // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-        const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(key, false);
-        const normalizedKey: string = identifierKind === PQP.StringUtils.IdentifierKind.Quote ? key.slice(2, -1) : key;
-
-        autocompleteItems.push({
-            key: normalizedKey,
-            type,
-        });
+        autocompleteItems.push(
+            AutocompleteItemUtils.createFromFieldAccess(label, powerQueryType, maybeIdentifierUnderPositionLiteral),
+        );
     }
 
     return autocompleteItems;

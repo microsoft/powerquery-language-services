@@ -29,7 +29,7 @@ export interface AutocompleteFieldAccess {
 
 export interface InspectedFieldAccess {
     readonly isAutocompleteAllowed: boolean;
-    readonly maybeIdentifierUnderPosition: string | undefined;
+    readonly maybeIdentifierUnderPosition: PQP.Language.Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
 }
 
