@@ -3,9 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { AutocompleteItem } from "./autocompleteItem";
+
 export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | undefined, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteKeyword = PQP.Result<AutocompleteKeyword, PQP.CommonError.CommonError>;
+export type TriedAutocompleteKeyword = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
 export type TriedAutocompleteLanguageConstant = PQP.Result<
     AutocompleteLanguageConstant | undefined,
@@ -25,11 +27,6 @@ export interface Autocomplete {
     readonly triedKeyword: TriedAutocompleteKeyword;
     readonly triedLanguageConstant: TriedAutocompleteLanguageConstant;
     readonly triedPrimitiveType: TriedAutocompletePrimitiveType;
-}
-
-export interface AutocompleteItem {
-    readonly key: string;
-    readonly type: PQP.Language.Type.PowerQueryType;
 }
 
 export interface AutocompleteFieldAccess {

@@ -2,11 +2,12 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import type { CompletionItem, Hover, Range, SignatureHelp } from "vscode-languageserver-types";
-import { ILibrary } from "../library/library";
+import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
+import type { ILibrary } from "../library/library";
 
 export interface CompletionItemProvider {
-    getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>>;
+    getAutocompleteItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
 }
 
 export interface CompletionItemProviderContext extends ProviderContext {

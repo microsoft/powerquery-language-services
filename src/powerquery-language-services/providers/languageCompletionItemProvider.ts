@@ -5,13 +5,14 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Inspection } from "..";
 import { CompletionItem, CompletionItemKind } from "../commonTypes";
+import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
 
 export class LanguageCompletionItemProvider implements CompletionItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
-    private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = [
+    private static readonly ExcludedKeywords: ReadonlyArray<string> = [
         PQP.Language.Keyword.KeywordKind.HashBinary,
         PQP.Language.Keyword.KeywordKind.HashDate,
         PQP.Language.Keyword.KeywordKind.HashDateTime,
@@ -27,7 +28,9 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        _context: CompletionItemProviderContext,
+    ): Promise<ReadonlyArray<AutocompleteItem>> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
             return [];
         }
@@ -36,27 +39,36 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
         return [
             ...this.getKeywords(autocomplete.triedKeyword),
-            ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
-            ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
+            // ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
+            // ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
         ];
     }
 
-    private getKeywords(triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword): ReadonlyArray<CompletionItem> {
+    // public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    //     if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
+    //         return [];
+    //     }
+
+    //     const autocomplete: Inspection.Autocomplete = this.maybeTriedInspection.autocomplete;
+
+    //     return [
+    //         ...this.getKeywords(autocomplete.triedKeyword),
+    //         ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
+    //         ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
+    //     ];
+    // }
+
+    private getKeywords(
+        triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
+    ): ReadonlyArray<AutocompleteItem> {
         if (PQP.ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
 
-        return triedKeywordAutocomplete.value
-            .filter(
-                (keywordKind: PQP.Language.Keyword.KeywordKind) =>
-                    LanguageCompletionItemProvider.ExcludedKeywords.includes(keywordKind) === false,
-            )
-            .map((keywordKind: PQP.Language.Keyword.KeywordKind) => {
-                return {
-                    kind: CompletionItemKind.Keyword,
-                    label: keywordKind,
-                };
-            });
+        return triedKeywordAutocomplete.value.filter(
+            (autocompleteItem: AutocompleteItem) =>
+                LanguageCompletionItemProvider.ExcludedKeywords.includes(autocompleteItem.key) === false,
+        );
     }
 
     private getLanguageConstants(
