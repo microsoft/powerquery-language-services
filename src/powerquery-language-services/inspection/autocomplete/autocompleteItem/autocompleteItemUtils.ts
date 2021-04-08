@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { CompletionItemKind, SymbolKind } from "vscode-languageserver-types";
+import { CompletionItemKind } from "vscode-languageserver-types";
 import { Inspection } from "../../..";
+import { Library } from "../../../library";
 import { calculateJaroWinkler } from "../../jaroWinkler";
-import { TScopeItem } from "../../scope";
 import { AutocompleteItem } from "./autocompleteItem";
 
 // export function create(
@@ -96,10 +96,6 @@ export function maybeCreateFromScopeItem(
     powerQueryType: PQP.Language.Type.PowerQueryType,
     maybeOther?: string,
 ): AutocompleteItem | undefined {
-    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
-    let symbolKind: SymbolKind;
-    let name: string;
-
     switch (scopeItem.kind) {
         case Inspection.ScopeItemKind.LetVariable:
         case Inspection.ScopeItemKind.RecordField:
@@ -108,8 +104,7 @@ export function maybeCreateFromScopeItem(
                 return undefined;
             }
 
-            name = scopeItem.isRecursive ? `@${label}` : label;
-            symbolKind = SymbolKind.Variable;
+            label = scopeItem.isRecursive ? `@${label}` : label;
             break;
         }
 
@@ -117,8 +112,6 @@ export function maybeCreateFromScopeItem(
             return undefined;
 
         case Inspection.ScopeItemKind.Parameter: {
-            name = label;
-            symbolKind = SymbolKind.Variable;
             break;
         }
 
@@ -127,8 +120,6 @@ export function maybeCreateFromScopeItem(
                 return undefined;
             }
 
-            name = label;
-            symbolKind = SymbolKind.Variable;
             break;
         }
 
@@ -136,9 +127,45 @@ export function maybeCreateFromScopeItem(
             throw PQP.Assert.isNever(scopeItem);
     }
 
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
+
     return {
         jaroWinklerScore,
+        kind: CompletionItemKind.Variable,
         label,
         powerQueryType,
+    };
+}
+
+export function createFromLibraryDefinition(
+    label: string,
+    libraryDefinition: Library.TLibraryDefinition,
+    maybeOther?: string,
+): Inspection.AutocompleteItem {
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
+
+    let completionItemKind: CompletionItemKind;
+    switch (libraryDefinition.kind) {
+        case Library.LibraryDefinitionKind.Constant:
+            completionItemKind = CompletionItemKind.Value;
+            break;
+
+        case Library.LibraryDefinitionKind.Function:
+            completionItemKind = CompletionItemKind.Function;
+            break;
+
+        case Library.LibraryDefinitionKind.Type:
+            completionItemKind = CompletionItemKind.TypeParameter;
+            break;
+
+        default:
+            throw PQP.Assert.isNever(libraryDefinition);
+    }
+
+    return {
+        jaroWinklerScore,
+        kind: completionItemKind,
+        label,
+        powerQueryType: libraryDefinition.asType,
     };
 }

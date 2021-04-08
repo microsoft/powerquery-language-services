@@ -8,7 +8,6 @@ import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import * as InspectionUtils from "../inspectionUtils";
 
 import { Inspection, Library } from "..";
-import { AutocompleteItemUtils } from "../inspection";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     CompletionItemProviderContext,
@@ -35,8 +34,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         }
 
         return [
-            ...this.getAutocompleteItemsFromFieldAccess(context, maybeInspection),
-            ...this.getCompletionItemsFromScope(context, maybeInspection),
+            ...this.getAutocompleteItemsFromFieldAccess(maybeInspection),
+            ...InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspection),
         ];
     }
 
@@ -124,40 +123,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private getCompletionItemsFromScope(
-        context: CompletionItemProviderContext,
-        inspection: Inspection.Inspection,
-    ): ReadonlyArray<Inspection.AutocompleteItem> {
-        if (PQP.ResultUtils.isError(inspection.triedNodeScope)) {
-            return [];
-        }
-        const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
-        const scopeTypeByKey: Inspection.ScopeTypeByKey = PQP.ResultUtils.isOk(inspection.triedScopeType)
-            ? inspection.triedScopeType.value
-            : new Map();
-
-        const partial: Inspection.AutocompleteItem[] = [];
-
-        for (const [label, scopeItem] of nodeScope.entries()) {
-            const maybeAutocompleteItem:
-                | Inspection.AutocompleteItem
-                | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
-                label,
-                scopeItem,
-                scopeTypeByKey.get(label) ?? PQP.Language.Type.UnknownInstance,
-                context.text,
-            );
-
-            if (maybeAutocompleteItem) {
-                partial.push(maybeAutocompleteItem);
-            }
-        }
-
-        return partial;
-    }
-
     private getAutocompleteItemsFromFieldAccess(
-        _context: CompletionItemProviderContext,
         inspection: Inspection.Inspection,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
         const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
