@@ -9,18 +9,11 @@ export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | 
 
 export type TriedAutocompleteKeyword = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteLanguageConstant = PQP.Result<
-    AutocompleteLanguageConstant | undefined,
-    PQP.CommonError.CommonError
->;
+export type TriedAutocompleteLanguageConstant = PQP.Result<AutocompleteItem | undefined, PQP.CommonError.CommonError>;
 
-export type TriedAutocompletePrimitiveType = PQP.Result<AutocompletePrimitiveType, PQP.CommonError.CommonError>;
+export type TriedAutocompletePrimitiveType = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
 export type AutocompleteKeyword = ReadonlyArray<PQP.Language.Keyword.KeywordKind>;
-
-export type AutocompleteLanguageConstant = PQP.Language.Constant.LanguageConstantKind;
-
-export type AutocompletePrimitiveType = ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind>;
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;

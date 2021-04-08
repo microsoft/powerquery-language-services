@@ -5,7 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { Position, PositionUtils } from "../position";
-import { AutocompleteLanguageConstant, TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
@@ -16,16 +17,20 @@ export function tryAutocompleteLanguageConstant(
     });
 }
 
-function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteLanguageConstant | undefined {
+function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteItem | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
     const activeNode: ActiveNode = maybeActiveNode;
 
     if (isNullableAllowed(activeNode)) {
-        return PQP.Language.Constant.LanguageConstantKind.Nullable;
+        return AutocompleteItemUtils.createFromLanguageConstantKind(
+            PQP.Language.Constant.LanguageConstantKind.Nullable,
+        );
     } else if (isOptionalAllowed(activeNode)) {
-        return PQP.Language.Constant.LanguageConstantKind.Optional;
+        return AutocompleteItemUtils.createFromLanguageConstantKind(
+            PQP.Language.Constant.LanguageConstantKind.Optional,
+        );
     } else {
         return undefined;
     }

@@ -3,8 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-export interface AutocompleteItem {
-    readonly key: string;
+import { CompletionItem } from "vscode-languageserver-types";
+
+export interface AutocompleteItem extends CompletionItem {
     readonly jaroWinklerScore: number;
     readonly powerQueryType: PQP.Language.Type.PowerQueryType;
 }

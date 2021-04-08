@@ -4,7 +4,6 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Inspection } from "..";
-import { CompletionItem, CompletionItemKind } from "../commonTypes";
 import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
@@ -39,24 +38,10 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
         return [
             ...this.getKeywords(autocomplete.triedKeyword),
-            // ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
-            // ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
+            ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
+            ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
         ];
     }
-
-    // public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
-    //     if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
-    //         return [];
-    //     }
-
-    //     const autocomplete: Inspection.Autocomplete = this.maybeTriedInspection.autocomplete;
-
-    //     return [
-    //         ...this.getKeywords(autocomplete.triedKeyword),
-    //         ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
-    //         ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
-    //     ];
-    // }
 
     private getKeywords(
         triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
@@ -67,42 +52,23 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
         return triedKeywordAutocomplete.value.filter(
             (autocompleteItem: AutocompleteItem) =>
-                LanguageCompletionItemProvider.ExcludedKeywords.includes(autocompleteItem.key) === false,
+                LanguageCompletionItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
         );
     }
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
-    ): ReadonlyArray<CompletionItem> {
-        if (
-            PQP.ResultUtils.isError(triedLanguageConstantAutocomplete) ||
-            triedLanguageConstantAutocomplete.value === undefined
-        ) {
-            return [];
-        }
-
-        return [
-            {
-                kind: CompletionItemKind.Keyword,
-                label: triedLanguageConstantAutocomplete.value,
-            },
-        ];
+    ): ReadonlyArray<AutocompleteItem> {
+        return PQP.ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
+            ? [triedLanguageConstantAutocomplete.value]
+            : [];
     }
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
-    ): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isError(triedPrimitiveTypeAutocomplete)) {
-            return [];
-        }
-
-        return triedPrimitiveTypeAutocomplete.value.map(
-            (keywordKind: PQP.Language.Constant.PrimitiveTypeConstantKind) => {
-                return {
-                    kind: CompletionItemKind.Reference,
-                    label: keywordKind,
-                };
-            },
-        );
+    ): ReadonlyArray<AutocompleteItem> {
+        return PQP.ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
+            ? triedPrimitiveTypeAutocomplete.value
+            : [];
     }
 }

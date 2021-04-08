@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 
