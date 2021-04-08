@@ -13,8 +13,6 @@ export type TriedAutocompleteLanguageConstant = PQP.Result<AutocompleteItem | un
 
 export type TriedAutocompletePrimitiveType = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
-export type AutocompleteKeyword = ReadonlyArray<PQP.Language.Keyword.KeywordKind>;
-
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
     readonly triedKeyword: TriedAutocompleteKeyword;
