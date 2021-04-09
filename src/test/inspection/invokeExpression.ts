@@ -487,7 +487,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNumber(inspected);
         });
 
-        it("WIP nested invocations, expects no parameters, missing parameter", () => {
+        it("nested invocations, expects no parameters, missing parameter", () => {
             const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
