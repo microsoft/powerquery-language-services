@@ -10,7 +10,7 @@ import * as InspectionUtils from "../inspectionUtils";
 import { Inspection, Library } from "..";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -26,7 +26,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getAutocompleteItems(
-        context: CompletionItemProviderContext,
+        context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
         if (maybeInspection === undefined) {

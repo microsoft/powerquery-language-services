@@ -8,18 +8,19 @@ import { expect } from "chai";
 import "mocha";
 
 import { TestConstants, TestUtils } from ".";
-import { CompletionItem, Hover, SignatureHelp } from "../powerquery-language-services";
+import { Hover, SignatureHelp } from "../powerquery-language-services";
+import type { AutocompleteItem } from "../powerquery-language-services/inspection";
 
 describe("Analysis", () => {
-    describe(`getCompletionItems;`, () => {
+    describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
-            const completionItems: ReadonlyArray<CompletionItem> = await TestUtils.createCompletionItems(`
+            const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(`
         let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
 
-            expect(completionItems.length).to.equal(1);
-            const completionItem: CompletionItem = Assert.asDefined(completionItems[0]);
-            expect(completionItem.label === TestConstants.TestLibraryName.SquareIfNumber);
-            expect(completionItem.documentation).to.equal(undefined, "local definition should have no documentation");
+            expect(autocompleteItems.length).to.equal(1);
+            const autocompleteItem: AutocompleteItem = Assert.asDefined(autocompleteItems[0]);
+            expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
+            expect(autocompleteItem.documentation).to.equal(undefined, "local definition should have no documentation");
         });
     });
 

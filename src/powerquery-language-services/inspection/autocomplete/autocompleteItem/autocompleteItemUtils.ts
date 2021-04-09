@@ -8,26 +8,6 @@ import { Library } from "../../../library";
 import { calculateJaroWinkler } from "../../jaroWinkler";
 import { AutocompleteItem } from "./autocompleteItem";
 
-// export function create(
-//     label: string,
-//     jaroWinklerScore: number,
-//     powerQueryType: PQP.Language.Type.PowerQueryType,
-// ): AutocompleteItem {
-//     return {
-//         label,
-//         jaroWinklerScore,
-//         powerQueryType,
-//     };
-// }
-
-// export function createFromJaroWinkler(
-//     key: string,
-//     other: string,
-//     powerQueryType: PQP.Language.Type.PowerQueryType,
-// ): AutocompleteItem {
-//     return create(key, calculateJaroWinkler(key, other), powerQueryType);
-// }
-
 export function createFromKeywordKind(label: PQP.Language.Keyword.KeywordKind, maybeOther?: string): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 

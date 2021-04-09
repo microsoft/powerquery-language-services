@@ -7,11 +7,11 @@ import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 
-export interface CompletionItemProvider {
-    getAutocompleteItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
+export interface AutocompleteItemProvider {
+    getAutocompleteItems(context: AutocompleteItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
 }
 
-export interface CompletionItemProviderContext extends ProviderContext {
+export interface AutocompleteItemProviderContext extends ProviderContext {
     readonly text?: string;
     readonly tokenKind?: string;
 }
@@ -39,4 +39,4 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionType: PQP.Language.Type.PowerQueryType;
 }
 
-export interface ISymbolProvider extends CompletionItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}
+export interface ISymbolProvider extends AutocompleteItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

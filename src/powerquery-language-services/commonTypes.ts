@@ -33,8 +33,6 @@ export interface IDisposable {
     dispose(): void;
 }
 
-export const EmptyCompletionItems: ReadonlyArray<CompletionItem> = [];
-
 export const EmptyHover: Hover = {
     range: undefined,
     contents: [],

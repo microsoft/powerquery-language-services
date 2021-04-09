@@ -9,7 +9,7 @@ import { Inspection } from "..";
 import { AutocompleteItemUtils } from "../inspection";
 import { Library, LibraryUtils } from "../library";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -27,7 +27,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     }
 
     public async getAutocompleteItems(
-        context: CompletionItemProviderContext,
+        context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         if (!context.text || !context.range) {
             return [];

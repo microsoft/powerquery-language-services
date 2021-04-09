@@ -3,15 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import {
-    CompletionItem,
-    CompletionItemKind,
-    DocumentSymbol,
-    Position,
-    Range,
-    SymbolKind,
-    TextEdit,
-} from "vscode-languageserver-types";
+import { CompletionItemKind, Position, Range, SymbolKind } from "vscode-languageserver-types";
 
 import { AnalysisOptions } from "./analysis/analysisOptions";
 
@@ -19,59 +11,45 @@ export function getLocale(analysisOptions: AnalysisOptions | undefined): string 
     return analysisOptions?.locale ?? DefaultLocale;
 }
 
-export function documentSymbolToCompletionItem(
-    documentSymbols: ReadonlyArray<DocumentSymbol>,
-    maybeTextEditRange: Range | undefined,
-): ReadonlyArray<CompletionItem> {
-    return documentSymbols.map((symbol: DocumentSymbol) => {
-        let textEdit: TextEdit | undefined;
-        if (maybeTextEditRange === undefined) {
-            textEdit = undefined;
-        } else {
-            textEdit = {
-                newText: symbol.name,
-                range: maybeTextEditRange,
-            };
-        }
-
-        return {
-            deprecated: symbol.deprecated,
-            detail: symbol.detail,
-            label: symbol.name,
-            kind: symbolKindToCompletionItemKind(symbol.kind),
-            textEdit,
-        };
-    });
-}
-
 export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): CompletionItemKind | undefined {
     switch (symbolKind) {
-        case SymbolKind.Module:
-            return CompletionItemKind.Module;
-        case SymbolKind.Field:
-            return CompletionItemKind.Field;
-        case SymbolKind.Constructor:
-            return CompletionItemKind.Constructor;
-        case SymbolKind.Enum:
-            return CompletionItemKind.Enum;
-        case SymbolKind.EnumMember:
-            return CompletionItemKind.EnumMember;
-        case SymbolKind.Function:
-            return CompletionItemKind.Function;
-        case SymbolKind.Variable:
-            return CompletionItemKind.Variable;
-        case SymbolKind.Constant:
-            return CompletionItemKind.Constant;
         case SymbolKind.Array:
         case SymbolKind.Boolean:
         case SymbolKind.Number:
         case SymbolKind.Null:
         case SymbolKind.String:
             return CompletionItemKind.Value;
+
+        case SymbolKind.Module:
+            return CompletionItemKind.Module;
+
+        case SymbolKind.Field:
+            return CompletionItemKind.Field;
+
+        case SymbolKind.Constructor:
+            return CompletionItemKind.Constructor;
+
+        case SymbolKind.Enum:
+            return CompletionItemKind.Enum;
+
+        case SymbolKind.EnumMember:
+            return CompletionItemKind.EnumMember;
+
+        case SymbolKind.Function:
+            return CompletionItemKind.Function;
+
+        case SymbolKind.Variable:
+            return CompletionItemKind.Variable;
+
+        case SymbolKind.Constant:
+            return CompletionItemKind.Constant;
+
         case SymbolKind.Struct:
             return CompletionItemKind.Struct;
+
         case SymbolKind.TypeParameter:
             return CompletionItemKind.TypeParameter;
+
         default:
             return undefined;
     }

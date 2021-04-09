@@ -9,87 +9,103 @@ import "mocha";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
+import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./common";
 
-function assertGetParseErrAutocompleteOkLanguageConstant<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: PQP.LexSettings & PQP.ParseSettings<S> & Inspection.InspectionSettings,
     text: string,
     position: Inspection.Position,
-): Inspection.AutocompleteLanguageConstant | undefined {
+): AbridgedAutocompleteItem | undefined {
     const actual: Inspection.Autocomplete = TestUtils.assertGetAutocomplete(settings, text, position);
     Assert.isOk(actual.triedLanguageConstant);
-    return actual.triedLanguageConstant.value;
+
+    return actual.triedLanguageConstant.value
+        ? createAbridgedAutocompleteItem(actual.triedLanguageConstant.value)
+        : undefined;
 }
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
     it(`a as |`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`a as |`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Nullable,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Nullable);
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`a as n|`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`a as n|`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Nullable,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Nullable);
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`(a as |`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(a as |`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Nullable,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Nullable);
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`(a as n|`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(a as n|`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Nullable,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Nullable);
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`(x, |`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(x, |`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Optional,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Optional);
+        expect(actual).to.deep.equal(expected);
     });
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(x, op|`);
-        const actual:
-            | Inspection.AutocompleteLanguageConstant
-            | undefined = assertGetParseErrAutocompleteOkLanguageConstant(
+        const expected: AbridgedAutocompleteItem | undefined = {
+            jaroWinklerScore: 1,
+            label: PQP.Language.Constant.LanguageConstantKind.Optional,
+        };
+        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultSettings,
             text,
             position,
         );
-        expect(actual).to.equal(PQP.Language.Constant.LanguageConstantKind.Optional);
+        expect(actual).to.deep.equal(expected);
     });
 });

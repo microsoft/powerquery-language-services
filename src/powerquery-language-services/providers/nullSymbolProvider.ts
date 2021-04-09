@@ -5,7 +5,7 @@ import { Inspection, Library } from "..";
 import { Hover, SignatureHelp } from "../commonTypes";
 import { AutocompleteItem } from "../inspection/autocomplete";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -27,7 +27,7 @@ export class NullSymbolProvider implements ISymbolProvider {
     }
 
     public async getAutocompleteItems(
-        _context: CompletionItemProviderContext,
+        _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
         return [];
     }

@@ -6,9 +6,9 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Inspection } from "..";
 import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
+import { AutocompleteItemProvider, AutocompleteItemProviderContext } from "./commonTypes";
 
-export class LanguageCompletionItemProvider implements CompletionItemProvider {
+export class LanguageAutocompleteItemProvider implements AutocompleteItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<string> = [
@@ -28,7 +28,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
 
     public async getAutocompleteItems(
-        _context: CompletionItemProviderContext,
+        _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
             return [];
@@ -52,7 +52,7 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
         return triedKeywordAutocomplete.value.filter(
             (autocompleteItem: AutocompleteItem) =>
-                LanguageCompletionItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
+                LanguageAutocompleteItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
         );
     }
 

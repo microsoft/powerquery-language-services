@@ -8,7 +8,7 @@ import * as TestUtils from "./testUtils";
 
 import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import { CompletionItem, Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 
 import * as TestConstants from "../testConstants";
 
@@ -63,11 +63,19 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
     }
 }
 
-export function assertGetCompletionItem(label: string, completionItems: ReadonlyArray<CompletionItem>): CompletionItem {
+export function assertGetAutocompleteItem(
+    label: string,
+    autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem>,
+): Inspection.AutocompleteItem {
     return Assert.asDefined(
-        completionItems.find((completionitem: CompletionItem) => completionitem.label === "Test.Foo"),
+        autocompleteItems.find((completionitem: Inspection.AutocompleteItem) => completionitem.label === "Test.Foo"),
         `did not find the expected completion item`,
-        { label, completionItemLabels: completionItems.map((completionItem: CompletionItem) => completionItem.label) },
+        {
+            label,
+            completionItemLabels: autocompleteItems.map(
+                (completionItem: Inspection.AutocompleteItem) => completionItem.label,
+            ),
+        },
     );
 }
 
@@ -133,11 +141,11 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     }
 }
 
-export function assertCompletionItemLabels(
+export function assertAutocompleteItemLabels(
     expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<CompletionItem>,
+    actual: ReadonlyArray<Inspection.AutocompleteItem>,
 ): void {
-    const actualLabels: ReadonlyArray<string> = actual.map((item: CompletionItem) => item.label);
+    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
     expect(actualLabels).to.include.members(expected);
 }
 

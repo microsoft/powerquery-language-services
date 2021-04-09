@@ -7,10 +7,10 @@ import { expect } from "chai";
 import "mocha";
 import {
     AnalysisOptions,
-    CompletionItem,
     EmptyHover,
     EmptySignatureHelp,
     Hover,
+    Inspection,
     NullSymbolProvider,
     SignatureHelp,
     WorkspaceCache,
@@ -28,8 +28,8 @@ const IsolatedAnalysisOptions: AnalysisOptions = {
     ) => NullSymbolProvider.singleton(),
 };
 
-async function createCompletionItems(text: string): Promise<ReadonlyArray<CompletionItem>> {
-    return TestUtils.createCompletionItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
 }
 
 async function createHover(text: string): Promise<Hover> {
@@ -41,26 +41,28 @@ async function createSignatureHelp(text: string): Promise<SignatureHelp> {
 }
 
 describe(`SimpleLibraryProvider`, async () => {
-    describe(`getCompletionItems`, async () => {
+    describe(`getAutocompleteItems`, async () => {
         it(`match`, async () => {
             const expected: ReadonlyArray<string> = [TestConstants.TestLibraryName.NumberOne];
-            const actual: ReadonlyArray<CompletionItem> = await createCompletionItems("Test.NumberO|");
-            TestUtils.assertCompletionItemLabels(expected, actual);
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.NumberO|");
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
         it(`match multiple`, async () => {
-            const actual: ReadonlyArray<CompletionItem> = await createCompletionItems("Test.Numbe|");
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.Numbe|");
             const expected: ReadonlyArray<string> = [
                 TestConstants.TestLibraryName.Number,
                 TestConstants.TestLibraryName.NumberOne,
             ];
-            TestUtils.assertCompletionItemLabels(expected, actual);
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
         it(`no match`, async () => {
-            const actual: ReadonlyArray<CompletionItem> = await createCompletionItems("Unknown|Identifier");
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
+                "Unknown|Identifier",
+            );
             const expected: ReadonlyArray<string> = [];
-            TestUtils.assertCompletionItemLabels(expected, actual);
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
     });
 

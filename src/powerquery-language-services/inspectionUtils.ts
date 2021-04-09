@@ -3,20 +3,13 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import {
-    CompletionItem,
-    CompletionItemKind,
-    DocumentSymbol,
-    SignatureHelp,
-    SymbolKind,
-    TextEdit,
-} from "vscode-languageserver-types";
+import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { Inspection } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
-import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
+import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
@@ -82,41 +75,6 @@ export function getMaybeType(
     return PQP.ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value.get(identifier)
         : undefined;
-}
-
-export function getCompletionItems(
-    context: CompletionItemProviderContext,
-    inspection: Inspection.Inspection,
-): ReadonlyArray<CompletionItem> {
-    const triedAutocompleteFieldAccess: Inspection.TriedAutocompleteFieldAccess =
-        inspection.autocomplete.triedFieldAccess;
-    if (PQP.ResultUtils.isError(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
-        return [];
-    }
-
-    const text: string | null | undefined = context.text;
-    const completionItems: CompletionItem[] = [];
-    for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
-        if (!text || autocompleteItem.label.startsWith(text)) {
-            let textEdit: TextEdit | undefined;
-            if (!context.range) {
-                textEdit = undefined;
-            } else {
-                textEdit = {
-                    range: context.range,
-                    newText: autocompleteItem.label,
-                };
-            }
-
-            completionItems.push({
-                kind: CompletionItemKind.Field,
-                label: autocompleteItem.label,
-                textEdit,
-            });
-        }
-    }
-
-    return completionItems;
 }
 
 export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
@@ -247,7 +205,7 @@ export function getSymbolForIdentifierPairedExpression(
 }
 
 export function getAutocompleteItemsFromScope(
-    context: CompletionItemProviderContext,
+    context: AutocompleteItemProviderContext,
     inspection: Inspection.Inspection,
 ): ReadonlyArray<Inspection.AutocompleteItem> {
     if (PQP.ResultUtils.isError(inspection.triedNodeScope)) {
