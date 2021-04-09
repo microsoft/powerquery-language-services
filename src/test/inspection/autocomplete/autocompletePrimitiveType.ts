@@ -40,7 +40,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("type |", () => {
@@ -51,7 +51,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("let x = type|", () => {
@@ -62,7 +62,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("let x = type |", () => {
@@ -73,7 +73,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("type | number", () => {
@@ -84,7 +84,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("type n|", () => {
@@ -108,7 +108,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x|) => 1", () => {
@@ -119,7 +119,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as| number) => 1", () => {
@@ -132,7 +132,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as | number) => 1", () => {
@@ -145,7 +145,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as| nullable number) => 1", () => {
@@ -158,7 +158,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as | nullable number) => 1", () => {
@@ -171,7 +171,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as nullable| number) => 1", () => {
@@ -184,7 +184,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
     it("(x as nullable num|ber) => 1", () => {
@@ -197,10 +197,10 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 
-    it("let a = 1 is |", () => {
+    it("WIP let a = 1 is |", () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`let a = 1 is |`);
         const expected: ReadonlyArray<AbridgedAutocompleteItem> = AbridgedPrimitiveTypeAutocompleteItems;
         const actual: ReadonlyArray<AbridgedAutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
@@ -208,6 +208,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             text,
             position,
         );
-        expect(actual).to.have.members(expected);
+        expect(actual).to.deep.equal(expected);
     });
 });
