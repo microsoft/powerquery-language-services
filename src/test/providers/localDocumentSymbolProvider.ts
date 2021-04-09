@@ -161,7 +161,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             });
         });
 
-        it(`WIP includes textEdit`, async () => {
+        xit(`includes textEdit`, async () => {
             const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|",
             );

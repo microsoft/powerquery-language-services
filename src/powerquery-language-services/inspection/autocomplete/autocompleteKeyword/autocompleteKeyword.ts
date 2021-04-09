@@ -25,6 +25,9 @@ export function tryAutocompleteKeyword(
 ): TriedAutocompleteKeyword {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return PQP.ResultUtils.createOk([
+            ...PQP.Language.Keyword.ExpressionKeywordKinds.map((keywordKind: PQP.Language.Keyword.KeywordKind) =>
+                AutocompleteItemUtils.createFromKeywordKind(keywordKind),
+            ),
             AutocompleteItemUtils.createFromKeywordKind(PQP.Language.Keyword.KeywordKind.Section),
         ]);
     }

@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Position, PositionUtils } from "../../position";
 import { TrailingToken } from "../commonTypes";
-import { ExpressionAutocomplete, InspectAutocompleteKeywordState } from "./commonTypes";
+import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordErrorHandlingExpression(
     state: InspectAutocompleteKeywordState,
@@ -50,7 +50,7 @@ export function autocompleteKeywordErrorHandlingExpression(
         } else if (child.kind === PQP.Parser.XorNodeKind.Ast && PositionUtils.isAfterAst(position, child.node, true)) {
             return [PQP.Language.Keyword.KeywordKind.Otherwise];
         } else {
-            return ExpressionAutocomplete;
+            return PQP.Language.Keyword.ExpressionKeywordKinds;
         }
     } else {
         return undefined;

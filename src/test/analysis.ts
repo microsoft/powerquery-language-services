@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 // tslint:disable: no-implicit-dependencies
-
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
@@ -16,9 +15,13 @@ describe("Analysis", () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(`
         let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
+            const autocompleteItem: AutocompleteItem = Assert.asDefined(
+                autocompleteItems.find(
+                    (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
+                ),
+            );
 
-            expect(autocompleteItems.length).to.equal(1);
-            const autocompleteItem: AutocompleteItem = Assert.asDefined(autocompleteItems[0]);
+            expect(autocompleteItem.jaroWinklerScore).to.equal(1);
             expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
             expect(autocompleteItem.documentation).to.equal(undefined, "local definition should have no documentation");
         });

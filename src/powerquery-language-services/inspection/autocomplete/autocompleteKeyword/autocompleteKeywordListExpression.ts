@@ -7,7 +7,7 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import { ActiveNode } from "../../activeNode";
 import { PositionUtils } from "../../position";
-import { ExpressionAutocomplete, InspectAutocompleteKeywordState } from "./commonTypes";
+import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordListExpression(
     state: InspectAutocompleteKeywordState,
@@ -47,7 +47,7 @@ export function autocompleteKeywordListExpression(
         itemNode.kind === PQP.Parser.XorNodeKind.Context ||
         PositionUtils.isBeforeXor(activeNode.position, itemNode, false)
     ) {
-        return ExpressionAutocomplete;
+        return PQP.Language.Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;
     }

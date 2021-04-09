@@ -15,6 +15,3 @@ export interface InspectAutocompleteKeywordState {
     child: PQP.Parser.TXorNode;
     ancestryIndex: number;
 }
-
-export const ExpressionAutocomplete: ReadonlyArray<PQP.Language.Keyword.KeywordKind> =
-    PQP.Language.Keyword.ExpressionKeywordKinds;
