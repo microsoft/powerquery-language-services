@@ -9,7 +9,7 @@ import * as InspectionUtils from "../inspectionUtils";
 
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
-import type { AutocompleteItem } from "../inspection";
+import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
 import type { ILibrary } from "../library/library";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
@@ -87,7 +87,7 @@ export abstract class AnalysisBase implements Analysis {
             }
         }
 
-        return partial;
+        return partial.sort(AutocompleteItemUtils.compareFn);
     }
 
     public async getHover(): Promise<Hover> {
