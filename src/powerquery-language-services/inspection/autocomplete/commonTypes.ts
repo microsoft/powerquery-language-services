@@ -3,33 +3,21 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { AutocompleteItem } from "./autocompleteItem";
+
 export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | undefined, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteKeyword = PQP.Result<AutocompleteKeyword, PQP.CommonError.CommonError>;
+export type TriedAutocompleteKeyword = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteLanguageConstant = PQP.Result<
-    AutocompleteLanguageConstant | undefined,
-    PQP.CommonError.CommonError
->;
+export type TriedAutocompleteLanguageConstant = PQP.Result<AutocompleteItem | undefined, PQP.CommonError.CommonError>;
 
-export type TriedAutocompletePrimitiveType = PQP.Result<AutocompletePrimitiveType, PQP.CommonError.CommonError>;
-
-export type AutocompleteKeyword = ReadonlyArray<PQP.Language.Keyword.KeywordKind>;
-
-export type AutocompleteLanguageConstant = PQP.Language.Constant.LanguageConstantKind;
-
-export type AutocompletePrimitiveType = ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind>;
+export type TriedAutocompletePrimitiveType = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
 export interface Autocomplete {
     readonly triedFieldAccess: TriedAutocompleteFieldAccess;
     readonly triedKeyword: TriedAutocompleteKeyword;
     readonly triedLanguageConstant: TriedAutocompleteLanguageConstant;
     readonly triedPrimitiveType: TriedAutocompletePrimitiveType;
-}
-
-export interface AutocompleteItem {
-    readonly key: string;
-    readonly type: PQP.Language.Type.PowerQueryType;
 }
 
 export interface AutocompleteFieldAccess {
@@ -41,7 +29,7 @@ export interface AutocompleteFieldAccess {
 
 export interface InspectedFieldAccess {
     readonly isAutocompleteAllowed: boolean;
-    readonly maybeIdentifierUnderPosition: string | undefined;
+    readonly maybeIdentifierUnderPosition: PQP.Language.Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
 }
 

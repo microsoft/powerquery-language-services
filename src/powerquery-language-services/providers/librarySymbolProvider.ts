@@ -3,20 +3,13 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import {
-    CompletionItem,
-    CompletionItemKind,
-    Hover,
-    MarkupKind,
-    Range,
-    SignatureHelp,
-    SignatureInformation,
-} from "vscode-languageserver-types";
+import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
+import { AutocompleteItemUtils } from "../inspection";
 import { Library, LibraryUtils } from "../library";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -33,29 +26,21 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         this.signatureInformationByLabel = new Map();
     }
 
-    public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        context: AutocompleteItemProviderContext,
+    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         if (!context.text || !context.range) {
             return [];
         }
-        const identifierLiteral: string = context.text;
-        const range: Range = context.range;
 
-        const result: CompletionItem[] = [];
-        for (const [key, value] of this.libraryDefinitions.entries()) {
-            if (key.startsWith(identifierLiteral)) {
-                result.push({
-                    label: key,
-                    kind: LibrarySymbolProvider.getCompletionItemKind(value.kind),
-                    documentation: value.description,
-                    textEdit: {
-                        newText: key,
-                        range,
-                    },
-                });
-            }
+        const partial: Inspection.AutocompleteItem[] = [];
+        const maybeContextText: string | undefined = context.text;
+
+        for (const [label, definition] of this.libraryDefinitions.entries()) {
+            partial.push(AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText));
         }
 
-        return result;
+        return partial;
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
@@ -73,7 +58,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
-        const definitionTypeText: string = PQP.Language.TypeUtils.nameOf(definition.asType);
+        const definitionTypeText: string = PQP.Language.TypeUtils.nameOf(definition.asPowerQueryType);
 
         return {
             contents: {
@@ -115,22 +100,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
             case Library.LibraryDefinitionKind.Type:
                 return "library type";
-
-            default:
-                throw PQP.Assert.isNever(kind);
-        }
-    }
-
-    private static getCompletionItemKind(kind: Library.LibraryDefinitionKind): CompletionItemKind {
-        switch (kind) {
-            case Library.LibraryDefinitionKind.Function:
-                return CompletionItemKind.Function;
-
-            case Library.LibraryDefinitionKind.Constant:
-                return CompletionItemKind.Constant;
-
-            case Library.LibraryDefinitionKind.Type:
-                return CompletionItemKind.TypeParameter;
 
             default:
                 throw PQP.Assert.isNever(kind);

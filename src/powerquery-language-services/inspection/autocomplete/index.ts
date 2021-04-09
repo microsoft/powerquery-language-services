@@ -4,6 +4,7 @@
 import * as AutocompleteUtils from "./autocompleteUtils";
 
 export { AutocompleteUtils };
+export * from "./autocompleteItem";
 export * from "./autocompleteKeyword";
 export * from "./commonTypes";
 export * from "./task";

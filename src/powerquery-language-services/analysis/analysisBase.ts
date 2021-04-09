@@ -3,17 +3,18 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { CompletionItem, Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
 
 import { CommonTypesUtils, Inspection } from "..";
-import { EmptyCompletionItems, EmptyHover, EmptySignatureHelp } from "../commonTypes";
-import { ILibrary } from "../library/library";
-import { LanguageCompletionItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
+import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
+import type { ILibrary } from "../library/library";
+import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
-    CompletionItemProvider,
-    CompletionItemProviderContext,
+    AutocompleteItemProvider,
+    AutocompleteItemProviderContext,
     HoverProvider,
     HoverProviderContext,
     ISymbolProvider,
@@ -21,11 +22,11 @@ import type {
     SignatureProviderContext,
 } from "../providers/commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { Analysis } from "./analysis";
-import { AnalysisOptions } from "./analysisOptions";
+import type { Analysis } from "./analysis";
+import type { AnalysisOptions } from "./analysisOptions";
 
 export abstract class AnalysisBase implements Analysis {
-    protected languageCompletionItemProvider: CompletionItemProvider;
+    protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
@@ -35,10 +36,10 @@ export abstract class AnalysisBase implements Analysis {
         library: ILibrary,
         protected options: AnalysisOptions,
     ) {
-        this.languageCompletionItemProvider =
-            options.createLanguageCompletionItemProviderFn !== undefined
-                ? options.createLanguageCompletionItemProviderFn()
-                : new LanguageCompletionItemProvider(maybeInspectionCacheItem);
+        this.languageAutocompleteItemProvider =
+            options.createLanguageAutocompleteItemProviderFn !== undefined
+                ? options.createLanguageAutocompleteItemProviderFn()
+                : new LanguageAutocompleteItemProvider(maybeInspectionCacheItem);
 
         this.librarySymbolProvider =
             options.createLibrarySymbolProviderFn !== undefined
@@ -51,8 +52,8 @@ export abstract class AnalysisBase implements Analysis {
                 : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
     }
 
-    public async getCompletionItems(): Promise<CompletionItem[]> {
-        let context: CompletionItemProviderContext = {};
+    public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
+        let context: AutocompleteItemProviderContext = {};
 
         const maybeToken:
             | PQP.Language.Ast.Identifier
@@ -69,24 +70,24 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-        const [languageCompletionItemProvider, libraryResponse, localDocumentResponse] = await Promise.all(
-            AnalysisBase.createCompletionItemCalls(context, [
-                this.languageCompletionItemProvider,
+        const [languageResponse, libraryResponse, localDocumentResponse] = await Promise.all(
+            AnalysisBase.createAutocompleteItemCalls(context, [
+                this.languageAutocompleteItemProvider,
                 this.librarySymbolProvider,
                 this.localDocumentSymbolProvider,
             ]),
         );
 
-        const partial: CompletionItem[] = [];
-        for (const collection of [localDocumentResponse, languageCompletionItemProvider, libraryResponse]) {
+        const partial: AutocompleteItem[] = [];
+        for (const collection of [localDocumentResponse, languageResponse, libraryResponse]) {
             for (const item of collection) {
-                if (partial.find((partialItem: CompletionItem) => partialItem.label === item.label) === undefined) {
+                if (partial.find((partialItem: AutocompleteItem) => partialItem.label === item.label) === undefined) {
                     partial.push(item);
                 }
             }
         }
 
-        return partial;
+        return partial.sort(AutocompleteItemUtils.compareFn);
     }
 
     public async getHover(): Promise<Hover> {
@@ -163,14 +164,14 @@ export abstract class AnalysisBase implements Analysis {
         return defaultReturnValue;
     }
 
-    private static createCompletionItemCalls(
-        context: CompletionItemProviderContext,
-        providers: ReadonlyArray<CompletionItemProvider>,
-    ): ReadonlyArray<Promise<ReadonlyArray<CompletionItem>>> {
+    private static createAutocompleteItemCalls(
+        context: AutocompleteItemProviderContext,
+        providers: ReadonlyArray<AutocompleteItemProvider>,
+    ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getCompletionItems(context).catch(() => {
-                return EmptyCompletionItems;
+            provider.getAutocompleteItems(context).catch(() => {
+                return [];
             }),
         );
     }

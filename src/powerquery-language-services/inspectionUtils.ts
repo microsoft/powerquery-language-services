@@ -3,20 +3,13 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import {
-    CompletionItem,
-    CompletionItemKind,
-    DocumentSymbol,
-    Range,
-    SignatureHelp,
-    SymbolKind,
-    TextEdit,
-} from "vscode-languageserver-types";
+import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { Inspection } from ".";
-import { CompletionItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
+import { AutocompleteItemUtils } from "./inspection/autocomplete";
+import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
@@ -82,41 +75,6 @@ export function getMaybeType(
     return PQP.ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value.get(identifier)
         : undefined;
-}
-
-export function getCompletionItems(
-    context: CompletionItemProviderContext,
-    inspection: Inspection.Inspection,
-): ReadonlyArray<CompletionItem> {
-    const triedAutocompleteFieldAccess: Inspection.TriedAutocompleteFieldAccess =
-        inspection.autocomplete.triedFieldAccess;
-    if (PQP.ResultUtils.isError(triedAutocompleteFieldAccess) || !triedAutocompleteFieldAccess.value) {
-        return [];
-    }
-
-    const text: string | null | undefined = context.text;
-    const completionItems: CompletionItem[] = [];
-    for (const autocompleteItem of triedAutocompleteFieldAccess.value.autocompleteItems) {
-        if (!text || autocompleteItem.key.startsWith(text)) {
-            let textEdit: TextEdit | undefined;
-            if (!context.range) {
-                textEdit = undefined;
-            } else {
-                textEdit = {
-                    range: context.range,
-                    newText: autocompleteItem.key,
-                };
-            }
-
-            completionItems.push({
-                kind: CompletionItemKind.Field,
-                label: autocompleteItem.key,
-                textEdit,
-            });
-        }
-    }
-
-    return completionItems;
 }
 
 export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
@@ -246,71 +204,35 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getSymbolsForInspectionScope(
-    inspected: Inspection.Inspection,
-    positionIdentifier: string | undefined,
-): ReadonlyArray<DocumentSymbol> {
-    if (PQP.ResultUtils.isError(inspected.triedNodeScope)) {
+export function getAutocompleteItemsFromScope(
+    context: AutocompleteItemProviderContext,
+    inspection: Inspection.Inspection,
+): ReadonlyArray<Inspection.AutocompleteItem> {
+    if (PQP.ResultUtils.isError(inspection.triedNodeScope)) {
         return [];
     }
+    const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = PQP.ResultUtils.isOk(inspection.triedScopeType)
+        ? inspection.triedScopeType.value
+        : new Map();
 
-    const documentSymbols: DocumentSymbol[] = [];
-    for (const [key, scopeItem] of inspected.triedNodeScope.value.entries()) {
-        if (positionIdentifier && !key.startsWith(positionIdentifier)) {
-            continue;
+    const maybeContextTest: string | undefined = context.text;
+    const partial: Inspection.AutocompleteItem[] = [];
+
+    for (const [label, scopeItem] of nodeScope.entries()) {
+        const maybeAutocompleteItem:
+            | Inspection.AutocompleteItem
+            | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
+            label,
+            scopeItem,
+            scopeTypeByKey.get(label) ?? PQP.Language.Type.UnknownInstance,
+            maybeContextTest,
+        );
+
+        if (maybeAutocompleteItem) {
+            partial.push(maybeAutocompleteItem);
         }
-
-        let kind: SymbolKind;
-        let range: Range;
-        let name: string;
-
-        switch (scopeItem.kind) {
-            case Inspection.ScopeItemKind.LetVariable:
-            case Inspection.ScopeItemKind.RecordField:
-            case Inspection.ScopeItemKind.SectionMember: {
-                if (scopeItem.maybeValue === undefined) {
-                    continue;
-                }
-
-                name = scopeItem.isRecursive ? `@${key}` : key;
-                kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.key.tokenRange);
-                break;
-            }
-
-            case Inspection.ScopeItemKind.Each:
-                continue;
-
-            case Inspection.ScopeItemKind.Parameter: {
-                name = key;
-                kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.name.tokenRange);
-                break;
-            }
-
-            case Inspection.ScopeItemKind.Undefined: {
-                if (scopeItem.xorNode.kind !== PQP.Parser.XorNodeKind.Ast) {
-                    continue;
-                }
-
-                name = key;
-                kind = SymbolKind.Variable;
-                range = LanguageServiceUtils.tokenRangeToRange(scopeItem.xorNode.node.tokenRange);
-                break;
-            }
-
-            default:
-                throw PQP.Assert.isNever(scopeItem);
-        }
-
-        documentSymbols.push({
-            name,
-            kind,
-            deprecated: false,
-            range,
-            selectionRange: range,
-        });
     }
 
-    return documentSymbols;
+    return partial;
 }

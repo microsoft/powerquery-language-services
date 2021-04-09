@@ -3,15 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CompletionItem, Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
-import * as LanguageServiceUtils from "../languageServiceUtils";
 
 import { Inspection, Library } from "..";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -26,15 +25,17 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
-    public async getCompletionItems(context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        context: AutocompleteItemProviderContext,
+    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
         if (maybeInspection === undefined) {
             return [];
         }
 
         return [
-            ...this.getCompletionItemsFromFieldAccess(context, maybeInspection),
-            ...this.getCompletionItemsFromScope(context, maybeInspection),
+            ...this.getAutocompleteItemsFromFieldAccess(maybeInspection),
+            ...InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspection),
         ];
     }
 
@@ -122,20 +123,13 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private getCompletionItemsFromScope(
-        context: CompletionItemProviderContext,
+    private getAutocompleteItemsFromFieldAccess(
         inspection: Inspection.Inspection,
-    ): ReadonlyArray<CompletionItem> {
-        return LanguageServiceUtils.documentSymbolToCompletionItem(
-            InspectionUtils.getSymbolsForInspectionScope(inspection, context.text),
-            context.range,
-        );
-    }
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
 
-    private getCompletionItemsFromFieldAccess(
-        context: CompletionItemProviderContext,
-        inspection: Inspection.Inspection,
-    ): ReadonlyArray<CompletionItem> {
-        return InspectionUtils.getCompletionItems(context, inspection);
+        return PQP.ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
+            ? triedFieldAccess.value.autocompleteItems
+            : [];
     }
 }

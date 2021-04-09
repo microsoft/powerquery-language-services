@@ -5,7 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { PositionUtils } from "../position";
-import { AutocompletePrimitiveType, TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
+import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
@@ -17,32 +18,28 @@ export function tryAutocompletePrimitiveType(
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => {
-        return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken);
+        return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data);
     });
 }
 
 function autocompletePrimitiveType(
     activeNode: ActiveNode,
-    maybeTrailingToken: TrailingToken | undefined,
-): AutocompletePrimitiveType {
-    return filterRecommendations(traverseAncestors(activeNode), maybeTrailingToken);
+    maybeTrailingText: string | undefined,
+): ReadonlyArray<AutocompleteItem> {
+    return createAutocompleteItems(traverseAncestors(activeNode), maybeTrailingText);
 }
 
-function filterRecommendations(
-    inspected: AutocompletePrimitiveType,
-    maybeTrailingToken: TrailingToken | undefined,
-): AutocompletePrimitiveType {
-    if (maybeTrailingToken === undefined) {
-        return inspected;
-    }
-    const trailingData: string = maybeTrailingToken.data;
-
-    return inspected.filter((primitiveTypeConstantKind: PQP.Language.Constant.PrimitiveTypeConstantKind) =>
-        primitiveTypeConstantKind.startsWith(trailingData),
+function createAutocompleteItems(
+    primitiveTypeConstantKinds: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind>,
+    maybeTrailingText: string | undefined,
+): ReadonlyArray<AutocompleteItem> {
+    return primitiveTypeConstantKinds.map(
+        (primitiveTypeConstantKind: PQP.Language.Constant.PrimitiveTypeConstantKind) =>
+            AutocompleteItemUtils.createFromPrimitiveTypeConstantKind(primitiveTypeConstantKind, maybeTrailingText),
     );
 }
 
-function traverseAncestors(activeNode: ActiveNode): AutocompletePrimitiveType {
+function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> {
     if (activeNode.ancestry.length === 0) {
         return [];
     }

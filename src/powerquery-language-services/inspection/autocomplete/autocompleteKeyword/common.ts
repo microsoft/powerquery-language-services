@@ -3,9 +3,10 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 
 import { ActiveNode } from "../../activeNode";
+import { AutocompleteItem } from "../autocompleteItem";
 import { autocompleteKeyword } from "./autocompleteKeyword";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
@@ -31,12 +32,21 @@ export function autocompleteKeywordRightMostLeaf(
         ...state.activeNode,
         ancestry: shiftedAncestry,
     };
-    const inspected: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = autocompleteKeyword(
+
+    const inspected: ReadonlyArray<AutocompleteItem> = autocompleteKeyword(
         state.nodeIdMapCollection,
         state.leafNodeIds,
         shiftedActiveNode,
         state.maybeTrailingToken,
     );
 
-    return inspected;
+    return inspected.map((autocompleteItem: AutocompleteItem) => {
+        if (!PQP.Language.KeywordUtils.isKeyword(autocompleteItem.label)) {
+            throw new CommonError.InvariantError(
+                `expected ${autocompleteKeyword.name} to return only with KeywordKind values for AutocompleteItem.label`,
+            );
+        }
+
+        return autocompleteItem.label;
+    });
 }

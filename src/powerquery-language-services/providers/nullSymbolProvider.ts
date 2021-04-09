@@ -2,9 +2,10 @@
 // Licensed under the MIT license.
 
 import { Inspection, Library } from "..";
-import { CompletionItem, Hover, SignatureHelp } from "../commonTypes";
+import { Hover, SignatureHelp } from "../commonTypes";
+import { AutocompleteItem } from "../inspection/autocomplete";
 import {
-    CompletionItemProviderContext,
+    AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
@@ -25,7 +26,9 @@ export class NullSymbolProvider implements ISymbolProvider {
         return NullSymbolProvider.instance;
     }
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        _context: AutocompleteItemProviderContext,
+    ): Promise<ReadonlyArray<AutocompleteItem>> {
         return [];
     }
 

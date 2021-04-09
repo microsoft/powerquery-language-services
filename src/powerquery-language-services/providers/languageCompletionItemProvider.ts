@@ -4,14 +4,14 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Inspection } from "..";
-import { CompletionItem, CompletionItemKind } from "../commonTypes";
+import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { CompletionItemProvider, CompletionItemProviderContext } from "./commonTypes";
+import { AutocompleteItemProvider, AutocompleteItemProviderContext } from "./commonTypes";
 
-export class LanguageCompletionItemProvider implements CompletionItemProvider {
+export class LanguageAutocompleteItemProvider implements AutocompleteItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
-    private static readonly ExcludedKeywords: ReadonlyArray<PQP.Language.Keyword.KeywordKind> = [
+    private static readonly ExcludedKeywords: ReadonlyArray<string> = [
         PQP.Language.Keyword.KeywordKind.HashBinary,
         PQP.Language.Keyword.KeywordKind.HashDate,
         PQP.Language.Keyword.KeywordKind.HashDateTime,
@@ -27,7 +27,9 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
 
-    public async getCompletionItems(_context: CompletionItemProviderContext): Promise<ReadonlyArray<CompletionItem>> {
+    public async getAutocompleteItems(
+        _context: AutocompleteItemProviderContext,
+    ): Promise<ReadonlyArray<AutocompleteItem>> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
             return [];
         }
@@ -41,56 +43,32 @@ export class LanguageCompletionItemProvider implements CompletionItemProvider {
         ];
     }
 
-    private getKeywords(triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword): ReadonlyArray<CompletionItem> {
+    private getKeywords(
+        triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
+    ): ReadonlyArray<AutocompleteItem> {
         if (PQP.ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
 
-        return triedKeywordAutocomplete.value
-            .filter(
-                (keywordKind: PQP.Language.Keyword.KeywordKind) =>
-                    LanguageCompletionItemProvider.ExcludedKeywords.includes(keywordKind) === false,
-            )
-            .map((keywordKind: PQP.Language.Keyword.KeywordKind) => {
-                return {
-                    kind: CompletionItemKind.Keyword,
-                    label: keywordKind,
-                };
-            });
+        return triedKeywordAutocomplete.value.filter(
+            (autocompleteItem: AutocompleteItem) =>
+                LanguageAutocompleteItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
+        );
     }
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
-    ): ReadonlyArray<CompletionItem> {
-        if (
-            PQP.ResultUtils.isError(triedLanguageConstantAutocomplete) ||
-            triedLanguageConstantAutocomplete.value === undefined
-        ) {
-            return [];
-        }
-
-        return [
-            {
-                kind: CompletionItemKind.Keyword,
-                label: triedLanguageConstantAutocomplete.value,
-            },
-        ];
+    ): ReadonlyArray<AutocompleteItem> {
+        return PQP.ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
+            ? [triedLanguageConstantAutocomplete.value]
+            : [];
     }
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
-    ): ReadonlyArray<CompletionItem> {
-        if (PQP.ResultUtils.isError(triedPrimitiveTypeAutocomplete)) {
-            return [];
-        }
-
-        return triedPrimitiveTypeAutocomplete.value.map(
-            (keywordKind: PQP.Language.Constant.PrimitiveTypeConstantKind) => {
-                return {
-                    kind: CompletionItemKind.Reference,
-                    label: keywordKind,
-                };
-            },
-        );
+    ): ReadonlyArray<AutocompleteItem> {
+        return PQP.ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
+            ? triedPrimitiveTypeAutocomplete.value
+            : [];
     }
 }

@@ -7,19 +7,12 @@ import * as File from "fs";
 import * as Path from "path";
 
 import { assert, expect } from "chai";
-import {
-    CompletionItem,
-    DocumentSymbol,
-    Hover,
-    Position,
-    SignatureHelp,
-    SymbolKind,
-} from "vscode-languageserver-types";
+import { DocumentSymbol, Hover, Position, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
 
-import { Analysis } from "../../powerquery-language-services";
+import { Analysis, Inspection } from "../../powerquery-language-services";
 import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
@@ -94,21 +87,21 @@ export function createAnalysis(
     );
 }
 
-export async function createCompletionItems(
+export async function createAutocompleteItems(
     text: string,
     maybeLibrary?: ILibrary,
     maybeAnalysisOptions?: AnalysisOptions,
-): Promise<ReadonlyArray<CompletionItem>> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getCompletionItems();
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getAutocompleteItems();
 }
 
-export async function createCompletionItemsForFile(
+export async function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeLibrary?: ILibrary,
     maybeAnalysisOptions?: AnalysisOptions,
-): Promise<ReadonlyArray<CompletionItem>> {
-    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisOptions).getCompletionItems();
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisOptions).getAutocompleteItems();
 }
 
 export async function createHover(
