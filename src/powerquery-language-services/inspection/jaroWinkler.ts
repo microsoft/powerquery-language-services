@@ -36,27 +36,6 @@ export function calculateJaroWinkler(left: string, right: string): number {
     return jaroScore;
 }
 
-export function calculateManyJaroWinkler(
-    constant: string,
-    toMatch: ReadonlyArray<string>,
-    sortByScore: boolean,
-): ReadonlyArray<string> {
-    let jaroWinklerScores: [number, string][] = toMatch.map<[number, string]>((text: string) => [
-        calculateJaroWinkler(constant, text),
-        text,
-    ]);
-
-    if (sortByScore) {
-        // Sort by jaro-winkler score, descending
-        jaroWinklerScores = jaroWinklerScores.sort(
-            ([leftScore, _leftText]: [number, string], [rightScore, _rightText]: [number, string]) =>
-                rightScore - leftScore,
-        );
-    }
-
-    return jaroWinklerScores.map(([_, text]) => text);
-}
-
 function calculateJaroForNormalized(shorter: string, longer: string): number {
     const shorterLength: number = shorter.length;
     const longerLength: number = longer.length;
