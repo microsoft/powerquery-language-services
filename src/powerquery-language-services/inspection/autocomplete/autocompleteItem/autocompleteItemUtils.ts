@@ -2,11 +2,13 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
 import { CompletionItemKind } from "vscode-languageserver-types";
+
 import { Inspection } from "../../..";
 import { Library } from "../../../library";
 import { calculateJaroWinkler } from "../../jaroWinkler";
-import { AutocompleteItem } from "./autocompleteItem";
+import type { AutocompleteItem } from "./autocompleteItem";
 
 export function createFromFieldAccess(
     label: string,
