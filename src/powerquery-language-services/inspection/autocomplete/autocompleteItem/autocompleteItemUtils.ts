@@ -8,6 +8,26 @@ import { Library } from "../../../library";
 import { calculateJaroWinkler } from "../../jaroWinkler";
 import { AutocompleteItem } from "./autocompleteItem";
 
+export function createFromFieldAccess(
+    label: string,
+    powerQueryType: PQP.Language.Type.PowerQueryType,
+    maybeOther?: string,
+): AutocompleteItem {
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
+
+    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
+    const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(label, false);
+    const normalizedLabel: string =
+        identifierKind === PQP.StringUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
+
+    return {
+        jaroWinklerScore,
+        kind: CompletionItemKind.Field,
+        label: normalizedLabel,
+        powerQueryType,
+    };
+}
+
 export function createFromKeywordKind(label: PQP.Language.Keyword.KeywordKind, maybeOther?: string): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
@@ -33,6 +53,39 @@ export function createFromLanguageConstantKind(
     };
 }
 
+export function createFromLibraryDefinition(
+    label: string,
+    libraryDefinition: Library.TLibraryDefinition,
+    maybeOther?: string,
+): Inspection.AutocompleteItem {
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
+
+    let completionItemKind: CompletionItemKind;
+    switch (libraryDefinition.kind) {
+        case Library.LibraryDefinitionKind.Constant:
+            completionItemKind = CompletionItemKind.Value;
+            break;
+
+        case Library.LibraryDefinitionKind.Function:
+            completionItemKind = CompletionItemKind.Function;
+            break;
+
+        case Library.LibraryDefinitionKind.Type:
+            completionItemKind = CompletionItemKind.TypeParameter;
+            break;
+
+        default:
+            throw PQP.Assert.isNever(libraryDefinition);
+    }
+
+    return {
+        jaroWinklerScore,
+        kind: completionItemKind,
+        label,
+        powerQueryType: libraryDefinition.asType,
+    };
+}
+
 export function createFromPrimitiveTypeConstantKind(
     label: PQP.Language.Constant.PrimitiveTypeConstantKind,
     maybeOther?: string,
@@ -47,26 +100,6 @@ export function createFromPrimitiveTypeConstantKind(
             false,
             PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
         ),
-    };
-}
-
-export function createFromFieldAccess(
-    label: string,
-    powerQueryType: PQP.Language.Type.PowerQueryType,
-    maybeOther?: string,
-): AutocompleteItem {
-    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
-
-    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(label, false);
-    const normalizedLabel: string =
-        identifierKind === PQP.StringUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
-
-    return {
-        jaroWinklerScore,
-        kind: CompletionItemKind.Field,
-        label: normalizedLabel,
-        powerQueryType,
     };
 }
 
@@ -117,35 +150,17 @@ export function maybeCreateFromScopeItem(
     };
 }
 
-export function createFromLibraryDefinition(
-    label: string,
-    libraryDefinition: Library.TLibraryDefinition,
-    maybeOther?: string,
-): Inspection.AutocompleteItem {
-    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
-
-    let completionItemKind: CompletionItemKind;
-    switch (libraryDefinition.kind) {
-        case Library.LibraryDefinitionKind.Constant:
-            completionItemKind = CompletionItemKind.Value;
-            break;
-
-        case Library.LibraryDefinitionKind.Function:
-            completionItemKind = CompletionItemKind.Function;
-            break;
-
-        case Library.LibraryDefinitionKind.Type:
-            completionItemKind = CompletionItemKind.TypeParameter;
-            break;
-
-        default:
-            throw PQP.Assert.isNever(libraryDefinition);
+export function compareFn(left: AutocompleteItem, right: AutocompleteItem): number {
+    const jaroWinklerScoreDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
+    if (jaroWinklerScoreDiff !== 0) {
+        return jaroWinklerScoreDiff;
+    } else {
+        if (left.label < right.label) {
+            return -1;
+        } else if (left.label > right.label) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
-
-    return {
-        jaroWinklerScore,
-        kind: completionItemKind,
-        label,
-        powerQueryType: libraryDefinition.asType,
-    };
 }
