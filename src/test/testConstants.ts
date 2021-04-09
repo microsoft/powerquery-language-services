@@ -7,6 +7,7 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import {
     AnalysisOptions,
+    CompletionItemKind,
     Inspection,
     Library,
     LibraryUtils,
@@ -87,29 +88,29 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.CreateFooAndBarRecord,
         LibraryUtils.createFunctionDefinition(
-            CreateFooAndBarRecordDefinedFunction,
-            `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
             TestLibraryName.CreateFooAndBarRecord,
-            PQP.Language.Type.RecordInstance,
+            `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
+            CreateFooAndBarRecordDefinedFunction,
+            CompletionItemKind.Function,
             [],
         ),
     ],
     [
         TestLibraryName.Number,
         LibraryUtils.createConstantDefinition(
-            PQP.Language.Type.NumberInstance,
-            `The name is ${TestLibraryName.Number}`,
             TestLibraryName.Number,
+            `The name is ${TestLibraryName.Number}`,
             PQP.Language.Type.NumberInstance,
+            CompletionItemKind.Value,
         ),
     ],
     [
         TestLibraryName.CombineNumberAndOptionalText,
         LibraryUtils.createFunctionDefinition(
-            CombineNumberAndOptionalTextDefinedFunction,
-            `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
             TestLibraryName.CombineNumberAndOptionalText,
-            PQP.Language.Type.NullInstance,
+            `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
+            CombineNumberAndOptionalTextDefinedFunction,
+            CompletionItemKind.Function,
             [
                 {
                     isNullable: false,
@@ -131,19 +132,19 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     [
         TestLibraryName.NumberOne,
         LibraryUtils.createConstantDefinition(
-            PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
-            `The name is ${TestLibraryName.NumberOne}`,
             TestLibraryName.NumberOne,
-            PQP.Language.Type.NumberInstance,
+            `The name is ${TestLibraryName.NumberOne}`,
+            PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
+            CompletionItemKind.Constant,
         ),
     ],
     [
         TestLibraryName.SquareIfNumber,
         LibraryUtils.createFunctionDefinition(
-            SquareIfNumberDefinedFunction,
-            `The name is ${TestLibraryName.SquareIfNumber}`,
             TestLibraryName.SquareIfNumber,
-            PQP.Language.Type.AnyInstance,
+            `The name is ${TestLibraryName.SquareIfNumber}`,
+            SquareIfNumberDefinedFunction,
+            CompletionItemKind.Function,
             [
                 {
                     isNullable: false,

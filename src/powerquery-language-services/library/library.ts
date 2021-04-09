@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { CompletionItemKind } from "vscode-languageserver-types";
 import { ExternalType } from "../inspection";
 
 export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
@@ -20,11 +21,11 @@ export interface ILibrary {
 }
 
 export interface ILibraryDefinition {
-    readonly asType: PQP.Language.Type.PowerQueryType;
+    readonly asPowerQueryType: PQP.Language.Type.PowerQueryType;
+    readonly completionItemKind: CompletionItemKind;
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;
-    readonly primitiveType: PQP.Language.Type.TPrimitiveType;
 }
 
 export interface LibraryConstant extends ILibraryDefinition {

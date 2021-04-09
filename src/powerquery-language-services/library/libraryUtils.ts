@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import {
     LibraryConstant,
     LibraryDefinitionKind,
@@ -51,33 +51,33 @@ export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): a
 }
 
 export function createConstantDefinition(
-    asType: PQP.Language.Type.PowerQueryType,
-    description: string,
     label: string,
-    primitiveType: PQP.Language.Type.TPrimitiveType,
+    description: string,
+    asType: PQP.Language.Type.PowerQueryType,
+    completionItemKind: CompletionItemKind,
 ): LibraryConstant {
     return {
         kind: LibraryDefinitionKind.Constant,
-        asType,
+        asPowerQueryType: asType,
+        completionItemKind,
         description,
         label,
-        primitiveType,
     };
 }
 
 export function createFunctionDefinition(
-    asType: PQP.Language.Type.PowerQueryType,
-    description: string,
     label: string,
-    primitiveType: PQP.Language.Type.TPrimitiveType,
+    description: string,
+    asType: PQP.Language.Type.PowerQueryType,
+    completionItemKind: CompletionItemKind,
     parameters: ReadonlyArray<LibraryParameter>,
 ): LibraryFunction {
     return {
         kind: LibraryDefinitionKind.Function,
-        asType,
+        asPowerQueryType: asType,
+        completionItemKind,
         description,
         label,
-        primitiveType,
         parameters,
     };
 }

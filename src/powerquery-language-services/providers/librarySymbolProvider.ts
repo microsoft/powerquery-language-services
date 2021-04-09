@@ -58,7 +58,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
-        const definitionTypeText: string = PQP.Language.TypeUtils.nameOf(definition.asType);
+        const definitionTypeText: string = PQP.Language.TypeUtils.nameOf(definition.asPowerQueryType);
 
         return {
             contents: {

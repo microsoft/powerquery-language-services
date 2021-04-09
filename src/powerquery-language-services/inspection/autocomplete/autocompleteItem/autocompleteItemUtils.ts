@@ -60,29 +60,11 @@ export function createFromLibraryDefinition(
 ): Inspection.AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
-    let completionItemKind: CompletionItemKind;
-    switch (libraryDefinition.kind) {
-        case Library.LibraryDefinitionKind.Constant:
-            completionItemKind = CompletionItemKind.Value;
-            break;
-
-        case Library.LibraryDefinitionKind.Function:
-            completionItemKind = CompletionItemKind.Function;
-            break;
-
-        case Library.LibraryDefinitionKind.Type:
-            completionItemKind = CompletionItemKind.TypeParameter;
-            break;
-
-        default:
-            throw PQP.Assert.isNever(libraryDefinition);
-    }
-
     return {
         jaroWinklerScore,
-        kind: completionItemKind,
+        kind: libraryDefinition.completionItemKind,
         label,
-        powerQueryType: libraryDefinition.asType,
+        powerQueryType: libraryDefinition.asPowerQueryType,
     };
 }
 
