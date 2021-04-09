@@ -283,7 +283,7 @@ function createAutocompleteItems(
         inspectedFieldAccess.maybeIdentifierUnderPosition?.literal;
 
     for (const [label, powerQueryType] of fieldEntries) {
-        if (fieldAccessNames.includes(label)) {
+        if (fieldAccessNames.includes(label) && label !== maybeIdentifierUnderPositionLiteral) {
             continue;
         }
 
