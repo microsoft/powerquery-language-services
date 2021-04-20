@@ -15,19 +15,16 @@ import { InspectionSettings } from "../../powerquery-language-services/inspectio
 function assertInvokeExpressionOk(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {
     const activeNode: Inspection.ActiveNode = Inspection.ActiveNodeUtils.assertActiveNode(
         nodeIdMapCollection,
-        leafNodeIds,
         position,
     );
 
     const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         activeNode,
     );
     Assert.isOk(triedInspect);
@@ -40,7 +37,7 @@ function assertParseOkInvokeExpressionOk(
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
-    return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
 function assertParseErrInvokeExpressionOk(
@@ -48,8 +45,8 @@ function assertParseErrInvokeExpressionOk(
     text: string,
     position: Inspection.Position,
 ): Inspection.InvokeExpression | undefined {
-    const parseErr: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(settings, text);
-    return assertInvokeExpressionOk(settings, parseErr.nodeIdMapCollection, parseErr.leafNodeIds, position);
+    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+    return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
 }
 
 function expectNoParameters_givenExtraneousParameter(inspected: Inspection.InvokeExpression | undefined): void {

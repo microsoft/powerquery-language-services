@@ -18,7 +18,6 @@ export type TriedType = PQP.Result<PQP.Language.Type.PowerQueryType, PQP.CommonE
 export function tryScopeType(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedScopeType {
@@ -27,7 +26,6 @@ export function tryScopeType(
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
-        leafNodeIds,
         scopeById: maybeTypeCache?.scopeById ?? new Map(),
     };
 
@@ -37,7 +35,6 @@ export function tryScopeType(
 export function tryType(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
@@ -46,7 +43,6 @@ export function tryType(
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
         nodeIdMapCollection,
-        leafNodeIds,
         scopeById: maybeTypeCache?.scopeById ?? new Map(),
     };
 

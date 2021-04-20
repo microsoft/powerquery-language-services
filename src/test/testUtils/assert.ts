@@ -35,11 +35,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
             settings,
             triedLexParseTask.parseState,
             Inspection.createTypeCache(),
-            ActiveNodeUtils.maybeActiveNode(
-                triedLexParseTask.nodeIdMapCollection,
-                triedLexParseTask.leafNodeIds,
-                position,
-            ),
+            ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             undefined,
         );
     } else if (PQP.TaskUtils.isParseStageError(triedLexParseTask)) {
@@ -51,11 +47,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
             settings,
             triedLexParseTask.parseState,
             Inspection.createTypeCache(),
-            ActiveNodeUtils.maybeActiveNode(
-                triedLexParseTask.nodeIdMapCollection,
-                triedLexParseTask.leafNodeIds,
-                position,
-            ),
+            ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             triedLexParseTask.error,
         );
     } else {
@@ -101,7 +93,7 @@ export function assertGetLexParseOk<S extends PQP.Parser.IParseState = PQP.Parse
     return triedLexParseTask;
 }
 
-export function assertGetLexParseErr<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+export function assertGetLexParseError<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: PQP.Settings<S>,
     text: string,
 ): PQP.Task.ParseTaskParseError<S> {
@@ -181,7 +173,7 @@ export function assertParserCacheItemOk(
     TaskUtils.assertIsParseStageOk(cacheItem);
 }
 
-export function assertParserCacheItemErr(
+export function assertParserCacheItemError(
     cacheItem: WorkspaceCache.CacheItem,
 ): asserts cacheItem is PQP.Task.ParseTaskOk {
     assertNotInspectionCacheItem(cacheItem);

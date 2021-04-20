@@ -29,13 +29,12 @@ import {
 export function tryScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
 ): TriedScope {
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById),
+        inspectScope(settings, nodeIdMapCollection, ancestry, maybeScopeById),
     );
 }
 
@@ -43,7 +42,6 @@ export function tryScope(
 export function tryNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
@@ -57,7 +55,7 @@ export function tryNodeScope(
             return new Map();
         }
 
-        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, leafNodeIds, ancestry, maybeScopeById);
+        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, maybeScopeById);
         return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
 }
@@ -65,7 +63,6 @@ export function tryNodeScope(
 export function assertGetOrCreateNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
@@ -76,7 +73,7 @@ export function assertGetOrCreateNodeScope(
         return PQP.ResultUtils.createOk(maybeScope);
     }
 
-    const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, leafNodeIds, nodeId, scopeById);
+    const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
     if (PQP.ResultUtils.isError(triedNodeScope)) {
         throw triedNodeScope.error;
     }
@@ -89,7 +86,6 @@ export function assertGetOrCreateNodeScope(
 export function maybeDereferencedIdentifier(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     xorNode: PQP.Parser.TXorNode,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined = undefined,
@@ -125,7 +121,6 @@ export function maybeDereferencedIdentifier(
     const triedNodeScope: Inspection.TriedNodeScope = assertGetOrCreateNodeScope(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         xorNode.node.id,
         scopeById,
     );
@@ -173,7 +168,7 @@ export function maybeDereferencedIdentifier(
     ) {
         return PQP.ResultUtils.createOk(xorNode);
     } else {
-        return maybeDereferencedIdentifier(settings, nodeIdMapCollection, leafNodeIds, maybeNextXorNode, scopeById);
+        return maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
 }
 
@@ -183,14 +178,12 @@ interface ScopeInspectionState {
     readonly deltaScope: ScopeById;
     readonly ancestry: ReadonlyArray<PQP.Parser.TXorNode>;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
     ancestryIndex: number;
 }
 
 function inspectScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
     maybeScopeById: ScopeById | undefined,
@@ -217,7 +210,6 @@ function inspectScope(
         deltaScope: scopeChanges,
         ancestry,
         nodeIdMapCollection,
-        leafNodeIds,
         ancestryIndex: 0,
     };
 
