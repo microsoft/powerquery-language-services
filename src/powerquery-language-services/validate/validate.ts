@@ -14,12 +14,12 @@ import type {
 } from "vscode-languageserver-types";
 import { DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
 
-import * as LanguageServiceUtils from "./languageServiceUtils";
+import * as LanguageServiceUtils from "../languageServiceUtils";
 
-import { AnalysisOptions } from "./analysis/analysisOptions";
-import { DiagnosticErrorCode } from "./diagnosticErrorCode";
-import { LocalizationUtils } from "./localization";
-import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
+import { AnalysisOptions } from "../analysis/analysisOptions";
+import { DiagnosticErrorCode } from "../diagnosticErrorCode";
+import { LocalizationUtils } from "../localization";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 
 export interface ValidationResult {
     readonly diagnostics: Diagnostic[];
