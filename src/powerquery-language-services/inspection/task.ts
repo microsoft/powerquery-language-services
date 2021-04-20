@@ -22,19 +22,13 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
 ): Inspection {
     const typeCache: TypeCache = createTypeCache();
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
     // We should only get an undefined for activeNode iff the document is empty
-    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(
-        nodeIdMapCollection,
-        leafNodeIds,
-        position,
-    );
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         maybeActiveNode,
         typeCache,
     );
@@ -48,13 +42,12 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
         triedNodeScope = tryNodeScope(
             settings,
             nodeIdMapCollection,
-            leafNodeIds,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             typeCache.scopeById,
         );
 
         const ancestryLeaf: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = tryScopeType(settings, nodeIdMapCollection, leafNodeIds, ancestryLeaf.node.id, typeCache);
+        triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {

@@ -8,7 +8,6 @@ import { TrailingToken } from "../commonTypes";
 
 export interface InspectAutocompleteKeywordState {
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
     readonly activeNode: ActiveNode;
     readonly maybeTrailingToken: TrailingToken | undefined;
     parent: PQP.Parser.TXorNode;

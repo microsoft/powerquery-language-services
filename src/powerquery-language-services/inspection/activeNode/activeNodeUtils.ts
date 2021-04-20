@@ -25,11 +25,10 @@ import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMa
 // '[foo = bar|' should be anchored on the identifier 'bar' and not the context node for the ']' PQP.Language.constant.
 export function maybeActiveNode(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     position: Position,
 ): TMaybeActiveNode {
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
-    const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, leafNodeIds, position);
+    const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, position);
     // Search for the closest Context node on or to the right of the closest Ast node.
     const maybeContextNode: PQP.Parser.ParseContext.Node | undefined = maybeFindContext(nodeIdMapCollection, astSearch);
 
@@ -93,12 +92,8 @@ export function createOutOfBoundPosition(position: Position): OutOfBoundPosition
     };
 }
 
-export function assertActiveNode(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    position: Position,
-): ActiveNode {
-    const maybeValue: TMaybeActiveNode = maybeActiveNode(nodeIdMapCollection, leafNodeIds, position);
+export function assertActiveNode(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection, position: Position): ActiveNode {
+    const maybeValue: TMaybeActiveNode = maybeActiveNode(nodeIdMapCollection, position);
     assertPositionInBounds(maybeValue);
     return maybeValue;
 }
@@ -193,11 +188,7 @@ function isAnchorNode(position: Position, astNode: PQP.Language.Ast.TNode): bool
     }
 }
 
-function maybeFindAstNodes(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
-    position: Position,
-): AstNodeSearch {
+function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection, position: Position): AstNodeSearch {
     const astNodeById: PQP.Parser.NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     let maybeBestOnOrBeforeNode: PQP.Language.Ast.TNode | undefined;
     let maybeBestAfter: PQP.Language.Ast.TNode | undefined;
@@ -206,7 +197,7 @@ function maybeFindAstNodes(
     // Find:
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
-    for (const nodeId of leafNodeIds) {
+    for (const nodeId of nodeIdMapCollection.leafIds) {
         const maybeCandidate: PQP.Language.Ast.TNode | undefined = astNodeById.get(nodeId);
         if (maybeCandidate === undefined) {
             continue;

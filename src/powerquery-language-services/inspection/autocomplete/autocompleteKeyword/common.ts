@@ -35,7 +35,6 @@ export function autocompleteKeywordRightMostLeaf(
 
     const inspected: ReadonlyArray<AutocompleteItem> = autocompleteKeyword(
         state.nodeIdMapCollection,
-        state.leafNodeIds,
         shiftedActiveNode,
         state.maybeTrailingToken,
     );

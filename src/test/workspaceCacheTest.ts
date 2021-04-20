@@ -29,7 +29,7 @@ describe("workspaceCache", () => {
     it("getTriedLexParse with error", () => {
         const document: TextDocument = TestUtils.createTextMockDocument("let c = 1, in c");
         const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
-        TestUtils.assertParserCacheItemErr(cacheItem);
+        TestUtils.assertParserCacheItemError(cacheItem);
     });
 
     it("getInspection", () => {

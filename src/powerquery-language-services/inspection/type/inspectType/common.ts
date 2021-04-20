@@ -40,7 +40,6 @@ export interface InspectTypeState {
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
-    readonly leafNodeIds: ReadonlyArray<number>;
     scopeById: ScopeById;
 }
 
@@ -81,7 +80,7 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
         return PQP.ResultUtils.createOk(maybeNodeScope);
     }
 
-    return tryNodeScope(state.settings, state.nodeIdMapCollection, state.leafNodeIds, nodeId, state.scopeById);
+    return tryNodeScope(state.settings, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
 export function getOrCreateScopeItemType(

@@ -28,7 +28,6 @@ export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IPars
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
 ): Autocomplete {
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const leafNodeIds: ReadonlyArray<number> = parseState.contextState.leafNodeIds;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {
@@ -50,7 +49,6 @@ export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IPars
     const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         maybeActiveNode,
         maybeTrailingToken,
     );
