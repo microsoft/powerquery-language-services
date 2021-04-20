@@ -86,13 +86,7 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
     }
     const field: PQP.Parser.TXorNode = maybeField;
 
-    const triedFieldType: TriedType = tryType(
-        settings,
-        nodeIdMapCollection,
-        parseState.contextState.leafNodeIds,
-        field.node.id,
-        typeCache,
-    );
+    const triedFieldType: TriedType = tryType(settings, nodeIdMapCollection, field.node.id, typeCache);
     if (PQP.ResultUtils.isError(triedFieldType)) {
         throw triedFieldType.error;
     }

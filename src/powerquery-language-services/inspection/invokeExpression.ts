@@ -33,7 +33,6 @@ export interface InvokeExpressionArguments {
 export function tryInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     maybeActiveNode: TMaybeActiveNode,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedInvokeExpression {
@@ -42,20 +41,13 @@ export function tryInvokeExpression(
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectInvokeExpression(
-            settings,
-            nodeIdMapCollection,
-            leafNodeIds,
-            maybeActiveNode,
-            maybeTypeCache ?? createTypeCache(),
-        ),
+        inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, maybeTypeCache ?? createTypeCache()),
     );
 }
 
 function inspectInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
     typeCache: TypeCache,
 ): InvokeExpression | undefined {
@@ -72,7 +64,7 @@ function inspectInvokeExpression(
             );
 
             const functionType: PQP.Language.Type.PowerQueryType = Assert.unwrapOk(
-                tryType(settings, nodeIdMapCollection, leafNodeIds, previousNode.node.id, typeCache),
+                tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
             );
             const maybeName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
                 nodeIdMapCollection,
@@ -89,7 +81,6 @@ function inspectInvokeExpression(
                 const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType> = getArgumentTypes(
                     settings,
                     nodeIdMapCollection,
-                    leafNodeIds,
                     typeCache,
                     iterableArguments,
                 );
@@ -113,14 +104,7 @@ function inspectInvokeExpression(
             return {
                 xorNode,
                 functionType,
-                isNameInLocalScope: getIsNameInLocalScope(
-                    settings,
-                    nodeIdMapCollection,
-                    leafNodeIds,
-                    typeCache,
-                    xorNode,
-                    maybeName,
-                ),
+                isNameInLocalScope: getIsNameInLocalScope(settings, nodeIdMapCollection, typeCache, xorNode, maybeName),
                 maybeName,
                 maybeArguments: maybeInvokeExpressionArgs,
             };
@@ -133,7 +117,6 @@ function inspectInvokeExpression(
 function getIsNameInLocalScope(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     typeCache: TypeCache,
     invokeExpressionXorNode: PQP.Parser.TXorNode,
     maybeName: string | undefined,
@@ -145,7 +128,6 @@ function getIsNameInLocalScope(
             assertGetOrCreateNodeScope(
                 settings,
                 nodeIdMapCollection,
-                leafNodeIds,
                 invokeExpressionXorNode.node.id,
                 typeCache.scopeById,
             ),
@@ -172,14 +154,13 @@ function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction
 function getArgumentTypes(
     settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     typeCache: TypeCache,
     argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,
 ): ReadonlyArray<PQP.Language.Type.PowerQueryType> {
     const result: PQP.Language.Type.PowerQueryType[] = [];
 
     for (const xorNode of argXorNodes) {
-        const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, leafNodeIds, xorNode.node.id, typeCache);
+        const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
         if (PQP.ResultUtils.isError(triedArgType)) {
             throw triedArgType;
         }

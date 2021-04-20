@@ -136,12 +136,10 @@ function createAbridgedParameterScopeItems(nodeScope: Inspection.NodeScope): Rea
 function assertNodeScopeOk(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     position: Inspection.Position,
 ): Inspection.NodeScope {
     const maybeActiveNode: Inspection.TMaybeActiveNode = Inspection.ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
-        leafNodeIds,
         position,
     );
     if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
@@ -152,7 +150,6 @@ function assertNodeScopeOk(
     const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         activeNode.ancestry[0].node.id,
         undefined,
     );
@@ -167,7 +164,7 @@ export function assertGetParseOkScopeOk(
     position: Inspection.Position,
 ): Inspection.NodeScope {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
-    return assertNodeScopeOk(settings, parseOk.nodeIdMapCollection, parseOk.leafNodeIds, position);
+    return assertNodeScopeOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
 export function assertGetParseErrScopeOk(
@@ -175,8 +172,8 @@ export function assertGetParseErrScopeOk(
     text: string,
     position: Inspection.Position,
 ): Inspection.NodeScope {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(settings, text);
-    return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, parseError.leafNodeIds, position);
+    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+    return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, position);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {

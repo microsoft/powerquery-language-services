@@ -19,7 +19,6 @@ import { InspectAutocompleteKeywordState } from "./commonTypes";
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteKeyword {
@@ -33,13 +32,12 @@ export function tryAutocompleteKeyword(
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteKeyword(nodeIdMapCollection, leafNodeIds, maybeActiveNode, maybeTrailingToken);
+        return autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken);
     });
 }
 
 export function autocompleteKeyword(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     activeNode: ActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
@@ -67,7 +65,6 @@ export function autocompleteKeyword(
 
     const state: InspectAutocompleteKeywordState = {
         nodeIdMapCollection,
-        leafNodeIds,
         activeNode,
         maybeTrailingToken,
         parent: activeNode.ancestry[1],

@@ -45,7 +45,6 @@ function assertParseOkNodeTypeEqual(
     const actual: PQP.Language.Type.PowerQueryType = assertGetParseNodeOk(
         settings,
         parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
         PQP.Parser.XorNodeUtils.createAstNode(parseOk.ast),
     );
 
@@ -53,13 +52,12 @@ function assertParseOkNodeTypeEqual(
 }
 
 function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.PowerQueryType): void {
-    const parseErr: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseErr(TestSettings, text);
+    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(TestSettings, text);
 
     const actual: PQP.Language.Type.PowerQueryType = assertGetParseNodeOk(
         TestSettings,
-        parseErr.nodeIdMapCollection,
-        parseErr.leafNodeIds,
-        PQP.Parser.XorNodeUtils.createContextNode(Assert.asDefined(parseErr.parseState.contextState.maybeRoot)),
+        parseError.nodeIdMapCollection,
+        PQP.Parser.XorNodeUtils.createContextNode(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
     );
 
     expect(actual).deep.equal(expected);
@@ -68,15 +66,9 @@ function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.P
 function assertGetParseNodeOk(
     settings: PQP.Settings & Inspection.InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.PowerQueryType {
-    const triedType: Inspection.TriedType = Inspection.tryType(
-        settings,
-        nodeIdMapCollection,
-        leafNodeIds,
-        xorNode.node.id,
-    );
+    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
     Assert.isOk(triedType);
 
     return triedType.value;
@@ -95,7 +87,6 @@ function assertParseOkScopeTypeEqual(
     const actual: Inspection.ScopeTypeByKey = assertGetParseOkScopeTypeOk(
         settings,
         parseOk.nodeIdMapCollection,
-        parseOk.leafNodeIds,
         position,
     );
 
@@ -105,16 +96,14 @@ function assertParseOkScopeTypeEqual(
 function assertGetParseOkScopeTypeOk(
     settings: Inspection.InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    leafNodeIds: ReadonlyArray<number>,
     position: Inspection.Position,
 ): Inspection.ScopeTypeByKey {
     const activeNodeLeaf: PQP.Parser.TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
-        Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, leafNodeIds, position),
+        Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, position),
     );
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
-        leafNodeIds,
         activeNodeLeaf.node.id,
     );
     Assert.isOk(triedScopeType);
