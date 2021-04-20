@@ -156,6 +156,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
             for (let index: number = 0; index < numFields; index += 1) {
                 const duplicate: TKeyValuePair = duplicates[index];
+                // Grab all DiagnosticRelatedInformation for a given key besides the one we're iterating over.
                 const relatedInformation: DiagnosticRelatedInformation[] = asRelatedInformation.filter(
                     (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,
                 );
@@ -174,9 +175,9 @@ function createDuplicateIdentifierDiagnostic(
     options: ValidationOptions,
 ): Diagnostic {
     return {
+        code: DiagnosticErrorCode.ParseError,
         message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, options),
         range: LanguageServiceUtils.tokenRangeToRange(keyValuePair.key.tokenRange),
-        code: DiagnosticErrorCode.ParseError,
         relatedInformation,
         severity: DiagnosticSeverity.Error,
         source: options.source,
