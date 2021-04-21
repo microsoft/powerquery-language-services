@@ -35,7 +35,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 
 function expectNoValidationErrors(document: TextDocument): void {
     const validationResult: ValidationResult = validate(document, DefaultValidationOptions);
-    expect(validationResult.syntaxError).to.equal(false, "syntaxError flag should be false");
+    expect(validationResult.isSyntaxError).to.equal(false, "syntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
 
@@ -99,7 +99,7 @@ describe("Syntax validation", () => {
             source: errorSource,
             maintainWorkspaceCache: false,
         });
-        expect(validationResult.syntaxError).to.equal(true, "syntaxError flag should be true");
+        expect(validationResult.isSyntaxError).to.equal(true, "syntaxError flag should be true");
         expect(validationResult.diagnostics.length).to.equal(1);
         expect(validationResult.diagnostics[0].source).to.equal(errorSource);
         assertValidationError(validationResult.diagnostics[0], { line: 0, character: 4 });
@@ -139,7 +139,7 @@ describe("validation with workspace cache", () => {
 });
 
 describe("Duplicate identifiers", () => {
-    it("let a = 1, a = 2 in a", () => {
+    it("WIP let a = 1, a = 2 in a", () => {
         const document: MockDocument = TestUtils.createTextMockDocument("let a = 1, a = 2 in a");
         validateDuplicateIdentifierDiagnostics(document, [
             {

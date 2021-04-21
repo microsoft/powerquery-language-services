@@ -8,6 +8,11 @@ export interface ValidationOptions extends AnalysisOptions {
     readonly checkForDuplicateIdentifiers?: boolean;
 }
 
+export interface ValidationResult {
+    readonly diagnostics: Diagnostic[];
+    readonly isSyntaxError: boolean;
+}
+
 export interface DiagnosticCheck {
     readonly diagnostics: ReadonlyArray<Diagnostic>;
     readonly maybeParserContextState: PQP.Parser.ParseContext.State | undefined;

@@ -104,6 +104,10 @@ function validateDuplicateIdentifiersForSection(
     );
 }
 
+// Generalized logic for iterating over some collection and their children, essentially by doing:
+//  for node in nodeIds:
+//      for childOfNode in iterNodeFn(node):
+//          ...
 function validateDuplicateIdentifiersForKeyValuePair(
     documentUri: DocumentUri,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,

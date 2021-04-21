@@ -16,37 +16,21 @@ export interface LexParseDiagnosticCheck {
     readonly maybeParserContextState: PQP.Parser.ParseContext.State | undefined;
 }
 
-export function validateLexAndParse(document: TextDocument, options: ValidationOptions): LexParseDiagnosticCheck {
+export function validateLexAndParse(document: TextDocument, options: ValidationOptions): Diagnostic[] {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
-    return createLexParseDiagnosticCheck(cacheItem, options);
-}
 
-const EmptyDiagnosticCheck: LexParseDiagnosticCheck = {
-    diagnostics: [],
-    maybeParserContextState: undefined,
-};
-
-function createLexParseDiagnosticCheck(
-    parserCacheItem: WorkspaceCache.ParseCacheItem,
-    options: ValidationOptions,
-): LexParseDiagnosticCheck {
-    switch (parserCacheItem.stage) {
-        case PQP.Task.TaskStage.Lex:
-            return lexerDiagnosticCheck(parserCacheItem, options);
-
-        case PQP.Task.TaskStage.Parse:
-            return parserDiagnosticCheck(parserCacheItem, options);
-
-        default:
-            throw PQP.Assert.isNever(parserCacheItem);
+    if (PQP.TaskUtils.isLexStage(cacheItem)) {
+        return lexerDiagnosticCheck(cacheItem, options);
+    } else if (PQP.TaskUtils.isParseStage(cacheItem)) {
+        return parserDiagnosticCheck(cacheItem, options);
+    } else {
+        return [];
     }
 }
 
-function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: ValidationOptions): LexParseDiagnosticCheck {
-    if (PQP.TaskUtils.isOk(triedLex)) {
-        return EmptyDiagnosticCheck;
-    } else if (!PQP.Lexer.LexError.isLexError(triedLex.error)) {
-        return EmptyDiagnosticCheck;
+function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: ValidationOptions): Diagnostic[] {
+    if (PQP.TaskUtils.isOk(triedLex) || !PQP.Lexer.LexError.isLexError(triedLex.error)) {
+        return [];
     }
 
     const error: PQP.Lexer.LexError.LexError = triedLex.error;
@@ -77,23 +61,12 @@ function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: Validati
         }
     }
 
-    return {
-        diagnostics: diagnostics.length !== 0 ? diagnostics : diagnostics,
-        maybeParserContextState: undefined,
-    };
+    return diagnostics;
 }
 
-function parserDiagnosticCheck(
-    triedParse: PQP.Task.TriedParseTask,
-    options: ValidationOptions,
-): LexParseDiagnosticCheck {
-    if (PQP.TaskUtils.isOk(triedParse)) {
-        return {
-            diagnostics: [],
-            maybeParserContextState: triedParse.parseState.contextState,
-        };
-    } else if (!PQP.Parser.ParseError.isParseError(triedParse.error)) {
-        return EmptyDiagnosticCheck;
+function parserDiagnosticCheck(triedParse: PQP.Task.TriedParseTask, options: ValidationOptions): Diagnostic[] {
+    if (PQP.TaskUtils.isOk(triedParse) || !PQP.Parser.ParseError.isParseError(triedParse.error)) {
+        return [];
     }
 
     const error: PQP.Parser.ParseError.ParseError = triedParse.error as PQP.Parser.ParseError.ParseError;
@@ -133,7 +106,7 @@ function parserDiagnosticCheck(
     } else {
         const maybeRoot: PQP.Parser.ParseContext.Node | undefined = parseContextState.maybeRoot;
         if (maybeRoot === undefined) {
-            return EmptyDiagnosticCheck;
+            return [];
         }
 
         const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
@@ -141,7 +114,7 @@ function parserDiagnosticCheck(
             maybeRoot.id,
         );
         if (maybeLeaf === undefined) {
-            return EmptyDiagnosticCheck;
+            return [];
         }
         const leafTokenRange: PQP.Language.Token.TokenRange = maybeLeaf.tokenRange;
 
@@ -157,16 +130,13 @@ function parserDiagnosticCheck(
         };
     }
 
-    return {
-        diagnostics: [
-            {
-                code: DiagnosticErrorCode.ParseError,
-                message,
-                range,
-                severity: DiagnosticSeverity.Error,
-                source: options?.source,
-            },
-        ],
-        maybeParserContextState: parseContextState,
-    };
+    return [
+        {
+            code: DiagnosticErrorCode.ParseError,
+            message,
+            range,
+            severity: DiagnosticSeverity.Error,
+            source: options?.source,
+        },
+    ];
 }
