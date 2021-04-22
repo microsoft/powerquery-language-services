@@ -35,8 +35,8 @@ import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
-export interface InspectTypeState {
-    readonly settings: Inspection.InspectionSettings;
+export interface InspectTypeState<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
+    readonly settings: Inspection.InspectionSettings<S>;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
@@ -61,7 +61,10 @@ export function allForAnyUnion(
     );
 }
 
-export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): NodeScope {
+export function assertGetOrCreateNodeScope<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
+    nodeId: number,
+): NodeScope {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
@@ -72,7 +75,10 @@ export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: numb
     return Assert.asDefined(triedGetOrCreateScope.value);
 }
 
-export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspection.TriedNodeScope {
+export function getOrCreateScope<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
+    nodeId: number,
+): Inspection.TriedNodeScope {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
@@ -83,8 +89,8 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
     return tryNodeScope(state.settings, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
-export function getOrCreateScopeItemType(
-    state: InspectTypeState,
+export function getOrCreateScopeItemType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     scopeItem: TScopeItem,
 ): PQP.Language.Type.PowerQueryType {
     const nodeId: number = scopeItem.id;
@@ -103,7 +109,10 @@ export function getOrCreateScopeItemType(
     return scopeType;
 }
 
-export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.PowerQueryType {
+export function inspectScopeItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
+    scopeItem: TScopeItem,
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
@@ -128,8 +137,8 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
     }
 }
 
-export function inspectTypeFromChildAttributeIndex(
-    state: InspectTypeState,
+export function inspectTypeFromChildAttributeIndex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     parentXorNode: PQP.Parser.TXorNode,
     attributeIndex: number,
 ): PQP.Language.Type.PowerQueryType {
@@ -144,7 +153,10 @@ export function inspectTypeFromChildAttributeIndex(
     return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : PQP.Language.Type.UnknownInstance;
 }
 
-export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PowerQueryType {
+export function inspectXor<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
+    xorNode: PQP.Parser.TXorNode,
+): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
@@ -331,8 +343,8 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
     return result;
 }
 
-export function maybeDereferencedIdentifierType(
-    state: InspectTypeState,
+export function maybeDereferencedIdentifierType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.PowerQueryType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
@@ -395,8 +407,8 @@ export function maybeDereferencedIdentifierType(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-export function recursiveIdentifierDereference(
-    state: InspectTypeState,
+export function recursiveIdentifierDereference<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Parser.TXorNode {
     state.settings.maybeCancellationToken?.throwIfCancelled();
@@ -406,8 +418,8 @@ export function recursiveIdentifierDereference(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-function recursiveIdentifierDereferenceHelper(
-    state: InspectTypeState,
+function recursiveIdentifierDereferenceHelper<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Parser.TXorNode | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();

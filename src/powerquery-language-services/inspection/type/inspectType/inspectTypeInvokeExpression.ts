@@ -8,8 +8,8 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
 
-export function inspectTypeInvokeExpression(
-    state: InspectTypeState,
+export function inspectTypeInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
@@ -44,8 +44,8 @@ export function inspectTypeInvokeExpression(
     }
 }
 
-function maybeExternalInvokeRequest(
-    state: InspectTypeState,
+function maybeExternalInvokeRequest<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): ExternalType.ExternalInvocationTypeRequest | undefined {
     const maybeIdentifier: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifier(

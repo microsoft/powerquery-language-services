@@ -5,8 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeListType(
-    state: InspectTypeState,
+export function inspectTypeListType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.ListType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();

@@ -15,13 +15,13 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<PQP.Language.Type.PowerQueryType, PQP.CommonError.CommonError>;
 
-export function tryScopeType(
-    settings: InspectionSettings,
+export function tryScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedScopeType {
-    const state: InspectTypeState = {
+    const state: InspectTypeState<S> = {
         settings,
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -32,13 +32,13 @@ export function tryScopeType(
     return PQP.ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
 }
 
-export function tryType(
-    settings: InspectionSettings,
+export function tryType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
     maybeTypeCache: TypeCache | undefined = undefined,
 ): TriedType {
-    const state: InspectTypeState = {
+    const state: InspectTypeState<S> = {
         settings,
         givenTypeById: maybeTypeCache?.typeById ?? new Map(),
         deltaTypeById: new Map(),
@@ -51,7 +51,10 @@ export function tryType(
     );
 }
 
-function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
+function inspectScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
+    nodeId: number,
+): ScopeTypeByKey {
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, nodeId);
 
     for (const scopeItem of nodeScope.values()) {

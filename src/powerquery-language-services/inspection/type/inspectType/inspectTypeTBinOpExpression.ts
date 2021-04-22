@@ -13,8 +13,8 @@ type TRecordOrTable =
     | PQP.Language.Type.DefinedRecord
     | PQP.Language.Type.DefinedTable;
 
-export function inspectTypeTBinOpExpression(
-    state: InspectTypeState,
+export function inspectTypeTBinOpExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.PowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();

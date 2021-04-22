@@ -23,7 +23,7 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
 }
 
 export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & InspectionSettings,
+    settings: InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): Inspection.Autocomplete {
@@ -43,7 +43,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
             throw triedLexParseTask.error;
         }
 
-        return Inspection.autocomplete(
+        return Inspection.autocomplete<S>(
             settings,
             triedLexParseTask.parseState,
             Inspection.createTypeCache(),
