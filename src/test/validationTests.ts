@@ -37,7 +37,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 
 function expectNoValidationErrors(document: TextDocument): void {
     const validationResult: ValidationResult = validate(document, DefaultValidationOptions);
-    expect(validationResult.isSyntaxError).to.equal(false, "syntaxError flag should be false");
+    expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
 
@@ -96,7 +96,7 @@ describe("Syntax validation", () => {
             source: errorSource,
             maintainWorkspaceCache: false,
         });
-        expect(validationResult.isSyntaxError).to.equal(true, "syntaxError flag should be true");
+        expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");
         expect(validationResult.diagnostics.length).to.equal(1);
         expect(validationResult.diagnostics[0].source).to.equal(errorSource);
         assertValidationError(validationResult.diagnostics[0], { line: 0, character: 4 });

@@ -15,6 +15,6 @@ export function validate(document: TextDocument, options: ValidationOptions): Va
 
     return {
         diagnostics: [...validateDuplicateIdentifiers(document, options), ...validateLexAndParse(document, options)],
-        isSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),
+        hasSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),
     };
 }

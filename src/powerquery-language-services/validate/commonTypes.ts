@@ -10,7 +10,7 @@ export interface ValidationOptions extends AnalysisOptions {
 
 export interface ValidationResult {
     readonly diagnostics: Diagnostic[];
-    readonly isSyntaxError: boolean;
+    readonly hasSyntaxError: boolean;
 }
 
 export interface DiagnosticCheck {
