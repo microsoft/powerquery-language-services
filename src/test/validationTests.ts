@@ -3,6 +3,7 @@
 
 // tslint:disable: no-implicit-dependencies
 
+import { Assert } from "@microsoft/powerquery-parser";
 import { assert, expect } from "chai";
 import "mocha";
 
@@ -10,6 +11,7 @@ import { TestUtils } from ".";
 import {
     Diagnostic,
     DiagnosticErrorCode,
+    DiagnosticRelatedInformation,
     DiagnosticSeverity,
     documentUpdated,
     Position,
@@ -48,43 +50,38 @@ interface DuplicateIdentifierError {
 function validateDuplicateIdentifierDiagnostics(
     document: TextDocument,
     expected: ReadonlyArray<DuplicateIdentifierError>,
-    totalErrorCount?: number,
 ): void {
     const errorSource: string = "UNIT-TESTS";
-    const diagnostics: ReadonlyArray<Diagnostic> = validate(document, {
+    const validationResult: ValidationResult = validate(document, {
         maintainWorkspaceCache: false,
         checkForDuplicateIdentifiers: true,
         source: errorSource,
-    }).diagnostics;
-    const actual: DuplicateIdentifierError[] = [];
-
-    diagnostics.forEach(value => {
-        if (value.code === DiagnosticErrorCode.DuplicateIdentifier) {
-            const match: RegExpMatchArray | null = value.message.match(/'(.*?)'/);
-            const name: string = match ? match[1] : "";
-
-            if (!value.relatedInformation) {
-                assert.fail("Duplicate Identifier error does not contain relatedInformation");
-            }
-
-            expect(value.source).to.equal(errorSource, "Unexpected source value on diagnostic");
-
-            actual.push({
-                name,
-                position: value.range.start,
-                relatedPositions: value.relatedInformation.map(relatedInfo => relatedInfo.location.range.start),
-            });
-        }
     });
+    const diagnostics: ReadonlyArray<Diagnostic> = validationResult.diagnostics;
 
-    if (totalErrorCount) {
-        expect(diagnostics.length).to.equal(totalErrorCount, "Total expected error count does not match");
+    const actual: ReadonlyArray<Diagnostic> = diagnostics.filter(
+        (diagnostic: Diagnostic) => diagnostic.code === DiagnosticErrorCode.DuplicateIdentifier,
+    );
+    const abridgedActual: DuplicateIdentifierError[] = [];
+
+    for (const diagnostic of actual) {
+        Assert.isDefined(diagnostic.relatedInformation);
+        expect(diagnostic.relatedInformation?.length).to.be.greaterThan(0, "expected at least one relatedInformation");
+        expect(diagnostic.source).to.equal(errorSource, `expected diagnostic to have errorSource of ${errorSource}`);
+
+        const match: RegExpMatchArray | null = diagnostic.message.match(/'(.*?)'/);
+        const name: string = match ? match[1] : "";
+
+        abridgedActual.push({
+            name,
+            position: diagnostic.range.start,
+            relatedPositions: diagnostic.relatedInformation.map(
+                (related: DiagnosticRelatedInformation) => related.location.range.start,
+            ),
+        });
     }
 
-    expect(actual).deep.equals(
-        expected,
-        "Expected errors to match.\nactual:" + JSON.stringify(actual) + "\nexpected:" + JSON.stringify(expected),
-    );
+    expect(abridgedActual).deep.equals(expected);
 }
 
 describe("Syntax validation", () => {
@@ -139,13 +136,18 @@ describe("validation with workspace cache", () => {
 });
 
 describe("Duplicate identifiers", () => {
-    it("WIP let a = 1, a = 2 in a", () => {
+    it("let a = 1, a = 2 in a", () => {
         const document: MockDocument = TestUtils.createTextMockDocument("let a = 1, a = 2 in a");
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "a",
                 position: { line: 0, character: 11 },
                 relatedPositions: [{ line: 0, character: 4 }],
+            },
+            {
+                name: "a",
+                position: { line: 0, character: 4 },
+                relatedPositions: [{ line: 0, character: 11 }],
             },
         ]);
     });
@@ -160,16 +162,45 @@ describe("Duplicate identifiers", () => {
                 position: { line: 0, character: 33 },
                 relatedPositions: [{ line: 0, character: 12 }],
             },
+            {
+                name: "a",
+                position: { line: 0, character: 12 },
+                relatedPositions: [{ line: 0, character: 33 }],
+            },
         ]);
     });
 
-    // TODO: Figure out why this doesn't hit visitNode() record processing
-    // it("[ a = 1, b = 2, c = 3, a = 4]", () => {
-    //     const document: Utils.MockDocument = Utils.documentFromText("[ a = 1, b = 2, c = 3, a = 4]");
-    //     const diagnostics: ReadonlyArray<Diagnostic> = validate(document).diagnostics;
+    it("[a = 1, b = 2, c = 3, a = 4]", () => {
+        const document: MockDocument = TestUtils.createTextMockDocument("[a = 1, b = 2, c = 3, a = 4]");
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 23 },
+                relatedPositions: [{ line: 0, character: 2 }],
+            },
+            {
+                name: "a",
+                position: { line: 0, character: 2 },
+                relatedPositions: [{ line: 0, character: 23 }],
+            },
+        ]);
+    });
 
-    //     expect(diagnostics.length).to.equal(1, "");
-    // });
+    it(`[#"a" = 1, a = 2, b = 3]`, () => {
+        const document: MockDocument = TestUtils.createTextMockDocument(`[#"a" = 1, a = 2, b = 3]`);
+        validateDuplicateIdentifierDiagnostics(document, [
+            {
+                name: "a",
+                position: { line: 0, character: 11 },
+                relatedPositions: [{ line: 0, character: 1 }],
+            },
+            {
+                name: `#"a"`,
+                position: { line: 0, character: 1 },
+                relatedPositions: [{ line: 0, character: 11 }],
+            },
+        ]);
+    });
 
     it('section foo; shared a = 1; a = "hello";', () => {
         const document: MockDocument = TestUtils.createTextMockDocument('section foo; shared a = 1; a = "hello";');
@@ -178,6 +209,11 @@ describe("Duplicate identifiers", () => {
                 name: "a",
                 position: { line: 0, character: 27 },
                 relatedPositions: [{ line: 0, character: 20 }],
+            },
+            {
+                name: "a",
+                position: { line: 0, character: 20 },
+                relatedPositions: [{ line: 0, character: 27 }],
             },
         ]);
     });
@@ -189,37 +225,29 @@ describe("Duplicate identifiers", () => {
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "b",
-                position: { line: 0, character: 55 },
+                position: { character: 55, line: 0 },
                 relatedPositions: [
-                    { line: 0, character: 48 },
-                    { line: 0, character: 62 },
+                    { character: 48, line: 0 },
+                    { character: 62, line: 0 },
                 ],
             },
             {
                 name: "b",
-                position: { line: 0, character: 62 },
+                position: { character: 48, line: 0 },
                 relatedPositions: [
-                    { line: 0, character: 48 },
-                    { line: 0, character: 55 },
+                    { character: 55, line: 0 },
+                    { character: 62, line: 0 },
+                ],
+            },
+            {
+                name: "b",
+                position: { character: 62, line: 0 },
+                relatedPositions: [
+                    { character: 55, line: 0 },
+                    { character: 48, line: 0 },
                 ],
             },
         ]);
-    });
-
-    // TODO: Should the final a = 4 entry also show up as a duplicate?
-    it("duplicates with syntax errors", () => {
-        const document: MockDocument = TestUtils.createTextMockDocument("section foo; a = 1; a = 2; b = let 1; a = 4;");
-        validateDuplicateIdentifierDiagnostics(
-            document,
-            [
-                {
-                    name: "a",
-                    position: { line: 0, character: 20 },
-                    relatedPositions: [{ line: 0, character: 13 }],
-                },
-            ],
-            2 /* additional parser error expected */,
-        );
     });
 
     it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
@@ -229,6 +257,11 @@ describe("Duplicate identifiers", () => {
                 name: "abc",
                 position: { line: 0, character: 26 },
                 relatedPositions: [{ line: 0, character: 17 }],
+            },
+            {
+                name: "abc",
+                position: { line: 0, character: 17 },
+                relatedPositions: [{ line: 0, character: 26 }],
             },
         ]);
     });
@@ -243,6 +276,11 @@ describe("Duplicate identifiers", () => {
                 position: { line: 0, character: 21 },
                 relatedPositions: [{ line: 0, character: 12 }],
             },
+            {
+                name: "abc",
+                position: { line: 0, character: 12 },
+                relatedPositions: [{ line: 0, character: 21 }],
+            },
         ]);
     });
 
@@ -255,6 +293,11 @@ describe("Duplicate identifiers", () => {
                 name: '#"s p a c e"',
                 position: { line: 0, character: 39 },
                 relatedPositions: [{ line: 0, character: 21 }],
+            },
+            {
+                name: '#"s p a c e"',
+                position: { line: 0, character: 21 },
+                relatedPositions: [{ line: 0, character: 39 }],
             },
         ]);
     });
