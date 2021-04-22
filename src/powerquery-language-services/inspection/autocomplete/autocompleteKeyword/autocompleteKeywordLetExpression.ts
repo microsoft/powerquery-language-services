@@ -55,9 +55,7 @@ export function autocompleteKeywordLetExpression(
 
 function autocompleteLastKeyValuePair(
     state: InspectAutocompleteKeywordState,
-    keyValuePairs: ReadonlyArray<
-        PQP.Parser.NodeIdMapIterator.KeyValuePair<PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier>
-    >,
+    keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.TKeyValuePair>,
 ): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
     if (keyValuePairs.length === 0) {
         return undefined;

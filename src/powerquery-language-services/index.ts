@@ -14,7 +14,7 @@ export * from "./documentSymbols";
 export * from "./formatter";
 export * from "./library";
 export * from "./providers";
-export * from "./validation";
+export * from "./validate";
 export * from "./workspaceCache";
 
 export function createTextDocument(id: string, version: number, content: string): TextDocument {
