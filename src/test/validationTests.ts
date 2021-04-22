@@ -175,13 +175,13 @@ describe("Duplicate identifiers", () => {
         validateDuplicateIdentifierDiagnostics(document, [
             {
                 name: "a",
-                position: { line: 0, character: 23 },
-                relatedPositions: [{ line: 0, character: 2 }],
+                position: { line: 0, character: 22 },
+                relatedPositions: [{ line: 0, character: 1 }],
             },
             {
                 name: "a",
-                position: { line: 0, character: 2 },
-                relatedPositions: [{ line: 0, character: 23 }],
+                position: { line: 0, character: 1 },
+                relatedPositions: [{ line: 0, character: 22 }],
             },
         ]);
     });
