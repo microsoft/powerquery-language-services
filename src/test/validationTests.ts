@@ -18,12 +18,12 @@ import {
     TextDocument,
     TextDocumentContentChangeEvent,
     validate,
-    ValidationOptions,
+    ValidationSettings,
     ValidationResult,
 } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
 
-const DefaultValidationOptions: ValidationOptions = {
+const DefaultValidationvalidationSettings: ValidationSettings = {
     maintainWorkspaceCache: true,
 };
 

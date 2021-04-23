@@ -9,7 +9,18 @@ import * as LanguageServiceUtils from "./languageServiceUtils";
 
 import { Inspection } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
+import { ExternalType } from "./inspection/externalType";
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
+
+export function createInspectionSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: PQP.Settings<S>,
+    maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
+): Inspection.InspectionSettings<S> {
+    return {
+        ...settings,
+        maybeExternalTypeResolver,
+    };
+}
 
 export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,

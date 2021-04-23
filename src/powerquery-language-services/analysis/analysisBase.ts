@@ -34,21 +34,21 @@ export abstract class AnalysisBase implements Analysis {
         protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
         library: ILibrary,
-        protected options: AnalysisOptions,
+        protected analysisOptions: AnalysisOptions,
     ) {
         this.languageAutocompleteItemProvider =
-            options.createLanguageAutocompleteItemProviderFn !== undefined
-                ? options.createLanguageAutocompleteItemProviderFn()
+            analysisOptions.createLanguageAutocompleteItemProviderFn !== undefined
+                ? analysisOptions.createLanguageAutocompleteItemProviderFn()
                 : new LanguageAutocompleteItemProvider(maybeInspectionCacheItem);
 
         this.librarySymbolProvider =
-            options.createLibrarySymbolProviderFn !== undefined
-                ? options.createLibrarySymbolProviderFn(library)
+            analysisOptions.createLibrarySymbolProviderFn !== undefined
+                ? analysisOptions.createLibrarySymbolProviderFn(library)
                 : new LibrarySymbolProvider(library);
 
         this.localDocumentSymbolProvider =
-            options.createLocalDocumentSymbolProviderFn !== undefined
-                ? options.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
+            analysisOptions.createLocalDocumentSymbolProviderFn !== undefined
+                ? analysisOptions.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
                 : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
     }
 

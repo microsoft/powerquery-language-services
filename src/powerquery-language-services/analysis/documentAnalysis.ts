@@ -14,24 +14,29 @@ export class DocumentAnalysis extends AnalysisBase {
         private readonly document: TextDocument,
         position: Position,
         library: ILibrary,
-        options: AnalysisOptions,
+        analysisOptions: AnalysisOptions,
     ) {
         super(
-            WorkspaceCacheUtils.getTriedInspection(document, position, library.externalTypeResolver, options.locale),
+            WorkspaceCacheUtils.getTriedInspection(
+                document,
+                position,
+                library.externalTypeResolver,
+                analysisOptions.locale,
+            ),
             position,
             library,
-            options,
+            analysisOptions,
         );
     }
 
     public dispose(): void {
-        if (!this.options.maintainWorkspaceCache) {
+        if (!this.analysisOptions.maintainWorkspaceCache) {
             WorkspaceCacheUtils.close(this.document);
         }
     }
 
     protected getLexerState(): WorkspaceCache.LexCacheItem {
-        return WorkspaceCacheUtils.getLexerState(this.document, this.options.locale);
+        return WorkspaceCacheUtils.getLexerState(this.document, this.analysisOptions.locale);
     }
 
     protected getText(range?: Range): string {

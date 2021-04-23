@@ -22,7 +22,7 @@ import { SimpleLibrary } from "./testConstants";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
-        const options: AnalysisOptions = {
+        const analysisOptions: AnalysisOptions = {
             locale: "en-us",
             maintainWorkspaceCache: false,
         };
@@ -34,7 +34,7 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, SimpleLibrary, options);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, SimpleLibrary, analysisOptions);
         const hover: Hover = await analysis.getHover();
 
         expect(hover.range === undefined);

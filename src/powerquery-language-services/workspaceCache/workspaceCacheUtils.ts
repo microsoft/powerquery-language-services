@@ -5,7 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Inspection } from "..";
 import type { Position, TextDocument, TextDocumentContentChangeEvent } from "../commonTypes";
-import { CacheItem, InspectionCacheItem, InspectionTask, LexCacheItem, ParseCacheItem } from "./workspaceCache";
+import { TypeCacheUtils } from "../inspection";
+import type { CacheItem, InspectionCacheItem, InspectionTask, LexCacheItem, ParseCacheItem } from "./workspaceCache";
 
 export function assertIsInspectionTask(cacheItem: CacheItem): asserts cacheItem is InspectionTask {
     if (!isInspectionTask(cacheItem)) {
@@ -65,6 +66,10 @@ export function getTriedInspection(
     }
 }
 
+export function getTypeCache(textDocument: TextDocument): Inspection.TypeCache {
+    return getOrCreate(TypeCacheCache, textDocument, undefined, createTypeCache);
+}
+
 export function isInspectionTask(cacheItem: CacheItem): cacheItem is InspectionTask {
     return cacheItem?.stage === "Inspection";
 }
@@ -90,8 +95,9 @@ type InspectionMap = WeakMap<Position, InspectionCacheItem>;
 const LexerTaskCache: Map<string, LexCacheItem> = new Map();
 const ParseTaskCache: Map<string, ParseCacheItem> = new Map();
 const InspectionCache: Map<string, InspectionMap> = new Map();
+const TypeCacheCache: Map<string, TypeCache> = new Map();
 
-const AllCaches: Map<string, any>[] = [LexerTaskCache, ParseTaskCache, InspectionCache];
+const AllCaches: Map<string, any>[] = [LexerTaskCache, ParseTaskCache, InspectionCache, TypeCacheCache];
 
 function getOrCreate<T>(
     cache: Map<string, T>,
@@ -123,6 +129,10 @@ function createParseCacheItem(textDocument: TextDocument, maybeLocale: string | 
 
     const settings: PQP.ParseSettings = getSettings(undefined, maybeLocale);
     return PQP.TaskUtils.tryParse(settings, triedLexTask.lexerSnapshot);
+}
+
+function createTypeCache(_textDocument: TextDocument, _maybeLocale: string | undefined): Inspection.TypeCache {
+    return TypeCacheUtils.createTypeCache();
 }
 
 // We're allowed to return undefined because if a document wasn't parsed then there's no way to perform an inspection.

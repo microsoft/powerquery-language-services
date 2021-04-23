@@ -12,17 +12,20 @@ import * as LanguageServiceUtils from "../languageServiceUtils";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { ValidationOptions } from "./commonTypes";
+import { ValidationSettings } from "./validationSettings";
 
-export function validateDuplicateIdentifiers(
+export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     document: TextDocument,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
-    if (!options.checkForDuplicateIdentifiers) {
+    if (!validationSettings.checkForDuplicateIdentifiers) {
         return [];
     }
 
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(
+        document,
+        validationSettings?.locale,
+    );
 
     let maybeNodeIdMapCollection: PQP.Parser.NodeIdMap.Collection | undefined;
     if (PQP.TaskUtils.isParseStageOk(cacheItem)) {
@@ -38,16 +41,16 @@ export function validateDuplicateIdentifiers(
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     return [
-        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, options),
-        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, options),
-        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, options),
+        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, validationSettings),
+        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, validationSettings),
+        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, validationSettings),
     ];
 }
 
-function validateDuplicateIdentifiersForLetExpresion(
+function validateDuplicateIdentifiersForLetExpresion<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     documentUri: DocumentUri,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     const letIds: ReadonlyArray<number> = [
         ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.LetExpression) ?? []),
@@ -58,14 +61,14 @@ function validateDuplicateIdentifiersForLetExpresion(
         nodeIdMapCollection,
         letIds,
         PQP.Parser.NodeIdMapIterator.iterLetExpression,
-        options,
+        validationSettings,
     );
 }
 
-function validateDuplicateIdentifiersForRecord(
+function validateDuplicateIdentifiersForRecord<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     documentUri: DocumentUri,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     const recordIds: ReadonlyArray<number> = [
         ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordExpression) ?? []),
@@ -78,14 +81,14 @@ function validateDuplicateIdentifiersForRecord(
         nodeIdMapCollection,
         recordIds,
         PQP.Parser.NodeIdMapIterator.iterRecord,
-        options,
+        validationSettings,
     );
 }
 
-function validateDuplicateIdentifiersForSection(
+function validateDuplicateIdentifiersForSection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     documentUri: DocumentUri,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     const recordIds: ReadonlyArray<number> = [
         ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.Section) ?? []),
@@ -96,7 +99,7 @@ function validateDuplicateIdentifiersForSection(
         nodeIdMapCollection,
         recordIds,
         PQP.Parser.NodeIdMapIterator.iterSection,
-        options,
+        validationSettings,
     );
 }
 
@@ -104,7 +107,7 @@ function validateDuplicateIdentifiersForSection(
 //  for node in nodeIds:
 //      for childOfNode in iterNodeFn(node):
 //          ...
-function validateDuplicateIdentifiersForKeyValuePair(
+function validateDuplicateIdentifiersForKeyValuePair<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     documentUri: DocumentUri,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
@@ -112,7 +115,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
         nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
         node: PQP.Parser.TXorNode,
     ) => ReadonlyArray<PQP.Parser.NodeIdMapIterator.TKeyValuePair>,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     if (!nodeIds.length) {
         return [];
@@ -152,7 +155,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
                             uri: documentUri,
                             range: LanguageServiceUtils.tokenRangeToRange(keyValuePair.key.tokenRange),
                         },
-                        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, options),
+                        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
                     };
                 },
             );
@@ -164,7 +167,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
                     (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,
                 );
 
-                result.push(createDuplicateIdentifierDiagnostic(duplicate, relatedInformation, options));
+                result.push(createDuplicateIdentifierDiagnostic(duplicate, relatedInformation, validationSettings));
             }
         }
     }
@@ -172,27 +175,27 @@ function validateDuplicateIdentifiersForKeyValuePair(
     return result;
 }
 
-function createDuplicateIdentifierDiagnostic(
+function createDuplicateIdentifierDiagnostic<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     keyValuePair: PQP.Parser.NodeIdMapIterator.TKeyValuePair,
     relatedInformation: DiagnosticRelatedInformation[],
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): Diagnostic {
     return {
         code: DiagnosticErrorCode.DuplicateIdentifier,
-        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, options),
+        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
         range: LanguageServiceUtils.tokenRangeToRange(keyValuePair.key.tokenRange),
         relatedInformation,
         severity: DiagnosticSeverity.Error,
-        source: options.source,
+        source: validationSettings.source,
     };
 }
 
-function createDuplicateIdentifierDiagnosticMessage(
+function createDuplicateIdentifierDiagnosticMessage<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     keyValuePair: PQP.Parser.NodeIdMapIterator.TKeyValuePair,
-    options: ValidationOptions,
+    validationSettings: ValidationSettings<S>,
 ): string {
     return Localization.error_validation_duplicate_identifier(
-        LocalizationUtils.getLocalizationTemplates(options?.locale ?? PQP.DefaultLocale),
+        LocalizationUtils.getLocalizationTemplates(validationSettings?.locale ?? PQP.DefaultLocale),
         keyValuePair.keyLiteral,
     );
 }

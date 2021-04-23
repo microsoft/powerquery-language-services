@@ -2,4 +2,4 @@
 // Licensed under the MIT license.
 
 export * from "./typeCache";
-export * from "./typeCacheUtils";
+export * as TypeCacheUtils from "./typeCacheUtils";

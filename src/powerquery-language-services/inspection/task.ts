@@ -8,11 +8,11 @@ import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
-import { Position } from "./position";
+import type { Position } from "./position";
 import { TriedNodeScope, tryNodeScope } from "./scope";
-import { InspectionSettings } from "./settings";
+import type { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";
-import { createTypeCache, TypeCache } from "./typeCache";
+import { TypeCache, TypeCacheUtils } from "./typeCache";
 
 export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: PQP.ParseSettings<S> & InspectionSettings,
@@ -20,7 +20,7 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
     position: Position,
 ): Inspection {
-    const typeCache: TypeCache = createTypeCache();
+    const typeCache: TypeCache = TypeCacheUtils.createTypeCache();
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
