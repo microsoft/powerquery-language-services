@@ -15,7 +15,7 @@ import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 
 export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.ParseSettings<S> & InspectionSettings,
+    settings: InspectionSettings<S>,
     parseState: S,
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
     position: Position,

@@ -11,7 +11,7 @@ import { Inspection } from "../../../powerquery-language-services";
 import { InspectionSettings } from "../../../powerquery-language-services/inspection";
 
 function assertGetPrimitiveTypeAutocompleteOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & InspectionSettings,
+    settings: InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): ReadonlyArray<Inspection.AutocompleteItem> {

@@ -16,7 +16,7 @@ import {
 } from "../powerquery-language-services";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
-export const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
+export const DefaultSettings: Inspection.InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: undefined,
 };
@@ -218,7 +218,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
     }
 };
 
-export const SimpleSettings: PQP.Settings & Inspection.InspectionSettings = {
+export const SimpleSettings: Inspection.InspectionSettings = {
     ...DefaultSettings,
     maybeExternalTypeResolver: SimpleExternalTypeResolver,
 };

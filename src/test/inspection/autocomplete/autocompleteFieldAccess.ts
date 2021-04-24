@@ -10,7 +10,7 @@ import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
 function assertGetFieldAccessAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & Inspection.InspectionSettings,
+    settings: Inspection.InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): ReadonlyArray<Inspection.AutocompleteItem> {

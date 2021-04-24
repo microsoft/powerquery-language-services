@@ -12,7 +12,7 @@ import { Inspection } from "../../../powerquery-language-services";
 import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./common";
 
 function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & Inspection.InspectionSettings,
+    settings: Inspection.InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): AbridgedAutocompleteItem | undefined {
