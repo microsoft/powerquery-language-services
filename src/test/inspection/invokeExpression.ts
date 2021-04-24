@@ -272,7 +272,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -285,7 +285,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -297,7 +297,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -309,7 +309,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -322,7 +322,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -335,7 +335,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -348,7 +348,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -360,7 +360,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -373,7 +373,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -388,7 +388,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -401,7 +401,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -413,7 +413,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -425,7 +425,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -438,7 +438,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -451,7 +451,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -464,7 +464,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -476,7 +476,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `${TestConstants.TestLibraryName.DuplicateText}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );
@@ -489,7 +489,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
-                TestConstants.SimpleSettings,
+                TestConstants.SimpleInspectionSettings,
                 text,
                 position,
             );

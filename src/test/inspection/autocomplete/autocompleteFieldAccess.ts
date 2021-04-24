@@ -29,7 +29,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -42,7 +42,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -55,7 +55,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -68,7 +68,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -81,7 +81,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["foo", "foobar"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -96,7 +96,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -109,7 +109,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -122,7 +122,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -135,7 +135,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -148,7 +148,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -161,7 +161,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -174,7 +174,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -191,7 +191,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -204,7 +204,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -218,7 +218,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -231,7 +231,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -244,7 +244,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -257,7 +257,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -272,7 +272,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -285,7 +285,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -298,7 +298,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat", "car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -311,7 +311,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["cat"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -324,7 +324,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -337,7 +337,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -350,7 +350,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -363,7 +363,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -376,7 +376,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -389,7 +389,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -402,7 +402,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -415,7 +415,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -428,7 +428,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = ["car"];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -441,7 +441,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 );
                 const expected: ReadonlyArray<string> = [];
                 const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                    TestConstants.DefaultSettings,
+                    TestConstants.DefaultInspectionSettings,
                     text,
                     position,
                 );
@@ -457,7 +457,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             );
             const expected: ReadonlyArray<string> = ["cat", "car"];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                TestConstants.DefaultSettings,
+                TestConstants.DefaultInspectionSettings,
                 text,
                 position,
             );
@@ -470,7 +470,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             );
             const expected: ReadonlyArray<string> = ["cat", "car"];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                TestConstants.DefaultSettings,
+                TestConstants.DefaultInspectionSettings,
                 text,
                 position,
             );
@@ -483,7 +483,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             );
             const expected: ReadonlyArray<string> = ["cat", "car"];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                TestConstants.DefaultSettings,
+                TestConstants.DefaultInspectionSettings,
                 text,
                 position,
             );
@@ -496,7 +496,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             );
             const expected: ReadonlyArray<string> = ["cat", "car"];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                TestConstants.DefaultSettings,
+                TestConstants.DefaultInspectionSettings,
                 text,
                 position,
             );
@@ -511,7 +511,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             );
             const expected: ReadonlyArray<string> = [`regularIdentifier`, `#"generalized identifier"`];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
-                TestConstants.DefaultSettings,
+                TestConstants.DefaultInspectionSettings,
                 text,
                 position,
             );

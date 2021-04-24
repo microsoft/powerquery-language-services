@@ -7,6 +7,6 @@ import { InspectionSettings } from "../../inspection";
 
 export interface ValidationSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>
     extends InspectionSettings<S> {
-    readonly source?: string;
-    readonly checkForDuplicateIdentifiers?: boolean;
+    readonly source: string;
+    readonly checkForDuplicateIdentifiers: boolean;
 }

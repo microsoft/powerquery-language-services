@@ -3,8 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
-import { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
+import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "../languageServiceUtils";
@@ -12,19 +11,20 @@ import * as LanguageServiceUtils from "../languageServiceUtils";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { WorkspaceCacheSettings } from "../workspaceCache/workspaceCache";
 import { ValidationSettings } from "./validationSettings";
 
 export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    document: TextDocument,
+    workspaceCacheSettings: WorkspaceCacheSettings,
     validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     if (!validationSettings.checkForDuplicateIdentifiers) {
         return [];
     }
 
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(
-        document,
-        validationSettings?.locale,
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        workspaceCacheSettings,
+        validationSettings,
     );
 
     let maybeNodeIdMapCollection: PQP.Parser.NodeIdMap.Collection | undefined;
@@ -37,7 +37,7 @@ export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = 
     if (maybeNodeIdMapCollection === undefined) {
         return [];
     }
-    const documentUri: string = document.uri;
+    const documentUri: string = workspaceCacheSettings.textDocument.uri;
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     return [

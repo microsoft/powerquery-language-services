@@ -12,11 +12,12 @@ import {
     Library,
     LibraryUtils,
     LocalDocumentSymbolProvider,
+    ValidationSettings,
     WorkspaceCache,
 } from "../powerquery-language-services";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
-export const DefaultSettings: Inspection.InspectionSettings = {
+export const DefaultInspectionSettings: Inspection.InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: undefined,
 };
@@ -218,9 +219,15 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
     }
 };
 
-export const SimpleSettings: Inspection.InspectionSettings = {
-    ...DefaultSettings,
+export const SimpleInspectionSettings: Inspection.InspectionSettings = {
+    ...DefaultInspectionSettings,
     maybeExternalTypeResolver: SimpleExternalTypeResolver,
+};
+
+export const SimpleValidationSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: true,
+    source: "UNIT-TEST-SOURCE",
 };
 
 export const SimpleLibrary: Library.ILibrary = {

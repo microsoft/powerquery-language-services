@@ -25,7 +25,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`type|`);
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -37,7 +37,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -48,7 +48,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`let x = type|`);
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -60,7 +60,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -72,7 +72,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -87,7 +87,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             PQP.Language.Constant.PrimitiveTypeConstantKind.Number,
         ];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -98,7 +98,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(x|) => 1`);
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -111,7 +111,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         );
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -125,7 +125,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -138,7 +138,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         );
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -152,7 +152,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -165,7 +165,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         );
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -179,7 +179,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -191,7 +191,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         const expected: ReadonlyArray<PQP.Language.Constant.PrimitiveTypeConstantKind> =
             PQP.Language.Constant.PrimitiveTypeConstantKinds;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
