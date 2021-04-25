@@ -80,7 +80,7 @@ describe("Syntax validation", () => {
     });
 
     it("let 1", () => {
-        const errorSource: string = "powerquery";
+        const errorSource: string = TestConstants.SimpleValidationSettings.source;
         const validationResult: ValidationResult = validate(
             TestUtils.createTextMockDocument(`let 1`),
             TestConstants.SimpleValidationSettings,

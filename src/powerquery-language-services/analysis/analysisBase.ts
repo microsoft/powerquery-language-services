@@ -23,32 +23,32 @@ import type {
 } from "../providers/commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
-import type { AnalysisOptions } from "./analysisOptions";
+import type { AnalysisSettings } from "./analysisSettings";
 
-export abstract class AnalysisBase implements Analysis {
+export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
+        protected analysisSettings: AnalysisSettings<S>,
         protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
         library: ILibrary,
-        protected analysisOptions: AnalysisOptions,
     ) {
         this.languageAutocompleteItemProvider =
-            analysisOptions.createLanguageAutocompleteItemProviderFn !== undefined
-                ? analysisOptions.createLanguageAutocompleteItemProviderFn()
+            analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn !== undefined
+                ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()
                 : new LanguageAutocompleteItemProvider(maybeInspectionCacheItem);
 
         this.librarySymbolProvider =
-            analysisOptions.createLibrarySymbolProviderFn !== undefined
-                ? analysisOptions.createLibrarySymbolProviderFn(library)
+            analysisSettings.maybeCreateLibrarySymbolProviderFn !== undefined
+                ? analysisSettings.maybeCreateLibrarySymbolProviderFn(library)
                 : new LibrarySymbolProvider(library);
 
         this.localDocumentSymbolProvider =
-            analysisOptions.createLocalDocumentSymbolProviderFn !== undefined
-                ? analysisOptions.createLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
+            analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
+                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
                 : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
     }
 

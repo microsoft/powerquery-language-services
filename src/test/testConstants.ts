@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import {
-    AnalysisOptions,
+    AnalysisSettings,
     CompletionItemKind,
     Inspection,
     Library,
@@ -235,9 +235,10 @@ export const SimpleLibrary: Library.ILibrary = {
     libraryDefinitions: SimpleLibraryDefinitions,
 };
 
-export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
-    createLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
-    createLocalDocumentSymbolProviderFn: (
+export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
+    createInspectionSettings: () => SimpleInspectionSettings,
+    maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
+    maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
         maybeTriedInspection: WorkspaceCache.InspectionCacheItem | undefined,
     ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),

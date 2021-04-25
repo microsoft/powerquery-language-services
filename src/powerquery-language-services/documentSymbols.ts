@@ -4,14 +4,20 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import * as InspectionUtils from "./inspectionUtils";
-import * as LanguageServiceUtils from "./languageServiceUtils";
 
-import { AnalysisOptions } from "./analysis/analysisOptions";
+import { AnalysisSettings } from "./analysis/analysisSettings";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
-export function getDocumentSymbols(document: TextDocument, options?: AnalysisOptions): DocumentSymbol[] {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+export function getDocumentSymbols<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
+    document: TextDocument,
+    options?: AnalysisSettings,
+): DocumentSymbol[] {
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        document,
+        lexAndParseSettings,
+    );
 
     let contextState: PQP.Parser.ParseContext.State | undefined;
 
@@ -40,7 +46,7 @@ export function getDocumentSymbols(document: TextDocument, options?: AnalysisOpt
         const documentOutlineResult: PQP.Traverse.TriedTraverse<DocumentOutline> = tryTraverse(
             rootNode,
             nodeIdMapCollection,
-            options,
+            lexAndParseSettings.locale,
         );
 
         // TODO: Trace error case
@@ -68,10 +74,8 @@ interface TraversalState extends PQP.Traverse.IState<DocumentOutline> {
 function tryTraverse(
     root: PQP.Parser.TXorNode,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    options?: AnalysisOptions,
+    locale: string,
 ): PQP.Traverse.TriedTraverse<DocumentOutline> {
-    const locale: string = LanguageServiceUtils.getLocale(options);
-
     const traversalState: TraversalState = {
         nodeIdMapCollection,
         locale,

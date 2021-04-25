@@ -7,7 +7,7 @@ import "mocha";
 
 import { TestConstants, TestUtils } from "..";
 import {
-    AnalysisOptions,
+    AnalysisSettings,
     AnalysisUtils,
     EmptyHover,
     Hover,
@@ -21,10 +21,10 @@ import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
 import { SimpleLibrary } from "../testConstants";
 
-const IsolatedAnalysisOptions: AnalysisOptions = {
-    ...TestConstants.SimpleLibraryAnalysisOptions,
-    createLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
-    createLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
+const IsolatedAnalysisOptions: AnalysisSettings = {
+    ...TestConstants.SimpleLibraryAnalysisSettings,
+    maybeCreateLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
+    maybeCreateLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
 };
 
 async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -169,6 +169,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const position: Position = pair[1];
 
             const autocompleteItems: Inspection.AutocompleteItem[] = await AnalysisUtils.createAnalysis(
+                { createInspectionSettings: () => TestConstants.SimpleInspectionSettings },
                 document,
                 position,
                 SimpleLibrary,
