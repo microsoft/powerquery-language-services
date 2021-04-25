@@ -76,11 +76,11 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
 export function createAnalysis(
     text: string,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Analysis {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
     return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisOptions),
+        createAnalysisSettings(maybeAnalysisSettings),
         document,
         position,
         maybeLibrary ?? TestConstants.SimpleLibrary,
@@ -90,55 +90,55 @@ export function createAnalysis(
 export async function createAutocompleteItems(
     text: string,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getAutocompleteItems();
+    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getAutocompleteItems();
 }
 
 export async function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisOptions).getAutocompleteItems();
+    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisSettings).getAutocompleteItems();
 }
 
 export async function createHover(
     text: string,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<Hover> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getHover();
+    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getHover();
 }
 
 export async function createSignatureHelp(
     text: string,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<SignatureHelp> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisOptions).getSignatureHelp();
+    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getSignatureHelp();
 }
 
 function createFileAnalysis(
     fileName: string,
     position: Position,
     maybeLibrary?: ILibrary,
-    maybeAnalysisOptions?: AnalysisSettings,
+    maybeAnalysisSettings?: AnalysisSettings,
 ): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
     return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisOptions),
+        createAnalysisSettings(maybeAnalysisSettings),
         document,
         position,
         maybeLibrary ?? TestConstants.SimpleLibrary,
     );
 }
 
-function createAnalysisSettings(maybeAnalysisOptions?: AnalysisSettings): AnalysisSettings {
+function createAnalysisSettings(maybeAnalysisSettings?: AnalysisSettings): AnalysisSettings {
     return {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        ...(maybeAnalysisOptions ?? {}),
+        ...(maybeAnalysisSettings ?? {}),
     };
 }
 
