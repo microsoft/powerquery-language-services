@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { Position, TextDocument } from "vscode-languageserver-textdocument";
 
 import { Inspection } from "..";
 
@@ -28,4 +28,10 @@ export type InspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IP
 export interface WorkspaceCacheSettings {
     readonly textDocument: TextDocument;
     readonly parserId: string;
+}
+
+export interface CacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
+    readonly lex: Map<string, LexCacheItem>;
+    readonly parse: Map<string, ParseCacheItem>;
+    readonly inspection: Map<string, Map<Position, InspectionCacheItem<S>>>;
 }

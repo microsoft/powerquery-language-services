@@ -2,17 +2,51 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import { Position } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
-import type { InspectionCacheItem, LexCacheItem, ParseCacheItem, WorkspaceCacheSettings } from "./workspaceCache";
+import type {
+    CacheCollection,
+    CacheItem,
+    InspectionCacheItem,
+    InspectionTask,
+    LexCacheItem,
+    ParseCacheItem,
+    WorkspaceCacheSettings,
+} from "./workspaceCache";
 
 const CacheByParserId: Map<string, CacheCollection> = new Map();
 
-interface CacheCollection {
-    readonly lex: Map<string, LexCacheItem>;
-    readonly parse: Map<string, ParseCacheItem>;
-    readonly inspection: Map<string, Map<Position, InspectionCacheItem>>;
+export function assertIsInspectionTask<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    cacheItem: CacheItem<S>,
+): asserts cacheItem is InspectionTask {
+    if (!isInspectionTask(cacheItem)) {
+        throw new PQP.CommonError.InvariantError(`expected cacheItem to be an InspectionCacheItem`, {
+            expectedStage: "Inspection",
+            actualStage: cacheItem?.stage,
+        });
+    }
+}
+
+export function close(workspaceCacheSettings: WorkspaceCacheSettings): void {
+    const cacheCollection: CacheCollection = getOrCreateCacheByParserId(workspaceCacheSettings.parserId);
+    const cacheKey: string = createCacheKey(workspaceCacheSettings);
+
+    cacheCollection.lex.delete(cacheKey);
+    cacheCollection.parse.delete(cacheKey);
+    cacheCollection.inspection.delete(cacheKey);
+}
+
+export function update(
+    workspaceCacheSettings: WorkspaceCacheSettings,
+    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
+    _version: number,
+): void {
+    // TODO: support incremental lexing
+    // TODO: premptively prepare cache on background thread?
+    // TODO: use document version
+    close(workspaceCacheSettings);
 }
 
 export function getOrCreateLex(
@@ -28,27 +62,27 @@ export function getOrCreateLex(
 
 export function getOrCreateParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     workspaceCacheSettings: WorkspaceCacheSettings,
-    lexSettings: PQP.LexSettings & PQP.ParseSettings<S>,
+    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
 ): ParseCacheItem<S> {
     const cacheCollection: CacheCollection = getOrCreateCacheByParserId(workspaceCacheSettings.parserId);
 
     return getOrCreateDefault(cacheCollection.lex, createCacheKey(workspaceCacheSettings), () =>
-        createParseCacheItem(workspaceCacheSettings, lexSettings),
+        createParseCacheItem(workspaceCacheSettings, lexAndParseSettings),
     );
 }
 
 // This code is a bit more complex as there's two layers of cache indirection,
 // first by the usual parserId, then by position (as some inspections are position sensitive).
-export function getOrCreateInspection(
+export function getOrCreateInspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     workspaceCacheSettings: WorkspaceCacheSettings,
-    inspectionSettings: Inspection.InspectionSettings,
+    inspectionSettings: Inspection.InspectionSettings<S>,
     position: Position,
-): InspectionCacheItem {
-    const cacheCollection: CacheCollection = getOrCreateCacheByParserId(workspaceCacheSettings.parserId);
+): InspectionCacheItem<S> {
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheByParserId(workspaceCacheSettings.parserId);
     const cacheKey: string = createCacheKey(workspaceCacheSettings);
-    const maybeByCacheKey: Map<Position, InspectionCacheItem> | undefined = cacheCollection.inspection.get(cacheKey);
+    const maybeByCacheKey: Map<Position, InspectionCacheItem<S>> | undefined = cacheCollection.inspection.get(cacheKey);
 
-    let byCacheKey: Map<Position, InspectionCacheItem>;
+    let byCacheKey: Map<Position, InspectionCacheItem<S>>;
     if (maybeByCacheKey === undefined) {
         byCacheKey = new Map();
         cacheCollection.inspection.set(cacheKey, byCacheKey);
@@ -61,7 +95,13 @@ export function getOrCreateInspection(
     );
 }
 
-function createCacheCollection(): CacheCollection {
+export function isInspectionTask<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    cacheItem: CacheItem<S>,
+): cacheItem is InspectionTask {
+    return cacheItem?.stage === "Inspection";
+}
+
+function createCacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(): CacheCollection<S> {
     return {
         lex: new Map(),
         parse: new Map(),
@@ -126,8 +166,14 @@ function createInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser
     };
 }
 
-function getOrCreateCacheByParserId(parserKey: string): CacheCollection {
-    return getOrCreateDefault(CacheByParserId, parserKey, createCacheCollection);
+function getOrCreateCacheByParserId<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    parserKey: string,
+): CacheCollection<S> {
+    return getOrCreateDefault<string, CacheCollection<S>>(
+        CacheByParserId as Map<string, CacheCollection<S>>,
+        parserKey,
+        createCacheCollection,
+    );
 }
 
 function getOrCreateDefault<K, V>(collection: Map<K, V>, key: K, createDefaultFn: () => V): V {

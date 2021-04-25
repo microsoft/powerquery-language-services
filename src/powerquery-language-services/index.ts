@@ -26,9 +26,9 @@ export function documentUpdated(
     changes: ReadonlyArray<TextDocumentContentChangeEvent>,
     version: number,
 ): void {
-    WorkspaceCacheUtils.update(document, changes, version);
+    WorkspaceCacheUtils.update({ textDocument: document, parserId: "" }, changes, version);
 }
 
 export function documentClosed(document: TextDocument): void {
-    WorkspaceCacheUtils.close(document);
+    WorkspaceCacheUtils.close({ textDocument: document, parserId: "" });
 }

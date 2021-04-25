@@ -8,12 +8,12 @@ import { ValidationSettings } from "./validationSettings";
 
 export function createValidationSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     inspectionSettings: InspectionSettings<S>,
+    source: string,
     checkForDuplicateIdentifiers?: boolean,
-    source?: string,
 ): ValidationSettings<S> {
     return {
         ...inspectionSettings,
-        checkForDuplicateIdentifiers,
+        checkForDuplicateIdentifiers: checkForDuplicateIdentifiers ?? true,
         source,
     };
 }

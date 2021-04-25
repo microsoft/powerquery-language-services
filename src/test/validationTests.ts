@@ -15,7 +15,6 @@ import {
     DiagnosticSeverity,
     documentUpdated,
     Position,
-    TextDocument,
     TextDocumentContentChangeEvent,
     validate,
 } from "../powerquery-language-services";
@@ -44,17 +43,10 @@ interface DuplicateIdentifierError {
 }
 
 function validateDuplicateIdentifierDiagnostics(
-    document: TextDocument,
+    workspaceCacheSettings: WorkspaceCacheSettings,
     expected: ReadonlyArray<DuplicateIdentifierError>,
 ): void {
-    const validationResult: ValidationResult = validate(
-        {
-            textDocument: document,
-            parserId: "test",
-        },
-        TestConstants.SimpleValidationSettings,
-          
-    );
+    const validationResult: ValidationResult = validate(workspaceCacheSettings, TestConstants.SimpleValidationSettings);
     const errorSource: string = TestConstants.SimpleValidationSettings.source;
     const diagnostics: ReadonlyArray<Diagnostic> = validationResult.diagnostics;
 
@@ -90,7 +82,10 @@ describe("Syntax validation", () => {
 
     it("let 1", () => {
         const errorSource: string = "powerquery";
-        const validationResult: ValidationResult = validate(TestUtils.createWorkspaceCacheSettingsFromString(`let 1`), TestConstants.SimpleValidationSettings);
+        const validationResult: ValidationResult = validate(
+            TestUtils.createWorkspaceCacheSettingsFromString(`let 1`),
+            TestConstants.SimpleValidationSettings,
+        );
         expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");
         expect(validationResult.diagnostics.length).to.equal(1);
         expect(validationResult.diagnostics[0].source).to.equal(errorSource);
@@ -99,12 +94,14 @@ describe("Syntax validation", () => {
 
     it("HelloWorldWithDocs.pq", () => {
         expectNoValidationErrors(
-                TestUtils.createWorkspaceCacheSettingsFromString(TestUtils.readFile("HelloWorldWithDocs.pq"))
+            TestUtils.createWorkspaceCacheSettingsFromString(TestUtils.readFile("HelloWorldWithDocs.pq")),
         );
     });
 
     it("DirectQueryForSQL.pq", () => {
-        expectNoValidationErrors(TestUtils.createWorkspaceCacheSettingsFromString(TestUtils.readFile("DirectQueryForSQL.pq")));
+        expectNoValidationErrors(
+            TestUtils.createWorkspaceCacheSettingsFromString(TestUtils.readFile("DirectQueryForSQL.pq")),
+        );
     });
 });
 
@@ -113,25 +110,31 @@ describe("validation with workspace cache", () => {
         const text: string = "let a = 1,";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
         const document: MockDocument = workspaceCacheSettings.textDocument as MockDocument;
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(workspaceCacheSettings, TestConstants.SimpleValidationSettings).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(
+            workspaceCacheSettings,
+            TestConstants.SimpleValidationSettings,
+        ).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
         const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update("1");
         documentUpdated(document, changes, document.version);
 
-        expectNoValidationErrors(document);
+        expectNoValidationErrors(workspaceCacheSettings);
     });
 
     it("errors after update", () => {
         const text: string = "let a = 1 in a";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
         const document: MockDocument = workspaceCacheSettings.textDocument as MockDocument;
-        expectNoValidationErrors(document);
+        expectNoValidationErrors(workspaceCacheSettings);
 
         const changes: ReadonlyArray<TextDocumentContentChangeEvent> = document.update(";;;;;;");
         documentUpdated(document, changes, document.version);
 
-        const diagnostics: ReadonlyArray<Diagnostic> = validate(workspaceCacheSettings, TestConstants.SimpleValidationSettings).diagnostics;
+        const diagnostics: ReadonlyArray<Diagnostic> = validate(
+            workspaceCacheSettings,
+            TestConstants.SimpleValidationSettings,
+        ).diagnostics;
         expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
     });
 });
@@ -140,7 +143,7 @@ describe("Duplicate identifiers", () => {
     it("let a = 1, a = 2 in a", () => {
         const text: string = "let a = 1, a = 2 in a";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "a",
                 position: { line: 0, character: 11 },
@@ -155,11 +158,10 @@ describe("Duplicate identifiers", () => {
     });
 
     it("let rec = [ a = 1, b = 2, c = 3, a = 4] in rec", () => {
-        const text: string  
+        const text: string = "let rec = [ a = 1, b = 2, c = 3, a = 4] in rec";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-            "let rec = [ a = 1, b = 2, c = 3, a = 4] in rec",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
+
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "a",
                 position: { line: 0, character: 33 },
@@ -176,7 +178,7 @@ describe("Duplicate identifiers", () => {
     it("[a = 1, b = 2, c = 3, a = 4]", () => {
         const text: string = "[a = 1, b = 2, c = 3, a = 4]";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "a",
                 position: { line: 0, character: 22 },
@@ -193,7 +195,7 @@ describe("Duplicate identifiers", () => {
     it(`[#"a" = 1, a = 2, b = 3]`, () => {
         const text: string = `[#"a" = 1, a = 2, b = 3]`;
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "a",
                 position: { line: 0, character: 11 },
@@ -210,7 +212,7 @@ describe("Duplicate identifiers", () => {
     it('section foo; shared a = 1; a = "hello";', () => {
         const text: string = 'section foo; shared a = 1; a = "hello";';
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "a",
                 position: { line: 0, character: 27 },
@@ -225,11 +227,9 @@ describe("Duplicate identifiers", () => {
     });
 
     it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
-        const text: string  
+        const text: string = "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-            "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "b",
                 position: { character: 55, line: 0 },
@@ -260,7 +260,7 @@ describe("Duplicate identifiers", () => {
     it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
         const text: string = "let a = 1 meta [ abc = 1, abc = 3 ] in a";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "abc",
                 position: { line: 0, character: 26 },
@@ -275,11 +275,9 @@ describe("Duplicate identifiers", () => {
     });
 
     it("let a = let abc = 1, abc = 2, b = 3 in b in a", () => {
-        const text: string  
+        const text: string = "let a = let abc = 1, abc = 2, b = 3 in b in a";
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-            "let a = let abc = 1, abc = 2, b = 3 in b in a",
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: "abc",
                 position: { line: 0, character: 21 },
@@ -294,11 +292,9 @@ describe("Duplicate identifiers", () => {
     });
 
     it('section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;', () => {
-        const text: string  
+        const text: string = 'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;';
         const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
-            'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;',
-        );
-        validateDuplicateIdentifierDiagnostics(document, [
+        validateDuplicateIdentifierDiagnostics(workspaceCacheSettings, [
             {
                 name: '#"s p a c e"',
                 position: { line: 0, character: 39 },
