@@ -8,14 +8,14 @@ import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import * as LanguageServiceUtils from "../languageServiceUtils";
 
+import { TextDocument } from "vscode-languageserver-textdocument";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { WorkspaceCacheSettings } from "../workspaceCache/workspaceCache";
 import { ValidationSettings } from "./validationSettings";
 
 export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    workspaceCacheSettings: WorkspaceCacheSettings,
+    textDocument: TextDocument,
     validationSettings: ValidationSettings<S>,
 ): ReadonlyArray<Diagnostic> {
     if (!validationSettings.checkForDuplicateIdentifiers) {
@@ -23,7 +23,7 @@ export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = 
     }
 
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-        workspaceCacheSettings,
+        textDocument,
         validationSettings,
     );
 
@@ -37,7 +37,7 @@ export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = 
     if (maybeNodeIdMapCollection === undefined) {
         return [];
     }
-    const documentUri: string = workspaceCacheSettings.textDocument.uri;
+    const documentUri: string = textDocument.uri;
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     return [

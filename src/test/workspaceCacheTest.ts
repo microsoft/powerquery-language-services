@@ -17,7 +17,7 @@ describe("workspaceCache", () => {
     it("getOrCreateLex", () => {
         const text: string = `let\n   b = 1\n   in b`;
         const cacheItem: WorkspaceCache.LexCacheItem = WorkspaceCacheUtils.getOrCreateLex(
-            TestUtils.createWorkspaceCacheSettingsFromString(text),
+            TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
         );
         TestUtils.assertLexerCacheItemOk(cacheItem);
@@ -27,7 +27,7 @@ describe("workspaceCache", () => {
     it("getOrCreateParse", () => {
         const text: string = "let c = 1 in c";
         const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            TestUtils.createWorkspaceCacheSettingsFromString(text),
+            TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(cacheItem);
@@ -36,7 +36,7 @@ describe("workspaceCache", () => {
     it("getOrCreateParse with error", () => {
         const text: string = "let c = 1, in c";
         const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            TestUtils.createWorkspaceCacheSettingsFromString(text),
+            TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemError(cacheItem);
@@ -47,7 +47,7 @@ describe("workspaceCache", () => {
             "let c = 1 in |c",
         );
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
-            TestUtils.createWorkspaceCacheSettings(document),
+            document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
             postion,
         );
@@ -60,7 +60,7 @@ describe("workspaceCache", () => {
             "let c = 1, in |",
         );
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
-            TestUtils.createWorkspaceCacheSettings(document),
+            document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
             postion,
         );

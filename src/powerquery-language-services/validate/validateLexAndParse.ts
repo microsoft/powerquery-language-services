@@ -2,21 +2,21 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { WorkspaceCacheSettings } from "../workspaceCache/workspaceCache";
 import { ValidationSettings } from "./validationSettings";
 
 export function validateLexAndParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    workspaceCacheSettings: WorkspaceCacheSettings,
+    textDocument: TextDocument,
     validationSettings: ValidationSettings<S>,
 ): Diagnostic[] {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-        workspaceCacheSettings,
+        textDocument,
         validationSettings,
     );
 

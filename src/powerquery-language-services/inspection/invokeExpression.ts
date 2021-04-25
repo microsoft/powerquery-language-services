@@ -9,7 +9,7 @@ import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
 import { InspectionSettings } from "./settings";
 import { TriedType, tryType } from "./type";
-import { createTypeCache, TypeCache } from "./typeCache";
+import { TypeCache, TypeCacheUtils } from "./typeCache";
 
 export type TriedInvokeExpression = PQP.Result<InvokeExpression | undefined, PQP.CommonError.CommonError>;
 
@@ -41,7 +41,12 @@ export function tryInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parse
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, maybeTypeCache ?? createTypeCache()),
+        inspectInvokeExpression(
+            settings,
+            nodeIdMapCollection,
+            maybeActiveNode,
+            maybeTypeCache ?? TypeCacheUtils.createTypeCache(),
+        ),
     );
 }
 

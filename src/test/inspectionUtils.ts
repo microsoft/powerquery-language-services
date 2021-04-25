@@ -11,7 +11,7 @@ import "mocha";
 import * as TestUtils from "./testUtils";
 
 import { InspectionUtils, SymbolKind, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
-import { WorkspaceCacheSettings } from "../powerquery-language-services/workspaceCache/workspaceCache";
+import { MockDocument } from "./mockDocument";
 import { AbridgedDocumentSymbol } from "./testUtils";
 
 // Used to test symbols at a specific level of inspection
@@ -36,11 +36,11 @@ function expectSymbolsForNode(
 
 describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
-        const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(
+        const testDocument: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
         const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            workspaceCacheSettings,
+            testDocument,
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
@@ -54,9 +54,9 @@ describe("Document symbol base functions", () => {
 
     it(`section foo; a = {1,2};`, () => {
         const text: string = `section foo; a = {1,2};`;
-        const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
         const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            workspaceCacheSettings,
+            textDocument,
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
@@ -66,9 +66,9 @@ describe("Document symbol base functions", () => {
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
         const text: string = `let a = 1, b = 2, c = 3 in c`;
-        const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
         const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            workspaceCacheSettings,
+            textDocument,
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
@@ -82,9 +82,9 @@ describe("Document symbol base functions", () => {
 
     it("HelloWorldWithDocs file section", () => {
         const text: string = TestUtils.readFile("HelloWorldWithDocs.pq");
-        const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
         const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            workspaceCacheSettings,
+            textDocument,
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
@@ -100,9 +100,9 @@ describe("Document symbol base functions", () => {
 
     it("DirectQueryForSQL file section", () => {
         const text: string = TestUtils.readFile("DirectQueryForSQL.pq");
-        const workspaceCacheSettings: WorkspaceCacheSettings = TestUtils.createWorkspaceCacheSettingsFromString(text);
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
         const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-            workspaceCacheSettings,
+            textDocument,
             PQP.DefaultSettings,
         );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);

@@ -73,10 +73,7 @@ export function assertGetAutocompleteItem(
 
 export function assertGetInspectionCacheItem(document: MockDocument, position: Position): Inspection.Inspection {
     const cacheItem: WorkspaceCache.InspectionCacheItem = WorkspaceCacheUtils.getOrCreateInspection(
-        {
-            textDocument: document,
-            parserId: "UNIT-TEST",
-        },
+        document,
         TestConstants.SimpleInspectionSettings,
         position,
     );

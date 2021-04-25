@@ -12,10 +12,9 @@ import { DocumentSymbol, Hover, Position, SignatureHelp, SymbolKind } from "vsco
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
 
-import { Analysis, Inspection, TextDocument } from "../../powerquery-language-services";
+import { Analysis, Inspection } from "../../powerquery-language-services";
 import { AnalysisOptions } from "../../powerquery-language-services/analysis/analysisOptions";
 import { ILibrary } from "../../powerquery-language-services/library/library";
-import { WorkspaceCacheSettings } from "../../powerquery-language-services/workspaceCache/workspaceCache";
 import { MockDocument } from "../mockDocument";
 
 export interface AbridgedDocumentSymbol {
@@ -40,20 +39,6 @@ export function createMockDocumentAndPosition(text: string): [MockDocument, Posi
     const position: Position = document.positionAt(text.indexOf("|"));
 
     return [document, position];
-}
-
-export function createWorkspaceCacheSettings(textDocument: TextDocument, parserId?: string): WorkspaceCacheSettings {
-    return {
-        parserId: parserId ?? "UNIT-TEST-PARSER-ID",
-        textDocument,
-    };
-}
-
-export function createWorkspaceCacheSettingsFromString(text: string, parserId?: string): WorkspaceCacheSettings {
-    return {
-        parserId: parserId ?? "UNIT-TEST-PARSER-ID",
-        textDocument: createTextMockDocument(text),
-    };
 }
 
 export function readFile(fileName: string): string {

@@ -3,27 +3,27 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { WorkspaceCacheSettings } from "../workspaceCache/workspaceCache";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateLexAndParse } from "./validateLexAndParse";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
 
 export function validate<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    workspaceCacheSettings: WorkspaceCacheSettings,
+    textDocument: TextDocument,
     validationSettings: ValidationSettings<S>,
 ): ValidationResult {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
-        workspaceCacheSettings,
+        textDocument,
         validationSettings,
     );
 
     return {
         diagnostics: [
-            ...validateDuplicateIdentifiers(workspaceCacheSettings, validationSettings),
-            ...validateLexAndParse(workspaceCacheSettings, validationSettings),
+            ...validateDuplicateIdentifiers(textDocument, validationSettings),
+            ...validateLexAndParse(textDocument, validationSettings),
         ],
         hasSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),
     };
