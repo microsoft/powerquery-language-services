@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
+import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
@@ -14,7 +15,7 @@ import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./comm
 function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: Inspection.InspectionSettings<S>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): AbridgedAutocompleteItem | undefined {
     const actual: Inspection.Autocomplete = TestUtils.assertGetAutocomplete(settings, text, position);
     Assert.isOk(actual.triedLanguageConstant);
@@ -26,7 +27,7 @@ function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState 
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
     it(`a as |`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`a as |`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as |`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
@@ -40,7 +41,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     });
 
     it(`a as n|`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`a as n|`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as n|`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
@@ -54,7 +55,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     });
 
     it(`(a as |`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(a as |`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as |`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
@@ -68,7 +69,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     });
 
     it(`(a as n|`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(a as n|`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as n|`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
@@ -82,7 +83,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     });
 
     it(`(x, |`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(x, |`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, |`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Optional,
@@ -96,7 +97,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     });
 
     it(`(x, op|`, () => {
-        const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`(x, op|`);
+        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, op|`);
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: PQP.Language.Constant.LanguageConstantKind.Optional,

@@ -3,12 +3,13 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import type { Position } from "vscode-languageserver-types";
+
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
-import type { Position } from "./position";
 import { TriedNodeScope, tryNodeScope } from "./scope";
 import type { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";

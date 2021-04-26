@@ -6,7 +6,7 @@ import * as PQLS from "../powerquery-language-services";
 
 import { expect } from "chai";
 import "mocha";
-import { Position } from "vscode-languageserver-types";
+import type { Position } from "vscode-languageserver-types";
 
 import { TestUtils } from ".";
 import { TextDocument, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
