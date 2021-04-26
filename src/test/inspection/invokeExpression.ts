@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
-import { Position } from "vscode-languageserver-types";
+import type { Position } from "vscode-languageserver-types";
 import { Inspection } from "../../powerquery-language-services";
 
 import { TestConstants, TestUtils } from "..";

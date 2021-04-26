@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-import { Position } from "vscode-languageserver-types";
+import type { Position } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
 import type {
