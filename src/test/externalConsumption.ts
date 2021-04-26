@@ -24,7 +24,7 @@ import { SimpleLibrary } from "./testConstants";
 describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
-            createInspectionSettings: () => TestConstants.SimpleInspectionSettings,
+            createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
             maintainWorkspaceCache: false,
         };
 

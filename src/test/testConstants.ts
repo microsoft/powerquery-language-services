@@ -236,7 +236,7 @@ export const SimpleLibrary: Library.ILibrary = {
 };
 
 export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
-    createInspectionSettings: () => SimpleInspectionSettings,
+    createInspectionSettingsFn: () => SimpleInspectionSettings,
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,

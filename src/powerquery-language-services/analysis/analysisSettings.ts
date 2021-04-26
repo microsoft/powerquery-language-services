@@ -9,7 +9,7 @@ import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTy
 import { WorkspaceCache } from "../workspaceCache";
 
 export interface AnalysisSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
-    readonly createInspectionSettings: () => Inspection.InspectionSettings<S>;
+    readonly createInspectionSettingsFn: () => Inspection.InspectionSettings<S>;
     readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => AutocompleteItemProvider;
     readonly maybeCreateLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentSymbolProviderFn?: (

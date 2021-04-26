@@ -20,7 +20,11 @@ export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IPar
     ) {
         super(
             analysisSettings,
-            WorkspaceCacheUtils.getOrCreateInspection(document, analysisSettings.createInspectionSettings(), position),
+            WorkspaceCacheUtils.getOrCreateInspection(
+                document,
+                analysisSettings.createInspectionSettingsFn(),
+                position,
+            ),
             position,
             library,
         );
@@ -33,7 +37,7 @@ export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IPar
     }
 
     protected getLexerState(): WorkspaceCache.LexCacheItem {
-        return WorkspaceCacheUtils.getOrCreateLex(this.document, this.analysisSettings.createInspectionSettings());
+        return WorkspaceCacheUtils.getOrCreateLex(this.document, this.analysisSettings.createInspectionSettingsFn());
     }
 
     protected getText(range?: Range): string {
