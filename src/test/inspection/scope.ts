@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
+import type { Position } from "vscode-languageserver-types";
 
 import { TestUtils } from "..";
 import { Inspection } from "../../powerquery-language-services";
@@ -136,7 +137,7 @@ function createAbridgedParameterScopeItems(nodeScope: Inspection.NodeScope): Rea
 function assertNodeScopeOk(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.NodeScope {
     const maybeActiveNode: Inspection.TMaybeActiveNode = Inspection.ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
@@ -161,7 +162,7 @@ function assertNodeScopeOk(
 export function assertGetParseOkScopeOk(
     settings: PQP.LexSettings & PQP.ParseSettings<PQP.Parser.IParseState>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.NodeScope {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
     return assertNodeScopeOk(settings, parseOk.nodeIdMapCollection, position);
@@ -170,7 +171,7 @@ export function assertGetParseOkScopeOk(
 export function assertGetParseErrScopeOk(
     settings: PQP.LexSettings & PQP.ParseSettings<PQP.Parser.IParseState>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.NodeScope {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
     return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, position);
@@ -180,7 +181,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
     describe(`Scope`, () => {
         describe(`${PQP.Language.Ast.NodeKind.EachExpression} (Ast)`, () => {
             it(`|each 1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`|each 1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|each 1`);
                 const expected: ReadonlyArray<TAbridgedNodeScopeItem> = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -189,7 +190,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`each| 1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`each| 1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each| 1`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -198,7 +199,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`each |1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`each |1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |1`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -214,7 +215,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`each 1|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`each 1|`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each 1|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -230,9 +231,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`each each 1|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `each each 1|`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each each 1|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -250,7 +249,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.EachExpression} (ParserContext)`, () => {
             it(`each|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`each|`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each|`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -259,7 +258,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`each |`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`each |`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -277,9 +276,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `|(x) => z`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) => z`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -288,9 +285,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x|, y) => z`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x|, y) => z`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) => z`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -299,9 +294,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x, y)| => z`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x, y)| => z`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| => z`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -310,9 +303,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x, y) => z|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x, y) => z|`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) => z|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -340,7 +331,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
             it(`|(x) =>`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`|(x) =>`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) =>`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -349,9 +340,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x|, y) =>`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x|, y) =>`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) =>`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -360,9 +349,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x, y)| =>`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x, y)| =>`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| =>`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -371,9 +358,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(x, y) =>|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `(x, y) =>|`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) =>|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -401,7 +386,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`let x = 1, y = x in 1|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let x = 1, y = x in 1|`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -429,7 +414,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.RecordExpression} (Ast)`, () => {
             it(`|[a=1]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`|[a=1]`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1]`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -438,7 +423,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[|a=1]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[|a=1]`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1]`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -447,7 +432,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1|]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=1|]`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|]`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -464,9 +449,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1, b=2|]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `[a=1, b=2|]`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|]`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -490,9 +473,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1, b=2|, c=3]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `[a=1, b=2|, c=3]`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3]`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -523,7 +504,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1]|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=1]|`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1]|`);
                 const expected: AbridgedNodeScope = [];
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
@@ -532,9 +513,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=[|b=1]]`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `[a=[|b=1]]`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1]]`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -553,7 +532,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
             it(`|[a=1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`|[a=1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -562,7 +541,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[|a=1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[|a=1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1`);
                 const expected: AbridgedNodeScope = [];
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
@@ -571,7 +550,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=|1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=|1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=|1`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -588,7 +567,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=1|`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -605,9 +584,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1, b=|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `[a=1, b=|`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -631,9 +608,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1, b=2|, c=3`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `[a=1, b=2|, c=3`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -664,7 +639,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=[|b=1`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -681,7 +656,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=[b=|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(`[a=[b=|`);
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[b=|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -707,7 +682,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.Section} (Ast)`, () => {
             it(`s|ection foo; x = 1; y = 2;`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `s|ection foo; x = 1; y = 2;`,
                 );
                 const expected: AbridgedNodeScope = [];
@@ -718,7 +693,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1|; y = 2;`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1|; y = 2;`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -744,7 +719,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1; y = 2|;`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = 2|;`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -770,7 +745,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1; y = 2;|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = 2;|`,
                 );
                 const expected: AbridgedNodeScope = [];
@@ -781,7 +756,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -823,7 +798,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.SectionMember} (ParserContext)`, () => {
             it(`s|ection foo; x = 1; y = 2`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `s|ection foo; x = 1; y = 2`,
                 );
                 const expected: AbridgedNodeScope = [];
@@ -834,7 +809,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1|; y = 2`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1|; y = 2`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -860,7 +835,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1; y = 2|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = 2|`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -886,7 +861,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`section foo; x = 1; y = () => 10|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = () => 10|`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -914,9 +889,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.LetExpression} (Ast)`, () => {
             it(`let a = 1 in |x`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `let a = 1 in |x`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |x`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -933,9 +906,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = 1 in x|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `let a = 1 in x|`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in x|`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -952,9 +923,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = |1 in x`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `let a = |1 in x`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = |1 in x`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -971,7 +940,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = 1, b = 2 in x|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let a = 1, b = 2 in x|`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -997,7 +966,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = 1|, b = 2 in x`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let a = 1|, b = 2 in x`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1023,7 +992,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `(p1, p2) => let a = 1, b = 2, c = 3| in c`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1072,7 +1041,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1105,7 +1074,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1147,9 +1116,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${PQP.Language.Ast.NodeKind.LetExpression} (ParserContext)`, () => {
             it(`let a = 1 in |`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-                    `let a = 1 in |`,
-                );
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |`);
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -1166,7 +1133,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = 1, b = 2 in |`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let a = 1, b = 2 in |`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1192,7 +1159,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let a = 1|, b = 2 in`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let a = 1|, b = 2 in `,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1218,7 +1185,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let x = (let y = 1 in z|) in`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let x = (let y = 1 in z|) in`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1244,7 +1211,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`let x = (let y = 1 in z) in |`, () => {
-                const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let x = (let y = 1 in z) in |`,
                 );
                 const expected: AbridgedNodeScope = [
@@ -1266,7 +1233,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
     describe(`Parameter`, () => {
         it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
             );
             const expected: ReadonlyArray<AbridgedParameterScopeItem> = [

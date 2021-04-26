@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
+import type { Position } from "vscode-languageserver-types";
 import { Inspection } from "../../powerquery-language-services";
 
 import { TestConstants, TestUtils } from "..";
@@ -15,7 +16,7 @@ import { InspectionSettings } from "../../powerquery-language-services/inspectio
 function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.InvokeExpression | undefined {
     const activeNode: Inspection.ActiveNode = Inspection.ActiveNodeUtils.assertActiveNode(
         nodeIdMapCollection,
@@ -34,7 +35,7 @@ function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.
 function assertParseOkInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.InvokeExpression | undefined {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
     return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
@@ -43,7 +44,7 @@ function assertParseOkInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.
 function assertParseErrInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.InvokeExpression | undefined {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
     return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
@@ -268,7 +269,7 @@ function expectNestedInvocation(inspected: Inspection.InvokeExpression | undefin
 describe(`subset Inspection - InvokeExpression`, () => {
     describe(`parse Ok`, () => {
         it("expects no parameters, given no parameters", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -281,7 +282,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects no parameters, given extraneous parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -293,7 +294,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expect number parameter, missing parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -305,7 +306,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -318,7 +319,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required and optional", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -331,7 +332,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given text", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -344,7 +345,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given nothing", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -356,7 +357,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given number", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -369,7 +370,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("nested invocations, expects no parameters, missing parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz)`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
@@ -384,7 +385,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     describe(`parse error`, () => {
         it("expects no parameters, given no parameters", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -397,7 +398,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects no parameters, given extraneous parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -409,7 +410,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expect number parameter, missing parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -421,7 +422,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -434,7 +435,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required and optional", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -447,7 +448,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given text", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -460,7 +461,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given nothing", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -472,7 +473,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given number", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
@@ -485,7 +486,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("nested invocations, expects no parameters, missing parameter", () => {
-            const [text, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
             const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
