@@ -3,8 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Position } from "vscode-languageserver-types";
+import { PositionUtils } from "..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { Position, PositionUtils } from "../position";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 

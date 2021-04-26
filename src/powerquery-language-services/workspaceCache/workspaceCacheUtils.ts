@@ -196,10 +196,7 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
         inspectionSettings,
         parseState,
         PQP.TaskUtils.isParseStageParseError(parseCacheItem) ? parseCacheItem.error : undefined,
-        {
-            lineNumber: position.line,
-            lineCodeUnit: position.character,
-        },
+        position,
     );
     const inspectionCacheItem: InspectionCacheItem = {
         ...inspection,

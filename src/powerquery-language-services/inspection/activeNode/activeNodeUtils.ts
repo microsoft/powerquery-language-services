@@ -3,7 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Position, PositionUtils } from "../position";
+import { Position } from "vscode-languageserver-types";
+
+import { PositionUtils } from "..";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 
 // Searches all leaf PQP.Language.Ast.TNodes and all Context nodes to find the "active" node.

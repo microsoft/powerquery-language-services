@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
+import { Position } from "vscode-languageserver-types";
 
 import { TestUtils } from "..";
 import { Inspection } from "../../powerquery-language-services";
@@ -79,9 +80,7 @@ function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Pars
     textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
 ): void {
-    const [textWithoutPipe, position]: [string, Inspection.Position] = TestUtils.assertGetTextWithPosition(
-        textWithPipe,
-    );
+    const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
 
     const actual: Inspection.ScopeTypeByKey = assertGetParseOkScopeTypeOk(
@@ -96,7 +95,7 @@ function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Pars
 function assertGetParseOkScopeTypeOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: Inspection.InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.ScopeTypeByKey {
     const activeNodeLeaf: PQP.Parser.TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
         Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, position),

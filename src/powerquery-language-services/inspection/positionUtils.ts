@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Position } from "./position";
+import { Position } from "vscode-languageserver-types";
 
 export function isBeforeXor(position: Position, xorNode: PQP.Parser.TXorNode, isBoundIncluded: boolean): boolean {
     switch (xorNode.kind) {
@@ -202,7 +202,7 @@ export function isBeforeTokenPosition(
     tokenPosition: PQP.Language.Token.TokenPosition,
     isBoundIncluded: boolean,
 ): boolean {
-    const positionLineNumber: number = position.lineNumber;
+    const positionLineNumber: number = position.line;
 
     if (positionLineNumber < tokenPosition.lineNumber) {
         return true;
@@ -210,12 +210,12 @@ export function isBeforeTokenPosition(
         return false;
     } else {
         const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit + 1;
-        return position.lineCodeUnit < upperBound;
+        return position.character < upperBound;
     }
 }
 
 export function isOnTokenPosition(position: Position, tokenPosition: PQP.Language.Token.TokenPosition): boolean {
-    return position.lineNumber === tokenPosition.lineNumber && position.lineCodeUnit === tokenPosition.lineCodeUnit;
+    return position.line === tokenPosition.lineNumber && position.character === tokenPosition.lineCodeUnit;
 }
 
 export function isAfterTokenPosition(
@@ -223,7 +223,7 @@ export function isAfterTokenPosition(
     tokenPosition: PQP.Language.Token.TokenPosition,
     isBoundIncluded: boolean,
 ): boolean {
-    const positionLineNumber: number = position.lineNumber;
+    const positionLineNumber: number = position.line;
 
     if (positionLineNumber < tokenPosition.lineNumber) {
         return false;
@@ -231,6 +231,6 @@ export function isAfterTokenPosition(
         return true;
     } else {
         const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit - 1;
-        return position.lineCodeUnit > upperBound;
+        return position.character > upperBound;
     }
 }

@@ -25,7 +25,7 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
 export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
     text: string,
-    position: Inspection.Position,
+    position: Position,
 ): Inspection.Autocomplete {
     const triedLexParseTask: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
@@ -103,15 +103,15 @@ export function assertGetLexParseError<S extends PQP.Parser.IParseState = PQP.Pa
 }
 
 // Only works with single line expressions
-export function assertGetTextWithPosition(text: string): [string, Inspection.Position] {
+export function assertGetTextWithPosition(text: string): [string, Position] {
     const indexOfPipe: number = text.indexOf("|");
 
     expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
     expect(indexOfPipe).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
 
-    const position: Inspection.Position = {
-        lineNumber: 0,
-        lineCodeUnit: indexOfPipe,
+    const position: Position = {
+        line: 0,
+        character: indexOfPipe,
     };
 
     return [text.replace("|", ""), position];

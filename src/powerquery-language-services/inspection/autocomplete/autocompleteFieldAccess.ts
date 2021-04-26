@@ -4,9 +4,10 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { Position } from "vscode-languageserver-types";
 
+import { PositionUtils } from "..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { Position, PositionUtils } from "../position";
 import { InspectionSettings } from "../settings";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../typeCache";

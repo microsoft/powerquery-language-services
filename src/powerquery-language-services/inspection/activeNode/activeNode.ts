@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Position } from "../position";
+import { Position } from "vscode-languageserver-types";
 
 export type TMaybeActiveNode =
     // A Position located inside an Ast (either fully or partially parsed).
