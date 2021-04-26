@@ -34,7 +34,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
         return Inspection.autocomplete(
             settings,
             triedLexParseTask.parseState,
-            TypeCacheUtils.createTypeCache(),
+            TypeCacheUtils.createEmptyCache(),
             ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             undefined,
         );
@@ -46,7 +46,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
         return Inspection.autocomplete<S>(
             settings,
             triedLexParseTask.parseState,
-            TypeCacheUtils.createTypeCache(),
+            TypeCacheUtils.createEmptyCache(),
             ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             triedLexParseTask.error,
         );

@@ -19,8 +19,9 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     parseState: S,
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
     position: Position,
+    maybeTypeCache: TypeCache | undefined = undefined,
 ): Inspection {
-    const typeCache: TypeCache = TypeCacheUtils.createTypeCache();
+    const typeCache: TypeCache = maybeTypeCache ?? TypeCacheUtils.createEmptyCache();
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty

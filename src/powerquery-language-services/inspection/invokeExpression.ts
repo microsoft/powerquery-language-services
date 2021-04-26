@@ -45,7 +45,7 @@ export function tryInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parse
             settings,
             nodeIdMapCollection,
             maybeActiveNode,
-            maybeTypeCache ?? TypeCacheUtils.createTypeCache(),
+            maybeTypeCache ?? TypeCacheUtils.createEmptyCache(),
         ),
     );
 }

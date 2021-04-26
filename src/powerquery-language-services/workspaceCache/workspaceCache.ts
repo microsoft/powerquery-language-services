@@ -29,4 +29,5 @@ export interface CacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.I
     readonly maybeLex: LexCacheItem | undefined;
     readonly maybeParse: ParseCacheItem<S> | undefined;
     readonly maybeInspection: Map<Position, InspectionCacheItem<S>> | undefined;
+    readonly typeCache: Inspection.TypeCache;
 }

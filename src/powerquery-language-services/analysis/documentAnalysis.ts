@@ -14,14 +14,14 @@ import { AnalysisSettings } from "./analysisSettings";
 export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> extends AnalysisBase<S> {
     constructor(
         analysisSettings: AnalysisSettings<S>,
-        private readonly document: TextDocument,
+        private readonly textDocument: TextDocument,
         position: Position,
         library: ILibrary,
     ) {
         super(
             analysisSettings,
             WorkspaceCacheUtils.getOrCreateInspection(
-                document,
+                textDocument,
                 analysisSettings.createInspectionSettingsFn(),
                 position,
             ),
@@ -32,15 +32,18 @@ export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IPar
 
     public dispose(): void {
         if (!this.analysisSettings.maintainWorkspaceCache) {
-            WorkspaceCacheUtils.close(this.document);
+            WorkspaceCacheUtils.close(this.textDocument);
         }
     }
 
     protected getLexerState(): WorkspaceCache.LexCacheItem {
-        return WorkspaceCacheUtils.getOrCreateLex(this.document, this.analysisSettings.createInspectionSettingsFn());
+        return WorkspaceCacheUtils.getOrCreateLex(
+            this.textDocument,
+            this.analysisSettings.createInspectionSettingsFn(),
+        );
     }
 
     protected getText(range?: Range): string {
-        return this.document.getText(range);
+        return this.textDocument.getText(range);
     }
 }

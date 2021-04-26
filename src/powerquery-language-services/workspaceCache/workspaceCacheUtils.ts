@@ -6,6 +6,7 @@ import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageser
 import { Position } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
+import { TypeCacheUtils } from "../inspection";
 import type {
     CacheCollection,
     CacheItem,
@@ -24,6 +25,14 @@ export function assertIsInspectionTask<S extends PQP.Parser.IParseState = PQP.Pa
             actualStage: cacheItem?.stage,
         });
     }
+}
+
+export function getOrCreateTypeCache<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    textDocument: TextDocument,
+): Inspection.TypeCache {
+    const cacheKey: string = createCacheKey(textDocument);
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey);
+    return cacheCollection.typeCache;
 }
 
 export function getOrCreateLex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
@@ -196,10 +205,8 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
         inspectionSettings,
         parseState,
         PQP.TaskUtils.isParseStageParseError(parseCacheItem) ? parseCacheItem.error : undefined,
-        {
-            lineNumber: position.line,
-            lineCodeUnit: position.character,
-        },
+        position,
+        cacheCollection.typeCache,
     );
     const inspectionCacheItem: InspectionCacheItem = {
         ...inspection,
@@ -233,6 +240,7 @@ function createEmptyCollection<S extends PQP.Parser.IParseState = PQP.Parser.IPa
         maybeLex: undefined,
         maybeParse: undefined,
         maybeInspection: undefined,
+        typeCache: TypeCacheUtils.createEmptyCache(),
     };
 }
 
