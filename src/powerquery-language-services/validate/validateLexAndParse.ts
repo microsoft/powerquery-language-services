@@ -2,33 +2,37 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
-import { ValidationOptions } from "./commonTypes";
+import { ValidationSettings } from "./validationSettings";
 
-export interface LexParseDiagnosticCheck {
-    readonly diagnostics: Diagnostic[];
-    readonly maybeParserContextState: PQP.Parser.ParseContext.State | undefined;
-}
-
-export function validateLexAndParse(document: TextDocument, options: ValidationOptions): Diagnostic[] {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+export function validateLexAndParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings<S>,
+): Diagnostic[] {
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        textDocument,
+        validationSettings,
+    );
 
     if (PQP.TaskUtils.isLexStage(cacheItem)) {
-        return lexerDiagnosticCheck(cacheItem, options);
+        return validateLex(cacheItem, validationSettings);
     } else if (PQP.TaskUtils.isParseStage(cacheItem)) {
-        return parserDiagnosticCheck(cacheItem, options);
+        return validateParse(cacheItem, validationSettings);
     } else {
         return [];
     }
 }
 
-function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: ValidationOptions): Diagnostic[] {
+function validateLex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    triedLex: PQP.Task.TriedLexTask,
+    validationSettings: ValidationSettings<S>,
+): Diagnostic[] {
     if (PQP.TaskUtils.isOk(triedLex) || !PQP.Lexer.LexError.isLexError(triedLex.error)) {
         return [];
     }
@@ -51,7 +55,7 @@ function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: Validati
                     code: DiagnosticErrorCode.LexError,
                     message,
                     severity: DiagnosticSeverity.Error,
-                    source: options?.source,
+                    source: validationSettings?.source,
                     range: {
                         start: position,
                         end: position,
@@ -64,7 +68,10 @@ function lexerDiagnosticCheck(triedLex: PQP.Task.TriedLexTask, options: Validati
     return diagnostics;
 }
 
-function parserDiagnosticCheck(triedParse: PQP.Task.TriedParseTask, options: ValidationOptions): Diagnostic[] {
+function validateParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    triedParse: PQP.Task.TriedParseTask,
+    validationSettings: ValidationSettings<S>,
+): Diagnostic[] {
     if (PQP.TaskUtils.isOk(triedParse) || !PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return [];
     }
@@ -136,7 +143,7 @@ function parserDiagnosticCheck(triedParse: PQP.Task.TriedParseTask, options: Val
             message,
             range,
             severity: DiagnosticSeverity.Error,
-            source: options?.source,
+            source: validationSettings?.source,
         },
     ];
 }

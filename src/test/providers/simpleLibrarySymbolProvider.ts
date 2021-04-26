@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import "mocha";
 import {
-    AnalysisOptions,
+    AnalysisSettings,
     EmptyHover,
     EmptySignatureHelp,
     Hover,
@@ -20,24 +20,24 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 
-const IsolatedAnalysisOptions: AnalysisOptions = {
-    ...TestConstants.SimpleLibraryAnalysisOptions,
-    createLocalDocumentSymbolProviderFn: (
+const IsolatedAnalysisSettings: AnalysisSettings = {
+    ...TestConstants.SimpleLibraryAnalysisSettings,
+    maybeCreateLocalDocumentSymbolProviderFn: (
         _library: ILibrary,
         _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
     ) => NullSymbolProvider.singleton(),
 };
 
 async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 async function createHover(text: string): Promise<Hover> {
-    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 async function createSignatureHelp(text: string): Promise<SignatureHelp> {
-    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 describe(`SimpleLibraryProvider`, async () => {

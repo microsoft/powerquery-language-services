@@ -3,18 +3,28 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { ValidationOptions, ValidationResult } from "./commonTypes";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateLexAndParse } from "./validateLexAndParse";
+import type { ValidationResult } from "./validationResult";
+import type { ValidationSettings } from "./validationSettings";
 
-export function validate(document: TextDocument, options: ValidationOptions): ValidationResult {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, options?.locale);
+export function validate<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings<S>,
+): ValidationResult {
+    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        textDocument,
+        validationSettings,
+    );
 
     return {
-        diagnostics: [...validateDuplicateIdentifiers(document, options), ...validateLexAndParse(document, options)],
+        diagnostics: [
+            ...validateDuplicateIdentifiers(textDocument, validationSettings),
+            ...validateLexAndParse(textDocument, validationSettings),
+        ],
         hasSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),
     };
 }

@@ -5,4 +5,4 @@ export * as AnalysisUtils from "./analysisUtils";
 export { AnalysisBase } from "./analysisBase";
 export { Analysis } from "./analysis";
 export { DocumentAnalysis } from "./documentAnalysis";
-export { AnalysisOptions } from "./analysisOptions";
+export { AnalysisSettings } from "./analysisSettings";

@@ -36,10 +36,13 @@ function expectSymbolsForNode(
 
 describe("Document symbol base functions", () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
-        const document: MockDocument = TestUtils.createTextMockDocument(
+        const testDocument: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+            testDocument,
+            PQP.DefaultSettings,
+        );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.ast, [
@@ -50,16 +53,24 @@ describe("Document symbol base functions", () => {
     });
 
     it(`section foo; a = {1,2};`, () => {
-        const document: MockDocument = TestUtils.createTextMockDocument(`section foo; a = {1,2};`);
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const text: string = `section foo; a = {1,2};`;
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+            textDocument,
+            PQP.DefaultSettings,
+        );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, () => {
-        const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = 2, c = 3 in c`);
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const text: string = `let a = 1, b = 2, c = 3 in c`;
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+            textDocument,
+            PQP.DefaultSettings,
+        );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.ast, [
@@ -70,8 +81,12 @@ describe("Document symbol base functions", () => {
     });
 
     it("HelloWorldWithDocs file section", () => {
-        const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const text: string = TestUtils.readFile("HelloWorldWithDocs.pq");
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+            textDocument,
+            PQP.DefaultSettings,
+        );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.ast, [
@@ -84,8 +99,12 @@ describe("Document symbol base functions", () => {
     });
 
     it("DirectQueryForSQL file section", () => {
-        const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getTriedParse(document, undefined);
+        const text: string = TestUtils.readFile("DirectQueryForSQL.pq");
+        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+            textDocument,
+            PQP.DefaultSettings,
+        );
         TestUtils.assertParserCacheItemOk(lexAndParseOk);
 
         expectSymbolsForNode(lexAndParseOk.ast, [

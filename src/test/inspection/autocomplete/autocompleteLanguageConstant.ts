@@ -12,7 +12,7 @@ import { Inspection } from "../../../powerquery-language-services";
 import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./common";
 
 function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & Inspection.InspectionSettings,
+    settings: Inspection.InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): AbridgedAutocompleteItem | undefined {
@@ -32,7 +32,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -46,7 +46,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -60,7 +60,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -74,7 +74,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Nullable,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -88,7 +88,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Optional,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
@@ -102,7 +102,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: PQP.Language.Constant.LanguageConstantKind.Optional,
         };
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
-            TestConstants.DefaultSettings,
+            TestConstants.DefaultInspectionSettings,
             text,
             position,
         );

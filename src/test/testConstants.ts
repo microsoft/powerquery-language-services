@@ -6,17 +6,18 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import {
-    AnalysisOptions,
+    AnalysisSettings,
     CompletionItemKind,
     Inspection,
     Library,
     LibraryUtils,
     LocalDocumentSymbolProvider,
+    ValidationSettings,
     WorkspaceCache,
 } from "../powerquery-language-services";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
-export const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
+export const DefaultInspectionSettings: Inspection.InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: undefined,
 };
@@ -218,9 +219,15 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
     }
 };
 
-export const SimpleSettings: PQP.Settings & Inspection.InspectionSettings = {
-    ...DefaultSettings,
+export const SimpleInspectionSettings: Inspection.InspectionSettings = {
+    ...DefaultInspectionSettings,
     maybeExternalTypeResolver: SimpleExternalTypeResolver,
+};
+
+export const SimpleValidationSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: true,
+    source: "UNIT-TEST-SOURCE",
 };
 
 export const SimpleLibrary: Library.ILibrary = {
@@ -228,9 +235,10 @@ export const SimpleLibrary: Library.ILibrary = {
     libraryDefinitions: SimpleLibraryDefinitions,
 };
 
-export const SimpleLibraryAnalysisOptions: AnalysisOptions = {
-    createLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
-    createLocalDocumentSymbolProviderFn: (
+export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
+    createInspectionSettingsFn: () => SimpleInspectionSettings,
+    maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
+    maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
         maybeTriedInspection: WorkspaceCache.InspectionCacheItem | undefined,
     ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),
