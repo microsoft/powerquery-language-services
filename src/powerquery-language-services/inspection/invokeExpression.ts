@@ -9,7 +9,7 @@ import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "./scope";
 import { InspectionSettings } from "./settings";
 import { TriedType, tryType } from "./type";
-import { createTypeCache, TypeCache } from "./typeCache";
+import { TypeCache, TypeCacheUtils } from "./typeCache";
 
 export type TriedInvokeExpression = PQP.Result<InvokeExpression | undefined, PQP.CommonError.CommonError>;
 
@@ -30,8 +30,8 @@ export interface InvokeExpressionArguments {
     readonly typeCheck: PQP.Language.TypeUtils.CheckedInvocation;
 }
 
-export function tryInvokeExpression(
-    settings: InspectionSettings,
+export function tryInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
     maybeTypeCache: TypeCache | undefined = undefined,
@@ -41,12 +41,17 @@ export function tryInvokeExpression(
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, maybeTypeCache ?? createTypeCache()),
+        inspectInvokeExpression(
+            settings,
+            nodeIdMapCollection,
+            maybeActiveNode,
+            maybeTypeCache ?? TypeCacheUtils.createTypeCache(),
+        ),
     );
 }
 
-function inspectInvokeExpression(
-    settings: InspectionSettings,
+function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     activeNode: ActiveNode,
     typeCache: TypeCache,
@@ -114,8 +119,8 @@ function inspectInvokeExpression(
     return undefined;
 }
 
-function getIsNameInLocalScope(
-    settings: InspectionSettings,
+function getIsNameInLocalScope<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     typeCache: TypeCache,
     invokeExpressionXorNode: PQP.Parser.TXorNode,
@@ -151,8 +156,8 @@ function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction
     return [numMinExpectedArguments, numMaxExpectedArguments];
 }
 
-function getArgumentTypes(
-    settings: InspectionSettings,
+function getArgumentTypes<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     typeCache: TypeCache,
     argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,

@@ -5,10 +5,11 @@
 
 import { expect } from "chai";
 import "mocha";
+import { TestConstants } from ".";
 
 import {
     Analysis,
-    AnalysisOptions,
+    AnalysisSettings,
     AnalysisUtils,
     CompletionItemKind,
     createTextDocument,
@@ -22,8 +23,8 @@ import { SimpleLibrary } from "./testConstants";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
-        const options: AnalysisOptions = {
-            locale: "en-us",
+        const analysisSettings: AnalysisSettings = {
+            createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
             maintainWorkspaceCache: false,
         };
 
@@ -34,7 +35,12 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, position, SimpleLibrary, options);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
+            analysisSettings,
+            textDocument,
+            position,
+            SimpleLibrary,
+        );
         const hover: Hover = await analysis.getHover();
 
         expect(hover.range === undefined);

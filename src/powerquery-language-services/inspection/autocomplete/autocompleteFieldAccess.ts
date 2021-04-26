@@ -14,7 +14,7 @@ import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 
 export function tryAutocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings,
+    settings: InspectionSettings<S>,
     parseState: S,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
@@ -40,7 +40,7 @@ const FieldAccessNodeKinds: ReadonlyArray<PQP.Language.Ast.NodeKind> = [
 ];
 
 function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings,
+    settings: InspectionSettings<S>,
     parseState: S,
     activeNode: ActiveNode,
     typeCache: TypeCache,

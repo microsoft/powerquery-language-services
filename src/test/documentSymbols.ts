@@ -8,7 +8,7 @@ import "mocha";
 
 import * as DocumentSymbols from "../powerquery-language-services/documentSymbols";
 
-import { TestUtils } from ".";
+import { TestConstants, TestUtils } from ".";
 import { SymbolKind, TextDocument } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
 import { AbridgedDocumentSymbol } from "./testUtils";
@@ -19,7 +19,7 @@ function expectSymbolsForDocument(
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): void {
     const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
-        DocumentSymbols.getDocumentSymbols(document),
+        DocumentSymbols.getDocumentSymbols(TestConstants.SimpleInspectionSettings, document),
     );
 
     assert.isDefined(actualSymbols);

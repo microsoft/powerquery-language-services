@@ -5,12 +5,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { CompletionItemKind, Position, Range, SymbolKind } from "vscode-languageserver-types";
 
-import { AnalysisOptions } from "./analysis/analysisOptions";
-
-export function getLocale(analysisOptions: AnalysisOptions | undefined): string {
-    return analysisOptions?.locale ?? DefaultLocale;
-}
-
 export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): CompletionItemKind | undefined {
     switch (symbolKind) {
         case SymbolKind.Array:
@@ -79,5 +73,3 @@ export function tokenPositionToRange(
 export function tokenRangeToRange(tokenRange: PQP.Language.Token.TokenRange): Range {
     return tokenPositionToRange(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
-
-const DefaultLocale: string = PQP.Locale.en_US;

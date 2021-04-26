@@ -20,7 +20,7 @@ export type TAbridgedNodeScopeItem =
 
 type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 
-const DefaultSettings: PQP.Settings & Inspection.InspectionSettings = {
+const DefaultSettings: Inspection.InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: undefined,
 };

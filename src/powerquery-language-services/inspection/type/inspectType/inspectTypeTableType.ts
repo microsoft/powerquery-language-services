@@ -6,8 +6,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { InspectTypeState, inspectXor } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
-export function inspectTypeTableType(
-    state: InspectTypeState,
+export function inspectTypeTableType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TableType | PQP.Language.Type.TableTypePrimaryExpression | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();

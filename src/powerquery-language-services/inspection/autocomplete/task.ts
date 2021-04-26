@@ -21,7 +21,7 @@ import {
 } from "./commonTypes";
 
 export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings,
+    settings: InspectionSettings<S>,
     parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,

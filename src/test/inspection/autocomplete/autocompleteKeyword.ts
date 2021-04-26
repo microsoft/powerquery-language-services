@@ -14,7 +14,7 @@ function assertGetKeywordAutocomplete(
     position: Inspection.Position,
 ): ReadonlyArray<Inspection.AutocompleteItem> {
     const actual: Inspection.Autocomplete = TestUtils.assertGetAutocomplete(
-        TestConstants.DefaultSettings,
+        TestConstants.DefaultInspectionSettings,
         text,
         position,
     );

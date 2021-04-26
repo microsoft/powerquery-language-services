@@ -5,6 +5,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ExternalType } from "./externalType";
 
-export interface InspectionSettings extends PQP.CommonSettings {
+export interface InspectionSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> extends PQP.Settings<S> {
     readonly maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined;
 }

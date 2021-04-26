@@ -13,7 +13,7 @@ import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languagese
 import * as TestConstants from "../testConstants";
 
 import { Inspection, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
-import { ActiveNodeUtils, InspectionSettings } from "../../powerquery-language-services/inspection";
+import { ActiveNodeUtils, InspectionSettings, TypeCacheUtils } from "../../powerquery-language-services/inspection";
 import { CacheItem } from "../../powerquery-language-services/workspaceCache/workspaceCache";
 import { MockDocument } from "../mockDocument";
 
@@ -23,7 +23,7 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
 }
 
 export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.LexSettings & PQP.ParseSettings<S> & InspectionSettings,
+    settings: InspectionSettings<S>,
     text: string,
     position: Inspection.Position,
 ): Inspection.Autocomplete {
@@ -34,7 +34,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
         return Inspection.autocomplete(
             settings,
             triedLexParseTask.parseState,
-            Inspection.createTypeCache(),
+            TypeCacheUtils.createTypeCache(),
             ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             undefined,
         );
@@ -43,10 +43,10 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
             throw triedLexParseTask.error;
         }
 
-        return Inspection.autocomplete(
+        return Inspection.autocomplete<S>(
             settings,
             triedLexParseTask.parseState,
-            Inspection.createTypeCache(),
+            TypeCacheUtils.createTypeCache(),
             ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             triedLexParseTask.error,
         );
@@ -72,11 +72,10 @@ export function assertGetAutocompleteItem(
 }
 
 export function assertGetInspectionCacheItem(document: MockDocument, position: Position): Inspection.Inspection {
-    const cacheItem: WorkspaceCache.InspectionCacheItem = WorkspaceCacheUtils.getTriedInspection(
+    const cacheItem: WorkspaceCache.InspectionCacheItem = WorkspaceCacheUtils.getOrCreateInspection(
         document,
+        TestConstants.SimpleInspectionSettings,
         position,
-        TestConstants.SimpleExternalTypeResolver,
-        undefined,
     );
     assertIsDefined(cacheItem);
     assertInspectionCacheItemOk(cacheItem);

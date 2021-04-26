@@ -7,7 +7,7 @@ import "mocha";
 
 import { TestConstants, TestUtils } from "..";
 import {
-    AnalysisOptions,
+    AnalysisSettings,
     AnalysisUtils,
     EmptyHover,
     Hover,
@@ -21,22 +21,22 @@ import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
 import { SimpleLibrary } from "../testConstants";
 
-const IsolatedAnalysisOptions: AnalysisOptions = {
-    ...TestConstants.SimpleLibraryAnalysisOptions,
-    createLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
-    createLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
+const IsolatedAnalysisSettings: AnalysisSettings = {
+    ...TestConstants.SimpleLibraryAnalysisSettings,
+    maybeCreateLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
+    maybeCreateLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
 };
 
 async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 async function createHover(text: string): Promise<Hover> {
-    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 async function createSignatureHelp(text: string): Promise<SignatureHelp> {
-    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisOptions);
+    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
 }
 
 describe(`SimpleLocalDocumentSymbolProvider`, async () => {
@@ -169,6 +169,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const position: Position = pair[1];
 
             const autocompleteItems: Inspection.AutocompleteItem[] = await AnalysisUtils.createAnalysis(
+                { createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings },
                 document,
                 position,
                 SimpleLibrary,

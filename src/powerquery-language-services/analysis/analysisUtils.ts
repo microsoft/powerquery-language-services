@@ -6,14 +6,14 @@ import type { Position } from "vscode-languageserver-types";
 
 import { ILibrary } from "../library/library";
 import { Analysis } from "./analysis";
-import { AnalysisOptions } from "./analysisOptions";
+import { AnalysisSettings } from "./analysisSettings";
 import { DocumentAnalysis } from "./documentAnalysis";
 
 export function createAnalysis(
+    analysisSettings: AnalysisSettings,
     document: TextDocument,
     position: Position,
     library: ILibrary,
-    options?: AnalysisOptions,
 ): Analysis {
-    return new DocumentAnalysis(document, position, library, options ?? {});
+    return new DocumentAnalysis(analysisSettings, document, position, library);
 }
