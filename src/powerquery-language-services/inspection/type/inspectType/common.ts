@@ -69,7 +69,7 @@ export function assertGetOrCreateNodeScope<S extends PQP.Parser.IParseState = PQ
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
     if (PQP.ResultUtils.isError(triedGetOrCreateScope)) {
-        throw triedGetOrCreateScope.error;
+        throw triedGetOrCreateScope;
     }
 
     return Assert.asDefined(triedGetOrCreateScope.value);

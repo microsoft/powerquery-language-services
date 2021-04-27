@@ -13,5 +13,53 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { ValidationSettings } from "./validationSettings";
+import { Inspection } from "..";
 
-export function validateInvokeExpression(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection): Diagnostic[] {}
+export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    settings: Inspection.InspectionSettings<S>,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    maybeCache?: Inspection.TypeCache,
+): Diagnostic[] {
+    const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+        PQP.Language.Ast.NodeKind.InvokeExpression,
+    );
+    if (maybeInvokeExpressionIds === undefined) {
+        return [];
+    }
+    // const xorNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterXor(
+    //     nodeIdMapCollection,
+    //     [...maybeIds.values()],
+    // );
+
+    const result: Diagnostic[] = [];
+    for (const nodeId of maybeInvokeExpressionIds) {
+        const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
+            settings,
+            nodeIdMapCollection,
+            nodeId,
+            maybeCache,
+        );
+        if (PQP.ResultUtils.isError(triedInvokeExpression)) {
+            throw triedInvokeExpression;
+        }
+
+        result.push(...invokeExpressionToDiagnostics(triedInvokeExpression.value));
+    }
+
+    return result;
+}
+
+function invokeExpressionToDiagnostics(invokeExpression: Inspection.InvokeExpression): Diagnostic[] {
+    const result: Diagnostic[] = [];
+
+    if (invokeExpression.maybeArguments !== undefined) {
+        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = invokeExpression.maybeArguments;
+        const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
+
+        if (numGivenArguments < invokeExpressionArguments.numMaxExpectedArguments) {
+            result.push();
+        }
+    }
+}
+
+function createTooFewArgumentMessage(settings: Inspection.InspectionSettings): string {}

@@ -75,7 +75,7 @@ export function assertGetOrCreateNodeScope(
 
     const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
     if (PQP.ResultUtils.isError(triedNodeScope)) {
-        throw triedNodeScope.error;
+        throw triedNodeScope;
     }
 
     return triedNodeScope;

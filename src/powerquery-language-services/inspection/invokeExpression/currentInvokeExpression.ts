@@ -71,7 +71,7 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
             typeCache,
         );
         if (PQP.ResultUtils.isError(triedInvokeExpression)) {
-            throw triedInvokeExpression.error;
+            throw triedInvokeExpression;
         }
 
         const invokeExpression: InvokeExpression = triedInvokeExpression.value;
