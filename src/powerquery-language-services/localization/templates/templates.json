@@ -1,4 +1,16 @@
 {
     "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-    "_error_validation_duplicate_identifier.comment": "A common error where the user declared two values using the same name. Expected to be user facing."
+    "_error_validation_duplicate_identifier.comment": "A common error where the user declared two values using the same name. Expected to be user facing.",
+
+    "error_validation_invokeExpression_named_num_args": "The function '{identifier}' expects at {leastOrMost} {numExpected} arguments, but {numGiven} were given.",
+    "_error_validation_invokeExpression_named_num_args.comment": "A common error where the user is incorrectly calling a function. The value for `leastOrMost` is either `least` or `most`. Expected to be user facing.",
+
+    "error_validation_invokeExpression_nameless_num_args": "The function expects at {leastOrMost} {numExpected} arguments, but {numGiven} were given.",
+    "_error_validation_invokeExpression_nameless_num_args.comment": "A common error where the user is incorrectly calling a function. The value for `leastOrMost` is either `least` or `most`. Expected to be user facing.",
+
+    "error_validation_invokeExpression_named_argType_mismatch": "The function `{identifier}` expected the {index} argument to be of type {expectedType} but {actualType} was found instead.",
+    "_error_validation_invokeExpression_named_argType_mismatch.comment": "A common error where the user is incorrectly calling a function. Expected to be user facing.",
+
+    "error_validation_invokeExpression_namesless_argType_mismatch": "The function expected the {index} argument to be of type {expectedType} but {actualType} was found instead.",
+    "_error_validation_invokeExpression_namesless_argType_mismatch.comment": "A common error where the user is incorrectly calling a function. Expected to be user facing."
 }
