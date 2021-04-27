@@ -4,7 +4,7 @@
 import { TypeCache } from "./typeCache";
 
 // A cache that can be re-used for successive calls under the same document.
-export function createTypeCache(): TypeCache {
+export function createEmptyCache(): TypeCache {
     return {
         scopeById: new Map(),
         typeById: new Map(),
