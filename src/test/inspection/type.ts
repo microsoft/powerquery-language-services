@@ -39,11 +39,11 @@ const TestSettings: PQP.Settings & Inspection.InspectionSettings = {
 function assertParseOkNodeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: Inspection.InspectionSettings<S>,
     text: string,
-    expected: PQP.Language.Type.PowerQueryType,
+    expected: PQP.Language.Type.TPowerQueryType,
 ): void {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, text);
 
-    const actual: PQP.Language.Type.PowerQueryType = assertGetParseNodeOk(
+    const actual: PQP.Language.Type.TPowerQueryType = assertGetParseNodeOk(
         settings,
         parseOk.nodeIdMapCollection,
         PQP.Parser.XorNodeUtils.createAstNode(parseOk.ast),
@@ -52,10 +52,10 @@ function assertParseOkNodeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parse
     expect(actual).deep.equal(expected);
 }
 
-function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.PowerQueryType): void {
+function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.TPowerQueryType): void {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(TestSettings, text);
 
-    const actual: PQP.Language.Type.PowerQueryType = assertGetParseNodeOk(
+    const actual: PQP.Language.Type.TPowerQueryType = assertGetParseNodeOk(
         TestSettings,
         parseError.nodeIdMapCollection,
         PQP.Parser.XorNodeUtils.createContextNode(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
@@ -68,7 +68,7 @@ function assertGetParseNodeOk<S extends PQP.Parser.IParseState = PQP.Parser.IPar
     settings: Inspection.InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
     Assert.isOk(triedType);
 
@@ -141,7 +141,7 @@ describe(`Inspection - Type`, () => {
         describe(`${PQP.Language.Ast.NodeKind.AsNullablePrimitiveType}`, () => {
             it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
                 const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
-                const expected: Inspection.ScopeTypeByKey = new Map<string, PQP.Language.Type.PowerQueryType>([
+                const expected: Inspection.ScopeTypeByKey = new Map<string, PQP.Language.Type.TPowerQueryType>([
                     ["foo", PQP.Language.Type.NumberInstance],
                     ["bar", PQP.Language.Type.NullableNumberInstance],
                 ]);
@@ -191,7 +191,7 @@ describe(`Inspection - Type`, () => {
         describe(`${PQP.Language.Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try 1`, () => {
                 const expression: string = `try 1`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Record),
                 ]);
@@ -201,7 +201,7 @@ describe(`Inspection - Type`, () => {
 
             it(`try 1 otherwise false`, () => {
                 const expression: string = `try 1 otherwise false`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical),
                 ]);
@@ -222,7 +222,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[a = 1][[a]]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["a", PQP.Language.TypeUtils.createNumberLiteral(false, "1")],
                     ]),
                     false,
@@ -246,7 +246,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["a", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["a", PQP.Language.Type.AnyInstance]]),
                     false,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -256,7 +256,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]?`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["a", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["a", PQP.Language.Type.AnyInstance]]),
                     false,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -275,25 +275,25 @@ describe(`Inspection - Type`, () => {
 
             it(`[a = 1][b]`, () => {
                 const expression: string = `[a = 1][b]`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.NoneInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.NoneInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[a = 1][b]?`, () => {
                 const expression: string = `[a = 1][b]?`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.NullInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.NullInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]`, () => {
                 const expression: string = `let x = (1 as record) in x[a]`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.AnyInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let x = (1 as record) in x[a]?`, () => {
                 const expression: string = `let x = (1 as record) in x[a]?`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.AnyInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -327,7 +327,7 @@ describe(`Inspection - Type`, () => {
 
             it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
                 const expression: string = `(a, b as number, c as nullable number, optional d) => 1`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createDefinedFunction(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createDefinedFunction(
                     false,
                     [
                         {
@@ -434,7 +434,7 @@ describe(`Inspection - Type`, () => {
 
             it(`if true then 1 else false`, () => {
                 const expression: string = `if true then 1 else false`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical),
                 ]);
@@ -444,7 +444,7 @@ describe(`Inspection - Type`, () => {
 
             it(`if if true then true else false then 1 else 0`, () => {
                 const expression: string = `if if true then true else false then 1 else ""`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createTextLiteral(false, `""`),
                 ]);
@@ -453,25 +453,25 @@ describe(`Inspection - Type`, () => {
 
             it(`if`, () => {
                 const expression: string = `if`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.UnknownInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.UnknownInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if "a"`, () => {
                 const expression: string = `if "a"`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.NoneInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.NoneInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if true or "a"`, () => {
                 const expression: string = `if true or "a"`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.Type.NoneInstance;
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.Type.NoneInstance;
                 assertParseErrNodeTypeEqual(expression, expected);
             });
 
             it(`if 1 as any then "a" as text else "b" as text`, () => {
                 const expression: string = `if 1 as any then "a"as text else "b" as text`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
                     false,
                     PQP.Language.Type.TypeKind.Text,
                 );
@@ -480,7 +480,7 @@ describe(`Inspection - Type`, () => {
 
             it(`if 1 as any then "a" else "b"`, () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createTextLiteral(false, `"a"`),
                     PQP.Language.TypeUtils.createTextLiteral(false, `"b"`),
                 ]);
@@ -489,7 +489,7 @@ describe(`Inspection - Type`, () => {
 
             it(`if true then 1`, () => {
                 const expression: string = `if true then 1`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Unknown),
                 ]);
@@ -567,7 +567,7 @@ describe(`Inspection - Type`, () => {
 
             it(`null`, () => {
                 const expression: string = "null";
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
                     true,
                     PQP.Language.Type.TypeKind.Null,
                 );
@@ -593,7 +593,7 @@ describe(`Inspection - Type`, () => {
         describe(`${PQP.Language.Ast.NodeKind.NullableType}`, () => {
             it(`type nullable number`, () => {
                 const expression: string = "type nullable number";
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
                     true,
                     PQP.Language.Type.TypeKind.Number,
                 );
@@ -613,7 +613,7 @@ describe(`Inspection - Type`, () => {
 
             it(`1 ?? 2`, () => {
                 const expression: string = `1 ?? 2`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createNumberLiteral(false, `2`),
                 ]);
@@ -622,7 +622,7 @@ describe(`Inspection - Type`, () => {
 
             it(`1 ?? ""`, () => {
                 const expression: string = `1 ?? ""`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                     PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
                     PQP.Language.TypeUtils.createTextLiteral(false, `""`),
                 ]);
@@ -641,7 +641,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[foo = 1] & [bar = 2]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createNumberLiteral(false, "1")],
                         ["bar", PQP.Language.TypeUtils.createNumberLiteral(false, "2")],
                     ]),
@@ -654,7 +654,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[] & [bar = 2]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["bar", PQP.Language.TypeUtils.createNumberLiteral(false, "2")],
                     ]),
                     false,
@@ -666,7 +666,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[foo = 1] & []`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createNumberLiteral(false, "1")],
                     ]),
                     false,
@@ -678,7 +678,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[foo = 1] & [foo = ""]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `""`)],
                     ]),
                     false,
@@ -690,7 +690,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[] as record & [foo = 1]`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createNumberLiteral(false, "1")],
                     ]),
                     true,
@@ -702,7 +702,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `[foo = 1] & [] as record`;
                 const expected: PQP.Language.Type.DefinedRecord = PQP.Language.TypeUtils.createDefinedRecord(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createNumberLiteral(false, "1")],
                     ]),
                     true,
@@ -712,7 +712,7 @@ describe(`Inspection - Type`, () => {
 
             it(`[] as record & [] as record`, () => {
                 const expression: string = `[] as record & [] as record`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
                     false,
                     PQP.Language.Type.TypeKind.Record,
                 );
@@ -725,7 +725,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type [foo]`;
                 const expected: PQP.Language.Type.RecordType = PQP.Language.TypeUtils.createRecordType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
                     false,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -735,7 +735,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type [foo, ...]`;
                 const expected: PQP.Language.Type.RecordType = PQP.Language.TypeUtils.createRecordType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
                     true,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -745,7 +745,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type [foo = number, bar = nullable text]`;
                 const expected: PQP.Language.Type.RecordType = PQP.Language.TypeUtils.createRecordType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Number)],
                         ["bar", PQP.Language.TypeUtils.createPrimitiveType(true, PQP.Language.Type.TypeKind.Text)],
                     ]),
@@ -794,15 +794,19 @@ describe(`Inspection - Type`, () => {
 
                 it(`${PQP.Language.Ast.NodeKind.FieldProjection}`, () => {
                     const expression: string = `let x = (_ as any) in x[[foo]]`;
-                    const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
+                    const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createAnyUnion([
                         PQP.Language.TypeUtils.createDefinedRecord(
                             false,
-                            new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                            new Map<string, PQP.Language.Type.TPowerQueryType>([
+                                ["foo", PQP.Language.Type.AnyInstance],
+                            ]),
                             false,
                         ),
                         PQP.Language.TypeUtils.createDefinedTable(
                             false,
-                            new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                            new Map<string, PQP.Language.Type.TPowerQueryType>([
+                                ["foo", PQP.Language.Type.AnyInstance],
+                            ]),
                             false,
                         ),
                     ]);
@@ -834,7 +838,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type table [foo]`;
                 const expected: PQP.Language.Type.TableType = PQP.Language.TypeUtils.createTableType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
                     false,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -844,7 +848,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type table [foo]`;
                 const expected: PQP.Language.Type.TableType = PQP.Language.TypeUtils.createTableType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([["foo", PQP.Language.Type.AnyInstance]]),
                     false,
                 );
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
@@ -854,7 +858,7 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `type table [foo = number, bar = nullable text]`;
                 const expected: PQP.Language.Type.TableType = PQP.Language.TypeUtils.createTableType(
                     false,
-                    new Map<string, PQP.Language.Type.PowerQueryType>([
+                    new Map<string, PQP.Language.Type.TPowerQueryType>([
                         ["foo", PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Number)],
                         ["bar", PQP.Language.TypeUtils.createPrimitiveType(true, PQP.Language.Type.TypeKind.Text)],
                     ]),
@@ -912,7 +916,7 @@ describe(`Inspection - Type`, () => {
 
             it(`+true`, () => {
                 const expression: string = `+true`;
-                const expected: PQP.Language.Type.PowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
+                const expected: PQP.Language.Type.TPowerQueryType = PQP.Language.TypeUtils.createPrimitiveType(
                     false,
                     PQP.Language.Type.TypeKind.None,
                 );

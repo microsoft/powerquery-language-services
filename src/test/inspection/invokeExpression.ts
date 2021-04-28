@@ -233,7 +233,7 @@ function expectText_givenNumber(inspected: Inspection.InvokeExpression | undefin
 
     const invalidArgument: PQP.Language.TypeUtils.Mismatch<
         number,
-        PQP.Language.Type.PowerQueryType | undefined,
+        PQP.Language.Type.TPowerQueryType | undefined,
         PQP.Language.Type.FunctionParameter
     > = PQP.Assert.asDefined(
         invokeArgs.typeCheck.invalid.find(mismatch => mismatch.key === 0),

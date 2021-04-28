@@ -22,7 +22,7 @@ export interface Autocomplete {
 
 export interface AutocompleteFieldAccess {
     readonly field: PQP.Parser.TXorNode;
-    readonly fieldType: PQP.Language.Type.PowerQueryType;
+    readonly fieldType: PQP.Language.Type.TPowerQueryType;
     readonly inspectedFieldAccess: InspectedFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }

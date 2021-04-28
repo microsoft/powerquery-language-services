@@ -55,7 +55,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
 
-        const maybeScopeItemType: PQP.Language.Type.PowerQueryType | undefined = this.maybeTypeFromIdentifier(
+        const maybeScopeItemType: PQP.Language.Type.TPowerQueryType | undefined = this.maybeTypeFromIdentifier(
             identifierLiteral,
         );
         const scopeItemTypeText: string =
@@ -107,7 +107,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             : undefined;
     }
 
-    private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.PowerQueryType | undefined {
+    private maybeTypeFromIdentifier(identifier: string): PQP.Language.Type.TPowerQueryType | undefined {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
         return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedScopeType)

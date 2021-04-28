@@ -7,5 +7,5 @@ import { CompletionItem } from "vscode-languageserver-types";
 
 export interface AutocompleteItem extends CompletionItem {
     readonly jaroWinklerScore: number;
-    readonly powerQueryType: PQP.Language.Type.PowerQueryType;
+    readonly powerQueryType: PQP.Language.Type.TPowerQueryType;
 }

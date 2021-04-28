@@ -91,10 +91,10 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
     if (PQP.ResultUtils.isError(triedFieldType)) {
         throw triedFieldType.error;
     }
-    const fieldType: PQP.Language.Type.PowerQueryType = triedFieldType.value;
+    const fieldType: PQP.Language.Type.TPowerQueryType = triedFieldType.value;
 
     // We can only autocomplete a field access if we know what fields are present.
-    const fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]> = fieldEntriesFromFieldType(
+    const fieldEntries: ReadonlyArray<[string, PQP.Language.Type.TPowerQueryType]> = fieldEntriesFromFieldType(
         fieldType,
     );
     if (fieldEntries.length === 0) {
@@ -110,11 +110,11 @@ function autocompleteFieldAccess<S extends PQP.Parser.IParseState = PQP.Parser.I
 }
 
 function fieldEntriesFromFieldType(
-    type: PQP.Language.Type.PowerQueryType,
-): ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]> {
+    type: PQP.Language.Type.TPowerQueryType,
+): ReadonlyArray<[string, PQP.Language.Type.TPowerQueryType]> {
     switch (type.maybeExtendedKind) {
         case PQP.Language.Type.ExtendedTypeKind.AnyUnion: {
-            let fields: [string, PQP.Language.Type.PowerQueryType][] = [];
+            let fields: [string, PQP.Language.Type.TPowerQueryType][] = [];
             for (const field of type.unionedTypePairs) {
                 if (
                     field.maybeExtendedKind &&
@@ -269,7 +269,7 @@ function inspectFieldSelector(
 }
 
 function createAutocompleteItems(
-    fieldEntries: ReadonlyArray<[string, PQP.Language.Type.PowerQueryType]>,
+    fieldEntries: ReadonlyArray<[string, PQP.Language.Type.TPowerQueryType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;

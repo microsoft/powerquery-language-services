@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-export function inspectTypePrimitiveType(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.PowerQueryType {
+export function inspectTypePrimitiveType(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TPowerQueryType {
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.PrimitiveType);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {

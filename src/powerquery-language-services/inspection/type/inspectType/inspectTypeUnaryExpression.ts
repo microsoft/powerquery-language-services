@@ -10,7 +10,7 @@ import { InspectTypeState, inspectXor } from "./common";
 export function inspectTypeUnaryExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
 
@@ -36,7 +36,7 @@ export function inspectTypeUnaryExpression<S extends PQP.Parser.IParseState = PQ
     }
     const expression: PQP.Parser.TXorNode = maybeExpression;
 
-    const expressionType: PQP.Language.Type.PowerQueryType = inspectXor(state, expression);
+    const expressionType: PQP.Language.Type.TPowerQueryType = inspectXor(state, expression);
     if (expressionType.kind === PQP.Language.Type.TypeKind.Number) {
         return inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
     } else if (PQP.Language.TypeUtils.isLogical(expressionType)) {

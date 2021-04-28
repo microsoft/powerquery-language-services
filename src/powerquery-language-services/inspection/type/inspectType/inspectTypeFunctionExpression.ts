@@ -13,19 +13,19 @@ import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } 
 export function inspectTypeFunctionExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
-    const pseudoReturnType: PQP.Language.Type.PowerQueryType = pseudoType.returnType;
-    const expressionType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const pseudoReturnType: PQP.Language.Type.TPowerQueryType = pseudoType.returnType;
+    const expressionType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
 
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
     // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
 
-    let returnType: PQP.Language.Type.PowerQueryType;
+    let returnType: PQP.Language.Type.TPowerQueryType;
     // If the stated return type is Any,
     // then it might as well be the expression's type as it can't be any wider than Any.
     if (pseudoReturnType.kind === PQP.Language.Type.TypeKind.Any) {
@@ -37,7 +37,7 @@ export function inspectTypeFunctionExpression<S extends PQP.Parser.IParseState =
         expressionType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion &&
         allForAnyUnion(
             expressionType,
-            (type: PQP.Language.Type.PowerQueryType) =>
+            (type: PQP.Language.Type.TPowerQueryType) =>
                 type.kind === pseudoReturnType.kind || type.kind === PQP.Language.Type.TypeKind.Any,
         )
     ) {
