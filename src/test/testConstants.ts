@@ -32,7 +32,7 @@ export const CreateFooAndBarRecordDefinedFunction: PQP.Language.Type.DefinedFunc
     [],
     PQP.Language.TypeUtils.createDefinedRecord(
         false,
-        new Map<string, PQP.Language.Type.PowerQueryType>([
+        new Map<string, PQP.Language.Type.TPowerQueryType>([
             ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `"fooString"`)],
             ["bar", PQP.Language.TypeUtils.createTextLiteral(false, `"barString"`)],
         ]),
@@ -170,7 +170,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     if (request.args.length !== 1) {
                         return PQP.Language.Type.NoneInstance;
                     }
-                    const arg: PQP.Language.Type.PowerQueryType = Assert.asDefined(request.args[0]);
+                    const arg: PQP.Language.Type.TPowerQueryType = Assert.asDefined(request.args[0]);
 
                     if (PQP.Language.TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;

@@ -82,7 +82,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
 export function getMaybeType(
     inspection: Inspection.Inspection,
     identifier: string,
-): PQP.Language.Type.PowerQueryType | undefined {
+): PQP.Language.Type.TPowerQueryType | undefined {
     return PQP.ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value.get(identifier)
         : undefined;
