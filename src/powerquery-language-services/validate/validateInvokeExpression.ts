@@ -54,6 +54,11 @@ function invokeExpressionToDiagnostics(invokeExpression: Inspection.InvokeExpres
 
     if (invokeExpression.maybeArguments !== undefined) {
         const invokeExpressionArguments: Inspection.InvokeExpressionArguments = invokeExpression.maybeArguments;
+
+        for (const mismatch of invokeExpressionArguments.typeCheck.invalid) {
+            result.push(createDiagnosticForMismatch(mismatch));
+        }
+
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
 
         if (numGivenArguments < invokeExpressionArguments.numMaxExpectedArguments) {
@@ -62,4 +67,40 @@ function invokeExpressionToDiagnostics(invokeExpression: Inspection.InvokeExpres
     }
 }
 
-function createTooFewArgumentMessage(settings: Inspection.InspectionSettings): string {}
+function createDiagnosticForMismatch(mismatch: string): Diagnostic {}
+
+function createTooFewArgumentMessage(
+    settings: Inspection.InspectionSettings,
+    invokeExpression: Inspection.InvokeExpression,
+): string {
+    return "";
+}
+
+function createTooManyArgumentMessage(
+    settings: Inspection.InspectionSettings,
+    invokeExpression: Inspection.InvokeExpression,
+): string {
+    return "";
+}
+
+function createArgumentTypeMismatchMessage(
+    settings: Inspection.InspectionSettings,
+    invokeExpression: Inspection.InvokeExpression,
+    index: number,
+): string {
+    const maybeFunctionName: string | undefined = invokeExpression.maybeName;
+    const invokeExpressionArguments: Inspection.InvokeExpressionArguments = PQP.Assert.asDefined(
+        invokeExpression.maybeArguments,
+    );
+    const givenArgument: PQP.Parser.TXorNode = PQP.Assert.asDefined(invokeExpressionArguments.givenArguments[index]);
+    const givenArgumentType: PQP.Language.Type.PowerQueryType = PQP.Assert.asDefined(
+        invokeExpressionArguments.givenArgumentTypes[index],
+    );
+    const expectedArgumentType: PQP.Language.Type.PowerQueryType = invokeExpressionArguments.typeCheck.invalid.find(
+        mismatch => mismatch.key,
+    );
+
+    // const givenArgumentName: string = invokeExpression.maybeArguments;
+
+    return "";
+}
