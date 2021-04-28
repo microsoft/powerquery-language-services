@@ -29,7 +29,7 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
-    const triedInvokeExpression: TriedCurrentInvokeExpression = tryCurrentInvokeExpression(
+    const triedCurrentInvokeExpression: TriedCurrentInvokeExpression = tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,
@@ -62,7 +62,7 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     return {
         maybeActiveNode,
         autocomplete: autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
-        triedInvokeExpression,
+        triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
         triedExpectedType,

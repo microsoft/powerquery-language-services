@@ -8,8 +8,8 @@ import { CommonError } from "@microsoft/powerquery-parser";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { InspectionSettings } from "../settings";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { IInvokeExpression } from "./common";
-import { tryInvokeExpression } from "./invokeExpression";
+import { IInvokeExpression, InvokeExpressionArguments } from "./common";
+import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 
 // An inspection of the first invoke expression encountered in an ActiveNode's ancestry.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;

@@ -5,9 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
-import * as LanguageServiceUtils from "./languageServiceUtils";
-
-import { Inspection } from ".";
+import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { ExternalType } from "./inspection/externalType";
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
@@ -26,13 +24,13 @@ export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
 ): SignatureProviderContext | undefined {
     if (
-        PQP.ResultUtils.isError(inspected.triedInvokeExpression) ||
-        inspected.triedInvokeExpression.value === undefined
+        PQP.ResultUtils.isError(inspected.triedCurrentInvokeExpression) ||
+        inspected.triedCurrentInvokeExpression.value === undefined
     ) {
         return undefined;
     }
 
-    const invokeExpression: Inspection.InvokeExpression = inspected.triedInvokeExpression.value;
+    const invokeExpression: Inspection.CurrentInvokeExpression = inspected.triedCurrentInvokeExpression.value;
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
     const argumentOrdinal: number | undefined =
@@ -189,8 +187,8 @@ export function getSymbolsForRecord(
             kind: SymbolKind.Field,
             deprecated: false,
             name: element.node.key.literal,
-            range: LanguageServiceUtils.tokenRangeToRange(element.node.tokenRange),
-            selectionRange: LanguageServiceUtils.tokenRangeToRange(element.node.key.tokenRange),
+            range: PositionUtils.createRangeFromTokenRange(element.node.tokenRange),
+            selectionRange: PositionUtils.createRangeFromTokenRange(element.node.key.tokenRange),
         });
     }
 
@@ -210,8 +208,8 @@ export function getSymbolForIdentifierPairedExpression(
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
         deprecated: false,
         name: identifierPairedExpressionNode.key.literal,
-        range: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.tokenRange),
-        selectionRange: LanguageServiceUtils.tokenRangeToRange(identifierPairedExpressionNode.key.tokenRange),
+        range: PositionUtils.createRangeFromTokenRange(identifierPairedExpressionNode.tokenRange),
+        selectionRange: PositionUtils.createRangeFromTokenRange(identifierPairedExpressionNode.key.tokenRange),
     };
 }
 
