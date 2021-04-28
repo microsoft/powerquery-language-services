@@ -21,7 +21,7 @@ export interface ILibrary {
 }
 
 export interface ILibraryDefinition {
-    readonly asPowerQueryType: PQP.Language.Type.PowerQueryType;
+    readonly asPowerQueryType: PQP.Language.Type.TPowerQueryType;
     readonly completionItemKind: CompletionItemKind;
     readonly description: string;
     readonly kind: LibraryDefinitionKind;

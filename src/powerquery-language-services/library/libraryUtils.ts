@@ -53,7 +53,7 @@ export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): a
 export function createConstantDefinition(
     label: string,
     description: string,
-    asType: PQP.Language.Type.PowerQueryType,
+    asType: PQP.Language.Type.TPowerQueryType,
     completionItemKind: CompletionItemKind,
 ): LibraryConstant {
     return {
@@ -68,7 +68,7 @@ export function createConstantDefinition(
 export function createFunctionDefinition(
     label: string,
     description: string,
-    asType: PQP.Language.Type.PowerQueryType,
+    asType: PQP.Language.Type.TPowerQueryType,
     completionItemKind: CompletionItemKind,
     parameters: ReadonlyArray<LibraryParameter>,
 ): LibraryFunction {

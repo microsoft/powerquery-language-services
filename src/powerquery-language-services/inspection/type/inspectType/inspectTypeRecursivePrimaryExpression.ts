@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 export function inspectTypeRecursivePrimaryExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
 
@@ -22,7 +22,7 @@ export function inspectTypeRecursivePrimaryExpression<S extends PQP.Parser.IPars
         return PQP.Language.Type.UnknownInstance;
     }
 
-    const headType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const headType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     if (headType.kind === PQP.Language.Type.TypeKind.None || headType.kind === PQP.Language.Type.TypeKind.Unknown) {
         return headType;
     }
@@ -49,9 +49,9 @@ export function inspectTypeRecursivePrimaryExpression<S extends PQP.Parser.IPars
         return PQP.Language.Type.UnknownInstance;
     }
 
-    let leftType: PQP.Language.Type.PowerQueryType = headType;
+    let leftType: PQP.Language.Type.TPowerQueryType = headType;
     for (const right of maybeExpressions) {
-        const rightType: PQP.Language.Type.PowerQueryType = inspectXor(state, right);
+        const rightType: PQP.Language.Type.TPowerQueryType = inspectXor(state, right);
         leftType = rightType;
     }
 

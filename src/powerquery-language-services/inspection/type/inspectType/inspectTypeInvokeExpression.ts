@@ -11,7 +11,7 @@ import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./
 export function inspectTypeInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
 
@@ -20,7 +20,7 @@ export function inspectTypeInvokeExpression<S extends PQP.Parser.IParseState = P
         xorNode,
     );
     if (maybeRequest !== undefined && state.settings.maybeExternalTypeResolver) {
-        const maybeType: PQP.Language.Type.PowerQueryType | undefined = state.settings.maybeExternalTypeResolver(
+        const maybeType: PQP.Language.Type.TPowerQueryType | undefined = state.settings.maybeExternalTypeResolver(
             maybeRequest,
         );
         if (maybeType !== undefined) {
@@ -32,7 +32,7 @@ export function inspectTypeInvokeExpression<S extends PQP.Parser.IParseState = P
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.PowerQueryType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     if (previousSiblingType.kind === PQP.Language.Type.TypeKind.Any) {
         return PQP.Language.Type.AnyInstance;
     } else if (previousSiblingType.kind !== PQP.Language.Type.TypeKind.Function) {
@@ -58,7 +58,7 @@ function maybeExternalInvokeRequest<S extends PQP.Parser.IParseState = PQP.Parse
     }
     const deferencedIdentifier: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
 
-    const types: PQP.Language.Type.PowerQueryType[] = [];
+    const types: PQP.Language.Type.TPowerQueryType[] = [];
     for (const argument of PQP.Parser.NodeIdMapIterator.iterInvokeExpression(state.nodeIdMapCollection, xorNode)) {
         types.push(inspectXor(state, argument));
     }

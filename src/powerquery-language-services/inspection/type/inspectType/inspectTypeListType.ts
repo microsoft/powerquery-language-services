@@ -21,7 +21,7 @@ export function inspectTypeListType<S extends PQP.Parser.IParseState = PQP.Parse
     if (maybeListItem === undefined) {
         return PQP.Language.Type.UnknownInstance;
     }
-    const itemType: PQP.Language.Type.PowerQueryType = inspectXor(state, maybeListItem);
+    const itemType: PQP.Language.Type.TPowerQueryType = inspectXor(state, maybeListItem);
 
     return {
         kind: PQP.Language.Type.TypeKind.Type,

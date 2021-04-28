@@ -14,7 +14,7 @@ export function inspectTypeList<S extends PQP.Parser.IParseState = PQP.Parser.IP
         state.nodeIdMapCollection,
         xorNode,
     );
-    const elements: ReadonlyArray<PQP.Language.Type.PowerQueryType> = items.map((item: PQP.Parser.TXorNode) =>
+    const elements: ReadonlyArray<PQP.Language.Type.TPowerQueryType> = items.map((item: PQP.Parser.TXorNode) =>
         inspectXor(state, item),
     );
 

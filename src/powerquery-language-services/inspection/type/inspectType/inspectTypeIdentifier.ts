@@ -8,7 +8,7 @@ import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 export function inspectTypeIdentifier<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Identifier);
 
@@ -16,7 +16,7 @@ export function inspectTypeIdentifier<S extends PQP.Parser.IParseState = PQP.Par
         return PQP.Language.Type.UnknownInstance;
     }
 
-    const dereferencedType: PQP.Language.Type.PowerQueryType | undefined = maybeDereferencedIdentifierType(
+    const dereferencedType: PQP.Language.Type.TPowerQueryType | undefined = maybeDereferencedIdentifierType(
         state,
         xorNode,
     );

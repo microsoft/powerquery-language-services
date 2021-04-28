@@ -48,11 +48,11 @@ export interface InspectTypeState<S extends PQP.Parser.IParseState = PQP.Parser.
 // then calls all(...) on the mapped values.
 export function allForAnyUnion(
     anyUnion: PQP.Language.Type.AnyUnion,
-    conditionFn: (type: PQP.Language.Type.PowerQueryType) => boolean,
+    conditionFn: (type: PQP.Language.Type.TPowerQueryType) => boolean,
 ): boolean {
     return (
         anyUnion.unionedTypePairs
-            .map((type: PQP.Language.Type.PowerQueryType) => {
+            .map((type: PQP.Language.Type.TPowerQueryType) => {
                 return type.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type);
@@ -92,27 +92,27 @@ export function getOrCreateScope<S extends PQP.Parser.IParseState = PQP.Parser.I
 export function getOrCreateScopeItemType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     scopeItem: TScopeItem,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     const nodeId: number = scopeItem.id;
 
-    const maybeGivenType: PQP.Language.Type.PowerQueryType | undefined = state.givenTypeById.get(nodeId);
+    const maybeGivenType: PQP.Language.Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeGivenType !== undefined) {
         return maybeGivenType;
     }
 
-    const maybeDeltaType: PQP.Language.Type.PowerQueryType | undefined = state.givenTypeById.get(nodeId);
+    const maybeDeltaType: PQP.Language.Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeDeltaType !== undefined) {
         return maybeDeltaType;
     }
 
-    const scopeType: PQP.Language.Type.PowerQueryType = inspectScopeItem(state, scopeItem);
+    const scopeType: PQP.Language.Type.TPowerQueryType = inspectScopeItem(state, scopeItem);
     return scopeType;
 }
 
 export function inspectScopeItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     scopeItem: TScopeItem,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
@@ -141,7 +141,7 @@ export function inspectTypeFromChildAttributeIndex<S extends PQP.Parser.IParseSt
     state: InspectTypeState<S>,
     parentXorNode: PQP.Parser.TXorNode,
     attributeIndex: number,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
@@ -156,17 +156,17 @@ export function inspectTypeFromChildAttributeIndex<S extends PQP.Parser.IParseSt
 export function inspectXor<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-    const maybeCached: PQP.Language.Type.PowerQueryType | undefined =
+    const maybeCached: PQP.Language.Type.TPowerQueryType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
-    let result: PQP.Language.Type.PowerQueryType;
+    let result: PQP.Language.Type.TPowerQueryType;
     switch (xorNode.node.kind) {
         case PQP.Language.Ast.NodeKind.ArrayWrapper:
         case PQP.Language.Ast.NodeKind.FieldSpecificationList:
@@ -346,7 +346,7 @@ export function inspectXor<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
 export function maybeDereferencedIdentifierType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType | undefined {
+): PQP.Language.Type.TPowerQueryType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const deferenced: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, xorNode);

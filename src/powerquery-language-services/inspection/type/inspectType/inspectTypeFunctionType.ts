@@ -42,7 +42,7 @@ export function inspectTypeFunctionType<S extends PQP.Parser.IParseState = PQP.P
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: PQP.Language.Type.PowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
         kind: PQP.Language.Type.TypeKind.Type,

@@ -14,7 +14,7 @@ export function createValueTypeRequest(identifierLiteral: string): ExternalValue
 
 export function createInvocationTypeRequest(
     identifierLiteral: string,
-    args: ReadonlyArray<PQP.Language.Type.PowerQueryType>,
+    args: ReadonlyArray<PQP.Language.Type.TPowerQueryType>,
 ): ExternalInvocationTypeRequest {
     return {
         kind: ExternalTypeRequestKind.Invocation,

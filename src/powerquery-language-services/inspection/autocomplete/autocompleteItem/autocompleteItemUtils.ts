@@ -12,7 +12,7 @@ import type { AutocompleteItem } from "./autocompleteItem";
 
 export function createFromFieldAccess(
     label: string,
-    powerQueryType: PQP.Language.Type.PowerQueryType,
+    powerQueryType: PQP.Language.Type.TPowerQueryType,
     maybeOther?: string,
 ): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
@@ -90,7 +90,7 @@ export function createFromPrimitiveTypeConstantKind(
 export function maybeCreateFromScopeItem(
     label: string,
     scopeItem: Inspection.TScopeItem,
-    powerQueryType: PQP.Language.Type.PowerQueryType,
+    powerQueryType: PQP.Language.Type.TPowerQueryType,
     maybeOther?: string,
 ): AutocompleteItem | undefined {
     switch (scopeItem.kind) {

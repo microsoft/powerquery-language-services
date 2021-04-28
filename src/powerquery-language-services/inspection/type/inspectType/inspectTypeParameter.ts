@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeParameter<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
 
@@ -22,7 +22,7 @@ export function inspectTypeParameter<S extends PQP.Parser.IParseState = PQP.Pars
     );
 
     const maybeParameterType:
-        | PQP.Language.Type.PowerQueryType
+        | PQP.Language.Type.TPowerQueryType
         | undefined = PQP.Language.TypeUtils.assertAsTPrimitiveType(
         inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );

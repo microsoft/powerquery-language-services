@@ -10,7 +10,7 @@ import { InspectTypeState, inspectXor } from "./common";
 export function inspectTypeFieldSelector<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
 
@@ -28,7 +28,7 @@ export function inspectTypeFieldSelector<S extends PQP.Parser.IParseState = PQP.
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.PowerQueryType = inspectXor(state, previousSibling);
+    const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
         PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
             PQP.Language.Ast.NodeKind.Constant,
@@ -50,7 +50,7 @@ export function inspectTypeFieldSelector<S extends PQP.Parser.IParseState = PQP.
                 case PQP.Language.Type.ExtendedTypeKind.DefinedRecord:
                 case PQP.Language.Type.ExtendedTypeKind.DefinedTable: {
                     const maybeNamedField:
-                        | PQP.Language.Type.PowerQueryType
+                        | PQP.Language.Type.TPowerQueryType
                         | undefined = previousSiblingType.fields.get(fieldName);
                     if (maybeNamedField !== undefined) {
                         return maybeNamedField;

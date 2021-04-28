@@ -8,16 +8,16 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export function inspectTypeRangeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     state: InspectTypeState<S>,
     xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.PowerQueryType {
+): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: PQP.Language.Type.PowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
+    const maybeLeftType: PQP.Language.Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
         state,
         xorNode,
         0,
     );
-    const maybeRightType: PQP.Language.Type.PowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
+    const maybeRightType: PQP.Language.Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
         state,
         xorNode,
         2,
