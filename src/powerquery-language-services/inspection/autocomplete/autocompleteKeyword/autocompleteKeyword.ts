@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../..";
+import { PositionUtils } from "../../..";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
 import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";

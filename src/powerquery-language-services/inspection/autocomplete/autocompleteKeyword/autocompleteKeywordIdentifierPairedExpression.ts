@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../..";
+import { PositionUtils } from "../../..";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordIdentifierPairedExpression(

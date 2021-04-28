@@ -8,15 +8,18 @@ import { CommonError } from "@microsoft/powerquery-parser";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { InspectionSettings } from "../settings";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import {
-    CurrentInvokeExpression,
-    CurrentInvokeExpressionArguments,
-    InvokeExpression,
-    InvokeExpressionArguments,
-    TriedCurrentInvokeExpression,
-    TriedInvokeExpression,
-} from "./common";
+import { IInvokeExpression } from "./common";
 import { tryInvokeExpression } from "./invokeExpression";
+
+// An inspection of the first invoke expression encountered in an ActiveNode's ancestry.
+export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
+
+// Identical to InvokeExpression except maybeArguments has an extra field, `argumentOrdinal`.
+export type CurrentInvokeExpression = IInvokeExpression<CurrentInvokeExpressionArguments>;
+
+export interface CurrentInvokeExpressionArguments extends InvokeExpressionArguments {
+    readonly argumentOrdinal: number;
+}
 
 export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,

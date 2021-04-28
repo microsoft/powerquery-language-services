@@ -9,7 +9,8 @@ import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
-import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
+import { TriedCurrentInvokeExpression } from "./invokeExpression";
+import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 import { TriedNodeScope, tryNodeScope } from "./scope";
 import type { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";
@@ -28,7 +29,7 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
-    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
+    const triedInvokeExpression: TriedCurrentInvokeExpression = tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,

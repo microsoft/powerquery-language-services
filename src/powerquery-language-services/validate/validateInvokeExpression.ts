@@ -3,20 +3,15 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
-import { DiagnosticSeverity } from "vscode-languageserver-types";
+import type { Range } from "vscode-languageserver-textdocument";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 
-import * as LanguageServiceUtils from "../languageServiceUtils";
-
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { Inspection, PositionUtils } from "..";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
-import { Localization, LocalizationUtils } from "../localization";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { ValidationSettings } from "./validationSettings";
-import { Inspection } from "..";
 
 export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    validationSettings: ValidationSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
 ): Diagnostic[] {
@@ -26,15 +21,11 @@ export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.
     if (maybeInvokeExpressionIds === undefined) {
         return [];
     }
-    // const xorNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterXor(
-    //     nodeIdMapCollection,
-    //     [...maybeIds.values()],
-    // );
 
     const result: Diagnostic[] = [];
     for (const nodeId of maybeInvokeExpressionIds) {
         const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
-            settings,
+            validationSettings,
             nodeIdMapCollection,
             nodeId,
             maybeCache,
@@ -43,64 +34,110 @@ export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.
             throw triedInvokeExpression;
         }
 
-        result.push(...invokeExpressionToDiagnostics(triedInvokeExpression.value));
+        result.push(
+            ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+        );
     }
 
     return result;
 }
 
-function invokeExpressionToDiagnostics(invokeExpression: Inspection.InvokeExpression): Diagnostic[] {
+function invokeExpressionToDiagnostics<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    valdiationSettings: ValidationSettings<S>,
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    inspected: Inspection.InvokeExpression,
+): Diagnostic[] {
     const result: Diagnostic[] = [];
 
-    if (invokeExpression.maybeArguments !== undefined) {
-        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = invokeExpression.maybeArguments;
+    if (inspected.maybeArguments !== undefined) {
+        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
+        const givenArguments: ReadonlyArray<PQP.Parser.TXorNode> = inspected.maybeArguments.givenArguments;
+        const invokeExpressionRange: Range = PQP.Assert.asDefined(
+            PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
+            "expected at least one leaf node under InvokeExpression",
+        );
 
-        for (const mismatch of invokeExpressionArguments.typeCheck.invalid) {
-            result.push(createDiagnosticForMismatch(mismatch));
+        const maybeFunctionName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+            nodeIdMapCollection,
+            inspected.invokeExpressionXorNode.node.id,
+        );
+
+        for (const [argIndex, mismatch] of invokeExpressionArguments.typeCheck.invalid.entries()) {
+            const maybeGivenArgumentRange: Range | undefined = PositionUtils.createRangeFromXorNode(
+                nodeIdMapCollection,
+                givenArguments[argIndex],
+            );
+
+            result.push(
+                createDiagnosticForMismatch(
+                    valdiationSettings,
+                    mismatch,
+                    maybeFunctionName,
+                    invokeExpressionRange,
+                    maybeGivenArgumentRange,
+                ),
+            );
         }
 
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
-
-        if (numGivenArguments < invokeExpressionArguments.numMaxExpectedArguments) {
-            result.push();
+        if (
+            numGivenArguments < invokeExpressionArguments.numMaxExpectedArguments ||
+            numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
+        ) {
+            result.push({
+                code: DiagnosticErrorCode.InvokeArgumentCountMismatch,
+                message: `Expected between ${invokeExpressionArguments.numMinExpectedArguments} and ${invokeExpressionArguments.numMaxExpectedArguments} arguments, but ${numGivenArguments} were given.`,
+                range: invokeExpressionRange,
+                severity: DiagnosticSeverity.Error,
+                source: valdiationSettings.source,
+            });
         }
     }
+
+    return result;
 }
 
-function createDiagnosticForMismatch(mismatch: string): Diagnostic {}
+function createDiagnosticForMismatch<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    validationSettings: ValidationSettings<S>,
+    mismatch: PQP.Language.TypeUtils.InvocationMismatch,
+    maybeFunctionName: string | undefined,
+    invokeExpressionRange: Range,
+    maybeGivenArgumentRange: Range | undefined,
+): Diagnostic {
+    let range: Range;
+    let message: string;
 
-function createTooFewArgumentMessage(
-    settings: Inspection.InspectionSettings,
-    invokeExpression: Inspection.InvokeExpression,
-): string {
-    return "";
-}
+    const expected: PQP.Language.Type.FunctionParameter = mismatch.expected;
 
-function createTooManyArgumentMessage(
-    settings: Inspection.InspectionSettings,
-    invokeExpression: Inspection.InvokeExpression,
-): string {
-    return "";
-}
+    // An argument containing at least one leaf node was given.
+    if (maybeGivenArgumentRange) {
+        const expectedTypeKindMessage: string = PQP.Language.TypeUtils.nameOfTypeKind(
+            expected.maybeType ?? PQP.Language.Type.AnyInstance.kind,
+        );
 
-function createArgumentTypeMismatchMessage(
-    settings: Inspection.InspectionSettings,
-    invokeExpression: Inspection.InvokeExpression,
-    index: number,
-): string {
-    const maybeFunctionName: string | undefined = invokeExpression.maybeName;
-    const invokeExpressionArguments: Inspection.InvokeExpressionArguments = PQP.Assert.asDefined(
-        invokeExpression.maybeArguments,
-    );
-    const givenArgument: PQP.Parser.TXorNode = PQP.Assert.asDefined(invokeExpressionArguments.givenArguments[index]);
-    const givenArgumentType: PQP.Language.Type.TPowerQueryType = PQP.Assert.asDefined(
-        invokeExpressionArguments.givenArgumentTypes[index],
-    );
-    const expectedArgumentType: PQP.Language.Type.TPowerQueryType = invokeExpressionArguments.typeCheck.invalid.find(
-        mismatch => mismatch.key,
-    );
+        const actual: PQP.Language.Type.TPowerQueryType = PQP.Assert.asDefined(mismatch.actual);
+        const actualTypeKindMessage: string = PQP.Language.TypeUtils.nameOfTypeKind(actual.kind);
 
-    // const givenArgumentName: string = invokeExpression.maybeArguments;
+        range = maybeGivenArgumentRange;
+        if (maybeFunctionName) {
+            message = `'${maybeFunctionName} expected the argument for '${expected.nameLiteral}' to be '${expectedTypeKindMessage}', but got '${actualTypeKindMessage}' instead.`;
+        } else {
+            message = `Expected the argument for '${expected.nameLiteral}' to be '${expectedTypeKindMessage}', but got '${actualTypeKindMessage}' instead.`;
+        }
+    } else {
+        range = invokeExpressionRange;
+        if (maybeFunctionName) {
+            message = `'${maybeFunctionName}' is missing an argument for the non-optional parameter '${expected.nameLiteral}'.`;
+        } else {
+            message = `Missing an argument for the non-optional parameter '${expected.nameLiteral}'.`;
+        }
+    }
 
-    return "";
+    return {
+        code: DiagnosticErrorCode.InvokeArgumentTypeMismatch,
+        message,
+        range,
+        severity: DiagnosticSeverity.Error,
+        source: validationSettings.source,
+    };
 }

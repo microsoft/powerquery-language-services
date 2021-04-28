@@ -6,9 +6,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-import * as LanguageServiceUtils from "../languageServiceUtils";
-
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { PositionUtils } from "..";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
@@ -153,7 +152,7 @@ function validateDuplicateIdentifiersForKeyValuePair<S extends PQP.Parser.IParse
                     return {
                         location: {
                             uri: documentUri,
-                            range: LanguageServiceUtils.tokenRangeToRange(keyValuePair.key.tokenRange),
+                            range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
                         },
                         message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
                     };
@@ -183,7 +182,7 @@ function createDuplicateIdentifierDiagnostic<S extends PQP.Parser.IParseState = 
     return {
         code: DiagnosticErrorCode.DuplicateIdentifier,
         message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
-        range: LanguageServiceUtils.tokenRangeToRange(keyValuePair.key.tokenRange),
+        range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
         relatedInformation,
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,

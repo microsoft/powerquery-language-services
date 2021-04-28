@@ -4,12 +4,19 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
-import { InvokeExpression, InvokeExpressionArguments, TriedInvokeExpression } from "./common";
 
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
 import { InspectionSettings } from "../settings";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
+import { IInvokeExpression, InvokeExpressionArguments } from "./common";
+
+export { InvokeExpressionArguments };
+
+// An inspection of an arbitrary invoke expression.
+export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
+
+export type InvokeExpression = IInvokeExpression<InvokeExpressionArguments>;
 
 export function tryInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
@@ -53,7 +60,7 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
         invokeExpressionId,
     );
 
-    const functionType: PQP.Language.Type.PowerQueryType = Assert.unwrapOk(
+    const functionType: PQP.Language.Type.TPowerQueryType = Assert.unwrapOk(
         tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
     const maybeName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
@@ -68,7 +75,7 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
             invokeExpressionXorNode,
         );
 
-        const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType> = getArgumentTypes(
+        const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.TPowerQueryType> = getArgumentTypes(
             settings,
             nodeIdMapCollection,
             typeCache,
@@ -147,15 +154,15 @@ function getArgumentTypes<S extends PQP.Parser.IParseState = PQP.Parser.IParseSt
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     typeCache: TypeCache,
     argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,
-): ReadonlyArray<PQP.Language.Type.PowerQueryType> {
-    const result: PQP.Language.Type.PowerQueryType[] = [];
+): ReadonlyArray<PQP.Language.Type.TPowerQueryType> {
+    const result: PQP.Language.Type.TPowerQueryType[] = [];
 
     for (const xorNode of argXorNodes) {
         const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
         if (PQP.ResultUtils.isError(triedArgType)) {
             throw triedArgType;
         }
-        const argType: PQP.Language.Type.PowerQueryType = triedArgType.value;
+        const argType: PQP.Language.Type.TPowerQueryType = triedArgType.value;
 
         // Occurs when there's expected to be a trailing argument, but none exist.
         // Eg. `foo(|` will iterate over an TXorNode which: contains no parsed elements, and evaluates to unknown.
