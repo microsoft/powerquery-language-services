@@ -53,7 +53,7 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
     }
     const invokeExpressionXorNode: PQP.Parser.TXorNode = maybeInvokeExpressionXorNode;
 
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(invokeExpressionXorNode, PQP.Language.Ast.NodeKind.FieldSelector);
+    PQP.Parser.XorNodeUtils.assertAstNodeKind(invokeExpressionXorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
 
     const previousNode: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,
