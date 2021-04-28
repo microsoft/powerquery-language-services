@@ -93,10 +93,10 @@ function createArgumentTypeMismatchMessage(
         invokeExpression.maybeArguments,
     );
     const givenArgument: PQP.Parser.TXorNode = PQP.Assert.asDefined(invokeExpressionArguments.givenArguments[index]);
-    const givenArgumentType: PQP.Language.Type.PowerQueryType = PQP.Assert.asDefined(
+    const givenArgumentType: PQP.Language.Type.TPowerQueryType = PQP.Assert.asDefined(
         invokeExpressionArguments.givenArgumentTypes[index],
     );
-    const expectedArgumentType: PQP.Language.Type.PowerQueryType = invokeExpressionArguments.typeCheck.invalid.find(
+    const expectedArgumentType: PQP.Language.Type.TPowerQueryType = invokeExpressionArguments.typeCheck.invalid.find(
         mismatch => mismatch.key,
     );
 

@@ -11,7 +11,7 @@ export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | 
 
 export interface IInvokeExpression<T extends InvokeExpressionArguments> {
     readonly invokeExpressionXorNode: PQP.Parser.TXorNode;
-    readonly functionType: PQP.Language.Type.PowerQueryType;
+    readonly functionType: PQP.Language.Type.TPowerQueryType;
     readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
     readonly maybeArguments: T | undefined;
@@ -26,7 +26,7 @@ export interface InvokeExpressionArguments {
     readonly numMaxExpectedArguments: number;
     readonly numMinExpectedArguments: number;
     readonly givenArguments: ReadonlyArray<PQP.Parser.TXorNode>;
-    readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.PowerQueryType>;
+    readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.TPowerQueryType>;
     readonly typeCheck: PQP.Language.TypeUtils.CheckedInvocation;
 }
 
