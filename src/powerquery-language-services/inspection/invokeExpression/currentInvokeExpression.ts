@@ -50,56 +50,48 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
     const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
     const numAncestors: number = activeNode.ancestry.length;
 
-    for (let ancestryIndex: number = 0; ancestryIndex <= numAncestors; ancestryIndex += 1) {
-        const xorNode: PQP.Parser.TXorNode = ancestry[ancestryIndex];
-        if (xorNode.node.kind !== PQP.Language.Ast.NodeKind.InvokeExpression) {
-            continue;
-        }
+    const maybeInvokeExpression:
+        | [PQP.Parser.TXorNode, number]
+        | undefined = PQP.Parser.AncestryUtils.maybeFirstXorAndIndexOfNodeKind(
+        ancestry,
+        PQP.Language.Ast.NodeKind.InvokeExpression,
+    );
 
-        const maybeInvokeExpressionXorNode:
-            | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.AncestryUtils.maybeFirstXorOfNodeKind(
-            ancestry,
-            PQP.Language.Ast.NodeKind.InvokeExpression,
-        );
-        if (maybeInvokeExpressionXorNode === undefined) {
-            return undefined;
-        }
-        const invokeExpressionXorNode: PQP.Parser.TXorNode = maybeInvokeExpressionXorNode;
+    if (!maybeInvokeExpression) {
+        return undefined;
+    }
 
-        const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
-            settings,
-            nodeIdMapCollection,
-            invokeExpressionXorNode.node.id,
-            typeCache,
-        );
-        if (PQP.ResultUtils.isError(triedInvokeExpression)) {
-            throw triedInvokeExpression;
-        }
+    const [invokeExpressionXorNode, ancestryIndex]: [PQP.Parser.TXorNode, number] = maybeInvokeExpression;
+    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
+        settings,
+        nodeIdMapCollection,
+        invokeExpressionXorNode.node.id,
+        typeCache,
+    );
+    if (PQP.ResultUtils.isError(triedInvokeExpression)) {
+        throw triedInvokeExpression;
+    }
 
-        const invokeExpression: InvokeExpression = triedInvokeExpression.value;
-        const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.maybeArguments;
+    const invokeExpression: InvokeExpression = triedInvokeExpression.value;
+    const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.maybeArguments;
 
-        let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
-        if (maybeArguments !== undefined) {
-            maybeWithArgumentOrdinal = {
-                ...maybeArguments,
-                argumentOrdinal: getArgumentOrdinal(
-                    nodeIdMapCollection,
-                    activeNode,
-                    ancestryIndex,
-                    invokeExpressionXorNode,
-                ),
-            };
-        }
-
-        return {
-            ...invokeExpression,
-            maybeArguments: maybeWithArgumentOrdinal,
+    let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
+    if (maybeArguments !== undefined) {
+        maybeWithArgumentOrdinal = {
+            ...maybeArguments,
+            argumentOrdinal: getArgumentOrdinal(
+                nodeIdMapCollection,
+                activeNode,
+                ancestryIndex,
+                invokeExpressionXorNode,
+            ),
         };
     }
 
-    return undefined;
+    return {
+        ...invokeExpression,
+        maybeArguments: maybeWithArgumentOrdinal,
+    };
 }
 
 function getArgumentOrdinal(
