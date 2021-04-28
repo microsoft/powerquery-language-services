@@ -48,7 +48,6 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
     typeCache: TypeCache,
 ): CurrentInvokeExpression | undefined {
     const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
-    const numAncestors: number = activeNode.ancestry.length;
 
     const maybeInvokeExpression:
         | [PQP.Parser.TXorNode, number]
