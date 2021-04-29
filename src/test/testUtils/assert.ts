@@ -12,10 +12,17 @@ import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languagese
 
 import * as TestConstants from "../testConstants";
 
-import { Inspection, WorkspaceCache, WorkspaceCacheUtils } from "../../powerquery-language-services";
+import {
+    Inspection,
+    TextDocument,
+    validate,
+    WorkspaceCache,
+    WorkspaceCacheUtils,
+} from "../../powerquery-language-services";
 import { ActiveNodeUtils, InspectionSettings, TypeCacheUtils } from "../../powerquery-language-services/inspection";
 import { CacheItem } from "../../powerquery-language-services/workspaceCache/workspaceCache";
 import { MockDocument } from "../mockDocument";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
@@ -115,6 +122,10 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     };
 
     return [text.replace("|", ""), position];
+}
+
+export function assertGetValidationResult(document: TextDocument): ValidationResult {
+    return validate(document, TestConstants.SimpleValidationSettings);
 }
 
 export function assertHover(expected: string, actual: Hover): void {
