@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
-import { PositionUtils } from "../..";
+import { PositionUtils } from "../../..";
 
 import { ActiveNode } from "../../activeNode";
 import { InspectAutocompleteKeywordState } from "./commonTypes";

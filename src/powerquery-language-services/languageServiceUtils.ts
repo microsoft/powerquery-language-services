@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { CompletionItemKind, Position, Range, SymbolKind } from "vscode-languageserver-types";
+import { CompletionItemKind, SymbolKind } from "vscode-languageserver-types";
 
 export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): CompletionItemKind | undefined {
     switch (symbolKind) {
@@ -47,29 +45,4 @@ export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): Completi
         default:
             return undefined;
     }
-}
-
-export function tokenPositionToPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
-    return {
-        line: tokenPosition.lineNumber,
-        character: tokenPosition.lineCodeUnit,
-    };
-}
-
-export function tokenPositionToRange(
-    startTokenPosition: PQP.Language.Token.TokenPosition | undefined,
-    endTokenPosition: PQP.Language.Token.TokenPosition | undefined,
-): Range | undefined {
-    if (startTokenPosition && endTokenPosition) {
-        return {
-            start: tokenPositionToPosition(startTokenPosition),
-            end: tokenPositionToPosition(endTokenPosition),
-        };
-    }
-
-    return undefined;
-}
-
-export function tokenRangeToRange(tokenRange: PQP.Language.Token.TokenRange): Range {
-    return tokenPositionToRange(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
