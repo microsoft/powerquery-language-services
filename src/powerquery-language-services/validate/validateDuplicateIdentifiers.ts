@@ -7,11 +7,11 @@ import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vsco
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { PositionUtils } from "..";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { ValidationSettings } from "./validationSettings";
+import { PositionUtils } from "..";
 
 export function validateDuplicateIdentifiers<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     textDocument: TextDocument,
