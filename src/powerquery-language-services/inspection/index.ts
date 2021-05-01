@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export * as PositionUtils from "./positionUtils";
 export * from "./activeNode";
 export * from "./autocomplete";
 export * from "./commonTypes";

@@ -3,7 +3,56 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import type { Position } from "vscode-languageserver-types";
+import type { Position, Range } from "vscode-languageserver-types";
+
+export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
+    return {
+        line: tokenPosition.lineNumber,
+        character: tokenPosition.lineCodeUnit,
+    };
+}
+
+// Attempts to turn a TXorNode into a Range.
+// Returns undefined if there are no leafs nodes.
+export function createRangeFromXorNode(
+    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    xorNode: PQP.Parser.TXorNode,
+): Range | undefined {
+    const nodeId: number = xorNode.node.id;
+    const maybeLeftMostLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeLeftMostLeaf(
+        nodeIdMapCollection,
+        nodeId,
+    );
+    const maybeRightMostLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
+        nodeIdMapCollection,
+        nodeId,
+    );
+
+    return maybeLeftMostLeaf === undefined || maybeRightMostLeaf === undefined
+        ? undefined
+        : createRangeFromTokenPositions(
+              maybeLeftMostLeaf.tokenRange.positionStart,
+              maybeRightMostLeaf.tokenRange.positionEnd,
+          );
+}
+
+export function createRangeFromTokenPositions(
+    startTokenPosition: PQP.Language.Token.TokenPosition | undefined,
+    endTokenPosition: PQP.Language.Token.TokenPosition | undefined,
+): Range | undefined {
+    if (startTokenPosition && endTokenPosition) {
+        return {
+            start: createPositionFromTokenPosition(startTokenPosition),
+            end: createPositionFromTokenPosition(endTokenPosition),
+        };
+    }
+
+    return undefined;
+}
+
+export function createRangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
+    return createRangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
+}
 
 export function isBeforeXor(position: Position, xorNode: PQP.Parser.TXorNode, isBoundIncluded: boolean): boolean {
     switch (xorNode.kind) {

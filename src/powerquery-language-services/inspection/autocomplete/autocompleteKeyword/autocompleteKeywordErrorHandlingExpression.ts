@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import type { Position } from "vscode-languageserver-types";
 
-import { PositionUtils } from "../..";
+import { PositionUtils } from "../../..";
 import { TrailingToken } from "../commonTypes";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
