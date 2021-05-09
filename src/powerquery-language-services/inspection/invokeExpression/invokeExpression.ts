@@ -11,8 +11,6 @@ import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 
-export { InvokeExpressionArguments };
-
 // An inspection of an arbitrary invoke expression.
 export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
 
