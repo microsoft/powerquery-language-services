@@ -21,7 +21,7 @@ interface ArgumentMismatchExec {
     readonly regExpExecArray: RegExpExecArray;
 }
 
-const NumArgumentsPattern = /Expected between (\d+) and (\d+) arguments, but (\d+) were given./;
+const NumArgumentsPattern: RegExp = /Expected between (\d+) and (\d+) arguments, but (\d+) were given./;
 
 function expectGetInvokeExpressionDiagnostics(textDocument: TextDocument): ReadonlyArray<AbridgedInvocationDiagnostic> {
     const validationResult: ValidationResult = TestUtils.assertGetValidationResult(textDocument);
