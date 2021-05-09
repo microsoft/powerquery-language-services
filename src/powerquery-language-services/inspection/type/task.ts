@@ -19,7 +19,7 @@ export function tryScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IPars
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
-    // If a TypeCache is given, then potentially mutate its values,
+    // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedScopeType {
