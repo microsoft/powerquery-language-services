@@ -25,19 +25,14 @@ export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQ
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
-    maybeTypeCache: TypeCache | undefined = undefined,
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedCurrentInvokeExpression {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return PQP.ResultUtils.createOk(undefined);
     }
 
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectInvokeExpression(
-            settings,
-            nodeIdMapCollection,
-            maybeActiveNode,
-            maybeTypeCache ?? TypeCacheUtils.createEmptyCache(),
-        ),
+        inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
 }
 
