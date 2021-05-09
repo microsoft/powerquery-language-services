@@ -21,6 +21,8 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     parseState: S,
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
     position: Position,
+    // If a TypeCache is given, then potentially mutate its values,
+    // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Inspection {
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;

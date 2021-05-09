@@ -65,9 +65,8 @@ export function assertGetOrCreateNodeScope(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
     // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: ScopeById | undefined = undefined,
+    scopeById: ScopeById = new Map(),
 ): Inspection.TriedNodeScope {
-    const scopeById: ScopeById = maybeScopeById ?? new Map();
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
         return PQP.ResultUtils.createOk(maybeScope);
@@ -87,11 +86,11 @@ export function maybeDereferencedIdentifier(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     xorNode: PQP.Parser.TXorNode,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: ScopeById | undefined = undefined,
+    // If a map is given, then it's mutated and returned.
+    // Else create a new Map instance and return that instead.
+    scopeById: ScopeById = new Map(),
 ): PQP.Result<PQP.Parser.TXorNode | undefined, PQP.CommonError.CommonError> {
     PQP.Parser.XorNodeUtils.assertIsIdentifier(xorNode);
-    const scopeById: ScopeById = maybeScopeById ?? new Map();
 
     if (PQP.Parser.XorNodeUtils.isContext(xorNode)) {
         return PQP.ResultUtils.createOk(undefined);

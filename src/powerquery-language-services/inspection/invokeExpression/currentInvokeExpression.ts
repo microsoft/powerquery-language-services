@@ -25,6 +25,8 @@ export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQ
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
+    // If a TypeCache is given, then potentially mutate its values,
+    // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedCurrentInvokeExpression {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {

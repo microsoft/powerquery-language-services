@@ -20,6 +20,8 @@ export function tryInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parse
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     invokeExpressionId: number,
+    // If a TypeCache is given, then potentially mutate its values,
+    // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedInvokeExpression {
     return PQP.ResultUtils.ensureResult(settings.locale, () =>
