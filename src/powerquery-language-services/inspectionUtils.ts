@@ -24,13 +24,13 @@ export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
 ): SignatureProviderContext | undefined {
     if (
-        PQP.ResultUtils.isError(inspected.triedInvokeExpression) ||
-        inspected.triedInvokeExpression.value === undefined
+        PQP.ResultUtils.isError(inspected.triedCurrentInvokeExpression) ||
+        inspected.triedCurrentInvokeExpression.value === undefined
     ) {
         return undefined;
     }
 
-    const invokeExpression: Inspection.InvokeExpression = inspected.triedInvokeExpression.value;
+    const invokeExpression: Inspection.CurrentInvokeExpression = inspected.triedCurrentInvokeExpression.value;
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
     const argumentOrdinal: number | undefined =

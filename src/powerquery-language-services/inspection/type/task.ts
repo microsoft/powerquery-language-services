@@ -8,7 +8,7 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
 import { InspectionSettings } from "../settings";
-import { TypeCache } from "../typeCache";
+import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
@@ -19,14 +19,16 @@ export function tryScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IPars
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
-    maybeTypeCache: TypeCache | undefined = undefined,
+    // If a TypeCache is given, then potentially mutate its values,
+    // Else create a new TypeCache and include it in the return.
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedScopeType {
     const state: InspectTypeState<S> = {
         settings,
-        givenTypeById: maybeTypeCache?.typeById ?? new Map(),
+        givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
         nodeIdMapCollection,
-        scopeById: maybeTypeCache?.scopeById ?? new Map(),
+        scopeById: typeCache.scopeById,
     };
 
     return PQP.ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
@@ -36,14 +38,14 @@ export function tryType<S extends PQP.Parser.IParseState = PQP.Parser.IParseStat
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
-    maybeTypeCache: TypeCache | undefined = undefined,
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedType {
     const state: InspectTypeState<S> = {
         settings,
-        givenTypeById: maybeTypeCache?.typeById ?? new Map(),
+        givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
         nodeIdMapCollection,
-        scopeById: maybeTypeCache?.scopeById ?? new Map(),
+        scopeById: typeCache.scopeById,
     };
 
     return PQP.ResultUtils.ensureResult(settings.locale, () =>

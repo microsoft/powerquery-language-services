@@ -40,7 +40,7 @@ export interface InspectTypeState<S extends PQP.Parser.IParseState = PQP.Parser.
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
-    scopeById: ScopeById;
+    readonly scopeById: ScopeById;
 }
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
@@ -69,7 +69,7 @@ export function assertGetOrCreateNodeScope<S extends PQP.Parser.IParseState = PQ
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
     if (PQP.ResultUtils.isError(triedGetOrCreateScope)) {
-        throw triedGetOrCreateScope.error;
+        throw triedGetOrCreateScope;
     }
 
     return Assert.asDefined(triedGetOrCreateScope.value);

@@ -12,7 +12,7 @@ export type TriedInspection = PQP.Result<Inspection, PQP.CommonError.CommonError
 export interface Inspection {
     readonly maybeActiveNode: TMaybeActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
-    readonly triedInvokeExpression: Inspection.TriedInvokeExpression;
+    readonly triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression;
     readonly triedNodeScope: Inspection.TriedNodeScope;
     readonly triedScopeType: Inspection.TriedScopeType;
     readonly triedExpectedType: TriedExpectedType;

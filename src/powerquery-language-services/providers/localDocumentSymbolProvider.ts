@@ -102,8 +102,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     private getMaybeInspectionInvokeExpression(): Inspection.InvokeExpression | undefined {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
-        return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedInvokeExpression)
-            ? maybeInspection.triedInvokeExpression.value
+        return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
+            ? maybeInspection.triedCurrentInvokeExpression.value
             : undefined;
     }
 

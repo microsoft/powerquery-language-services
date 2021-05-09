@@ -10,20 +10,20 @@ import type { Position } from "vscode-languageserver-types";
 import { Inspection } from "../../powerquery-language-services";
 
 import { TestConstants, TestUtils } from "..";
-import { InvokeExpressionArguments } from "../../powerquery-language-services/inspection";
+import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 import { InspectionSettings } from "../../powerquery-language-services/inspection/settings";
 
 function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-): Inspection.InvokeExpression | undefined {
+): Inspection.CurrentInvokeExpression | undefined {
     const activeNode: Inspection.ActiveNode = Inspection.ActiveNodeUtils.assertActiveNode(
         nodeIdMapCollection,
         position,
     );
 
-    const triedInspect: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
+    const triedInspect: Inspection.TriedCurrentInvokeExpression = Inspection.tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         activeNode,
@@ -36,7 +36,7 @@ function assertParseOkInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.
     settings: InspectionSettings<S>,
     text: string,
     position: Position,
-): Inspection.InvokeExpression | undefined {
+): Inspection.CurrentInvokeExpression | undefined {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
     return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
 }
@@ -45,18 +45,18 @@ function assertParseErrInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP
     settings: InspectionSettings<S>,
     text: string,
     position: Position,
-): Inspection.InvokeExpression | undefined {
+): Inspection.CurrentInvokeExpression | undefined {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
     return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
 }
 
-function expectNoParameters_givenExtraneousParameter(inspected: Inspection.InvokeExpression | undefined): void {
+function expectNoParameters_givenExtraneousParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -64,22 +64,22 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Invok
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(1);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(1);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.typeCheck.extraneous.includes(0)).to.equal(true);
+    expect(invokeArgs.typeChecked.extraneous.includes(0)).to.equal(true);
 }
 
-function expectText_givenNothing(inspected: Inspection.InvokeExpression | undefined): void {
+function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -87,21 +87,21 @@ function expectText_givenNothing(inspected: Inspection.InvokeExpression | undefi
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(1);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(1);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    expect(invokeArgs.typeCheck.missing).to.deep.equal([0]);
+    expect(invokeArgs.typeChecked.missing).to.deep.equal([0]);
 }
 
-function expectText_givenText(inspected: Inspection.InvokeExpression | undefined): void {
+function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -109,21 +109,21 @@ function expectText_givenText(inspected: Inspection.InvokeExpression | undefined
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(1);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(1);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0]);
 }
 
-function expectNumberParameter_missingParameter(inspected: Inspection.InvokeExpression | undefined): void {
+function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -131,41 +131,41 @@ function expectNumberParameter_missingParameter(inspected: Inspection.InvokeExpr
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(1);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(1);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.typeCheck.missing.includes(0)).to.equal(true);
+    expect(invokeArgs.typeChecked.missing.includes(0)).to.equal(true);
 }
 
-function expectNoParameter_givenNoParameter(inspected: Inspection.InvokeExpression | undefined): void {
+function expectNoParameter_givenNoParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 }
 
-function expectRequiredAndOptional_givenRequired(inspected: Inspection.InvokeExpression | undefined): void {
+function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -173,22 +173,24 @@ function expectRequiredAndOptional_givenRequired(inspected: Inspection.InvokeExp
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(2);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(2);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0, 1]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0, 1]);
 }
 
-function expectRequiredAndOptional_givenRequiredAndOptional(inspected: Inspection.InvokeExpression | undefined): void {
+function expectRequiredAndOptional_givenRequiredAndOptional(
+    inspected: Inspection.CurrentInvokeExpression | undefined,
+): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
 
     Assert.isDefined(inspected.maybeArguments);
 
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(1);
     // tslint:disable-next-line: chai-vague-errors
@@ -199,15 +201,15 @@ function expectRequiredAndOptional_givenRequiredAndOptional(inspected: Inspectio
     expect(invokeArgs.givenArguments.length).to.equal(2);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(2);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(2);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0, 1]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0, 1]);
 }
 
-function expectText_givenNumber(inspected: Inspection.InvokeExpression | undefined): void {
+function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     const expectedArgument: PQP.Language.Type.FunctionParameter = PQP.Assert.asDefined(
         TestConstants.DuplicateTextDefinedFunction.parameters[0],
     );
@@ -218,7 +220,7 @@ function expectText_givenNumber(inspected: Inspection.InvokeExpression | undefin
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -226,12 +228,12 @@ function expectText_givenNumber(inspected: Inspection.InvokeExpression | undefin
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(1);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(1);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    const invalidArguments: Map<number, PQP.Language.TypeUtils.InvocationMismatch> = invokeArgs.typeCheck.invalid;
+    const invalidArguments: Map<number, PQP.Language.TypeUtils.InvocationMismatch> = invokeArgs.typeChecked.invalid;
     const firstArg: PQP.Language.TypeUtils.InvocationMismatch = PQP.MapUtils.assertGet(invalidArguments, 0);
 
     expect(firstArg).to.deep.equal({
@@ -240,13 +242,13 @@ function expectText_givenNumber(inspected: Inspection.InvokeExpression | undefin
     });
 }
 
-function expectNestedInvocation(inspected: Inspection.InvokeExpression | undefined): void {
+function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
     expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
     Assert.isDefined(inspected.maybeArguments);
-    const invokeArgs: InvokeExpressionArguments = inspected.maybeArguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
@@ -254,10 +256,10 @@ function expectNestedInvocation(inspected: Inspection.InvokeExpression | undefin
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {
@@ -266,7 +268,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -279,7 +281,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -291,7 +293,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -303,7 +305,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -316,7 +318,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -329,7 +331,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -342,7 +344,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -354,7 +356,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -367,7 +369,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz)`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -382,7 +384,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -395,7 +397,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -407,7 +409,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -419,7 +421,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -432,7 +434,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -445,7 +447,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -458,7 +460,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -470,7 +472,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -483,7 +485,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
-            const inspected: Inspection.InvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,

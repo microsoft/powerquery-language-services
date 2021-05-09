@@ -9,7 +9,8 @@ import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
-import { TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
+import { TriedCurrentInvokeExpression } from "./invokeExpression";
+import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 import { TriedNodeScope, tryNodeScope } from "./scope";
 import type { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";
@@ -20,15 +21,16 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     parseState: S,
     maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
     position: Position,
-    maybeTypeCache: TypeCache | undefined = undefined,
+    // If a TypeCache is given, then potentially mutate its values,
+    // Else create a new TypeCache and include it in the return.
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Inspection {
-    const typeCache: TypeCache = maybeTypeCache ?? TypeCacheUtils.createEmptyCache();
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
-    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
+    const triedCurrentInvokeExpression: TriedCurrentInvokeExpression = tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,
@@ -61,7 +63,7 @@ export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseS
     return {
         maybeActiveNode,
         autocomplete: autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
-        triedInvokeExpression,
+        triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
         triedExpectedType,

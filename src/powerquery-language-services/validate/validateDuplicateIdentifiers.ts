@@ -3,7 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Diagnostic, DiagnosticSeverity, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
+import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
+import { DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
