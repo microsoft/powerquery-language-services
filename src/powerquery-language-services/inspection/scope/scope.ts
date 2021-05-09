@@ -6,8 +6,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 // Keys are identifier literals.
 export type ScopeTypeByKey = Map<string, PQP.Language.Type.TPowerQueryType>;
 
-export type TriedScope = PQP.Result<ScopeById, PQP.CommonError.CommonError>;
-
 export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 
 // Scopes for multiple nodes, where the keys are nodeIds.

@@ -20,31 +20,16 @@ import {
     ScopeItemKind,
     SectionMemberScopeItem,
     TriedNodeScope,
-    TriedScope,
     TScopeItem,
 } from "./scope";
-
-// Builds scopes for multiple nodes using a top-down approach,
-// starting from the ancestry's root and finishing on the the ancestry's leaf.
-export function tryScope(
-    settings: PQP.CommonSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: ScopeById | undefined,
-): TriedScope {
-    return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectScope(settings, nodeIdMapCollection, ancestry, maybeScopeById),
-    );
-}
 
 // Builds a scope for the given node.
 export function tryNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: ScopeById | undefined,
+    // scopeById may get mutated by adding new entries.
+    scopeById: ScopeById,
 ): TriedNodeScope {
     return PQP.ResultUtils.ensureResult(settings.locale, () => {
         const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.AncestryUtils.assertGetAncestry(
@@ -55,7 +40,7 @@ export function tryNodeScope(
             return new Map();
         }
 
-        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, maybeScopeById);
+        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
         return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
 }
@@ -64,8 +49,8 @@ export function assertGetOrCreateNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    scopeById: ScopeById = new Map(),
+    // scopeById may get mutated by adding new entries.
+    scopeById: ScopeById,
 ): Inspection.TriedNodeScope {
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
@@ -184,20 +169,15 @@ function inspectScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
-    // If a map is given, then it's mutated and returned. Else create and return a new instance.
-    maybeScopeById: ScopeById | undefined,
+    // scopeById may get mutated by adding new entries.
+    scopeById: ScopeById,
 ): ScopeById {
     const rootId: number = ancestry[0].node.id;
 
-    let scopeById: ScopeById;
-    if (maybeScopeById !== undefined) {
-        const maybeCached: NodeScope | undefined = maybeScopeById.get(rootId);
-        if (maybeCached !== undefined) {
-            return maybeScopeById;
-        }
-        scopeById = maybeScopeById;
-    } else {
-        scopeById = new Map();
+    // A scope for the given ancestry has already been generated.
+    const maybeCached: NodeScope | undefined = scopeById.get(rootId);
+    if (maybeCached !== undefined) {
+        return scopeById;
     }
 
     // Store the delta between the given scope and what's found in a temporary map.
