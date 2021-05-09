@@ -64,13 +64,13 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(1);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(1);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.typeCheck.extraneous.includes(0)).to.equal(true);
+    expect(invokeArgs.typeChecked.extraneous.includes(0)).to.equal(true);
 }
 
 function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -87,12 +87,12 @@ function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression |
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(1);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(1);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    expect(invokeArgs.typeCheck.missing).to.deep.equal([0]);
+    expect(invokeArgs.typeChecked.missing).to.deep.equal([0]);
 }
 
 function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -109,12 +109,12 @@ function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | un
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(1);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(1);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0]);
 }
 
 function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -131,13 +131,13 @@ function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInv
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(1);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(1);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.typeCheck.missing.includes(0)).to.equal(true);
+    expect(invokeArgs.typeChecked.missing.includes(0)).to.equal(true);
 }
 
 function expectNoParameter_givenNoParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -153,10 +153,10 @@ function expectNoParameter_givenNoParameter(inspected: Inspection.CurrentInvokeE
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 }
 
 function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -173,12 +173,12 @@ function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentIn
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(2);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(2);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0, 1]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0, 1]);
 }
 
 function expectRequiredAndOptional_givenRequiredAndOptional(
@@ -201,12 +201,12 @@ function expectRequiredAndOptional_givenRequiredAndOptional(
     expect(invokeArgs.givenArguments.length).to.equal(2);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(2);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(2);
 
-    expect(invokeArgs.typeCheck.valid).to.deep.equal([0, 1]);
+    expect(invokeArgs.typeChecked.valid).to.deep.equal([0, 1]);
 }
 
 function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | undefined): void {
@@ -228,12 +228,12 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | 
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(1);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(1);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    const invalidArguments: Map<number, PQP.Language.TypeUtils.InvocationMismatch> = invokeArgs.typeCheck.invalid;
+    const invalidArguments: Map<number, PQP.Language.TypeUtils.InvocationMismatch> = invokeArgs.typeChecked.invalid;
     const firstArg: PQP.Language.TypeUtils.InvocationMismatch = PQP.MapUtils.assertGet(invalidArguments, 0);
 
     expect(firstArg).to.deep.equal({
@@ -256,10 +256,10 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | 
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
-    expect(invokeArgs.typeCheck.extraneous.length).to.equal(0);
-    expect(invokeArgs.typeCheck.invalid.size).to.equal(0);
-    expect(invokeArgs.typeCheck.missing.length).to.equal(0);
-    expect(invokeArgs.typeCheck.valid.length).to.equal(0);
+    expect(invokeArgs.typeChecked.extraneous.length).to.equal(0);
+    expect(invokeArgs.typeChecked.invalid.size).to.equal(0);
+    expect(invokeArgs.typeChecked.missing.length).to.equal(0);
+    expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 }
 
 describe(`subset Inspection - InvokeExpression`, () => {

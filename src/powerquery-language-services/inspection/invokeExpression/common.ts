@@ -16,5 +16,5 @@ export interface InvokeExpressionArguments {
     readonly numMinExpectedArguments: number;
     readonly givenArguments: ReadonlyArray<PQP.Parser.TXorNode>;
     readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.TPowerQueryType>;
-    readonly typeCheck: PQP.Language.TypeUtils.CheckedInvocation;
+    readonly typeChecked: PQP.Language.TypeUtils.CheckedInvocation;
 }

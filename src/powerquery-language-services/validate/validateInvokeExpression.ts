@@ -62,7 +62,7 @@ function invokeExpressionToDiagnostics<S extends PQP.Parser.IParseState = PQP.Pa
             inspected.invokeExpressionXorNode.node.id,
         );
 
-        for (const [argIndex, mismatch] of invokeExpressionArguments.typeCheck.invalid.entries()) {
+        for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
             const maybeGivenArgumentRange: Range | undefined = PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,
                 givenArguments[argIndex],

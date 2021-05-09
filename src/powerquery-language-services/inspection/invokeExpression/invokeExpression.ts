@@ -93,7 +93,7 @@ function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.I
             givenArgumentTypes,
             numMaxExpectedArguments,
             numMinExpectedArguments,
-            typeCheck: PQP.Language.TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
+            typeChecked: PQP.Language.TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
         };
     }
 
