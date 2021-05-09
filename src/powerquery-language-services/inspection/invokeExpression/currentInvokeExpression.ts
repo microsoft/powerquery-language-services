@@ -11,7 +11,7 @@ import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 
-// An inspection of the first invoke expression encountered in an ActiveNode's ancestry.
+// An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
 
 // Identical to InvokeExpression except maybeArguments has an extra field, `argumentOrdinal`.
