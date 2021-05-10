@@ -152,7 +152,7 @@ function assertNodeScopeOk(
         settings,
         nodeIdMapCollection,
         activeNode.ancestry[0].node.id,
-        undefined,
+        new Map(),
     );
     Assert.isOk(triedNodeScope);
 
