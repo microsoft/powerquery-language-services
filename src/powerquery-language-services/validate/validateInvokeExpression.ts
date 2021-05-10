@@ -8,6 +8,8 @@ import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from "..";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
+import { Localization, LocalizationUtils } from "../localization";
+import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
 export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
@@ -107,30 +109,21 @@ function createDiagnosticForMismatch<S extends PQP.Parser.IParseState = PQP.Pars
     let range: Range;
     let message: string;
 
-    const expected: PQP.Language.Type.FunctionParameter = mismatch.expected;
+    const parameter: PQP.Language.Type.FunctionParameter = mismatch.expected;
+    const argName: string = parameter.nameLiteral;
+    const expected: string = PQP.Language.TypeUtils.nameOfTypeKind(
+        parameter.maybeType ?? PQP.Language.Type.AnyInstance.kind,
+    );
 
     // An argument containing at least one leaf node was given.
     if (maybeGivenArgumentRange) {
-        const expectedTypeKindMessage: string = PQP.Language.TypeUtils.nameOfTypeKind(
-            expected.maybeType ?? PQP.Language.Type.AnyInstance.kind,
-        );
-
-        const actual: PQP.Language.Type.TPowerQueryType = PQP.Assert.asDefined(mismatch.actual);
-        const actualTypeKindMessage: string = PQP.Language.TypeUtils.nameOfTypeKind(actual.kind);
+        const actual: string = PQP.Language.TypeUtils.nameOfTypeKind(PQP.Assert.asDefined(mismatch.actual).kind);
 
         range = maybeGivenArgumentRange;
-        if (maybeFunctionName) {
-            message = `'${maybeFunctionName} expected the argument for '${expected.nameLiteral}' to be '${expectedTypeKindMessage}', but got '${actualTypeKindMessage}' instead.`;
-        } else {
-            message = `Expected the argument for '${expected.nameLiteral}' to be '${expectedTypeKindMessage}', but got '${actualTypeKindMessage}' instead.`;
-        }
+        message = createTypeMismatchMessage(validationSettings.locale, maybeFunctionName, argName, expected, actual);
     } else {
         range = invokeExpressionRange;
-        if (maybeFunctionName) {
-            message = `'${maybeFunctionName}' is missing an argument for the non-optional parameter '${expected.nameLiteral}'.`;
-        } else {
-            message = `Missing an argument for the non-optional parameter '${expected.nameLiteral}'.`;
-        }
+        message = createMissingMandatoryMessage(validationSettings.locale, maybeFunctionName, argName);
     }
 
     return {
@@ -140,4 +133,45 @@ function createDiagnosticForMismatch<S extends PQP.Parser.IParseState = PQP.Pars
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,
     };
+}
+
+function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
+    const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
+    if (maybeFunctionName) {
+        return Localization.error_validation_invokeExpression_missingMandatory_named(
+            templates,
+            maybeFunctionName,
+            argName,
+        );
+    } else {
+        return Localization.error_validation_invokeExpression_missingMandatory_unnamed(templates, argName);
+    }
+}
+
+function createTypeMismatchMessage(
+    locale: string,
+    maybeFunctionName: string | undefined,
+    argName: string,
+    expected: string,
+    actual: string,
+): string {
+    const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
+    if (maybeFunctionName) {
+        return Localization.error_validation_invokeExpression_typeMismatch_named(
+            templates,
+            maybeFunctionName,
+            argName,
+            expected,
+            actual,
+        );
+    } else {
+        return Localization.error_validation_invokeExpression_typeMismatch_unnamed(
+            templates,
+            argName,
+            expected,
+            actual,
+        );
+    }
 }
