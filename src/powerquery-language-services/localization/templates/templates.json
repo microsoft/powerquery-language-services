@@ -12,5 +12,5 @@
     "_error_validation_invokeExpression_typeMismatch_named.comment": "An error when a named function call is missing a mandatory argument. Expected to be user facing.",
 
     "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-    "_error_validation_invokeExpression_typeMismatch_unnamed.comment": "An error when a named function call is missing a mandatory argument. Expected to be user facing."
+    "_error_validation_invokeExpression_typeMismatch_unnamed.comment": "An error when an unnamed function call is missing a mandatory argument. Expected to be user facing."
 }

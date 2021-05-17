@@ -25,7 +25,7 @@ export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQ
     settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
-    // If a TypeCache is given, then potentially mutate its values,
+    // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedCurrentInvokeExpression {
