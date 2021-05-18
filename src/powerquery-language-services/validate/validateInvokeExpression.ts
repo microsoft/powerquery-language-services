@@ -137,16 +137,7 @@ function createDiagnosticForMismatch<S extends PQP.Parser.IParseState = PQP.Pars
 
 function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
-
-    if (maybeFunctionName) {
-        return Localization.error_validation_invokeExpression_missingMandatory_named(
-            templates,
-            maybeFunctionName,
-            argName,
-        );
-    } else {
-        return Localization.error_validation_invokeExpression_missingMandatory_unnamed(templates, argName);
-    }
+    return Localization.error_validation_invokeExpression_missingMandatory(templates, maybeFunctionName, argName);
 }
 
 function createTypeMismatchMessage(
@@ -157,21 +148,11 @@ function createTypeMismatchMessage(
     actual: string,
 ): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
-
-    if (maybeFunctionName) {
-        return Localization.error_validation_invokeExpression_typeMismatch_named(
-            templates,
-            maybeFunctionName,
-            argName,
-            expected,
-            actual,
-        );
-    } else {
-        return Localization.error_validation_invokeExpression_typeMismatch_unnamed(
-            templates,
-            argName,
-            expected,
-            actual,
-        );
-    }
+    return Localization.error_validation_invokeExpression_typeMismatch(
+        templates,
+        maybeFunctionName,
+        argName,
+        expected,
+        actual,
+    );
 }
