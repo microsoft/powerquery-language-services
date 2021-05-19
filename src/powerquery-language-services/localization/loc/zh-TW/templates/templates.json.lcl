@@ -19,6 +19,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName}' is missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{funcName}' 遺漏非選擇性參數 '{argName}' 的引數。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[遺漏非選擇性參數 '{argName}' 的引數。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{funcName} 預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
     </Item>
   </Item>
 </LCX>

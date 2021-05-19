@@ -13,11 +13,47 @@
       <Item ItemId=";error_validation_duplicate_identifier" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Duplicate identifier '{identifier}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bikoiztu "{identifier}" identifikatzailea]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[A common error where the user declared two values using the same name. Expected to be user facing.]]></Cmt>
-        </Cmts>
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName}' is missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
       </Item>
     </Item>
   </Item>
