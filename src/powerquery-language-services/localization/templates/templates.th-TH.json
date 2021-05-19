@@ -1,7 +1,7 @@
 {
   "error_validation_duplicate_identifier": "ตัวระบุ \"{identifier}\" ที่ซ้ำกัน",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' ไม่มีอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "ไม่พบอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน"
 }
