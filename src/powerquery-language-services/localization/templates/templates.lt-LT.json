@@ -1,7 +1,7 @@
 {
-  "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_duplicate_identifier": "Pasikartojantis identifikatorius „{identifier}“",
+  "error_validation_invokeExpression_missingMandatory_named": "„{funcName}“ trūksta argumento nepasirenkamam parametrui „{argName}“.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Trūksta nepasirinktinio parametro „{argName}“ argumento.",
+  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ tikėjosi, kad „{argName}“ argumentas bus „{expected}“, tačiau gautas „{actual}“.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Tikėtasi, kad argumentas, skirtas „{argName}“, bus „{expected}“, tačiau gautas „{actual}“."
 }

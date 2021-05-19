@@ -1,7 +1,7 @@
 {
   "error_validation_duplicate_identifier": "Pengidentifikasi duplikat '{identifier}'",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' tidak memiliki argumen untuk parameter non-opsional '{argName}'.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Tidak ada argumen untuk parameter non-opsional '{argName}'.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} mengharapkan argumen untuk '{argName}' adalah '{expected}', namun mendapatkan '{actual}' sebagai gantinya.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Argumen yang diharapkan untuk '{argName}' adalah '{expected}', namun yang didapatkan adalah '{actual}'."
 }

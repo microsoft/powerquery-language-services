@@ -1,7 +1,7 @@
 {
   "error_validation_duplicate_identifier": "Identificator dublat „{identifier}”",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_missingMandatory_named": "„{funcName}” are un argument lipsă pentru parametrul non-opțional „{argName}”.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Lipsește un argument pentru parametrul non-opțional „{argName}”.",
+  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}” aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar a primit în schimb „{actual}”.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Se aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar s-a primit în schimb „{actual}”."
 }
