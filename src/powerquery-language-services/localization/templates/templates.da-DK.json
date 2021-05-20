@@ -1,7 +1,7 @@
 {
-  "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_duplicate_identifier": "Duplikeret identifikator '{identifier}'",
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'mangler et argument for den ikke-valgfrie parameter '{argName}'.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Der mangler et argument for den ikke-valgfrie parameter '{argName}'.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for."
 }

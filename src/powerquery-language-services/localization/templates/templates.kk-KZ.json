@@ -1,7 +1,7 @@
 {
   "error_validation_duplicate_identifier": "Қайталанатын идентификатор \"{identifier}\"",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' функциясында '{argName}' міндетті параметріне аргументі жоқ.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "''{argName}' міндетті параметріне аргументі жоқ.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} функциясында '{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан."
 }
