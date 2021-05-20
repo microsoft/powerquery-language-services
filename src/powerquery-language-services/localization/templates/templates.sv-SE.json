@@ -1,7 +1,7 @@
 {
   "error_validation_duplicate_identifier": "Dubblettidentifierare {identifier}",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_missingMandatory_named": "{funcName} saknas för den icke-valfria parametern {argName}.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Ett argument saknas för den icke-valfria parametern {argName}.",
+  "error_validation_invokeExpression_typeMismatch_named": "{funcName} förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället."
 }
