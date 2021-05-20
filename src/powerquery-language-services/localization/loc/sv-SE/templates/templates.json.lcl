@@ -19,6 +19,42 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName}' is missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{funcName} saknas för den icke-valfria parametern {argName}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ett argument saknas för den icke-valfria parametern {argName}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{funcName} förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
     </Item>
   </Item>
 </LCX>
