@@ -19,7 +19,6 @@ import {
 } from "../../powerquery-language-services";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
-import { SimpleLibrary } from "../testConstants";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
@@ -28,15 +27,15 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
 };
 
 async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
 async function createHover(text: string): Promise<Hover> {
-    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
 async function createSignatureHelp(text: string): Promise<SignatureHelp> {
-    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
 describe(`SimpleLocalDocumentSymbolProvider`, async () => {
@@ -170,9 +169,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
 
             const autocompleteItems: Inspection.AutocompleteItem[] = await AnalysisUtils.createAnalysis(
                 document,
-                { createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings },
+                {
+                    createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
+                    library: TestConstants.SimpleLibrary,
+                },
                 position,
-                SimpleLibrary,
             ).getAutocompleteItems();
             expect(autocompleteItems.length).to.equal(2);
 

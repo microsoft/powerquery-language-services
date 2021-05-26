@@ -10,7 +10,7 @@ import * as InspectionUtils from "../inspectionUtils";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
-import type { ILibrary } from "../library/library";
+import { Library } from "../library";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
     AutocompleteItemProvider,
@@ -34,8 +34,9 @@ export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser
         protected analysisSettings: AnalysisSettings<S>,
         protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
-        library: ILibrary,
     ) {
+        const library: Library.ILibrary = analysisSettings.library;
+
         this.languageAutocompleteItemProvider =
             analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn !== undefined
                 ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()

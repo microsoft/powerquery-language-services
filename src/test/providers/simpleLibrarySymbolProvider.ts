@@ -29,15 +29,15 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
 };
 
 async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
 async function createHover(text: string): Promise<Hover> {
-    return TestUtils.createHover(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
 async function createSignatureHelp(text: string): Promise<SignatureHelp> {
-    return TestUtils.createSignatureHelp(text, TestConstants.SimpleLibrary, IsolatedAnalysisSettings);
+    return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
 describe(`SimpleLibraryProvider`, async () => {
