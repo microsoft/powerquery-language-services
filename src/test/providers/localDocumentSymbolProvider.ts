@@ -169,8 +169,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const position: Position = pair[1];
 
             const autocompleteItems: Inspection.AutocompleteItem[] = await AnalysisUtils.createAnalysis(
-                { createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings },
                 document,
+                { createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings },
                 position,
                 SimpleLibrary,
             ).getAutocompleteItems();

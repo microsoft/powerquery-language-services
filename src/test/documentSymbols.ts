@@ -19,7 +19,7 @@ function expectSymbolsForDocument(
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): void {
     const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
-        DocumentSymbols.getDocumentSymbols(TestConstants.SimpleInspectionSettings, document),
+        DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
     );
 
     assert.isDefined(actualSymbols);

@@ -80,8 +80,8 @@ export function createAnalysis(
 ): Analysis {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
     return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisSettings),
         document,
+        createAnalysisSettings(maybeAnalysisSettings),
         position,
         maybeLibrary ?? TestConstants.SimpleLibrary,
     );
@@ -128,8 +128,8 @@ function createFileAnalysis(
 ): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
     return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisSettings),
         document,
+        createAnalysisSettings(maybeAnalysisSettings),
         position,
         maybeLibrary ?? TestConstants.SimpleLibrary,
     );

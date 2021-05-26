@@ -3,3 +3,4 @@
 
 export { validate } from "./validate";
 export * from "./validationSettings";
+export * from "./validationResult";

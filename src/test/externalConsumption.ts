@@ -36,8 +36,8 @@ describe("External consumption", () => {
         };
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(
-            analysisSettings,
             textDocument,
+            analysisSettings,
             position,
             SimpleLibrary,
         );

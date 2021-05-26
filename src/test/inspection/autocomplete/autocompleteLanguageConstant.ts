@@ -9,11 +9,11 @@ import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
+import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./common";
 
 function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    settings: InspectionSettings<S>,
     text: string,
     position: Position,
 ): AbridgedAutocompleteItem | undefined {

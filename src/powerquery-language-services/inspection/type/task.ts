@@ -5,9 +5,9 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
 
+import { InspectionSettings } from "../..";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
-import { InspectionSettings } from "../settings";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 

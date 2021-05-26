@@ -7,8 +7,8 @@ import { Assert } from "@microsoft/powerquery-parser";
 import type { Position } from "vscode-languageserver-types";
 
 import { PositionUtils } from "../..";
+import { InspectionSettings } from "../../inspectionSettings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { InspectionSettings } from "../settings";
 import { TriedType, tryType } from "../type";
 import { TypeCache } from "../typeCache";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";

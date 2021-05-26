@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import type { Position } from "vscode-languageserver-types";
 
+import { InspectionSettings } from "../inspectionSettings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { autocomplete } from "./autocomplete";
 import { Inspection } from "./commonTypes";
@@ -12,7 +13,6 @@ import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 import { TriedNodeScope, tryNodeScope } from "./scope";
-import type { InspectionSettings } from "./settings";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 

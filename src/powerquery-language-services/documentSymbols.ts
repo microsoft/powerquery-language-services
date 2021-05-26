@@ -5,14 +5,13 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import * as InspectionUtils from "./inspectionUtils";
 
-import { AnalysisSettings } from "./analysis/analysisSettings";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
 export function getDocumentSymbols<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
     textDocument: TextDocument,
-    analysisSettings?: AnalysisSettings<S>,
+    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
+    maintainWorkspaceCache: boolean,
 ): DocumentSymbol[] {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
@@ -30,7 +29,7 @@ export function getDocumentSymbols<S extends PQP.Parser.IParseState = PQP.Parser
     addIdentifierPairedExpressionSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
     addRecordSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
 
-    if (!analysisSettings?.maintainWorkspaceCache) {
+    if (!maintainWorkspaceCache) {
         WorkspaceCacheUtils.close(textDocument);
     }
 
