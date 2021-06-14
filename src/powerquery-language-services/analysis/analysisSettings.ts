@@ -2,19 +2,20 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Inspection } from "..";
 
+import { InspectionSettings } from "../inspectionSettings";
 import { ILibrary } from "../library/library";
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";
 import { WorkspaceCache } from "../workspaceCache";
 
 export interface AnalysisSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
-    readonly createInspectionSettingsFn: () => Inspection.InspectionSettings<S>;
+    readonly createInspectionSettingsFn: () => InspectionSettings<S>;
+    readonly library: ILibrary;
+    readonly maintainWorkspaceCache?: boolean;
     readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => AutocompleteItemProvider;
     readonly maybeCreateLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentSymbolProviderFn?: (
         library: ILibrary,
         maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
     ) => ISymbolProvider;
-    readonly maintainWorkspaceCache?: boolean;
 }

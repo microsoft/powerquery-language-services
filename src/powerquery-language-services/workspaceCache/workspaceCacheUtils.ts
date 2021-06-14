@@ -7,6 +7,7 @@ import type { Position } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
 import { TypeCacheUtils } from "../inspection";
+import { InspectionSettings } from "../inspectionSettings";
 import type {
     CacheCollection,
     CacheItem,
@@ -69,7 +70,7 @@ export function getOrCreateParse<S extends PQP.Parser.IParseState = PQP.Parser.I
 
 export function getOrCreateInspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     textDocument: TextDocument,
-    inspectionSettings: Inspection.InspectionSettings<S>,
+    inspectionSettings: InspectionSettings<S>,
     position: Position,
 ): InspectionCacheItem<S> {
     const cacheKey: string = createCacheKey(textDocument);
@@ -172,7 +173,7 @@ function getOrCreateParseCacheItem<S extends PQP.Parser.IParseState = PQP.Parser
 function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     cacheCollection: CacheCollection<S>,
     textDocument: TextDocument,
-    inspectionSettings: Inspection.InspectionSettings<S>,
+    inspectionSettings: InspectionSettings<S>,
     position: Position,
 ): [CacheCollection<S>, InspectionCacheItem<S>] {
     if (cacheCollection.maybeInspection) {

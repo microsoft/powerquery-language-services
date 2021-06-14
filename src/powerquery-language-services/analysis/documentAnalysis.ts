@@ -6,17 +6,15 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position, Range } from "vscode-languageserver-types";
 
-import { ILibrary } from "../library/library";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AnalysisBase } from "./analysisBase";
 import { AnalysisSettings } from "./analysisSettings";
 
 export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> extends AnalysisBase<S> {
     constructor(
-        analysisSettings: AnalysisSettings<S>,
         private readonly textDocument: TextDocument,
+        analysisSettings: AnalysisSettings<S>,
         position: Position,
-        library: ILibrary,
     ) {
         super(
             analysisSettings,
@@ -26,7 +24,6 @@ export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IPar
                 position,
             ),
             position,
-            library,
         );
     }
 

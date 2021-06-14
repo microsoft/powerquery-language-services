@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { InspectionSettings } from "../../inspection";
+import { InspectionSettings } from "../..";
 import { ValidationSettings } from "./validationSettings";
 
 export function createValidationSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(

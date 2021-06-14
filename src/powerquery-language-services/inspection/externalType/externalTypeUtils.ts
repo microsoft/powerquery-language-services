@@ -2,12 +2,11 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { ExternalType } from ".";
 
-import { ExternalInvocationTypeRequest, ExternalTypeRequestKind, ExternalValueTypeRequest } from "./externalType";
-
-export function createValueTypeRequest(identifierLiteral: string): ExternalValueTypeRequest {
+export function createValueTypeRequest(identifierLiteral: string): ExternalType.ExternalValueTypeRequest {
     return {
-        kind: ExternalTypeRequestKind.Value,
+        kind: ExternalType.ExternalTypeRequestKind.Value,
         identifierLiteral,
     };
 }
@@ -15,9 +14,9 @@ export function createValueTypeRequest(identifierLiteral: string): ExternalValue
 export function createInvocationTypeRequest(
     identifierLiteral: string,
     args: ReadonlyArray<PQP.Language.Type.TPowerQueryType>,
-): ExternalInvocationTypeRequest {
+): ExternalType.ExternalInvocationTypeRequest {
     return {
-        kind: ExternalTypeRequestKind.Invocation,
+        kind: ExternalType.ExternalTypeRequestKind.Invocation,
         identifierLiteral,
         args,
     };

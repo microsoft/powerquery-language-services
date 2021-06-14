@@ -8,8 +8,7 @@ import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
-import { InspectionSettings } from "../../../powerquery-language-services/inspection";
+import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 
 function assertGetPrimitiveTypeAutocompleteOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,

@@ -4,9 +4,9 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { CommonError } from "@microsoft/powerquery-parser";
+import { InspectionSettings } from "../../inspectionSettings";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { InspectionSettings } from "../settings";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";

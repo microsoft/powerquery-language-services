@@ -8,12 +8,13 @@ import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver
 import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { ExternalType } from "./inspection/externalType";
+import { InspectionSettings } from "./inspectionSettings";
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function createInspectionSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: PQP.Settings<S>,
     maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
-): Inspection.InspectionSettings<S> {
+): InspectionSettings<S> {
     return {
         ...settings,
         maybeExternalTypeResolver,

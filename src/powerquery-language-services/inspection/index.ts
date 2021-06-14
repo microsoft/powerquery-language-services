@@ -7,7 +7,6 @@ export * from "./commonTypes";
 export * from "./externalType";
 export * from "./invokeExpression";
 export * from "./jaroWinkler";
-export * from "./settings";
 export * from "./scope";
 export * from "./task";
 export * from "./type";

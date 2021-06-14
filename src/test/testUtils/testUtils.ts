@@ -14,7 +14,6 @@ import * as TestConstants from "../testConstants";
 
 import { Analysis, Inspection } from "../../powerquery-language-services";
 import { AnalysisSettings } from "../../powerquery-language-services/analysis/analysisSettings";
-import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
 
 export interface AbridgedDocumentSymbol {
@@ -73,66 +72,40 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
     };
 }
 
-export function createAnalysis(
-    text: string,
-    maybeLibrary?: ILibrary,
-    maybeAnalysisSettings?: AnalysisSettings,
-): Analysis {
+export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
-    return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisSettings),
-        document,
-        position,
-        maybeLibrary ?? TestConstants.SimpleLibrary,
-    );
+    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 
 export async function createAutocompleteItems(
     text: string,
-    maybeLibrary?: ILibrary,
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getAutocompleteItems();
+    return createAnalysis(text, maybeAnalysisSettings).getAutocompleteItems();
 }
 
 export async function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
-    maybeLibrary?: ILibrary,
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createFileAnalysis(fileName, position, maybeLibrary, maybeAnalysisSettings).getAutocompleteItems();
+    return createFileAnalysis(fileName, position, maybeAnalysisSettings).getAutocompleteItems();
 }
 
-export async function createHover(
-    text: string,
-    maybeLibrary?: ILibrary,
-    maybeAnalysisSettings?: AnalysisSettings,
-): Promise<Hover> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getHover();
+export async function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
+    return createAnalysis(text, maybeAnalysisSettings).getHover();
 }
 
 export async function createSignatureHelp(
     text: string,
-    maybeLibrary?: ILibrary,
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<SignatureHelp> {
-    return createAnalysis(text, maybeLibrary, maybeAnalysisSettings).getSignatureHelp();
+    return createAnalysis(text, maybeAnalysisSettings).getSignatureHelp();
 }
 
-function createFileAnalysis(
-    fileName: string,
-    position: Position,
-    maybeLibrary?: ILibrary,
-    maybeAnalysisSettings?: AnalysisSettings,
-): Analysis {
+function createFileAnalysis(fileName: string, position: Position, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
-    return AnalysisUtils.createAnalysis(
-        createAnalysisSettings(maybeAnalysisSettings),
-        document,
-        position,
-        maybeLibrary ?? TestConstants.SimpleLibrary,
-    );
+    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 
 function createAnalysisSettings(maybeAnalysisSettings?: AnalysisSettings): AnalysisSettings {

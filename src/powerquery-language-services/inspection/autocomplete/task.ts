@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { InspectionSettings } from "../../inspectionSettings";
 
 import { TMaybeActiveNode } from "../activeNode";
-import { InspectionSettings } from "../settings";
 import { TypeCache } from "../typeCache";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";

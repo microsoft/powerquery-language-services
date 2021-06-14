@@ -9,7 +9,7 @@ import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
 import { TestUtils } from "..";
-import { Inspection } from "../../powerquery-language-services";
+import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 
 const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
     request: Inspection.ExternalType.TExternalTypeRequest,
@@ -31,13 +31,13 @@ const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
     }
 };
 
-const TestSettings: PQP.Settings & Inspection.InspectionSettings = {
+const TestSettings: PQP.Settings & InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
 function assertParseOkNodeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    settings: InspectionSettings<S>,
     text: string,
     expected: PQP.Language.Type.TPowerQueryType,
 ): void {
@@ -65,7 +65,7 @@ function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.T
 }
 
 function assertGetParseNodeOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
@@ -76,7 +76,7 @@ function assertGetParseNodeOk<S extends PQP.Parser.IParseState = PQP.Parser.IPar
 }
 
 function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    settings: InspectionSettings<S>,
     textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
 ): void {
@@ -93,7 +93,7 @@ function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Pars
 }
 
 function assertGetParseOkScopeTypeOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: Inspection.InspectionSettings<S>,
+    settings: InspectionSettings<S>,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
 ): Inspection.ScopeTypeByKey {

@@ -7,11 +7,10 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
 import type { Position } from "vscode-languageserver-types";
-import { Inspection } from "../../powerquery-language-services";
+import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 
 import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
-import { InspectionSettings } from "../../powerquery-language-services/inspection/settings";
 
 function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     settings: InspectionSettings<S>,

@@ -9,7 +9,7 @@ import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
 import { TestUtils } from "..";
-import { Inspection } from "../../powerquery-language-services";
+import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem
@@ -21,7 +21,7 @@ export type TAbridgedNodeScopeItem =
 
 type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 
-const DefaultSettings: Inspection.InspectionSettings = {
+const DefaultSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeExternalTypeResolver: undefined,
 };

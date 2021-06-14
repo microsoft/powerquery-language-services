@@ -14,15 +14,16 @@ import * as TestConstants from "../testConstants";
 
 import {
     Inspection,
+    InspectionSettings,
     TextDocument,
     validate,
     WorkspaceCache,
     WorkspaceCacheUtils,
 } from "../../powerquery-language-services";
-import { ActiveNodeUtils, InspectionSettings, TypeCacheUtils } from "../../powerquery-language-services/inspection";
+import { ActiveNodeUtils, TypeCacheUtils } from "../../powerquery-language-services/inspection";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 import { CacheItem } from "../../powerquery-language-services/workspaceCache/workspaceCache";
 import { MockDocument } from "../mockDocument";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);

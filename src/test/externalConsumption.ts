@@ -19,13 +19,13 @@ import {
     SymbolKind,
     TextDocument,
 } from "../powerquery-language-services";
-import { SimpleLibrary } from "./testConstants";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
             createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
             maintainWorkspaceCache: false,
+            library: TestConstants.SimpleLibrary,
         };
 
         const textDocument: TextDocument = createTextDocument("id", 1, "let a = 1 in a");
@@ -35,12 +35,7 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            analysisSettings,
-            textDocument,
-            position,
-            SimpleLibrary,
-        );
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings, position);
         const hover: Hover = await analysis.getHover();
 
         expect(hover.range === undefined);

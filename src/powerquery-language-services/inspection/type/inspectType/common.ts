@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { Inspection } from "../../..";
+import { InspectionSettings } from "../../../inspectionSettings";
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { TypeById } from "../../typeCache";
@@ -36,7 +37,7 @@ import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 
 export interface InspectTypeState<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
-    readonly settings: Inspection.InspectionSettings<S>;
+    readonly settings: InspectionSettings<S>;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;

@@ -13,6 +13,7 @@ export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
 export * from "./formatter";
+export * from "./inspectionSettings";
 export * from "./library";
 export * from "./providers";
 export * from "./validate";
