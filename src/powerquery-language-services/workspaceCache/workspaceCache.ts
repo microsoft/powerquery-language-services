@@ -7,7 +7,7 @@ import { Position } from "vscode-languageserver-textdocument";
 
 import { Inspection } from "..";
 
-export type InspectionTask = Inspection.Inspection & { stage: "Inspection" };
+export type InspectionTask = Inspection.Inspection & { readonly stage: "Inspection"; readonly version: number };
 
 export type CacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> =
     | LexCacheItem
@@ -25,9 +25,11 @@ export type InspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IP
     | InspectionTask
     | undefined;
 
+// A collection for a given TextDocument.uri
 export interface CacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
     readonly maybeLex: LexCacheItem | undefined;
     readonly maybeParse: ParseCacheItem<S> | undefined;
-    readonly maybeInspection: Map<Position, InspectionCacheItem<S>> | undefined;
+    readonly maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> | undefined;
     readonly typeCache: Inspection.TypeCache;
+    readonly version: number;
 }

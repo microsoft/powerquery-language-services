@@ -83,7 +83,7 @@ function invokeExpressionToDiagnostics<S extends PQP.Parser.IParseState = PQP.Pa
 
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
         if (
-            numGivenArguments < invokeExpressionArguments.numMaxExpectedArguments ||
+            numGivenArguments < invokeExpressionArguments.numMinExpectedArguments ||
             numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
         ) {
             result.push({

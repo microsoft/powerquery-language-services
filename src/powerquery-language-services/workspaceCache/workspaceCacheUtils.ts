@@ -32,7 +32,9 @@ export function getOrCreateTypeCache<S extends PQP.Parser.IParseState = PQP.Pars
     textDocument: TextDocument,
 ): Inspection.TypeCache {
     const cacheKey: string = createCacheKey(textDocument);
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey);
+    const cacheVersion: number = textDocument.version;
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
+
     return cacheCollection.typeCache;
 }
 
@@ -41,7 +43,8 @@ export function getOrCreateLex<S extends PQP.Parser.IParseState = PQP.Parser.IPa
     lexSettings: PQP.LexSettings,
 ): LexCacheItem {
     const cacheKey: string = createCacheKey(textDocument);
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey);
+    const cacheVersion: number = textDocument.version;
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
     const [updatedCacheCollection, lexCacheItem]: [CacheCollection<S>, LexCacheItem] = getOrCreateLexCacheItem(
         cacheCollection,
         textDocument,
@@ -57,7 +60,8 @@ export function getOrCreateParse<S extends PQP.Parser.IParseState = PQP.Parser.I
     lexSettings: PQP.LexSettings & PQP.ParseSettings<S>,
 ): ParseCacheItem<S> {
     const cacheKey: string = createCacheKey(textDocument);
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey);
+    const cacheVersion: number = textDocument.version;
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
     const [updatedCacheCollection, parseCacheItem]: [CacheCollection<S>, ParseCacheItem<S>] = getOrCreateParseCacheItem(
         cacheCollection,
         textDocument,
@@ -74,7 +78,8 @@ export function getOrCreateInspection<S extends PQP.Parser.IParseState = PQP.Par
     position: Position,
 ): InspectionCacheItem<S> {
     const cacheKey: string = createCacheKey(textDocument);
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey);
+    const cacheVersion: number = textDocument.version;
+    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
     const [updatedCacheCollection, inspectionCacheItem]: [
         CacheCollection<S>,
         InspectionCacheItem<S>,
@@ -112,15 +117,16 @@ const CacheCollectionByCacheKey: Map<string, CacheCollection> = new Map();
 
 function getOrCreateCacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     cacheKey: string,
+    cacheVersion: number,
 ): CacheCollection<S> {
     const maybeCollection: CacheCollection<S> | undefined = CacheCollectionByCacheKey.get(cacheKey) as
         | CacheCollection<S>
         | undefined;
 
-    if (maybeCollection !== undefined) {
+    if (maybeCollection !== undefined && maybeCollection.version === cacheVersion) {
         return maybeCollection;
     } else {
-        const cacheCollection: CacheCollection<S> = createEmptyCollection();
+        const cacheCollection: CacheCollection<S> = createEmptyCollection(cacheVersion);
         CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
         return cacheCollection;
     }
@@ -176,11 +182,12 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
     inspectionSettings: InspectionSettings<S>,
     position: Position,
 ): [CacheCollection<S>, InspectionCacheItem<S>] {
-    if (cacheCollection.maybeInspection) {
-        const maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> = cacheCollection.maybeInspection;
+    if (cacheCollection.maybeInspectionByPosition) {
+        const maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> =
+            cacheCollection.maybeInspectionByPosition;
         const maybeInspection: InspectionCacheItem<S> | undefined = maybeInspectionByPosition.get(position);
 
-        if (maybeInspectionByPosition) {
+        if (maybeInspection) {
             return [cacheCollection, maybeInspection];
         }
     }
@@ -212,13 +219,16 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
     const inspectionCacheItem: InspectionCacheItem = {
         ...inspection,
         stage: "Inspection",
+        version: textDocument.version,
     };
 
-    const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(parseCacheCollection.maybeInspection ?? []);
+    const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(
+        parseCacheCollection.maybeInspectionByPosition ?? [],
+    );
     updatedByPosition.set(position, inspectionCacheItem);
     const updatedCacheCollection: CacheCollection<S> = updateCacheCollectionAttribute(
         parseCacheCollection,
-        "maybeInspection",
+        "maybeInspectionByPosition",
         updatedByPosition,
     );
 
@@ -236,11 +246,14 @@ function updateCacheCollectionAttribute<
     };
 }
 
-function createEmptyCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(): CacheCollection<S> {
+function createEmptyCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+    version: number,
+): CacheCollection<S> {
     return {
+        version,
         maybeLex: undefined,
         maybeParse: undefined,
-        maybeInspection: undefined,
+        maybeInspectionByPosition: undefined,
         typeCache: TypeCacheUtils.createEmptyCache(),
     };
 }
