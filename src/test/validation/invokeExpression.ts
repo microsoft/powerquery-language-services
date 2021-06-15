@@ -66,9 +66,12 @@ function expectArgumentCountMismatch(
 
     const { regExpExecArray } = matches[0];
 
-    const actualNumMin: number = Number.parseInt(Assert.asDefined(regExpExecArray[1], "expected capture group 1"));
-    const actualNumMax: number = Number.parseInt(Assert.asDefined(regExpExecArray[2], "expected capture group 2"));
-    const actualNumGiven: number = Number.parseInt(Assert.asDefined(regExpExecArray[3], "expected capture group 3"));
+    const actualNumMin: number = Number.parseInt(Assert.asDefined(regExpExecArray[1], "expected capture group 1"), 10);
+    const actualNumMax: number = Number.parseInt(Assert.asDefined(regExpExecArray[2], "expected capture group 2"), 10);
+    const actualNumGiven: number = Number.parseInt(
+        Assert.asDefined(regExpExecArray[3], "expected capture group 3"),
+        10,
+    );
 
     expect(actualNumMin).to.equal(expectedNumMin);
     expect(actualNumMax).to.equal(expectedNumMax);
@@ -105,16 +108,6 @@ describe("Validation - InvokeExpression", () => {
                 textDocument,
             );
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
-        });
-
-        it(`expects [1, 2] arguments, 1 given`, () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0)`,
-            );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
-            expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 1);
         });
 
         it(`expects [1, 2] arguments, 2 given`, () => {
