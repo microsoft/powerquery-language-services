@@ -176,11 +176,12 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
     inspectionSettings: InspectionSettings<S>,
     position: Position,
 ): [CacheCollection<S>, InspectionCacheItem<S>] {
-    if (cacheCollection.maybeInspection) {
-        const maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> = cacheCollection.maybeInspection;
+    if (cacheCollection.maybeInspectionByPosition) {
+        const maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> =
+            cacheCollection.maybeInspectionByPosition;
         const maybeInspection: InspectionCacheItem<S> | undefined = maybeInspectionByPosition.get(position);
 
-        if (maybeInspectionByPosition) {
+        if (maybeInspection) {
             return [cacheCollection, maybeInspection];
         }
     }
@@ -214,11 +215,13 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
         stage: "Inspection",
     };
 
-    const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(parseCacheCollection.maybeInspection ?? []);
+    const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(
+        parseCacheCollection.maybeInspectionByPosition ?? [],
+    );
     updatedByPosition.set(position, inspectionCacheItem);
     const updatedCacheCollection: CacheCollection<S> = updateCacheCollectionAttribute(
         parseCacheCollection,
-        "maybeInspection",
+        "maybeInspectionByPosition",
         updatedByPosition,
     );
 
@@ -240,11 +243,11 @@ function createEmptyCollection<S extends PQP.Parser.IParseState = PQP.Parser.IPa
     return {
         maybeLex: undefined,
         maybeParse: undefined,
-        maybeInspection: undefined,
+        maybeInspectionByPosition: undefined,
         typeCache: TypeCacheUtils.createEmptyCache(),
     };
 }
 
 function createCacheKey(textDocument: TextDocument): string {
-    return textDocument.uri;
+    return `${textDocument.uri},${textDocument.version}`;
 }
