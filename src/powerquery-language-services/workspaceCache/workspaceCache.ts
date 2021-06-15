@@ -33,8 +33,3 @@ export interface CacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.I
     readonly typeCache: Inspection.TypeCache;
     readonly version: number;
 }
-
-export interface CacheEntry<E> {
-    readonly entry: E;
-    readonly version: number;
-}
