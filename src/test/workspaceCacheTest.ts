@@ -67,6 +67,29 @@ describe("workspaceCache", () => {
         TestUtils.assertIsDefined(cacheItem);
         TestUtils.assertInspectionCacheItemOk(cacheItem);
     });
+
+    it("cache invalidation with version change", () => {
+        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition("foo|");
+        let cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
+            document,
+            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            postion,
+        );
+
+        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertInspectionCacheItemOk(cacheItem);
+        expect(cacheItem.version === 1);
+
+        document.setText("bar");
+        cacheItem = WorkspaceCacheUtils.getOrCreateInspection(
+            document,
+            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            postion,
+        );
+        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertInspectionCacheItemOk(cacheItem);
+        expect(cacheItem.version === 2);
+    });
 });
 
 describe("top level workspace functions", () => {
