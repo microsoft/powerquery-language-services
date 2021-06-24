@@ -10,8 +10,8 @@ import type { Position } from "vscode-languageserver-types";
 import { TestConstants, TestUtils } from "../..";
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 
-function assertGetPrimitiveTypeAutocompleteOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertGetPrimitiveTypeAutocompleteOk(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): ReadonlyArray<Inspection.AutocompleteItem> {

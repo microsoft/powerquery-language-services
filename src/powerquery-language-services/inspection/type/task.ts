@@ -15,15 +15,15 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<PQP.Language.Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-export function tryScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+export function tryScopeType(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedScopeType {
-    const state: InspectTypeState<S> = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
@@ -34,13 +34,13 @@ export function tryScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IPars
     return PQP.ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
 }
 
-export function tryType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+export function tryType(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     nodeId: number,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedType {
-    const state: InspectTypeState<S> = {
+    const state: InspectTypeState = {
         settings,
         givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
@@ -53,10 +53,7 @@ export function tryType<S extends PQP.Parser.IParseState = PQP.Parser.IParseStat
     );
 }
 
-function inspectScopeType<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
-    nodeId: number,
-): ScopeTypeByKey {
+function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, nodeId);
 
     for (const scopeItem of nodeScope.values()) {

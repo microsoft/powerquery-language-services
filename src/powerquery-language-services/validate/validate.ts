@@ -13,10 +13,7 @@ import { validateLexAndParse } from "./validateLexAndParse";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
 
-export function validate<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    textDocument: TextDocument,
-    validationSettings: ValidationSettings<S>,
-): ValidationResult {
+export function validate(textDocument: TextDocument, validationSettings: ValidationSettings): ValidationResult {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,

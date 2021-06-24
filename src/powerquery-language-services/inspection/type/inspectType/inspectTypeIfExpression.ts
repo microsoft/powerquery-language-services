@@ -5,8 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeIfExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+export function inspectTypeIfExpression(
+    state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();

@@ -192,29 +192,43 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
     });
 
     describe(`getHover`, async () => {
-        it(`let-variable`, async () => {
-            const hover: Hover = await createHover("let x = 1 in x|");
-            TestUtils.assertHover("[let-variable] x: 1", hover);
+        describe(`simple`, async () => {
+            it(`let-variable`, async () => {
+                const hover: Hover = await createHover("let x = 1 in x|");
+                TestUtils.assertHover("[let-variable] x: 1", hover);
+            });
+
+            it(`parameter`, async () => {
+                const hover: Hover = await createHover("(x as number) => x|");
+                TestUtils.assertHover("[parameter] x: number", hover);
+            });
+
+            it(`record-field`, async () => {
+                const hover: Hover = await createHover("[x = 1, y = x|]");
+                TestUtils.assertHover("[record-field] x: 1", hover);
+            });
+
+            it(`section-member`, async () => {
+                const hover: Hover = await createHover("section; x = 1; y = x|;");
+                TestUtils.assertHover("[section-member] x: 1", hover);
+            });
+
+            it(`undefined`, async () => {
+                const hover: Hover = await createHover("x|");
+                expect(hover).to.equal(EmptyHover);
+            });
         });
 
-        it(`parameter`, async () => {
-            const hover: Hover = await createHover("(x as number) => x|");
-            TestUtils.assertHover("[parameter] x: number", hover);
+        it(`null on parameter hover`, async () => {
+            const hover: Hover = await createHover("let foo = 10, bar = (foo| as number) => foo in foo");
+            expect(hover).to.deep.equal(EmptyHover);
         });
 
-        it(`record-field`, async () => {
-            const hover: Hover = await createHover("[x = 1, y = x|]");
-            TestUtils.assertHover("[record-field] x: 1", hover);
-        });
-
-        it(`section-member`, async () => {
-            const hover: Hover = await createHover("section; x = 1; y = x|;");
-            TestUtils.assertHover("[section-member] x: 1", hover);
-        });
-
-        it(`undefined`, async () => {
-            const hover: Hover = await createHover("x|");
-            expect(hover).to.equal(EmptyHover);
+        describe(`hover the value when over key`, () => {
+            it(`WIP let-variable`, async () => {
+                const hover: Hover = await createHover("let foo| = 1 in foo");
+                TestUtils.assertHover("[let-variable] foo: 1", hover);
+            });
         });
     });
 

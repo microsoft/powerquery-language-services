@@ -12,8 +12,8 @@ import { Inspection, InspectionSettings } from "../../powerquery-language-servic
 import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
-function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertInvokeExpressionOk(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
 ): Inspection.CurrentInvokeExpression | undefined {
@@ -31,8 +31,8 @@ function assertInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.
     return triedInspect.value;
 }
 
-function assertParseOkInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertParseOkInvokeExpressionOk(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): Inspection.CurrentInvokeExpression | undefined {
@@ -40,8 +40,8 @@ function assertParseOkInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.
     return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
-function assertParseErrInvokeExpressionOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertParseErrInvokeExpressionOk(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): Inspection.CurrentInvokeExpression | undefined {

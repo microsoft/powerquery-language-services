@@ -25,13 +25,13 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 
-export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> implements Analysis {
+export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
-        protected analysisSettings: AnalysisSettings<S>,
+        protected analysisSettings: AnalysisSettings,
         protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
     ) {
@@ -49,8 +49,16 @@ export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser
 
         this.localDocumentSymbolProvider =
             analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
-                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
-                : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
+                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
+                      library,
+                      maybeInspectionCacheItem,
+                      analysisSettings.createInspectionSettingsFn,
+                  )
+                : new LocalDocumentSymbolProvider(
+                      library,
+                      maybeInspectionCacheItem,
+                      analysisSettings.createInspectionSettingsFn,
+                  );
     }
 
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
@@ -217,9 +225,12 @@ export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser
         const followingNode: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[1]);
         if (followingNode.node.kind === PQP.Language.Ast.NodeKind.Parameter) {
             return false;
-        } else if (
+        }
+        // Allow hover on either the key or value of IdentifierPairedExpression.
+        // Do not allow hover if it's an incomplete Ast, or if you're on the equals symbol.
+        else if (
             followingNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierPairedExpression &&
-            leaf.node.maybeAttributeIndex !== 2
+            [undefined, 1].includes(PQP.Assert.asDefined(leaf.node.maybeAttributeIndex))
         ) {
             return false;
         }

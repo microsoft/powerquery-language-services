@@ -10,12 +10,8 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AnalysisBase } from "./analysisBase";
 import { AnalysisSettings } from "./analysisSettings";
 
-export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> extends AnalysisBase<S> {
-    constructor(
-        private readonly textDocument: TextDocument,
-        analysisSettings: AnalysisSettings<S>,
-        position: Position,
-    ) {
+export class DocumentAnalysis extends AnalysisBase {
+    constructor(private readonly textDocument: TextDocument, analysisSettings: AnalysisSettings, position: Position) {
         super(
             analysisSettings,
             WorkspaceCacheUtils.getOrCreateInspection(

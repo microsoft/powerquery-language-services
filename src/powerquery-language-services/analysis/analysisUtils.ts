@@ -10,9 +10,9 @@ import { Analysis } from "./analysis";
 import { AnalysisSettings } from "./analysisSettings";
 import { DocumentAnalysis } from "./documentAnalysis";
 
-export function createAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+export function createAnalysis(
     document: TextDocument,
-    analysisSettings: AnalysisSettings<S>,
+    analysisSettings: AnalysisSettings,
     position: Position,
 ): Analysis {
     return new DocumentAnalysis(document, analysisSettings, position);

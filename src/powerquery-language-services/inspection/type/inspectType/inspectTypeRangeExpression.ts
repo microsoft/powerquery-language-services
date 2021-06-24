@@ -5,8 +5,8 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeRangeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+export function inspectTypeRangeExpression(
+    state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();

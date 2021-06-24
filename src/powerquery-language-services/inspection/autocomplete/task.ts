@@ -20,12 +20,12 @@ import {
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 
-export function autocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+export function autocomplete(
+    settings: InspectionSettings,
     parseState: S,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
-    maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
+    maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Autocomplete {
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 

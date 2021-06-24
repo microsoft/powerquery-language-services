@@ -21,8 +21,8 @@ export interface CurrentInvokeExpressionArguments extends InvokeExpressionArgume
     readonly argumentOrdinal: number;
 }
 
-export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+export function tryCurrentInvokeExpression(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
@@ -38,8 +38,8 @@ export function tryCurrentInvokeExpression<S extends PQP.Parser.IParseState = PQ
     );
 }
 
-function inspectInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function inspectInvokeExpression(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     activeNode: ActiveNode,
     typeCache: TypeCache,

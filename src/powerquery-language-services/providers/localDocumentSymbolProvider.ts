@@ -8,6 +8,7 @@ import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import * as InspectionUtils from "../inspectionUtils";
 
 import { Inspection, Library } from "..";
+import { InspectionSettings } from "../inspectionSettings";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     AutocompleteItemProviderContext,
@@ -20,7 +21,11 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
-    constructor(library: Library.ILibrary, private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {
+    constructor(
+        library: Library.ILibrary,
+        private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem,
+        private readonly createInspectionSettingsFn: () => InspectionSettings,
+    ) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
     }
@@ -39,27 +44,127 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         ];
     }
 
-    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        const maybeNodeScope: Inspection.NodeScope | undefined = this.maybeNodeScope();
-        if (maybeNodeScope === undefined) {
-            // tslint:disable-next-line: no-null-keyword
+    // We might be hovering over the key in a key-value-pair (eg. an entry in a record).
+    // In that case then get the hover details for the value instead of the key.
+    public async getHoverForIdentifierPairedExpression(
+        inspectionTask: WorkspaceCache.InspectionTask,
+        activeNode: Inspection.ActiveNode,
+    ): Promise<Hover | null> {
+        const parseState: PQP.Parser.ParseState = inspectionTask.parseState;
+        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+        const maybeLeaf: PQP.Parser.TXorNode | undefined = ancestry[0];
+
+        if (!maybeLeaf || maybeLeaf.node.kind !== PQP.Language.Ast.NodeKind.Identifier) {
             return null;
         }
 
-        const identifierLiteral: string = context.identifier;
-        const maybeScopeItem: Inspection.TScopeItem | undefined = maybeNodeScope.get(identifierLiteral);
-        if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
-            // tslint:disable-next-line: no-null-keyword
+        const maybeIdentifierPairedExpression:
+            | PQP.Parser.TXorNode
+            | undefined = PQP.Parser.AncestryUtils.maybeNthXor(activeNode.ancestry, 1, [
+            PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+        ]);
+
+        // We're on an identifier in some other context which we don't support.
+        if (maybeIdentifierPairedExpression === undefined) {
             return null;
         }
 
-        const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
-
-        const maybeScopeItemType: PQP.Language.Type.TPowerQueryType | undefined = this.maybeTypeFromIdentifier(
-            identifierLiteral,
+        const maybeExpression:
+            | PQP.Parser.TXorNode
+            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+            parseState.contextState.nodeIdMapCollection,
+            maybeIdentifierPairedExpression.node.id,
+            2,
+            undefined,
         );
-        const scopeItemTypeText: string =
-            maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
+
+        // We're on an identifier in some other context which we don't support.
+        if (maybeExpression === undefined) {
+            return null;
+        }
+
+        Inspection.tryType();
+    }
+
+    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+        if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
+            return null;
+        }
+
+        const activeNode: Inspection.TMaybeActiveNode = this.maybeTriedInspection.maybeActiveNode;
+        if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
+            return null;
+        }
+
+        const parseState: PQP.Parser.ParseState = this.maybeTriedInspection.parseState;
+        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+        const maybeLeaf: PQP.Parser.TXorNode | undefined = ancestry[0];
+
+        // We might be hovering over the key in a key-value-pair (eg. an entry in a record).
+        // In that case then get the hover details for the value instead of the key.
+        if (maybeLeaf?.node.kind === PQP.Language.Ast.NodeKind.Identifier) {
+            const maybeIdentifierPairedExpression:
+                | PQP.Parser.TXorNode
+                | undefined = PQP.Parser.AncestryUtils.maybeNthXor(activeNode.ancestry, 1, [
+                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+            ]);
+
+            // We're on an identifier in some other context which we don't support.
+            if (maybeIdentifierPairedExpression === undefined) {
+                return null;
+            }
+
+            const maybeExpression:
+                | PQP.Parser.TXorNode
+                | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+                parseState.contextState.nodeIdMapCollection,
+                maybeIdentifierPairedExpression.node.id,
+                2,
+                undefined,
+            );
+
+            // We're on an identifier in some other context which we don't support.
+            if (maybeExpression === undefined) {
+                return null;
+            }
+
+            if (maybeIdentifierPairedExpression !== undefined) {
+            }
+        }
+
+        // const maybeNodeScope: Inspection.NodeScope | undefined = this.maybeNodeScope();
+        // if (maybeNodeScope === undefined) {
+        //     // tslint:disable-next-line: no-null-keyword
+        //     return null;
+        // }
+
+        // const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
+        // if (!maybeInspection || !Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspection.maybeActiveNode)) {
+        //     // tslint:disable-next-line: no-null-keyword
+        //     return null;
+        // }
+        // const activeNode: Inspection.ActiveNode = maybeInspection.maybeActiveNode;
+
+        // const maybeNodeScope: Inspection.NodeScope | undefined = this.maybeNodeScope();
+        // if (maybeNodeScope === undefined) {
+        //     // tslint:disable-next-line: no-null-keyword
+        //     return null;
+        // }
+
+        // const identifierLiteral: string = context.identifier;
+        // const maybeScopeItem: Inspection.TScopeItem | undefined = maybeNodeScope.get(identifierLiteral);
+        // if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
+        //     // tslint:disable-next-line: no-null-keyword
+        //     return null;
+        // }
+
+        // const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
+
+        // const maybeScopeItemType: PQP.Language.Type.TPowerQueryType | undefined = this.maybeTypeFromIdentifier(
+        //     identifierLiteral,
+        // );
+        // const scopeItemTypeText: string =
+        //     maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 
         return {
             contents: {
@@ -69,6 +174,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             },
             range: undefined,
         };
+    }
+
+    public getHoverTarget(): PQP.Parser.TXorNode | undefined {
+        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
+        if (!maybeInspection || !Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspection.maybeActiveNode)) {
+            return undefined;
+        }
+        const activeNode: Inspection.ActiveNode = maybeInspection.maybeActiveNode;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {

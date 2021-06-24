@@ -7,8 +7,8 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeUnaryExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+export function inspectTypeUnaryExpression(
+    state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
@@ -51,8 +51,8 @@ type NumberUnaryNodeOperator = PQP.Language.Ast.IConstant<
 >;
 type LogicalUnaryNodeOperator = PQP.Language.Ast.IConstant<PQP.Language.Constant.UnaryOperatorKind.Not>;
 
-function inspectTypeUnaryNumber<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+function inspectTypeUnaryNumber(
+    state: InspectTypeState,
     unaryExpressionType: PQP.Language.Type.TNumber,
     unaryOperatorWrapperId: number,
 ): PQP.Language.Type.TNumber | PQP.Language.Type.None {
@@ -96,8 +96,8 @@ function inspectTypeUnaryNumber<S extends PQP.Parser.IParseState = PQP.Parser.IP
     }
 }
 
-function inspectTypeUnaryLogical<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+function inspectTypeUnaryLogical(
+    state: InspectTypeState,
     unaryExpressionType: PQP.Language.Type.TLogical,
     unaryOperatorWrapperId: number,
 ): PQP.Language.Type.TLogical | PQP.Language.Type.None {

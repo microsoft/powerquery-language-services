@@ -16,10 +16,10 @@ import { TriedNodeScope, tryNodeScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 
-export function inspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
-    parseState: S,
-    maybeParseError: PQP.Parser.ParseError.ParseError<S> | undefined,
+export function inspection(
+    settings: InspectionSettings,
+    parseState: PQP.Parser.ParseState,
+    maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
     position: Position,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.

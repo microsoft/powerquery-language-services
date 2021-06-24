@@ -12,8 +12,8 @@ import { Localization, LocalizationUtils } from "../localization";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    validationSettings: ValidationSettings<S>,
+export function validateInvokeExpression(
+    validationSettings: ValidationSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
 ): Diagnostic[] {
@@ -44,8 +44,8 @@ export function validateInvokeExpression<S extends PQP.Parser.IParseState = PQP.
     return result;
 }
 
-function invokeExpressionToDiagnostics<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    valdiationSettings: ValidationSettings<S>,
+function invokeExpressionToDiagnostics(
+    valdiationSettings: ValidationSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
 ): Diagnostic[] {
@@ -99,8 +99,8 @@ function invokeExpressionToDiagnostics<S extends PQP.Parser.IParseState = PQP.Pa
     return result;
 }
 
-function createDiagnosticForMismatch<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    validationSettings: ValidationSettings<S>,
+function createDiagnosticForMismatch(
+    validationSettings: ValidationSettings,
     mismatch: PQP.Language.TypeUtils.InvocationMismatch,
     maybeFunctionName: string | undefined,
     invokeExpressionRange: Range,

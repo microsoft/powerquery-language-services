@@ -160,7 +160,7 @@ function assertNodeScopeOk(
 }
 
 export function assertGetParseOkScopeOk(
-    settings: PQP.LexSettings & PQP.ParseSettings<PQP.Parser.IParseState>,
+    settings: PQP.LexSettings & PQP.ParseSettings,
     text: string,
     position: Position,
 ): Inspection.NodeScope {
@@ -169,7 +169,7 @@ export function assertGetParseOkScopeOk(
 }
 
 export function assertGetParseErrScopeOk(
-    settings: PQP.LexSettings & PQP.ParseSettings<PQP.Parser.IParseState>,
+    settings: PQP.LexSettings & PQP.ParseSettings,
     text: string,
     position: Position,
 ): Inspection.NodeScope {
