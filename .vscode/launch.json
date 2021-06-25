@@ -9,15 +9,7 @@
             "request": "launch",
             "name": "Run unit tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "args": [
-                "-g",
-                "WIP",
-                "--inspect",
-                "--colors",
-                "--timeout",
-                "999999",
-                "${workspaceFolder}/lib/test/**/*.js"
-            ],
+            "args": ["--inspect", "--colors", "--timeout", "999999", "${workspaceFolder}/lib/test/**/*.js"],
             "preLaunchTask": "preUnitTests",
             "internalConsoleOptions": "openOnSessionStart"
         }
