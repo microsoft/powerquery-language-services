@@ -218,18 +218,20 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         const leaf: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[0]);
-        if (leaf.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier) {
+        const followingNode: PQP.Parser.TXorNode | undefined = ancestry[1];
+
+        if (followingNode?.node?.kind === PQP.Language.Ast.NodeKind.Parameter) {
             return false;
         }
 
-        const followingNode: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[1]);
-        if (followingNode.node.kind === PQP.Language.Ast.NodeKind.Parameter) {
-            return false;
-        }
-        // Allow hover on either the key or value of IdentifierPairedExpression.
-        // Do not allow hover if it's an incomplete Ast, or if you're on the equals symbol.
+        // Allow hover on either the key or value of [Generalized|Identifier]PairedExpression.
+        // Validate it's not an incomplete Ast or that you're on the conjunction.
         else if (
-            followingNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierPairedExpression &&
+            [
+                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+            ].includes(followingNode.node.kind) &&
             [undefined, 1].includes(PQP.Assert.asDefined(leaf.node.maybeAttributeIndex))
         ) {
             return false;

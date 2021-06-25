@@ -67,5 +67,6 @@ export function inspection(
         triedNodeScope,
         triedScopeType,
         triedExpectedType,
+        typeCache,
     };
 }

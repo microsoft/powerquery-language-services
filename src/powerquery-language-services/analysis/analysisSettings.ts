@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import { InspectionSettings } from "../inspectionSettings";
 import { ILibrary } from "../library/library";
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";

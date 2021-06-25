@@ -242,8 +242,9 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
-        maybeTriedInspection: WorkspaceCache.InspectionCacheItem | undefined,
-    ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection),
+        maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+        createInspectionSettingsFn: () => InspectionSettings,
+    ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection, createInspectionSettingsFn),
 };
 
 export const enum TestLibraryName {

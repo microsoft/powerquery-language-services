@@ -16,7 +16,7 @@ import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAc
 
 export function tryAutocompleteFieldAccess(
     settings: InspectionSettings,
-    parseState: S,
+    parseState: PQP.Parser.ParseState,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
 ): TriedAutocompleteFieldAccess {
@@ -42,7 +42,7 @@ const FieldAccessNodeKinds: ReadonlyArray<PQP.Language.Ast.NodeKind> = [
 
 function autocompleteFieldAccess(
     settings: InspectionSettings,
-    parseState: S,
+    parseState: PQP.Parser.ParseState,
     activeNode: ActiveNode,
     typeCache: TypeCache,
 ): AutocompleteFieldAccess | undefined {

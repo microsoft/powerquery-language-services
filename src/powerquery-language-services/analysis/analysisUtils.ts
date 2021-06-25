@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position } from "vscode-languageserver-types";
 

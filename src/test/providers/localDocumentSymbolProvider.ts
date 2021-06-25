@@ -225,9 +225,24 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
 
         describe(`hover the value when over key`, () => {
-            it(`WIP let-variable`, async () => {
+            it(`let-variable`, async () => {
                 const hover: Hover = await createHover("let foo| = 1 in foo");
                 TestUtils.assertHover("[let-variable] foo: 1", hover);
+            });
+
+            it(`record-field expression`, async () => {
+                const hover: Hover = await createHover("[foo| = 1]");
+                TestUtils.assertHover("[record-field] foo: 1", hover);
+            });
+
+            it(`record-field literal`, async () => {
+                const hover: Hover = await createHover("[foo| = 1] section; bar = 1;");
+                TestUtils.assertHover("[record-field] foo: 1", hover);
+            });
+
+            it(`section-member`, async () => {
+                const hover: Hover = await createHover("section; foo| = 1;");
+                TestUtils.assertHover("[section-member] foo: 1", hover);
             });
         });
     });

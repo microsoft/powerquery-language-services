@@ -22,7 +22,7 @@ import {
 
 export function autocomplete(
     settings: InspectionSettings,
-    parseState: S,
+    parseState: PQP.Parser.ParseState,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
