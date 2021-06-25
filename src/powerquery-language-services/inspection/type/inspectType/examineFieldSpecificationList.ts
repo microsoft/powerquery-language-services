@@ -12,8 +12,8 @@ export interface ExaminedFieldSpecificationList {
 }
 
 // It's called an examination instead of inspection because it doesn't return TType.
-export function examineFieldSpecificationList<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
+export function examineFieldSpecificationList(
+    state: InspectTypeState,
     xorNode: PQP.Parser.TXorNode,
 ): ExaminedFieldSpecificationList {
     state.settings.maybeCancellationToken?.throwIfCancelled();

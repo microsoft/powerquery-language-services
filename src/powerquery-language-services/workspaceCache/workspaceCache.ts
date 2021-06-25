@@ -7,29 +7,25 @@ import { Position } from "vscode-languageserver-textdocument";
 
 import { Inspection } from "..";
 
-export type InspectionTask = Inspection.Inspection & { readonly stage: "Inspection"; readonly version: number };
+export type InspectionTask = Inspection.Inspection & {
+    readonly stage: "Inspection";
+    readonly version: number;
+    readonly parseState: PQP.Parser.ParseState;
+};
 
-export type CacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> =
-    | LexCacheItem
-    | ParseCacheItem<S>
-    | InspectionCacheItem;
+export type CacheItem = LexCacheItem | ParseCacheItem | InspectionCacheItem;
 
 export type LexCacheItem = PQP.Task.TriedLexTask;
 
-export type ParseCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> =
-    | LexCacheItem
-    | PQP.Task.TriedParseTask<S>;
+export type ParseCacheItem = LexCacheItem | PQP.Task.TriedParseTask;
 
-export type InspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> =
-    | ParseCacheItem<S>
-    | InspectionTask
-    | undefined;
+export type InspectionCacheItem = ParseCacheItem | InspectionTask | undefined;
 
 // A collection for a given TextDocument.uri
-export interface CacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> {
+export interface CacheCollection {
     readonly maybeLex: LexCacheItem | undefined;
-    readonly maybeParse: ParseCacheItem<S> | undefined;
-    readonly maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> | undefined;
+    readonly maybeParse: ParseCacheItem | undefined;
+    readonly maybeInspectionByPosition: Map<Position, InspectionCacheItem> | undefined;
     readonly typeCache: Inspection.TypeCache;
     readonly version: number;
 }

@@ -25,13 +25,13 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 
-export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> implements Analysis {
+export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
-        protected analysisSettings: AnalysisSettings<S>,
+        protected analysisSettings: AnalysisSettings,
         protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
         protected position: Position,
     ) {
@@ -49,8 +49,16 @@ export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser
 
         this.localDocumentSymbolProvider =
             analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
-                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(library, maybeInspectionCacheItem)
-                : new LocalDocumentSymbolProvider(library, maybeInspectionCacheItem);
+                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
+                      library,
+                      maybeInspectionCacheItem,
+                      analysisSettings.createInspectionSettingsFn,
+                  )
+                : new LocalDocumentSymbolProvider(
+                      library,
+                      maybeInspectionCacheItem,
+                      analysisSettings.createInspectionSettingsFn,
+                  );
     }
 
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
@@ -210,16 +218,21 @@ export abstract class AnalysisBase<S extends PQP.Parser.IParseState = PQP.Parser
         }
 
         const leaf: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[0]);
-        if (leaf.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier) {
+        const followingNode: PQP.Parser.TXorNode | undefined = ancestry[1];
+
+        if (followingNode?.node?.kind === PQP.Language.Ast.NodeKind.Parameter) {
             return false;
         }
 
-        const followingNode: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[1]);
-        if (followingNode.node.kind === PQP.Language.Ast.NodeKind.Parameter) {
-            return false;
-        } else if (
-            followingNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierPairedExpression &&
-            leaf.node.maybeAttributeIndex !== 2
+        // Allow hover on either the key or value of [Generalized|Identifier]PairedExpression.
+        // Validate it's not an incomplete Ast or that you're on the conjunction.
+        else if (
+            [
+                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+            ].includes(followingNode.node.kind) &&
+            [undefined, 1].includes(PQP.Assert.asDefined(leaf.node.maybeAttributeIndex))
         ) {
             return false;
         }

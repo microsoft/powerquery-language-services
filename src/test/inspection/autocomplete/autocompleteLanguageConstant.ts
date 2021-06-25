@@ -12,8 +12,8 @@ import { TestConstants, TestUtils } from "../..";
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./common";
 
-function assertGetLanguageConstantAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertGetLanguageConstantAutocomplete(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): AbridgedAutocompleteItem | undefined {

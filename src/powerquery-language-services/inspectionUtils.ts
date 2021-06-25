@@ -11,10 +11,10 @@ import { ExternalType } from "./inspection/externalType";
 import { InspectionSettings } from "./inspectionSettings";
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
-export function createInspectionSettings<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.Settings<S>,
+export function createInspectionSettings(
+    settings: PQP.Settings,
     maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
-): InspectionSettings<S> {
+): InspectionSettings {
     return {
         ...settings,
         maybeExternalTypeResolver,

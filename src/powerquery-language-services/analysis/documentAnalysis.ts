@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position, Range } from "vscode-languageserver-types";
 
@@ -10,12 +8,8 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AnalysisBase } from "./analysisBase";
 import { AnalysisSettings } from "./analysisSettings";
 
-export class DocumentAnalysis<S extends PQP.Parser.IParseState = PQP.Parser.IParseState> extends AnalysisBase<S> {
-    constructor(
-        private readonly textDocument: TextDocument,
-        analysisSettings: AnalysisSettings<S>,
-        position: Position,
-    ) {
+export class DocumentAnalysis extends AnalysisBase {
+    constructor(private readonly textDocument: TextDocument, analysisSettings: AnalysisSettings, position: Position) {
         super(
             analysisSettings,
             WorkspaceCacheUtils.getOrCreateInspection(

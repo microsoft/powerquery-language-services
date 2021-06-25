@@ -5,10 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeList<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    state: InspectTypeState<S>,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.DefinedList {
+export function inspectTypeList(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.DefinedList {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     const items: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterListItems(
         state.nodeIdMapCollection,

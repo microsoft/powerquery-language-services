@@ -30,12 +30,12 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
-export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+export function assertGetAutocomplete(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): Inspection.Autocomplete {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
     if (PQP.TaskUtils.isParseStageOk(triedLexParseTask)) {
@@ -51,7 +51,7 @@ export function assertGetAutocomplete<S extends PQP.Parser.IParseState = PQP.Par
             throw triedLexParseTask.error;
         }
 
-        return Inspection.autocomplete<S>(
+        return Inspection.autocomplete(
             settings,
             triedLexParseTask.parseState,
             TypeCacheUtils.createEmptyCache(),
@@ -90,21 +90,15 @@ export function assertGetInspectionCacheItem(document: MockDocument, position: P
     return cacheItem;
 }
 
-export function assertGetLexParseOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.Settings<S>,
-    text: string,
-): PQP.Task.ParseTaskOk<S> {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+export function assertGetLexParseOk(settings: PQP.Settings, text: string): PQP.Task.ParseTaskOk {
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;
 }
 
-export function assertGetLexParseError<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: PQP.Settings<S>,
-    text: string,
-): PQP.Task.ParseTaskParseError<S> {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask<S> = PQP.TaskUtils.tryLexParse(settings, text);
+export function assertGetLexParseError(settings: PQP.Settings, text: string): PQP.Task.ParseTaskParseError {
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageParseError(triedLexParseTask);
 
     return triedLexParseTask;

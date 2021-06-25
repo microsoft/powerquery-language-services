@@ -8,9 +8,9 @@ import * as InspectionUtils from "./inspectionUtils";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 
-export function getDocumentSymbols<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+export function getDocumentSymbols(
     textDocument: TextDocument,
-    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
+    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
     maintainWorkspaceCache: boolean,
 ): DocumentSymbol[] {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(

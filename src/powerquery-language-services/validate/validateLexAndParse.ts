@@ -11,10 +11,7 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateLexAndParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    textDocument: TextDocument,
-    validationSettings: ValidationSettings<S>,
-): Diagnostic[] {
+export function validateLexAndParse(textDocument: TextDocument, validationSettings: ValidationSettings): Diagnostic[] {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,
@@ -29,10 +26,7 @@ export function validateLexAndParse<S extends PQP.Parser.IParseState = PQP.Parse
     }
 }
 
-function validateLex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    triedLex: PQP.Task.TriedLexTask,
-    validationSettings: ValidationSettings<S>,
-): Diagnostic[] {
+function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: ValidationSettings): Diagnostic[] {
     if (PQP.TaskUtils.isOk(triedLex) || !PQP.Lexer.LexError.isLexError(triedLex.error)) {
         return [];
     }
@@ -68,10 +62,7 @@ function validateLex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
     return diagnostics;
 }
 
-function validateParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    triedParse: PQP.Task.TriedParseTask,
-    validationSettings: ValidationSettings<S>,
-): Diagnostic[] {
+function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: ValidationSettings): Diagnostic[] {
     if (PQP.TaskUtils.isOk(triedParse) || !PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return [];
     }

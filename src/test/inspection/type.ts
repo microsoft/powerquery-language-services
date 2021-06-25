@@ -36,8 +36,8 @@ const TestSettings: PQP.Settings & InspectionSettings = {
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
-function assertParseOkNodeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertParseOkNodeTypeEqual(
+    settings: InspectionSettings,
     text: string,
     expected: PQP.Language.Type.TPowerQueryType,
 ): void {
@@ -64,8 +64,8 @@ function assertParseErrNodeTypeEqual(text: string, expected: PQP.Language.Type.T
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseNodeOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertGetParseNodeOk(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
@@ -75,8 +75,8 @@ function assertGetParseNodeOk<S extends PQP.Parser.IParseState = PQP.Parser.IPar
     return triedType.value;
 }
 
-function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertParseOkScopeTypeEqual(
+    settings: InspectionSettings,
     textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
 ): void {
@@ -92,8 +92,8 @@ function assertParseOkScopeTypeEqual<S extends PQP.Parser.IParseState = PQP.Pars
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseOkScopeTypeOk<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertGetParseOkScopeTypeOk(
+    settings: InspectionSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
 ): Inspection.ScopeTypeByKey {

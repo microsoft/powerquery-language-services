@@ -17,9 +17,7 @@ import type {
     ParseCacheItem,
 } from "./workspaceCache";
 
-export function assertIsInspectionTask<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheItem: CacheItem<S>,
-): asserts cacheItem is InspectionTask {
+export function assertIsInspectionTask(cacheItem: CacheItem): asserts cacheItem is InspectionTask {
     if (!isInspectionTask(cacheItem)) {
         throw new PQP.CommonError.InvariantError(`expected cacheItem to be an InspectionCacheItem`, {
             expectedStage: "Inspection",
@@ -28,24 +26,19 @@ export function assertIsInspectionTask<S extends PQP.Parser.IParseState = PQP.Pa
     }
 }
 
-export function getOrCreateTypeCache<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    textDocument: TextDocument,
-): Inspection.TypeCache {
+export function getOrCreateTypeCache(textDocument: TextDocument): Inspection.TypeCache {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
 
     return cacheCollection.typeCache;
 }
 
-export function getOrCreateLex<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    textDocument: TextDocument,
-    lexSettings: PQP.LexSettings,
-): LexCacheItem {
+export function getOrCreateLex(textDocument: TextDocument, lexSettings: PQP.LexSettings): LexCacheItem {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
-    const [updatedCacheCollection, lexCacheItem]: [CacheCollection<S>, LexCacheItem] = getOrCreateLexCacheItem(
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
+    const [updatedCacheCollection, lexCacheItem]: [CacheCollection, LexCacheItem] = getOrCreateLexCacheItem(
         cacheCollection,
         textDocument,
         lexSettings,
@@ -55,14 +48,14 @@ export function getOrCreateLex<S extends PQP.Parser.IParseState = PQP.Parser.IPa
     return lexCacheItem;
 }
 
-export function getOrCreateParse<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+export function getOrCreateParse(
     textDocument: TextDocument,
-    lexSettings: PQP.LexSettings & PQP.ParseSettings<S>,
-): ParseCacheItem<S> {
+    lexSettings: PQP.LexSettings & PQP.ParseSettings,
+): ParseCacheItem {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
-    const [updatedCacheCollection, parseCacheItem]: [CacheCollection<S>, ParseCacheItem<S>] = getOrCreateParseCacheItem(
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
+    const [updatedCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = getOrCreateParseCacheItem(
         cacheCollection,
         textDocument,
         lexSettings,
@@ -72,17 +65,17 @@ export function getOrCreateParse<S extends PQP.Parser.IParseState = PQP.Parser.I
     return parseCacheItem;
 }
 
-export function getOrCreateInspection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
+export function getOrCreateInspection(
     textDocument: TextDocument,
-    inspectionSettings: InspectionSettings<S>,
+    inspectionSettings: InspectionSettings,
     position: Position,
-): InspectionCacheItem<S> {
+): InspectionCacheItem {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection<S> = getOrCreateCacheCollection(cacheKey, cacheVersion);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
     const [updatedCacheCollection, inspectionCacheItem]: [
-        CacheCollection<S>,
-        InspectionCacheItem<S>,
+        CacheCollection,
+        InspectionCacheItem,
     ] = getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
 
     CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
@@ -107,42 +100,37 @@ export function update(
     close(textDocument);
 }
 
-export function isInspectionTask<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheItem: CacheItem<S>,
-): cacheItem is InspectionTask {
+export function isInspectionTask(cacheItem: CacheItem): cacheItem is InspectionTask {
     return cacheItem?.stage === "Inspection";
 }
 
 const CacheCollectionByCacheKey: Map<string, CacheCollection> = new Map();
 
-function getOrCreateCacheCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheKey: string,
-    cacheVersion: number,
-): CacheCollection<S> {
-    const maybeCollection: CacheCollection<S> | undefined = CacheCollectionByCacheKey.get(cacheKey) as
-        | CacheCollection<S>
+function getOrCreateCacheCollection(cacheKey: string, cacheVersion: number): CacheCollection {
+    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey) as
+        | CacheCollection
         | undefined;
 
     if (maybeCollection !== undefined && maybeCollection.version === cacheVersion) {
         return maybeCollection;
     } else {
-        const cacheCollection: CacheCollection<S> = createEmptyCollection(cacheVersion);
+        const cacheCollection: CacheCollection = createEmptyCollection(cacheVersion);
         CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
         return cacheCollection;
     }
 }
 
-function getOrCreateLexCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheCollection: CacheCollection<S>,
+function getOrCreateLexCacheItem(
+    cacheCollection: CacheCollection,
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings,
-): [CacheCollection<S>, LexCacheItem] {
+): [CacheCollection, LexCacheItem] {
     if (cacheCollection.maybeLex) {
         return [cacheCollection, cacheCollection.maybeLex];
     }
 
     const lexCacheItem: LexCacheItem = PQP.TaskUtils.tryLex(lexSettings, textDocument.getText());
-    const updatedCacheCollection: CacheCollection<S> = {
+    const updatedCacheCollection: CacheCollection = {
         ...cacheCollection,
         maybeLex: lexCacheItem,
     };
@@ -150,16 +138,16 @@ function getOrCreateLexCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.I
     return [updatedCacheCollection, lexCacheItem];
 }
 
-function getOrCreateParseCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheCollection: CacheCollection<S>,
+function getOrCreateParseCacheItem(
+    cacheCollection: CacheCollection,
     textDocument: TextDocument,
-    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings<S>,
-): [CacheCollection<S>, ParseCacheItem<S>] {
+    lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
+): [CacheCollection, ParseCacheItem] {
     if (cacheCollection.maybeParse) {
         return [cacheCollection, cacheCollection.maybeParse];
     }
 
-    const [updatedCacheCollection, lexCacheItem]: [CacheCollection<S>, LexCacheItem] = getOrCreateLexCacheItem(
+    const [updatedCacheCollection, lexCacheItem]: [CacheCollection, LexCacheItem] = getOrCreateLexCacheItem(
         cacheCollection,
         textDocument,
         lexAndParseSettings,
@@ -168,7 +156,7 @@ function getOrCreateParseCacheItem<S extends PQP.Parser.IParseState = PQP.Parser
         return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", lexCacheItem), lexCacheItem];
     }
 
-    const parseCacheItem: PQP.Task.TriedParseTask<S> = PQP.TaskUtils.tryParse(
+    const parseCacheItem: PQP.Task.TriedParseTask = PQP.TaskUtils.tryParse(
         lexAndParseSettings,
         lexCacheItem.lexerSnapshot,
     );
@@ -176,28 +164,27 @@ function getOrCreateParseCacheItem<S extends PQP.Parser.IParseState = PQP.Parser
     return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", parseCacheItem), parseCacheItem];
 }
 
-function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    cacheCollection: CacheCollection<S>,
+function getOrCreateInspectionCacheItem(
+    cacheCollection: CacheCollection,
     textDocument: TextDocument,
-    inspectionSettings: InspectionSettings<S>,
+    inspectionSettings: InspectionSettings,
     position: Position,
-): [CacheCollection<S>, InspectionCacheItem<S>] {
+): [CacheCollection, InspectionCacheItem] {
     if (cacheCollection.maybeInspectionByPosition) {
-        const maybeInspectionByPosition: Map<Position, InspectionCacheItem<S>> =
-            cacheCollection.maybeInspectionByPosition;
-        const maybeInspection: InspectionCacheItem<S> | undefined = maybeInspectionByPosition.get(position);
+        const maybeInspectionByPosition: Map<Position, InspectionCacheItem> = cacheCollection.maybeInspectionByPosition;
+        const maybeInspection: InspectionCacheItem | undefined = maybeInspectionByPosition.get(position);
 
         if (maybeInspection) {
             return [cacheCollection, maybeInspection];
         }
     }
 
-    const [parseCacheCollection, parseCacheItem]: [CacheCollection<S>, ParseCacheItem<S>] = getOrCreateParseCacheItem(
+    const [parseCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = getOrCreateParseCacheItem(
         cacheCollection,
         textDocument,
         inspectionSettings,
     );
-    let parseState: S;
+    let parseState: PQP.Parser.ParseState;
 
     if (!PQP.TaskUtils.isParseStage(parseCacheItem) || PQP.TaskUtils.isParseStageCommonError(parseCacheItem)) {
         return [parseCacheCollection, parseCacheItem];
@@ -209,7 +196,7 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
         throw new PQP.CommonError.InvariantError(`this should never be reached, but 'never' doesn't catch it.`);
     }
 
-    const inspection: Inspection.Inspection = Inspection.inspection<S>(
+    const inspection: Inspection.Inspection = Inspection.inspection(
         inspectionSettings,
         parseState,
         PQP.TaskUtils.isParseStageParseError(parseCacheItem) ? parseCacheItem.error : undefined,
@@ -220,13 +207,14 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
         ...inspection,
         stage: "Inspection",
         version: textDocument.version,
+        parseState,
     };
 
     const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(
         parseCacheCollection.maybeInspectionByPosition ?? [],
     );
     updatedByPosition.set(position, inspectionCacheItem);
-    const updatedCacheCollection: CacheCollection<S> = updateCacheCollectionAttribute(
+    const updatedCacheCollection: CacheCollection = updateCacheCollectionAttribute(
         parseCacheCollection,
         "maybeInspectionByPosition",
         updatedByPosition,
@@ -235,20 +223,18 @@ function getOrCreateInspectionCacheItem<S extends PQP.Parser.IParseState = PQP.P
     return [updatedCacheCollection, inspectionCacheItem];
 }
 
-function updateCacheCollectionAttribute<
-    K extends keyof CacheCollection<S>,
-    V = CacheCollection[K],
-    S extends PQP.Parser.IParseState = PQP.Parser.IParseState
->(cacheCollection: CacheCollection<S>, key: K, value: V): CacheCollection<S> {
+function updateCacheCollectionAttribute<K extends keyof CacheCollection, V = CacheCollection[K]>(
+    cacheCollection: CacheCollection,
+    key: K,
+    value: V,
+): CacheCollection {
     return {
         ...cacheCollection,
         [key]: value,
     };
 }
 
-function createEmptyCollection<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    version: number,
-): CacheCollection<S> {
+function createEmptyCollection(version: number): CacheCollection {
     return {
         version,
         maybeLex: undefined,

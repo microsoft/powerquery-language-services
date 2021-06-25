@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
 import "mocha";
 import type { Position } from "vscode-languageserver-types";
@@ -10,8 +8,8 @@ import type { Position } from "vscode-languageserver-types";
 import { TestConstants, TestUtils } from "../..";
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 
-function assertGetFieldAccessAutocomplete<S extends PQP.Parser.IParseState = PQP.Parser.IParseState>(
-    settings: InspectionSettings<S>,
+function assertGetFieldAccessAutocomplete(
+    settings: InspectionSettings,
     text: string,
     position: Position,
 ): ReadonlyArray<Inspection.AutocompleteItem> {
