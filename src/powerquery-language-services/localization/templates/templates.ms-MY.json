@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Pengecam pendua '{identifier}'",
-  "error_validation_invokeExpression_numArgs": "Expected between ${invokeExpressionArguments.numMinExpectedArguments}-${invokeExpressionArguments.numMaxExpectedArguments} arguments, but ${numGivenArguments} were given.",
+  "error_validation_invokeExpression_numArgs": "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.",
   "_error_validation_invokeExpression_numArgs": "An error when a function call was given either too few or too many arguments. Expected to be user facing.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
