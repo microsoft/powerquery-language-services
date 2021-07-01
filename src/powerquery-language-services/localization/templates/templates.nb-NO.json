@@ -1,5 +1,7 @@
 {
   "error_validation_duplicate_identifier": "Duplikat identifikator \"{identifier}\"",
+  "error_validation_invokeExpression_numArgs": "Expected between ${invokeExpressionArguments.numMinExpectedArguments}-${invokeExpressionArguments.numMaxExpectedArguments} arguments, but ${numGivenArguments} were given.",
+  "_error_validation_invokeExpression_numArgs": "An error when a function call was given either too few or too many arguments. Expected to be user facing.",
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} mangler et argument for den ikke-optimale parameteren {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Mangler et argument for den ikke-valgfrie parameteren {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "{funcName} forventet at argumentet {argName} skulle være {expected}, men fikk {actual} i stedet.",
