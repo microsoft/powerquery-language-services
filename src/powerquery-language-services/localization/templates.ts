@@ -139,6 +139,7 @@ export interface ILocalizationTemplates {
     readonly error_validation_invokeExpression_typeMismatch_unnamed: string;
     readonly error_validation_invokeExpression_missingMandatory_named: string;
     readonly error_validation_invokeExpression_missingMandatory_unnamed: string;
+    readonly error_validation_invokeExpression_numArgs: string;
 }
 
 export const DefaultTemplates: ILocalizationTemplates = en_US;
