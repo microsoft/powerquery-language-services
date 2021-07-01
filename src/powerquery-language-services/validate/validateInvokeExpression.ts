@@ -45,7 +45,7 @@ export function validateInvokeExpression(
 }
 
 function invokeExpressionToDiagnostics(
-    valdiationSettings: ValidationSettings,
+    validationSettings: ValidationSettings,
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
 ): Diagnostic[] {
@@ -71,8 +71,8 @@ function invokeExpressionToDiagnostics(
             );
 
             result.push(
-                createDiagnosticForMismatch(
-                    valdiationSettings,
+                createDiagnosticForArgumentMismatch(
+                    validationSettings,
                     mismatch,
                     maybeFunctionName,
                     invokeExpressionRange,
@@ -86,20 +86,40 @@ function invokeExpressionToDiagnostics(
             numGivenArguments < invokeExpressionArguments.numMinExpectedArguments ||
             numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
         ) {
-            result.push({
-                code: DiagnosticErrorCode.InvokeArgumentCountMismatch,
-                message: `Expected between ${invokeExpressionArguments.numMinExpectedArguments} and ${invokeExpressionArguments.numMaxExpectedArguments} arguments, but ${numGivenArguments} were given.`,
-                range: invokeExpressionRange,
-                severity: DiagnosticSeverity.Error,
-                source: valdiationSettings.source,
-            });
+            result.push(
+                createDiagnosticForArgumentNumberMismatch(
+                    validationSettings,
+                    invokeExpressionRange,
+                    invokeExpressionArguments.numMinExpectedArguments,
+                    invokeExpressionArguments.numMaxExpectedArguments,
+                    numGivenArguments,
+                ),
+            );
         }
     }
 
     return result;
 }
 
-function createDiagnosticForMismatch(
+function createDiagnosticForArgumentNumberMismatch(
+    validationSettings: ValidationSettings,
+    invokeExpressionRange: Range,
+    numMin: number,
+    numMax: number,
+    numGiven: number,
+): Diagnostic {
+    const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(validationSettings.locale);
+
+    return {
+        code: DiagnosticErrorCode.InvokeArgumentCountMismatch,
+        message: Localization.error_validation_invokeExpression_numArgs(templates, numMin, numMax, numGiven),
+        range: invokeExpressionRange,
+        severity: DiagnosticSeverity.Error,
+        source: validationSettings.source,
+    };
+}
+
+function createDiagnosticForArgumentMismatch(
     validationSettings: ValidationSettings,
     mismatch: PQP.Language.TypeUtils.InvocationMismatch,
     maybeFunctionName: string | undefined,
