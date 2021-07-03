@@ -1,9 +1,9 @@
 {
-  "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-  "error_validation_invokeExpression_numArgs": "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.",
-  "_error_validation_invokeExpression_numArgs": "An error when a function call was given either too few or too many arguments. Expected to be user facing.",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_duplicate_identifier": "Bikoiztu \"{identifier}\" identifikatzailea",
+  "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
+  "_error_validation_invokeExpression_numArgs": "Errore bat gertatuko da funtzio-dei batek argumentu gutxiegi edo gehiegi ematen dituenean. Erabiltzaileak kudeatuko ditu balio horiek.",
+  "error_validation_invokeExpression_missingMandatory_named": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.",
+  "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da."
 }
