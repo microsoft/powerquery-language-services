@@ -1,9 +1,9 @@
 {
-  "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-  "error_validation_invokeExpression_numArgs": "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.",
-  "_error_validation_invokeExpression_numArgs": "An error when a function call was given either too few or too many arguments. Expected to be user facing.",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_duplicate_identifier": "Pasikartojantis identifikatorius „{identifier}“",
+  "error_validation_invokeExpression_numArgs": "Tikimasi tarp {numMin} ir {numMax} argumentų, bet buvo pateikta {numGiven}.",
+  "_error_validation_invokeExpression_numArgs": "Kai funkcijos iškvietimui buvo duota per mažai arba per daug argumentų, įvyko klaida. Tikimasi, kad su ja susidurs vartotojas.",
+  "error_validation_invokeExpression_missingMandatory_named": "„{funcName}“ trūksta argumento nepasirenkamam parametrui „{argName}“.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Trūksta nepasirinktinio parametro „{argName}“ argumento.",
+  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ tikėjosi, kad „{argName}“ argumentas bus „{expected}“, tačiau gautas „{actual}“.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Tikėtasi, kad argumentas, skirtas „{argName}“, bus „{expected}“, tačiau gautas „{actual}“."
 }

@@ -1,9 +1,9 @@
 {
   "error_validation_duplicate_identifier": "識別子 '{identifier}' が重複しています",
-  "error_validation_invokeExpression_numArgs": "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.",
-  "_error_validation_invokeExpression_numArgs": "An error when a function call was given either too few or too many arguments. Expected to be user facing.",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_numArgs": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
+  "_error_validation_invokeExpression_numArgs": "関数呼び出しの指定の引数の数が少なすぎるか、多すぎる場合のエラーです。ユーザー向けである必要があります。",
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "オプションではないパラメーター '{argName}' の引数がありません。",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。"
 }
