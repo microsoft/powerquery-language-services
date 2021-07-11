@@ -10,6 +10,15 @@
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
     <Item ItemId=";Strings" ItemType="0" PsrId="306" Leaf="false">
       <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";_error_validation_invokeExpression_numArgs" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An error when a function call was given either too few or too many arguments. Expected to be user facing.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[En feil når et funksjonskall ble angitt enten for få eller for mange argumenter. Forventet å være brukerrettet.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";error_validation_duplicate_identifier" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Duplicate identifier '{identifier}']]></Val>
@@ -33,6 +42,15 @@
           <Val><![CDATA[Missing an argument for the non-optional parameter '{argName}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Mangler et argument for den ikke-valgfrie parameteren {argName}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_numArgs" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected between {numMin}-{numMax} arguments, but {numGiven} were given.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Forventet mellom {numMin}-{numMax} argumenter, men {numGiven} ble angitt.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
