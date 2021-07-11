@@ -10,11 +10,65 @@
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
     <Item ItemId=";Strings" ItemType="0" PsrId="306" Leaf="false">
       <Disp Icon="Str" Disp="true" LocTbl="false" />
+      <Item ItemId=";_error_validation_invokeExpression_numArgs" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An error when a function call was given either too few or too many arguments. Expected to be user facing.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bir işlev çağrısına çok az veya çok fazla bağımsız değişken verildiğinde oluşan bir hata. Kullanıcıya yönelik olması bekleniyor.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";error_validation_duplicate_identifier" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Duplicate identifier '{identifier}']]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Yinelenen '{identifier}' tanımlayıcısı]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName}' is missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_missingMandatory_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Missing an argument for the non-optional parameter '{argName}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[İsteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişken eksik.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_numArgs" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected between {numMin}-{numMax} arguments, but {numGiven} were given.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{numMin}-{numMax} bağımsız değişken arasında bekleniyor, ancak {numGiven} bağımsız değişken verildi.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{funcName}, '{argName}' bağımsız değişkeninin' {expected}' olmasını bekliyordu, ancak bunun yerine '{actual}' alındı.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";error_validation_invokeExpression_typeMismatch_unnamed" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
