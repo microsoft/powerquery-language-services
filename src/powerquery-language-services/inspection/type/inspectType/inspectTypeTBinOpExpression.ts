@@ -135,20 +135,45 @@ function inspectRecordOrTableUnion(
     else if (leftType?.maybeExtendedKind === rightType?.maybeExtendedKind) {
         // The cast should be safe since the first if statement tests their the same kind,
         // and the above checks if they're the same extended kind.
-        return unionFields([leftType, rightType] as
-            | [PQP.Language.Type.DefinedRecord, PQP.Language.Type.DefinedRecord]
-            | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]);
+
+        if (PQP.Language.TypeUtils.isRecord(leftType)) {
+            return unionRecordFields([leftType, rightType] as [
+                PQP.Language.Type.DefinedRecord,
+                PQP.Language.Type.DefinedRecord,
+            ]);
+        } else {
+            return unionTableFields([leftType, rightType] as [
+                PQP.Language.Type.DefinedTable,
+                PQP.Language.Type.DefinedTable,
+            ]);
+        }
     } else {
         throw Assert.shouldNeverBeReachedTypescript();
     }
 }
 
-function unionFields([leftType, rightType]:
-    | [PQP.Language.Type.DefinedRecord, PQP.Language.Type.DefinedRecord]
-    | [PQP.Language.Type.DefinedTable, PQP.Language.Type.DefinedTable]):
-    | PQP.Language.Type.DefinedRecord
-    | PQP.Language.Type.DefinedTable {
+function unionRecordFields([leftType, rightType]: [
+    PQP.Language.Type.DefinedRecord,
+    PQP.Language.Type.DefinedRecord,
+]): PQP.Language.Type.DefinedRecord {
     const combinedFields: Map<string, PQP.Language.Type.TPowerQueryType> = new Map(leftType.fields);
+    for (const [key, value] of rightType.fields.entries()) {
+        combinedFields.set(key, value);
+    }
+
+    return {
+        ...leftType,
+        fields: combinedFields,
+        isNullable: leftType.isNullable && rightType.isNullable,
+        isOpen: leftType.isOpen || rightType.isOpen,
+    };
+}
+
+function unionTableFields([leftType, rightType]: [
+    PQP.Language.Type.DefinedTable,
+    PQP.Language.Type.DefinedTable,
+]): PQP.Language.Type.DefinedTable {
+    const combinedFields: PQP.Language.Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
