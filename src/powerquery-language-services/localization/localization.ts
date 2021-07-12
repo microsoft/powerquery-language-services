@@ -11,6 +11,13 @@ interface ILocalization {
         argName: string,
     ) => string;
 
+    error_validation_invokeExpression_numArgs: (
+        templates: ILocalizationTemplates,
+        numMin: number,
+        numMax: number,
+        numGiven: number,
+    ) => string;
+
     error_validation_invokeExpression_typeMismatch: (
         templates: ILocalizationTemplates,
         maybeFuncName: string | undefined,
@@ -47,6 +54,21 @@ export const Localization: ILocalization = {
             );
         }
     },
+
+    error_validation_invokeExpression_numArgs: (
+        templates: ILocalizationTemplates,
+        numMin: number,
+        numMax: number,
+        numGiven: number,
+    ) =>
+        PQP.StringUtils.assertGetFormatted(
+            templates.error_validation_invokeExpression_numArgs,
+            new Map([
+                ["numMin", numMin.toString()],
+                ["numMax", numMax.toString()],
+                ["numGiven", numGiven.toString()],
+            ]),
+        ),
 
     error_validation_invokeExpression_typeMismatch: (
         templates: ILocalizationTemplates,

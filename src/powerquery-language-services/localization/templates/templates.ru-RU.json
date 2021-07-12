@@ -1,7 +1,9 @@
 {
   "error_validation_duplicate_identifier": "Повторяющийся идентификатор \"{identifier}\"",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_numArgs": "Ожидаемое число аргументов: от {numMin} до {numMax}, указанное: {numGiven}.",
+  "_error_validation_invokeExpression_numArgs": "Ошибка при указании слишком маленького или слишком большого числа аргументов при вызове функции. Будет доступно пользователю.",
+  "error_validation_invokeExpression_missingMandatory_named": "Функции \"{funcName}\" требуется аргумент для обязательного параметра \"{argName}\".",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Требуется аргумент для обязательного параметра \"{argName}\".",
+  "error_validation_invokeExpression_typeMismatch_named": "Функция \"{funcName}\" ожидала, что аргументом для \"{argName}\" будет \"{expected}\", однако вместо этого получен аргумент \"{actual}\".",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Ожидалось, что аргументом для \"{argName}\" будет \"{expected}\", однако вместо этого получен аргумент \"{actual}\"."
 }

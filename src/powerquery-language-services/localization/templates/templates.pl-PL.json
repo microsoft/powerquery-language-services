@@ -1,7 +1,9 @@
 {
   "error_validation_duplicate_identifier": "Zduplikowany identyfikator „{identifier}”",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_numArgs": "Oczekiwano liczbę argumentów od {numMin}-{numMax}, ale podano {numGiven}.",
+  "_error_validation_invokeExpression_numArgs": "Błąd, gdy wywołanie funkcji otrzymało zbyt mało lub zbyt wiele argumentów. Oczekuje się, że będzie dostępny dla użytkownika.",
+  "error_validation_invokeExpression_missingMandatory_named": "Element „{funcName}” nie ma argumentu dla parametru nieopcjonalnego „{argName}”.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Brak argumentu dla parametru nieopcjonalnego „{argName}”.",
+  "error_validation_invokeExpression_typeMismatch_named": "Element „{funcName}” oczekiwał na argument „{argName}” na „{expected}”, ale zamiast tego otrzymano „{actual}”.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Oczekiwano argumentu „{argName}” na „{expected}”, ale zamiast tego otrzymano „{actual}”."
 }

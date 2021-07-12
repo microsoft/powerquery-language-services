@@ -1,7 +1,9 @@
 {
   "error_validation_duplicate_identifier": "重複的識別碼 '{identifier}'",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_numArgs": "預期介於 {numMin}-{numMax} 個引數之間，但給予了 {numGiven} 個。",
+  "_error_validation_invokeExpression_numArgs": "函數呼叫的引數太少或太多時發生錯誤。預期為使用者對向。",
+  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' 遺漏非選擇性參數 '{argName}' 的引數。",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "遺漏非選擇性參數 '{argName}' 的引數。",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} 預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。"
 }

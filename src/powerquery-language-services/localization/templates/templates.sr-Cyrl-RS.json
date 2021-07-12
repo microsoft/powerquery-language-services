@@ -1,7 +1,9 @@
 {
   "error_validation_duplicate_identifier": "Дупликат идентификатора „{identifier}“",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_invokeExpression_numArgs": "Очекивано је између {numMin}-{numMax} аргумената, али је дат {нумГивен}.",
+  "_error_validation_invokeExpression_numArgs": "Грешка када је позиву функције дато или премало или превише аргумената. Очекује се да корисник буде окренут ка кориснику.",
+  "error_validation_invokeExpression_missingMandatory_named": "У '{funcName}' недостаје аргумент за неопционални параметар '{argName}'.",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Недостаје аргумент за неопционални параметар '{argName}'.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' очекује аргумент за '{argName}' који треба да буде '{expected}', али је уместо дога добијен '{actual}'.",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Очекивани аргумент за '{argName}' који треба да буде '{expected}', али је уместо тога добијен '{actual}'."
 }

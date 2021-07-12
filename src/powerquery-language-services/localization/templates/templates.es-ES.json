@@ -1,7 +1,9 @@
 {
-  "error_validation_duplicate_identifier": "Duplicate identifier '{identifier}'",
-  "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_missingMandatory_unnamed": "Missing an argument for the non-optional parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+  "error_validation_duplicate_identifier": "Identificador duplicado \"{identifier}\"",
+  "error_validation_invokeExpression_numArgs": "Se espera entre los argumentos {numMin}-{numMax}, pero se proporcionaron {numGiven}.",
+  "_error_validation_invokeExpression_numArgs": "Se produjo un error cuando se proporcionó una llamada de función a muy pocos argumentos o demasiados argumentos. Se espera que esté destinado al usuario.",
+  "error_validation_invokeExpression_missingMandatory_named": "Falta un argumento en \"{funcName}\" para el parámetro no opcional \"{argName}\".",
+  "error_validation_invokeExpression_missingMandatory_unnamed": "Falta un argumento para el parámetro no opcional \"{argName}\".",
+  "error_validation_invokeExpression_typeMismatch_named": "\"{funcName} esperaba que el argumento \"{argName}\" fuera \"{expected}\", pero en su lugar obtuvo \"{actual}\".",
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Se esperaba que el argumento de \"{argName}\" fuera \"{expected}\", pero en su lugar se obtuvo \"{actual}\"."
 }
