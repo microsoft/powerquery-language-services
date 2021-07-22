@@ -8,7 +8,6 @@ import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import * as InspectionUtils from "../inspectionUtils";
 
 import { Inspection, Library } from "..";
-import { EmptyHover } from "../commonTypes";
 import { InspectionSettings } from "../inspectionSettings";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
@@ -70,7 +69,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         }
 
         if (!PQP.ResultUtils.isOk(inspection.triedNodeScope) || !PQP.ResultUtils.isOk(inspection.triedScopeType)) {
-            return EmptyHover;
+            // tslint:disable-next-line: no-null-keyword
+            return null;
         }
 
         maybeHover = await LocalDocumentSymbolProvider.getHoverForScopeItem(
@@ -79,7 +79,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             inspection.triedScopeType.value,
         );
 
-        return maybeHover ?? EmptyHover;
+        // tslint:disable-next-line: no-null-keyword
+        return maybeHover ?? null;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
