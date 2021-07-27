@@ -41,7 +41,7 @@ export const Localization: ILocalization = {
     ) => {
         if (maybeFuncName) {
             return PQP.StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_typeMismatch_named,
+                templates.error_validation_invokeExpression_missingMandatory_named,
                 new Map([
                     ["funcName", maybeFuncName],
                     ["argName", argName],
@@ -49,7 +49,7 @@ export const Localization: ILocalization = {
             );
         } else {
             return PQP.StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_typeMismatch_unnamed,
+                templates.error_validation_invokeExpression_missingMandatory_unnamed,
                 new Map([["argName", argName]]),
             );
         }
