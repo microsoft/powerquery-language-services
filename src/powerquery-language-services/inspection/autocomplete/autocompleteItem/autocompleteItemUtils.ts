@@ -81,7 +81,7 @@ export function createFromPrimitiveTypeConstantKind(
         kind: CompletionItemKind.Keyword,
         label,
         powerQueryType: PQP.Language.TypeUtils.createPrimitiveType(
-            false,
+            label === PQP.Language.Constant.PrimitiveTypeConstantKind.Null,
             PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
         ),
     };
