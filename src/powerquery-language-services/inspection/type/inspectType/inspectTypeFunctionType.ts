@@ -10,21 +10,23 @@ export function inspectTypeFunctionType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.FunctionType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
 
     const maybeParameters:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        | PQP.Parser.XorNode<PQP.Language.Ast.TParameterList>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
-        [PQP.Language.Ast.NodeKind.ParameterList],
+        PQP.Language.Ast.NodeKind.ParameterList,
     );
     if (maybeParameters === undefined) {
         return PQP.Language.Type.UnknownInstance;
     }
 
-    const maybeArrayWrapper: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper:
+        | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
         state.nodeIdMapCollection,
         maybeParameters,
         PQP.Language.Ast.NodeKind.ArrayWrapper,

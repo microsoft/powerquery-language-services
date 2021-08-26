@@ -24,8 +24,6 @@ export function validateFunctionExpression(
         return [];
     }
 
-    PQP.Parser.NodeIdMapIterator.
-
     const result: Diagnostic[] = [];
     for (const nodeId of maybeInvokeExpressionIds) {
         const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(

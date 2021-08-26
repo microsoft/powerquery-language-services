@@ -19,19 +19,17 @@ export function pseudoFunctionExpressionType(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     fnExpr: PQP.Parser.TXorNode,
 ): PseduoFunctionExpressionType {
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: PseudoFunctionParameterType[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an PQP.Language.Ast.Identifier for its name.
-        const maybeName:
-            | PQP.Language.Ast.Identifier
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        const maybeName: PQP.Language.Ast.Identifier | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
             nodeIdMapCollection,
             parameter.node.id,
             1,
-            [PQP.Language.Ast.NodeKind.Identifier],
+            PQP.Language.Ast.NodeKind.Identifier,
         ) as PQP.Language.Ast.Identifier;
         if (maybeName === undefined) {
             break;
@@ -50,16 +48,19 @@ export function pseudoFunctionExpressionType(
     }
 
     const maybeReturnType:
-        | PQP.Language.Ast.TNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(nodeIdMapCollection, fnExpr.node.id, 1, [
+        | PQP.Language.Ast.AsNullablePrimitiveType
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        nodeIdMapCollection,
+        fnExpr.node.id,
+        1,
         PQP.Language.Ast.NodeKind.AsNullablePrimitiveType,
-    ]);
+    );
 
     let isReturnNullable: boolean;
     let returnType: PQP.Language.Type.TypeKind;
     if (maybeReturnType !== undefined) {
         const simplified: PQP.Language.AstUtils.SimplifiedType = PQP.Language.AstUtils.simplifyAsNullablePrimitiveType(
-            maybeReturnType as PQP.Language.Ast.AsNullablePrimitiveType,
+            maybeReturnType,
         );
         isReturnNullable = simplified.isNullable;
         returnType = PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
@@ -83,14 +84,17 @@ function functionParameterXorNodes(
     fnExpr: PQP.Parser.TXorNode,
 ): ReadonlyArray<PQP.Parser.TXorNode> {
     const maybeParameterList:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, fnExpr.node.id, 0, [
+        | PQP.Parser.XorNode<PQP.Language.Ast.TParameterList>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        nodeIdMapCollection,
+        fnExpr.node.id,
+        0,
         PQP.Language.Ast.NodeKind.ParameterList,
-    ]);
+    );
     if (maybeParameterList === undefined) {
         return [];
     }
-    const maybeWrappedContent: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeArrayWrapperContent(
+    const maybeWrappedContent: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
         maybeParameterList,
     );

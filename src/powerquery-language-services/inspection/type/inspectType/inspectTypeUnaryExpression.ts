@@ -12,24 +12,26 @@ export function inspectTypeUnaryExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeUnaryOperatorWrapper:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 0, [
+        | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        nodeIdMapCollection,
+        xorNode.node.id,
+        0,
         PQP.Language.Ast.NodeKind.ArrayWrapper,
-    ]);
+    );
     if (maybeUnaryOperatorWrapper === undefined) {
         return PQP.Language.Type.UnknownInstance;
     }
     const unaryOperatorWrapper: PQP.Parser.TXorNode | undefined = maybeUnaryOperatorWrapper;
 
-    const maybeExpression: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeExpression: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         nodeIdMapCollection,
         xorNode.node.id,
         1,
-        undefined,
     );
     if (maybeExpression === undefined) {
         return PQP.Language.Type.UnknownInstance;

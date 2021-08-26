@@ -217,9 +217,10 @@ function inspectFieldSelector(
     }
 
     const generalizedIdentifierId: number = childIds[1];
-    const generalizedIdentifierXor: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetXor(
+    const generalizedIdentifierXor: PQP.Parser.XorNode<PQP.Language.Ast.GeneralizedIdentifier> = PQP.Parser.NodeIdMapUtils.assertGetXor(
         nodeIdMapCollection,
         generalizedIdentifierId,
+        PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
     );
     Assert.isTrue(
         generalizedIdentifierXor.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
@@ -228,7 +229,7 @@ function inspectFieldSelector(
 
     switch (generalizedIdentifierXor.kind) {
         case PQP.Parser.XorNodeKind.Ast: {
-            const generalizedIdentifier: PQP.Language.Ast.GeneralizedIdentifier = generalizedIdentifierXor.node as PQP.Language.Ast.GeneralizedIdentifier;
+            const generalizedIdentifier: PQP.Language.Ast.GeneralizedIdentifier = generalizedIdentifierXor.node;
             const isPositionInIdentifier: boolean = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
@@ -241,11 +242,11 @@ function inspectFieldSelector(
             // TODO [Autocomplete]:
             // This doesn't take into account of generalized identifiers consisting of multiple tokens.
             // Eg. `foo[bar baz]` or `foo[#"bar baz"].
-            const openBracketConstant: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+            const openBracketConstant: PQP.Language.Ast.TConstant = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAst(
                 nodeIdMapCollection,
                 fieldSelector.node.id,
                 0,
-                [PQP.Language.Ast.NodeKind.Constant],
+                PQP.Language.Ast.NodeKind.Constant,
             );
             const maybeNextTokenPosition: PQP.Language.Token.TokenPosition =
                 lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;

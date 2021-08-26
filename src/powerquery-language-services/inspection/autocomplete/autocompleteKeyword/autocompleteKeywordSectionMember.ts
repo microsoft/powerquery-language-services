@@ -15,12 +15,12 @@ export function autocompleteKeywordSectionMember(
     if (maybeChildAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
         const maybeSharedConstant:
-            | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+            | PQP.Parser.XorNode<PQP.Language.Ast.TConstant>
+            | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
             state.nodeIdMapCollection,
             state.parent.node.id,
             1,
-            [PQP.Language.Ast.NodeKind.Constant],
+            PQP.Language.Ast.NodeKind.Constant,
         );
 
         // 'shared' was parsed so we can exit.
@@ -51,11 +51,11 @@ export function autocompleteKeywordSectionMember(
     // `section foo; bar = 1 |` would be expecting a semicolon.
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
     else if (maybeChildAttributeIndex === 3 && state.child.kind === PQP.Parser.XorNodeKind.Context) {
-        const identifierPairedExpression: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+        const identifierPairedExpression: PQP.Language.Ast.IdentifierPairedExpression = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAst(
             state.nodeIdMapCollection,
             state.parent.node.id,
             2,
-            [PQP.Language.Ast.NodeKind.IdentifierPairedExpression],
+            PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
         );
         return autocompleteKeywordRightMostLeaf(state, identifierPairedExpression.id);
     } else {

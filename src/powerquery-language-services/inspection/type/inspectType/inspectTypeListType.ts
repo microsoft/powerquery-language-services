@@ -10,13 +10,12 @@ export function inspectTypeListType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.ListType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.ListType);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.ListType);
 
-    const maybeListItem: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeListItem: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
-        undefined,
     );
     if (maybeListItem === undefined) {
         return PQP.Language.Type.UnknownInstance;

@@ -250,7 +250,12 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
                 maybeBestAfter.constantKind,
             )
         ) {
-            const parent: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetParentAst(
+            const parent:
+                | PQP.Language.Ast.RecordExpression
+                | PQP.Language.Ast.RecordLiteral
+                | PQP.Language.Ast.ListExpression
+                | PQP.Language.Ast.ListLiteral
+                | PQP.Language.Ast.InvokeExpression = PQP.Parser.NodeIdMapUtils.assertUnwrapParentAst(
                 nodeIdMapCollection,
                 currentOnOrBefore.id,
                 [
@@ -261,11 +266,11 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
                     PQP.Language.Ast.NodeKind.InvokeExpression,
                 ],
             );
-            const arrayWrapper: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+            const arrayWrapper: PQP.Language.Ast.TArrayWrapper = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAst(
                 nodeIdMapCollection,
                 parent.id,
                 1,
-                [PQP.Language.Ast.NodeKind.ArrayWrapper],
+                PQP.Language.Ast.NodeKind.ArrayWrapper,
             );
             maybeShiftedRightNode = arrayWrapper;
         }
@@ -317,7 +322,7 @@ function findIdentifierUnderPosition(
     position: Position,
     leaf: PQP.Parser.TXorNode,
 ): PQP.Language.Ast.Identifier | PQP.Language.Ast.GeneralizedIdentifier | undefined {
-    if (PQP.Parser.XorNodeUtils.isContext(leaf)) {
+    if (PQP.Parser.XorNodeUtils.isContextXor(leaf)) {
         return undefined;
     }
 
@@ -334,7 +339,7 @@ function findIdentifierUnderPosition(
         }
         const parentId: number = maybeParentId;
 
-        const parent: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetAst(
+        const parent: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertUnwrapAst(
             nodeIdMapCollection.astNodeById,
             parentId,
         );

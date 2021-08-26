@@ -10,13 +10,12 @@ export function inspectTypeRecursivePrimaryExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
 
-    const maybeHead: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeHead: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
-        undefined,
     );
     if (maybeHead === undefined) {
         return PQP.Language.Type.UnknownInstance;
@@ -28,12 +27,12 @@ export function inspectTypeRecursivePrimaryExpression(
     }
 
     const maybeArrayWrapper:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
-        [PQP.Language.Ast.NodeKind.ArrayWrapper],
+        PQP.Language.Ast.NodeKind.ArrayWrapper,
     );
     if (maybeArrayWrapper === undefined) {
         return PQP.Language.Type.UnknownInstance;

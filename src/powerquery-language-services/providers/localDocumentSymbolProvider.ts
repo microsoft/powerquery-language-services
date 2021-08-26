@@ -138,13 +138,10 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const maybeExpression:
-            | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        const maybeExpression: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
             parseState.contextState.nodeIdMapCollection,
             maybeIdentifierPairedExpression.node.id,
             2,
-            undefined,
         );
 
         // We're on an identifier in some other context which we don't support.

@@ -10,7 +10,7 @@ export function inspectTypeRangeExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: PQP.Language.Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
         state,

@@ -17,7 +17,7 @@ export function examineFieldSpecificationList(
     xorNode: PQP.Parser.TXorNode,
 ): ExaminedFieldSpecificationList {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecificationList);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
     const fields: [string, PQP.Language.Type.TPowerQueryType][] = [];
@@ -27,26 +27,28 @@ export function examineFieldSpecificationList(
         xorNode,
     )) {
         const maybeName:
-            | PQP.Language.Ast.TNode
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+            | PQP.Language.Ast.GeneralizedIdentifier
+            | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
             nodeIdMapCollection,
             fieldSpecification.node.id,
             1,
-            [PQP.Language.Ast.NodeKind.GeneralizedIdentifier],
+            PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
         );
 
         if (maybeName === undefined) {
             break;
         }
-        const name: string = (maybeName as PQP.Language.Ast.GeneralizedIdentifier).literal;
         const type: PQP.Language.Type.TPowerQueryType = inspectTypeFieldSpecification(state, fieldSpecification);
-        fields.push([name, type]);
+        fields.push([maybeName.literal, type]);
     }
 
     const isOpen: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(nodeIdMapCollection, xorNode.node.id, 3, [
+        PQP.Parser.NodeIdMapUtils.maybeNthChild(
+            nodeIdMapCollection,
+            xorNode.node.id,
+            3,
             PQP.Language.Ast.NodeKind.Constant,
-        ]) !== undefined;
+        ) !== undefined;
 
     return {
         fields: new Map(fields),

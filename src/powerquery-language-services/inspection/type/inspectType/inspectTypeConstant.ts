@@ -4,7 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 export function inspectTypeConstant(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TPowerQueryType {
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Constant);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.Constant);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return PQP.Language.Type.UnknownInstance;

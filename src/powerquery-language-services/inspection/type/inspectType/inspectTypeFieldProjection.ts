@@ -10,7 +10,7 @@ export function inspectTypeFieldProjection(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = PQP.Parser.NodeIdMapIterator.iterFieldProjectionNames(
         state.nodeIdMapCollection,
@@ -22,9 +22,12 @@ export function inspectTypeFieldProjection(
     );
     const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            3,
             PQP.Language.Ast.NodeKind.Constant,
-        ]) !== undefined;
+        ) !== undefined;
 
     return inspectFieldProjectionHelper(previousSiblingType, projectedFieldNames, isOptional);
 }

@@ -10,15 +10,15 @@ export function inspectTypeParameter(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant:
-        | PQP.Language.Ast.TNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        | PQP.Language.Ast.TConstant
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
-        [PQP.Language.Ast.NodeKind.Constant],
+        PQP.Language.Ast.NodeKind.Constant,
     );
 
     const maybeParameterType:

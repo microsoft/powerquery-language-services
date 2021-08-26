@@ -11,15 +11,13 @@ export function inspectTypeRecordType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.RecordType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecordType);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecordType);
 
-    const maybeFields:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeFields: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
-        [PQP.Language.Ast.NodeKind.FieldSpecificationList],
+        PQP.Language.Ast.NodeKind.FieldSpecificationList,
     );
     if (maybeFields === undefined) {
         return PQP.Language.Type.UnknownInstance;

@@ -10,7 +10,7 @@ export function inspectTypeIdentifierExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.IdentifierExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.IdentifierExpression);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return PQP.Language.Type.UnknownInstance;

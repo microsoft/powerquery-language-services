@@ -10,15 +10,15 @@ export function inspectTypeErrorHandlingExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        | PQP.Parser.XorNode<PQP.Language.Ast.OtherwiseExpression>
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,
-        [PQP.Language.Ast.NodeKind.OtherwiseExpression],
+        PQP.Language.Ast.NodeKind.OtherwiseExpression,
     );
 
     return PQP.Language.TypeUtils.createAnyUnion([

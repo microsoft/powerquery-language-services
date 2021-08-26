@@ -12,9 +12,11 @@ export function inspectTypeFieldSelector(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
 
-    const maybeFieldName: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContentAst(
+    const maybeFieldName:
+        | PQP.Language.Ast.GeneralizedIdentifier
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapWrappedContentIfAst(
         state.nodeIdMapCollection,
         xorNode,
         PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
@@ -22,7 +24,7 @@ export function inspectTypeFieldSelector(
     if (maybeFieldName === undefined) {
         return PQP.Language.Type.UnknownInstance;
     }
-    const fieldName: string = (maybeFieldName as PQP.Language.Ast.GeneralizedIdentifier).literal;
+    const fieldName: string = maybeFieldName.literal;
 
     const previousSibling: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
@@ -30,9 +32,12 @@ export function inspectTypeFieldSelector(
     );
     const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
+        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            3,
             PQP.Language.Ast.NodeKind.Constant,
-        ]) !== undefined;
+        ) !== undefined;
 
     switch (previousSiblingType.kind) {
         case PQP.Language.Type.TypeKind.Any:

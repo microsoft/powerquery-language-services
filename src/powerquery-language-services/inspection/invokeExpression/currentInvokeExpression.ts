@@ -120,11 +120,11 @@ function getArgumentOrdinal(
     let arrayWrapperXorNode: PQP.Parser.TXorNode;
     switch (maybePreviousXor?.node.kind) {
         case PQP.Language.Ast.NodeKind.Constant: {
-            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetChildXorByAttributeIndex(
+            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetNthChild(
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 1,
-                [PQP.Language.Ast.NodeKind.ArrayWrapper],
+                PQP.Language.Ast.NodeKind.ArrayWrapper,
             );
 
             break;

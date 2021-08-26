@@ -49,15 +49,20 @@ function addIdentifierPairedExpressionSymbols(
     );
 
     for (const xorNode of identifierPairedExpressionsXorNodes) {
-        if (!PQP.Parser.XorNodeUtils.isAst(xorNode)) {
+        if (
+            !PQP.Parser.XorNodeUtils.isAstXor<PQP.Language.Ast.IdentifierPairedExpression>(
+                xorNode,
+                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+            )
+        ) {
             continue;
         }
 
-        const asAst: PQP.Language.Ast.IdentifierPairedExpression = xorNode.node as PQP.Language.Ast.IdentifierPairedExpression;
-        const asDocumentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(asAst);
+        const nodeId: number = xorNode.node.id;
+        const documentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(xorNode.node);
 
-        addDocumentSymbols(nodeIdMapCollection, parentSymbolById, asAst.id, currentSymbols, asDocumentSymbol);
-        parentSymbolById.set(asAst.id, asDocumentSymbol);
+        addDocumentSymbols(nodeIdMapCollection, parentSymbolById, nodeId, currentSymbols, documentSymbol);
+        parentSymbolById.set(nodeId, documentSymbol);
     }
 }
 
@@ -76,7 +81,7 @@ function addRecordSymbols(
     );
 
     for (const xorNode of recordXorNodes) {
-        if (!PQP.Parser.XorNodeUtils.isAst(xorNode)) {
+        if (!PQP.Parser.XorNodeUtils.isAstXor(xorNode)) {
             continue;
         }
 

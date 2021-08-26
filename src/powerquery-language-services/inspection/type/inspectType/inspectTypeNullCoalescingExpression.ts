@@ -10,16 +10,16 @@ export function inspectTypeNullCoalescingExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
+    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
 
     const maybeLeftType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeNullCoalescingOperator:
-        | PQP.Language.Ast.TNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+        | PQP.Language.Ast.TConstant
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
-        [PQP.Language.Ast.NodeKind.Constant],
+        PQP.Language.Ast.NodeKind.Constant,
     );
     // '??' isn't present, treat it as an Expression.
     if (maybeNullCoalescingOperator === undefined) {
