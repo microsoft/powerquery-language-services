@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
@@ -15,7 +17,7 @@ export function inspectTypeFunctionExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
     const pseudoReturnType: PQP.Language.Type.TPowerQueryType = pseudoType.returnType;

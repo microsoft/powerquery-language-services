@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSpecification(
@@ -10,7 +12,7 @@ export function inspectTypeFieldSpecification(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecification);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecification);
 
     const maybeFieldTypeSpecification: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,

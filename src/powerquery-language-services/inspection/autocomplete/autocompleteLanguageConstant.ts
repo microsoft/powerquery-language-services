@@ -126,10 +126,13 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
     const maybeParameter:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, fnExprAncestryIndex, 4, [
+        | PQP.Parser.XorNode<PQP.Language.Ast.TParameter>
+        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXorChecked<PQP.Language.Ast.TParameter>(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
+        4,
         PQP.Language.Ast.NodeKind.Parameter,
-    ]);
+    );
     if (maybeParameter === undefined) {
         return false;
     }

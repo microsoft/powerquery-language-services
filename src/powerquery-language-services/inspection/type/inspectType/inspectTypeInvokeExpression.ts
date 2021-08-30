@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
@@ -13,7 +14,7 @@ export function inspectTypeInvokeExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
 
     const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = maybeExternalInvokeRequest(
         state,
@@ -59,7 +60,10 @@ function maybeExternalInvokeRequest(
     const deferencedIdentifier: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
 
     const types: PQP.Language.Type.TPowerQueryType[] = [];
-    for (const argument of PQP.Parser.NodeIdMapIterator.iterInvokeExpression(state.nodeIdMapCollection, xorNode)) {
+    for (const argument of PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
+        state.nodeIdMapCollection,
+        XorNodeUtils.assertAsInvokeExpression(xorNode),
+    )) {
         types.push(inspectXor(state, argument));
     }
 

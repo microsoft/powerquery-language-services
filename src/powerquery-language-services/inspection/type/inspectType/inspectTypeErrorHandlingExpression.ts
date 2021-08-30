@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeErrorHandlingExpression(
@@ -10,11 +12,11 @@ export function inspectTypeErrorHandlingExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression:
         | PQP.Parser.XorNode<PQP.Language.Ast.OtherwiseExpression>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.OtherwiseExpression>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,

@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeRangeExpression(
@@ -10,7 +12,7 @@ export function inspectTypeRangeExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: PQP.Language.Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(
         state,

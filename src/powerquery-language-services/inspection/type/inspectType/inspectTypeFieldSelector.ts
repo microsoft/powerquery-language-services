@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
@@ -12,13 +13,13 @@ export function inspectTypeFieldSelector(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
 
     const maybeFieldName:
         | PQP.Language.Ast.GeneralizedIdentifier
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapWrappedContentIfAst(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapWrappedContentIfAstChecked(
         state.nodeIdMapCollection,
-        xorNode,
+        xorNode.node.id,
         PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
     );
     if (maybeFieldName === undefined) {
@@ -32,7 +33,7 @@ export function inspectTypeFieldSelector(
     );
     const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

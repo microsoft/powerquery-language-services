@@ -127,7 +127,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const maybeIdentifierPairedExpression:
             | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.AncestryUtils.maybeNthXor(activeNode.ancestry, 1, [
+            | undefined = PQP.Parser.AncestryUtils.maybeNthXorChecked(activeNode.ancestry, 1, [
             PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
             PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression,
             PQP.Language.Ast.NodeKind.IdentifierPairedExpression,

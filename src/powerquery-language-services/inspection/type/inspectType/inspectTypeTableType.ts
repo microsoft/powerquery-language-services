@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
@@ -11,7 +13,7 @@ export function inspectTypeTableType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TableType | PQP.Language.Type.TableTypePrimaryExpression | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.TableType);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.TableType);
 
     const maybeRowType: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,

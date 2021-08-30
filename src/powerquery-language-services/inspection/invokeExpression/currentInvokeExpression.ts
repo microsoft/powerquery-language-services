@@ -3,7 +3,6 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { CommonError } from "@microsoft/powerquery-parser";
 import { InspectionSettings } from "../../inspectionSettings";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
@@ -97,16 +96,17 @@ function getArgumentOrdinal(
     invokeExpressionXorNode: PQP.Parser.TXorNode,
 ): number {
     // `foo(1|)
-    const maybeAncestoryCsv:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, ancestryIndex, 2, [
+    const maybeAncestoryCsv: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXorChecked(
+        activeNode.ancestry,
+        ancestryIndex,
+        2,
         PQP.Language.Ast.NodeKind.Csv,
-    ]);
+    );
     if (maybeAncestoryCsv !== undefined) {
         return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
     }
 
-    const maybePreviousXor: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybePreviousXor(
+    const maybePreviousXor: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybePreviousXorChecked(
         activeNode.ancestry,
         ancestryIndex,
         [
@@ -120,7 +120,7 @@ function getArgumentOrdinal(
     let arrayWrapperXorNode: PQP.Parser.TXorNode;
     switch (maybePreviousXor?.node.kind) {
         case PQP.Language.Ast.NodeKind.Constant: {
-            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetNthChild(
+            arrayWrapperXorNode = PQP.Parser.NodeIdMapUtils.assertGetNthChildChecked(
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 1,
@@ -137,7 +137,7 @@ function getArgumentOrdinal(
 
         case undefined:
         default:
-            throw new CommonError.InvariantError(`encountered an unknown scenario for getARgumentOrdinal`, {
+            throw new PQP.CommonError.InvariantError(`encountered an unknown scenario for getArgumentOrdinal`, {
                 ancestryIndex,
                 ancestryNodeKinds: activeNode.ancestry.map((xorNode: PQP.Parser.TXorNode) => xorNode.node.kind),
             });

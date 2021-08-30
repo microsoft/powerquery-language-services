@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { XorNodeUtils } from "../../../../../powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionSettings } from "../../inspectionSettings";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
@@ -48,7 +49,7 @@ function inspectInvokeExpression(
     }
     const invokeExpressionXorNode: PQP.Parser.TXorNode = maybeInvokeExpressionXorNode;
 
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(invokeExpressionXorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
+    XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
 
     const previousNode: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,

@@ -217,7 +217,7 @@ function inspectFieldSelector(
     }
 
     const generalizedIdentifierId: number = childIds[1];
-    const generalizedIdentifierXor: PQP.Parser.XorNode<PQP.Language.Ast.GeneralizedIdentifier> = PQP.Parser.NodeIdMapUtils.assertGetXor(
+    const generalizedIdentifierXor: PQP.Parser.XorNode<PQP.Language.Ast.GeneralizedIdentifier> = PQP.Parser.NodeIdMapUtils.assertGetXorChecked(
         nodeIdMapCollection,
         generalizedIdentifierId,
         PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
@@ -242,7 +242,7 @@ function inspectFieldSelector(
             // TODO [Autocomplete]:
             // This doesn't take into account of generalized identifiers consisting of multiple tokens.
             // Eg. `foo[bar baz]` or `foo[#"bar baz"].
-            const openBracketConstant: PQP.Language.Ast.TConstant = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAst(
+            const openBracketConstant: PQP.Language.Ast.TConstant = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAstChecked(
                 nodeIdMapCollection,
                 fieldSelector.node.id,
                 0,

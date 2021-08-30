@@ -15,9 +15,11 @@ export function autocompleteKeywordIdentifierPairedExpression(
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        PQP.Parser.AncestryUtils.maybeNextXor(state.activeNode.ancestry, state.ancestryIndex, [
+        PQP.Parser.AncestryUtils.maybeNextXorChecked(
+            state.activeNode.ancestry,
+            state.ancestryIndex,
             PQP.Language.Ast.NodeKind.SectionMember,
-        ])
+        )
     ) {
         return [PQP.Language.Keyword.KeywordKind.Shared];
     } else if (childAttributeIndex !== 2) {

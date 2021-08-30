@@ -6,6 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { Inspection } from "../../..";
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 import { InspectionSettings } from "../../../inspectionSettings";
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
@@ -400,7 +401,7 @@ export function recursiveIdentifierDereference(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Parser.TXorNode {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsIdentifier(xorNode);
+    XorNodeUtils.assertIsIdentifier(xorNode);
 
     return Assert.asDefined(recursiveIdentifierDereferenceHelper(state, xorNode));
 }
@@ -411,14 +412,12 @@ function recursiveIdentifierDereferenceHelper(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Parser.TXorNode | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsIdentifier(xorNode);
+    XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return undefined;
     }
-    const identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.IdentifierExpression = xorNode.node as
-        | PQP.Language.Ast.Identifier
-        | PQP.Language.Ast.IdentifierExpression;
+    const identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.IdentifierExpression = xorNode.node;
     const identifierId: number = identifier.id;
 
     let identifierLiteral: string;

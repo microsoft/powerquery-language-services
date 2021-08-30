@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
 export function inspectTypeIdentifierExpression(
@@ -10,7 +12,7 @@ export function inspectTypeIdentifierExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.IdentifierExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.IdentifierExpression);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return PQP.Language.Type.UnknownInstance;

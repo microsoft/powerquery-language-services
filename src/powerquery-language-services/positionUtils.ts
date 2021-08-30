@@ -136,7 +136,7 @@ export function isAfterXor(
 
 export function isBeforeContext(
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): boolean {
     const maybeTokenStart: PQP.Language.Token.Token | undefined = contextNode.maybeTokenStart;
@@ -151,7 +151,7 @@ export function isBeforeContext(
 export function isInContext(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean,
 ): boolean {
@@ -161,7 +161,7 @@ export function isInContext(
     );
 }
 
-export function isOnContextStart(position: Position, contextNode: PQP.Parser.ParseContext.Node): boolean {
+export function isOnContextStart(position: Position, contextNode: PQP.Parser.ParseContext.TNode): boolean {
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
@@ -170,7 +170,7 @@ export function isOnContextStart(position: Position, contextNode: PQP.Parser.Par
 export function isOnContextEnd(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
 ): boolean {
     const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
         nodeIdMapCollection,
@@ -186,7 +186,7 @@ export function isOnContextEnd(
 export function isAfterContext(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): boolean {
     const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(

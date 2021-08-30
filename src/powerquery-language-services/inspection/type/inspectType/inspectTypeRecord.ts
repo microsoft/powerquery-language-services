@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecord(
@@ -10,7 +12,7 @@ export function inspectTypeRecord(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.DefinedRecord {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsRecord(xorNode);
+    XorNodeUtils.assertIsRecord(xorNode);
 
     const fields: Map<string, PQP.Language.Type.TPowerQueryType> = new Map();
     for (const keyValuePair of PQP.Parser.NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {

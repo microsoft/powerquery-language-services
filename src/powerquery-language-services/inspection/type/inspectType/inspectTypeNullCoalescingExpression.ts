@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeNullCoalescingExpression(
@@ -10,12 +12,12 @@ export function inspectTypeNullCoalescingExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.NullCoalescingExpression);
 
     const maybeLeftType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeNullCoalescingOperator:
         | PQP.Language.Ast.TConstant
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

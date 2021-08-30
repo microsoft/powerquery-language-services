@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 // A type for a potentially incomplete function expression.
 export interface PseduoFunctionExpressionType {
     readonly parameters: ReadonlyArray<PseudoFunctionParameterType>;
@@ -19,13 +21,15 @@ export function pseudoFunctionExpressionType(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     fnExpr: PQP.Parser.TXorNode,
 ): PseduoFunctionExpressionType {
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: PseudoFunctionParameterType[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an PQP.Language.Ast.Identifier for its name.
-        const maybeName: PQP.Language.Ast.Identifier | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        const maybeName:
+            | PQP.Language.Ast.Identifier
+            | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked<PQP.Language.Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
@@ -37,7 +41,10 @@ export function pseudoFunctionExpressionType(
 
         const maybeExaminable:
             | PQP.Language.Type.FunctionParameter
-            | undefined = PQP.Language.TypeUtils.inspectParameter(nodeIdMapCollection, parameter);
+            | undefined = PQP.Language.TypeUtils.inspectParameter(
+            nodeIdMapCollection,
+            XorNodeUtils.assertAsParameter(parameter),
+        );
         if (maybeExaminable !== undefined) {
             examinedParameters.push({
                 ...maybeExaminable,
@@ -49,7 +56,7 @@ export function pseudoFunctionExpressionType(
 
     const maybeReturnType:
         | PQP.Language.Ast.AsNullablePrimitiveType
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked(
         nodeIdMapCollection,
         fnExpr.node.id,
         1,
@@ -85,7 +92,7 @@ function functionParameterXorNodes(
 ): ReadonlyArray<PQP.Parser.TXorNode> {
     const maybeParameterList:
         | PQP.Parser.XorNode<PQP.Language.Ast.TParameterList>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.TParameterList>(
         nodeIdMapCollection,
         fnExpr.node.id,
         0,
@@ -96,7 +103,7 @@ function functionParameterXorNodes(
     }
     const maybeWrappedContent: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
-        maybeParameterList,
+        maybeParameterList.node.id,
     );
 
     return maybeWrappedContent === undefined

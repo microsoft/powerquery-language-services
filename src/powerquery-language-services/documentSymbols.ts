@@ -50,7 +50,7 @@ function addIdentifierPairedExpressionSymbols(
 
     for (const xorNode of identifierPairedExpressionsXorNodes) {
         if (
-            !PQP.Parser.XorNodeUtils.isAstXor<PQP.Language.Ast.IdentifierPairedExpression>(
+            !PQP.Parser.XorNodeUtils.isAstXorChecked<PQP.Language.Ast.IdentifierPairedExpression>(
                 xorNode,
                 PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
             )

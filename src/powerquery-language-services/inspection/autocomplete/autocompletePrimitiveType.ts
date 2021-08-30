@@ -76,16 +76,18 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<PQP.Language.C
         // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === PQP.Language.Ast.NodeKind.Parameter &&
-            PQP.Parser.AncestryUtils.maybeNthNextXor(ancestry, index, 4, [
+            PQP.Parser.AncestryUtils.maybeNthNextXorChecked(
+                ancestry,
+                index,
+                4,
                 PQP.Language.Ast.NodeKind.FunctionExpression,
-            ]) !== undefined
+            ) !== undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
             const maybeGrandchild: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(
                 ancestry,
                 index,
                 2,
-                undefined,
             );
             if (maybeGrandchild === undefined) {
                 continue;
@@ -105,7 +107,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<PQP.Language.C
             else if (maybeGrandchild.node.kind === PQP.Language.Ast.NodeKind.NullablePrimitiveType) {
                 const maybeGreatGreatGrandchild:
                     | PQP.Parser.TXorNode
-                    | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(ancestry, index, 3, undefined);
+                    | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(ancestry, index, 3);
                 if (maybeGreatGreatGrandchild?.node.kind === PQP.Language.Ast.NodeKind.PrimitiveType) {
                     return PQP.Language.Constant.PrimitiveTypeConstantKinds;
                 }

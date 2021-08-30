@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeRecursivePrimaryExpression(
@@ -10,7 +12,7 @@ export function inspectTypeRecursivePrimaryExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
@@ -28,7 +30,7 @@ export function inspectTypeRecursivePrimaryExpression(
 
     const maybeArrayWrapper:
         | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.TArrayWrapper>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

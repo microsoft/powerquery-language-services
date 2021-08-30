@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
@@ -11,9 +13,9 @@ export function inspectTypeRecordType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.RecordType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecordType);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.RecordType);
 
-    const maybeFields: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+    const maybeFields: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,

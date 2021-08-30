@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
@@ -12,12 +13,12 @@ export function inspectTypeUnaryExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeUnaryOperatorWrapper:
         | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.TArrayWrapper>(
         nodeIdMapCollection,
         xorNode.node.id,
         0,

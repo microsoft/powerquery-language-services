@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldProjection(
@@ -10,7 +12,7 @@ export function inspectTypeFieldProjection(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = PQP.Parser.NodeIdMapIterator.iterFieldProjectionNames(
         state.nodeIdMapCollection,
@@ -22,7 +24,7 @@ export function inspectTypeFieldProjection(
     );
     const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAst(
+        PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

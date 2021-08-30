@@ -4,11 +4,12 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 
 export function inspectTypeLiteralExpression(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.TPrimitiveType | PQP.Language.Type.TextLiteral | PQP.Language.Type.NumberLiteral {
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.LiteralExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.LiteralExpression);
 
     switch (xorNode.kind) {
         case PQP.Parser.XorNodeKind.Ast:

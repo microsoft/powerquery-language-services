@@ -32,7 +32,10 @@ export function maybeActiveNode(
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
     const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, position);
     // Search for the closest Context node on or to the right of the closest Ast node.
-    const maybeContextNode: PQP.Parser.ParseContext.Node | undefined = maybeFindContext(nodeIdMapCollection, astSearch);
+    const maybeContextNode: PQP.Parser.ParseContext.TNode | undefined = maybeFindContext(
+        nodeIdMapCollection,
+        astSearch,
+    );
 
     let maybeLeaf: PQP.Parser.TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
@@ -114,14 +117,11 @@ export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is 
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 
-export function maybeFirstXorOfNodeKind(
+export function maybeFirstXorOfNodeKind<T extends PQP.Language.Ast.TNode>(
     activeNode: ActiveNode,
-    nodeKind: PQP.Language.Ast.NodeKind,
-): PQP.Parser.TXorNode | undefined {
-    return PQP.Parser.AncestryUtils.maybeFirstXorWhere(
-        activeNode.ancestry,
-        (xorNode: PQP.Parser.TXorNode) => xorNode.node.kind === nodeKind,
-    );
+    nodeKind: T["kind"],
+): PQP.Parser.XorNode<T> | undefined {
+    return PQP.Parser.AncestryUtils.maybeFirstXorOfNodeKind(activeNode.ancestry, nodeKind);
 }
 
 interface AstNodeSearch {
@@ -255,7 +255,7 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
                 | PQP.Language.Ast.RecordLiteral
                 | PQP.Language.Ast.ListExpression
                 | PQP.Language.Ast.ListLiteral
-                | PQP.Language.Ast.InvokeExpression = PQP.Parser.NodeIdMapUtils.assertUnwrapParentAst(
+                | PQP.Language.Ast.InvokeExpression = PQP.Parser.NodeIdMapUtils.assertUnwrapParentAstChecked(
                 nodeIdMapCollection,
                 currentOnOrBefore.id,
                 [
@@ -266,11 +266,9 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
                     PQP.Language.Ast.NodeKind.InvokeExpression,
                 ],
             );
-            const arrayWrapper: PQP.Language.Ast.TArrayWrapper = PQP.Parser.NodeIdMapUtils.assertUnwrapNthChildAsAst(
+            const arrayWrapper: PQP.Language.Ast.TArrayWrapper = PQP.Parser.NodeIdMapUtils.assertUnwrapArrayWrapperAst(
                 nodeIdMapCollection,
                 parent.id,
-                1,
-                PQP.Language.Ast.NodeKind.ArrayWrapper,
             );
             maybeShiftedRightNode = arrayWrapper;
         }
@@ -295,13 +293,13 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
 function maybeFindContext(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
-): PQP.Parser.ParseContext.Node | undefined {
+): PQP.Parser.ParseContext.TNode | undefined {
     if (astNodeSearch.maybeBestOnOrBeforeNode === undefined) {
         return undefined;
     }
     const tokenIndexLowBound: number = astNodeSearch.maybeBestOnOrBeforeNode.tokenRange.tokenIndexStart;
 
-    let maybeCurrent: PQP.Parser.ParseContext.Node | undefined = undefined;
+    let maybeCurrent: PQP.Parser.ParseContext.TNode | undefined = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {

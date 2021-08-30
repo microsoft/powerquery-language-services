@@ -30,7 +30,6 @@ export function autocompleteKeywordListExpression(
         activeNode.ancestry,
         ancestryIndex,
         3,
-        undefined,
     );
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
@@ -40,7 +39,7 @@ export function autocompleteKeywordListExpression(
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: PQP.Parser.TXorNode =
         nodeOrComma.node.kind === PQP.Language.Ast.NodeKind.RangeExpression
-            ? PQP.Parser.AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4, undefined)
+            ? PQP.Parser.AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4)
             : nodeOrComma;
 
     if (

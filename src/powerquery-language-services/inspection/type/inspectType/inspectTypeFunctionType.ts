@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionType(
@@ -10,11 +12,11 @@ export function inspectTypeFunctionType(
     xorNode: PQP.Parser.TXorNode,
 ): PQP.Language.Type.FunctionType | PQP.Language.Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
+    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
 
     const maybeParameters:
         | PQP.Parser.XorNode<PQP.Language.Ast.TParameterList>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.TParameterList>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
@@ -26,10 +28,9 @@ export function inspectTypeFunctionType(
 
     const maybeArrayWrapper:
         | PQP.Parser.XorNode<PQP.Language.Ast.TArrayWrapper>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
+        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapArrayWrapper(
         state.nodeIdMapCollection,
-        maybeParameters,
-        PQP.Language.Ast.NodeKind.ArrayWrapper,
+        maybeParameters.node.id,
     );
     if (maybeArrayWrapper === undefined) {
         return PQP.Language.Type.UnknownInstance;
@@ -40,7 +41,10 @@ export function inspectTypeFunctionType(
         maybeArrayWrapper,
     )
         .map((parameter: PQP.Parser.TXorNode) =>
-            PQP.Language.TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter),
+            PQP.Language.TypeUtils.inspectParameter(
+                state.nodeIdMapCollection,
+                XorNodeUtils.assertAsParameter(parameter),
+            ),
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
