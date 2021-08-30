@@ -5,6 +5,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+
 import { assert, expect } from "chai";
 import "mocha";
 
@@ -15,15 +17,12 @@ import { MockDocument } from "./mockDocument";
 import { AbridgedDocumentSymbol } from "./testUtils";
 
 // Used to test symbols at a specific level of inspection
-function expectSymbolsForNode(
-    node: PQP.Language.Ast.TNode,
-    expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
-): void {
+function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>): void {
     let actualSymbols: ReadonlyArray<AbridgedDocumentSymbol>;
 
-    if (node.kind === PQP.Language.Ast.NodeKind.Section) {
+    if (AstUtils.isSection(node)) {
         actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForSection(node));
-    } else if (node.kind === PQP.Language.Ast.NodeKind.LetExpression) {
+    } else if (AstUtils.isLetExpression(node)) {
         actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForLetExpression(node));
     } else {
         throw new Error("unsupported code path");

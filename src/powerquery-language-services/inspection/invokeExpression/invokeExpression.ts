@@ -3,8 +3,15 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
-import { XorNodeUtils } from "../../../../../powerquery-parser/lib/powerquery-parser/parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionSettings } from "../../inspectionSettings";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
@@ -19,25 +26,25 @@ export type InvokeExpression = IInvokeExpression<InvokeExpressionArguments>;
 
 export function tryInvokeExpression(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     invokeExpressionId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedInvokeExpression {
-    return PQP.ResultUtils.ensureResult(settings.locale, () =>
+    return ResultUtils.ensureResult(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, invokeExpressionId, typeCache),
     );
 }
 
 function inspectInvokeExpression(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     invokeExpressionId: number,
     typeCache: TypeCache,
 ): InvokeExpression {
     settings.maybeCancellationToken?.throwIfCancelled();
-    const maybeInvokeExpressionXorNode: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeXor(
+    const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(
         nodeIdMapCollection,
         invokeExpressionId,
     );
@@ -47,40 +54,37 @@ function inspectInvokeExpression(
             invokeExpressionId,
         });
     }
-    const invokeExpressionXorNode: PQP.Parser.TXorNode = maybeInvokeExpressionXorNode;
+    const invokeExpressionXorNode: TXorNode = maybeInvokeExpressionXorNode;
 
     XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
 
-    const previousNode: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousNode: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,
         invokeExpressionId,
     );
 
-    const functionType: PQP.Language.Type.TPowerQueryType = Assert.unwrapOk(
+    const functionType: Type.TPowerQueryType = Assert.unboxOk(
         tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
-    const maybeName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+    const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
         nodeIdMapCollection,
         invokeExpressionId,
     );
 
     let maybeInvokeExpressionArgs: InvokeExpressionArguments | undefined;
-    if (PQP.Language.TypeUtils.isDefinedFunction(functionType)) {
-        const iterableArguments: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
+    if (TypeUtils.isDefinedFunction(functionType)) {
+        const iterableArguments: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
             nodeIdMapCollection,
             invokeExpressionXorNode,
         );
 
-        const givenArgumentTypes: ReadonlyArray<PQP.Language.Type.TPowerQueryType> = getArgumentTypes(
+        const givenArgumentTypes: ReadonlyArray<Type.TPowerQueryType> = getArgumentTypes(
             settings,
             nodeIdMapCollection,
             typeCache,
             iterableArguments,
         );
-        const givenArguments: ReadonlyArray<PQP.Parser.TXorNode> = iterableArguments.slice(
-            0,
-            givenArgumentTypes.length,
-        );
+        const givenArguments: ReadonlyArray<TXorNode> = iterableArguments.slice(0, givenArgumentTypes.length);
 
         const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
 
@@ -89,7 +93,7 @@ function inspectInvokeExpression(
             givenArgumentTypes,
             numMaxExpectedArguments,
             numMinExpectedArguments,
-            typeChecked: PQP.Language.TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
+            typeChecked: TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
         };
     }
 
@@ -110,15 +114,15 @@ function inspectInvokeExpression(
 
 function getIsNameInLocalScope(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: TypeCache,
-    invokeExpressionXorNode: PQP.Parser.TXorNode,
+    invokeExpressionXorNode: TXorNode,
     maybeName: string | undefined,
 ): boolean {
     // Try to find out if the identifier is a local or external name.
     if (maybeName !== undefined) {
         // Seed local scope
-        const scope: NodeScope = Assert.unwrapOk(
+        const scope: NodeScope = Assert.unboxOk(
             assertGetOrCreateNodeScope(
                 settings,
                 nodeIdMapCollection,
@@ -134,9 +138,9 @@ function getIsNameInLocalScope(
     }
 }
 
-function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction): [number, number] {
-    const nonOptionalArguments: ReadonlyArray<PQP.Language.Type.FunctionParameter> = functionType.parameters.filter(
-        (parameter: PQP.Language.Type.FunctionParameter) => !parameter.isOptional,
+function getNumExpectedArguments(functionType: Type.DefinedFunction): [number, number] {
+    const nonOptionalArguments: ReadonlyArray<Type.FunctionParameter> = functionType.parameters.filter(
+        (parameter: Type.FunctionParameter) => !parameter.isOptional,
     );
 
     const numMinExpectedArguments: number = nonOptionalArguments.length;
@@ -147,25 +151,22 @@ function getNumExpectedArguments(functionType: PQP.Language.Type.DefinedFunction
 
 function getArgumentTypes(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: TypeCache,
-    argXorNodes: ReadonlyArray<PQP.Parser.TXorNode>,
-): ReadonlyArray<PQP.Language.Type.TPowerQueryType> {
-    const result: PQP.Language.Type.TPowerQueryType[] = [];
+    argXorNodes: ReadonlyArray<TXorNode>,
+): ReadonlyArray<Type.TPowerQueryType> {
+    const result: Type.TPowerQueryType[] = [];
 
     for (const xorNode of argXorNodes) {
         const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
-        if (PQP.ResultUtils.isError(triedArgType)) {
+        if (ResultUtils.isError(triedArgType)) {
             throw triedArgType;
         }
-        const argType: PQP.Language.Type.TPowerQueryType = triedArgType.value;
+        const argType: Type.TPowerQueryType = triedArgType.value;
 
         // Occurs when there's expected to be a trailing argument, but none exist.
         // Eg. `foo(|` will iterate over an TXorNode which: contains no parsed elements, and evaluates to unknown.
-        if (
-            PQP.Language.TypeUtils.isUnknown(argType) &&
-            !PQP.Parser.NodeIdMapUtils.hasParsedToken(nodeIdMapCollection, xorNode.node.id)
-        ) {
+        if (TypeUtils.isUnknown(argType) && !NodeIdMapUtils.hasParsedToken(nodeIdMapCollection, xorNode.node.id)) {
             Assert.isTrue(xorNode === argXorNodes[argXorNodes.length - 1]);
             return result;
         }

@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export interface IInvokeExpression<T extends InvokeExpressionArguments> {
-    readonly invokeExpressionXorNode: PQP.Parser.TXorNode;
-    readonly functionType: PQP.Language.Type.TPowerQueryType;
+    readonly invokeExpressionXorNode: TXorNode;
+    readonly functionType: Type.TPowerQueryType;
     readonly isNameInLocalScope: boolean;
     readonly maybeName: string | undefined;
     readonly maybeArguments: T | undefined;
@@ -14,7 +15,7 @@ export interface IInvokeExpression<T extends InvokeExpressionArguments> {
 export interface InvokeExpressionArguments {
     readonly numMaxExpectedArguments: number;
     readonly numMinExpectedArguments: number;
-    readonly givenArguments: ReadonlyArray<PQP.Parser.TXorNode>;
-    readonly givenArgumentTypes: ReadonlyArray<PQP.Language.Type.TPowerQueryType>;
-    readonly typeChecked: PQP.Language.TypeUtils.CheckedInvocation;
+    readonly givenArguments: ReadonlyArray<TXorNode>;
+    readonly givenArgumentTypes: ReadonlyArray<Type.TPowerQueryType>;
+    readonly typeChecked: TypeUtils.CheckedInvocation;
 }

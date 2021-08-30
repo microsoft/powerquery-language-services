@@ -1,55 +1,56 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+// import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
-import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
 
-export function inspectTypeInvokeExpression(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType {
+export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.InvokeExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.InvokeExpression);
 
     const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = maybeExternalInvokeRequest(
         state,
         xorNode,
     );
     if (maybeRequest !== undefined && state.settings.maybeExternalTypeResolver) {
-        const maybeType: PQP.Language.Type.TPowerQueryType | undefined = state.settings.maybeExternalTypeResolver(
-            maybeRequest,
-        );
+        const maybeType: Type.TPowerQueryType | undefined = state.settings.maybeExternalTypeResolver(maybeRequest);
         if (maybeType !== undefined) {
             return maybeType;
         }
     }
 
-    const previousSibling: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
-    if (previousSiblingType.kind === PQP.Language.Type.TypeKind.Any) {
-        return PQP.Language.Type.AnyInstance;
-    } else if (previousSiblingType.kind !== PQP.Language.Type.TypeKind.Function) {
-        return PQP.Language.Type.NoneInstance;
-    } else if (previousSiblingType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.DefinedFunction) {
+    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+    if (previousSiblingType.kind === Type.TypeKind.Any) {
+        return Type.AnyInstance;
+    } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
+        return Type.NoneInstance;
+    } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
         return previousSiblingType.returnType;
     } else {
-        return PQP.Language.Type.AnyInstance;
+        return Type.AnyInstance;
     }
 }
 
 function maybeExternalInvokeRequest(
     state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
+    xorNode: TXorNode,
 ): ExternalType.ExternalInvocationTypeRequest | undefined {
-    const maybeIdentifier: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifier(
+    const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifier(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
@@ -57,10 +58,10 @@ function maybeExternalInvokeRequest(
     if (maybeIdentifier === undefined) {
         return undefined;
     }
-    const deferencedIdentifier: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
+    const deferencedIdentifier: TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
 
-    const types: PQP.Language.Type.TPowerQueryType[] = [];
-    for (const argument of PQP.Parser.NodeIdMapIterator.iterInvokeExpression(
+    const types: Type.TPowerQueryType[] = [];
+    for (const argument of NodeIdMapIterator.iterInvokeExpression(
         state.nodeIdMapCollection,
         XorNodeUtils.assertAsInvokeExpression(xorNode),
     )) {
@@ -68,7 +69,7 @@ function maybeExternalInvokeRequest(
     }
 
     return ExternalTypeUtils.createInvocationTypeRequest(
-        Assert.asDefined(PQP.Parser.XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
+        Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
         types,
     );
 }

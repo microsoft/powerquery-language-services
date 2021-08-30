@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CompletionItem } from "vscode-languageserver-types";
 
 export interface AutocompleteItem extends CompletionItem {
     readonly jaroWinklerScore: number;
-    readonly powerQueryType: PQP.Language.Type.TPowerQueryType;
+    readonly powerQueryType: Type.TPowerQueryType;
 }

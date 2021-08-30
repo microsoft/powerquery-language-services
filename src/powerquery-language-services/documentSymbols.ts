@@ -3,6 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import * as InspectionUtils from "./inspectionUtils";
 
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
@@ -22,7 +30,7 @@ export function getDocumentSymbols(
         return [];
     }
 
-    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = cacheItem.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = cacheItem.nodeIdMapCollection;
     const currentSymbols: DocumentSymbol[] = [];
     const parentSymbolById: Map<number, DocumentSymbol> = new Map();
 
@@ -37,22 +45,22 @@ export function getDocumentSymbols(
 }
 
 function addIdentifierPairedExpressionSymbols(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
 ): void {
     const identifierPairedExpressionIds: Set<number> =
-        nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.IdentifierPairedExpression) ?? new Set();
-    const identifierPairedExpressionsXorNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterXor(
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierPairedExpression) ?? new Set();
+    const identifierPairedExpressionsXorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(
         nodeIdMapCollection,
         [...identifierPairedExpressionIds.values()],
     );
 
     for (const xorNode of identifierPairedExpressionsXorNodes) {
         if (
-            !PQP.Parser.XorNodeUtils.isAstXorChecked<PQP.Language.Ast.IdentifierPairedExpression>(
+            !XorNodeUtils.isAstXorChecked<Ast.IdentifierPairedExpression>(
                 xorNode,
-                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
             )
         ) {
             continue;
@@ -67,27 +75,24 @@ function addIdentifierPairedExpressionSymbols(
 }
 
 function addRecordSymbols(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
 ): void {
     const recordIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordExpression) ?? new Set()).values(),
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordLiteral) ?? new Set()).values(),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set()).values(),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? new Set()).values(),
     ];
-    const recordXorNodes: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.assertIterXor(
-        nodeIdMapCollection,
-        recordIds,
-    );
+    const recordXorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, recordIds);
 
     for (const xorNode of recordXorNodes) {
-        if (!PQP.Parser.XorNodeUtils.isAstXor(xorNode)) {
+        if (!XorNodeUtils.isAstXor(xorNode)) {
             continue;
         }
 
-        const asAst: PQP.Language.Ast.RecordExpression | PQP.Language.Ast.RecordLiteral = xorNode.node as
-            | PQP.Language.Ast.RecordExpression
-            | PQP.Language.Ast.RecordLiteral;
+        const asAst: Ast.RecordExpression | Ast.RecordLiteral = xorNode.node as
+            | Ast.RecordExpression
+            | Ast.RecordLiteral;
 
         // Process the record if the immediate parent is a Struct
         const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(xorNode.node.id);
@@ -102,7 +107,7 @@ function addRecordSymbols(
 }
 
 function addDocumentSymbols(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     parentSymbolById: Map<number, DocumentSymbol>,
     nodeId: number,
     currentSymbols: DocumentSymbol[],
@@ -123,7 +128,7 @@ function addDocumentSymbols(
 }
 
 function findParentSymbol(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     parentSymbolById: Map<number, DocumentSymbol>,
     nodeId: number,
 ): DocumentSymbol | undefined {

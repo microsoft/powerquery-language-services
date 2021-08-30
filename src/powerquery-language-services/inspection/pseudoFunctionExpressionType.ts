@@ -1,47 +1,49 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { XorNodeUtils } from "../../../../powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, AstUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 // A type for a potentially incomplete function expression.
 export interface PseduoFunctionExpressionType {
     readonly parameters: ReadonlyArray<PseudoFunctionParameterType>;
-    readonly returnType: PQP.Language.Type.TPrimitiveType;
+    readonly returnType: Type.TPrimitiveType;
 }
 
 // Omit "nameLiteral" since we're going to include the `name` identifier.
-export interface PseudoFunctionParameterType extends Omit<PQP.Language.Type.FunctionParameter, "nameLiteral"> {
+export interface PseudoFunctionParameterType extends Omit<Type.FunctionParameter, "nameLiteral"> {
     readonly id: number;
-    readonly name: PQP.Language.Ast.Identifier;
+    readonly name: Ast.Identifier;
 }
 
 export function pseudoFunctionExpressionType(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    fnExpr: PQP.Parser.TXorNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fnExpr: TXorNode,
 ): PseduoFunctionExpressionType {
-    XorNodeUtils.assertIsNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: PseudoFunctionParameterType[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
-        // A parameter isn't examinable if it doesn't have an PQP.Language.Ast.Identifier for its name.
-        const maybeName:
-            | PQP.Language.Ast.Identifier
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked<PQP.Language.Ast.Identifier>(
+        // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
-            PQP.Language.Ast.NodeKind.Identifier,
-        ) as PQP.Language.Ast.Identifier;
+            Ast.NodeKind.Identifier,
+        ) as Ast.Identifier;
         if (maybeName === undefined) {
             break;
         }
 
-        const maybeExaminable:
-            | PQP.Language.Type.FunctionParameter
-            | undefined = PQP.Language.TypeUtils.inspectParameter(
+        const maybeExaminable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
             nodeIdMapCollection,
             XorNodeUtils.assertAsParameter(parameter),
         );
@@ -54,26 +56,22 @@ export function pseudoFunctionExpressionType(
         }
     }
 
-    const maybeReturnType:
-        | PQP.Language.Ast.AsNullablePrimitiveType
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeUnwrapNthChildIfAstChecked(
+    const maybeReturnType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
         nodeIdMapCollection,
         fnExpr.node.id,
         1,
-        PQP.Language.Ast.NodeKind.AsNullablePrimitiveType,
+        Ast.NodeKind.AsNullablePrimitiveType,
     );
 
     let isReturnNullable: boolean;
-    let returnType: PQP.Language.Type.TypeKind;
+    let returnType: Type.TypeKind;
     if (maybeReturnType !== undefined) {
-        const simplified: PQP.Language.AstUtils.SimplifiedType = PQP.Language.AstUtils.simplifyAsNullablePrimitiveType(
-            maybeReturnType,
-        );
+        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(maybeReturnType);
         isReturnNullable = simplified.isNullable;
-        returnType = PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+        returnType = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
     } else {
         isReturnNullable = true;
-        returnType = PQP.Language.Type.TypeKind.Any;
+        returnType = Type.TypeKind.Any;
     }
 
     return {
@@ -87,26 +85,21 @@ export function pseudoFunctionExpressionType(
 }
 
 function functionParameterXorNodes(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    fnExpr: PQP.Parser.TXorNode,
-): ReadonlyArray<PQP.Parser.TXorNode> {
-    const maybeParameterList:
-        | PQP.Parser.XorNode<PQP.Language.Ast.TParameterList>
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChildChecked<PQP.Language.Ast.TParameterList>(
-        nodeIdMapCollection,
-        fnExpr.node.id,
-        0,
-        PQP.Language.Ast.NodeKind.ParameterList,
-    );
+    nodeIdMapCollection: NodeIdMap.Collection,
+    fnExpr: TXorNode,
+): ReadonlyArray<TXorNode> {
+    const maybeParameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
+        Ast.TParameterList
+    >(nodeIdMapCollection, fnExpr.node.id, 0, Ast.NodeKind.ParameterList);
     if (maybeParameterList === undefined) {
         return [];
     }
-    const maybeWrappedContent: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
+    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
         nodeIdMapCollection,
         maybeParameterList.node.id,
     );
 
     return maybeWrappedContent === undefined
         ? []
-        : PQP.Parser.NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, maybeWrappedContent);
+        : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, maybeWrappedContent);
 }

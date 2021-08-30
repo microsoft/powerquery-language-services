@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import type { Position } from "vscode-languageserver-types";
 
@@ -29,12 +30,9 @@ export interface ActiveNode extends IActiveNode {
     // A full parental ancestry of the starting node.
     // [starting node, parent of starting node, parent of parent of starting node, ...].
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
-    readonly ancestry: ReadonlyArray<PQP.Parser.TXorNode>;
+    readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier.
-    readonly maybeIdentifierUnderPosition:
-        | PQP.Language.Ast.Identifier
-        | PQP.Language.Ast.GeneralizedIdentifier
-        | undefined;
+    readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {

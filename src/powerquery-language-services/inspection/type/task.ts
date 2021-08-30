@@ -3,7 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionSettings } from "../..";
 import { NodeScope } from "../scope";
@@ -13,11 +15,11 @@ import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState,
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
 
-export type TriedType = PQP.Result<PQP.Language.Type.TPowerQueryType, PQP.CommonError.CommonError>;
+export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
 export function tryScopeType(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
@@ -31,12 +33,12 @@ export function tryScopeType(
         scopeById: typeCache.scopeById,
     };
 
-    return PQP.ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
+    return ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
 }
 
 export function tryType(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedType {
@@ -48,8 +50,8 @@ export function tryType(
         scopeById: typeCache.scopeById,
     };
 
-    return PQP.ResultUtils.ensureResult(settings.locale, () =>
-        inspectXor(state, PQP.Parser.NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
+    return ResultUtils.ensureResult(settings.locale, () =>
+        inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
     );
 }
 
@@ -68,7 +70,7 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
 
     const result: ScopeTypeByKey = new Map();
     for (const [key, scopeItem] of nodeScope.entries()) {
-        const type: PQP.Language.Type.TPowerQueryType = Assert.asDefined(
+        const type: Type.TPowerQueryType = Assert.asDefined(
             state.givenTypeById.get(scopeItem.id),
             `expected nodeId to be in givenTypeById`,
             { nodeId: scopeItem.id },

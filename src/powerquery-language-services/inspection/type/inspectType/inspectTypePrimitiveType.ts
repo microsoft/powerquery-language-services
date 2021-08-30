@@ -1,19 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TPowerQueryType {
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.PrimitiveType);
 
-export function inspectTypePrimitiveType(xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TPowerQueryType {
-    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.PrimitiveType);
-
-    if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
-        return PQP.Language.Type.UnknownInstance;
+    if (XorNodeUtils.isContextXor(xorNode)) {
+        return Type.UnknownInstance;
     }
 
-    const kind: PQP.Language.Type.TypeKind = PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(
-        (xorNode.node as PQP.Language.Ast.PrimitiveType).primitiveTypeKind,
+    const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(
+        (xorNode.node as Ast.PrimitiveType).primitiveTypeKind,
     );
     return {
         kind,

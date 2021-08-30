@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import type { Range } from "vscode-languageserver-textdocument";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
@@ -14,11 +16,11 @@ import { ValidationSettings } from "./validationSettings";
 
 export function validateFunctionExpression(
     validationSettings: ValidationSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
 ): Diagnostic[] {
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
-        PQP.Language.Ast.NodeKind.FunctionExpression,
+        Ast.NodeKind.FunctionExpression,
     );
     if (maybeInvokeExpressionIds === undefined) {
         return [];
@@ -32,7 +34,7 @@ export function validateFunctionExpression(
             nodeId,
             maybeCache,
         );
-        if (PQP.ResultUtils.isError(triedInvokeExpression)) {
+        if (ResultUtils.isError(triedInvokeExpression)) {
             throw triedInvokeExpression;
         }
 
@@ -46,20 +48,20 @@ export function validateFunctionExpression(
 
 function invokeExpressionToDiagnostics(
     validationSettings: ValidationSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
 ): Diagnostic[] {
     const result: Diagnostic[] = [];
 
     if (inspected.maybeArguments !== undefined) {
         const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
-        const givenArguments: ReadonlyArray<PQP.Parser.TXorNode> = inspected.maybeArguments.givenArguments;
-        const invokeExpressionRange: Range = PQP.Assert.asDefined(
+        const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
+        const invokeExpressionRange: Range = Assert.asDefined(
             PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
         );
 
-        const maybeFunctionName: string | undefined = PQP.Parser.NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+        const maybeFunctionName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
             nodeIdMapCollection,
             inspected.invokeExpressionXorNode.node.id,
         );
@@ -121,7 +123,7 @@ function createDiagnosticForArgumentNumberMismatch(
 
 function createDiagnosticForArgumentMismatch(
     validationSettings: ValidationSettings,
-    mismatch: PQP.Language.TypeUtils.InvocationMismatch,
+    mismatch: TypeUtils.InvocationMismatch,
     maybeFunctionName: string | undefined,
     invokeExpressionRange: Range,
     maybeGivenArgumentRange: Range | undefined,
@@ -129,15 +131,13 @@ function createDiagnosticForArgumentMismatch(
     let range: Range;
     let message: string;
 
-    const parameter: PQP.Language.Type.FunctionParameter = mismatch.expected;
+    const parameter: Type.FunctionParameter = mismatch.expected;
     const argName: string = parameter.nameLiteral;
-    const expected: string = PQP.Language.TypeUtils.nameOfTypeKind(
-        parameter.maybeType ?? PQP.Language.Type.AnyInstance.kind,
-    );
+    const expected: string = TypeUtils.nameOfTypeKind(parameter.maybeType ?? Type.AnyInstance.kind);
 
     // An argument containing at least one leaf node was given.
     if (maybeGivenArgumentRange) {
-        const actual: string = PQP.Language.TypeUtils.nameOfTypeKind(PQP.Assert.asDefined(mismatch.actual).kind);
+        const actual: string = TypeUtils.nameOfTypeKind(Assert.asDefined(mismatch.actual).kind);
 
         range = maybeGivenArgumentRange;
         message = createTypeMismatchMessage(validationSettings.locale, maybeFunctionName, argName, expected, actual);

@@ -3,6 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Assert } from "@microsoft/powerquery-parser";
+import { Constant, Keyword, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
 
 import { Inspection } from "../../..";
@@ -12,7 +15,7 @@ import type { AutocompleteItem } from "./autocompleteItem";
 
 export function createFromFieldAccess(
     label: string,
-    powerQueryType: PQP.Language.Type.TPowerQueryType,
+    powerQueryType: Type.TPowerQueryType,
     maybeOther?: string,
 ): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
@@ -30,19 +33,19 @@ export function createFromFieldAccess(
     };
 }
 
-export function createFromKeywordKind(label: PQP.Language.Keyword.KeywordKind, maybeOther?: string): AutocompleteItem {
+export function createFromKeywordKind(label: Keyword.KeywordKind, maybeOther?: string): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,
         kind: CompletionItemKind.Keyword,
         label,
-        powerQueryType: PQP.Language.Type.NotApplicableInstance,
+        powerQueryType: Type.NotApplicableInstance,
     };
 }
 
 export function createFromLanguageConstantKind(
-    label: PQP.Language.Constant.LanguageConstantKind,
+    label: Constant.LanguageConstantKind,
     maybeOther?: string,
 ): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
@@ -51,7 +54,7 @@ export function createFromLanguageConstantKind(
         jaroWinklerScore,
         kind: CompletionItemKind.Keyword,
         label,
-        powerQueryType: PQP.Language.Type.NotApplicableInstance,
+        powerQueryType: Type.NotApplicableInstance,
     };
 }
 
@@ -71,7 +74,7 @@ export function createFromLibraryDefinition(
 }
 
 export function createFromPrimitiveTypeConstantKind(
-    label: PQP.Language.Constant.PrimitiveTypeConstantKind,
+    label: Constant.PrimitiveTypeConstantKind,
     maybeOther?: string,
 ): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
@@ -80,9 +83,9 @@ export function createFromPrimitiveTypeConstantKind(
         jaroWinklerScore,
         kind: CompletionItemKind.Keyword,
         label,
-        powerQueryType: PQP.Language.TypeUtils.createPrimitiveType(
-            label === PQP.Language.Constant.PrimitiveTypeConstantKind.Null,
-            PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
+        powerQueryType: TypeUtils.createPrimitiveType(
+            label === Constant.PrimitiveTypeConstantKind.Null,
+            TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
         ),
     };
 }
@@ -90,7 +93,7 @@ export function createFromPrimitiveTypeConstantKind(
 export function maybeCreateFromScopeItem(
     label: string,
     scopeItem: Inspection.TScopeItem,
-    powerQueryType: PQP.Language.Type.TPowerQueryType,
+    powerQueryType: Type.TPowerQueryType,
     maybeOther?: string,
 ): AutocompleteItem | undefined {
     switch (scopeItem.kind) {
@@ -113,7 +116,7 @@ export function maybeCreateFromScopeItem(
         }
 
         case Inspection.ScopeItemKind.Undefined: {
-            if (scopeItem.xorNode.kind !== PQP.Parser.XorNodeKind.Ast) {
+            if (XorNodeUtils.isContextXor(scopeItem.xorNode)) {
                 return undefined;
             }
 
@@ -121,7 +124,7 @@ export function maybeCreateFromScopeItem(
         }
 
         default:
-            throw PQP.Assert.isNever(scopeItem);
+            throw Assert.isNever(scopeItem);
     }
 
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;

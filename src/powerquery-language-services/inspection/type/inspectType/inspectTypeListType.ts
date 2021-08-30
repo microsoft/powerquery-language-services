@@ -1,32 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeListType(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.ListType | PQP.Language.Type.Unknown {
+export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode): Type.ListType | Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, PQP.Language.Ast.NodeKind.ListType);
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.ListType);
 
-    const maybeListItem: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+    const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
     );
     if (maybeListItem === undefined) {
-        return PQP.Language.Type.UnknownInstance;
+        return Type.UnknownInstance;
     }
-    const itemType: PQP.Language.Type.TPowerQueryType = inspectXor(state, maybeListItem);
+    const itemType: Type.TPowerQueryType = inspectXor(state, maybeListItem);
 
     return {
-        kind: PQP.Language.Type.TypeKind.Type,
-        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.ListType,
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.ListType,
         isNullable: false,
         itemType,
     };

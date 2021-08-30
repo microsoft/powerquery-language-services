@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
-import { PositionUtils } from "../../..";
+import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
+import { PositionUtils } from "../../..";
 import { ActiveNode } from "../../activeNode";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordListExpression(
     state: InspectAutocompleteKeywordState,
-): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const ancestryIndex: number = state.ancestryIndex;
-    const child: PQP.Parser.TXorNode = state.child;
+    const child: TXorNode = state.child;
 
     // '{' or '}'
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
@@ -26,27 +26,19 @@ export function autocompleteKeywordListExpression(
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetNthPreviousXor(
-        activeNode.ancestry,
-        ancestryIndex,
-        3,
-    );
+    const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3);
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }
 
     // We know it's the node component of the Csv,
     // but we have to drill down one more level if it's a RangeExpression.
-    const itemNode: PQP.Parser.TXorNode =
-        nodeOrComma.node.kind === PQP.Language.Ast.NodeKind.RangeExpression
-            ? PQP.Parser.AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4)
-            : nodeOrComma;
+    const itemNode: TXorNode = XorNodeUtils.isNodeKind(nodeOrComma, Ast.NodeKind.RangeExpression)
+        ? AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4)
+        : nodeOrComma;
 
-    if (
-        itemNode.kind === PQP.Parser.XorNodeKind.Context ||
-        PositionUtils.isBeforeXor(activeNode.position, itemNode, false)
-    ) {
-        return PQP.Language.Keyword.ExpressionKeywordKinds;
+    if (XorNodeUtils.isContextXor(itemNode) || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {
+        return Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;
     }

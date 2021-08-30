@@ -1,38 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { AncestryUtils, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { PositionUtils } from "../../..";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordIdentifierPairedExpression(
     state: InspectAutocompleteKeywordState,
-): ReadonlyArray<PQP.Language.Keyword.KeywordKind> | undefined {
+): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const childAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
 
     // `section; s|`
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        PQP.Parser.AncestryUtils.maybeNextXorChecked(
-            state.activeNode.ancestry,
-            state.ancestryIndex,
-            PQP.Language.Ast.NodeKind.SectionMember,
-        )
+        AncestryUtils.maybeNextXorChecked(state.activeNode.ancestry, state.ancestryIndex, Ast.NodeKind.SectionMember)
     ) {
-        return [PQP.Language.Keyword.KeywordKind.Shared];
+        return [Keyword.KeywordKind.Shared];
     } else if (childAttributeIndex !== 2) {
         return [];
     }
-    const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeLeftMostLeaf(
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(
         state.nodeIdMapCollection,
         state.child.node.id,
     );
     // `x = |`
     // `x = |1`
     if (maybeLeaf === undefined || PositionUtils.isBeforeAst(state.activeNode.position, maybeLeaf, false)) {
-        return PQP.Language.Keyword.ExpressionKeywordKinds;
+        return Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;
     }

@@ -3,10 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Inspection } from "../../..";
-import { XorNodeUtils } from "../../../../../../powerquery-parser/lib/powerquery-parser/parser";
 import { InspectionSettings } from "../../../inspectionSettings";
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
@@ -41,21 +42,18 @@ export interface InspectTypeState {
     readonly settings: InspectionSettings;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
-    readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
 }
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
 // then calls all(...) on the mapped values.
-export function allForAnyUnion(
-    anyUnion: PQP.Language.Type.AnyUnion,
-    conditionFn: (type: PQP.Language.Type.TPowerQueryType) => boolean,
-): boolean {
+export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TPowerQueryType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
-            .map((type: PQP.Language.Type.TPowerQueryType) => {
-                return type.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion
+            .map((type: Type.TPowerQueryType) => {
+                return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type);
             })
@@ -67,7 +65,7 @@ export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: numb
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
-    if (PQP.ResultUtils.isError(triedGetOrCreateScope)) {
+    if (ResultUtils.isError(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope;
     }
 
@@ -79,42 +77,37 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
     if (maybeNodeScope !== undefined) {
-        return PQP.ResultUtils.createOk(maybeNodeScope);
+        return ResultUtils.boxOk(maybeNodeScope);
     }
 
     return tryNodeScope(state.settings, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
-export function getOrCreateScopeItemType(
-    state: InspectTypeState,
-    scopeItem: TScopeItem,
-): PQP.Language.Type.TPowerQueryType {
+export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
     const nodeId: number = scopeItem.id;
 
-    const maybeGivenType: PQP.Language.Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
+    const maybeGivenType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeGivenType !== undefined) {
         return maybeGivenType;
     }
 
-    const maybeDeltaType: PQP.Language.Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
+    const maybeDeltaType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
     if (maybeDeltaType !== undefined) {
         return maybeDeltaType;
     }
 
-    const scopeType: PQP.Language.Type.TPowerQueryType = inspectScopeItem(state, scopeItem);
+    const scopeType: Type.TPowerQueryType = inspectScopeItem(state, scopeItem);
     return scopeType;
 }
 
-export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): PQP.Language.Type.TPowerQueryType {
+export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined
-                ? PQP.Language.Type.UnknownInstance
-                : inspectXor(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Each:
             return inspectXor(state, scopeItem.eachExpression);
@@ -123,7 +116,7 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
             return createParameterType(scopeItem);
 
         case ScopeItemKind.Undefined:
-            return PQP.Language.Type.UnknownInstance;
+            return Type.UnknownInstance;
 
         default:
             throw Assert.isNever(scopeItem);
@@ -132,195 +125,195 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
 
 export function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
-    parentXorNode: PQP.Parser.TXorNode,
+    parentXorNode: TXorNode,
     attributeIndex: number,
-): PQP.Language.Type.TPowerQueryType {
+): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
-    const maybeXorNode: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+    const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
     );
-    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : PQP.Language.Type.UnknownInstance;
+    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
 }
 
-export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.TPowerQueryType {
+export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-    const maybeCached: PQP.Language.Type.TPowerQueryType | undefined =
+    const maybeCached: Type.TPowerQueryType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
-    let result: PQP.Language.Type.TPowerQueryType;
+    let result: Type.TPowerQueryType;
     switch (xorNode.node.kind) {
-        case PQP.Language.Ast.NodeKind.ArrayWrapper:
-        case PQP.Language.Ast.NodeKind.FieldSpecificationList:
-        case PQP.Language.Ast.NodeKind.GeneralizedIdentifier:
-        case PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
-        case PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case PQP.Language.Ast.NodeKind.IdentifierPairedExpression:
-        case PQP.Language.Ast.NodeKind.ParameterList:
-        case PQP.Language.Ast.NodeKind.Section:
-            return PQP.Language.Type.NotApplicableInstance;
+        case Ast.NodeKind.ArrayWrapper:
+        case Ast.NodeKind.FieldSpecificationList:
+        case Ast.NodeKind.GeneralizedIdentifier:
+        case Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral:
+        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case Ast.NodeKind.IdentifierPairedExpression:
+        case Ast.NodeKind.ParameterList:
+        case Ast.NodeKind.Section:
+            return Type.NotApplicableInstance;
 
-        case PQP.Language.Ast.NodeKind.AsType:
-        case PQP.Language.Ast.NodeKind.AsNullablePrimitiveType:
-        case PQP.Language.Ast.NodeKind.FieldTypeSpecification:
-        case PQP.Language.Ast.NodeKind.OtherwiseExpression:
-        case PQP.Language.Ast.NodeKind.ParenthesizedExpression:
-        case PQP.Language.Ast.NodeKind.TypePrimaryType:
+        case Ast.NodeKind.AsType:
+        case Ast.NodeKind.AsNullablePrimitiveType:
+        case Ast.NodeKind.FieldTypeSpecification:
+        case Ast.NodeKind.OtherwiseExpression:
+        case Ast.NodeKind.ParenthesizedExpression:
+        case Ast.NodeKind.TypePrimaryType:
             result = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
             break;
 
-        case PQP.Language.Ast.NodeKind.ArithmeticExpression:
-        case PQP.Language.Ast.NodeKind.EqualityExpression:
-        case PQP.Language.Ast.NodeKind.LogicalExpression:
-        case PQP.Language.Ast.NodeKind.RelationalExpression:
+        case Ast.NodeKind.ArithmeticExpression:
+        case Ast.NodeKind.EqualityExpression:
+        case Ast.NodeKind.LogicalExpression:
+        case Ast.NodeKind.RelationalExpression:
             result = inspectTypeTBinOpExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.AsExpression:
-        case PQP.Language.Ast.NodeKind.SectionMember:
+        case Ast.NodeKind.AsExpression:
+        case Ast.NodeKind.SectionMember:
             result = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
             break;
 
-        case PQP.Language.Ast.NodeKind.Csv:
-        case PQP.Language.Ast.NodeKind.MetadataExpression:
+        case Ast.NodeKind.Csv:
+        case Ast.NodeKind.MetadataExpression:
             result = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
             break;
 
-        case PQP.Language.Ast.NodeKind.ListExpression:
-        case PQP.Language.Ast.NodeKind.ListLiteral:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
             result = inspectTypeList(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.NullableType:
-        case PQP.Language.Ast.NodeKind.NullablePrimitiveType:
+        case Ast.NodeKind.NullableType:
+        case Ast.NodeKind.NullablePrimitiveType:
             result = {
                 ...inspectTypeFromChildAttributeIndex(state, xorNode, 1),
                 isNullable: true,
             };
             break;
 
-        case PQP.Language.Ast.NodeKind.RecordLiteral:
-        case PQP.Language.Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordExpression:
             result = inspectTypeRecord(state, xorNode);
             break;
 
         // TODO: how should error raising be typed?
-        case PQP.Language.Ast.NodeKind.ErrorRaisingExpression:
-            result = PQP.Language.Type.AnyInstance;
+        case Ast.NodeKind.ErrorRaisingExpression:
+            result = Type.AnyInstance;
             break;
 
-        case PQP.Language.Ast.NodeKind.Constant:
+        case Ast.NodeKind.Constant:
             result = inspectTypeConstant(xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.EachExpression:
+        case Ast.NodeKind.EachExpression:
             result = inspectTypeEachExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.ErrorHandlingExpression:
+        case Ast.NodeKind.ErrorHandlingExpression:
             result = inspectTypeErrorHandlingExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FieldProjection:
+        case Ast.NodeKind.FieldProjection:
             result = inspectTypeFieldProjection(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FieldSelector:
+        case Ast.NodeKind.FieldSelector:
             result = inspectTypeFieldSelector(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FieldSpecification:
+        case Ast.NodeKind.FieldSpecification:
             result = inspectTypeFieldSpecification(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FunctionExpression:
+        case Ast.NodeKind.FunctionExpression:
             result = inspectTypeFunctionExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FunctionType:
+        case Ast.NodeKind.FunctionType:
             result = inspectTypeFunctionType(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.Identifier:
+        case Ast.NodeKind.Identifier:
             result = inspectTypeIdentifier(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.IdentifierExpression:
             result = inspectTypeIdentifierExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.IfExpression:
+        case Ast.NodeKind.IfExpression:
             result = inspectTypeIfExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.IsExpression:
-            result = PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical);
+        case Ast.NodeKind.IsExpression:
+            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
             break;
 
-        case PQP.Language.Ast.NodeKind.InvokeExpression:
+        case Ast.NodeKind.InvokeExpression:
             result = inspectTypeInvokeExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.IsNullablePrimitiveType:
-            result = PQP.Language.TypeUtils.createPrimitiveType(false, PQP.Language.Type.TypeKind.Logical);
+        case Ast.NodeKind.IsNullablePrimitiveType:
+            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
             break;
 
-        case PQP.Language.Ast.NodeKind.ItemAccessExpression:
-            result = PQP.Language.Type.AnyInstance;
+        case Ast.NodeKind.ItemAccessExpression:
+            result = Type.AnyInstance;
             break;
 
-        case PQP.Language.Ast.NodeKind.LetExpression:
+        case Ast.NodeKind.LetExpression:
             result = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
             break;
 
-        case PQP.Language.Ast.NodeKind.ListType:
+        case Ast.NodeKind.ListType:
             result = inspectTypeListType(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.LiteralExpression:
+        case Ast.NodeKind.LiteralExpression:
             result = inspectTypeLiteralExpression(xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.NotImplementedExpression:
-            result = PQP.Language.Type.NoneInstance;
+        case Ast.NodeKind.NotImplementedExpression:
+            result = Type.NoneInstance;
             break;
 
-        case PQP.Language.Ast.NodeKind.NullCoalescingExpression:
+        case Ast.NodeKind.NullCoalescingExpression:
             result = inspectTypeNullCoalescingExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.Parameter:
+        case Ast.NodeKind.Parameter:
             result = inspectTypeParameter(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.PrimitiveType:
+        case Ast.NodeKind.PrimitiveType:
             result = inspectTypePrimitiveType(xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.RangeExpression:
+        case Ast.NodeKind.RangeExpression:
             result = inspectTypeRangeExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.RecordType:
+        case Ast.NodeKind.RecordType:
             result = inspectTypeRecordType(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.RecursivePrimaryExpression:
+        case Ast.NodeKind.RecursivePrimaryExpression:
             result = inspectTypeRecursivePrimaryExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.TableType:
+        case Ast.NodeKind.TableType:
             result = inspectTypeTableType(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.UnaryExpression:
+        case Ast.NodeKind.UnaryExpression:
             result = inspectTypeUnaryExpression(state, xorNode);
             break;
 
@@ -334,15 +327,13 @@ export function inspectXor(state: InspectTypeState, xorNode: PQP.Parser.TXorNode
 
 export function maybeDereferencedIdentifierType(
     state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType | undefined {
+    xorNode: TXorNode,
+): Type.TPowerQueryType | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
 
-    const deferenced: PQP.Parser.TXorNode = recursiveIdentifierDereference(state, xorNode);
+    const deferenced: TXorNode = recursiveIdentifierDereference(state, xorNode);
 
-    const maybeDereferencedLiteral: string | undefined = PQP.Parser.XorNodeUtils.maybeIdentifierExpressionLiteral(
-        deferenced,
-    );
+    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
     if (maybeDereferencedLiteral === undefined) {
         return undefined;
     }
@@ -367,7 +358,7 @@ export function maybeDereferencedIdentifierType(
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
-    let maybeNextXorNode: PQP.Parser.TXorNode | undefined;
+    let maybeNextXorNode: TXorNode | undefined;
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
@@ -396,10 +387,7 @@ export function maybeDereferencedIdentifierType(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-export function recursiveIdentifierDereference(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Parser.TXorNode {
+export function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): TXorNode {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
@@ -407,29 +395,26 @@ export function recursiveIdentifierDereference(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-function recursiveIdentifierDereferenceHelper(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Parser.TXorNode | undefined {
+function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
         return undefined;
     }
-    const identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.IdentifierExpression = xorNode.node;
+    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node;
     const identifierId: number = identifier.id;
 
     let identifierLiteral: string;
     let isRecursiveIdentifier: boolean;
 
     switch (identifier.kind) {
-        case PQP.Language.Ast.NodeKind.Identifier:
+        case Ast.NodeKind.Identifier:
             identifierLiteral = identifier.literal;
             isRecursiveIdentifier = false;
             break;
 
-        case PQP.Language.Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.IdentifierExpression:
             identifierLiteral = identifier.identifier.literal;
             isRecursiveIdentifier = identifier.maybeInclusiveConstant !== undefined;
             break;
@@ -451,7 +436,7 @@ function recursiveIdentifierDereferenceHelper(
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
-    let maybeNextXorNode: PQP.Parser.TXorNode | undefined;
+    let maybeNextXorNode: TXorNode | undefined;
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
@@ -470,19 +455,19 @@ function recursiveIdentifierDereferenceHelper(
 
     return maybeNextXorNode !== undefined &&
         maybeNextXorNode.kind !== PQP.Parser.XorNodeKind.Context &&
-        (maybeNextXorNode.node.kind === PQP.Language.Ast.NodeKind.Identifier ||
-            maybeNextXorNode.node.kind === PQP.Language.Ast.NodeKind.IdentifierExpression)
+        (maybeNextXorNode.node.kind === Ast.NodeKind.Identifier ||
+            maybeNextXorNode.node.kind === Ast.NodeKind.IdentifierExpression)
         ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
         : xorNode;
 }
 
-export function createParameterType(parameter: ParameterScopeItem): PQP.Language.Type.TPrimitiveType {
+export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
     if (parameter.maybeType === undefined) {
-        return PQP.Language.Type.NoneInstance;
+        return Type.NoneInstance;
     }
 
     return {
-        kind: PQP.Language.TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
+        kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
         maybeExtendedKind: undefined,
         isNullable: parameter.isNullable,
     };

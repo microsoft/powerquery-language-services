@@ -3,8 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 // Keys are identifier literals.
-export type ScopeTypeByKey = Map<string, PQP.Language.Type.TPowerQueryType>;
+export type ScopeTypeByKey = Map<string, Type.TPowerQueryType>;
 
 export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 
@@ -44,37 +47,34 @@ export interface IScopeItem {
 }
 
 export interface IKeyValuePairScopeItem<
-    Key extends PQP.Language.Ast.Identifier | PQP.Language.Ast.GeneralizedIdentifier,
+    Key extends Ast.Identifier | Ast.GeneralizedIdentifier,
     Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember
 > extends IScopeItem {
     readonly kind: Kind;
     readonly key: Key;
-    readonly maybeValue: PQP.Parser.TXorNode | undefined;
+    readonly maybeValue: TXorNode | undefined;
 }
 
 export interface EachScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Each;
-    readonly eachExpression: PQP.Parser.TXorNode;
+    readonly eachExpression: TXorNode;
 }
 
-export type LetVariableScopeItem = IKeyValuePairScopeItem<PQP.Language.Ast.Identifier, ScopeItemKind.LetVariable>;
+export type LetVariableScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.LetVariable>;
 
 export interface ParameterScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Parameter;
-    readonly name: PQP.Language.Ast.Identifier;
+    readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: PQP.Language.Constant.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
 }
 
-export type RecordFieldScopeItem = IKeyValuePairScopeItem<
-    PQP.Language.Ast.GeneralizedIdentifier,
-    ScopeItemKind.RecordField
->;
+export type RecordFieldScopeItem = IKeyValuePairScopeItem<Ast.GeneralizedIdentifier, ScopeItemKind.RecordField>;
 
-export type SectionMemberScopeItem = IKeyValuePairScopeItem<PQP.Language.Ast.Identifier, ScopeItemKind.SectionMember>;
+export type SectionMemberScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.SectionMember>;
 
 export interface UndefinedScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Undefined;
-    readonly xorNode: PQP.Parser.TXorNode;
+    readonly xorNode: TXorNode;
 }

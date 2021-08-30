@@ -3,10 +3,18 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Inspection } from "../..";
-import { XorNodeUtils } from "../../../../../powerquery-parser/lib/powerquery-parser/parser";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
@@ -27,16 +35,13 @@ import {
 // Builds a scope for the given node.
 export function tryNodeScope(
     settings: PQP.CommonSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): TriedNodeScope {
-    return PQP.ResultUtils.ensureResult(settings.locale, () => {
-        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.AncestryUtils.assertGetAncestry(
-            nodeIdMapCollection,
-            nodeId,
-        );
+    return ResultUtils.ensureResult(settings.locale, () => {
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
             return new Map();
         }
@@ -48,18 +53,18 @@ export function tryNodeScope(
 
 export function assertGetOrCreateNodeScope(
     settings: PQP.CommonSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): Inspection.TriedNodeScope {
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
-        return PQP.ResultUtils.createOk(maybeScope);
+        return ResultUtils.boxOk(maybeScope);
     }
 
     const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
-    if (PQP.ResultUtils.isError(triedNodeScope)) {
+    if (ResultUtils.isError(triedNodeScope)) {
         throw triedNodeScope;
     }
 
@@ -70,31 +75,31 @@ export function assertGetOrCreateNodeScope(
 // Does not handle recursive identifiers.
 export function maybeDereferencedIdentifier(
     settings: PQP.CommonSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    xorNode: PQP.Parser.TXorNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    xorNode: TXorNode,
     // If a map is given, then it's mutated and returned.
     // Else create a new Map instance and return that instead.
     scopeById: ScopeById = new Map(),
-): PQP.Result<PQP.Parser.TXorNode | undefined, PQP.CommonError.CommonError> {
+): PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> {
     XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
-        return PQP.ResultUtils.createOk(undefined);
+        return ResultUtils.boxOk(undefined);
     }
-    const identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.IdentifierExpression = xorNode.node as
-        | PQP.Language.Ast.Identifier
-        | PQP.Language.Ast.IdentifierExpression;
+    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
+        | Ast.Identifier
+        | Ast.IdentifierExpression;
 
     let identifierLiteral: string;
     let isIdentifierRecurisve: boolean;
 
     switch (identifier.kind) {
-        case PQP.Language.Ast.NodeKind.Identifier:
+        case Ast.NodeKind.Identifier:
             identifierLiteral = identifier.literal;
             isIdentifierRecurisve = false;
             break;
 
-        case PQP.Language.Ast.NodeKind.IdentifierExpression:
+        case Ast.NodeKind.IdentifierExpression:
             identifierLiteral = identifier.identifier.literal;
             isIdentifierRecurisve = identifier.maybeInclusiveConstant !== undefined;
             break;
@@ -109,7 +114,7 @@ export function maybeDereferencedIdentifier(
         xorNode.node.id,
         scopeById,
     );
-    if (PQP.ResultUtils.isError(triedNodeScope)) {
+    if (ResultUtils.isError(triedNodeScope)) {
         return triedNodeScope;
     }
 
@@ -120,11 +125,11 @@ export function maybeDereferencedIdentifier(
         // then either the scope generation is incorrect or it's an external identifier.
         maybeScopeItem?.isRecursive !== isIdentifierRecurisve
     ) {
-        return PQP.ResultUtils.createOk(undefined);
+        return ResultUtils.boxOk(undefined);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
 
-    let maybeNextXorNode: PQP.Parser.TXorNode | undefined;
+    let maybeNextXorNode: TXorNode | undefined;
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
@@ -145,13 +150,13 @@ export function maybeDereferencedIdentifier(
     }
 
     if (maybeNextXorNode === undefined) {
-        return PQP.ResultUtils.createOk(xorNode);
+        return ResultUtils.boxOk(xorNode);
     } else if (
         XorNodeUtils.isContextXor(maybeNextXorNode) ||
-        (maybeNextXorNode.node.kind !== PQP.Language.Ast.NodeKind.Identifier &&
-            maybeNextXorNode.node.kind !== PQP.Language.Ast.NodeKind.IdentifierExpression)
+        (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
+            maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {
-        return PQP.ResultUtils.createOk(xorNode);
+        return ResultUtils.boxOk(xorNode);
     } else {
         return maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
@@ -161,15 +166,15 @@ interface ScopeInspectionState {
     readonly settings: PQP.CommonSettings;
     readonly givenScope: ScopeById;
     readonly deltaScope: ScopeById;
-    readonly ancestry: ReadonlyArray<PQP.Parser.TXorNode>;
-    readonly nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
+    readonly ancestry: ReadonlyArray<TXorNode>;
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
     ancestryIndex: number;
 }
 
 function inspectScope(
     settings: PQP.CommonSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    ancestry: ReadonlyArray<TXorNode>,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): ScopeById {
@@ -197,7 +202,7 @@ function inspectScope(
     const numNodes: number = ancestry.length;
     for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
         state.ancestryIndex = ancestryIndex;
-        const xorNode: PQP.Parser.TXorNode = ancestry[ancestryIndex];
+        const xorNode: TXorNode = ancestry[ancestryIndex];
 
         inspectNode(state, xorNode);
     }
@@ -205,26 +210,26 @@ function inspectScope(
     return state.deltaScope;
 }
 
-function inspectNode(state: ScopeInspectionState, xorNode: PQP.Parser.TXorNode): void {
+function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
     switch (xorNode.node.kind) {
-        case PQP.Language.Ast.NodeKind.EachExpression:
+        case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.FunctionExpression:
+        case Ast.NodeKind.FunctionExpression:
             inspectFunctionExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.LetExpression:
+        case Ast.NodeKind.LetExpression:
             inspectLetExpression(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.RecordExpression:
-        case PQP.Language.Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
             inspectRecordExpressionOrRecordLiteral(state, xorNode);
             break;
 
-        case PQP.Language.Ast.NodeKind.Section:
+        case Ast.NodeKind.Section:
             inspectSection(state, xorNode);
             break;
 
@@ -233,8 +238,8 @@ function inspectNode(state: ScopeInspectionState, xorNode: PQP.Parser.TXorNode):
     }
 }
 
-function inspectEachExpression(state: ScopeInspectionState, eachExpr: PQP.Parser.TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(eachExpr, PQP.Language.Ast.NodeKind.EachExpression);
+function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
+    XorNodeUtils.assertIsNodeKind(eachExpr, Ast.NodeKind.EachExpression);
     expandChildScope(
         state,
         eachExpr,
@@ -254,8 +259,8 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: PQP.Parser
     );
 }
 
-function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: PQP.Parser.TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(fnExpr, PQP.Language.Ast.NodeKind.FunctionExpression);
+function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
+    XorNodeUtils.assertIsNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined);
@@ -274,7 +279,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: PQP.Pars
                     isNullable: parameter.isNullable,
                     maybeType:
                         parameter.maybeType !== undefined
-                            ? PQP.Language.TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
+                            ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
                             : undefined,
                 },
             ];
@@ -283,13 +288,13 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: PQP.Pars
     expandChildScope(state, fnExpr, [3], newEntries, nodeScope);
 }
 
-function inspectLetExpression(state: ScopeInspectionState, letExpr: PQP.Parser.TXorNode): void {
-    XorNodeUtils.assertIsNodeKind<PQP.Language.Ast.LetExpression>(letExpr, PQP.Language.Ast.NodeKind.LetExpression);
+function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): void {
+    XorNodeUtils.assertIsNodeKind<Ast.LetExpression>(letExpr, Ast.NodeKind.LetExpression);
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, letExpr.node.id, undefined);
 
-    const keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.LetKeyValuePair> = PQP.Parser.NodeIdMapIterator.iterLetExpression(
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
         state.nodeIdMapCollection,
         letExpr,
     );
@@ -305,23 +310,23 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: PQP.Parser.T
     expandChildScope(state, letExpr, [3], newEntries, nodeScope);
 }
 
-function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: PQP.Parser.TXorNode): void {
+function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, record: TXorNode): void {
     XorNodeUtils.assertIsRecord(record);
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, record.node.id, undefined);
 
-    const keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.RecordKeyValuePair> = PQP.Parser.NodeIdMapIterator.iterRecord(
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
         state.nodeIdMapCollection,
         record,
     );
     inspectKeyValuePairs(state, nodeScope, keyValuePairs, createRecordMemberScopeItem);
 }
 
-function inspectSection(state: ScopeInspectionState, section: PQP.Parser.TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(section, PQP.Language.Ast.NodeKind.Section);
+function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
+    XorNodeUtils.assertIsNodeKind(section, Ast.NodeKind.Section);
 
-    const keyValuePairs: ReadonlyArray<PQP.Parser.NodeIdMapIterator.SectionKeyValuePair> = PQP.Parser.NodeIdMapIterator.iterSection(
+    const keyValuePairs: ReadonlyArray<NodeIdMapIterator.SectionKeyValuePair> = NodeIdMapIterator.iterSection(
         state.nodeIdMapCollection,
         section,
     );
@@ -343,7 +348,7 @@ function inspectSection(state: ScopeInspectionState, section: PQP.Parser.TXorNod
 }
 
 // Expands the scope of the value portion for each key value pair.
-function inspectKeyValuePairs<T extends TScopeItem, KVP extends PQP.Parser.NodeIdMapIterator.TKeyValuePair>(
+function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<KVP>,
@@ -367,7 +372,7 @@ function inspectKeyValuePairs<T extends TScopeItem, KVP extends PQP.Parser.NodeI
 
 function expandScope(
     state: ScopeInspectionState,
-    xorNode: PQP.Parser.TXorNode,
+    xorNode: TXorNode,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
     maybeDefaultScope: NodeScope | undefined,
 ): void {
@@ -379,17 +384,17 @@ function expandScope(
 
 function expandChildScope(
     state: ScopeInspectionState,
-    parent: PQP.Parser.TXorNode,
+    parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
     maybeDefaultScope: NodeScope | undefined,
 ): void {
-    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const parentId: number = parent.node.id;
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const maybeChild: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+        const maybeChild: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
             nodeIdMapCollection,
             parentId,
             attributeId,
@@ -428,10 +433,7 @@ function localGetOrCreateNodeScope(
     }
 
     // Default to a parent's scope if the node has a parent.
-    const maybeParent: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeParentXor(
-        state.nodeIdMapCollection,
-        nodeId,
-    );
+    const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(state.nodeIdMapCollection, nodeId);
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
 
@@ -456,7 +458,7 @@ function localGetOrCreateNodeScope(
     return newScope;
 }
 
-function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends PQP.Parser.NodeIdMapIterator.TKeyValuePair>(
+function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
     createFn: (keyValuePair: KVP, isRecursive: boolean) => T,
@@ -469,7 +471,7 @@ function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends PQP.Parse
 }
 
 function createSectionMemberScopeItem(
-    keyValuePair: PQP.Parser.NodeIdMapIterator.SectionKeyValuePair,
+    keyValuePair: NodeIdMapIterator.SectionKeyValuePair,
     isRecursive: boolean,
 ): SectionMemberScopeItem {
     return {
@@ -482,7 +484,7 @@ function createSectionMemberScopeItem(
 }
 
 function createLetVariableScopeItem(
-    keyValuePair: PQP.Parser.NodeIdMapIterator.LetKeyValuePair,
+    keyValuePair: NodeIdMapIterator.LetKeyValuePair,
     isRecursive: boolean,
 ): LetVariableScopeItem {
     return {
@@ -495,7 +497,7 @@ function createLetVariableScopeItem(
 }
 
 function createRecordMemberScopeItem(
-    keyValuePair: PQP.Parser.NodeIdMapIterator.RecordKeyValuePair,
+    keyValuePair: NodeIdMapIterator.RecordKeyValuePair,
     isRecursive: boolean,
 ): RecordFieldScopeItem {
     return {
