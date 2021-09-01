@@ -146,7 +146,10 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
+                    const nameAst: Ast.Identifier = XorNodeUtils.assertUnboxAstChecked<Ast.Identifier>(
+                        childOfParameter,
+                        Ast.NodeKind.Identifier,
+                    );
                     const name: string = nameAst.literal;
 
                     return (

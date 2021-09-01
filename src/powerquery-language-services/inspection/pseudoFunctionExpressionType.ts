@@ -38,7 +38,7 @@ export function pseudoFunctionExpressionType(
             parameter.node.id,
             1,
             Ast.NodeKind.Identifier,
-        ) as Ast.Identifier;
+        );
         if (maybeName === undefined) {
             break;
         }

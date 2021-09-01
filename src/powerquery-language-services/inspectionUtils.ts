@@ -5,7 +5,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from ".";
@@ -130,7 +129,7 @@ export function getSymbolKindFromLiteralExpression(node: Ast.LiteralExpression):
     }
 }
 
-export function getSymbolKindFromNode(node: Ast.INode | ParseContext.TNode): SymbolKind {
+export function getSymbolKindFromNode(node: Ast.TNode): SymbolKind {
     switch (node.kind) {
         case Ast.NodeKind.Constant:
             return SymbolKind.Constant;
@@ -143,7 +142,7 @@ export function getSymbolKindFromNode(node: Ast.INode | ParseContext.TNode): Sym
             return SymbolKind.Array;
 
         case Ast.NodeKind.LiteralExpression:
-            return getSymbolKindFromLiteralExpression(node as Ast.LiteralExpression);
+            return getSymbolKindFromLiteralExpression(node);
 
         case Ast.NodeKind.MetadataExpression:
             return SymbolKind.TypeParameter;

@@ -11,9 +11,7 @@ export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TPowerQueryTyp
         return Type.UnknownInstance;
     }
 
-    const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(
-        (xorNode.node as Ast.PrimitiveType).primitiveTypeKind,
-    );
+    const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(xorNode.node.primitiveTypeKind);
     return {
         kind,
         maybeExtendedKind: undefined,
