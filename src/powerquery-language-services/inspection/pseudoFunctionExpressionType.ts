@@ -27,7 +27,7 @@ export function pseudoFunctionExpressionType(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): PseduoFunctionExpressionType {
-    XorNodeUtils.assertIsNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(fnExpr, Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: PseudoFunctionParameterType[] = [];
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.

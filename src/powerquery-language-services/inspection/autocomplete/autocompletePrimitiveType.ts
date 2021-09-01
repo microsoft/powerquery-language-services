@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { AncestryUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
@@ -57,7 +57,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If the node is a context PrimitiveType node,
         // which is created only when a primitive type was expected but there was nothing to parse.
         // `x as |`
-        if (parent.kind === PQP.Parser.XorNodeKind.Context && parent.node.kind === Ast.NodeKind.PrimitiveType) {
+        if (XorNodeUtils.isContextXorChecked(parent, Ast.NodeKind.PrimitiveType)) {
             return Constant.PrimitiveTypeConstantKinds;
         }
         // If on the second attribute for TypePrimaryType.
@@ -67,8 +67,8 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
                 return Constant.PrimitiveTypeConstantKinds;
             } else if (
                 maybeChild.node.maybeAttributeIndex === 0 &&
-                maybeChild.kind === PQP.Parser.XorNodeKind.Ast &&
-                PositionUtils.isAfterAst(activeNode.position, maybeChild.node as Ast.TNode, true)
+                XorNodeUtils.isAstXor(maybeChild) &&
+                PositionUtils.isAfterAst(activeNode.position, maybeChild.node, true)
             ) {
                 return Constant.PrimitiveTypeConstantKinds;
             }
@@ -86,8 +86,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             // On primitive type.
             // `(x as |) => 0`
             else if (
-                maybeGrandchild.kind === PQP.Parser.XorNodeKind.Ast &&
-                maybeGrandchild.node.kind === Ast.NodeKind.Constant &&
+                XorNodeUtils.isAstXorChecked<Ast.TConstant>(maybeGrandchild, Ast.NodeKind.Constant) &&
                 maybeGrandchild.node.constantKind === Constant.KeywordConstantKind.As &&
                 PositionUtils.isAfterAst(activeNode.position, maybeGrandchild.node, true)
             ) {
@@ -95,15 +94,12 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             }
             // On nullable primitive type
             // `(x as nullable |) => 0`
-            else if (maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-                const maybeGreatGreatGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
-                    ancestry,
-                    index,
-                    3,
-                );
-                if (maybeGreatGreatGrandchild?.node.kind === Ast.NodeKind.PrimitiveType) {
-                    return Constant.PrimitiveTypeConstantKinds;
-                }
+            else if (
+                maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
+                // Check the great grandchild
+                AncestryUtils.maybeNthPreviousXorChecked(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
+            ) {
+                return Constant.PrimitiveTypeConstantKinds;
             }
         }
     }

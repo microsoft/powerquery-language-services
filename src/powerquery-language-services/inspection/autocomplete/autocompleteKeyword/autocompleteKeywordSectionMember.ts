@@ -7,7 +7,7 @@ import {
     NodeIdMapUtils,
     TXorNode,
     XorNode,
-    XorNodeKind,
+    XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { autocompleteKeywordRightMostLeaf } from "./common";
@@ -31,20 +31,22 @@ export function autocompleteKeywordSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorChecked(
+        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
             state.activeNode.ancestry,
             state.ancestryIndex,
             2,
-            [Ast.NodeKind.IdentifierPairedExpression, Ast.NodeKind.Identifier],
         );
-
         // Name hasn't been parsed yet so we can exit.
-        if (maybeName?.kind !== XorNodeKind.Ast) {
+        if (
+            !maybeName ||
+            !XorNodeUtils.isAstXorChecked<Ast.IdentifierPairedExpression>(maybeName, [
+                Ast.NodeKind.IdentifierPairedExpression,
+            ])
+        ) {
             return undefined;
         }
 
-        const name: Ast.Identifier = maybeName.node as Ast.Identifier;
-        if (Keyword.KeywordKind.Shared.startsWith(name.literal)) {
+        if (Keyword.KeywordKind.Shared.startsWith(maybeName.node.key.literal)) {
             return [Keyword.KeywordKind.Shared];
         }
 
@@ -52,7 +54,7 @@ export function autocompleteKeywordSectionMember(
     }
     // `section foo; bar = 1 |` would be expecting a semicolon.
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
-    else if (maybeChildAttributeIndex === 3 && state.child.kind === XorNodeKind.Context) {
+    else if (maybeChildAttributeIndex === 3 && XorNodeUtils.isContextXor(state.child)) {
         const identifierPairedExpression: Ast.IdentifierPairedExpression = NodeIdMapUtils.assertUnboxNthChildAsAstChecked(
             state.nodeIdMapCollection,
             state.parent.node.id,

@@ -5,7 +5,7 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export function inspectTypePrimitiveType(xorNode: TXorNode): Type.TPowerQueryType {
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.PrimitiveType);
+    XorNodeUtils.assertIsNodeKind<Ast.PrimitiveType>(xorNode, Ast.NodeKind.PrimitiveType);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
         return Type.UnknownInstance;

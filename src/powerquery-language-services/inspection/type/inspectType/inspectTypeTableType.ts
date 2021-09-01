@@ -12,7 +12,7 @@ export function inspectTypeTableType(
     xorNode: TXorNode,
 ): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.TableType);
+    XorNodeUtils.assertIsNodeKind<Ast.TableType>(xorNode, Ast.NodeKind.TableType);
 
     const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,

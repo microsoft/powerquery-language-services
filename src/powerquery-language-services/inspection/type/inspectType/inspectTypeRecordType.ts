@@ -9,7 +9,7 @@ import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
 export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.RecordType);
+    XorNodeUtils.assertIsNodeKind<Ast.RecordType>(xorNode, Ast.NodeKind.RecordType);
 
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked(
         state.nodeIdMapCollection,
