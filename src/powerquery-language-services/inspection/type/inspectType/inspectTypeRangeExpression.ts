@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.RangeExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
     const maybeLeftType: Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
     const maybeRightType: Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);

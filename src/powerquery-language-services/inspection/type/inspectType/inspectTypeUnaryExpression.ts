@@ -17,7 +17,7 @@ import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.UnaryExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.TUnaryExpression>(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<

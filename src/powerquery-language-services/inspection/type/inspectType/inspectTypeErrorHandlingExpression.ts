@@ -13,7 +13,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 
 export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.ErrorHandlingExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.ErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression: XorNode<Ast.OtherwiseExpression> | undefined = NodeIdMapUtils.maybeNthChildChecked<
         Ast.OtherwiseExpression

@@ -54,8 +54,7 @@ export function autocompleteKeyword(
         }
         // Matches 'null', 'true', and 'false'.
         else if (
-            ancestryLeaf.kind === PQP.Parser.XorNodeKind.Ast &&
-            ancestryLeaf.node.kind === Ast.NodeKind.LiteralExpression &&
+            XorNodeUtils.isAstXorChecked<Ast.LiteralExpression>(ancestryLeaf, Ast.NodeKind.LiteralExpression) &&
             (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
                 ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
@@ -166,9 +165,8 @@ function getMaybeEdgeCase(
 
     // `(x |) => x+1` -> `(x as|) => x+1`
     else if (
-        ancestry[0].kind === PQP.Parser.XorNodeKind.Ast &&
-        ancestry[0].node.kind === Ast.NodeKind.Identifier &&
-        ancestry[1].node.kind === Ast.NodeKind.Parameter &&
+        XorNodeUtils.isAstXorChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
+        XorNodeUtils.isNodeKind<Ast.TParameter>(ancestry[1], Ast.NodeKind.Parameter) &&
         PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
     ) {
         maybeInspected = [AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.As)];
@@ -177,10 +175,9 @@ function getMaybeEdgeCase(
     // `(foo a|) => foo` -> `(foo as) => foo
     else if (
         maybeTrailingToken?.data === "a" &&
-        ancestry[0].kind === PQP.Parser.XorNodeKind.Context &&
-        ancestry[0].node.kind === Ast.NodeKind.Constant &&
-        ancestry[1].node.kind === Ast.NodeKind.ParameterList &&
-        ancestry[2].node.kind === Ast.NodeKind.FunctionExpression
+        XorNodeUtils.isContextXorChecked<Ast.TConstant>(ancestry[0], Ast.NodeKind.Constant) &&
+        XorNodeUtils.isNodeKind<Ast.TParameterList>(ancestry[1], Ast.NodeKind.ParameterList) &&
+        XorNodeUtils.isNodeKind<Ast.FunctionExpression>(ancestry[2], Ast.NodeKind.FunctionExpression)
     ) {
         maybeInspected = [AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.As)];
     }
@@ -214,8 +211,7 @@ function handleConjunctions(
     // `[x=1] |`
     if (
         activeNode.ancestry.length === 2 &&
-        activeNode.ancestry[1].kind === PQP.Parser.XorNodeKind.Ast &&
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.RecordExpression
+        XorNodeUtils.isAstXorChecked<Ast.RecordExpression>(activeNode.ancestry[1], Ast.NodeKind.RecordExpression)
     ) {
         if (maybeTrailingToken === undefined) {
             return PQP.ArrayUtils.concatUnique(inspected, [Keyword.KeywordKind.Section]);
@@ -244,7 +240,7 @@ function handleConjunctions(
             return inspected;
         }
         // `let x = 1|`
-        else if (activeNodeLeaf.kind === PQP.Parser.XorNodeKind.Ast) {
+        else if (XorNodeUtils.isAstXor(activeNodeLeaf)) {
             return PQP.ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
         }
         // `let x = |`

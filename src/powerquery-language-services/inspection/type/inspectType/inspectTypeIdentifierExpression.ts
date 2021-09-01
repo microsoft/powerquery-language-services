@@ -8,7 +8,7 @@ import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
 export function inspectTypeIdentifierExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.IdentifierExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.IdentifierExpression>(xorNode, Ast.NodeKind.IdentifierExpression);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
         return Type.UnknownInstance;

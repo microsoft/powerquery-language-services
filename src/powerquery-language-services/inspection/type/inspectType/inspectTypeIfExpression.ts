@@ -8,7 +8,7 @@ import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } 
 
 export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.IfExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.IfExpression>(xorNode, Ast.NodeKind.IfExpression);
 
     const conditionType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
     if (conditionType.kind === Type.TypeKind.Unknown) {

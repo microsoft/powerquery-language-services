@@ -17,7 +17,7 @@ export function inspectTypeRecursivePrimaryExpression(
     xorNode: TXorNode,
 ): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.RecursivePrimaryExpression>(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
     const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
     if (maybeHead === undefined) {

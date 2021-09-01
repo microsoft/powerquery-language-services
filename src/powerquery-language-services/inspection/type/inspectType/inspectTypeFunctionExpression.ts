@@ -13,7 +13,7 @@ import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } 
 
 export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(xorNode, Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
     const pseudoReturnType: Type.TPowerQueryType = pseudoType.returnType;

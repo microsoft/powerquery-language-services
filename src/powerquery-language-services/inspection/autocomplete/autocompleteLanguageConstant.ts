@@ -5,7 +5,12 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { AncestryUtils, TXorNode, XorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    AncestryUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import type { Position } from "vscode-languageserver-types";
 import { PositionUtils } from "../..";
@@ -52,7 +57,7 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
                 break;
 
             case Ast.NodeKind.PrimitiveType:
-                if (isNullableAllowedForPrimitiveType(xorNode)) {
+                if (XorNodeUtils.isContextXor(xorNode)) {
                     return true;
                 }
                 break;
@@ -98,14 +103,10 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
             PositionUtils.isBeforeXor(position, grandchild, false)
         );
     } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
-        return isNullableAllowedForPrimitiveType(paired);
+        return XorNodeUtils.isContextXor(paired);
     } else {
         return false;
     }
-}
-
-function isNullableAllowedForPrimitiveType(primitiveType: TXorNode): boolean {
-    return primitiveType.kind === PQP.Parser.XorNodeKind.Context;
 }
 
 function isOptionalAllowed(activeNode: ActiveNode): boolean {
@@ -145,7 +146,10 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
+                    const nameAst: Ast.Identifier = XorNodeUtils.assertUnboxAstChecked<Ast.Identifier>(
+                        childOfParameter,
+                        Ast.NodeKind.Identifier,
+                    );
                     const name: string = nameAst.literal;
 
                     return (

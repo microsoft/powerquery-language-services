@@ -8,7 +8,7 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeEachExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.EachExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(xorNode, Ast.NodeKind.EachExpression);
 
     const expressionType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
 

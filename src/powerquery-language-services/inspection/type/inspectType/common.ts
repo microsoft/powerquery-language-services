@@ -399,7 +399,7 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
-    if (xorNode.kind === PQP.Parser.XorNodeKind.Context) {
+    if (XorNodeUtils.isContextXor(xorNode)) {
         return undefined;
     }
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node;
@@ -454,9 +454,10 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
     }
 
     return maybeNextXorNode !== undefined &&
-        maybeNextXorNode.kind !== PQP.Parser.XorNodeKind.Context &&
-        (maybeNextXorNode.node.kind === Ast.NodeKind.Identifier ||
-            maybeNextXorNode.node.kind === Ast.NodeKind.IdentifierExpression)
+        XorNodeUtils.isAstXorChecked<Ast.Identifier | Ast.IdentifierExpression>(maybeNextXorNode, [
+            Ast.NodeKind.Identifier,
+            Ast.NodeKind.IdentifierExpression,
+        ])
         ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
         : xorNode;
 }

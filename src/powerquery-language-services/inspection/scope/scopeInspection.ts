@@ -239,7 +239,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(eachExpr, Ast.NodeKind.EachExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(eachExpr, Ast.NodeKind.EachExpression);
     expandChildScope(
         state,
         eachExpr,
@@ -260,7 +260,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode):
 }
 
 function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(fnExpr, Ast.NodeKind.FunctionExpression);
+    XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(fnExpr, Ast.NodeKind.FunctionExpression);
 
     // Propegates the parent's scope.
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined);
@@ -324,7 +324,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
 }
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
-    XorNodeUtils.assertIsNodeKind(section, Ast.NodeKind.Section);
+    XorNodeUtils.assertIsNodeKind<Ast.Section>(section, Ast.NodeKind.Section);
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.SectionKeyValuePair> = NodeIdMapIterator.iterSection(
         state.nodeIdMapCollection,
