@@ -15,7 +15,7 @@ import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FieldProjection);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldProjection>(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
         state.nodeIdMapCollection,

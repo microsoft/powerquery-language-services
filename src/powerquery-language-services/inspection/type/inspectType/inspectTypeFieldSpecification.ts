@@ -8,7 +8,7 @@ import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FieldSpecification);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
     const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,

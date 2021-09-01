@@ -46,8 +46,6 @@ const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKi
     Type.ExtendedTypeKind.DefinedTable,
 ];
 
-const FieldAccessNodeKinds: ReadonlyArray<Ast.NodeKind> = [Ast.NodeKind.FieldSelector, Ast.NodeKind.FieldProjection];
-
 function autocompleteFieldAccess(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
@@ -57,9 +55,14 @@ function autocompleteFieldAccess(
     let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
     // Option 1: Find a field access node in the ancestry.
-    let maybeFieldAccessAncestor: TXorNode | undefined;
+    let maybeFieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
     for (const ancestor of activeNode.ancestry) {
-        if (FieldAccessNodeKinds.includes(ancestor.node.kind)) {
+        if (
+            XorNodeUtils.isNodeKind<Ast.FieldSelector | Ast.FieldProjection>(ancestor, [
+                Ast.NodeKind.FieldSelector,
+                Ast.NodeKind.FieldProjection,
+            ])
+        ) {
             maybeFieldAccessAncestor = ancestor;
         }
     }
@@ -144,7 +147,7 @@ function inspectFieldAccess(
     lexerSnapshot: PQP.Lexer.LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    fieldAccess: TXorNode,
+    fieldAccess: XorNode<Ast.FieldSelector | Ast.FieldProjection>,
 ): InspectedFieldAccess {
     switch (fieldAccess.node.kind) {
         case Ast.NodeKind.FieldProjection:
@@ -154,14 +157,7 @@ function inspectFieldAccess(
             return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
 
         default:
-            const details: {} = {
-                nodeId: fieldAccess.node.id,
-                nodeKind: fieldAccess.node.kind,
-            };
-            throw new PQP.CommonError.InvariantError(
-                `fieldAccess should be either ${Ast.NodeKind.FieldProjection} or ${Ast.NodeKind.FieldSelector}`,
-                details,
-            );
+            throw Assert.isNever(fieldAccess.node);
     }
 }
 
@@ -223,15 +219,12 @@ function inspectFieldSelector(
         generalizedIdentifierId,
         Ast.NodeKind.GeneralizedIdentifier,
     );
-    Assert.isTrue(
-        generalizedIdentifierXor.node.kind === Ast.NodeKind.GeneralizedIdentifier,
-        "generalizedIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier",
-    );
 
     switch (generalizedIdentifierXor.kind) {
         case PQP.Parser.XorNodeKind.Ast: {
             const generalizedIdentifier: Ast.GeneralizedIdentifier = generalizedIdentifierXor.node;
             const isPositionInIdentifier: boolean = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
+
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
                 maybeIdentifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,

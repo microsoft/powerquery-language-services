@@ -24,7 +24,7 @@ export function examineFieldSpecificationList(
     xorNode: TXorNode,
 ): ExaminedFieldSpecificationList {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FieldSpecificationList);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     const fields: [string, Type.TPowerQueryType][] = [];

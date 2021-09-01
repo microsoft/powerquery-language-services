@@ -9,7 +9,7 @@ import { InspectTypeState, inspectXor } from "./common";
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FieldSelector);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked(
         state.nodeIdMapCollection,

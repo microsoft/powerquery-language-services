@@ -94,7 +94,7 @@ function functionParameterXorNodes(
     if (maybeParameterList === undefined) {
         return [];
     }
-    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeWrappedContent(
+    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeUnboxWrappedContent(
         nodeIdMapCollection,
         maybeParameterList.node.id,
     );

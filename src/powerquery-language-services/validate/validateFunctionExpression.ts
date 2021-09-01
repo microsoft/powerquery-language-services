@@ -4,7 +4,6 @@
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import type { Range } from "vscode-languageserver-textdocument";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 
