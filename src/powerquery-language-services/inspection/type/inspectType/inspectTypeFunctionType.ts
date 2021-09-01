@@ -3,50 +3,50 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeFunctionType(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.FunctionType | PQP.Language.Type.Unknown {
+export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FunctionType);
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.FunctionType);
 
-    const maybeParameters:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-        1,
-        [PQP.Language.Ast.NodeKind.ParameterList],
-    );
+    const maybeParameters: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
+        Ast.TParameterList
+    >(state.nodeIdMapCollection, xorNode.node.id, 1, Ast.NodeKind.ParameterList);
     if (maybeParameters === undefined) {
-        return PQP.Language.Type.UnknownInstance;
+        return Type.UnknownInstance;
     }
 
-    const maybeArrayWrapper: PQP.Parser.TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContent(
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeUnboxArrayWrapper(
         state.nodeIdMapCollection,
-        maybeParameters,
-        PQP.Language.Ast.NodeKind.ArrayWrapper,
+        maybeParameters.node.id,
     );
     if (maybeArrayWrapper === undefined) {
-        return PQP.Language.Type.UnknownInstance;
+        return Type.UnknownInstance;
     }
 
-    const parameterTypes: ReadonlyArray<PQP.Language.Type.FunctionParameter> = PQP.Parser.NodeIdMapIterator.iterArrayWrapper(
+    const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
         state.nodeIdMapCollection,
         maybeArrayWrapper,
     )
-        .map((parameter: PQP.Parser.TXorNode) =>
-            PQP.Language.TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter),
+        .map((parameter: TXorNode) =>
+            TypeUtils.inspectParameter(state.nodeIdMapCollection, XorNodeUtils.assertAsParameter(parameter)),
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     return {
-        kind: PQP.Language.Type.TypeKind.Type,
-        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.FunctionType,
+        kind: Type.TypeKind.Type,
+        maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
         isNullable: false,
         parameters: parameterTypes,
         returnType,

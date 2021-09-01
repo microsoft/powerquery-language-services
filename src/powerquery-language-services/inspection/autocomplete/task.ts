@@ -2,6 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import { InspectionSettings } from "../../inspectionSettings";
 
 import { TMaybeActiveNode } from "../activeNode";
@@ -27,7 +30,7 @@ export function autocomplete(
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Autocomplete {
-    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     let maybeTrailingToken: TrailingToken | undefined;
     if (maybeParseError !== undefined) {

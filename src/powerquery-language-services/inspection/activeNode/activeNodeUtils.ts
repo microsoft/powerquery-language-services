@@ -3,12 +3,21 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
 import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 
-// Searches all leaf PQP.Language.Ast.TNodes and all Context nodes to find the "active" node.
+// Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
 // 'let x=|1 in x' -> the value part of the key-value-pair.
 // 'foo(|)' -> the zero length ArrayWrapper of an InvokeExpression
@@ -17,24 +26,24 @@ import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMa
 // This approach breaks under several edge cases.
 //
 // Take a look at the ArithmeticExpression example above,
-// it doesn't make sense for the ActiveNode to be the '+' PQP.Language.constant.
-// When the position is on a constant the selected PQP.Language.Ast.TNode might need to be shifted one to the right.
+// it doesn't make sense for the ActiveNode to be the '+' Constant.
+// When the position is on a constant the selected Ast.TNode might need to be shifted one to the right.
 // This happens with atomic constants such as '+', '=>', '[', '(' etc.
 // However if you shifted right on '(' for 'foo(|)' then the ActiveNode would be ')' instead of the ArrayWrapper.
 //
 // Sometimes we don't want to shift at all.
 // Nodes that prevent shifting are called anchor nodes.
-// '[foo = bar|' should be anchored on the identifier 'bar' and not the context node for the ']' PQP.Language.constant.
-export function maybeActiveNode(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    position: Position,
-): TMaybeActiveNode {
+// '[foo = bar|' should be anchored on the identifier 'bar' and not the context node for the ']' Constant.
+export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TMaybeActiveNode {
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
     const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, position);
     // Search for the closest Context node on or to the right of the closest Ast node.
-    const maybeContextNode: PQP.Parser.ParseContext.Node | undefined = maybeFindContext(nodeIdMapCollection, astSearch);
+    const maybeContextNode: PQP.Parser.ParseContext.TNode | undefined = maybeFindContext(
+        nodeIdMapCollection,
+        astSearch,
+    );
 
-    let maybeLeaf: PQP.Parser.TXorNode | undefined;
+    let maybeLeaf: TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
     // Order of node priority:
     //  * shifted
@@ -42,19 +51,19 @@ export function maybeActiveNode(
     //  * Context
     //  * Ast
     if (astSearch.maybeShiftedRightNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeShiftedRightNode);
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
     } else if (
         astSearch.maybeBestOnOrBeforeNode !== undefined &&
         isAnchorNode(position, astSearch.maybeBestOnOrBeforeNode)
     ) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeBestOnOrBeforeNode);
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.createContextNode(maybeContextNode);
+        maybeLeaf = XorNodeUtils.boxContext(maybeContextNode);
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
-        maybeLeaf = PQP.Parser.XorNodeUtils.createAstNode(astSearch.maybeBestOnOrBeforeNode);
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeBestOnOrBeforeNode);
         leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
@@ -62,12 +71,12 @@ export function maybeActiveNode(
         return createOutOfBoundPosition(position);
     }
 
-    const leaf: PQP.Parser.TXorNode = maybeLeaf;
+    const leaf: TXorNode = maybeLeaf;
 
     return createActiveNode(
         leafKind,
         position,
-        PQP.Parser.AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
+        AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
         findIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
     );
 }
@@ -75,8 +84,8 @@ export function maybeActiveNode(
 export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
-    ancestry: ReadonlyArray<PQP.Parser.TXorNode>,
-    maybeIdentifierUnderPosition: PQP.Language.Ast.Identifier | PQP.Language.Ast.GeneralizedIdentifier | undefined,
+    ancestry: ReadonlyArray<TXorNode>,
+    maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
 ): ActiveNode {
     return {
         kind: ActiveNodeKind.ActiveNode,
@@ -94,14 +103,14 @@ export function createOutOfBoundPosition(position: Position): OutOfBoundPosition
     };
 }
 
-export function assertActiveNode(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection, position: Position): ActiveNode {
+export function assertActiveNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): ActiveNode {
     const maybeValue: TMaybeActiveNode = maybeActiveNode(nodeIdMapCollection, position);
     assertPositionInBounds(maybeValue);
     return maybeValue;
 }
 
-export function assertGetLeaf(activeNode: ActiveNode): PQP.Parser.TXorNode {
-    return PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
+export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
+    return AncestryUtils.assertGetLeaf(activeNode.ancestry);
 }
 
 export function assertPositionInBounds(maybeValue: TMaybeActiveNode): asserts maybeValue is ActiveNode {
@@ -114,72 +123,63 @@ export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is 
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 
-export function maybeFirstXorOfNodeKind(
+export function maybeFirstXorOfNodeKind<T extends Ast.TNode>(
     activeNode: ActiveNode,
-    nodeKind: PQP.Language.Ast.NodeKind,
-): PQP.Parser.TXorNode | undefined {
-    return PQP.Parser.AncestryUtils.maybeFirstXorWhere(
-        activeNode.ancestry,
-        (xorNode: PQP.Parser.TXorNode) => xorNode.node.kind === nodeKind,
-    );
+    nodeKind: T["kind"],
+): XorNode<T> | undefined {
+    return AncestryUtils.maybeFirstXorOfNodeKind(activeNode.ancestry, nodeKind);
 }
 
 interface AstNodeSearch {
-    readonly maybeBestOnOrBeforeNode: PQP.Language.Ast.TNode | undefined;
-    readonly maybeShiftedRightNode: PQP.Language.Ast.TNode | undefined;
+    readonly maybeBestOnOrBeforeNode: Ast.TNode | undefined;
+    readonly maybeShiftedRightNode: Ast.TNode | undefined;
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
-    PQP.Language.Constant.WrapperConstantKind.LeftBrace,
-    PQP.Language.Constant.WrapperConstantKind.LeftBracket,
-    PQP.Language.Constant.WrapperConstantKind.LeftParenthesis,
+    Constant.WrapperConstantKind.LeftBrace,
+    Constant.WrapperConstantKind.LeftBracket,
+    Constant.WrapperConstantKind.LeftParenthesis,
 ];
 
 const ShiftRightConstantKinds: ReadonlyArray<string> = [
-    PQP.Language.Constant.MiscConstantKind.Comma,
-    PQP.Language.Constant.MiscConstantKind.Equal,
-    PQP.Language.Constant.MiscConstantKind.FatArrow,
-    PQP.Language.Constant.WrapperConstantKind.RightBrace,
-    PQP.Language.Constant.WrapperConstantKind.RightBracket,
-    PQP.Language.Constant.WrapperConstantKind.RightParenthesis,
-    PQP.Language.Constant.MiscConstantKind.Semicolon,
+    Constant.MiscConstantKind.Comma,
+    Constant.MiscConstantKind.Equal,
+    Constant.MiscConstantKind.FatArrow,
+    Constant.WrapperConstantKind.RightBrace,
+    Constant.WrapperConstantKind.RightBracket,
+    Constant.WrapperConstantKind.RightParenthesis,
+    Constant.MiscConstantKind.Semicolon,
     ...DrilldownConstantKind,
 ];
 
-function isAnchorNode(position: Position, astNode: PQP.Language.Ast.TNode): boolean {
+function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     if (!PositionUtils.isInAst(position, astNode, true, true)) {
         return false;
     }
 
-    if (
-        astNode.kind === PQP.Language.Ast.NodeKind.Identifier ||
-        astNode.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier
-    ) {
+    if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
         return true;
-    } else if (
-        astNode.kind === PQP.Language.Ast.NodeKind.LiteralExpression &&
-        astNode.literalKind === PQP.Language.Ast.LiteralKind.Numeric
-    ) {
+    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
         return true;
-    } else if (astNode.kind === PQP.Language.Ast.NodeKind.Constant) {
+    } else if (astNode.kind === Ast.NodeKind.Constant) {
         switch (astNode.constantKind) {
-            case PQP.Language.Constant.KeywordConstantKind.As:
-            case PQP.Language.Constant.KeywordConstantKind.Each:
-            case PQP.Language.Constant.KeywordConstantKind.Else:
-            case PQP.Language.Constant.KeywordConstantKind.Error:
-            case PQP.Language.Constant.KeywordConstantKind.If:
-            case PQP.Language.Constant.KeywordConstantKind.In:
-            case PQP.Language.Constant.KeywordConstantKind.Is:
-            case PQP.Language.Constant.KeywordConstantKind.Section:
-            case PQP.Language.Constant.KeywordConstantKind.Shared:
-            case PQP.Language.Constant.KeywordConstantKind.Let:
-            case PQP.Language.Constant.KeywordConstantKind.Meta:
-            case PQP.Language.Constant.KeywordConstantKind.Otherwise:
-            case PQP.Language.Constant.KeywordConstantKind.Then:
-            case PQP.Language.Constant.KeywordConstantKind.Try:
-            case PQP.Language.Constant.KeywordConstantKind.Type:
+            case Constant.KeywordConstantKind.As:
+            case Constant.KeywordConstantKind.Each:
+            case Constant.KeywordConstantKind.Else:
+            case Constant.KeywordConstantKind.Error:
+            case Constant.KeywordConstantKind.If:
+            case Constant.KeywordConstantKind.In:
+            case Constant.KeywordConstantKind.Is:
+            case Constant.KeywordConstantKind.Section:
+            case Constant.KeywordConstantKind.Shared:
+            case Constant.KeywordConstantKind.Let:
+            case Constant.KeywordConstantKind.Meta:
+            case Constant.KeywordConstantKind.Otherwise:
+            case Constant.KeywordConstantKind.Then:
+            case Constant.KeywordConstantKind.Try:
+            case Constant.KeywordConstantKind.Type:
 
-            case PQP.Language.Constant.PrimitiveTypeConstantKind.Null:
+            case Constant.PrimitiveTypeConstantKind.Null:
                 return true;
 
             default:
@@ -190,29 +190,29 @@ function isAnchorNode(position: Position, astNode: PQP.Language.Ast.TNode): bool
     }
 }
 
-function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection, position: Position): AstNodeSearch {
+function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: Position): AstNodeSearch {
     const astNodeById: PQP.Parser.NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    let maybeBestOnOrBeforeNode: PQP.Language.Ast.TNode | undefined;
-    let maybeBestAfter: PQP.Language.Ast.TNode | undefined;
-    let maybeShiftedRightNode: PQP.Language.Ast.TNode | undefined;
+    let maybeBestOnOrBeforeNode: Ast.TNode | undefined;
+    let maybeBestAfter: Ast.TNode | undefined;
+    let maybeShiftedRightNode: Ast.TNode | undefined;
 
     // Find:
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
     for (const nodeId of nodeIdMapCollection.leafIds) {
-        const maybeCandidate: PQP.Language.Ast.TNode | undefined = astNodeById.get(nodeId);
+        const maybeCandidate: Ast.TNode | undefined = astNodeById.get(nodeId);
         if (maybeCandidate === undefined) {
             continue;
         }
-        const candidate: PQP.Language.Ast.TNode = maybeCandidate;
+        const candidate: Ast.TNode = maybeCandidate;
 
         let isBoundIncluded: boolean;
         if (
             // let x|=1
-            (candidate.kind === PQP.Language.Ast.NodeKind.Constant &&
+            (candidate.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
-            (maybeBestOnOrBeforeNode?.kind === PQP.Language.Ast.NodeKind.Constant &&
+            (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
@@ -238,34 +238,37 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
     }
 
     // Might need to shift.
-    if (maybeBestOnOrBeforeNode?.kind === PQP.Language.Ast.NodeKind.Constant) {
-        const currentOnOrBefore: PQP.Language.Ast.TConstant = maybeBestOnOrBeforeNode;
+    if (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant) {
+        const currentOnOrBefore: Ast.TConstant = maybeBestOnOrBeforeNode;
 
         // Requires a shift into an empty ArrayWrapper.
         if (
             DrilldownConstantKind.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1 &&
-            maybeBestAfter?.kind === PQP.Language.Ast.NodeKind.Constant &&
+            maybeBestAfter?.kind === Ast.NodeKind.Constant &&
             PQP.Language.ConstantUtils.isPairedWrapperConstantKinds(
                 maybeBestOnOrBeforeNode.constantKind,
                 maybeBestAfter.constantKind,
             )
         ) {
-            const parent: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetParentAst(
+            const parent:
+                | Ast.RecordExpression
+                | Ast.RecordLiteral
+                | Ast.ListExpression
+                | Ast.ListLiteral
+                | Ast.InvokeExpression = NodeIdMapUtils.assertUnboxParentAstChecked(
                 nodeIdMapCollection,
                 currentOnOrBefore.id,
                 [
-                    PQP.Language.Ast.NodeKind.RecordExpression,
-                    PQP.Language.Ast.NodeKind.RecordLiteral,
-                    PQP.Language.Ast.NodeKind.ListExpression,
-                    PQP.Language.Ast.NodeKind.ListLiteral,
-                    PQP.Language.Ast.NodeKind.InvokeExpression,
+                    Ast.NodeKind.RecordExpression,
+                    Ast.NodeKind.RecordLiteral,
+                    Ast.NodeKind.ListExpression,
+                    Ast.NodeKind.ListLiteral,
+                    Ast.NodeKind.InvokeExpression,
                 ],
             );
-            const arrayWrapper: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetChildAstByAttributeIndex(
+            const arrayWrapper: Ast.TArrayWrapper = NodeIdMapUtils.assertUnboxArrayWrapperAst(
                 nodeIdMapCollection,
                 parent.id,
-                1,
-                [PQP.Language.Ast.NodeKind.ArrayWrapper],
             );
             maybeShiftedRightNode = arrayWrapper;
         }
@@ -288,15 +291,15 @@ function maybeFindAstNodes(nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
 }
 
 function maybeFindContext(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
-): PQP.Parser.ParseContext.Node | undefined {
+): PQP.Parser.ParseContext.TNode | undefined {
     if (astNodeSearch.maybeBestOnOrBeforeNode === undefined) {
         return undefined;
     }
     const tokenIndexLowBound: number = astNodeSearch.maybeBestOnOrBeforeNode.tokenRange.tokenIndexStart;
 
-    let maybeCurrent: PQP.Parser.ParseContext.Node | undefined = undefined;
+    let maybeCurrent: PQP.Parser.ParseContext.TNode | undefined = undefined;
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {
@@ -313,39 +316,30 @@ function maybeFindContext(
 }
 
 function findIdentifierUnderPosition(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    leaf: PQP.Parser.TXorNode,
-): PQP.Language.Ast.Identifier | PQP.Language.Ast.GeneralizedIdentifier | undefined {
-    if (PQP.Parser.XorNodeUtils.isContext(leaf)) {
+    leaf: TXorNode,
+): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
+    if (XorNodeUtils.isContextXor(leaf)) {
         return undefined;
     }
 
-    let identifier: PQP.Language.Ast.Identifier | PQP.Language.Ast.GeneralizedIdentifier;
+    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (
-        leaf.node.kind === PQP.Language.Ast.NodeKind.Constant &&
-        leaf.node.constantKind === PQP.Language.Constant.MiscConstantKind.AtSign
-    ) {
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstantKind.AtSign) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;
         }
         const parentId: number = maybeParentId;
 
-        const parent: PQP.Language.Ast.TNode = PQP.Parser.NodeIdMapUtils.assertGetAst(
-            nodeIdMapCollection.astNodeById,
-            parentId,
-        );
-        if (parent.kind !== PQP.Language.Ast.NodeKind.IdentifierExpression) {
+        const parent: Ast.TNode = NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, parentId);
+        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
             return undefined;
         }
         identifier = parent.identifier;
-    } else if (
-        leaf.node.kind === PQP.Language.Ast.NodeKind.Identifier ||
-        leaf.node.kind === PQP.Language.Ast.NodeKind.GeneralizedIdentifier
-    ) {
+    } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
         identifier = leaf.node;
     } else {
         return undefined;

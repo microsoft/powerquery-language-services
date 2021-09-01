@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
 import { InspectionSettings } from "../inspectionSettings";
@@ -25,7 +26,7 @@ export function inspection(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Inspection {
-    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
@@ -50,14 +51,14 @@ export function inspection(
             typeCache.scopeById,
         );
 
-        const ancestryLeaf: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
+        const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
         triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = PQP.ResultUtils.createOk(new Map());
-        triedScopeType = PQP.ResultUtils.createOk(new Map());
-        triedExpectedType = PQP.ResultUtils.createOk(undefined);
+        triedNodeScope = PQP.ResultUtils.boxOk(new Map());
+        triedScopeType = PQP.ResultUtils.boxOk(new Map());
+        triedExpectedType = PQP.ResultUtils.boxOk(undefined);
     }
 
     return {

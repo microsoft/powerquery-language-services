@@ -1,29 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeParameter(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType {
+export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.Parameter);
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.Parameter);
 
-    const maybeOptionalConstant:
-        | PQP.Language.Ast.TNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(
+    const maybeOptionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
-        [PQP.Language.Ast.NodeKind.Constant],
+        Ast.NodeKind.Constant,
     );
 
-    const maybeParameterType:
-        | PQP.Language.Type.TPowerQueryType
-        | undefined = PQP.Language.TypeUtils.assertAsTPrimitiveType(
+    const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
         inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );
 

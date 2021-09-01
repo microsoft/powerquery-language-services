@@ -1,6 +1,7 @@
 {
     "rulesDirectory": ["tslint-config-prettier", "tslint-microsoft-contrib", "tslint-plugin-prettier"],
     "rules": {
+        "no-submodule-imports": [true, "@microsoft/powerquery-parser", "chai", "mocha"],
         "no-angle-bracket-type-assertion": true,
         "no-internal-module": true,
         "no-namespace": true,

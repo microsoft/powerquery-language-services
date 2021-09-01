@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ExternalType } from ".";
 
 export function createValueTypeRequest(identifierLiteral: string): ExternalType.ExternalValueTypeRequest {
@@ -13,7 +13,7 @@ export function createValueTypeRequest(identifierLiteral: string): ExternalType.
 
 export function createInvocationTypeRequest(
     identifierLiteral: string,
-    args: ReadonlyArray<PQP.Language.Type.TPowerQueryType>,
+    args: ReadonlyArray<Type.TPowerQueryType>,
 ): ExternalType.ExternalInvocationTypeRequest {
     return {
         kind: ExternalType.ExternalTypeRequestKind.Invocation,

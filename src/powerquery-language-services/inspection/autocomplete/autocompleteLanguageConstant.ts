@@ -3,6 +3,10 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { AncestryUtils, TXorNode, XorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import type { Position } from "vscode-languageserver-types";
 import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
@@ -13,7 +17,7 @@ export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
-    return PQP.ResultUtils.ensureResult(settings.locale, () => {
+    return ResultUtils.ensureResult(settings.locale, () => {
         return autocompleteLanguageConstant(maybeActiveNode);
     });
 }
@@ -25,33 +29,29 @@ function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): Autoco
     const activeNode: ActiveNode = maybeActiveNode;
 
     if (isNullableAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstantKind(
-            PQP.Language.Constant.LanguageConstantKind.Nullable,
-        );
+        return AutocompleteItemUtils.createFromLanguageConstantKind(Constant.LanguageConstantKind.Nullable);
     } else if (isOptionalAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstantKind(
-            PQP.Language.Constant.LanguageConstantKind.Optional,
-        );
+        return AutocompleteItemUtils.createFromLanguageConstantKind(Constant.LanguageConstantKind.Optional);
     } else {
         return undefined;
     }
 }
 
 function isNullableAllowed(activeNode: ActiveNode): boolean {
-    const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
 
     for (let index: number = 0; index < numAncestors; index += 1) {
-        const xorNode: PQP.Parser.TXorNode = ancestry[index];
+        const xorNode: TXorNode = ancestry[index];
 
         switch (xorNode.node.kind) {
-            case PQP.Language.Ast.NodeKind.AsNullablePrimitiveType:
+            case Ast.NodeKind.AsNullablePrimitiveType:
                 if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
                     return true;
                 }
                 break;
 
-            case PQP.Language.Ast.NodeKind.PrimitiveType:
+            case Ast.NodeKind.PrimitiveType:
                 if (isNullableAllowedForPrimitiveType(xorNode)) {
                     return true;
                 }
@@ -66,27 +66,21 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 }
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
-    const maybeChild: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybePreviousXor(
-        activeNode.ancestry,
-        ancestryIndex,
-    );
+    const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
     if (maybeChild?.node.maybeAttributeIndex !== 1) {
         return false;
     }
-    // PQP.Language.Ast.AsNullablePrimitiveType.paired: PQP.Language.Ast.TNullablePrimitiveType
-    const paired: PQP.Parser.TXorNode = maybeChild;
+    // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
+    const paired: TXorNode = maybeChild;
     const position: Position = activeNode.position;
 
-    // PQP.Language.Ast.PrimitiveType
-    if (
-        paired.node.kind === PQP.Language.Ast.NodeKind.PrimitiveType &&
-        PositionUtils.isBeforeXor(position, paired, false)
-    ) {
+    // Ast.PrimitiveType
+    if (paired.node.kind === Ast.NodeKind.PrimitiveType && PositionUtils.isBeforeXor(position, paired, false)) {
         return true;
     }
-    // PQP.Language.Ast.NullablePrimitiveType
-    else if (paired.node.kind === PQP.Language.Ast.NodeKind.NullablePrimitiveType) {
-        const maybeGrandchild: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(
+    // Ast.NullablePrimitiveType
+    else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
+        const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
             activeNode.ancestry,
             ancestryIndex,
             2,
@@ -94,30 +88,30 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
         if (maybeGrandchild === undefined) {
             return false;
         }
-        // PQP.Language.Ast.Constant || PQP.Language.Ast.PrimitiveType
-        const grandchild: PQP.Parser.TXorNode = maybeGrandchild;
+        // Ast.Constant || Ast.PrimitiveType
+        const grandchild: TXorNode = maybeGrandchild;
 
         return (
-            // PQP.Language.Ast.Constant
-            grandchild.node.kind === PQP.Language.Ast.NodeKind.Constant ||
-            // before PQP.Language.Ast.PrimitiveType
+            // Ast.Constant
+            grandchild.node.kind === Ast.NodeKind.Constant ||
+            // before Ast.PrimitiveType
             PositionUtils.isBeforeXor(position, grandchild, false)
         );
-    } else if (paired.node.kind === PQP.Language.Ast.NodeKind.PrimitiveType) {
+    } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
         return isNullableAllowedForPrimitiveType(paired);
     } else {
         return false;
     }
 }
 
-function isNullableAllowedForPrimitiveType(primitiveType: PQP.Parser.TXorNode): boolean {
+function isNullableAllowedForPrimitiveType(primitiveType: TXorNode): boolean {
     return primitiveType.kind === PQP.Parser.XorNodeKind.Context;
 }
 
 function isOptionalAllowed(activeNode: ActiveNode): boolean {
-    const maybeFnExprAncestryIndex: number | undefined = PQP.Parser.AncestryUtils.maybeFirstIndexOfNodeKind(
+    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
         activeNode.ancestry,
-        PQP.Language.Ast.NodeKind.FunctionExpression,
+        Ast.NodeKind.FunctionExpression,
     );
     if (maybeFnExprAncestryIndex === undefined) {
         return false;
@@ -125,16 +119,14 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const maybeParameter:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(activeNode.ancestry, fnExprAncestryIndex, 4, [
-        PQP.Language.Ast.NodeKind.Parameter,
-    ]);
+    const maybeParameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.maybeNthPreviousXorChecked<
+        Ast.TParameter
+    >(activeNode.ancestry, fnExprAncestryIndex, 4, Ast.NodeKind.Parameter);
     if (maybeParameter === undefined) {
         return false;
     }
 
-    const maybeChildOfParameter: PQP.Parser.TXorNode | undefined = PQP.Parser.AncestryUtils.maybeNthPreviousXor(
+    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
         activeNode.ancestry,
         fnExprAncestryIndex,
         5,
@@ -142,7 +134,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     if (maybeChildOfParameter === undefined) {
         return true;
     }
-    const childOfParameter: PQP.Parser.TXorNode = maybeChildOfParameter;
+    const childOfParameter: TXorNode = maybeChildOfParameter;
 
     switch (childOfParameter.node.maybeAttributeIndex) {
         // IParameter.maybeOptionalConstant
@@ -153,12 +145,12 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: PQP.Language.Ast.Identifier = childOfParameter.node as PQP.Language.Ast.Identifier;
+                    const nameAst: Ast.Identifier = childOfParameter.node as Ast.Identifier;
                     const name: string = nameAst.literal;
 
                     return (
-                        PQP.Language.Constant.LanguageConstantKind.Optional.startsWith(name) &&
-                        name !== PQP.Language.Constant.LanguageConstantKind.Optional &&
+                        Constant.LanguageConstantKind.Optional.startsWith(name) &&
+                        name !== Constant.LanguageConstantKind.Optional &&
                         PositionUtils.isInAst(activeNode.position, nameAst, false, true)
                     );
                 }
@@ -167,7 +159,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
                     return true;
 
                 default:
-                    throw PQP.Assert.isNever(childOfParameter);
+                    throw Assert.isNever(childOfParameter);
             }
 
         default:

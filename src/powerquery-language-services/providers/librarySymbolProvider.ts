@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
+import { Assert } from "@microsoft/powerquery-parser";
+import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 
 import { Inspection } from "..";
@@ -58,7 +58,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
-        const definitionTypeText: string = PQP.Language.TypeUtils.nameOf(definition.asPowerQueryType);
+        const definitionTypeText: string = TypeUtils.nameOf(definition.asPowerQueryType);
 
         return {
             contents: {
@@ -102,7 +102,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
                 return "library type";
 
             default:
-                throw PQP.Assert.isNever(kind);
+                throw Assert.isNever(kind);
         }
     }
 
@@ -112,6 +112,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
         }
 
-        return PQP.Assert.asDefined(this.signatureInformationByLabel.get(key));
+        return Assert.asDefined(this.signatureInformationByLabel.get(key));
     }
 }

@@ -1,63 +1,61 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeFieldSelector(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType {
+export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSelector);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
-    const maybeFieldName: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeWrappedContentAst(
+    const maybeFieldName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked(
         state.nodeIdMapCollection,
-        xorNode,
-        PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
+        xorNode.node.id,
+        Ast.NodeKind.GeneralizedIdentifier,
     );
     if (maybeFieldName === undefined) {
-        return PQP.Language.Type.UnknownInstance;
+        return Type.UnknownInstance;
     }
-    const fieldName: string = (maybeFieldName as PQP.Language.Ast.GeneralizedIdentifier).literal;
+    const fieldName: string = maybeFieldName.literal;
 
-    const previousSibling: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const previousSiblingType: PQP.Language.Type.TPowerQueryType = inspectXor(state, previousSibling);
+    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
     const isOptional: boolean =
-        PQP.Parser.NodeIdMapUtils.maybeChildAstByAttributeIndex(state.nodeIdMapCollection, xorNode.node.id, 3, [
-            PQP.Language.Ast.NodeKind.Constant,
-        ]) !== undefined;
+        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            3,
+            Ast.NodeKind.Constant,
+        ) !== undefined;
 
     switch (previousSiblingType.kind) {
-        case PQP.Language.Type.TypeKind.Any:
-            return PQP.Language.Type.AnyInstance;
+        case Type.TypeKind.Any:
+            return Type.AnyInstance;
 
-        case PQP.Language.Type.TypeKind.Unknown:
-            return PQP.Language.Type.UnknownInstance;
+        case Type.TypeKind.Unknown:
+            return Type.UnknownInstance;
 
-        case PQP.Language.Type.TypeKind.Record:
-        case PQP.Language.Type.TypeKind.Table:
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
             switch (previousSiblingType.maybeExtendedKind) {
                 case undefined:
-                    return PQP.Language.Type.AnyInstance;
+                    return Type.AnyInstance;
 
-                case PQP.Language.Type.ExtendedTypeKind.DefinedRecord:
-                case PQP.Language.Type.ExtendedTypeKind.DefinedTable: {
-                    const maybeNamedField:
-                        | PQP.Language.Type.TPowerQueryType
-                        | undefined = previousSiblingType.fields.get(fieldName);
+                case Type.ExtendedTypeKind.DefinedRecord:
+                case Type.ExtendedTypeKind.DefinedTable: {
+                    const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
                     if (maybeNamedField !== undefined) {
                         return maybeNamedField;
                     } else if (previousSiblingType.isOpen) {
-                        return PQP.Language.Type.AnyInstance;
+                        return Type.AnyInstance;
                     } else {
-                        return isOptional ? PQP.Language.Type.NullInstance : PQP.Language.Type.NoneInstance;
+                        return isOptional ? Type.NullInstance : Type.NoneInstance;
                     }
                 }
 
@@ -66,6 +64,6 @@ export function inspectTypeFieldSelector(
             }
 
         default:
-            return PQP.Language.Type.NoneInstance;
+            return Type.NoneInstance;
     }
 }

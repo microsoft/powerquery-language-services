@@ -2,8 +2,10 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { TextDocument } from "vscode-languageserver-textdocument";
 
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
@@ -102,12 +104,12 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
             },
         };
     } else {
-        const maybeRoot: PQP.Parser.ParseContext.Node | undefined = parseContextState.maybeRoot;
+        const maybeRoot: ParseContext.TNode | undefined = parseContextState.maybeRoot;
         if (maybeRoot === undefined) {
             return [];
         }
 
-        const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
+        const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );

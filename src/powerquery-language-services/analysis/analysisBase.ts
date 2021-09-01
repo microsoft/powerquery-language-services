@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
+import { Assert } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
@@ -64,10 +65,7 @@ export abstract class AnalysisBase implements Analysis {
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
         let context: AutocompleteItemProviderContext = {};
 
-        const maybeToken:
-            | PQP.Language.Ast.Identifier
-            | PQP.Language.Ast.GeneralizedIdentifier
-            | undefined = this.getMaybePositionIdentifier();
+        const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = this.getMaybePositionIdentifier();
         if (maybeToken !== undefined) {
             context = {
                 range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
@@ -101,8 +99,8 @@ export abstract class AnalysisBase implements Analysis {
 
     public async getHover(): Promise<Hover> {
         const identifierToken:
-            | PQP.Language.Ast.Identifier
-            | PQP.Language.Ast.GeneralizedIdentifier
+            | Ast.Identifier
+            | Ast.GeneralizedIdentifier
             | undefined = this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return EmptyHover;
@@ -212,15 +210,15 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
-        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
+        const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         if (ancestry.length <= 1) {
             return true;
         }
 
-        const leaf: PQP.Parser.TXorNode = PQP.Assert.asDefined(ancestry[0]);
-        const followingNode: PQP.Parser.TXorNode | undefined = ancestry[1];
+        const leaf: TXorNode = Assert.asDefined(ancestry[0]);
+        const followingNode: TXorNode | undefined = ancestry[1];
 
-        if (followingNode?.node?.kind === PQP.Language.Ast.NodeKind.Parameter) {
+        if (followingNode?.node?.kind === Ast.NodeKind.Parameter) {
             return false;
         }
 
@@ -228,11 +226,11 @@ export abstract class AnalysisBase implements Analysis {
         // Validate it's not an incomplete Ast or that you're on the conjunction.
         else if (
             [
-                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
             ].includes(followingNode.node.kind) &&
-            [undefined, 1].includes(PQP.Assert.asDefined(leaf.node.maybeAttributeIndex))
+            [undefined, 1].includes(Assert.asDefined(leaf.node.maybeAttributeIndex))
         ) {
             return false;
         }
@@ -240,10 +238,7 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private getMaybePositionIdentifier():
-        | PQP.Language.Ast.Identifier
-        | PQP.Language.Ast.GeneralizedIdentifier
-        | undefined {
+    private getMaybePositionIdentifier(): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
         return this.getMaybeActiveNode()?.maybeIdentifierUnderPosition;
     }
 

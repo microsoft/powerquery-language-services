@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { ResultUtils } from "@microsoft/powerquery-parser";
+
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assert, expect } from "chai";
 import "mocha";
@@ -11,7 +13,7 @@ import { Inspection, InspectionUtils, Position, SignatureProviderContext } from 
 import { MockDocument } from "./mockDocument";
 
 function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): void {
-    if (PQP.ResultUtils.isError(inspected.triedNodeScope)) {
+    if (ResultUtils.isError(inspected.triedNodeScope)) {
         throw new Error(`expected inspected.triedNodeScope to be Ok`);
     }
 
@@ -103,12 +105,11 @@ describe("InspectedInvokeExpression", () => {
 
                 TestUtils.assertIsDefined(activeNode.maybeIdentifierUnderPosition);
                 expect(activeNode.maybeIdentifierUnderPosition.kind).equals(
-                    PQP.Language.Ast.NodeKind.Identifier,
+                    Ast.NodeKind.Identifier,
                     "expecting identifier",
                 );
 
-                const identifier: PQP.Language.Ast.GeneralizedIdentifier | PQP.Language.Ast.Identifier =
-                    activeNode.maybeIdentifierUnderPosition;
+                const identifier: Ast.GeneralizedIdentifier | Ast.Identifier = activeNode.maybeIdentifierUnderPosition;
                 expect(identifier.literal).equals("OdbcDataSource");
                 expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });

@@ -3,6 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from ".";
@@ -25,7 +28,7 @@ export function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
 ): SignatureProviderContext | undefined {
     if (
-        PQP.ResultUtils.isError(inspected.triedCurrentInvokeExpression) ||
+        ResultUtils.isError(inspected.triedCurrentInvokeExpression) ||
         inspected.triedCurrentInvokeExpression.value === undefined
     ) {
         return undefined;
@@ -51,16 +54,14 @@ export function getMaybeContextForSignatureProvider(
 
 export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
-    if (identifierLiteral === undefined || !PQP.Language.TypeUtils.isDefinedFunction(context.functionType)) {
+    if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
         // tslint:disable-next-line: no-null-keyword
         return null;
     }
-    const nameOfParameters: string = context.functionType.parameters
-        .map(PQP.Language.TypeUtils.nameOfFunctionParameter)
-        .join(", ");
+    const nameOfParameters: string = context.functionType.parameters.map(TypeUtils.nameOfFunctionParameter).join(", ");
     const label: string = `${identifierLiteral}(${nameOfParameters})`;
 
-    const parameters: ReadonlyArray<PQP.Language.Type.FunctionParameter> = context.functionType.parameters;
+    const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
     return {
         // tslint:disable-next-line: no-null-keyword
         activeParameter: context.argumentOrdinal ?? null,
@@ -68,7 +69,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
         signatures: [
             {
                 label,
-                parameters: parameters.map((parameter: PQP.Language.Type.FunctionParameter) => {
+                parameters: parameters.map((parameter: Type.FunctionParameter) => {
                     return {
                         label: parameter.nameLiteral,
                     };
@@ -78,13 +79,8 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
     };
 }
 
-export function getMaybeType(
-    inspection: Inspection.Inspection,
-    identifier: string,
-): PQP.Language.Type.TPowerQueryType | undefined {
-    return PQP.ResultUtils.isOk(inspection.triedScopeType)
-        ? inspection.triedScopeType.value.get(identifier)
-        : undefined;
+export function getMaybeType(inspection: Inspection.Inspection, identifier: string): Type.TPowerQueryType | undefined {
+    return ResultUtils.isOk(inspection.triedScopeType) ? inspection.triedScopeType.value.get(identifier) : undefined;
 }
 
 export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
@@ -108,55 +104,55 @@ export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): s
             return "unknown";
 
         default:
-            throw PQP.Assert.isNever(scopeItemKind);
+            throw Assert.isNever(scopeItemKind);
     }
 }
 
-export function getSymbolKindFromLiteralExpression(node: PQP.Language.Ast.LiteralExpression): SymbolKind {
+export function getSymbolKindFromLiteralExpression(node: Ast.LiteralExpression): SymbolKind {
     switch (node.literalKind) {
-        case PQP.Language.Ast.LiteralKind.List:
+        case Ast.LiteralKind.List:
             return SymbolKind.Array;
 
-        case PQP.Language.Ast.LiteralKind.Logical:
+        case Ast.LiteralKind.Logical:
             return SymbolKind.Boolean;
 
-        case PQP.Language.Ast.LiteralKind.Null:
+        case Ast.LiteralKind.Null:
             return SymbolKind.Null;
 
-        case PQP.Language.Ast.LiteralKind.Numeric:
+        case Ast.LiteralKind.Numeric:
             return SymbolKind.Number;
 
-        case PQP.Language.Ast.LiteralKind.Text:
+        case Ast.LiteralKind.Text:
             return SymbolKind.String;
 
         default:
-            return PQP.Assert.isNever(node.literalKind);
+            return Assert.isNever(node.literalKind);
     }
 }
 
-export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.Parser.ParseContext.Node): SymbolKind {
+export function getSymbolKindFromNode(node: Ast.INode | ParseContext.TNode): SymbolKind {
     switch (node.kind) {
-        case PQP.Language.Ast.NodeKind.Constant:
+        case Ast.NodeKind.Constant:
             return SymbolKind.Constant;
 
-        case PQP.Language.Ast.NodeKind.FunctionExpression:
+        case Ast.NodeKind.FunctionExpression:
             return SymbolKind.Function;
 
-        case PQP.Language.Ast.NodeKind.ListExpression:
-        case PQP.Language.Ast.NodeKind.ListLiteral:
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
             return SymbolKind.Array;
 
-        case PQP.Language.Ast.NodeKind.LiteralExpression:
-            return getSymbolKindFromLiteralExpression(node as PQP.Language.Ast.LiteralExpression);
+        case Ast.NodeKind.LiteralExpression:
+            return getSymbolKindFromLiteralExpression(node as Ast.LiteralExpression);
 
-        case PQP.Language.Ast.NodeKind.MetadataExpression:
+        case Ast.NodeKind.MetadataExpression:
             return SymbolKind.TypeParameter;
 
-        case PQP.Language.Ast.NodeKind.RecordExpression:
-        case PQP.Language.Ast.NodeKind.RecordLiteral:
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
             return SymbolKind.Struct;
 
-        case PQP.Language.Ast.NodeKind.Section:
+        case Ast.NodeKind.Section:
             return SymbolKind.Module;
 
         default:
@@ -164,13 +160,11 @@ export function getSymbolKindFromNode(node: PQP.Language.Ast.INode | PQP.Parser.
     }
 }
 
-export function getSymbolsForLetExpression(
-    expressionNode: PQP.Language.Ast.LetExpression,
-): ReadonlyArray<DocumentSymbol> {
+export function getSymbolsForLetExpression(expressionNode: Ast.LetExpression): ReadonlyArray<DocumentSymbol> {
     const documentSymbols: DocumentSymbol[] = [];
 
     for (const element of expressionNode.variableList.elements) {
-        const pairedExpression: PQP.Language.Ast.ICsv<PQP.Language.Ast.IdentifierPairedExpression> = element;
+        const pairedExpression: Ast.ICsv<Ast.IdentifierPairedExpression> = element;
         const memberSymbol: DocumentSymbol = getSymbolForIdentifierPairedExpression(pairedExpression.node);
         documentSymbols.push(memberSymbol);
     }
@@ -179,7 +173,7 @@ export function getSymbolsForLetExpression(
 }
 
 export function getSymbolsForRecord(
-    recordNode: PQP.Language.Ast.RecordExpression | PQP.Language.Ast.RecordLiteral,
+    recordNode: Ast.RecordExpression | Ast.RecordLiteral,
 ): ReadonlyArray<DocumentSymbol> {
     const documentSymbols: DocumentSymbol[] = [];
 
@@ -196,14 +190,14 @@ export function getSymbolsForRecord(
     return documentSymbols;
 }
 
-export function getSymbolsForSection(sectionNode: PQP.Language.Ast.Section): ReadonlyArray<DocumentSymbol> {
-    return sectionNode.sectionMembers.elements.map((sectionMember: PQP.Language.Ast.SectionMember) =>
+export function getSymbolsForSection(sectionNode: Ast.Section): ReadonlyArray<DocumentSymbol> {
+    return sectionNode.sectionMembers.elements.map((sectionMember: Ast.SectionMember) =>
         getSymbolForIdentifierPairedExpression(sectionMember.namePairedExpression),
     );
 }
 
 export function getSymbolForIdentifierPairedExpression(
-    identifierPairedExpressionNode: PQP.Language.Ast.IdentifierPairedExpression,
+    identifierPairedExpressionNode: Ast.IdentifierPairedExpression,
 ): DocumentSymbol {
     return {
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
@@ -218,11 +212,11 @@ export function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
     inspection: Inspection.Inspection,
 ): ReadonlyArray<Inspection.AutocompleteItem> {
-    if (PQP.ResultUtils.isError(inspection.triedNodeScope)) {
+    if (ResultUtils.isError(inspection.triedNodeScope)) {
         return [];
     }
     const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
-    const scopeTypeByKey: Inspection.ScopeTypeByKey = PQP.ResultUtils.isOk(inspection.triedScopeType)
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value
         : new Map();
 
@@ -235,7 +229,7 @@ export function getAutocompleteItemsFromScope(
             | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
             label,
             scopeItem,
-            scopeTypeByKey.get(label) ?? PQP.Language.Type.UnknownInstance,
+            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
             maybeContextTest,
         );
 

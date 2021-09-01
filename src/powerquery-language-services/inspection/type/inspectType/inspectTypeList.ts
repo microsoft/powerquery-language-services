@@ -1,24 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapIterator, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeList(state: InspectTypeState, xorNode: PQP.Parser.TXorNode): PQP.Language.Type.DefinedList {
+export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Type.DefinedList {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    const items: ReadonlyArray<PQP.Parser.TXorNode> = PQP.Parser.NodeIdMapIterator.iterListItems(
-        state.nodeIdMapCollection,
-        xorNode,
-    );
-    const elements: ReadonlyArray<PQP.Language.Type.TPowerQueryType> = items.map((item: PQP.Parser.TXorNode) =>
-        inspectXor(state, item),
-    );
+    const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
+    const elements: ReadonlyArray<Type.TPowerQueryType> = items.map((item: TXorNode) => inspectXor(state, item));
 
     return {
-        kind: PQP.Language.Type.TypeKind.List,
+        kind: Type.TypeKind.List,
         isNullable: false,
-        maybeExtendedKind: PQP.Language.Type.ExtendedTypeKind.DefinedList,
+        maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
         elements,
     };
 }

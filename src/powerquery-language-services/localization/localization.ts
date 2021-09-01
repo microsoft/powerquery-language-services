@@ -1,4 +1,4 @@
-import * as PQP from "@microsoft/powerquery-parser";
+import { StringUtils } from "@microsoft/powerquery-parser";
 
 import { ILocalizationTemplates } from "./templates";
 
@@ -29,7 +29,7 @@ interface ILocalization {
 
 export const Localization: ILocalization = {
     error_validation_duplicate_identifier: (templates: ILocalizationTemplates, identifier: string) =>
-        PQP.StringUtils.assertGetFormatted(
+        StringUtils.assertGetFormatted(
             templates.error_validation_duplicate_identifier,
             new Map([["identifier", identifier]]),
         ),
@@ -40,7 +40,7 @@ export const Localization: ILocalization = {
         argName: string,
     ) => {
         if (maybeFuncName) {
-            return PQP.StringUtils.assertGetFormatted(
+            return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_missingMandatory_named,
                 new Map([
                     ["funcName", maybeFuncName],
@@ -48,7 +48,7 @@ export const Localization: ILocalization = {
                 ]),
             );
         } else {
-            return PQP.StringUtils.assertGetFormatted(
+            return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_missingMandatory_unnamed,
                 new Map([["argName", argName]]),
             );
@@ -61,7 +61,7 @@ export const Localization: ILocalization = {
         numMax: number,
         numGiven: number,
     ) =>
-        PQP.StringUtils.assertGetFormatted(
+        StringUtils.assertGetFormatted(
             templates.error_validation_invokeExpression_numArgs,
             new Map([
                 ["numMin", numMin.toString()],
@@ -78,7 +78,7 @@ export const Localization: ILocalization = {
         actual: string,
     ) => {
         if (maybeFuncName) {
-            return PQP.StringUtils.assertGetFormatted(
+            return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_typeMismatch_named,
                 new Map([
                     ["funcName", maybeFuncName],
@@ -88,7 +88,7 @@ export const Localization: ILocalization = {
                 ]),
             );
         } else {
-            return PQP.StringUtils.assertGetFormatted(
+            return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_typeMismatch_unnamed,
                 new Map([
                     ["argName", argName],

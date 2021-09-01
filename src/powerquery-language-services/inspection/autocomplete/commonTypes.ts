@@ -3,6 +3,9 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import { AutocompleteItem } from "./autocompleteItem";
 
 export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | undefined, PQP.CommonError.CommonError>;
@@ -21,15 +24,15 @@ export interface Autocomplete {
 }
 
 export interface AutocompleteFieldAccess {
-    readonly field: PQP.Parser.TXorNode;
-    readonly fieldType: PQP.Language.Type.TPowerQueryType;
+    readonly field: TXorNode;
+    readonly fieldType: Type.TPowerQueryType;
     readonly inspectedFieldAccess: InspectedFieldAccess;
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }
 
 export interface InspectedFieldAccess {
     readonly isAutocompleteAllowed: boolean;
-    readonly maybeIdentifierUnderPosition: PQP.Language.Ast.GeneralizedIdentifier | undefined;
+    readonly maybeIdentifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
 }
 

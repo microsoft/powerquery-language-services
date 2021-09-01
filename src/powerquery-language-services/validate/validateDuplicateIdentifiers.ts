@@ -3,15 +3,22 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
 
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { PositionUtils } from "..";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { ValidationSettings } from "./validationSettings";
-import { PositionUtils } from "..";
 
 export function validateDuplicateIdentifiers(
     textDocument: TextDocument,
@@ -26,7 +33,7 @@ export function validateDuplicateIdentifiers(
         validationSettings,
     );
 
-    let maybeNodeIdMapCollection: PQP.Parser.NodeIdMap.Collection | undefined;
+    let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
     if (PQP.TaskUtils.isParseStageOk(cacheItem)) {
         maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
     } else if (PQP.TaskUtils.isParseStageParseError(cacheItem)) {
@@ -37,7 +44,7 @@ export function validateDuplicateIdentifiers(
         return [];
     }
     const documentUri: string = textDocument.uri;
-    const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = maybeNodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     return [
         ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, validationSettings),
@@ -48,56 +55,54 @@ export function validateDuplicateIdentifiers(
 
 function validateDuplicateIdentifiersForLetExpresion(
     documentUri: DocumentUri,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
 ): ReadonlyArray<Diagnostic> {
     const letIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.LetExpression) ?? []),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? []),
     ];
 
     return validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         letIds,
-        PQP.Parser.NodeIdMapIterator.iterLetExpression,
+        NodeIdMapIterator.iterLetExpression,
         validationSettings,
     );
 }
 
 function validateDuplicateIdentifiersForRecord(
     documentUri: DocumentUri,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
 ): ReadonlyArray<Diagnostic> {
     const recordIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordExpression) ?? []),
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordLiteral) ?? []),
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.RecordType) ?? []),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? []),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? []),
+        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordType) ?? []),
     ];
 
     return validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         recordIds,
-        PQP.Parser.NodeIdMapIterator.iterRecord,
+        NodeIdMapIterator.iterRecord,
         validationSettings,
     );
 }
 
 function validateDuplicateIdentifiersForSection(
     documentUri: DocumentUri,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
 ): ReadonlyArray<Diagnostic> {
-    const recordIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(PQP.Language.Ast.NodeKind.Section) ?? []),
-    ];
+    const recordIds: ReadonlyArray<number> = [...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Section) ?? [])];
 
     return validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         recordIds,
-        PQP.Parser.NodeIdMapIterator.iterSection,
+        NodeIdMapIterator.iterSection,
         validationSettings,
     );
 }
@@ -108,12 +113,12 @@ function validateDuplicateIdentifiersForSection(
 //          ...
 function validateDuplicateIdentifiersForKeyValuePair(
     documentUri: DocumentUri,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     nodeIds: ReadonlyArray<number>,
     iterNodeFn: (
-        nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-        node: PQP.Parser.TXorNode,
-    ) => ReadonlyArray<PQP.Parser.NodeIdMapIterator.TKeyValuePair>,
+        nodeIdMapCollection: NodeIdMap.Collection,
+        node: TXorNode,
+    ) => ReadonlyArray<NodeIdMapIterator.TKeyValuePair>,
     validationSettings: ValidationSettings,
 ): ReadonlyArray<Diagnostic> {
     if (!nodeIds.length) {
@@ -123,18 +128,16 @@ function validateDuplicateIdentifiersForKeyValuePair(
     const result: Diagnostic[] = [];
 
     for (const nodeId of nodeIds) {
-        const node: PQP.Parser.TXorNode = PQP.Parser.NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
-        const duplicateFieldsByKey: Map<string, PQP.Parser.NodeIdMapIterator.TKeyValuePair[]> = new Map();
-        const knownFieldByKey: Map<string, PQP.Parser.NodeIdMapIterator.TKeyValuePair> = new Map();
+        const node: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
+        const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
+        const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
 
         for (const field of iterNodeFn(nodeIdMapCollection, node)) {
             const keyLiteral: string = field.normalizedKeyLiteral;
-            const maybeDuplicateFields:
-                | PQP.Parser.NodeIdMapIterator.TKeyValuePair[]
-                | undefined = duplicateFieldsByKey.get(keyLiteral);
-            const maybeKnownField: PQP.Parser.NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(
+            const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined = duplicateFieldsByKey.get(
                 keyLiteral,
             );
+            const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
             if (maybeDuplicateFields) {
                 maybeDuplicateFields.push(field);
@@ -148,7 +151,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
         for (const duplicates of duplicateFieldsByKey.values()) {
             const numFields: number = duplicates.length;
             const asRelatedInformation: DiagnosticRelatedInformation[] = duplicates.map(
-                (keyValuePair: PQP.Parser.NodeIdMapIterator.TKeyValuePair) => {
+                (keyValuePair: NodeIdMapIterator.TKeyValuePair) => {
                     return {
                         location: {
                             uri: documentUri,
@@ -160,7 +163,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
             );
 
             for (let index: number = 0; index < numFields; index += 1) {
-                const duplicate: PQP.Parser.NodeIdMapIterator.TKeyValuePair = duplicates[index];
+                const duplicate: NodeIdMapIterator.TKeyValuePair = duplicates[index];
                 // Grab all DiagnosticRelatedInformation for a given key besides the one we're iterating over.
                 const relatedInformation: DiagnosticRelatedInformation[] = asRelatedInformation.filter(
                     (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,
@@ -175,7 +178,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
 }
 
 function createDuplicateIdentifierDiagnostic(
-    keyValuePair: PQP.Parser.NodeIdMapIterator.TKeyValuePair,
+    keyValuePair: NodeIdMapIterator.TKeyValuePair,
     relatedInformation: DiagnosticRelatedInformation[],
     validationSettings: ValidationSettings,
 ): Diagnostic {
@@ -190,7 +193,7 @@ function createDuplicateIdentifierDiagnostic(
 }
 
 function createDuplicateIdentifierDiagnosticMessage(
-    keyValuePair: PQP.Parser.NodeIdMapIterator.TKeyValuePair,
+    keyValuePair: NodeIdMapIterator.TKeyValuePair,
     validationSettings: ValidationSettings,
 ): string {
     return Localization.error_validation_duplicate_identifier(

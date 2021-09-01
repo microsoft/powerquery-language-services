@@ -1,39 +1,36 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeIfExpression(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType {
+export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.IfExpression);
+    XorNodeUtils.assertIsNodeKind(xorNode, Ast.NodeKind.IfExpression);
 
-    const conditionType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
-    if (conditionType.kind === PQP.Language.Type.TypeKind.Unknown) {
-        return PQP.Language.Type.UnknownInstance;
+    const conditionType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    if (conditionType.kind === Type.TypeKind.Unknown) {
+        return Type.UnknownInstance;
     }
     // Any is allowed so long as AnyUnion only contains Any or Logical.
-    else if (conditionType.kind === PQP.Language.Type.TypeKind.Any) {
+    else if (conditionType.kind === Type.TypeKind.Any) {
         if (
-            conditionType.maybeExtendedKind === PQP.Language.Type.ExtendedTypeKind.AnyUnion &&
+            conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
             !allForAnyUnion(
                 conditionType,
-                (type: PQP.Language.Type.TPowerQueryType) =>
-                    type.kind === PQP.Language.Type.TypeKind.Logical || type.kind === PQP.Language.Type.TypeKind.Any,
+                (type: Type.TPowerQueryType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,
             )
         ) {
-            return PQP.Language.Type.NoneInstance;
+            return Type.NoneInstance;
         }
-    } else if (conditionType.kind !== PQP.Language.Type.TypeKind.Logical) {
-        return PQP.Language.Type.NoneInstance;
+    } else if (conditionType.kind !== Type.TypeKind.Logical) {
+        return Type.NoneInstance;
     }
 
-    const trueExprType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
-    const falseExprType: PQP.Language.Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
+    const trueExprType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const falseExprType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 5);
 
-    return PQP.Language.TypeUtils.createAnyUnion([trueExprType, falseExprType]);
+    return TypeUtils.createAnyUnion([trueExprType, falseExprType]);
 }

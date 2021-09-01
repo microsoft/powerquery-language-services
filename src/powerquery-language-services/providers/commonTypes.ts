@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
@@ -36,7 +36,7 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly argumentOrdinal: number | undefined;
     readonly functionName: string | undefined;
     readonly isNameInLocalScope: boolean;
-    readonly functionType: PQP.Language.Type.TPowerQueryType;
+    readonly functionType: Type.TPowerQueryType;
 }
 
 export interface ISymbolProvider extends AutocompleteItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

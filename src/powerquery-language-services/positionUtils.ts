@@ -3,6 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Assert } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMap,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeKind,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position, Range } from "vscode-languageserver-types";
 
 export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
@@ -15,18 +23,12 @@ export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Toke
 // Attempts to turn a TXorNode into a Range.
 // Returns undefined if there are no leafs nodes.
 export function createRangeFromXorNode(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    xorNode: PQP.Parser.TXorNode,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    xorNode: TXorNode,
 ): Range | undefined {
     const nodeId: number = xorNode.node.id;
-    const maybeLeftMostLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeLeftMostLeaf(
-        nodeIdMapCollection,
-        nodeId,
-    );
-    const maybeRightMostLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        nodeId,
-    );
+    const maybeLeftMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(nodeIdMapCollection, nodeId);
+    const maybeRightMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, nodeId);
 
     return maybeLeftMostLeaf === undefined || maybeRightMostLeaf === undefined
         ? undefined
@@ -54,89 +56,85 @@ export function createRangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRa
     return createRangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
 
-export function isBeforeXor(position: Position, xorNode: PQP.Parser.TXorNode, isBoundIncluded: boolean): boolean {
+export function isBeforeXor(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isBeforeAst(position, xorNode.node, isBoundIncluded);
 
-        case PQP.Parser.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isBeforeContext(position, xorNode.node, isBoundIncluded);
 
         default:
-            throw PQP.Assert.isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
 export function isInXor(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    xorNode: PQP.Parser.TXorNode,
+    xorNode: TXorNode,
     isLowerBoundIncluded: boolean,
     isUpperBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isInAst(position, xorNode.node, isLowerBoundIncluded, isUpperBoundIncluded);
 
-        case PQP.Parser.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isInContext(nodeIdMapCollection, position, xorNode.node, isLowerBoundIncluded, isUpperBoundIncluded);
 
         default:
-            throw PQP.Assert.isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
-export function isOnXorStart(position: Position, xorNode: PQP.Parser.TXorNode): boolean {
+export function isOnXorStart(position: Position, xorNode: TXorNode): boolean {
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isOnAstStart(position, xorNode.node);
 
-        case PQP.Parser.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isOnContextStart(position, xorNode.node);
 
         default:
-            throw PQP.Assert.isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
-export function isOnXorEnd(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
-    position: Position,
-    xorNode: PQP.Parser.TXorNode,
-): boolean {
+export function isOnXorEnd(nodeIdMapCollection: NodeIdMap.Collection, position: Position, xorNode: TXorNode): boolean {
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isOnAstEnd(position, xorNode.node);
 
-        case PQP.Parser.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isOnContextEnd(nodeIdMapCollection, position, xorNode.node);
 
         default:
-            throw PQP.Assert.isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
 export function isAfterXor(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    xorNode: PQP.Parser.TXorNode,
+    xorNode: TXorNode,
     isBoundIncluded: boolean,
 ): boolean {
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             return isAfterAst(position, xorNode.node, isBoundIncluded);
 
-        case PQP.Parser.XorNodeKind.Context:
+        case XorNodeKind.Context:
             return isAfterContext(nodeIdMapCollection, position, xorNode.node, isBoundIncluded);
 
         default:
-            throw PQP.Assert.isNever(xorNode);
+            throw Assert.isNever(xorNode);
     }
 }
 
 export function isBeforeContext(
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): boolean {
     const maybeTokenStart: PQP.Language.Token.Token | undefined = contextNode.maybeTokenStart;
@@ -149,9 +147,9 @@ export function isBeforeContext(
 }
 
 export function isInContext(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean,
 ): boolean {
@@ -161,21 +159,18 @@ export function isInContext(
     );
 }
 
-export function isOnContextStart(position: Position, contextNode: PQP.Parser.ParseContext.Node): boolean {
+export function isOnContextStart(position: Position, contextNode: PQP.Parser.ParseContext.TNode): boolean {
     return contextNode.maybeTokenStart !== undefined
         ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
         : false;
 }
 
 export function isOnContextEnd(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
 ): boolean {
-    const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        contextNode.id,
-    );
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
         return false;
     }
@@ -184,15 +179,12 @@ export function isOnContextEnd(
 }
 
 export function isAfterContext(
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    contextNode: PQP.Parser.ParseContext.Node,
+    contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): boolean {
-    const maybeLeaf: PQP.Language.Ast.TNode | undefined = PQP.Parser.NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        contextNode.id,
-    );
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
     if (maybeLeaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
@@ -202,18 +194,18 @@ export function isAfterContext(
             return isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, isBoundIncluded);
         }
     }
-    const leaf: PQP.Language.Ast.TNode = maybeLeaf;
+    const leaf: Ast.TNode = maybeLeaf;
 
     return isAfterAst(position, leaf, isBoundIncluded);
 }
 
-export function isBeforeAst(position: Position, astNode: PQP.Language.Ast.TNode, isBoundIncluded: boolean): boolean {
+export function isBeforeAst(position: Position, astNode: Ast.TNode, isBoundIncluded: boolean): boolean {
     return isBeforeTokenPosition(position, astNode.tokenRange.positionStart, isBoundIncluded);
 }
 
 export function isInAst(
     position: Position,
-    astNode: PQP.Language.Ast.TNode,
+    astNode: Ast.TNode,
     isLowerBoundIncluded: boolean,
     isHigherBoundIncluded: boolean,
 ): boolean {
@@ -222,15 +214,15 @@ export function isInAst(
     );
 }
 
-export function isOnAstStart(position: Position, astNode: PQP.Language.Ast.TNode): boolean {
+export function isOnAstStart(position: Position, astNode: Ast.TNode): boolean {
     return isOnTokenPosition(position, astNode.tokenRange.positionStart);
 }
 
-export function isOnAstEnd(position: Position, astNode: PQP.Language.Ast.TNode): boolean {
+export function isOnAstEnd(position: Position, astNode: Ast.TNode): boolean {
     return isOnTokenPosition(position, astNode.tokenRange.positionEnd);
 }
 
-export function isAfterAst(position: Position, astNode: PQP.Language.Ast.TNode, isBoundIncluded: boolean): boolean {
+export function isAfterAst(position: Position, astNode: Ast.TNode, isBoundIncluded: boolean): boolean {
     return isAfterTokenPosition(position, astNode.tokenRange.positionEnd, isBoundIncluded);
 }
 

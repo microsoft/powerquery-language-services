@@ -4,17 +4,19 @@
 import * as PQP from "@microsoft/powerquery-parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { expect } from "chai";
 import "mocha";
 import type { Position } from "vscode-languageserver-types";
-import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 
 import { TestConstants, TestUtils } from "..";
+import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
 function assertInvokeExpressionOk(
     settings: InspectionSettings,
-    nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
 ): Inspection.CurrentInvokeExpression | undefined {
     const activeNode: Inspection.ActiveNode = Inspection.ActiveNodeUtils.assertActiveNode(
@@ -59,7 +61,7 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([PQP.Language.TypeUtils.createNumberLiteral(false, `1`)]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, `1`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
@@ -104,7 +106,7 @@ function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | un
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([PQP.Language.TypeUtils.createTextLiteral(false, `"foo"`)]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createTextLiteral(false, `"foo"`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
@@ -168,7 +170,7 @@ function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentIn
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     // tslint:disable-next-line: chai-vague-errors
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([PQP.Language.TypeUtils.createNumberLiteral(false, "1")]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, "1")]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
@@ -194,8 +196,8 @@ function expectRequiredAndOptional_givenRequiredAndOptional(
     expect(invokeArgs.argumentOrdinal).to.equal(1);
     // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([
-        PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
-        PQP.Language.TypeUtils.createTextLiteral(false, `"secondArg"`),
+        TypeUtils.createNumberLiteral(false, "1"),
+        TypeUtils.createTextLiteral(false, `"secondArg"`),
     ]);
     expect(invokeArgs.givenArguments.length).to.equal(2);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
@@ -209,10 +211,10 @@ function expectRequiredAndOptional_givenRequiredAndOptional(
 }
 
 function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | undefined): void {
-    const expectedArgument: PQP.Language.Type.FunctionParameter = PQP.Assert.asDefined(
+    const expectedArgument: Type.FunctionParameter = Assert.asDefined(
         TestConstants.DuplicateTextDefinedFunction.parameters[0],
     );
-    const actualArgument: PQP.Language.Type.NumberLiteral = PQP.Language.TypeUtils.createNumberLiteral(false, "1");
+    const actualArgument: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
 
     Assert.isDefined(inspected);
 
@@ -232,8 +234,8 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | 
     expect(invokeArgs.typeChecked.missing.length).to.equal(0);
     expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    const invalidArguments: Map<number, PQP.Language.TypeUtils.InvocationMismatch> = invokeArgs.typeChecked.invalid;
-    const firstArg: PQP.Language.TypeUtils.InvocationMismatch = PQP.MapUtils.assertGet(invalidArguments, 0);
+    const invalidArguments: Map<number, TypeUtils.InvocationMismatch> = invokeArgs.typeChecked.invalid;
+    const firstArg: TypeUtils.InvocationMismatch = PQP.MapUtils.assertGet(invalidArguments, 0);
 
     expect(firstArg).to.deep.equal({
         expected: expectedArgument,

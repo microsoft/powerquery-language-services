@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
+import { Assert } from "@microsoft/powerquery-parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+
 import {
     LibraryConstant,
     LibraryDefinitionKind,
@@ -53,7 +54,7 @@ export function assertIsType(maybeDefinition: TLibraryDefinition | undefined): a
 export function createConstantDefinition(
     label: string,
     description: string,
-    asType: PQP.Language.Type.TPowerQueryType,
+    asType: Type.TPowerQueryType,
     completionItemKind: CompletionItemKind,
 ): LibraryConstant {
     return {
@@ -68,7 +69,7 @@ export function createConstantDefinition(
 export function createFunctionDefinition(
     label: string,
     description: string,
-    asType: PQP.Language.Type.TPowerQueryType,
+    asType: Type.TPowerQueryType,
     completionItemKind: CompletionItemKind,
     parameters: ReadonlyArray<LibraryParameter>,
 ): LibraryFunction {
@@ -121,6 +122,6 @@ export function nameOf(kind: LibraryDefinitionKind): string {
             return "library type";
 
         default:
-            throw PQP.Assert.isNever(kind);
+            throw Assert.isNever(kind);
     }
 }

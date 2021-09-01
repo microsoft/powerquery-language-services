@@ -13,13 +13,13 @@ import { Localization, LocalizationUtils } from "../localization";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateInvokeExpression(
+export function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
 ): Diagnostic[] {
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
-        Ast.NodeKind.InvokeExpression,
+        Ast.NodeKind.FunctionExpression,
     );
     if (maybeInvokeExpressionIds === undefined) {
         return [];

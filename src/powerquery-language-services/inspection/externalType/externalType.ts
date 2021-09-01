@@ -1,19 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export type TExternalTypeRequest = ExternalValueTypeRequest | ExternalInvocationTypeRequest;
 
-export type TExternalTypeResolverFn = (request: TExternalTypeRequest) => PQP.Language.Type.TPowerQueryType | undefined;
+export type TExternalTypeResolverFn = (request: TExternalTypeRequest) => Type.TPowerQueryType | undefined;
 
 export type TExternalInvocationTypeResolverFn = (
     request: ExternalInvocationTypeRequest,
-) => PQP.Language.Type.TPowerQueryType | undefined;
+) => Type.TPowerQueryType | undefined;
 
-export type TExternalValueTypeResolverFn = (
-    request: ExternalValueTypeRequest,
-) => PQP.Language.Type.TPowerQueryType | undefined;
+export type TExternalValueTypeResolverFn = (request: ExternalValueTypeRequest) => Type.TPowerQueryType | undefined;
 
 export const enum ExternalTypeRequestKind {
     Invocation = "Invocation",
@@ -31,7 +29,7 @@ export interface ExternalValueTypeRequest extends IExternalType {
 
 export interface ExternalInvocationTypeRequest extends IExternalType {
     readonly kind: ExternalTypeRequestKind.Invocation;
-    readonly args: ReadonlyArray<PQP.Language.Type.TPowerQueryType>;
+    readonly args: ReadonlyArray<Type.TPowerQueryType>;
 }
 
 // A null/no-op resolver for when one is required but shouldn't resolve anything, eg. for test mocks.

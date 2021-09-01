@@ -4,6 +4,7 @@
 import * as PQF from "@microsoft/powerquery-formatter";
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types";
 
@@ -22,7 +23,7 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
     };
     const triedFormat: PQF.TriedFormat = PQF.tryFormat(formatSettings, document.getText());
 
-    if (PQP.ResultUtils.isOk(triedFormat)) {
+    if (ResultUtils.isOk(triedFormat)) {
         return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];
     }
     // If an unhandled exception was returned.

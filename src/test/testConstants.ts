@@ -3,6 +3,8 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+
 import { Assert } from "@microsoft/powerquery-parser";
 
 import {
@@ -28,39 +30,39 @@ export const NoOpLibrary: Library.ILibrary = {
     libraryDefinitions: new Map(),
 };
 
-export const CreateFooAndBarRecordDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+export const CreateFooAndBarRecordDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
     false,
     [],
-    PQP.Language.TypeUtils.createDefinedRecord(
+    TypeUtils.createDefinedRecord(
         false,
-        new Map<string, PQP.Language.Type.TPowerQueryType>([
-            ["foo", PQP.Language.TypeUtils.createTextLiteral(false, `"fooString"`)],
-            ["bar", PQP.Language.TypeUtils.createTextLiteral(false, `"barString"`)],
+        new Map<string, Type.TPowerQueryType>([
+            ["foo", TypeUtils.createTextLiteral(false, `"fooString"`)],
+            ["bar", TypeUtils.createTextLiteral(false, `"barString"`)],
         ]),
         false,
     ),
 );
 
-export const CombineNumberAndOptionalTextDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
     false,
     [
         {
             isNullable: false,
             isOptional: false,
             nameLiteral: "firstArg",
-            maybeType: PQP.Language.Type.TypeKind.Number,
+            maybeType: Type.TypeKind.Number,
         },
         {
             isNullable: false,
             isOptional: true,
             nameLiteral: "secondArg",
-            maybeType: PQP.Language.Type.TypeKind.Text,
+            maybeType: Type.TypeKind.Text,
         },
     ],
-    PQP.Language.Type.NullInstance,
+    Type.NullInstance,
 );
 
-export const SquareIfNumberDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
     false,
     [
         {
@@ -70,20 +72,20 @@ export const SquareIfNumberDefinedFunction: PQP.Language.Type.DefinedFunction = 
             nameLiteral: "x",
         },
     ],
-    PQP.Language.Type.AnyInstance,
+    Type.AnyInstance,
 );
 
-export const DuplicateTextDefinedFunction: PQP.Language.Type.DefinedFunction = PQP.Language.TypeUtils.createDefinedFunction(
+export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
     false,
     [
         {
             isNullable: false,
             isOptional: false,
-            maybeType: PQP.Language.Type.TypeKind.Text,
+            maybeType: Type.TypeKind.Text,
             nameLiteral: "txt",
         },
     ],
-    PQP.Language.Type.TextInstance,
+    Type.TextInstance,
 );
 
 export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<string, Library.TLibraryDefinition>([
@@ -102,7 +104,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
         LibraryUtils.createConstantDefinition(
             TestLibraryName.Number,
             `The name is ${TestLibraryName.Number}`,
-            PQP.Language.Type.NumberInstance,
+            Type.NumberInstance,
             CompletionItemKind.Value,
         ),
     ],
@@ -119,14 +121,14 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isOptional: false,
                     label: "firstArg",
                     maybeDocumentation: undefined,
-                    typeKind: PQP.Language.Type.TypeKind.Number,
+                    typeKind: Type.TypeKind.Number,
                 },
                 {
                     isNullable: false,
                     isOptional: true,
                     label: "secondArg",
                     maybeDocumentation: undefined,
-                    typeKind: PQP.Language.Type.TypeKind.Text,
+                    typeKind: Type.TypeKind.Text,
                 },
             ],
         ),
@@ -136,7 +138,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
         LibraryUtils.createConstantDefinition(
             TestLibraryName.NumberOne,
             `The name is ${TestLibraryName.NumberOne}`,
-            PQP.Language.TypeUtils.createNumberLiteral(false, "1"),
+            TypeUtils.createNumberLiteral(false, "1"),
             CompletionItemKind.Constant,
         ),
     ],
@@ -154,7 +156,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     label: "x",
                     maybeDocumentation:
                         "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
-                    typeKind: PQP.Language.Type.TypeKind.Any,
+                    typeKind: Type.TypeKind.Any,
                 },
             ],
         ),
@@ -169,21 +171,21 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
             switch (request.identifierLiteral) {
                 case TestLibraryName.SquareIfNumber: {
                     if (request.args.length !== 1) {
-                        return PQP.Language.Type.NoneInstance;
+                        return Type.NoneInstance;
                     }
-                    const arg: PQP.Language.Type.TPowerQueryType = Assert.asDefined(request.args[0]);
+                    const arg: Type.TPowerQueryType = Assert.asDefined(request.args[0]);
 
-                    if (PQP.Language.TypeUtils.isNumberLiteral(arg)) {
+                    if (TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
                         return {
                             ...arg,
                             literal: newNormalizedLiteral.toString(),
                             normalizedLiteral: newNormalizedLiteral,
                         };
-                    } else if (PQP.Language.TypeUtils.isNumber(arg)) {
-                        return PQP.Language.Type.NumberInstance;
+                    } else if (TypeUtils.isNumber(arg)) {
+                        return Type.NumberInstance;
                     } else {
-                        return PQP.Language.Type.AnyInstance;
+                        return Type.AnyInstance;
                     }
                 }
 
@@ -203,10 +205,10 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     return DuplicateTextDefinedFunction;
 
                 case TestLibraryName.Number:
-                    return PQP.Language.Type.NumberInstance;
+                    return Type.NumberInstance;
 
                 case TestLibraryName.NumberOne:
-                    return PQP.Language.TypeUtils.createNumberLiteral(false, "1");
+                    return TypeUtils.createNumberLiteral(false, "1");
 
                 case TestLibraryName.SquareIfNumber:
                     return SquareIfNumberDefinedFunction;

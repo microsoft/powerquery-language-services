@@ -1,27 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeFieldSpecification(
-    state: InspectTypeState,
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPowerQueryType {
+export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.FieldSpecification);
+    XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
-    const maybeFieldTypeSpecification:
-        | PQP.Parser.TXorNode
-        | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,
-        undefined,
     );
 
     return maybeFieldTypeSpecification !== undefined
         ? inspectXor(state, maybeFieldTypeSpecification)
-        : PQP.Language.Type.AnyInstance;
+        : Type.AnyInstance;
 }

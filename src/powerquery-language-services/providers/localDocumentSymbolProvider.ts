@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
+import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    AncestryUtils,
+    NodeIdMapUtils,
+    ParseState,
+    TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
@@ -68,7 +74,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return maybeHover;
         }
 
-        if (!PQP.ResultUtils.isOk(inspection.triedNodeScope) || !PQP.ResultUtils.isOk(inspection.triedScopeType)) {
+        if (!ResultUtils.isOk(inspection.triedNodeScope) || !ResultUtils.isOk(inspection.triedScopeType)) {
             // tslint:disable-next-line: no-null-keyword
             return null;
         }
@@ -112,25 +118,24 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         inspectionTask: WorkspaceCache.InspectionTask,
         activeNode: Inspection.ActiveNode,
     ): Promise<Hover | undefined> {
-        const parseState: PQP.Parser.ParseState = inspectionTask.parseState;
-        const ancestry: ReadonlyArray<PQP.Parser.TXorNode> = activeNode.ancestry;
-        const maybeLeafKind: PQP.Language.Ast.NodeKind | undefined = ancestry[0]?.node.kind;
+        const parseState: ParseState = inspectionTask.parseState;
+        const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+        const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
 
-        const isValidLeafNodeKind: boolean = [
-            PQP.Language.Ast.NodeKind.GeneralizedIdentifier,
-            PQP.Language.Ast.NodeKind.Identifier,
-        ].includes(maybeLeafKind);
+        const isValidLeafNodeKind: boolean = [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier].includes(
+            maybeLeafKind,
+        );
 
         if (!isValidLeafNodeKind) {
             return undefined;
         }
 
         const maybeIdentifierPairedExpression:
-            | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.AncestryUtils.maybeNthXor(activeNode.ancestry, 1, [
-            PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            PQP.Language.Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-            PQP.Language.Ast.NodeKind.IdentifierPairedExpression,
+            | TXorNode
+            | undefined = AncestryUtils.maybeNthXorChecked(activeNode.ancestry, 1, [
+            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            Ast.NodeKind.IdentifierPairedExpression,
         ]);
 
         // We're on an identifier in some other context which we don't support.
@@ -138,13 +143,10 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const maybeExpression:
-            | PQP.Parser.TXorNode
-            | undefined = PQP.Parser.NodeIdMapUtils.maybeChildXorByAttributeIndex(
+        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
             parseState.contextState.nodeIdMapCollection,
             maybeIdentifierPairedExpression.node.id,
             2,
-            undefined,
         );
 
         // We're on an identifier in some other context which we don't support.
@@ -160,31 +162,30 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         );
 
         // TODO handle error
-        if (PQP.ResultUtils.isError(triedExpressionType)) {
+        if (ResultUtils.isError(triedExpressionType)) {
             return undefined;
         }
 
         let scopeItemText: string = "unknown";
         // If it's a SectionMember
-        const maybeThirdNodeKind: PQP.Language.Ast.NodeKind = ancestry[2]?.node.kind;
-        if (maybeThirdNodeKind === PQP.Language.Ast.NodeKind.SectionMember) {
+        const maybeThirdNodeKind: Ast.NodeKind = ancestry[2]?.node.kind;
+        if (maybeThirdNodeKind === Ast.NodeKind.SectionMember) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.SectionMember);
         }
 
         // Else if it's RecordExpression or RecordLiteral
-        const maybeFifthNodeKind: PQP.Language.Ast.NodeKind = ancestry[4]?.node.kind;
-        const isRecordNodeKind: boolean = [
-            PQP.Language.Ast.NodeKind.RecordExpression,
-            PQP.Language.Ast.NodeKind.RecordLiteral,
-        ].includes(maybeFifthNodeKind);
+        const maybeFifthNodeKind: Ast.NodeKind = ancestry[4]?.node.kind;
+        const isRecordNodeKind: boolean = [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral].includes(
+            maybeFifthNodeKind,
+        );
 
         if (isRecordNodeKind) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.RecordField);
-        } else if (maybeFifthNodeKind === PQP.Language.Ast.NodeKind.LetExpression) {
+        } else if (maybeFifthNodeKind === Ast.NodeKind.LetExpression) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.LetVariable);
         }
 
-        const nameOfExpressionType: string = PQP.Language.TypeUtils.nameOf(triedExpressionType.value);
+        const nameOfExpressionType: string = TypeUtils.nameOf(triedExpressionType.value);
 
         return {
             contents: {
@@ -209,9 +210,9 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
 
-        const maybeScopeItemType: PQP.Language.Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
+        const maybeScopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
         const scopeItemTypeText: string =
-            maybeScopeItemType !== undefined ? PQP.Language.TypeUtils.nameOf(maybeScopeItemType) : "unknown";
+            maybeScopeItemType !== undefined ? TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 
         return {
             contents: {
@@ -236,7 +237,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     private getMaybeInspectionInvokeExpression(): Inspection.InvokeExpression | undefined {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
 
-        return maybeInspection !== undefined && PQP.ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
+        return maybeInspection !== undefined && ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
             ? maybeInspection.triedCurrentInvokeExpression.value
             : undefined;
     }
@@ -246,7 +247,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     ): ReadonlyArray<Inspection.AutocompleteItem> {
         const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
 
-        return PQP.ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
+        return ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
             ? triedFieldAccess.value.autocompleteItems
             : [];
     }

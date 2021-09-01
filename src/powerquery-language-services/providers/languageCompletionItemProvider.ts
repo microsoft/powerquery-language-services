@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { ResultUtils } from "@microsoft/powerquery-parser";
+import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 
 import { Inspection } from "..";
 import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
@@ -12,17 +13,17 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<string> = [
-        PQP.Language.Keyword.KeywordKind.HashBinary,
-        PQP.Language.Keyword.KeywordKind.HashDate,
-        PQP.Language.Keyword.KeywordKind.HashDateTime,
-        PQP.Language.Keyword.KeywordKind.HashDateTimeZone,
-        PQP.Language.Keyword.KeywordKind.HashDuration,
-        PQP.Language.Keyword.KeywordKind.HashInfinity,
-        PQP.Language.Keyword.KeywordKind.HashNan,
-        PQP.Language.Keyword.KeywordKind.HashSections,
-        PQP.Language.Keyword.KeywordKind.HashShared,
-        PQP.Language.Keyword.KeywordKind.HashTable,
-        PQP.Language.Keyword.KeywordKind.HashTime,
+        KeywordKind.HashBinary,
+        KeywordKind.HashDate,
+        KeywordKind.HashDateTime,
+        KeywordKind.HashDateTimeZone,
+        KeywordKind.HashDuration,
+        KeywordKind.HashInfinity,
+        KeywordKind.HashNan,
+        KeywordKind.HashSections,
+        KeywordKind.HashShared,
+        KeywordKind.HashTable,
+        KeywordKind.HashTime,
     ];
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
@@ -46,7 +47,7 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
     private getKeywords(
         triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
     ): ReadonlyArray<AutocompleteItem> {
-        if (PQP.ResultUtils.isError(triedKeywordAutocomplete)) {
+        if (ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
 
@@ -59,7 +60,7 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
     ): ReadonlyArray<AutocompleteItem> {
-        return PQP.ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
+        return ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
             ? [triedLanguageConstantAutocomplete.value]
             : [];
     }
@@ -67,7 +68,7 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
     ): ReadonlyArray<AutocompleteItem> {
-        return PQP.ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
+        return ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
             ? triedPrimitiveTypeAutocomplete.value
             : [];
     }

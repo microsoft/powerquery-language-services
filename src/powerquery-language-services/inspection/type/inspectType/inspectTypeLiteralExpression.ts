@@ -1,39 +1,37 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TXorNode, XorNodeKind, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Assert } from "@microsoft/powerquery-parser";
-
 export function inspectTypeLiteralExpression(
-    xorNode: PQP.Parser.TXorNode,
-): PQP.Language.Type.TPrimitiveType | PQP.Language.Type.TextLiteral | PQP.Language.Type.NumberLiteral {
-    PQP.Parser.XorNodeUtils.assertAstNodeKind(xorNode, PQP.Language.Ast.NodeKind.LiteralExpression);
+    xorNode: TXorNode,
+): Type.TPrimitiveType | Type.TextLiteral | Type.NumberLiteral {
+    XorNodeUtils.assertIsNodeKind<Ast.LiteralExpression>(xorNode, Ast.NodeKind.LiteralExpression);
 
     switch (xorNode.kind) {
-        case PQP.Parser.XorNodeKind.Ast:
+        case XorNodeKind.Ast:
             // We already checked it's a Ast Literal Expression.
-            const literalExpression: PQP.Language.Ast.LiteralExpression = xorNode.node as PQP.Language.Ast.LiteralExpression;
-            const typeKind: PQP.Language.Type.TypeKind = PQP.Language.TypeUtils.typeKindFromLiteralKind(
-                literalExpression.literalKind,
-            );
+            const literalExpression: Ast.LiteralExpression = xorNode.node;
+            const typeKind: Type.TypeKind = TypeUtils.typeKindFromLiteralKind(literalExpression.literalKind);
 
             switch (typeKind) {
-                case PQP.Language.Type.TypeKind.Number:
-                    return PQP.Language.TypeUtils.createNumberLiteral(false, literalExpression.literal);
+                case Type.TypeKind.Number:
+                    return TypeUtils.createNumberLiteral(false, literalExpression.literal);
 
-                case PQP.Language.Type.TypeKind.Text:
-                    return PQP.Language.TypeUtils.createTextLiteral(false, literalExpression.literal);
+                case Type.TypeKind.Text:
+                    return TypeUtils.createTextLiteral(false, literalExpression.literal);
 
                 default:
-                    return PQP.Language.TypeUtils.createPrimitiveType(
-                        literalExpression.literalKind === PQP.Language.Ast.LiteralKind.Null,
+                    return TypeUtils.createPrimitiveType(
+                        literalExpression.literalKind === Ast.LiteralKind.Null,
                         typeKind,
                     );
             }
 
-        case PQP.Parser.XorNodeKind.Context:
-            return PQP.Language.Type.UnknownInstance;
+        case XorNodeKind.Context:
+            return Type.UnknownInstance;
 
         default:
             throw Assert.isNever(xorNode);
