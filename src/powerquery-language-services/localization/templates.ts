@@ -135,7 +135,6 @@ export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
 
 export interface ILocalizationTemplates {
     readonly error_validation_duplicate_identifier: string;
-    readonly error_validation_duplicate_parameter_name: string;
     readonly error_validation_invokeExpression_typeMismatch_named: string;
     readonly error_validation_invokeExpression_typeMismatch_unnamed: string;
     readonly error_validation_invokeExpression_missingMandatory_named: string;
