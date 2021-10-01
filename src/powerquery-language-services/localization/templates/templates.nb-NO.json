@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Duplikat identifikator \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Duplisert parameternavn {identifier}",
   "error_validation_invokeExpression_numArgs": "Forventet mellom {numMin}-{numMax} argumenter, men {numGiven} ble angitt.",
   "_error_validation_invokeExpression_numArgs": "En feil når et funksjonskall ble angitt enten for få eller for mange argumenter. Forventet å være brukerrettet.",
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} mangler et argument for den ikke-optimale parameteren {argName}.",

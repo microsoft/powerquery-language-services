@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Bikoiztu \"{identifier}\" identifikatzailea",
+  "error_validation_duplicate_parameter_name": "Parametro-izen bikoiztua: \"{identifier}\"",
   "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
   "_error_validation_invokeExpression_numArgs": "Errore bat gertatuko da funtzio-dei batek argumentu gutxiegi edo gehiegi ematen dituenean. Erabiltzaileak kudeatuko ditu balio horiek.",
   "error_validation_invokeExpression_missingMandatory_named": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",

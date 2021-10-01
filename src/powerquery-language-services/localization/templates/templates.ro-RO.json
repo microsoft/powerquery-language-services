@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identificator dublat „{identifier}”",
+  "error_validation_duplicate_parameter_name": "Nume parametru dublat „{identifier}”",
   "error_validation_invokeExpression_numArgs": "Se așteaptă {numMin}-{numMax} argumente, dar s-au oferit {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "O eroare atunci când apelarea funcției a primit fie prea puține, fie prea multe argumente. Se așteaptă să fie orientată spre utilizator.",
   "error_validation_invokeExpression_missingMandatory_named": "„{funcName}” are un argument lipsă pentru parametrul non-opțional „{argName}”.",

@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Қайталанатын идентификатор \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Күтілген аргументтер саны: {numMin}-{numMax}, көрсетілгені: {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Функцияны шақыру кезінде тым аз немесе тым көп аргумент көрсеткен кездегі қате. Пайдаланушыға қолжетімді болады.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' функциясында '{argName}' міндетті параметріне аргументі жоқ.",

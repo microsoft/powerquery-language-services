@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Дублиран идентификатор „{identifier}“",
+  "error_validation_duplicate_parameter_name": "Име на дублиран параметър \"{identifier}\"",
   "error_validation_invokeExpression_numArgs": "Очаква се между {numMin}-{numMax} аргументи, но {numGiven} бяха предоставени.",
   "_error_validation_invokeExpression_numArgs": "Грешка, когато е на повикване на функция са зададени или твърде малко, или твърде много аргументи. Очаква се да бъде насочена към потребителя.",
   "error_validation_invokeExpression_missingMandatory_named": "\"{funcName}\" липсва аргумент за незадължителния параметър \"{argName}\".",

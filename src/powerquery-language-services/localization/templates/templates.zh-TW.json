@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "重複的識別碼 '{identifier}'",
+  "error_validation_duplicate_parameter_name": "重複的參數名稱 '{identifier}'",
   "error_validation_invokeExpression_numArgs": "預期介於 {numMin}-{numMax} 個引數之間，但給予了 {numGiven} 個。",
   "_error_validation_invokeExpression_numArgs": "函數呼叫的引數太少或太多時發生錯誤。預期為使用者對向。",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' 遺漏非選擇性參數 '{argName}' 的引數。",

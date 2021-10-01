@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "識別子 '{identifier}' が重複しています",
+  "error_validation_duplicate_parameter_name": "パラメーター名 '{identifier}' が重複しています",
   "error_validation_invokeExpression_numArgs": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
   "_error_validation_invokeExpression_numArgs": "関数呼び出しの指定の引数の数が少なすぎるか、多すぎる場合のエラーです。ユーザー向けである必要があります。",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",

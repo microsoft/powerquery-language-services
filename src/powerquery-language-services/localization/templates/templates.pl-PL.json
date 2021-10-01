@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Zduplikowany identyfikator „{identifier}”",
+  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Oczekiwano liczbę argumentów od {numMin}-{numMax}, ale podano {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Błąd, gdy wywołanie funkcji otrzymało zbyt mało lub zbyt wiele argumentów. Oczekuje się, że będzie dostępny dla użytkownika.",
   "error_validation_invokeExpression_missingMandatory_named": "Element „{funcName}” nie ma argumentu dla parametru nieopcjonalnego „{argName}”.",

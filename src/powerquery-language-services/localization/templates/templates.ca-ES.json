@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identificador duplicat \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "El nom del paràmetre \"{identifier}\" està duplicat.",
   "error_validation_invokeExpression_numArgs": "S’esperaven entre {numMin}-{numMax} arguments, però s’han proporcionat {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "S'ha produït un error en cridar una funció perquè s'ha proporcionat un nombre insuficient o excessiu d’arguments. S'esperava que estigués dirigit a l'usuari.",
   "error_validation_invokeExpression_missingMandatory_named": "Falta un argument a \"{funcName}\" per al paràmetre \"{argName}\" no opcional.",

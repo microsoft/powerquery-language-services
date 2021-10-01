@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Dubleeritud identifikaator \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Parameetrinimi „{identifier}“ on dubleeritud",
   "error_validation_invokeExpression_numArgs": "Eeldati {numMin}–{numMax} argumenti, kuid edastati {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Tõrge, mis ilmneb siis, kui funktsioonikutsele edastati liiga vähe või liiga palju argumente. Eeldatavasti kasutajale suunatud.",
   "error_validation_invokeExpression_missingMandatory_named": "Funktsioonil „{funcName}“ puudub mittevalikulise parameetri argument „{argName}“.",

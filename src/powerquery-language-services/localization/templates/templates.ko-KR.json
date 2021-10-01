@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "'{identifier}' 식별자가 중복됨",
+  "error_validation_duplicate_parameter_name": "중복 매개 변수 이름 '{identifier}'",
   "error_validation_invokeExpression_numArgs": "{numMin}~{numMax}개의 인수가 필요하지만 {numGiven}개의 인수가 제공되었습니다.",
   "_error_validation_invokeExpression_numArgs": "함수 호출 시 인수가 너무 적거나 너무 많을 때 나타나는 오류입니다. 사용자를 대상으로 해야합니다.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'에 비선택적 매개 변수 '{argName}'에 대한 인수가 없습니다.",

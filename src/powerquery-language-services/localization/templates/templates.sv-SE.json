@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Dubblettidentifierare {identifier}",
+  "error_validation_duplicate_parameter_name": "Duplicerat parameternamn “{identifier}”",
   "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} argument förväntades, men {numGiven} angavs.",
   "_error_validation_invokeExpression_numArgs": "Ett fel uppstod när ett funktionsanrop fick antingen för få eller för många argument. Förväntas vara användarinriktad.",
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} saknas för den icke-valfria parametern {argName}.",

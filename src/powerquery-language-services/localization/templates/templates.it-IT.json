@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identificatore '{identifier}' duplicato",
+  "error_validation_duplicate_parameter_name": "Nome di parametro duplicato '{identifier}'",
   "error_validation_invokeExpression_numArgs": "È previsto un numero di argomenti compreso tra {numMin} e {numMax}, ma ne sono stati specificati {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Errore che si verifica quando per una chiamata di funzione viene specificato un numero eccessivo o insufficiente di argomenti. Deve essere rivolto all'utente.",
   "error_validation_invokeExpression_missingMandatory_named": "In '{funcName}' manca un argomento per il parametro non facoltativo ' {argName}'.",

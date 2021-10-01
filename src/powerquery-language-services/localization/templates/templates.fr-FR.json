@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identificateur « {identifier} » en double",
+  "error_validation_duplicate_parameter_name": "Nom de paramètre « {identifier} » en double",
   "error_validation_invokeExpression_numArgs": "Entre {numMin} et {numMax} arguments attendus, mais {numGiven} ont été fournis.",
   "_error_validation_invokeExpression_numArgs": "Erreur lorsqu’un appel de fonction a reçu un nombre trop faible ou trop élevé d’arguments. Il devrait être accessible à l’utilisateur.",
   "error_validation_invokeExpression_missingMandatory_named": "Désolé... Un argument manque à '{funcName}' pour le paramètre obligatoire '{argName}'.",

@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Duplicitný identifikátor {identifier}",
+  "error_validation_duplicate_parameter_name": "Duplicitný názov parametra {identifier}",
   "error_validation_invokeExpression_numArgs": "Očakávalo sa {numMin} až {numMax} argumentov, ale poskytlo sa {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Chyba, ak volanie funkcie malo príliš málo alebo príliš veľa argumentov. Očakáva sa, že bude smerovať na používateľa.",
   "error_validation_invokeExpression_missingMandatory_named": "Vo {funcName} chýba argument pre nevoliteľný parameter {argName}.",

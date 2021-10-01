@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Dubbele id {identifier}",
+  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
   "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} argumenten verwacht, maar {numGiven} zijn opgegeven.",
   "_error_validation_invokeExpression_numArgs": "Er is een fout opgetreden bij een functieaanroep die te weinig of te veel argumenten heeft gekregen. Naar verwachting op de gebruiker gericht.",
   "error_validation_invokeExpression_missingMandatory_named": "Bij '{funcName}' ontbreekt een argument voor de niet-optionele parameter '{argName}'.",

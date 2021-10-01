@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Дупликат идентификатора „{identifier}“",
+  "error_validation_duplicate_parameter_name": "Дупликат назива параметра '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Очекивано је између {numMin}-{numMax} аргумената, али је дат {нумГивен}.",
   "_error_validation_invokeExpression_numArgs": "Грешка када је позиву функције дато или премало или превише аргумената. Очекује се да корисник буде окренут ка кориснику.",
   "error_validation_invokeExpression_missingMandatory_named": "У '{funcName}' недостаје аргумент за неопционални параметар '{argName}'.",
