@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Tunnuksen kaksoiskappale {identifier}",
-  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Parametrin nimen {identifier} kaksoiskappale",
   "error_validation_invokeExpression_numArgs": "Odotettiin {numMin}–{numMax} argumenttia, mutta {numGiven} annettiin.",
   "_error_validation_invokeExpression_numArgs": "Virhe, kun funktiokutsulle annettiin joko liian vähän tai liian paljon argumentteja. Odotettiin olevan käyttäjälle suunnattu.",
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} puuttuu määrite ei-valinnaiselle parametrille {argName}.",

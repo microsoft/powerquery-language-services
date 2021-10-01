@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "डुप्लिकेट पहचानकर्ता ' {identifier} '",
-  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
+  "error_validation_duplicate_parameter_name": "डुप्लिकेट पैरामीटर नाम ' {identifier} '",
   "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} तर्क के बीच अपेक्षित था लेकिन {numGiven} दिए गए.",
   "_error_validation_invokeExpression_numArgs": "फ़ंक्शन कॉल को या तो बहुत कम या बहुत अधिक तर्क दिए जाने पर त्रुटि हुई. उपयोगकर्ता द्वारा सामना किए जाने की अपेक्षा है.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' हेतु ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",

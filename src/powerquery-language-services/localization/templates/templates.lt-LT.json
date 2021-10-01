@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Pasikartojantis identifikatorius „{identifier}“",
-  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Pasikartojantis parametro pavadinimas „{identifier}“",
   "error_validation_invokeExpression_numArgs": "Tikimasi tarp {numMin} ir {numMax} argumentų, bet buvo pateikta {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Kai funkcijos iškvietimui buvo duota per mažai arba per daug argumentų, įvyko klaida. Tikimasi, kad su ja susidurs vartotojas.",
   "error_validation_invokeExpression_missingMandatory_named": "„{funcName}“ trūksta argumento nepasirenkamam parametrui „{argName}“.",

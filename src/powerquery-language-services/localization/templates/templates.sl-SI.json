@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Podvojeni identifikator »{identifier}«",
-  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Podvojeno ime parametra »{identifier}«",
   "error_validation_invokeExpression_numArgs": "Pričakovano je bilo med {numMin}-{numMax} argumenti, vendar je bilo podanih {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Napaka, ko je bil klicu funkcije podanih premalo ali preveč argumentov. Pričakuje se, da se bo usmerjena k uporabniku.",
   "error_validation_invokeExpression_missingMandatory_named": "Za funkcijo »{funcName}« manjka argument za neizbirni parameter »{argName}«.",
