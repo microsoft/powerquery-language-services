@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Pengecam pendua '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Nama parameter duplikasi '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Dijangka antara {numMin}-{numMax} argumen, tetapi {numGiven} diberikan.",
   "_error_validation_invokeExpression_numArgs": "Ralat apabila panggilan fungsi diberikan sama ada terlalu sedikit atau terlalu banyak argumen. Dijangka menghadap pengguna.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' tiada argumen untuk parameter bukan pilihan '{argName}'.",

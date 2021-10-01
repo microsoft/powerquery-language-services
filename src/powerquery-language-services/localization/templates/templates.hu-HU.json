@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Duplikált azonosító: „{identifier}”",
+  "error_validation_duplicate_parameter_name": "Ismétlődő paraméternév: {identifier}",
   "error_validation_invokeExpression_numArgs": "A rendszer {numMin}–{numMax} argumentumot várt, de {numGiven} lett megadva.",
   "_error_validation_invokeExpression_numArgs": "Hiba, ha a függvény hívása túl kevés vagy túl sok argumentumot adott meg. Várhatóan megjelenik a felhasználók számára.",
   "error_validation_invokeExpression_missingMandatory_named": "Ebből: {funcName} hiányzik egy argumentum a nem válaszható {argName} paraméterhez.",

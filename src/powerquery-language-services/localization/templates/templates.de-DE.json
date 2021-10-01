@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Doppelter Bezeichner \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Es wurden {numMin} bis {numMax} Argumente erwartet, aber {numGiven} angegeben.",
   "_error_validation_invokeExpression_numArgs": "Fehler, wenn für einen Funktionsaufruf zu wenige oder zu viele Argumente angegeben wurden. Sollte dem Benutzer angezeigt werden.",
   "error_validation_invokeExpression_missingMandatory_named": "Für „{funcName}“ fehlt ein Argument für den nicht optionalen Parameter „{argName}“.",

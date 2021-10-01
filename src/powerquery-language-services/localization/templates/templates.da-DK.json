@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Duplikeret identifikator '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Duplikér parameternavn '{identifier}' ",
   "error_validation_invokeExpression_numArgs": "Forventet mellem {numMin} {numMax} argumenter, men {numGiven} blev angivet.",
   "_error_validation_invokeExpression_numArgs": "En fejl, når et funktionsopkald blev givet for få eller for mange argumenter. Forventes at være brugerrettet.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'mangler et argument for den ikke-valgfrie parameter '{argName}'.",

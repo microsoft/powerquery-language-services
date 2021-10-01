@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Повторюваний ідентифікатор \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Повторюване ім’я параметра \"{identifier}\"",
   "error_validation_invokeExpression_numArgs": "Має бути стільки аргументів: {numMin}–{numMax}. Задано: {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Сталася помилка під час виклику функції через зависоку або занизьку кількість аргументів у ньому. Очікувалось отримання користувачем.",
   "error_validation_invokeExpression_missingMandatory_named": "У функції \"{funcName}\" відсутній аргумент для обов’язкового параметра \"{argName}\".",

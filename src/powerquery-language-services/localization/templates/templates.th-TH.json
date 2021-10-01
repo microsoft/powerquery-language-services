@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "ตัวระบุ \"{identifier}\" ที่ซ้ำกัน",
+  "error_validation_duplicate_parameter_name": "ชื่อพารามิเตอร์ที่ซ้ำกัน '{identifier}'",
   "error_validation_invokeExpression_numArgs": "คาดไว้ระหว่าง {numMin}-{numMax} อาร์กิวเมนต์ แต่ได้รับ {numGiven}",
   "_error_validation_invokeExpression_numArgs": "มีข้อผิดพลาดเมื่อการเรียกฟังก์ชันให้อาร์กิวเมนต์น้อยเกินไปหรือมากเกินไป คาดไว้ว่าจะเชื่อมกับผู้ใช้",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' ไม่มีอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",

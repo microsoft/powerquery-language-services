@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "标识符“{identifier}”重复",
+  "error_validation_duplicate_parameter_name": "参数名称“{identifier}”重复",
   "error_validation_invokeExpression_numArgs": "应介于 {numMin}-{numMax} 参数之间，但提供了 {numGiven}。",
   "_error_validation_invokeExpression_numArgs": "提供给函数调用的参数太少或过多时出错。应为面向用户。",
   "error_validation_invokeExpression_missingMandatory_named": "\"{funcName}\" 缺少非可选参数 \"{argName}\" 的参数。",

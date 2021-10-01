@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Διπλότυπο αναγνωριστικό \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Διπλότυπο όνομα της παραμέτρου '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Αναμενόταν μεταξύ των ορισμάτων {numMin}-{numMax}, αλλά δόθηκε {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Παρουσιάστηκε σφάλμα κατά την κλήση συνάρτησης με υπερβολικά λίγα ή πάρα πολλά ορίσματα. Αναμενόταν να είναι στραμμένη προς το χρήστη.",
   "error_validation_invokeExpression_missingMandatory_named": "Λείπει ένα όρισμα από τον τύπο {funcName} για τη μη προαιρετική παράμετρο {argName}.",

@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Повторяющийся идентификатор \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Дублирующееся имя параметра \"{identifier}\"",
   "error_validation_invokeExpression_numArgs": "Ожидаемое число аргументов: от {numMin} до {numMax}, указанное: {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Ошибка при указании слишком маленького или слишком большого числа аргументов при вызове функции. Будет доступно пользователю.",
   "error_validation_invokeExpression_missingMandatory_named": "Функции \"{funcName}\" требуется аргумент для обязательного параметра \"{argName}\".",

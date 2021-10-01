@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identifikatora dublikāts: {identifier}",
+  "error_validation_duplicate_parameter_name": "Parametra nosaukuma “{identifier}” dublikāts",
   "error_validation_invokeExpression_numArgs": "Paredzams starp {numMin}–{numMax} argumentiem, taču tika norādīts {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Kļūda, kad funkcijas izsaukumam tika piešķirts pārāk maz vai pārāk daudz argumentu. Paredzams, ka tas būs redzams lietotājam.",
   "error_validation_invokeExpression_missingMandatory_named": "Funkcijai {funcName} trūkst argumenta obligātajam parametram {argName}.",

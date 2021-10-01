@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Mã định danh trùng lặp '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Nhân đôi tên tham số “{identifier}”",
   "error_validation_invokeExpression_numArgs": "Dự kiến giữa {numMin}-{numMax} tham đối, nhưng thực tế được cung cấp {numGiven} tham đối.",
   "_error_validation_invokeExpression_numArgs": "Lỗi khi một lệnh gọi hàm được cung cấp quá ít hoặc quá nhiều tham đối. Dự kiến người dùng phải đối mặt.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' thiếu tham đối cho tham số không tối ưu '{argName}'.",

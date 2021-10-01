@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Identificador duplicado '{identifier}'",
+  "error_validation_duplicate_parameter_name": "Nome de parâmetro duplicado '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Esperava-se entre {numMin}-{numMax} argumentos, mas {numGiven} foram fornecidos.",
   "_error_validation_invokeExpression_numArgs": "Um erro quando uma chamada de função recebeu muitos argumentos ou poucos argumentos. Espera-se que seja voltado para o usuário.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' falta um argumento para o parâmetro não opcional '{argName}'.",

@@ -1,5 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Duplicar identificador \"{identifier}\"",
+  "error_validation_duplicate_parameter_name": "Duplicar o nome do parámetro '{identifier}'",
   "error_validation_invokeExpression_numArgs": "Esperábanse entre {numMin}-{numMax} argumentos, déronse {numGiven}.",
   "_error_validation_invokeExpression_numArgs": "Un erro cando se lle deu a unha chamada de función poucos ou demasiados argumento. Esperábase que estivera orientado ao usuario.",
   "error_validation_invokeExpression_missingMandatory_named": "A “{funcName}” fáltalle un argumento para o parámetro “{argName}” non opcional.",
