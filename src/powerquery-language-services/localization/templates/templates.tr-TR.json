@@ -1,6 +1,6 @@
 {
   "error_validation_duplicate_identifier": "Yinelenen '{identifier}' tanımlayıcısı",
-  "error_validation_duplicate_parameter_name": "Duplicate parameter name '{identifier}'",
+  "error_validation_duplicate_parameter_name": "'{identifier}' yinelenen parametre adı",
   "error_validation_invokeExpression_numArgs": "{numMin}-{numMax} bağımsız değişken arasında bekleniyor, ancak {numGiven} bağımsız değişken verildi.",
   "_error_validation_invokeExpression_numArgs": "Bir işlev çağrısına çok az veya çok fazla bağımsız değişken verildiğinde oluşan bir hata. Kullanıcıya yönelik olması bekleniyor.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.",
