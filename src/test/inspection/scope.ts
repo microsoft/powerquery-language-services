@@ -49,7 +49,7 @@ interface AbridgedParameterScopeItem extends IAbridgedNodeScopeItem {
     readonly kind: Inspection.ScopeItemKind.Parameter;
     readonly isNullable: boolean;
     readonly isOptional: boolean;
-    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Constant.PrimitiveTypeConstant | undefined;
 }
 
 interface AbridgedRecordScopeItem extends IAbridgedNodeScopeItem {
@@ -1253,7 +1253,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: false,
                     isOptional: false,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Number,
+                    maybeType: Constant.PrimitiveTypeConstant.Number,
                 },
                 {
                     identifier: "c",
@@ -1261,7 +1261,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: true,
                     isOptional: false,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Function,
+                    maybeType: Constant.PrimitiveTypeConstant.Function,
                 },
                 {
                     identifier: "d",
@@ -1277,7 +1277,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     isRecursive: false,
                     isNullable: false,
                     isOptional: true,
-                    maybeType: Constant.PrimitiveTypeConstantKind.Table,
+                    maybeType: Constant.PrimitiveTypeConstant.Table,
                 },
             ];
             const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedParameterScopeItems(

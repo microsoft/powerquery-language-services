@@ -136,19 +136,19 @@ interface AstNodeSearch {
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
-    Constant.WrapperConstantKind.LeftBrace,
-    Constant.WrapperConstantKind.LeftBracket,
-    Constant.WrapperConstantKind.LeftParenthesis,
+    Constant.WrapperConstant.LeftBrace,
+    Constant.WrapperConstant.LeftBracket,
+    Constant.WrapperConstant.LeftParenthesis,
 ];
 
 const ShiftRightConstantKinds: ReadonlyArray<string> = [
-    Constant.MiscConstantKind.Comma,
-    Constant.MiscConstantKind.Equal,
-    Constant.MiscConstantKind.FatArrow,
-    Constant.WrapperConstantKind.RightBrace,
-    Constant.WrapperConstantKind.RightBracket,
-    Constant.WrapperConstantKind.RightParenthesis,
-    Constant.MiscConstantKind.Semicolon,
+    Constant.MiscConstant.Comma,
+    Constant.MiscConstant.Equal,
+    Constant.MiscConstant.FatArrow,
+    Constant.WrapperConstant.RightBrace,
+    Constant.WrapperConstant.RightBracket,
+    Constant.WrapperConstant.RightParenthesis,
+    Constant.MiscConstant.Semicolon,
     ...DrilldownConstantKind,
 ];
 
@@ -163,23 +163,23 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
         return true;
     } else if (astNode.kind === Ast.NodeKind.Constant) {
         switch (astNode.constantKind) {
-            case Constant.KeywordConstantKind.As:
-            case Constant.KeywordConstantKind.Each:
-            case Constant.KeywordConstantKind.Else:
-            case Constant.KeywordConstantKind.Error:
-            case Constant.KeywordConstantKind.If:
-            case Constant.KeywordConstantKind.In:
-            case Constant.KeywordConstantKind.Is:
-            case Constant.KeywordConstantKind.Section:
-            case Constant.KeywordConstantKind.Shared:
-            case Constant.KeywordConstantKind.Let:
-            case Constant.KeywordConstantKind.Meta:
-            case Constant.KeywordConstantKind.Otherwise:
-            case Constant.KeywordConstantKind.Then:
-            case Constant.KeywordConstantKind.Try:
-            case Constant.KeywordConstantKind.Type:
+            case Constant.KeywordConstant.As:
+            case Constant.KeywordConstant.Each:
+            case Constant.KeywordConstant.Else:
+            case Constant.KeywordConstant.Error:
+            case Constant.KeywordConstant.If:
+            case Constant.KeywordConstant.In:
+            case Constant.KeywordConstant.Is:
+            case Constant.KeywordConstant.Section:
+            case Constant.KeywordConstant.Shared:
+            case Constant.KeywordConstant.Let:
+            case Constant.KeywordConstant.Meta:
+            case Constant.KeywordConstant.Otherwise:
+            case Constant.KeywordConstant.Then:
+            case Constant.KeywordConstant.Try:
+            case Constant.KeywordConstant.Type:
 
-            case Constant.PrimitiveTypeConstantKind.Null:
+            case Constant.PrimitiveTypeConstant.Null:
                 return true;
 
             default:
@@ -327,7 +327,7 @@ function findIdentifierUnderPosition(
     let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
 
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstantKind.AtSign) {
+    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstant.AtSign) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
         if (maybeParentId === undefined) {
             return undefined;

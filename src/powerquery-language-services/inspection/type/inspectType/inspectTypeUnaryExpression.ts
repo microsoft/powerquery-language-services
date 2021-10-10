@@ -44,8 +44,8 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     }
 }
 
-type NumberUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperatorKind.Negative | Constant.UnaryOperatorKind.Positive>;
-type LogicalUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperatorKind.Not>;
+type NumberUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive>;
+type LogicalUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperator.Not>;
 
 function inspectTypeUnaryNumber(
     state: InspectTypeState,
@@ -56,20 +56,20 @@ function inspectTypeUnaryNumber(
         NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<NumberUnaryNodeOperator>;
 
-    const expectedUnaryOperatorKinds: ReadonlyArray<Constant.UnaryOperatorKind> = [
-        Constant.UnaryOperatorKind.Positive,
-        Constant.UnaryOperatorKind.Negative,
+    const expectedUnaryOperators: ReadonlyArray<Constant.UnaryOperator> = [
+        Constant.UnaryOperator.Positive,
+        Constant.UnaryOperator.Negative,
     ];
-    const unaryOperators: (Constant.UnaryOperatorKind.Negative | Constant.UnaryOperatorKind.Positive)[] = [];
+    const unaryOperators: (Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive)[] = [];
     let isPositive: boolean = true;
 
     for (const operator of unaryNodeOperators) {
-        if (expectedUnaryOperatorKinds.indexOf(operator.constantKind) === -1) {
+        if (expectedUnaryOperators.indexOf(operator.constantKind) === -1) {
             return Type.NoneInstance;
         }
 
         unaryOperators.push(operator.constantKind);
-        if (operator.constantKind === Constant.UnaryOperatorKind.Negative) {
+        if (operator.constantKind === Constant.UnaryOperator.Negative) {
             isPositive = !isPositive;
         }
     }
@@ -99,7 +99,7 @@ function inspectTypeUnaryLogical(
     ) as ReadonlyArray<LogicalUnaryNodeOperator>;
 
     for (const operator of unaryNodeOperators) {
-        if (operator.constantKind !== Constant.UnaryOperatorKind.Not) {
+        if (operator.constantKind !== Constant.UnaryOperator.Not) {
             return Type.NoneInstance;
         }
     }

@@ -34,9 +34,9 @@ function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): Autoco
     const activeNode: ActiveNode = maybeActiveNode;
 
     if (isNullableAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstantKind(Constant.LanguageConstantKind.Nullable);
+        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Nullable);
     } else if (isOptionalAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstantKind(Constant.LanguageConstantKind.Optional);
+        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Optional);
     } else {
         return undefined;
     }
@@ -153,8 +153,8 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
                     const name: string = nameAst.literal;
 
                     return (
-                        Constant.LanguageConstantKind.Optional.startsWith(name) &&
-                        name !== Constant.LanguageConstantKind.Optional &&
+                        Constant.LanguageConstant.Optional.startsWith(name) &&
+                        name !== Constant.LanguageConstant.Optional &&
                         PositionUtils.isInAst(activeNode.position, nameAst, false, true)
                     );
                 }

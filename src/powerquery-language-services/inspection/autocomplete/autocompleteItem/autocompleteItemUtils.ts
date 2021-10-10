@@ -44,10 +44,7 @@ export function createFromKeywordKind(label: Keyword.KeywordKind, maybeOther?: s
     };
 }
 
-export function createFromLanguageConstantKind(
-    label: Constant.LanguageConstantKind,
-    maybeOther?: string,
-): AutocompleteItem {
+export function createFromLanguageConstant(label: Constant.LanguageConstant, maybeOther?: string): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
@@ -73,8 +70,8 @@ export function createFromLibraryDefinition(
     };
 }
 
-export function createFromPrimitiveTypeConstantKind(
-    label: Constant.PrimitiveTypeConstantKind,
+export function createFromPrimitiveTypeConstant(
+    label: Constant.PrimitiveTypeConstant,
     maybeOther?: string,
 ): AutocompleteItem {
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
@@ -84,7 +81,7 @@ export function createFromPrimitiveTypeConstantKind(
         kind: CompletionItemKind.Keyword,
         label,
         powerQueryType: TypeUtils.createPrimitiveType(
-            label === Constant.PrimitiveTypeConstantKind.Null,
+            label === Constant.PrimitiveTypeConstant.Null,
             TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
         ),
     };
