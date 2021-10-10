@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Tõrge, mis ilmneb siis, kui funktsioonikutsele edastati liiga vähe või liiga palju argumente. Eeldatavasti kasutajale suunatud.",
   "error_validation_invokeExpression_missingMandatory_named": "Funktsioonil „{funcName}“ puudub mittevalikulise parameetri argument „{argName}“.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Puudub mittevalikulise parameetri argument „{argName}“.",
-  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ eeldas, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Eeldati, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“."
 }

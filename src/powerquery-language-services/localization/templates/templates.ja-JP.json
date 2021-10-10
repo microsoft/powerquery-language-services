@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "関数呼び出しの指定の引数の数が少なすぎるか、多すぎる場合のエラーです。ユーザー向けである必要があります。",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
   "error_validation_invokeExpression_missingMandatory_unnamed": "オプションではないパラメーター '{argName}' の引数がありません。",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。"
 }
