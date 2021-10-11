@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Er is een fout opgetreden bij een functieaanroep die te weinig of te veel argumenten heeft gekregen. Naar verwachting op de gebruiker gericht.",
   "error_validation_invokeExpression_missingMandatory_named": "Bij '{funcName}' ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Er ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'."
 }

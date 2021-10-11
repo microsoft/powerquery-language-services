@@ -77,7 +77,7 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
 
         // '[foo = 1] & [bar = 2]'
         if (
-            operatorKind === Constant.ArithmeticOperatorKind.And &&
+            operatorKind === Constant.ArithmeticOperator.And &&
             (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
         ) {
             return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
@@ -174,12 +174,12 @@ export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
     ...createLookupsForRelational(Type.TypeKind.Time),
     ...createLookupsForEquality(Type.TypeKind.Time),
     ...createLookupsForClockKind(Type.TypeKind.Time),
-    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
+    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperator.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
 
     ...createLookupsForRelational(Type.TypeKind.Date),
     ...createLookupsForEquality(Type.TypeKind.Date),
     ...createLookupsForClockKind(Type.TypeKind.Date),
-    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
+    [lookupKey(Type.TypeKind.Date, Constant.ArithmeticOperator.And, Type.TypeKind.Time), Type.TypeKind.DateTime],
 
     ...createLookupsForRelational(Type.TypeKind.DateTime),
     ...createLookupsForEquality(Type.TypeKind.DateTime),
@@ -192,41 +192,41 @@ export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
     ...createLookupsForRelational(Type.TypeKind.Duration),
     ...createLookupsForEquality(Type.TypeKind.Duration),
     [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration),
+        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Addition, Type.TypeKind.Duration),
         Type.TypeKind.Duration,
     ],
     [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration),
+        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Subtraction, Type.TypeKind.Duration),
         Type.TypeKind.Duration,
     ],
     [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Multiplication, Type.TypeKind.Number),
+        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Multiplication, Type.TypeKind.Number),
         Type.TypeKind.Duration,
     ],
     [
-        lookupKey(Type.TypeKind.Number, Constant.ArithmeticOperatorKind.Multiplication, Type.TypeKind.Duration),
+        lookupKey(Type.TypeKind.Number, Constant.ArithmeticOperator.Multiplication, Type.TypeKind.Duration),
         Type.TypeKind.Duration,
     ],
     [
-        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Division, Type.TypeKind.Number),
+        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Division, Type.TypeKind.Number),
         Type.TypeKind.Duration,
     ],
 
     ...createLookupsForRelational(Type.TypeKind.Text),
     ...createLookupsForEquality(Type.TypeKind.Text),
-    [lookupKey(Type.TypeKind.Text, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Text), Type.TypeKind.Text],
+    [lookupKey(Type.TypeKind.Text, Constant.ArithmeticOperator.And, Type.TypeKind.Text), Type.TypeKind.Text],
 
     ...createLookupsForRelational(Type.TypeKind.Binary),
     ...createLookupsForEquality(Type.TypeKind.Binary),
 
     ...createLookupsForEquality(Type.TypeKind.List),
-    [lookupKey(Type.TypeKind.List, Constant.ArithmeticOperatorKind.And, Type.TypeKind.List), Type.TypeKind.List],
+    [lookupKey(Type.TypeKind.List, Constant.ArithmeticOperator.And, Type.TypeKind.List), Type.TypeKind.List],
 
     ...createLookupsForEquality(Type.TypeKind.Record),
-    [lookupKey(Type.TypeKind.Record, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Record), Type.TypeKind.Record],
+    [lookupKey(Type.TypeKind.Record, Constant.ArithmeticOperator.And, Type.TypeKind.Record), Type.TypeKind.Record],
 
     ...createLookupsForEquality(Type.TypeKind.Table),
-    [lookupKey(Type.TypeKind.Table, Constant.ArithmeticOperatorKind.And, Type.TypeKind.Table), Type.TypeKind.Table],
+    [lookupKey(Type.TypeKind.Table, Constant.ArithmeticOperator.And, Type.TypeKind.Table), Type.TypeKind.Table],
 ]);
 
 // Keys: <first operand> <operator>
@@ -278,34 +278,34 @@ export function partialLookupKey(leftTypeKind: Type.TypeKind, operatorKind: Cons
 
 function createLookupsForRelational(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThan, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.GreaterThanEqualTo, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.LessThan, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.RelationalOperatorKind.LessThanEqualTo, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.RelationalOperator.GreaterThan, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.RelationalOperator.GreaterThanEqualTo, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.RelationalOperator.LessThan, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.RelationalOperator.LessThanEqualTo, typeKind), Type.TypeKind.Logical],
     ];
 }
 
 function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.EqualityOperatorKind.EqualTo, typeKind), Type.TypeKind.Logical],
-        [lookupKey(typeKind, Constant.EqualityOperatorKind.NotEqualTo, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.EqualityOperator.EqualTo, typeKind), Type.TypeKind.Logical],
+        [lookupKey(typeKind, Constant.EqualityOperator.NotEqualTo, typeKind), Type.TypeKind.Logical],
     ];
 }
 
 // Note: does not include the and <'&'> Constant.
 function createLookupsForArithmetic(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Division, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Multiplication, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Addition, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Division, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Multiplication, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Subtraction, typeKind), typeKind],
     ];
 }
 
 function createLookupsForLogical(typeKind: Type.TypeKind): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.LogicalOperatorKind.And, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.LogicalOperatorKind.Or, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.LogicalOperator.And, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.LogicalOperator.Or, typeKind), typeKind],
     ];
 }
 
@@ -313,9 +313,9 @@ function createLookupsForClockKind(
     typeKind: Type.TypeKind.Date | Type.TypeKind.DateTime | Type.TypeKind.DateTimeZone | Type.TypeKind.Time,
 ): ReadonlyArray<[string, Type.TypeKind]> {
     return [
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Addition, Type.TypeKind.Duration), typeKind],
-        [lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperatorKind.Addition, typeKind), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, Type.TypeKind.Duration), typeKind],
-        [lookupKey(typeKind, Constant.ArithmeticOperatorKind.Subtraction, typeKind), Type.TypeKind.Duration],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Addition, Type.TypeKind.Duration), typeKind],
+        [lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Addition, typeKind), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Subtraction, Type.TypeKind.Duration), typeKind],
+        [lookupKey(typeKind, Constant.ArithmeticOperator.Subtraction, typeKind), Type.TypeKind.Duration],
     ];
 }

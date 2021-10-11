@@ -67,7 +67,7 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly name: Ast.Identifier;
     readonly isOptional: boolean;
     readonly isNullable: boolean;
-    readonly maybeType: Constant.PrimitiveTypeConstantKind | undefined;
+    readonly maybeType: Constant.PrimitiveTypeConstant | undefined;
 }
 
 export type RecordFieldScopeItem = IKeyValuePairScopeItem<Ast.GeneralizedIdentifier, ScopeItemKind.RecordField>;

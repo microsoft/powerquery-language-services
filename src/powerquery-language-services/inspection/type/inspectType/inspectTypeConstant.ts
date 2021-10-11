@@ -13,61 +13,61 @@ export function inspectTypeConstant(xorNode: TXorNode): Type.TPowerQueryType {
 
     const constant: Ast.TConstant = xorNode.node;
     switch (constant.constantKind) {
-        case Constant.PrimitiveTypeConstantKind.Action:
+        case Constant.PrimitiveTypeConstant.Action:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Action);
 
-        case Constant.PrimitiveTypeConstantKind.Any:
+        case Constant.PrimitiveTypeConstant.Any:
             return Type.AnyInstance;
 
-        case Constant.PrimitiveTypeConstantKind.AnyNonNull:
+        case Constant.PrimitiveTypeConstant.AnyNonNull:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.AnyNonNull);
 
-        case Constant.PrimitiveTypeConstantKind.Binary:
+        case Constant.PrimitiveTypeConstant.Binary:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Binary);
 
-        case Constant.PrimitiveTypeConstantKind.Date:
+        case Constant.PrimitiveTypeConstant.Date:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Date);
 
-        case Constant.PrimitiveTypeConstantKind.DateTime:
+        case Constant.PrimitiveTypeConstant.DateTime:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.DateTime);
 
-        case Constant.PrimitiveTypeConstantKind.DateTimeZone:
+        case Constant.PrimitiveTypeConstant.DateTimeZone:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.DateTimeZone);
 
-        case Constant.PrimitiveTypeConstantKind.Duration:
+        case Constant.PrimitiveTypeConstant.Duration:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Duration);
 
-        case Constant.PrimitiveTypeConstantKind.Function:
+        case Constant.PrimitiveTypeConstant.Function:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Function);
 
-        case Constant.PrimitiveTypeConstantKind.List:
+        case Constant.PrimitiveTypeConstant.List:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.List);
 
-        case Constant.PrimitiveTypeConstantKind.Logical:
+        case Constant.PrimitiveTypeConstant.Logical:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
 
-        case Constant.PrimitiveTypeConstantKind.None:
+        case Constant.PrimitiveTypeConstant.None:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.None);
 
-        case Constant.PrimitiveTypeConstantKind.Null:
+        case Constant.PrimitiveTypeConstant.Null:
             return Type.NoneInstance;
 
-        case Constant.PrimitiveTypeConstantKind.Number:
+        case Constant.PrimitiveTypeConstant.Number:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Number);
 
-        case Constant.PrimitiveTypeConstantKind.Record:
+        case Constant.PrimitiveTypeConstant.Record:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Record);
 
-        case Constant.PrimitiveTypeConstantKind.Table:
+        case Constant.PrimitiveTypeConstant.Table:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Table);
 
-        case Constant.PrimitiveTypeConstantKind.Text:
+        case Constant.PrimitiveTypeConstant.Text:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Text);
 
-        case Constant.PrimitiveTypeConstantKind.Time:
+        case Constant.PrimitiveTypeConstant.Time:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Time);
 
-        case Constant.PrimitiveTypeConstantKind.Type:
+        case Constant.PrimitiveTypeConstant.Type:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Type);
 
         default:

@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "फ़ंक्शन कॉल को या तो बहुत कम या बहुत अधिक तर्क दिए जाने पर त्रुटि हुई. उपयोगकर्ता द्वारा सामना किए जाने की अपेक्षा है.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' हेतु ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",
-  "error_validation_invokeExpression_typeMismatch_named": "‘{Funcname} से {argName} के लिए {expected} तर्क की अपेक्षा थी, लेकिन उसके बजाय {actual} मिला.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "{argName} के लिए {expected} तर्क की अपेक्षा थी, लेकिन उसके बजाय {actual} मिला."
 }

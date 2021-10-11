@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Fehler, wenn für einen Funktionsaufruf zu wenige oder zu viele Argumente angegeben wurden. Sollte dem Benutzer angezeigt werden.",
   "error_validation_invokeExpression_missingMandatory_named": "Für „{funcName}“ fehlt ein Argument für den nicht optionalen Parameter „{argName}“.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Ein Argument für den nicht optionalen Parameter „{argName}“ fehlt.",
-  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ erwartete, dass das Argument für „{argName}“ „{expected}“ sein würde, hat aber stattdessen „{actual}“ erhalten.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Es wurde erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, aber stattdessen wurde „{actual}“ erhalten."
 }
