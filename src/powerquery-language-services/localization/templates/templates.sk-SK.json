@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Chyba, ak volanie funkcie malo príliš málo alebo príliš veľa argumentov. Očakáva sa, že bude smerovať na používateľa.",
   "error_validation_invokeExpression_missingMandatory_named": "Vo {funcName} chýba argument pre nevoliteľný parameter {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Chýba argument pre nevoliteľný parameter {argName}.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName} očakávala, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Očakávalo sa, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'."
 }
