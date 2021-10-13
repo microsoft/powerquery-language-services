@@ -66,10 +66,13 @@
       </Item>
       <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Val><![CDATA['{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{funcName}에서는 '{argName}'에 대한 인수를 '{expected}'(으)로 예상했지만 대신 '{actual}'을(를) 받았습니다.]]></Val>
+            <Val><![CDATA['{funcName}'에서는 '{argName}'에 대한 인수를 '{expected}'(으)로 예상했지만 대신 '{actual}'을(를) 받았습니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

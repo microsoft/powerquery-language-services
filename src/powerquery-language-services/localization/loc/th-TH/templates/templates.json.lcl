@@ -66,10 +66,13 @@
       </Item>
       <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Val><![CDATA['{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{funcName} ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน]]></Val>
+            <Val><![CDATA['{funcName}' ต้องการอาร์กิวเมนต์สําหรับ '{argName}' เป็น '{expected}' แต่ได้รับ '{actual}' แทน]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

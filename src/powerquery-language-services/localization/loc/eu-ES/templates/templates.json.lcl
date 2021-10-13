@@ -66,10 +66,13 @@
       </Item>
       <Item ItemId=";error_validation_invokeExpression_typeMismatch_named" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          <Val><![CDATA['{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA['{funcName} expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
