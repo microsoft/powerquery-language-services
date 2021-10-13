@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "O eroare atunci când apelarea funcției a primit fie prea puține, fie prea multe argumente. Se așteaptă să fie orientată spre utilizator.",
   "error_validation_invokeExpression_missingMandatory_named": "„{funcName}” are un argument lipsă pentru parametrul non-opțional „{argName}”.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Lipsește un argument pentru parametrul non-opțional „{argName}”.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}” se aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar a primit în schimb „{actual}”.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Se aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar s-a primit în schimb „{actual}”."
 }
