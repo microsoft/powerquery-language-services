@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Virhe, kun funktiokutsulle annettiin joko liian vähän tai liian paljon argumentteja. Odotettiin olevan käyttäjälle suunnattu.",
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} puuttuu määrite ei-valinnaiselle parametrille {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Ei-valinnaiselle parametrille {argName} puuttuu määrite.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+  "error_validation_invokeExpression_typeMismatch_named": "{funcName} odotti, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan argumentin {actual}.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Odotettiin, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan {actual}."
 }
