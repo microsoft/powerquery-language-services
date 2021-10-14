@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Bir işlev çağrısına çok az veya çok fazla bağımsız değişken verildiğinde oluşan bir hata. Kullanıcıya yönelik olması bekleniyor.",
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "İsteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişken eksik.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}, '{argName}' bağımsız değişkeninin '{expected}' olmasını bekliyordu, ancak bunun yerine '{actual}' alındı.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı."
 }
