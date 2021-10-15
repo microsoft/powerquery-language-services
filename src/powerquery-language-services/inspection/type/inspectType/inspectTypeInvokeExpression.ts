@@ -35,6 +35,7 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         xorNode.node.id,
     );
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+
     if (previousSiblingType.kind === Type.TypeKind.Any) {
         return Type.AnyInstance;
     } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
