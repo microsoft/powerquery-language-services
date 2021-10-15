@@ -21,11 +21,22 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
     const fieldName: string = maybeFieldName.literal;
 
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
-    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+    const fieldScope: FieldScope = getFieldScope();
+
+    let fieldType: Type.TPowerQueryType;
+    switch (fieldScope) {
+        case FieldScope.EachExpression:
+            fieldType = inspectEachExpressionFieldSelector(state, xorNode);
+            break;
+
+        case FieldScope.RecursivePrimaryExpression:
+            fieldType = inspectRecursivePrimaryExpressionFieldSelector(state, xorNode);
+            break;
+
+        default:
+            throw Assert.isNever(fieldScope);
+    }
+
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
             state.nodeIdMapCollection,
@@ -34,7 +45,25 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    switch (previousSiblingType.kind) {
+    return getFieldSelectorType(fieldType, fieldName, isOptional);
+}
+
+const enum FieldScope {
+    EachExpression,
+    RecursivePrimaryExpression,
+}
+
+function getFieldScope(): FieldScope {
+    // TODO
+    return FieldScope.RecursivePrimaryExpression;
+}
+
+function getFieldSelectorType(
+    fieldType: Type.TPowerQueryType,
+    fieldName: string,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    switch (fieldType.kind) {
         case Type.TypeKind.Any:
             return Type.AnyInstance;
 
@@ -43,16 +72,16 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
-            switch (previousSiblingType.maybeExtendedKind) {
+            switch (fieldType.maybeExtendedKind) {
                 case undefined:
                     return Type.AnyInstance;
 
                 case Type.ExtendedTypeKind.DefinedRecord:
                 case Type.ExtendedTypeKind.DefinedTable: {
-                    const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
+                    const maybeNamedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
                     if (maybeNamedField !== undefined) {
                         return maybeNamedField;
-                    } else if (previousSiblingType.isOpen) {
+                    } else if (fieldType.isOpen) {
                         return Type.AnyInstance;
                     } else {
                         return isOptional ? Type.NullInstance : Type.NoneInstance;
@@ -60,10 +89,25 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
                 }
 
                 default:
-                    throw Assert.isNever(previousSiblingType);
+                    throw Assert.isNever(fieldType);
             }
 
         default:
             return Type.NoneInstance;
     }
+}
+
+function inspectEachExpressionFieldSelector(_state: InspectTypeState, _xorNode: TXorNode): Type.TPowerQueryType {
+    throw new Error("TODO");
+}
+
+function inspectRecursivePrimaryExpressionFieldSelector(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Type.TPowerQueryType {
+    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+    return inspectXor(state, previousSibling);
 }
