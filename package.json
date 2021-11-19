@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.2.13",
+    "version": "0.2.14",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -10,8 +10,7 @@
         "lint": "npm run lint:prettier && npm run lint:tslint",
         "lint:prettier": ".\\node_modules\\.bin\\prettier --config \".prettierrc\" --list-different src\\**\\*.ts",
         "lint:tslint": ".\\node_modules\\.bin\\tslint src/*.ts",
-        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/**/*.ts",
-        "preUnitTests": "cpy src/test/powerquery-language-services/files/*.pq lib/test/files/ && npm run watch"
+        "test": "mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json -r ts-node/register src/test/**/*.ts"
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services#readme",
     "repository": {
@@ -29,28 +28,27 @@
         "power bi"
     ],
     "devDependencies": {
-        "@types/chai": "^4.2.11",
-        "@types/mocha": "^8.0.0",
-        "@types/node": "^14.0.23",
-        "chai": "^4.2.0",
-        "cpy-cli": "^3.1.1",
-        "mocha": "^9.1.2",
-        "mocha-junit-reporter": "^2.0.0",
-        "mocha-multi-reporters": "^1.1.7",
-        "prettier": "^2.0.5",
-        "ts-loader": "^8.0.1",
-        "ts-node": "^8.10.2",
-        "tslint": "^6.1.2",
-        "tslint-config-prettier": "^1.18.0",
-        "tslint-microsoft-contrib": "^6.2.0",
-        "tslint-plugin-prettier": "^2.3.0",
-        "typescript": "^4.3.5"
+        "@types/chai": "4.2.22",
+        "@types/mocha": "9.0.0",
+        "@types/node": "16.11.7",
+        "chai": "4.3.4",
+        "mocha": "9.1.3",
+        "mocha-junit-reporter": "2.0.2",
+        "mocha-multi-reporters": "1.5.1",
+        "prettier": "2.4.1",
+        "ts-loader": "9.2.6",
+        "ts-node": "10.4.0",
+        "tslint": "6.1.2",
+        "tslint-config-prettier": "1.18.0",
+        "tslint-microsoft-contrib": "6.2.0",
+        "tslint-plugin-prettier": "2.3.0",
+        "typescript": "4.4.4"
     },
     "dependencies": {
         "@microsoft/powerquery-formatter": "0.0.41",
         "@microsoft/powerquery-parser": "0.4.18",
-        "vscode-languageserver-textdocument": "1.0.1",
-        "vscode-languageserver-types": "3.15.1"
+        "vscode-languageserver-textdocument": "1.0.2",
+        "vscode-languageserver-types": "3.16.0"
     },
     "files": [
         "lib/powerquery-language-services/**/*"
