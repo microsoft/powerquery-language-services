@@ -8,10 +8,12 @@ export function createValidationSettings(
     inspectionSettings: InspectionSettings,
     source: string,
     checkForDuplicateIdentifiers?: boolean,
+    checkInvokeExpressions?: boolean,
 ): ValidationSettings {
     return {
         ...inspectionSettings,
         checkForDuplicateIdentifiers: checkForDuplicateIdentifiers ?? true,
+        checkInvokeExpressions: checkInvokeExpressions ?? true,
         source,
     };
 }

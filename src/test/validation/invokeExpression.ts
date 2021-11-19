@@ -7,9 +7,18 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
 
+import * as PQLS from "../../powerquery-language-services";
+
 import { TestConstants, TestUtils } from "..";
-import { Diagnostic, DiagnosticErrorCode, Position, TextDocument } from "../../powerquery-language-services";
+import {
+    Diagnostic,
+    DiagnosticErrorCode,
+    Position,
+    TextDocument,
+    ValidationSettings,
+} from "../../powerquery-language-services";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { SimpleValidationSettings } from "../testConstants";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -89,14 +98,29 @@ function expectInvocationDiagnosticPositions(
 }
 
 describe("Validation - InvokeExpression", () => {
+    describe(`checkInvokeExpressions = false`, () => {
+        const validationSettings: ValidationSettings = {
+            ...SimpleValidationSettings,
+            checkInvokeExpressions: false,
+        };
+
+        it(`argument count suppressed`, () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(
+                `${TestConstants.TestLibraryName.SquareIfNumber}()`,
+            );
+
+            const validationResult: ValidationResult = PQLS.validate(textDocument, validationSettings);
+            expect(validationResult.diagnostics.length).to.equal(0);
+        });
+    });
+
     describe(`single invocation`, () => {
         it(`expects [1, 1] arguments, 0 given`, () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.SquareIfNumber}()`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
             expectArgumentCountMismatch(invocationDiagnostics, 1, 1, 0);
         });
 
@@ -104,9 +128,8 @@ describe("Validation - InvokeExpression", () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
         });
 
@@ -114,9 +137,8 @@ describe("Validation - InvokeExpression", () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
             expect(invocationDiagnostics.length).to.equal(0);
         });
     });
@@ -131,9 +153,8 @@ let
 in
     _`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
 
             expect(invocationDiagnostics.length).to.equal(2);
 
