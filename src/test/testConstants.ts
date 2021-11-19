@@ -230,6 +230,7 @@ export const SimpleInspectionSettings: InspectionSettings = {
 export const SimpleValidationSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
+    checkInvokeExpressions: true,
     source: "UNIT-TEST-SOURCE",
 };
 
