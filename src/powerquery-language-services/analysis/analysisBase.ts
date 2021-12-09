@@ -80,11 +80,11 @@ export abstract class AnalysisBase implements Analysis {
         // - honor expected data type
         // - only include current query name after @
         const [languageResponse, libraryResponse, localDocumentResponse] = await Promise.all(
-            AnalysisBase.createAutocompleteItemCalls(context, [
-                this.languageAutocompleteItemProvider,
-                this.librarySymbolProvider,
-                this.localDocumentSymbolProvider,
-            ]),
+            AnalysisBase.createAutocompleteItemCalls(
+                context,
+                [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentSymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
         );
 
         const partial: AutocompleteItem[] = [];
@@ -146,10 +146,11 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createSignatureHelpCalls(context, [
-                this.localDocumentSymbolProvider,
-                this.librarySymbolProvider,
-            ]),
+            AnalysisBase.createSignatureHelpCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptySignatureHelp,
         );
     }
@@ -161,6 +162,7 @@ export abstract class AnalysisBase implements Analysis {
 
     private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS?: number): Promise<T> {
         if (timeoutInMS) {
+            // TODO: Enabling trace entry when timeout occurs
             return Promise.race([
                 promise,
                 new Promise<T>(resolve =>
