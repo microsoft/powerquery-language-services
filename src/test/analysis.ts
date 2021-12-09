@@ -7,8 +7,15 @@ import { expect } from "chai";
 import "mocha";
 
 import { TestConstants, TestUtils } from ".";
-import { AnalysisSettings, Hover, SignatureHelp } from "../powerquery-language-services";
+import {
+    AnalysisSettings,
+    Hover,
+    InspectionSettings,
+    SignatureHelp,
+    WorkspaceCache,
+} from "../powerquery-language-services";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
+import { ILibrary } from "../powerquery-language-services/library/library";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
 describe("Analysis", () => {
@@ -36,29 +43,12 @@ describe("Analysis", () => {
             TestUtils.assertHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
         });
 
-        it(`timeout`, async () => {
-            const analysisSettings: AnalysisSettings = {
-                ...TestConstants.SimpleLibraryAnalysisSettings,
-                maybeCreateLocalDocumentSymbolProviderFn: (
-                    library,
-                    _maybeTriedInspection,
-                    _createInspectionSettingsFn,
-                ) => new SlowSymbolProvider(library, 1000),
-            };
+        it(`timeout library provider`, async () => {
+            await runHoverTimeoutTest("library", `[let-variable] Test.SquareIfNumber: logical`);
+        });
 
-            const startTime: number = new Date().getTime();
-
-            const hover: Hover = await TestUtils.createHover(
-                `${TestConstants.TestLibraryName.SquareIfNumber}|`,
-                analysisSettings,
-            );
-
-            const stopTime: number = new Date().getTime();
-            const totalMS: number = stopTime - startTime;
-
-            TestUtils.assertHover(`[library function] Test.SquareIfNumber: (x: any) => any`, hover);
-
-            expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
+        it(`timeout local document provider`, async () => {
+            await runHoverTimeoutTest("local", `[library function] Test.SquareIfNumber: (x: any) => any`);
         });
     });
 
@@ -85,3 +75,38 @@ describe("Analysis", () => {
         });
     });
 });
+
+async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverText: string): Promise<void> {
+    const baseAnalysis: any =
+        provider === "local"
+            ? {
+                  maybeCreateLocalDocumentSymbolProviderFn: (
+                      library: ILibrary,
+                      _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+                      _createInspectionSettingsFn: () => InspectionSettings,
+                  ) => new SlowSymbolProvider(library, 1000),
+              }
+            : {
+                  maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
+              };
+
+    const analysisSettings: AnalysisSettings = {
+        ...TestConstants.SimpleLibraryAnalysisSettings,
+        ...baseAnalysis,
+        symbolProviderTimeoutInMS: 10,
+    };
+
+    const startTime: number = new Date().getTime();
+
+    const hover: Hover = await TestUtils.createHover(
+        `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+        analysisSettings,
+    );
+
+    const stopTime: number = new Date().getTime();
+    const totalMS: number = stopTime - startTime;
+
+    TestUtils.assertHover(expectedHoverText, hover);
+
+    expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
+}

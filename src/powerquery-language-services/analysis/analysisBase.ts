@@ -98,10 +98,8 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken:
-            | Ast.Identifier
-            | Ast.GeneralizedIdentifier
-            | undefined = this.getMaybePositionIdentifier();
+        const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return EmptyHover;
         }
@@ -120,6 +118,7 @@ export abstract class AnalysisBase implements Analysis {
         return AnalysisBase.resolveProviders(
             AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
             EmptyHover,
+            this.analysisSettings.symbolProviderTimeoutInMS,
         );
     }
 
@@ -129,9 +128,8 @@ export abstract class AnalysisBase implements Analysis {
         }
         const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
-            inspected,
-        );
+        const maybeContext: SignatureProviderContext | undefined =
+            InspectionUtils.getMaybeContextForSignatureProvider(inspected);
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
         }
@@ -156,11 +154,31 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
+    private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS: number): Promise<T> {
+        const timeoutPromise: Promise<T> = new Promise(resolve =>
+            setTimeout(() => {
+                resolve(timeoutReturnValue);
+            }, timeoutInMS),
+        );
+
+        return Promise.race([promise, timeoutPromise]);
+    }
+
     private static async resolveProviders<T>(
         calls: ReadonlyArray<Promise<T | null>>,
         defaultReturnValue: T,
+        timeoutInMS?: number,
     ): Promise<T> {
-        const results: (T | null)[] = await Promise.all(calls);
+        let promiseCalls: ReadonlyArray<Promise<T | null>>;
+
+        if (timeoutInMS) {
+            // tslint:disable-next-line: no-null-keyword
+            promiseCalls = calls.map(p => this.promiseWithTimeout(p, null, timeoutInMS));
+        } else {
+            promiseCalls = calls;
+        }
+
+        const results: (T | null)[] = await Promise.all(promiseCalls);
 
         for (let i: number = 0; i < results.length; i++) {
             if (results[i] !== null) {
