@@ -26,6 +26,8 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 
+// tslint:disable: no-null-keyword
+
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
@@ -116,9 +118,12 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
+            AnalysisBase.createHoverCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptyHover,
-            this.analysisSettings.symbolProviderTimeoutInMS,
         );
     }
 
@@ -154,31 +159,26 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
-    private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS: number): Promise<T> {
-        const timeoutPromise: Promise<T> = new Promise(resolve =>
-            setTimeout(() => {
-                resolve(timeoutReturnValue);
-            }, timeoutInMS),
-        );
+    private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS?: number): Promise<T> {
+        if (timeoutInMS) {
+            return Promise.race([
+                promise,
+                new Promise<T>(resolve =>
+                    setTimeout(() => {
+                        resolve(timeoutReturnValue);
+                    }, timeoutInMS),
+                ),
+            ]);
+        }
 
-        return Promise.race([promise, timeoutPromise]);
+        return promise;
     }
 
     private static async resolveProviders<T>(
         calls: ReadonlyArray<Promise<T | null>>,
         defaultReturnValue: T,
-        timeoutInMS?: number,
     ): Promise<T> {
-        let promiseCalls: ReadonlyArray<Promise<T | null>>;
-
-        if (timeoutInMS) {
-            // tslint:disable-next-line: no-null-keyword
-            promiseCalls = calls.map(p => this.promiseWithTimeout(p, null, timeoutInMS));
-        } else {
-            promiseCalls = calls;
-        }
-
-        const results: (T | null)[] = await Promise.all(promiseCalls);
+        const results: (T | null)[] = await Promise.all(calls);
 
         for (let i: number = 0; i < results.length; i++) {
             if (results[i] !== null) {
@@ -204,13 +204,17 @@ export abstract class AnalysisBase implements Analysis {
     private static createHoverCalls(
         context: HoverProviderContext,
         providers: HoverProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getHover(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
+            this.promiseWithTimeout(
+                provider.getHover(context).catch(() => {
+                    return null;
+                }),
+                null,
+                timeoutInMS,
+            ),
         );
     }
 
@@ -221,7 +225,6 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
             provider.getSignatureHelp(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
                 return null;
             }),
         );
