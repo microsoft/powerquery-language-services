@@ -192,12 +192,17 @@ export abstract class AnalysisBase implements Analysis {
     private static createAutocompleteItemCalls(
         context: AutocompleteItemProviderContext,
         providers: ReadonlyArray<AutocompleteItemProvider>,
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getAutocompleteItems(context).catch(() => {
-                return [];
-            }),
+            this.promiseWithTimeout(
+                provider.getAutocompleteItems(context).catch(() => {
+                    return [];
+                }),
+                [],
+                timeoutInMS,
+            ),
         );
     }
 
@@ -221,12 +226,17 @@ export abstract class AnalysisBase implements Analysis {
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getSignatureHelp(context).catch(() => {
-                return null;
-            }),
+            this.promiseWithTimeout(
+                provider.getSignatureHelp(context).catch(() => {
+                    return null;
+                }),
+                null,
+                timeoutInMS,
+            ),
         );
     }
 
