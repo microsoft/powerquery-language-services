@@ -7,52 +7,9 @@ import { expect } from "chai";
 import "mocha";
 
 import { TestConstants, TestUtils } from ".";
-import {
-    AnalysisSettings,
-    AutocompleteItemProviderContext,
-    Hover,
-    HoverProviderContext,
-    Library,
-    LibrarySymbolProvider,
-    SignatureHelp,
-    SignatureProviderContext,
-} from "../powerquery-language-services";
+import { AnalysisSettings, Hover, SignatureHelp } from "../powerquery-language-services";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
-import { ILibrary } from "../powerquery-language-services/library/library";
-
-class SlowSymbolProvider extends LibrarySymbolProvider {
-    private readonly delayInMS: number;
-
-    constructor(library: ILibrary, delayInMS: number) {
-        super(library);
-        this.delayInMS = delayInMS;
-    }
-
-    public override async getAutocompleteItems(
-        context: AutocompleteItemProviderContext,
-    ): Promise<ReadonlyArray<AutocompleteItem>> {
-        await this.delay();
-        return super.getAutocompleteItems(context);
-    }
-
-    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        await this.delay();
-        return super.getHover(context);
-    }
-
-    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        await this.delay();
-        return super.getSignatureHelp(context);
-    }
-
-    private async delay(): Promise<void> {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve();
-            }, this.delayInMS);
-        });
-    }
-}
+import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
 describe("Analysis", () => {
     describe(`getAutocompleteItems;`, () => {
@@ -82,12 +39,11 @@ describe("Analysis", () => {
         it(`timeout`, () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
-                maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new SlowSymbolProvider(library, 200),
-                // maybeCreateLocalDocumentSymbolProviderFn: (
-                //     _library: Library.ILibrary,
-                //     _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
-                //     _createInspectionSettingsFn: () => InspectionSettings,
-                // ) => new SlowSymbolProvider(5000),
+                maybeCreateLocalDocumentSymbolProviderFn: (
+                    library,
+                    _maybeTriedInspection,
+                    _createInspectionSettingsFn,
+                ) => new SlowSymbolProvider(library, 1000),
             };
 
             const startTime: number = new Date().getTime();
@@ -95,11 +51,11 @@ describe("Analysis", () => {
             return TestUtils.createHover(`${TestConstants.TestLibraryName.SquareIfNumber}|`, analysisSettings).then(
                 hover => {
                     const stopTime: number = new Date().getTime();
+                    const totalMS: number = stopTime - startTime;
+
                     TestUtils.assertHover(`[library function] Test.SquareIfNumber: (x: any) => any`, hover);
 
-                    const totalMS: number = stopTime - startTime;
-                    console.warn(`total time:[${totalMS}ms]`);
-                    expect(totalMS).to.be.lessThanOrEqual(1000, `Test took longer than expected. [${totalMS}ms]`);
+                    expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
                 },
             );
         });
