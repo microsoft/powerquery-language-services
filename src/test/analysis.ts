@@ -36,7 +36,7 @@ describe("Analysis", () => {
             TestUtils.assertHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
         });
 
-        it(`timeout`, () => {
+        it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 maybeCreateLocalDocumentSymbolProviderFn: (
@@ -48,16 +48,17 @@ describe("Analysis", () => {
 
             const startTime: number = new Date().getTime();
 
-            return TestUtils.createHover(`${TestConstants.TestLibraryName.SquareIfNumber}|`, analysisSettings).then(
-                hover => {
-                    const stopTime: number = new Date().getTime();
-                    const totalMS: number = stopTime - startTime;
-
-                    TestUtils.assertHover(`[library function] Test.SquareIfNumber: (x: any) => any`, hover);
-
-                    expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
-                },
+            const hover: Hover = await TestUtils.createHover(
+                `${TestConstants.TestLibraryName.SquareIfNumber}|`,
+                analysisSettings,
             );
+
+            const stopTime: number = new Date().getTime();
+            const totalMS: number = stopTime - startTime;
+
+            TestUtils.assertHover(`[library function] Test.SquareIfNumber: (x: any) => any`, hover);
+
+            expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
         });
     });
 
