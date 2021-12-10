@@ -98,6 +98,23 @@ describe("Analysis", () => {
             };
             expect(actual).to.deep.equal(expected);
         });
+
+        it(`timeout`, async () => {
+            const analysisSettings: AnalysisSettings = {
+                ...TestConstants.SimpleLibraryAnalysisSettings,
+                symbolProviderTimeoutInMS: 0, // immediate timeout
+                maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
+            };
+
+            const signatureHelp: SignatureHelp = await TestUtils.createSignatureHelp(
+                `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                analysisSettings,
+            );
+
+            // tslint:disable-next-line: no-null-keyword
+            expect(signatureHelp.activeParameter).equals(null, "Didn't expect to find symbol");
+            expect(signatureHelp.signatures.length).equals(0, "Didn't expect to find symbol");
+        });
     });
 });
 
