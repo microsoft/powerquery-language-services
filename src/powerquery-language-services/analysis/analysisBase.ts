@@ -161,7 +161,7 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getText(range?: Range): string;
 
     private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS?: number): Promise<T> {
-        if (timeoutInMS) {
+        if (timeoutInMS !== undefined) {
             // TODO: Enabling trace entry when timeout occurs
             return Promise.race([
                 promise,
