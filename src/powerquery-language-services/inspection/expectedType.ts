@@ -461,7 +461,7 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
 }
 
 function unknownChildIndexError(parent: TXorNode, childIndex: number): PQP.CommonError.InvariantError {
-    const details: {} = {
+    const details: object = {
         parentId: parent.node.kind,
         parentNodeKind: parent.node.kind,
         childIndex,

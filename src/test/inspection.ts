@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";

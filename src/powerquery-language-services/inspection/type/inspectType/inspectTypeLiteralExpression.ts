@@ -10,11 +10,14 @@ export function inspectTypeLiteralExpression(
 ): Type.TPrimitiveType | Type.TextLiteral | Type.NumberLiteral {
     XorNodeUtils.assertIsNodeKind<Ast.LiteralExpression>(xorNode, Ast.NodeKind.LiteralExpression);
 
+    let literalExpression: Ast.LiteralExpression | undefined;
+    let typeKind: Type.TypeKind | undefined;
+
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
             // We already checked it's a Ast Literal Expression.
-            const literalExpression: Ast.LiteralExpression = xorNode.node;
-            const typeKind: Type.TypeKind = TypeUtils.typeKindFromLiteralKind(literalExpression.literalKind);
+            literalExpression = xorNode.node;
+            typeKind = TypeUtils.typeKindFromLiteralKind(literalExpression.literalKind);
 
             switch (typeKind) {
                 case Type.TypeKind.Number:
