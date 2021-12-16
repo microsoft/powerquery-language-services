@@ -26,8 +26,6 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 
-// tslint:disable: no-null-keyword
-
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;

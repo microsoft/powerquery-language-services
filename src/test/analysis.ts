@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import "mocha";
@@ -111,7 +110,6 @@ describe("Analysis", () => {
                 analysisSettings,
             );
 
-            // tslint:disable-next-line: no-null-keyword
             expect(signatureHelp.activeParameter).equals(null, "Didn't expect to find symbol");
             expect(signatureHelp.signatures.length).equals(0, "Didn't expect to find symbol");
         });

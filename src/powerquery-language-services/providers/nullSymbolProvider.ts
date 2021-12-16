@@ -33,12 +33,10 @@ export class NullSymbolProvider implements ISymbolProvider {
     }
 
     public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
 
     public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
 }

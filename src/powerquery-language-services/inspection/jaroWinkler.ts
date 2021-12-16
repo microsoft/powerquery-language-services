@@ -42,9 +42,7 @@ function calculateJaroForNormalized(shorter: string, longer: string): number {
     // When trying to find similar characters limit the search to a window based on longer's length.
     const matchingWindowSize: number = Math.floor(longerLength / 2) - 1;
 
-    // tslint:disable-next-line: prefer-array-literal
     const shorterMatches: boolean[] = new Array(shorterLength);
-    // tslint:disable-next-line: prefer-array-literal
     const longerMatches: boolean[] = new Array(longerLength);
     let numMatches: number = 0;
 

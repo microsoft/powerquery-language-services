@@ -40,8 +40,6 @@ export const EmptyHover: Hover = {
 
 export const EmptySignatureHelp: SignatureHelp = {
     signatures: [],
-    // tslint:disable-next-line: no-null-keyword
     activeParameter: null,
-    // tslint:disable-next-line: no-null-keyword
     activeSignature: null,
 };

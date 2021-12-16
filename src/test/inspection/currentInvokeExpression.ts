@@ -60,7 +60,6 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, `1`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
@@ -70,7 +69,6 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
     expect(invokeArgs.typeChecked.missing.length).to.equal(0);
     expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.typeChecked.extraneous.includes(0)).to.equal(true);
 }
 
@@ -83,7 +81,6 @@ function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression |
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
@@ -105,7 +102,6 @@ function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | un
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createTextLiteral(false, `"foo"`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
@@ -127,7 +123,6 @@ function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInv
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
@@ -137,7 +132,6 @@ function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInv
     expect(invokeArgs.typeChecked.missing.length).to.equal(1);
     expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.typeChecked.missing.includes(0)).to.equal(true);
 }
 
@@ -169,7 +163,6 @@ function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentIn
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, "1")]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
@@ -194,7 +187,6 @@ function expectRequiredAndOptional_givenRequiredAndOptional(
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(1);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([
         TypeUtils.createNumberLiteral(false, "1"),
         TypeUtils.createTextLiteral(false, `"secondArg"`),
@@ -224,7 +216,6 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | 
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([actualArgument]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
@@ -252,7 +243,6 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | 
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    // tslint:disable-next-line: chai-vague-errors
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
     expect(invokeArgs.givenArguments.length).to.equal(0);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);

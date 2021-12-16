@@ -54,7 +54,6 @@ export function getMaybeContextForSignatureProvider(
 export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
     if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
     const nameOfParameters: string = context.functionType.parameters.map(TypeUtils.nameOfFunctionParameter).join(", ");
@@ -62,7 +61,6 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
 
     const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
     return {
-        // tslint:disable-next-line: no-null-keyword
         activeParameter: context.argumentOrdinal ?? null,
         activeSignature: 0,
         signatures: [
