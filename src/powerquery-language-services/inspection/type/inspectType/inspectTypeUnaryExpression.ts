@@ -20,9 +20,13 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
     XorNodeUtils.assertIsNodeKind<Ast.TUnaryExpression>(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TArrayWrapper
-    >(nodeIdMapCollection, xorNode.node.id, 0, Ast.NodeKind.ArrayWrapper);
+    const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
+            nodeIdMapCollection,
+            xorNode.node.id,
+            0,
+            Ast.NodeKind.ArrayWrapper,
+        );
     if (maybeUnaryOperatorWrapper === undefined) {
         return Type.UnknownInstance;
     }

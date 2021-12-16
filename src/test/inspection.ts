@@ -39,9 +39,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -54,9 +53,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -69,9 +67,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 

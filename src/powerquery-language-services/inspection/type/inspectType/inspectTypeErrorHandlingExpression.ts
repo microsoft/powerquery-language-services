@@ -15,9 +15,13 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.ErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
-    const maybeOtherwiseExpression: XorNode<Ast.OtherwiseExpression> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.OtherwiseExpression
-    >(state.nodeIdMapCollection, xorNode.node.id, 2, Ast.NodeKind.OtherwiseExpression);
+    const maybeOtherwiseExpression: XorNode<Ast.OtherwiseExpression> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.OtherwiseExpression>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            2,
+            Ast.NodeKind.OtherwiseExpression,
+        );
 
     return TypeUtils.createAnyUnion([
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),

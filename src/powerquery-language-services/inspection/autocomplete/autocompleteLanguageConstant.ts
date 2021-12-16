@@ -120,9 +120,13 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const maybeParameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.maybeNthPreviousXorChecked<
-        Ast.TParameter
-    >(activeNode.ancestry, fnExprAncestryIndex, 4, Ast.NodeKind.Parameter);
+    const maybeParameter: XorNode<Ast.TParameter> | undefined =
+        AncestryUtils.maybeNthPreviousXorChecked<Ast.TParameter>(
+            activeNode.ancestry,
+            fnExprAncestryIndex,
+            4,
+            Ast.NodeKind.Parameter,
+        );
     if (maybeParameter === undefined) {
         return false;
     }

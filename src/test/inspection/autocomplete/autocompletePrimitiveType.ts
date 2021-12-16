@@ -124,9 +124,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     });
 
     it("(x as| nullable number) => 1", () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-            `(x as| nullable number) => 1`,
-        );
+        const [text, position]: [string, Position] =
+            TestUtils.assertGetTextWithPosition(`(x as| nullable number) => 1`);
         const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
             TestConstants.DefaultInspectionSettings,
@@ -137,9 +136,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     });
 
     it("(x as | nullable number) => 1", () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-            `(x as | nullable number) => 1`,
-        );
+        const [text, position]: [string, Position] =
+            TestUtils.assertGetTextWithPosition(`(x as | nullable number) => 1`);
         const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
             TestConstants.DefaultInspectionSettings,
@@ -150,9 +148,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     });
 
     it("(x as nullable| number) => 1", () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-            `(x as nullable| number) => 1`,
-        );
+        const [text, position]: [string, Position] =
+            TestUtils.assertGetTextWithPosition(`(x as nullable| number) => 1`);
         const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
             TestConstants.DefaultInspectionSettings,
@@ -163,9 +160,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     });
 
     it("(x as nullable num|ber) => 1", () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-            `(x as nullable num|ber) => 1`,
-        );
+        const [text, position]: [string, Position] =
+            TestUtils.assertGetTextWithPosition(`(x as nullable num|ber) => 1`);
         const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetPrimitiveTypeAutocompleteOk(
             TestConstants.DefaultInspectionSettings,

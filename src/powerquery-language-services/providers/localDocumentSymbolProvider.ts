@@ -90,9 +90,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const maybeInvokeInspection:
-            | Inspection.InvokeExpression
-            | undefined = this.getMaybeInspectionInvokeExpression();
+        const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
+            this.getMaybeInspectionInvokeExpression();
         if (maybeInvokeInspection === undefined) {
             // tslint:disable-next-line: no-null-keyword
             return null;
@@ -130,13 +129,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression:
-            | TXorNode
-            | undefined = AncestryUtils.maybeNthXorChecked(activeNode.ancestry, 1, [
-            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-            Ast.NodeKind.IdentifierPairedExpression,
-        ]);
+        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.maybeNthXorChecked(
+            activeNode.ancestry,
+            1,
+            [
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
+            ],
+        );
 
         // We're on an identifier in some other context which we don't support.
         if (maybeIdentifierPairedExpression === undefined) {

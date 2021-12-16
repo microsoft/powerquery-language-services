@@ -18,9 +18,13 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
     state.settings.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionType>(xorNode, Ast.NodeKind.FunctionType);
 
-    const maybeParameters: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TParameterList
-    >(state.nodeIdMapCollection, xorNode.node.id, 1, Ast.NodeKind.ParameterList);
+    const maybeParameters: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TParameterList>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            1,
+            Ast.NodeKind.ParameterList,
+        );
     if (maybeParameters === undefined) {
         return Type.UnknownInstance;
     }

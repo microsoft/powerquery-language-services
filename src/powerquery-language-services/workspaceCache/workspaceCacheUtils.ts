@@ -74,10 +74,8 @@ export function getOrCreateInspection(
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
-    const [updatedCacheCollection, inspectionCacheItem]: [
-        CacheCollection,
-        InspectionCacheItem,
-    ] = getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
+    const [updatedCacheCollection, inspectionCacheItem]: [CacheCollection, InspectionCacheItem] =
+        getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
 
     CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
     return inspectionCacheItem;

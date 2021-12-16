@@ -43,9 +43,8 @@ describe("workspaceCache", () => {
     });
 
     it("getOrCreateInspection", () => {
-        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-            "let c = 1 in |c",
-        );
+        const [document, postion]: [MockDocument, Position] =
+            TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
@@ -56,9 +55,8 @@ describe("workspaceCache", () => {
     });
 
     it("getOrCreateInspection with parser error", () => {
-        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-            "let c = 1, in |",
-        );
+        const [document, postion]: [MockDocument, Position] =
+            TestUtils.createMockDocumentAndPosition("let c = 1, in |");
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),

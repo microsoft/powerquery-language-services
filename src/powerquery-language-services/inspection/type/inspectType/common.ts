@@ -351,9 +351,8 @@ export function maybeDereferencedIdentifierType(
             return undefined;
         }
 
-        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.createValueTypeRequest(
-            deferencedLiteral,
-        );
+        const request: ExternalType.ExternalValueTypeRequest =
+            ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
         return maybeResolver(request);
     }
     const scopeItem: TScopeItem = maybeScopeItem;

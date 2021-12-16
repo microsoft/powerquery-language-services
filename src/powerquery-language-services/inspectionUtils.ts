@@ -223,14 +223,13 @@ export function getAutocompleteItemsFromScope(
     const partial: Inspection.AutocompleteItem[] = [];
 
     for (const [label, scopeItem] of nodeScope.entries()) {
-        const maybeAutocompleteItem:
-            | Inspection.AutocompleteItem
-            | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
-            label,
-            scopeItem,
-            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
-            maybeContextTest,
-        );
+        const maybeAutocompleteItem: Inspection.AutocompleteItem | undefined =
+            AutocompleteItemUtils.maybeCreateFromScopeItem(
+                label,
+                scopeItem,
+                scopeTypeByKey.get(label) ?? Type.UnknownInstance,
+                maybeContextTest,
+            );
 
         if (maybeAutocompleteItem) {
             partial.push(maybeAutocompleteItem);

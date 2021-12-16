@@ -88,9 +88,13 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeParameterList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TParameterList
-    >(nodeIdMapCollection, fnExpr.node.id, 0, Ast.NodeKind.ParameterList);
+    const maybeParameterList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            fnExpr.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
     if (maybeParameterList === undefined) {
         return [];
     }
