@@ -39,7 +39,9 @@ function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: Valida
     if (error instanceof PQP.Lexer.LexError.ErrorLineMapError) {
         for (const errorLine of error.errorLineMap.values()) {
             const innerError: PQP.Lexer.LexError.TInnerLexError = errorLine.error.innerError;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((innerError as any).graphemePosition) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const graphemePosition: PQP.StringUtils.GraphemePosition = (innerError as any).graphemePosition;
                 const message: string = innerError.message;
                 const position: Position = {

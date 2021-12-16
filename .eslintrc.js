@@ -21,5 +21,7 @@ module.exports = {
         ],
         "prettier/prettier": ["warn"],
         "security/detect-non-literal-fs-filename": "off",
+        // TODO: Should this be enabled?
+        "security/detect-object-injection": "off",
     },
 };
