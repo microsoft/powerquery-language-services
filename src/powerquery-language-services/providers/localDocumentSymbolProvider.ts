@@ -52,13 +52,11 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
         const activeNode: Inspection.TMaybeActiveNode = this.maybeTriedInspection.maybeActiveNode;
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
         const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
@@ -75,7 +73,6 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         }
 
         if (!ResultUtils.isOk(inspection.triedNodeScope) || !ResultUtils.isOk(inspection.triedScopeType)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
@@ -85,22 +82,18 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             inspection.triedScopeType.value,
         );
 
-        // tslint:disable-next-line: no-null-keyword
         return maybeHover ?? null;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const maybeInvokeInspection:
-            | Inspection.InvokeExpression
-            | undefined = this.getMaybeInspectionInvokeExpression();
+        const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
+            this.getMaybeInspectionInvokeExpression();
         if (maybeInvokeInspection === undefined) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
         const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
@@ -130,13 +123,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression:
-            | TXorNode
-            | undefined = AncestryUtils.maybeNthXorChecked(activeNode.ancestry, 1, [
-            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-            Ast.NodeKind.IdentifierPairedExpression,
-        ]);
+        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.maybeNthXorChecked(
+            activeNode.ancestry,
+            1,
+            [
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
+            ],
+        );
 
         // We're on an identifier in some other context which we don't support.
         if (maybeIdentifierPairedExpression === undefined) {

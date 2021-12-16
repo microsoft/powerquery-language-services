@@ -89,7 +89,7 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
 
 function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TPowerQueryType {
     if (leftType.kind !== rightType.kind) {
-        const details: {} = {
+        const details: object = {
             leftTypeKind: leftType.kind,
             rightTypeKind: rightType.kind,
         };

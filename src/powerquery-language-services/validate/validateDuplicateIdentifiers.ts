@@ -134,9 +134,8 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
         for (const field of iterNodeFn(nodeIdMapCollection, node)) {
             const keyLiteral: string = field.normalizedKeyLiteral;
-            const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined = duplicateFieldsByKey.get(
-                keyLiteral,
-            );
+            const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
+                duplicateFieldsByKey.get(keyLiteral);
             const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
             if (maybeDuplicateFields) {

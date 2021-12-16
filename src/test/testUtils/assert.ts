@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
 import * as PQP from "@microsoft/powerquery-parser";
 import * as TestUtils from "./testUtils";
 

@@ -178,7 +178,6 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
             case Constant.KeywordConstant.Then:
             case Constant.KeywordConstant.Try:
             case Constant.KeywordConstant.Type:
-
             case Constant.PrimitiveTypeConstant.Null:
                 return true;
 

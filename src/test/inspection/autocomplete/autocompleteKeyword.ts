@@ -459,18 +459,16 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
     describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
         it(`try true otherwise| false`, () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                `try true otherwise| false`,
-            );
+            const [text, position]: [string, Position] =
+                TestUtils.assertGetTextWithPosition(`try true otherwise| false`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = [];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetKeywordAutocomplete(text, position);
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true otherwise |false`, () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                `try true otherwise |false`,
-            );
+            const [text, position]: [string, Position] =
+                TestUtils.assertGetTextWithPosition(`try true otherwise |false`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetKeywordAutocomplete(text, position);
             TestUtils.assertAutocompleteItemLabels(expected, actual);
@@ -630,9 +628,8 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         });
 
         it(`if true then true else |`, () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                `if true then true else |`,
-            );
+            const [text, position]: [string, Position] =
+                TestUtils.assertGetTextWithPosition(`if true then true else |`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetKeywordAutocomplete(text, position);
             TestUtils.assertAutocompleteItemLabels(expected, actual);

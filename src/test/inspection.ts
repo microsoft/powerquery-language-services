@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -39,9 +41,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -54,9 +55,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 
@@ -69,9 +69,8 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
             const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
-            const maybeContext:
-                | SignatureProviderContext
-                | undefined = InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined =
+                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
 

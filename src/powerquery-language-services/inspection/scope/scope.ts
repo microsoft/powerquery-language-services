@@ -48,7 +48,7 @@ export interface IScopeItem {
 
 export interface IKeyValuePairScopeItem<
     Key extends Ast.Identifier | Ast.GeneralizedIdentifier,
-    Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember
+    Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember,
 > extends IScopeItem {
     readonly kind: Kind;
     readonly key: Key;

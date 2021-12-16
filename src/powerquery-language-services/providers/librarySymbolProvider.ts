@@ -45,14 +45,12 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!context.identifier) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
         const identifierLiteral: string = context.identifier;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
         if (maybeDefinition === undefined) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
         const definition: Library.TLibraryDefinition = maybeDefinition;
@@ -72,14 +70,12 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         if (!context.functionName) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
         if (!LibraryUtils.isFunction(maybeDefinition)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 

@@ -29,9 +29,13 @@ export function inspectTypeRecursivePrimaryExpression(
         return headType;
     }
 
-    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TArrayWrapper
-    >(state.nodeIdMapCollection, xorNode.node.id, 1, Ast.NodeKind.ArrayWrapper);
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            1,
+            Ast.NodeKind.ArrayWrapper,
+        );
     if (maybeArrayWrapper === undefined) {
         return Type.UnknownInstance;
     }
