@@ -10,7 +10,6 @@
             "name": "Run unit tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
-                "--inspect",
                 "--colors",
                 "--timeout",
                 "999999",

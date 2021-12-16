@@ -26,6 +26,8 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 
+// tslint:disable: no-null-keyword
+
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
@@ -78,11 +80,11 @@ export abstract class AnalysisBase implements Analysis {
         // - honor expected data type
         // - only include current query name after @
         const [languageResponse, libraryResponse, localDocumentResponse] = await Promise.all(
-            AnalysisBase.createAutocompleteItemCalls(context, [
-                this.languageAutocompleteItemProvider,
-                this.librarySymbolProvider,
-                this.localDocumentSymbolProvider,
-            ]),
+            AnalysisBase.createAutocompleteItemCalls(
+                context,
+                [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentSymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
         );
 
         const partial: AutocompleteItem[] = [];
@@ -98,10 +100,8 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getHover(): Promise<Hover> {
-        const identifierToken:
-            | Ast.Identifier
-            | Ast.GeneralizedIdentifier
-            | undefined = this.getMaybePositionIdentifier();
+        const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            this.getMaybePositionIdentifier();
         if (identifierToken === undefined) {
             return EmptyHover;
         }
@@ -118,7 +118,11 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
+            AnalysisBase.createHoverCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptyHover,
         );
     }
@@ -129,9 +133,8 @@ export abstract class AnalysisBase implements Analysis {
         }
         const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
-            inspected,
-        );
+        const maybeContext: SignatureProviderContext | undefined =
+            InspectionUtils.getMaybeContextForSignatureProvider(inspected);
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
         }
@@ -143,10 +146,11 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createSignatureHelpCalls(context, [
-                this.localDocumentSymbolProvider,
-                this.librarySymbolProvider,
-            ]),
+            AnalysisBase.createSignatureHelpCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptySignatureHelp,
         );
     }
@@ -155,6 +159,22 @@ export abstract class AnalysisBase implements Analysis {
 
     protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
+
+    private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS?: number): Promise<T> {
+        if (timeoutInMS !== undefined) {
+            // TODO: Enabling trace entry when timeout occurs
+            return Promise.race([
+                promise,
+                new Promise<T>(resolve =>
+                    setTimeout(() => {
+                        resolve(timeoutReturnValue);
+                    }, timeoutInMS),
+                ),
+            ]);
+        }
+
+        return promise;
+    }
 
     private static async resolveProviders<T>(
         calls: ReadonlyArray<Promise<T | null>>,
@@ -174,38 +194,51 @@ export abstract class AnalysisBase implements Analysis {
     private static createAutocompleteItemCalls(
         context: AutocompleteItemProviderContext,
         providers: ReadonlyArray<AutocompleteItemProvider>,
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getAutocompleteItems(context).catch(() => {
-                return [];
-            }),
+            this.promiseWithTimeout(
+                provider.getAutocompleteItems(context).catch(() => {
+                    return [];
+                }),
+                [],
+                timeoutInMS,
+            ),
         );
     }
 
     private static createHoverCalls(
         context: HoverProviderContext,
         providers: HoverProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getHover(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
+            this.promiseWithTimeout(
+                provider.getHover(context).catch(() => {
+                    return null;
+                }),
+                null,
+                timeoutInMS,
+            ),
         );
     }
 
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
         return providers.map(provider =>
-            provider.getSignatureHelp(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
+            this.promiseWithTimeout(
+                provider.getSignatureHelp(context).catch(() => {
+                    return null;
+                }),
+                null,
+                timeoutInMS,
+            ),
         );
     }
 

@@ -17,4 +17,5 @@ export interface AnalysisSettings {
         maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => ISymbolProvider;
+    readonly symbolProviderTimeoutInMS?: number;
 }
