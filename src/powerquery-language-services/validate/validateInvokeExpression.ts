@@ -3,13 +3,13 @@
 
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Range } from "vscode-languageserver-textdocument";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from "..";
-import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
+import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 

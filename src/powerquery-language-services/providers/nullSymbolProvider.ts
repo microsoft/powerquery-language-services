@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection, Library } from "..";
-import { Hover, SignatureHelp } from "../commonTypes";
-import { AutocompleteItem } from "../inspection/autocomplete";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Hover, SignatureHelp } from "../commonTypes";
+import { Inspection, Library } from "..";
+import { AutocompleteItem } from "../inspection/autocomplete";
 
 export class NullSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =

@@ -3,13 +3,11 @@
 
 import * as File from "fs";
 import * as Path from "path";
-
 import { assert, expect } from "chai";
 import { DocumentSymbol, Hover, Position, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
-
 import { Analysis, Inspection } from "../../powerquery-language-services";
 import { AnalysisSettings } from "../../powerquery-language-services/analysis/analysisSettings";
 import { MockDocument } from "../mockDocument";

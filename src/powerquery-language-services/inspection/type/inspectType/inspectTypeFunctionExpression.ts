@@ -4,12 +4,12 @@
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
+import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
     PseudoFunctionParameterType,
 } from "../../pseudoFunctionExpressionType";
-import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     state.settings.maybeCancellationToken?.throwIfCancelled();

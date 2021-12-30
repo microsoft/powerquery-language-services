@@ -2,18 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { InspectionSettings } from "../../inspectionSettings";
-
-import { TMaybeActiveNode } from "../activeNode";
-import { TypeCache } from "../typeCache";
-import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
-import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
-import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
-import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
-import { createTrailingToken } from "./common";
 import {
     Autocomplete,
     TrailingToken,
@@ -22,6 +12,14 @@ import {
     TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
+import { createTrailingToken } from "./common";
+import { InspectionSettings } from "../../inspectionSettings";
+import { TMaybeActiveNode } from "../activeNode";
+import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
+import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
+import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
+import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
+import { TypeCache } from "../typeCache";
 
 export function autocomplete(
     settings: InspectionSettings,

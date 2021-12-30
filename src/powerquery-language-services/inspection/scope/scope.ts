@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 

@@ -3,12 +3,11 @@
 
 import { Keyword, Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import type { Position } from "vscode-languageserver-types";
 
+import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
 import { TrailingToken } from "../commonTypes";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordErrorHandlingExpression(
     state: InspectAutocompleteKeywordState,

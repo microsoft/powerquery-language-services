@@ -4,8 +4,8 @@
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { InspectTypeState } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
+import { InspectTypeState } from "./common";
 
 export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
     state.settings.maybeCancellationToken?.throwIfCancelled();

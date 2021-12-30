@@ -2,12 +2,10 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../../..";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
 import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
@@ -19,6 +17,7 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,

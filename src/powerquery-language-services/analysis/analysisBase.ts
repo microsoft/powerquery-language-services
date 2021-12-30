@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
-
-import { CommonTypesUtils, Inspection } from "..";
-import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
-import { Library } from "../library";
-import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
     AutocompleteItemProvider,
     AutocompleteItemProviderContext,
@@ -22,9 +17,13 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
+import { CommonTypesUtils, Inspection } from "..";
+import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
+import { Library } from "../library";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
@@ -77,7 +76,9 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-        const [languageResponse, libraryResponse, localDocumentResponse] = await Promise.all(
+        const [languageResponse, libraryResponse, localDocumentResponse]: ReadonlyArray<
+            ReadonlyArray<Inspection.AutocompleteItem>
+        > = await Promise.all(
             AnalysisBase.createAutocompleteItemCalls(
                 context,
                 [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentSymbolProvider],
@@ -163,7 +164,7 @@ export abstract class AnalysisBase implements Analysis {
             // TODO: Enabling trace entry when timeout occurs
             return Promise.race([
                 promise,
-                new Promise<T>(resolve =>
+                new Promise<T>((resolve: (value: T | PromiseLike<T>) => void) =>
                     setTimeout(() => {
                         resolve(timeoutReturnValue);
                     }, timeoutInMS),
@@ -196,7 +197,7 @@ export abstract class AnalysisBase implements Analysis {
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
+        return providers.map((provider: AutocompleteItemProvider) =>
             this.promiseWithTimeout(
                 provider.getAutocompleteItems(context).catch(() => {
                     return [];
@@ -213,7 +214,7 @@ export abstract class AnalysisBase implements Analysis {
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
+        return providers.map((provider: HoverProvider) =>
             this.promiseWithTimeout(
                 provider.getHover(context).catch(() => {
                     return null;
@@ -230,7 +231,7 @@ export abstract class AnalysisBase implements Analysis {
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
+        return providers.map((provider: SignatureHelpProvider) =>
             this.promiseWithTimeout(
                 provider.getSignatureHelp(context).catch(() => {
                     return null;

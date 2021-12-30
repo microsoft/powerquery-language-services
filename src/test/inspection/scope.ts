@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { expect } from "chai";
 import "mocha";
+import * as PQP from "@microsoft/powerquery-parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
-import { TestUtils } from "..";
 import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { TestUtils } from "..";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem

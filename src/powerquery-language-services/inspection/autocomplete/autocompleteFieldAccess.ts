@@ -2,9 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -14,16 +11,17 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { PositionUtils } from "../..";
-import { InspectionSettings } from "../../inspectionSettings";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { TriedType, tryType } from "../type";
-import { TypeCache } from "../typeCache";
-import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
+import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { TriedType, tryType } from "../type";
+import { InspectionSettings } from "../../inspectionSettings";
+import { PositionUtils } from "../..";
+import { TypeCache } from "../typeCache";
 
 export function tryAutocompleteFieldAccess(
     settings: InspectionSettings,

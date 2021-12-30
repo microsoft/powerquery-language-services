@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import "mocha";
 
 import * as PQLS from "../../powerquery-language-services";
-
-import { TestConstants, TestUtils } from "..";
 import {
     Diagnostic,
     DiagnosticErrorCode,
@@ -15,8 +13,9 @@ import {
     TextDocument,
     ValidationSettings,
 } from "../../powerquery-language-services";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { TestConstants, TestUtils } from "..";
 import { SimpleValidationSettings } from "../testConstants";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -71,7 +70,7 @@ function expectArgumentCountMismatch(
         throw new Error(`expected exactly one invocation diagnostic error, but ${matches.length} were found.`);
     }
 
-    const { regExpExecArray } = matches[0];
+    const { regExpExecArray }: { regExpExecArray: RegExpExecArray } = matches[0];
 
     const actualNumMin: number = Number.parseInt(Assert.asDefined(regExpExecArray[1], "expected capture group 1"), 10);
     const actualNumMax: number = Number.parseInt(Assert.asDefined(regExpExecArray[2], "expected capture group 2"), 10);

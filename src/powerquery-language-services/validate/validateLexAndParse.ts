@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { TextDocument } from "vscode-languageserver-textdocument";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
+import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { DiagnosticSeverity } from "vscode-languageserver-types";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
 
 export function validateLexAndParse(textDocument: TextDocument, validationSettings: ValidationSettings): Diagnostic[] {

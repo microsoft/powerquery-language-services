@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { TextDocument } from "vscode-languageserver-textdocument";
 import { Diagnostic } from "vscode-languageserver-types";
+import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";

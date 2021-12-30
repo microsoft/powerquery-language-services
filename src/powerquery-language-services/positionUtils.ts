@@ -2,9 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapUtils,
@@ -12,6 +9,8 @@ import {
     XorNodeKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position, Range } from "vscode-languageserver-types";
+import { Assert } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
     return {

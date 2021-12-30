@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
-import { TestUtils } from "..";
 import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { TestUtils } from "..";
 
 const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
     request: Inspection.ExternalType.TExternalTypeRequest,

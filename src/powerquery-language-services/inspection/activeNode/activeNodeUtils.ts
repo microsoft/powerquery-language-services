@@ -2,8 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -12,10 +10,11 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
+import { PositionUtils } from "../..";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.

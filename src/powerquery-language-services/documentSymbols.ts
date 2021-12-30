@@ -2,17 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import * as InspectionUtils from "./inspectionUtils";
-
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
 import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
 

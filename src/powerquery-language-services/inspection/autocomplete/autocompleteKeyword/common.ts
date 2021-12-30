@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast, Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { AncestryUtils, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
+import { Ast, Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
 import { CommonError } from "@microsoft/powerquery-parser";
 
 import { ActiveNode } from "../../activeNode";

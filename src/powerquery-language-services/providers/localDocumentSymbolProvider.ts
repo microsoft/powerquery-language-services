@@ -1,27 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMapUtils,
     ParseState,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as InspectionUtils from "../inspectionUtils";
-
-import { Inspection, Library } from "..";
-import { InspectionSettings } from "../inspectionSettings";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Inspection, Library } from "..";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { InspectionSettings } from "../inspectionSettings";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;

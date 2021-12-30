@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
-import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { expect } from "chai";
 import "mocha";
+import * as PQP from "@microsoft/powerquery-parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
-import { TestConstants, TestUtils } from "..";
 import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
 function assertInvokeExpressionOk(
