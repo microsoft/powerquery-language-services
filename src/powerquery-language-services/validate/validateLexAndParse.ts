@@ -5,7 +5,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { Diagnostic, Position, Range } from "vscode-languageserver-types";
 import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DiagnosticSeverity } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";

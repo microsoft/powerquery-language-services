@@ -10,7 +10,6 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DiagnosticSeverity } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { Localization, LocalizationUtils } from "../localization";

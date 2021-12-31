@@ -23,7 +23,7 @@ function expectSymbolsForDocument(
 
     expect(actualSymbols).deep.equals(
         expectedSymbols,
-        "Expected document symbols to match.\n" + JSON.stringify(actualSymbols),
+        `Expected document symbols to match.\n${JSON.stringify(actualSymbols)}`,
     );
 }
 

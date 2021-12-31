@@ -181,7 +181,7 @@ export abstract class AnalysisBase implements Analysis {
     ): Promise<T> {
         const results: (T | null)[] = await Promise.all(calls);
 
-        for (let i: number = 0; i < results.length; i++) {
+        for (let i: number = 0; i < results.length; i += 1) {
             const result: T | null = results[i];
             if (result !== null) {
                 return result;
