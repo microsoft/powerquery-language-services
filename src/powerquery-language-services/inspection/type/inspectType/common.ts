@@ -402,7 +402,7 @@ export function maybeDereferencedIdentifierType(
 export function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): TXorNode {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
-        inspectXor.name,
+        recursiveIdentifierDereference.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
     state.maybeCancellationToken?.throwIfCancelled();
