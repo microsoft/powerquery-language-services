@@ -7,10 +7,9 @@ import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powe
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { NodeScope, ScopeTypeByKey } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../..";
-import { NodeScope } from "../scope";
-import { ScopeTypeByKey } from "../scope";
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
 

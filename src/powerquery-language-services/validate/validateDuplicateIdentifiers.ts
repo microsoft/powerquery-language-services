@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import type { Diagnostic, DiagnosticRelatedInformation, DocumentUri } from "vscode-languageserver-types";
+import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentUri } from "vscode-languageserver-types";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -10,7 +10,6 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DiagnosticSeverity } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { Localization, LocalizationUtils } from "../localization";

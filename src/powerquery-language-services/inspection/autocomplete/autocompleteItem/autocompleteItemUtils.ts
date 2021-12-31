@@ -137,13 +137,11 @@ export function compareFn(left: AutocompleteItem, right: AutocompleteItem): numb
     const jaroWinklerScoreDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
     if (jaroWinklerScoreDiff !== 0) {
         return jaroWinklerScoreDiff;
+    } else if (left.label < right.label) {
+        return -1;
+    } else if (left.label > right.label) {
+        return 1;
     } else {
-        if (left.label < right.label) {
-            return -1;
-        } else if (left.label > right.label) {
-            return 1;
-        } else {
-            return 0;
-        }
+        return 0;
     }
 }
