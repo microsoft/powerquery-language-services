@@ -16,6 +16,8 @@ import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../../inspectionSettings";
+import { LanguageServiceTraceConstant } from "../..";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 // An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
@@ -35,13 +37,21 @@ export function tryCurrentInvokeExpression(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedCurrentInvokeExpression {
+    const trace: Trace = settings.traceManager.entry(
+        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        tryCurrentInvokeExpression.name,
+    );
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.boxOk(undefined);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () =>
+    const result: TriedCurrentInvokeExpression = ResultUtils.ensureResult(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
+    trace.exit();
+
+    return result;
 }
 
 function inspectInvokeExpression(
