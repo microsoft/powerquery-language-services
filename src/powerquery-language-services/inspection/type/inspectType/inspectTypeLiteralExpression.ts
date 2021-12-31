@@ -3,8 +3,8 @@
 
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeKind, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
+
 export function inspectTypeLiteralExpression(
     xorNode: TXorNode,
 ): Type.TPrimitiveType | Type.TextLiteral | Type.NumberLiteral {

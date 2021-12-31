@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "@microsoft/powerquery-parser";
-import { assert, expect } from "chai";
 import "mocha";
+import { assert, expect } from "chai";
+import { Assert } from "@microsoft/powerquery-parser";
 
-import { TestConstants, TestUtils } from "..";
 import {
     Diagnostic,
     DiagnosticErrorCode,
@@ -16,8 +15,9 @@ import {
     TextDocumentContentChangeEvent,
     validate,
 } from "../../powerquery-language-services";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);

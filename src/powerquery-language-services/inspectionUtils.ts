@@ -7,11 +7,11 @@ import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
+import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { ExternalType } from "./inspection/externalType";
 import { InspectionSettings } from "./inspectionSettings";
-import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function createInspectionSettings(
     settings: PQP.Settings,

@@ -2,10 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 
@@ -239,8 +238,8 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
             (
                 binaryExpressionPartialLookup: Map<string, Set<Type.TypeKind>>,
                 key: string,
-                _currentIndex,
-                _array,
+                _currentIndex: number,
+                _array: ReadonlyArray<string>,
             ): Map<string, Set<Type.TypeKind>> => {
                 const lastDeliminatorIndex: number = key.lastIndexOf(",");
                 // Grab '<first operand> , <operator>'.

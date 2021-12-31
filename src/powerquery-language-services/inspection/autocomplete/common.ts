@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import type { Position } from "vscode-languageserver-types";
 
 import { PositionUtils } from "../..";

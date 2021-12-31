@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-import * as PQLS from "../powerquery-language-services";
-
-import { expect } from "chai";
 import "mocha";
+import * as PQP from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 import type { Position } from "vscode-languageserver-types";
 
-import { TestUtils } from ".";
+import * as PQLS from "../powerquery-language-services";
 import { TextDocument, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
 import { SimpleLibrary } from "./testConstants";
+import { TestUtils } from ".";
 
 describe("workspaceCache", () => {
     it("getOrCreateLex", () => {

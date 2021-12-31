@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { PositionUtils } from "../../..";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
-import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { autocompleteKeywordRightMostLeaf } from "./common";
+import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function autocompleteKeywordLetExpression(
     state: InspectAutocompleteKeywordState,

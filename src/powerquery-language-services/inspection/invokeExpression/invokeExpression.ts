@@ -2,9 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -12,12 +10,13 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { InspectionSettings } from "../../inspectionSettings";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
+import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { IInvokeExpression, InvokeExpressionArguments } from "./common";
+import { InspectionSettings } from "../../inspectionSettings";
 
 // An inspection of an arbitrary invoke expression.
 export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
@@ -86,7 +85,8 @@ function inspectInvokeExpression(
         );
         const givenArguments: ReadonlyArray<TXorNode> = iterableArguments.slice(0, givenArgumentTypes.length);
 
-        const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
+        const [numMinExpectedArguments, numMaxExpectedArguments]: [number, number] =
+            getNumExpectedArguments(functionType);
 
         maybeInvokeExpressionArgs = {
             givenArguments,

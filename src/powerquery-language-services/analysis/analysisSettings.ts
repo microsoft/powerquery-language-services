@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { InspectionSettings } from "../inspectionSettings";
-import { ILibrary } from "../library/library";
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";
+import { ILibrary } from "../library/library";
+import { InspectionSettings } from "../inspectionSettings";
 import { WorkspaceCache } from "../workspaceCache";
 
 export interface AnalysisSettings {

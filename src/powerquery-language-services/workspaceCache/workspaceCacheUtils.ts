@@ -2,13 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import type { Position } from "vscode-languageserver-types";
 
-import { Inspection } from "..";
-import { TypeCacheUtils } from "../inspection";
-import { InspectionSettings } from "../inspectionSettings";
 import type {
     CacheCollection,
     CacheItem,
@@ -17,6 +13,9 @@ import type {
     LexCacheItem,
     ParseCacheItem,
 } from "./workspaceCache";
+import { Inspection } from "..";
+import { InspectionSettings } from "../inspectionSettings";
+import { TypeCacheUtils } from "../inspection";
 
 export function assertIsInspectionTask(cacheItem: CacheItem): asserts cacheItem is InspectionTask {
     if (!isInspectionTask(cacheItem)) {

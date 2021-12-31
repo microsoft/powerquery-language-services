@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";

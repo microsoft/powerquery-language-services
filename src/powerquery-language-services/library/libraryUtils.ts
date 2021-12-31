@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 
 import {
     LibraryConstant,

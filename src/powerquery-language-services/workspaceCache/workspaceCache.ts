@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Position } from "vscode-languageserver-textdocument";
 
 import { Inspection } from "..";

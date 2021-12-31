@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import "mocha";
 import type { Position } from "vscode-languageserver-types";
 
-import { TestConstants, TestUtils } from "../..";
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
+import { TestConstants, TestUtils } from "../..";
 
 function assertGetPrimitiveTypeAutocompleteOk(
     settings: InspectionSettings,

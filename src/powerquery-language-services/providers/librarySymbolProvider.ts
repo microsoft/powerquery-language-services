@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 
-import { Inspection } from "..";
-import { AutocompleteItemUtils } from "../inspection";
-import { Library, LibraryUtils } from "../library";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Library, LibraryUtils } from "../library";
+import { AutocompleteItemUtils } from "../inspection";
+import { Inspection } from "..";
 
 export class LibrarySymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;

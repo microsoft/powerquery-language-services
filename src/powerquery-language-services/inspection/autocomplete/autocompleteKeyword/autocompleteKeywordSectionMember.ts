@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMapUtils,
@@ -9,6 +8,7 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { autocompleteKeywordRightMostLeaf } from "./common";
 import { InspectAutocompleteKeywordState } from "./commonTypes";

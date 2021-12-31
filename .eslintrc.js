@@ -1,6 +1,9 @@
 module.exports = {
     root: true,
     parser: "@typescript-eslint/parser",
+    parserOptions: {
+        project: "./tsconfig.json",
+    },
     plugins: ["@typescript-eslint", "security", "prettier"],
     extends: [
         "eslint:recommended",
@@ -10,18 +13,31 @@ module.exports = {
     ],
     rules: {
         "@typescript-eslint/no-inferrable-types": "off",
-        "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+        "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+        "@typescript-eslint/space-infix-ops": "error",
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/typedef": [
-            "warn",
+            "error",
             {
-                arrowParameter: false,
+                arrayDestructuring: true,
+                arrowParameter: true,
+                memberVariableDeclaration: true,
+                objectDestructuring: true,
+                parameter: true,
+                propertyDeclaration: true,
                 variableDeclaration: true,
-                variableDeclarationIgnoreFunction: true,
             },
         ],
-        "prettier/prettier": ["warn"],
+        "@typescript-eslint/unified-signatures": "error",
+        "prettier/prettier": ["error"],
         "security/detect-non-literal-fs-filename": "off",
-        // TODO: Should this be enabled?
         "security/detect-object-injection": "off",
+        "sort-imports": [
+            "error",
+            {
+                allowSeparatedGroups: true,
+                ignoreCase: true,
+            },
+        ],
     },
 };

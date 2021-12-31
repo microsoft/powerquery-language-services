@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { assert, expect } from "chai";
 import "mocha";
+import { assert, expect } from "chai";
 
 import * as DocumentSymbols from "../powerquery-language-services/documentSymbols";
-
-import { TestConstants, TestUtils } from ".";
 import { SymbolKind, TextDocument } from "../powerquery-language-services";
-import { MockDocument } from "./mockDocument";
+import { TestConstants, TestUtils } from ".";
 import { AbridgedDocumentSymbol } from "./testUtils";
+import { MockDocument } from "./mockDocument";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
 function expectSymbolsForDocument(

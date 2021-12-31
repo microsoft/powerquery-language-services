@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { InspectTypeState, inspectXor } from "./common";
 

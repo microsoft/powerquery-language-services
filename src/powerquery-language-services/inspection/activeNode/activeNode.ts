@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import type { Position } from "vscode-languageserver-types";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export type TMaybeActiveNode =
     // A Position located inside an Ast (either fully or partially parsed).

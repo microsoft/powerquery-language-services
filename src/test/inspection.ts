@@ -3,15 +3,13 @@
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
+import "mocha";
+import { assert, expect } from "chai";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-
-import { assert, expect } from "chai";
-import "mocha";
-
-import { TestConstants, TestUtils } from ".";
 import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
+import { TestConstants, TestUtils } from ".";
 import { MockDocument } from "./mockDocument";
 
 function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): void {

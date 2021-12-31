@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
+import { PositionUtils } from "../..";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,

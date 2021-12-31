@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position, Range } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AnalysisBase } from "./analysisBase";

@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import "mocha";
 
-import { TestConstants, TestUtils } from ".";
 import {
     AnalysisSettings,
     Hover,
@@ -13,6 +12,7 @@ import {
     SignatureHelp,
     WorkspaceCache,
 } from "../powerquery-language-services";
+import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
 import { ILibrary } from "../powerquery-language-services/library/library";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";

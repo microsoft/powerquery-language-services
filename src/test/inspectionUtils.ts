@@ -1,18 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
-
+import { assert, expect } from "chai";
 import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { assert, expect } from "chai";
-import "mocha";
-
 import * as TestUtils from "./testUtils";
-
 import { InspectionUtils, SymbolKind, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
-import { MockDocument } from "./mockDocument";
 import { AbridgedDocumentSymbol } from "./testUtils";
+import { MockDocument } from "./mockDocument";
 
 // Used to test symbols at a specific level of inspection
 function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>): void {

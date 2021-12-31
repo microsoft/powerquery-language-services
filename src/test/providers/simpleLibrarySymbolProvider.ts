@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
 import "mocha";
+import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
+
 import {
     AnalysisSettings,
     EmptyHover,
@@ -13,8 +15,6 @@ import {
     SignatureHelp,
     WorkspaceCache,
 } from "../../powerquery-language-services";
-
-import { Assert } from "@microsoft/powerquery-parser";
 import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 

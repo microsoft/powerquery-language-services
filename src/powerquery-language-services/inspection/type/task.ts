@@ -2,16 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../..";
 import { NodeScope } from "../scope";
 import { ScopeTypeByKey } from "../scope";
-import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
 

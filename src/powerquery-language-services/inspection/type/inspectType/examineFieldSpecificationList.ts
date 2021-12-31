@@ -10,8 +10,8 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { InspectTypeState } from "./common";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
+import { InspectTypeState } from "./common";
 
 export interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TPowerQueryType>;

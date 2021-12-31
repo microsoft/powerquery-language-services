@@ -2,9 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -13,13 +10,9 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { Inspection } from "../..";
-import {
-    PseduoFunctionExpressionType,
-    pseudoFunctionExpressionType,
-    PseudoFunctionParameterType,
-} from "../pseudoFunctionExpressionType";
 import {
     LetVariableScopeItem,
     NodeScope,
@@ -31,6 +24,12 @@ import {
     TriedNodeScope,
     TScopeItem,
 } from "./scope";
+import {
+    PseduoFunctionExpressionType,
+    pseudoFunctionExpressionType,
+    PseudoFunctionParameterType,
+} from "../pseudoFunctionExpressionType";
+import { Inspection } from "../..";
 
 // Builds a scope for the given node.
 export function tryNodeScope(
