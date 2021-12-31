@@ -7,11 +7,18 @@ import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
 export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeTBinOpExpression.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
         nodeKind: xorNode.node.kind,
@@ -30,13 +37,14 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
             : (children[1].node as Ast.IConstant<Constant.TBinOpExpressionOperator>).constantKind;
     const maybeRight: TXorNode | undefined = children[2];
 
+    let result: Type.TPowerQueryType;
     // ''
     if (maybeLeft === undefined) {
-        return Type.UnknownInstance;
+        result = Type.UnknownInstance;
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return inspectXor(state, maybeLeft);
+        result = inspectXor(state, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || XorNodeUtils.isContextXor(maybeRight)) {
@@ -46,9 +54,9 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
         const key: string = partialLookupKey(leftType.kind, operatorKind);
         const maybeAllowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = PartialLookup.get(key);
         if (maybeAllowedTypeKinds === undefined) {
-            return Type.NoneInstance;
+            result = Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.createPrimitiveType(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
+            result = TypeUtils.createPrimitiveType(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
         } else {
             const unionedTypePairs: Type.TPowerQueryType[] = [];
             for (const kind of maybeAllowedTypeKinds.values()) {
@@ -58,7 +66,7 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
                     isNullable: true,
                 });
             }
-            return TypeUtils.createAnyUnion(unionedTypePairs);
+            result = TypeUtils.createAnyUnion(unionedTypePairs);
         }
     }
     // '1 + 1'
@@ -70,20 +78,25 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
         if (maybeResultTypeKind === undefined) {
-            return Type.NoneInstance;
-        }
-        const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
-
-        // '[foo = 1] & [bar = 2]'
-        if (
-            operatorKind === Constant.ArithmeticOperator.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
-        ) {
-            return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+            result = Type.NoneInstance;
         } else {
-            return TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+
+            // '[foo = 1] & [bar = 2]'
+            if (
+                operatorKind === Constant.ArithmeticOperator.And &&
+                (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
+            ) {
+                result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+            } else {
+                result = TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            }
         }
     }
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TPowerQueryType {
@@ -92,6 +105,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
             leftTypeKind: leftType.kind,
             rightTypeKind: rightType.kind,
         };
+
         throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
     // '[] & []' or '#table() & #table()'
@@ -107,6 +121,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
         const extendedType: Type.DefinedRecord | Type.DefinedTable =
             leftType.maybeExtendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
+
         return {
             ...extendedType,
             isOpen: true,

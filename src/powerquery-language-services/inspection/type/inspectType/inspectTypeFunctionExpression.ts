@@ -2,9 +2,11 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
@@ -12,7 +14,12 @@ import {
 } from "../../pseudoFunctionExpressionType";
 
 export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeFunctionExpression.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(xorNode, Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
@@ -42,6 +49,8 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
     }
     // If the stated return type doesn't match the expression's type then it's None.
     else if (pseudoReturnType.kind !== expressionType.kind) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.NoneInstance) });
+
         return Type.NoneInstance;
     }
     // If the expression's type can't be known, then assume it's the stated return Type.
@@ -53,7 +62,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         returnType = expressionType;
     }
 
-    return {
+    const result: Type.TPowerQueryType = {
         kind: Type.TypeKind.Function,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
         isNullable: false,
@@ -67,4 +76,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         }),
         returnType,
     };
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

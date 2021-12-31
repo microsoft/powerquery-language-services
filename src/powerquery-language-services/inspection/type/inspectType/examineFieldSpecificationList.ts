@@ -9,7 +9,9 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 import { InspectTypeState } from "./common";
 
@@ -23,7 +25,12 @@ export function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
 ): ExaminedFieldSpecificationList {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        examineFieldSpecificationList.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
@@ -51,8 +58,11 @@ export function examineFieldSpecificationList(
         NodeIdMapUtils.maybeNthChildChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !==
         undefined;
 
-    return {
+    const result: ExaminedFieldSpecificationList = {
         fields: new Map(fields),
         isOpen,
     };
+    trace.exit();
+
+    return result;
 }
