@@ -5,24 +5,34 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
-import { PositionUtils } from "../..";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.boxOk([]);
-    }
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.PrimitiveType,
+        tryAutocompletePrimitiveType.name,
+    );
 
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data);
-    });
+    let result: TriedAutocompletePrimitiveType;
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        result = ResultUtils.boxOk([]);
+    } else {
+        result = ResultUtils.ensureResult(settings.locale, () => {
+            return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data);
+        });
+    }
+    trace.exit();
+
+    return result;
 }
 
 function autocompletePrimitiveType(

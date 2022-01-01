@@ -13,14 +13,15 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TriedType, tryType } from "../type";
 import { InspectionSettings } from "../../inspectionSettings";
-import { PositionUtils } from "../..";
 import { TypeCache } from "../typeCache";
 
 export function tryAutocompleteFieldAccess(
@@ -29,13 +30,22 @@ export function tryAutocompleteFieldAccess(
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
 ): TriedAutocompleteFieldAccess {
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.boxOk(undefined);
-    }
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.FieldAccess,
+        tryAutocompleteFieldAccess.name,
+    );
 
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache);
-    });
+    let result: TriedAutocompleteFieldAccess;
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        result = ResultUtils.boxOk(undefined);
+    } else {
+        result = ResultUtils.ensureResult(settings.locale, () => {
+            return autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache);
+        });
+    }
+    trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });
+
+    return result;
 }
 
 const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKind> = [

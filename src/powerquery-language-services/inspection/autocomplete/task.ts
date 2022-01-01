@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     Autocomplete,
@@ -12,6 +13,7 @@ import {
     TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
+import { AutocompleteTraceConstant } from "../..";
 import { createTrailingToken } from "./common";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TMaybeActiveNode } from "../activeNode";
@@ -28,6 +30,8 @@ export function autocomplete(
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Autocomplete {
+    const trace: Trace = settings.traceManager.entry(AutocompleteTraceConstant.Autocomplete, autocomplete.name);
+
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     let maybeTrailingToken: TrailingToken | undefined;
@@ -64,6 +68,7 @@ export function autocomplete(
         maybeActiveNode,
         maybeTrailingToken,
     );
+    trace.exit();
 
     return {
         triedFieldAccess,
