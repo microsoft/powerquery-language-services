@@ -13,6 +13,7 @@ import {
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../..";
 import {
     LetVariableScopeItem,
     NodeScope,
@@ -29,7 +30,7 @@ import {
     pseudoFunctionExpressionType,
     PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
-import { Inspection } from "../..";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 // Builds a scope for the given node.
 export function tryNodeScope(
@@ -39,7 +40,9 @@ export function tryNodeScope(
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): TriedNodeScope {
-    return ResultUtils.ensureResult(settings.locale, () => {
+    const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Scope, tryNodeScope.name);
+
+    const result: TriedNodeScope = ResultUtils.ensureResult(settings.locale, () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
         if (ancestry.length === 0) {
             return new Map();
@@ -48,6 +51,9 @@ export function tryNodeScope(
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
         return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
+    trace.exit();
+
+    return result;
 }
 
 export function assertGetOrCreateNodeScope(
@@ -57,15 +63,26 @@ export function assertGetOrCreateNodeScope(
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): Inspection.TriedNodeScope {
+    const trace: Trace = settings.traceManager.entry(
+        LanguageServiceTraceConstant.Scope,
+        assertGetOrCreateNodeScope.name,
+    );
+
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
     if (maybeScope !== undefined) {
+        trace.exit({ [TraceConstant.IsThrowing]: false });
+
         return ResultUtils.boxOk(maybeScope);
     }
 
     const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
     if (ResultUtils.isError(triedNodeScope)) {
+        trace.exit({ [TraceConstant.IsThrowing]: true });
+
         throw triedNodeScope;
     }
+
+    trace.exit({ [TraceConstant.IsThrowing]: false });
 
     return triedNodeScope;
 }
@@ -80,9 +97,16 @@ export function maybeDereferencedIdentifier(
     // Else create a new Map instance and return that instead.
     scopeById: ScopeById = new Map(),
 ): PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> {
+    const trace: Trace = settings.traceManager.entry(
+        LanguageServiceTraceConstant.Scope,
+        maybeDereferencedIdentifier.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
     XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
+        trace.exit({ [TraceConstant.Result]: undefined });
+
         return ResultUtils.boxOk(undefined);
     }
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
@@ -114,6 +138,8 @@ export function maybeDereferencedIdentifier(
         scopeById,
     );
     if (ResultUtils.isError(triedNodeScope)) {
+        trace.exit({ [TraceConstant.Result]: triedNodeScope.kind });
+
         return triedNodeScope;
     }
 
@@ -124,6 +150,8 @@ export function maybeDereferencedIdentifier(
         // then either the scope generation is incorrect or it's an external identifier.
         maybeScopeItem?.isRecursive !== isIdentifierRecurisve
     ) {
+        trace.exit({ [TraceConstant.Result]: undefined });
+
         return ResultUtils.boxOk(undefined);
     }
     const scopeItem: TScopeItem = maybeScopeItem;
@@ -148,21 +176,24 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(scopeItem);
     }
 
+    let result: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>;
     if (maybeNextXorNode === undefined) {
-        return ResultUtils.boxOk(xorNode);
+        result = ResultUtils.boxOk(xorNode);
     } else if (
         XorNodeUtils.isContextXor(maybeNextXorNode) ||
         (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
             maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {
-        return ResultUtils.boxOk(xorNode);
+        result = ResultUtils.boxOk(xorNode);
     } else {
-        return maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
+        result = maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
+    trace.exit({ [TraceConstant.Result]: result.kind });
+
+    return result;
 }
 
-interface ScopeInspectionState {
-    readonly settings: PQP.CommonSettings;
+interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> {
     readonly givenScope: ScopeById;
     readonly deltaScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
@@ -177,11 +208,14 @@ function inspectScope(
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
 ): ScopeById {
+    const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Scope, inspectScope.name);
     const rootId: number = ancestry[0].node.id;
 
     // A scope for the given ancestry has already been generated.
     const maybeCached: NodeScope | undefined = scopeById.get(rootId);
     if (maybeCached !== undefined) {
+        trace.exit();
+
         return scopeById;
     }
 
@@ -189,7 +223,7 @@ function inspectScope(
     // This will prevent mutation in the given map if an error is thrown.
     const scopeChanges: ScopeById = new Map();
     const state: ScopeInspectionState = {
-        settings,
+        traceManager: settings.traceManager,
         givenScope: scopeById,
         deltaScope: scopeChanges,
         ancestry,
@@ -205,11 +239,18 @@ function inspectScope(
 
         inspectNode(state, xorNode);
     }
+    trace.exit();
 
     return state.deltaScope;
 }
 
 function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Scope,
+        inspectNode.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode);
@@ -235,6 +276,8 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
         default:
             localGetOrCreateNodeScope(state, xorNode.node.id, undefined);
     }
+
+    trace.exit();
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {

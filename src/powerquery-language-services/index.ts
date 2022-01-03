@@ -8,6 +8,7 @@ export * as CommonTypesUtils from "./commonTypesUtils";
 export * as Inspection from "./inspection";
 export * as InspectionUtils from "./inspectionUtils";
 export * as PositionUtils from "./positionUtils";
+export * as TraceUtils from "./traceUtils";
 export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
@@ -16,6 +17,7 @@ export * from "./formatter";
 export * from "./inspectionSettings";
 export * from "./library";
 export * from "./providers";
+export * from "./trace";
 export * from "./validate";
 export * from "./workspaceCache";
 

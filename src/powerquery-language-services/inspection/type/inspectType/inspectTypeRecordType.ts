@@ -3,12 +3,19 @@
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 import { InspectTypeState } from "./common";
 
 export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeRecordType.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecordType>(xorNode, Ast.NodeKind.RecordType);
 
     const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked(
@@ -17,14 +24,19 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
         0,
         Ast.NodeKind.FieldSpecificationList,
     );
-    if (maybeFields === undefined) {
-        return Type.UnknownInstance;
-    }
 
-    return {
-        kind: Type.TypeKind.Type,
-        maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
-        isNullable: false,
-        ...examineFieldSpecificationList(state, maybeFields),
-    };
+    let result: Type.TPowerQueryType;
+    if (maybeFields === undefined) {
+        result = Type.UnknownInstance;
+    } else {
+        result = {
+            kind: Type.TypeKind.Type,
+            maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
+            isNullable: false,
+            ...examineFieldSpecificationList(state, maybeFields),
+        };
+    }
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

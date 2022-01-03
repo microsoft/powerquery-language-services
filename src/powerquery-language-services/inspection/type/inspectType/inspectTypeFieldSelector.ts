@@ -3,12 +3,19 @@
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeFieldSelector.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked(
@@ -17,6 +24,8 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
         Ast.NodeKind.GeneralizedIdentifier,
     );
     if (maybeFieldName === undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+
         return Type.UnknownInstance;
     }
     const fieldName: string = maybeFieldName.literal;
@@ -34,36 +43,48 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
             Ast.NodeKind.Constant,
         ) !== undefined;
 
+    let result: Type.TPowerQueryType;
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any:
-            return Type.AnyInstance;
+            result = Type.AnyInstance;
+            break;
 
         case Type.TypeKind.Unknown:
-            return Type.UnknownInstance;
+            result = Type.UnknownInstance;
+            break;
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
             switch (previousSiblingType.maybeExtendedKind) {
                 case undefined:
-                    return Type.AnyInstance;
+                    result = Type.AnyInstance;
+                    break;
 
                 case Type.ExtendedTypeKind.DefinedRecord:
                 case Type.ExtendedTypeKind.DefinedTable: {
                     const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
                     if (maybeNamedField !== undefined) {
-                        return maybeNamedField;
+                        result = maybeNamedField;
+                        break;
                     } else if (previousSiblingType.isOpen) {
-                        return Type.AnyInstance;
+                        result = Type.AnyInstance;
+                        break;
                     } else {
-                        return isOptional ? Type.NullInstance : Type.NoneInstance;
+                        result = isOptional ? Type.NullInstance : Type.NoneInstance;
+                        break;
                     }
                 }
 
                 default:
                     throw Assert.isNever(previousSiblingType);
             }
+            break;
 
         default:
-            return Type.NoneInstance;
+            result = Type.NoneInstance;
+            break;
     }
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

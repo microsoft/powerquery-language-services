@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -10,11 +11,17 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeFunctionType.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionType>(xorNode, Ast.NodeKind.FunctionType);
 
     const maybeParameters: XorNode<Ast.TParameterList> | undefined =
@@ -25,6 +32,8 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
             Ast.NodeKind.ParameterList,
         );
     if (maybeParameters === undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+
         return Type.UnknownInstance;
     }
 
@@ -33,6 +42,8 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         maybeParameters.node.id,
     );
     if (maybeArrayWrapper === undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+
         return Type.UnknownInstance;
     }
 
@@ -46,12 +57,14 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         .filter(PQP.TypeScriptUtils.isDefined);
 
     const returnType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
-
-    return {
+    const result: Type.TPowerQueryType = {
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
         isNullable: false,
         parameters: parameterTypes,
         returnType,
     };
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

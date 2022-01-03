@@ -9,11 +9,18 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeFieldProjection.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldProjection>(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
@@ -33,7 +40,14 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    return inspectFieldProjectionHelper(previousSiblingType, projectedFieldNames, isOptional);
+    const result: Type.TPowerQueryType = inspectFieldProjectionHelper(
+        previousSiblingType,
+        projectedFieldNames,
+        isOptional,
+    );
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 function inspectFieldProjectionHelper(

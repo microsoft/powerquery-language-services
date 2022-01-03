@@ -10,20 +10,29 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { PositionUtils } from "../..";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
-    return ResultUtils.ensureResult(settings.locale, () => {
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.LanguageConstant,
+        tryAutocompleteLanguageConstant.name,
+    );
+
+    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(settings.locale, () => {
         return autocompleteLanguageConstant(maybeActiveNode);
     });
+    trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });
+
+    return result;
 }
 
 function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteItem | undefined {

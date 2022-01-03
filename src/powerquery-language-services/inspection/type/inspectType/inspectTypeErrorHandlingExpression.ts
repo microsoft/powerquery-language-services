@@ -8,11 +8,18 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeErrorHandlingExpression.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.ErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     const maybeOtherwiseExpression: XorNode<Ast.OtherwiseExpression> | undefined =
@@ -23,10 +30,13 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
             Ast.NodeKind.OtherwiseExpression,
         );
 
-    return TypeUtils.createAnyUnion([
+    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([
         inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
             ? inspectXor(state, maybeOtherwiseExpression)
             : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
     ]);
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

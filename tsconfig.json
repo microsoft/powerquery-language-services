@@ -6,7 +6,6 @@
         "outDir": "lib",
         "strict": true,
         "downlevelIteration": true,
-        "noFallthroughCasesInSwitch": true,
         "noEmitOnError": true,
         "noImplicitReturns": true,
         "noUnusedLocals": true,
