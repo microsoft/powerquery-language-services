@@ -420,7 +420,7 @@ function expandScope(
 ): void {
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, maybeDefaultScope);
     for (const [key, value] of newEntries) {
-        nodeScope.set(key, value);
+        nodeScope.set(value.isRecursive ? `@${key}` : key, value);
     }
 }
 
@@ -453,9 +453,15 @@ function localGetOrCreateNodeScope(
     nodeId: number,
     maybeDefaultScope: NodeScope | undefined,
 ): NodeScope {
+    const trace: Trace = state.traceManager.entry(LanguageServiceTraceConstant.Scope, localGetOrCreateNodeScope.name, {
+        nodeId,
+    });
+
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
     const maybeDeltaScope: NodeScope | undefined = state.deltaScope.get(nodeId);
     if (maybeDeltaScope !== undefined) {
+        trace.exit({ [TraceConstant.Result]: "deltaScope cache hit" });
+
         return maybeDeltaScope;
     }
 
@@ -465,12 +471,16 @@ function localGetOrCreateNodeScope(
     if (maybeGivenScope !== undefined) {
         const shallowCopy: NodeScope = new Map(maybeGivenScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
+        trace.exit({ [TraceConstant.Result]: "givenScope cache hit" });
+
         return shallowCopy;
     }
 
     if (maybeDefaultScope !== undefined) {
         const shallowCopy: NodeScope = new Map(maybeDefaultScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
+        trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
+
         return shallowCopy;
     }
 
@@ -483,6 +493,8 @@ function localGetOrCreateNodeScope(
         if (maybeParentDeltaScope !== undefined) {
             const shallowCopy: NodeScope = new Map(maybeParentDeltaScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
+            trace.exit({ [TraceConstant.Result]: "parent deltaScope hit" });
+
             return shallowCopy;
         }
 
@@ -490,6 +502,8 @@ function localGetOrCreateNodeScope(
         if (maybeParentGivenScope !== undefined) {
             const shallowCopy: NodeScope = new Map(maybeParentGivenScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
+            trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
+
             return shallowCopy;
         }
     }
@@ -497,6 +511,8 @@ function localGetOrCreateNodeScope(
     // The node has no parent or it hasn't been visited.
     const newScope: NodeScope = new Map();
     state.deltaScope.set(nodeId, newScope);
+    trace.exit({ [TraceConstant.Result]: "set new entry" });
+
     return newScope;
 }
 
