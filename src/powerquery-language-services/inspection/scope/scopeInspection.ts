@@ -389,7 +389,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
     }
 }
 
-// Expands the scope of the value portion for each key value pair.
+// Expands the scope on the value part of the key value pair.
 function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
     state: ScopeInspectionState,
     parentScope: NodeScope,
