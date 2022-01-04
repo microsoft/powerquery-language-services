@@ -435,7 +435,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|]`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -459,7 +459,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "b",
+                        identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -483,7 +483,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "b",
+                        identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -516,7 +516,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1]]`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -553,7 +553,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=|1`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -570,7 +570,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -594,7 +594,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "b",
+                        identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -618,7 +618,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "b",
+                        identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -642,7 +642,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -659,14 +659,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[b=|`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 8,
                         maybeValueNodeId: 10,
                     },
                     {
-                        identifier: "b",
+                        identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 17,
@@ -696,7 +696,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2;`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "x",
+                        identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -728,7 +728,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "y",
+                        identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -771,7 +771,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                     {
-                        identifier: "z",
+                        identifier: "@z",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 24,
@@ -808,7 +808,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "x",
+                        identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
@@ -840,7 +840,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "y",
+                        identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -866,7 +866,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                     {
-                        identifier: "y",
+                        identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 16,
@@ -919,7 +919,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = |1 in x`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
@@ -962,7 +962,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in x`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
@@ -1018,7 +1018,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 31,
                     },
                     {
-                        identifier: "c",
+                        identifier: "@c",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 35,
@@ -1070,7 +1070,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 );
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "eggs",
+                        identifier: "@eggs",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
@@ -1153,7 +1153,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in `);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "a",
+                        identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
@@ -1178,7 +1178,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     TestUtils.assertGetTextWithPosition(`let x = (let y = 1 in z|) in`);
                 const expected: AbridgedNodeScope = [
                     {
-                        identifier: "x",
+                        identifier: "@x",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
