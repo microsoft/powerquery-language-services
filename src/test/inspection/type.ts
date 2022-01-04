@@ -616,6 +616,16 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
+            it(`let foo = 1 in [foo = foo]`, () => {
+                const expression: string = `let foo = 1 in [foo = foo]`;
+                const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
+                    false,
+                );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
             it(`[] & [bar = 2]`, () => {
                 const expression: string = `[] & [bar = 2]`;
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
