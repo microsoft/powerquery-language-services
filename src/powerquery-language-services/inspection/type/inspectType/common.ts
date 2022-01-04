@@ -484,13 +484,17 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(scopeItem);
     }
 
-    return maybeNextXorNode !== undefined &&
+    const result: TXorNode | undefined =
+        maybeNextXorNode !== undefined &&
         XorNodeUtils.isAstXorChecked<Ast.Identifier | Ast.IdentifierExpression>(maybeNextXorNode, [
             Ast.NodeKind.Identifier,
             Ast.NodeKind.IdentifierExpression,
         ])
-        ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
-        : xorNode;
+            ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+            : xorNode;
+    trace.exit();
+
+    return result;
 }
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
