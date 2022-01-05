@@ -100,7 +100,6 @@ export function maybeCreateFromScopeItem(
                 return undefined;
             }
 
-            label = scopeItem.isRecursive ? `@${label}` : label;
             break;
         }
 

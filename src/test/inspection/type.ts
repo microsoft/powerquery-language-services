@@ -765,6 +765,56 @@ describe(`Inspection - Type`, () => {
             });
         });
 
+        describe(`Recursive identifiers`, () => {
+            it(`let foo = 1 in [foo = foo]`, () => {
+                const expression: string = `let foo = 1 in [foo = foo]`;
+                const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
+                    false,
+                );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`let foo = 1 in [foo = foo, bar = foo]`, () => {
+                const expression: string = `let foo = 1 in [foo = foo, bar = foo]`;
+                const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([
+                        ["foo", TypeUtils.createNumberLiteral(false, 1)],
+                        ["bar", TypeUtils.createNumberLiteral(false, 1)],
+                    ]),
+                    false,
+                );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`let someIdentifier = 1, result = let someIdentifier = 2 in [ outer = someIdentifier, inner = @someIdentifier ] in result`, () => {
+                const expression: string = `
+    let
+        someIdentifier = 1,
+        result =
+            let
+                someIdentifier = 2
+            in
+                [
+                    outer = someIdentifier,
+                    inner = @someIdentifier
+                ]
+in
+    result`;
+                const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([
+                        ["outer", TypeUtils.createNumberLiteral(false, 2)],
+                        ["inner", TypeUtils.createNumberLiteral(false, 2)],
+                    ]),
+                    false,
+                );
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+        });
+
         describe(`${Ast.NodeKind.TableType}`, () => {
             it(`type table [foo]`, () => {
                 const expression: string = `type table [foo]`;

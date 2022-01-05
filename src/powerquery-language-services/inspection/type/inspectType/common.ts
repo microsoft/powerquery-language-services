@@ -352,7 +352,15 @@ export function maybeDereferencedIdentifierType(
     const deferencedLiteral: string = maybeDereferencedLiteral;
 
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.node.id);
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
+
+    // When referencing an identifier as a recursive identifier there's no requirements
+    // for it to resolve to a recursive reference.
+    // This if it's a recursive identifier we need to also try the identifier without the recursive `@` prefix.
+    let maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
+    if (deferencedLiteral.startsWith("@") && maybeScopeItem === undefined) {
+        maybeScopeItem = nodeScope.get(deferencedLiteral.slice(1));
+    }
+
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
@@ -450,16 +458,10 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(identifier);
     }
 
-    // TODO: handle recursive identifiers
-    if (isRecursiveIdentifier === true) {
-        trace.exit({ [TraceConstant.Result]: "recursive identifier" });
-
-        return xorNode;
-    }
-
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, identifierId);
-
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
+    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(
+        isRecursiveIdentifier ? `@${identifierLiteral}` : identifierLiteral,
+    );
     if (maybeScopeItem === undefined) {
         return xorNode;
     }
@@ -484,13 +486,17 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(scopeItem);
     }
 
-    return maybeNextXorNode !== undefined &&
+    const result: TXorNode | undefined =
+        maybeNextXorNode !== undefined &&
         XorNodeUtils.isAstXorChecked<Ast.Identifier | Ast.IdentifierExpression>(maybeNextXorNode, [
             Ast.NodeKind.Identifier,
             Ast.NodeKind.IdentifierExpression,
         ])
-        ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
-        : xorNode;
+            ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+            : xorNode;
+    trace.exit();
+
+    return result;
 }
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
