@@ -171,10 +171,12 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     if (request.args.length !== 1) {
                         return Type.NoneInstance;
                     }
+
                     const arg: Type.TPowerQueryType = Assert.asDefined(request.args[0]);
 
                     if (TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
+
                         return {
                             ...arg,
                             literal: newNormalizedLiteral.toString(),

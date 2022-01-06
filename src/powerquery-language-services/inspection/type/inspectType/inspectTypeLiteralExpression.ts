@@ -18,6 +18,7 @@ export function inspectTypeLiteralExpression(
         inspectTypeLiteralExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     XorNodeUtils.assertIsNodeKind<Ast.LiteralExpression>(xorNode, Ast.NodeKind.LiteralExpression);
 
     let literalExpression: Ast.LiteralExpression | undefined;
@@ -44,8 +45,10 @@ export function inspectTypeLiteralExpression(
                         literalExpression.literalKind === Ast.LiteralKind.Null,
                         typeKind,
                     );
+
                     break;
             }
+
             break;
         }
 
@@ -56,6 +59,7 @@ export function inspectTypeLiteralExpression(
         default:
             throw Assert.isNever(xorNode);
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

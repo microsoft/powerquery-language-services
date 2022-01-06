@@ -15,6 +15,7 @@ import {
 import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
 import { ILibrary } from "../powerquery-language-services/library/library";
+import { ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
 describe("Analysis", () => {
@@ -22,6 +23,7 @@ describe("Analysis", () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(`
         let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
+
             const autocompleteItem: AutocompleteItem = Assert.asDefined(
                 autocompleteItems.find(
                     (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
@@ -64,6 +66,7 @@ describe("Analysis", () => {
             const hover: Hover = await TestUtils.createHover(
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
             );
+
             TestUtils.assertHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
         });
 
@@ -81,6 +84,7 @@ describe("Analysis", () => {
             const actual: SignatureHelp = await TestUtils.createSignatureHelp(
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
+
             const expected: SignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
@@ -95,6 +99,7 @@ describe("Analysis", () => {
                     },
                 ],
             };
+
             expect(actual).to.deep.equal(expected);
         });
 
@@ -124,10 +129,11 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
                       library: ILibrary,
                       _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
                       _createInspectionSettingsFn: () => InspectionSettings,
-                  ) => new SlowSymbolProvider(library, 1000),
+                  ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
               }
             : {
-                  maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
+                  maybeCreateLibrarySymbolProviderFn: (library: ILibrary): ISymbolProvider =>
+                      new SlowSymbolProvider(library, 1000),
               };
 
     const analysisSettings: AnalysisSettings = {

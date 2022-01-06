@@ -32,6 +32,7 @@ export function validateDuplicateIdentifiers(
     );
 
     let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
+
     if (PQP.TaskUtils.isParseStageOk(cacheItem)) {
         maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
     } else if (PQP.TaskUtils.isParseStageParseError(cacheItem)) {
@@ -41,6 +42,7 @@ export function validateDuplicateIdentifiers(
     if (maybeNodeIdMapCollection === undefined) {
         return [];
     }
+
     const documentUri: string = textDocument.uri;
     const nodeIdMapCollection: NodeIdMap.Collection = maybeNodeIdMapCollection;
 
@@ -132,8 +134,10 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
         for (const field of iterNodeFn(nodeIdMapCollection, node)) {
             const keyLiteral: string = field.normalizedKeyLiteral;
+
             const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
                 duplicateFieldsByKey.get(keyLiteral);
+
             const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
             if (maybeDuplicateFields) {
@@ -147,20 +151,20 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
         for (const duplicates of duplicateFieldsByKey.values()) {
             const numFields: number = duplicates.length;
+
             const asRelatedInformation: DiagnosticRelatedInformation[] = duplicates.map(
-                (keyValuePair: NodeIdMapIterator.TKeyValuePair) => {
-                    return {
-                        location: {
-                            uri: documentUri,
-                            range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
-                        },
-                        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
-                    };
-                },
+                (keyValuePair: NodeIdMapIterator.TKeyValuePair) => ({
+                    location: {
+                        uri: documentUri,
+                        range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
+                    },
+                    message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
+                }),
             );
 
             for (let index: number = 0; index < numFields; index += 1) {
                 const duplicate: NodeIdMapIterator.TKeyValuePair = duplicates[index];
+
                 // Grab all DiagnosticRelatedInformation for a given key besides the one we're iterating over.
                 const relatedInformation: DiagnosticRelatedInformation[] = asRelatedInformation.filter(
                     (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,

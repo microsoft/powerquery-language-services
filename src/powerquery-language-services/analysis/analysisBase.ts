@@ -65,6 +65,7 @@ export abstract class AnalysisBase implements Analysis {
         let context: AutocompleteItemProviderContext = {};
 
         const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = this.getMaybePositionIdentifier();
+
         if (maybeToken !== undefined) {
             context = {
                 range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
@@ -87,6 +88,7 @@ export abstract class AnalysisBase implements Analysis {
         );
 
         const partial: AutocompleteItem[] = [];
+
         for (const collection of [localDocumentResponse, languageResponse, libraryResponse]) {
             for (const item of collection) {
                 if (partial.find((partialItem: AutocompleteItem) => partialItem.label === item.label) === undefined) {
@@ -101,11 +103,13 @@ export abstract class AnalysisBase implements Analysis {
     public async getHover(): Promise<Hover> {
         const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
             this.getMaybePositionIdentifier();
+
         if (identifierToken === undefined) {
             return EmptyHover;
         }
 
         const maybeActiveNode: Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
+
         if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
             return EmptyHover;
         }
@@ -130,13 +134,16 @@ export abstract class AnalysisBase implements Analysis {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem)) {
             return EmptySignatureHelp;
         }
+
         const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
 
         const maybeContext: SignatureProviderContext | undefined =
             InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
         }
+
         const context: SignatureProviderContext = maybeContext;
 
         if (context.functionName === undefined) {
@@ -183,6 +190,7 @@ export abstract class AnalysisBase implements Analysis {
 
         for (let i: number = 0; i < results.length; i += 1) {
             const result: T | null = results[i];
+
             if (result !== null) {
                 return result;
             }
@@ -199,9 +207,7 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: add tracing to the catch case
         return providers.map((provider: AutocompleteItemProvider) =>
             this.promiseWithTimeout(
-                provider.getAutocompleteItems(context).catch(() => {
-                    return [];
-                }),
+                provider.getAutocompleteItems(context).catch(() => []),
                 [],
                 timeoutInMS,
             ),
@@ -216,9 +222,7 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: add tracing to the catch case
         return providers.map((provider: HoverProvider) =>
             this.promiseWithTimeout(
-                provider.getHover(context).catch(() => {
-                    return null;
-                }),
+                provider.getHover(context).catch(() => null),
                 null,
                 timeoutInMS,
             ),
@@ -233,9 +237,7 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: add tracing to the catch case
         return providers.map((provider: SignatureHelpProvider) =>
             this.promiseWithTimeout(
-                provider.getSignatureHelp(context).catch(() => {
-                    return null;
-                }),
+                provider.getSignatureHelp(context).catch(() => null),
                 null,
                 timeoutInMS,
             ),
@@ -244,6 +246,7 @@ export abstract class AnalysisBase implements Analysis {
 
     private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+
         if (ancestry.length <= 1) {
             return true;
         }

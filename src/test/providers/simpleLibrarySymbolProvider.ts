@@ -48,10 +48,12 @@ describe(`SimpleLibraryProvider`, async () => {
 
         it(`match multiple`, async () => {
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.Numbe|");
+
             const expected: ReadonlyArray<string> = [
                 TestConstants.TestLibraryName.Number,
                 TestConstants.TestLibraryName.NumberOne,
             ];
+
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
@@ -59,6 +61,7 @@ describe(`SimpleLibraryProvider`, async () => {
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                 "Unknown|Identifier",
             );
+
             const expected: ReadonlyArray<string> = [];
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
@@ -89,30 +92,36 @@ describe(`SimpleLibraryProvider`, async () => {
 
         it(`first parameter, no literal`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, no comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1,|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 1,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });

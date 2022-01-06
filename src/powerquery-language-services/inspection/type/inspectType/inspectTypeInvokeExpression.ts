@@ -23,6 +23,7 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         inspectTypeInvokeExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
 
@@ -30,8 +31,10 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         state,
         xorNode,
     );
+
     if (maybeRequest !== undefined && state.maybeExternalTypeResolver) {
         const maybeType: Type.TPowerQueryType | undefined = state.maybeExternalTypeResolver(maybeRequest);
+
         if (maybeType !== undefined) {
             trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(maybeType) });
 
@@ -43,9 +46,11 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
+
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
 
     let result: Type.TPowerQueryType;
+
     if (previousSiblingType.kind === Type.TypeKind.Any) {
         result = Type.AnyInstance;
     } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
@@ -55,6 +60,7 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
     } else {
         result = Type.AnyInstance;
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
@@ -72,9 +78,11 @@ function maybeExternalInvokeRequest(
     if (maybeIdentifier === undefined) {
         return undefined;
     }
+
     const deferencedIdentifier: TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
 
     const types: Type.TPowerQueryType[] = [];
+
     for (const argument of NodeIdMapIterator.iterInvokeExpression(
         state.nodeIdMapCollection,
         XorNodeUtils.assertAsInvokeExpression(xorNode),

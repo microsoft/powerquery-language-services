@@ -65,6 +65,7 @@ export function tryType(
     const result: TriedType = ResultUtils.ensureResult(settings.locale, () =>
         inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
     );
+
     trace.exit({ [TraceConstant.IsError]: result.kind });
 
     return result;
@@ -84,12 +85,14 @@ function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByK
     }
 
     const result: ScopeTypeByKey = new Map();
+
     for (const [key, scopeItem] of nodeScope.entries()) {
         const type: Type.TPowerQueryType = Assert.asDefined(
             state.givenTypeById.get(scopeItem.id),
             `expected nodeId to be in givenTypeById`,
             { nodeId: scopeItem.id },
         );
+
         result.set(key, type);
     }
 

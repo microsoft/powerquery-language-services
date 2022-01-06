@@ -12,6 +12,7 @@ export function inspectTypeConstant(xorNode: TXorNode): Type.TPowerQueryType {
     }
 
     const constant: Ast.TConstant = xorNode.node;
+
     switch (constant.constantKind) {
         case Constant.PrimitiveTypeConstant.Action:
             return TypeUtils.createPrimitiveType(false, Type.TypeKind.Action);

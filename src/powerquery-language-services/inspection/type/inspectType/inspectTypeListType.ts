@@ -14,6 +14,7 @@ export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode):
         inspectTypeListType.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.ListType>(xorNode, Ast.NodeKind.ListType);
 
@@ -24,6 +25,7 @@ export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode):
     );
 
     let result: Type.TPowerQueryType;
+
     if (maybeListItem === undefined) {
         result = Type.UnknownInstance;
     } else {
@@ -36,6 +38,7 @@ export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode):
             itemType,
         };
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

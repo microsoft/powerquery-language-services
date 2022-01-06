@@ -19,6 +19,7 @@ export function validate(textDocument: TextDocument, validationSettings: Validat
     );
 
     let invokeExpressionDiagnostics: Diagnostic[];
+
     if (
         validationSettings.checkInvokeExpressions &&
         (PQP.TaskUtils.isParseStageOk(cacheItem) || PQP.TaskUtils.isParseStageParseError(cacheItem))

@@ -14,6 +14,7 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
         inspectTypeParameter.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TParameter>(xorNode, Ast.NodeKind.Parameter);
 
@@ -32,6 +33,7 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
         ...maybeParameterType,
         isNullable: maybeOptionalConstant !== undefined || maybeParameterType.isNullable,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

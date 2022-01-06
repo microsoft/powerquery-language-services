@@ -15,6 +15,7 @@ export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXo
         inspectTypeRangeExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
@@ -22,6 +23,7 @@ export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXo
     const maybeRightType: Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     let result: Type.TPowerQueryType;
+
     if (maybeLeftType === undefined || maybeRightType === undefined) {
         result = Type.UnknownInstance;
     } else if (maybeLeftType.kind === Type.TypeKind.Number && maybeRightType.kind === Type.TypeKind.Number) {
@@ -38,6 +40,7 @@ export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXo
     } else {
         result = Type.NoneInstance;
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

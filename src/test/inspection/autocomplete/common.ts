@@ -24,10 +24,8 @@ export function createTweakedAbridgedAutocompleteItems(
     labels: ReadonlyArray<string>,
     jaroWinklerValues?: Map<string, number>,
 ): ReadonlyArray<AbridgedAutocompleteItem> {
-    return labels.map((kind: string) => {
-        return {
-            label: kind,
-            jaroWinklerScore: jaroWinklerValues?.get(kind) ?? 1,
-        };
-    });
+    return labels.map((kind: string) => ({
+        label: kind,
+        jaroWinklerScore: jaroWinklerValues?.get(kind) ?? 1,
+    }));
 }

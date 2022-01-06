@@ -30,6 +30,7 @@ export function pseudoFunctionExpressionType(
     XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(fnExpr, Ast.NodeKind.FunctionExpression);
 
     const examinedParameters: PseudoFunctionParameterType[] = [];
+
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
@@ -39,6 +40,7 @@ export function pseudoFunctionExpressionType(
             1,
             Ast.NodeKind.Identifier,
         );
+
         if (maybeName === undefined) {
             break;
         }
@@ -47,6 +49,7 @@ export function pseudoFunctionExpressionType(
             nodeIdMapCollection,
             XorNodeUtils.assertAsParameter(parameter),
         );
+
         if (maybeExaminable !== undefined) {
             examinedParameters.push({
                 ...maybeExaminable,
@@ -65,6 +68,7 @@ export function pseudoFunctionExpressionType(
 
     let isReturnNullable: boolean;
     let returnType: Type.TypeKind;
+
     if (maybeReturnType !== undefined) {
         const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(maybeReturnType);
         isReturnNullable = simplified.isNullable;
@@ -95,9 +99,11 @@ function functionParameterXorNodes(
             0,
             Ast.NodeKind.ParameterList,
         );
+
     if (maybeParameterList === undefined) {
         return [];
     }
+
     const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeUnboxWrappedContent(
         nodeIdMapCollection,
         maybeParameterList.node.id,

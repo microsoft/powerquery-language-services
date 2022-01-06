@@ -9,6 +9,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 
 export function tryFormat(document: TextDocument, formattingOptions: FormattingOptions, locale: string): TextEdit[] {
     let indentationLiteral: PQF.IndentationLiteral;
+
     if (formattingOptions.insertSpaces) {
         indentationLiteral = PQF.IndentationLiteral.SpaceX4;
     } else {
@@ -20,6 +21,7 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
         locale,
         indentationLiteral,
     };
+
     const triedFormat: PQF.TriedFormat = PQF.tryFormat(formatSettings, document.getText());
 
     if (ResultUtils.isOk(triedFormat)) {

@@ -34,8 +34,10 @@ export function getMaybeContextForSignatureProvider(
     }
 
     const invokeExpression: Inspection.CurrentInvokeExpression = inspected.triedCurrentInvokeExpression.value;
+
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
+
     const argumentOrdinal: number | undefined =
         invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
 
@@ -53,24 +55,25 @@ export function getMaybeContextForSignatureProvider(
 
 export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
+
     if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
         return null;
     }
+
     const nameOfParameters: string = context.functionType.parameters.map(TypeUtils.nameOfFunctionParameter).join(", ");
     const label: string = `${identifierLiteral}(${nameOfParameters})`;
 
     const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+
     return {
         activeParameter: context.argumentOrdinal ?? null,
         activeSignature: 0,
         signatures: [
             {
                 label,
-                parameters: parameters.map((parameter: Type.FunctionParameter) => {
-                    return {
-                        label: parameter.nameLiteral,
-                    };
-                }),
+                parameters: parameters.map((parameter: Type.FunctionParameter) => ({
+                    label: parameter.nameLiteral,
+                })),
             },
         ],
     };
@@ -212,7 +215,9 @@ export function getAutocompleteItemsFromScope(
     if (ResultUtils.isError(inspection.triedNodeScope)) {
         return [];
     }
+
     const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+
     const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value
         : new Map();

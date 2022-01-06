@@ -36,13 +36,15 @@ export function tryAutocompleteFieldAccess(
     );
 
     let result: TriedAutocompleteFieldAccess;
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
-        result = ResultUtils.ensureResult(settings.locale, () => {
-            return autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache);
-        });
+        result = ResultUtils.ensureResult(settings.locale, () =>
+            autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
+        );
     }
+
     trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });
 
     return result;
@@ -64,6 +66,7 @@ function autocompleteFieldAccess(
 
     // Option 1: Find a field access node in the ancestry.
     let maybeFieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
+
     for (const ancestor of activeNode.ancestry) {
         if (
             XorNodeUtils.isNodeKind<Ast.FieldSelector | Ast.FieldProjection>(ancestor, [
@@ -74,6 +77,7 @@ function autocompleteFieldAccess(
             maybeFieldAccessAncestor = ancestor;
         }
     }
+
     if (maybeFieldAccessAncestor !== undefined) {
         maybeInspectedFieldAccess = inspectFieldAccess(
             parseState.lexerSnapshot,
@@ -88,6 +92,7 @@ function autocompleteFieldAccess(
     if (maybeInspectedFieldAccess === undefined || maybeInspectedFieldAccess.isAutocompleteAllowed === false) {
         return undefined;
     }
+
     const inspectedFieldAccess: InspectedFieldAccess = maybeInspectedFieldAccess;
 
     // Don't waste time on type analysis if the field access
@@ -101,19 +106,24 @@ function autocompleteFieldAccess(
     // arbitrary field could be costly.
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
     const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(nodeIdMapCollection, activeNode);
+
     if (maybeField === undefined) {
         return undefined;
     }
+
     const field: TXorNode = maybeField;
 
     const triedFieldType: TriedType = tryType(settings, nodeIdMapCollection, field.node.id, typeCache);
+
     if (ResultUtils.isError(triedFieldType)) {
         throw triedFieldType.error;
     }
+
     const fieldType: Type.TPowerQueryType = triedFieldType.value;
 
     // We can only autocomplete a field access if we know what fields are present.
     const fieldEntries: ReadonlyArray<[string, Type.TPowerQueryType]> = fieldEntriesFromFieldType(fieldType);
+
     if (fieldEntries.length === 0) {
         return undefined;
     }
@@ -130,6 +140,7 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
     switch (type.maybeExtendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
             let fields: [string, Type.TPowerQueryType][] = [];
+
             for (const field of type.unionedTypePairs) {
                 if (
                     field.maybeExtendedKind &&
@@ -186,10 +197,12 @@ function inspectFieldProjection(
             position,
             fieldSelector,
         );
+
         if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.maybeIdentifierUnderPosition) {
             isAutocompleteAllowed = true;
             maybeIdentifierUnderPosition = inspectedFieldSelector.maybeIdentifierUnderPosition;
         }
+
         fieldNames.push(...inspectedFieldSelector.fieldNames);
     }
 
@@ -215,6 +228,7 @@ function inspectFieldSelector(
     fieldSelector: TXorNode,
 ): InspectedFieldAccess {
     const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
+
     if (childIds === undefined) {
         return createInspectedFieldAccess(false);
     } else if (childIds.length === 1) {
@@ -222,6 +236,7 @@ function inspectFieldSelector(
     }
 
     const generalizedIdentifierId: number = childIds[1];
+
     const generalizedIdentifierXor: XorNode<Ast.GeneralizedIdentifier> = NodeIdMapUtils.assertGetXorChecked(
         nodeIdMapCollection,
         generalizedIdentifierId,
@@ -250,6 +265,7 @@ function inspectFieldSelector(
                 0,
                 Ast.NodeKind.Constant,
             );
+
             const maybeNextTokenPosition: PQP.Language.Token.TokenPosition =
                 lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;
 
@@ -277,6 +293,7 @@ function createAutocompleteItems(
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
     const autocompleteItems: AutocompleteItem[] = [];
+
     const maybeIdentifierUnderPositionLiteral: string | undefined =
         inspectedFieldAccess.maybeIdentifierUnderPosition?.literal;
 
@@ -302,6 +319,7 @@ function maybeTypablePrimaryExpression(
 
     let maybeContiguousPrimaryExpression: TXorNode | undefined;
     let matchingContiguousPrimaryExpression: boolean = true;
+
     for (let index: number = 0; index < numAncestors; index += 1) {
         const xorNode: TXorNode = ancestry[index];
 
@@ -318,6 +336,7 @@ function maybeTypablePrimaryExpression(
             // then grab the previous sibling.
             else if (xorNodeBeforeRpe.node.maybeAttributeIndex === 1) {
                 const rpeChild: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index, 2);
+
                 return NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
                     nodeIdMapCollection,
                     rpeChild.node.id,

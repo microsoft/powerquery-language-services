@@ -39,6 +39,7 @@ export function createMockDocumentAndPosition(text: string): [MockDocument, Posi
 export function readFile(fileName: string): string {
     const fullPath: string = Path.join(Path.dirname(__filename), "..", "files", fileName);
     assert.isTrue(File.existsSync(fullPath), `file ${fullPath} not found.`);
+
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
@@ -70,6 +71,7 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
 
 export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
+
     return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 
@@ -101,6 +103,7 @@ export async function createSignatureHelp(
 
 function createFileAnalysis(fileName: string, position: Position, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
+
     return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 

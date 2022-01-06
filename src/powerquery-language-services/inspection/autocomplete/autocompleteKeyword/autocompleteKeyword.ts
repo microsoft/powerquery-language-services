@@ -34,9 +34,9 @@ export function tryAutocompleteKeyword(
         ]);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken);
-    });
+    return ResultUtils.ensureResult(settings.locale, () =>
+        autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
+    );
 }
 
 export function autocompleteKeyword(
@@ -75,6 +75,7 @@ export function autocompleteKeyword(
     };
 
     const maybeEdgeCase: ReadonlyArray<AutocompleteItem> | undefined = getMaybeEdgeCase(state, maybeTrailingToken);
+
     if (maybeEdgeCase !== undefined) {
         return maybeEdgeCase;
     }
@@ -102,6 +103,7 @@ function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArra
     const numNodes: number = ancestry.length;
 
     let maybeInspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
+
     for (let ancestryIndex: number = 1; ancestryIndex < numNodes; ancestryIndex += 1) {
         state.ancestryIndex = ancestryIndex;
         state.parent = ancestry[ancestryIndex];
@@ -157,6 +159,7 @@ function getMaybeEdgeCase(
         XorNodeUtils.isNodeKind(ancestry[1], Ast.NodeKind.IdentifierExpression)
     ) {
         const identifier: string = ancestry[0].node.literal;
+
         maybeInspected = Keyword.StartOfDocumentKeywords.map((keywordKind: Keyword.KeywordKind) =>
             AutocompleteItemUtils.createFromKeywordKind(keywordKind, identifier),
         );
@@ -223,6 +226,7 @@ function handleConjunctions(
     }
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
+
     // `let x = 1 a|`
     if (maybeTrailingToken !== undefined && maybeTrailingToken.isInOrOnPosition) {
         return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, undefined);

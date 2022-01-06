@@ -19,6 +19,7 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
         inspectTypeErrorHandlingExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.ErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
@@ -36,6 +37,7 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
             ? inspectXor(state, maybeOtherwiseExpression)
             : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
     ]);
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

@@ -17,6 +17,7 @@ export function autocompleteKeywordErrorHandlingExpression(
     const maybeTrailingText: TrailingToken | undefined = state.maybeTrailingToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
+
     if (maybeChildAttributeIndex === 0) {
         return [Keyword.KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {

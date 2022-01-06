@@ -14,6 +14,7 @@ export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Typ
         inspectTypeList.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
     const elements: ReadonlyArray<Type.TPowerQueryType> = items.map((item: TXorNode) => inspectXor(state, item));
@@ -24,6 +25,7 @@ export function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Typ
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
         elements,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

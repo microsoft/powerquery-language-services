@@ -20,6 +20,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         inspectTypeFieldProjection.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldProjection>(xorNode, Ast.NodeKind.FieldProjection);
 
@@ -27,11 +28,14 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         state.nodeIdMapCollection,
         xorNode,
     );
+
     const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
+
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
             state.nodeIdMapCollection,
@@ -45,6 +49,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         projectedFieldNames,
         isOptional,
     );
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
@@ -85,25 +90,33 @@ function inspectFieldProjectionHelper(
         }
 
         case Type.TypeKind.Record:
-        case Type.TypeKind.Table: {
-            // All we know is previousSibling was a Record/Table.
-            // Create a DefinedRecord/DefinedTable with the projected fields.
-            if (TypeUtils.isDefinedRecord(previousSiblingType)) {
-                return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedRecordFields);
-            } else if (TypeUtils.isDefinedTable(previousSiblingType)) {
-                return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedTableFields);
-            } else {
-                const newFields: Map<string, Type.TPowerQueryType> = new Map(
-                    projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
-                );
-                return previousSiblingType.kind === Type.TypeKind.Record
-                    ? TypeUtils.createDefinedRecord(false, newFields, false)
-                    : TypeUtils.createDefinedTable(false, new PQP.OrderedMap([...newFields]), false);
-            }
-        }
+        case Type.TypeKind.Table:
+            return inspectRecordOrTableProjection(previousSiblingType, projectedFieldNames, isOptional);
 
         default:
             return Type.NoneInstance;
+    }
+}
+
+function inspectRecordOrTableProjection(
+    previousSiblingType: Type.TRecord | Type.TTable,
+    projectedFieldNames: ReadonlyArray<string>,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    // All we know is previousSibling was a Record/Table.
+    // Create a DefinedRecord/DefinedTable with the projected fields.
+    if (TypeUtils.isDefinedRecord(previousSiblingType)) {
+        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedRecordFields);
+    } else if (TypeUtils.isDefinedTable(previousSiblingType)) {
+        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedTableFields);
+    } else {
+        const newFields: Map<string, Type.TPowerQueryType> = new Map(
+            projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
+        );
+
+        return previousSiblingType.kind === Type.TypeKind.Record
+            ? TypeUtils.createDefinedRecord(false, newFields, false)
+            : TypeUtils.createDefinedTable(false, new PQP.OrderedMap([...newFields]), false);
     }
 }
 

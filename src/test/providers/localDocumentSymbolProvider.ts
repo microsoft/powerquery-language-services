@@ -44,17 +44,21 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`${Inspection.ScopeItemKind.LetVariable}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "let foo = 1, bar = 2, foobar = 3 in |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "let foo = 1, bar = 2, foobar = 3 in foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -62,17 +66,21 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`${Inspection.ScopeItemKind.Parameter}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "(foo as number, bar as number, foobar as number) => |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "(foo as number, bar as number, foobar as number) => foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -80,17 +88,21 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`${Inspection.ScopeItemKind.RecordField}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3, x = |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3, x = foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -98,17 +110,21 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`${Inspection.ScopeItemKind.SectionMember}`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "section; foo = 1; bar = 2; foobar = 3; x = |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "section; foo = 1; bar = 2; foobar = 3; x = foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -118,25 +134,31 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`fieldProjection`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`no repeats`, async () => {
                     const expected: ReadonlyArray<string> = ["bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[foo], [|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -144,17 +166,21 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             describe(`fieldSelection`, async () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -164,6 +190,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|",
             );
+
             const document: TextDocument = pair[0];
             const position: Position = pair[1];
 
@@ -175,12 +202,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 },
                 position,
             ).getAutocompleteItems();
+
             expect(autocompleteItems.length).to.equal(2);
 
             const firstOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.Foo",
                 autocompleteItems,
             );
+
             const secondOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.FooBar",
                 autocompleteItems,
@@ -252,6 +281,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
+
             const expected: SignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
@@ -269,6 +299,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                     },
                 ],
             };
+
             expect(actual).to.deep.equal(expected);
         });
 
@@ -276,6 +307,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|)",
             );
+
             const expected: SignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
@@ -293,6 +325,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                     },
                 ],
             };
+
             expect(actual).to.deep.equal(expected);
         });
     });
@@ -303,10 +336,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 line: 40,
                 character: 25,
             };
+
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await TestUtils.createAutocompleteItemsForFile(
                 "DirectQueryForSQL.pq",
                 postion,
             );
+
             const expected: ReadonlyArray<string> = [
                 "ConnectionString",
                 "Credential",

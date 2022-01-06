@@ -39,6 +39,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
+
         if (maybeInspection === undefined) {
             return [];
         }
@@ -55,9 +56,11 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         }
 
         const activeNode: Inspection.TMaybeActiveNode = this.maybeTriedInspection.maybeActiveNode;
+
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return null;
         }
+
         const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
         let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
@@ -87,9 +90,11 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
             this.getMaybeInspectionInvokeExpression();
+
         if (maybeInvokeInspection === undefined) {
             return null;
         }
+
         const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
@@ -163,12 +168,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         let scopeItemText: string = "unknown";
         // If it's a SectionMember
         const maybeThirdNodeKind: Ast.NodeKind = ancestry[2]?.node.kind;
+
         if (maybeThirdNodeKind === Ast.NodeKind.SectionMember) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.SectionMember);
         }
 
         // Else if it's RecordExpression or RecordLiteral
         const maybeFifthNodeKind: Ast.NodeKind = ancestry[4]?.node.kind;
+
         const isRecordNodeKind: boolean = [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral].includes(
             maybeFifthNodeKind,
         );
@@ -198,6 +205,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     ): Promise<Hover | undefined> {
         const identifierLiteral: string = context.identifier;
         const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
+
         if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             return undefined;
         }
@@ -205,6 +213,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
 
         const maybeScopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
+
         const scopeItemTypeText: string =
             maybeScopeItemType !== undefined ? TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 

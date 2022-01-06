@@ -19,6 +19,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         inspectTypeFunctionExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(xorNode, Ast.NodeKind.FunctionExpression);
 
@@ -31,6 +32,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
     // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
 
     let returnType: Type.TPowerQueryType;
+
     // If the stated return type is Any,
     // then it might as well be the expression's type as it can't be any wider than Any.
     if (pseudoReturnType.kind === Type.TypeKind.Any) {
@@ -66,16 +68,15 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
         kind: Type.TypeKind.Function,
         maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
         isNullable: false,
-        parameters: pseudoType.parameters.map((pseudoParameter: PseudoFunctionParameterType) => {
-            return {
-                nameLiteral: pseudoParameter.name.literal,
-                isNullable: pseudoParameter.isNullable,
-                isOptional: pseudoParameter.isOptional,
-                maybeType: pseudoParameter.maybeType,
-            };
-        }),
+        parameters: pseudoType.parameters.map((pseudoParameter: PseudoFunctionParameterType) => ({
+            nameLiteral: pseudoParameter.name.literal,
+            isNullable: pseudoParameter.isNullable,
+            isOptional: pseudoParameter.isOptional,
+            maybeType: pseudoParameter.maybeType,
+        })),
         returnType,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

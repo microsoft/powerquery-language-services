@@ -22,10 +22,12 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
         inspectTypeUnaryExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TUnaryExpression>(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
     const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
         NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
@@ -33,15 +35,18 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
             0,
             Ast.NodeKind.ArrayWrapper,
         );
+
     if (maybeUnaryOperatorWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: Type.UnknownInstance });
 
         return Type.UnknownInstance;
     }
+
     const unaryOperatorWrapper: TXorNode | undefined = maybeUnaryOperatorWrapper;
 
     let result: Type.TPowerQueryType;
     const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, xorNode.node.id, 1);
+
     if (maybeExpression === undefined) {
         result = Type.UnknownInstance;
     } else {
@@ -56,6 +61,7 @@ export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXo
             result = Type.NoneInstance;
         }
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
@@ -77,6 +83,7 @@ function inspectTypeUnaryNumber(
         Constant.UnaryOperator.Positive,
         Constant.UnaryOperator.Negative,
     ];
+
     const unaryOperators: (Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive)[] = [];
     let isPositive: boolean = true;
 
@@ -86,6 +93,7 @@ function inspectTypeUnaryNumber(
         }
 
         unaryOperators.push(operator.constantKind);
+
         if (operator.constantKind === Constant.UnaryOperator.Negative) {
             isPositive = !isPositive;
         }

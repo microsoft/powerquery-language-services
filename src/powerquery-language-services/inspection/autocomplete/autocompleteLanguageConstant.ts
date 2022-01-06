@@ -27,9 +27,10 @@ export function tryAutocompleteLanguageConstant(
         tryAutocompleteLanguageConstant.name,
     );
 
-    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteLanguageConstant(maybeActiveNode);
-    });
+    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(settings.locale, () =>
+        autocompleteLanguageConstant(maybeActiveNode),
+    );
+
     trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });
 
     return result;
@@ -39,6 +40,7 @@ function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): Autoco
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
+
     const activeNode: ActiveNode = maybeActiveNode;
 
     if (isNullableAllowed(activeNode)) {
@@ -62,12 +64,14 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
                 if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
                     return true;
                 }
+
                 break;
 
             case Ast.NodeKind.PrimitiveType:
                 if (XorNodeUtils.isContextXor(xorNode)) {
                     return true;
                 }
+
                 break;
 
             default:
@@ -80,9 +84,11 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
     const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
+
     if (maybeChild?.node.maybeAttributeIndex !== 1) {
         return false;
     }
+
     // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
     const paired: TXorNode = maybeChild;
     const position: Position = activeNode.position;
@@ -98,9 +104,11 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
             ancestryIndex,
             2,
         );
+
         if (maybeGrandchild === undefined) {
             return false;
         }
+
         // Ast.Constant || Ast.PrimitiveType
         const grandchild: TXorNode = maybeGrandchild;
 
@@ -122,9 +130,11 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
+
     if (maybeFnExprAncestryIndex === undefined) {
         return false;
     }
+
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
@@ -135,6 +145,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
             4,
             Ast.NodeKind.Parameter,
         );
+
     if (maybeParameter === undefined) {
         return false;
     }
@@ -144,9 +155,11 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         fnExprAncestryIndex,
         5,
     );
+
     if (maybeChildOfParameter === undefined) {
         return true;
     }
+
     const childOfParameter: TXorNode = maybeChildOfParameter;
 
     switch (childOfParameter.node.maybeAttributeIndex) {
@@ -162,6 +175,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
                         childOfParameter,
                         Ast.NodeKind.Identifier,
                     );
+
                     const name: string = nameAst.literal;
 
                     return (

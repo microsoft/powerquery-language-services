@@ -18,6 +18,7 @@ export function inspectTypeTableType(
         inspectTypeTableType.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TableType>(xorNode, Ast.NodeKind.TableType);
 
@@ -28,6 +29,7 @@ export function inspectTypeTableType(
     );
 
     let result: Type.TPowerQueryType;
+
     if (maybeRowType === undefined) {
         result = Type.UnknownInstance;
     } else if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
@@ -45,6 +47,7 @@ export function inspectTypeTableType(
             primaryExpression: inspectXor(state, maybeRowType),
         };
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

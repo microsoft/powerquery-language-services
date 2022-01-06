@@ -23,13 +23,15 @@ export function tryAutocompletePrimitiveType(
     );
 
     let result: TriedAutocompletePrimitiveType;
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk([]);
     } else {
-        result = ResultUtils.ensureResult(settings.locale, () => {
-            return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data);
-        });
+        result = ResultUtils.ensureResult(settings.locale, () =>
+            autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data),
+        );
     }
+
     trace.exit();
 
     return result;
@@ -59,6 +61,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
     const numAncestors: number = activeNode.ancestry.length;
+
     for (let index: number = 0; index < numAncestors; index += 1) {
         const parent: TXorNode = ancestry[index];
         const maybeChild: TXorNode | undefined = ancestry[index - 1];
@@ -89,6 +92,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
             const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(ancestry, index, 2);
+
             if (maybeGrandchild === undefined) {
                 continue;
             }

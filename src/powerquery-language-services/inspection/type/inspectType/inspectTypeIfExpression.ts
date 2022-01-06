@@ -14,6 +14,7 @@ export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNo
         inspectTypeIfExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.IfExpression>(xorNode, Ast.NodeKind.IfExpression);
 
@@ -41,6 +42,7 @@ export function inspectTypeIfExpression(state: InspectTypeState, xorNode: TXorNo
     } else {
         result = createAnyUnion(state, xorNode);
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

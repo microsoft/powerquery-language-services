@@ -21,6 +21,7 @@ export function createFromFieldAccess(
 
     // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
     const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(label, false);
+
     const normalizedLabel: string =
         identifierKind === PQP.StringUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
 
@@ -95,13 +96,12 @@ export function maybeCreateFromScopeItem(
     switch (scopeItem.kind) {
         case Inspection.ScopeItemKind.LetVariable:
         case Inspection.ScopeItemKind.RecordField:
-        case Inspection.ScopeItemKind.SectionMember: {
+        case Inspection.ScopeItemKind.SectionMember:
             if (scopeItem.maybeValue === undefined) {
                 return undefined;
             }
 
             break;
-        }
 
         case Inspection.ScopeItemKind.Each:
             return undefined;
@@ -134,6 +134,7 @@ export function maybeCreateFromScopeItem(
 
 export function compareFn(left: AutocompleteItem, right: AutocompleteItem): number {
     const jaroWinklerScoreDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
+
     if (jaroWinklerScoreDiff !== 0) {
         return jaroWinklerScoreDiff;
     } else if (left.label < right.label) {

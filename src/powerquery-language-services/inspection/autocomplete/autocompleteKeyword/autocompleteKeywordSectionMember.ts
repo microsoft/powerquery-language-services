@@ -40,6 +40,7 @@ export function autocompleteKeywordSectionMember(
             state.ancestryIndex,
             2,
         );
+
         // Name hasn't been parsed yet so we can exit.
         if (
             !maybeName ||
@@ -66,6 +67,7 @@ export function autocompleteKeywordSectionMember(
                 2,
                 Ast.NodeKind.IdentifierPairedExpression,
             );
+
         return autocompleteKeywordRightMostLeaf(state, identifierPairedExpression.id);
     } else {
         return undefined;

@@ -47,12 +47,15 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         if (!context.identifier) {
             return null;
         }
+
         const identifierLiteral: string = context.identifier;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
+
         if (maybeDefinition === undefined) {
             return null;
         }
+
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
@@ -72,9 +75,11 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         if (!context.functionName) {
             return null;
         }
+
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+
         if (!LibraryUtils.isFunction(maybeDefinition)) {
             return null;
         }
