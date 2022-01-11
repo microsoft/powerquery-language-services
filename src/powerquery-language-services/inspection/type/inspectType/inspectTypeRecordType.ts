@@ -15,6 +15,7 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
         inspectTypeRecordType.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecordType>(xorNode, Ast.NodeKind.RecordType);
 
@@ -26,6 +27,7 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
     );
 
     let result: Type.TPowerQueryType;
+
     if (maybeFields === undefined) {
         result = Type.UnknownInstance;
     } else {
@@ -36,6 +38,7 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
             ...examineFieldSpecificationList(state, maybeFields),
         };
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

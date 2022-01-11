@@ -39,6 +39,7 @@ export function createMockDocumentAndPosition(text: string): [MockDocument, Posi
 export function readFile(fileName: string): string {
     const fullPath: string = Path.join(Path.dirname(__filename), "..", "files", fileName);
     assert.isTrue(File.existsSync(fullPath), `file ${fullPath} not found.`);
+
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
@@ -70,17 +71,18 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
 
 export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
+
     return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 
-export async function createAutocompleteItems(
+export function createAutocompleteItems(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return createAnalysis(text, maybeAnalysisSettings).getAutocompleteItems();
 }
 
-export async function createAutocompleteItemsForFile(
+export function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeAnalysisSettings?: AnalysisSettings,
@@ -88,19 +90,17 @@ export async function createAutocompleteItemsForFile(
     return createFileAnalysis(fileName, position, maybeAnalysisSettings).getAutocompleteItems();
 }
 
-export async function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
+export function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
     return createAnalysis(text, maybeAnalysisSettings).getHover();
 }
 
-export async function createSignatureHelp(
-    text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
-): Promise<SignatureHelp> {
+export function createSignatureHelp(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<SignatureHelp> {
     return createAnalysis(text, maybeAnalysisSettings).getSignatureHelp();
 }
 
 function createFileAnalysis(fileName: string, position: Position, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
+
     return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 

@@ -16,16 +16,19 @@ import {
 
 export function assertAsConstant(maybeDefinition: TLibraryDefinition | undefined): LibraryConstant {
     assertIsConstant(maybeDefinition);
+
     return maybeDefinition;
 }
 
 export function assertAsFunction(maybeDefinition: TLibraryDefinition | undefined): LibraryFunction {
     assertIsFunction(maybeDefinition);
+
     return maybeDefinition;
 }
 
 export function assertAsType(maybeDefinition: TLibraryDefinition | undefined): LibraryType {
     assertIsType(maybeDefinition);
+
     return maybeDefinition;
 }
 

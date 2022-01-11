@@ -35,10 +35,12 @@ export function autocomplete(
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     let maybeTrailingToken: TrailingToken | undefined;
+
     if (maybeParseError !== undefined) {
         const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(
             maybeParseError.innerError,
         );
+
         if (maybeParseErrorToken !== undefined) {
             maybeTrailingToken = createTrailingToken(maybeActiveNode.position, maybeParseErrorToken);
         }
@@ -68,6 +70,7 @@ export function autocomplete(
         maybeActiveNode,
         maybeTrailingToken,
     );
+
     trace.exit();
 
     return {

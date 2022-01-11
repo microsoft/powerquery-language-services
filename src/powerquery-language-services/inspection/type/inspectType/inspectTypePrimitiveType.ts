@@ -14,6 +14,7 @@ export function inspectTypePrimitiveType(state: InspectTypeState, xorNode: TXorN
         inspectTypePrimitiveType.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     XorNodeUtils.assertIsNodeKind<Ast.PrimitiveType>(xorNode, Ast.NodeKind.PrimitiveType);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
@@ -23,11 +24,13 @@ export function inspectTypePrimitiveType(state: InspectTypeState, xorNode: TXorN
     }
 
     const kind: Type.TypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(xorNode.node.primitiveTypeKind);
+
     const result: Type.TPowerQueryType = {
         kind,
         maybeExtendedKind: undefined,
         isNullable: false,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

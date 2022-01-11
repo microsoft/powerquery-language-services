@@ -26,6 +26,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         this.signatureInformationByLabel = new Map();
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -43,16 +44,20 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         return partial;
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!context.identifier) {
             return null;
         }
+
         const identifierLiteral: string = context.identifier;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
+
         if (maybeDefinition === undefined) {
             return null;
         }
+
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
@@ -68,13 +73,16 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         };
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         if (!context.functionName) {
             return null;
         }
+
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+
         if (!LibraryUtils.isFunction(maybeDefinition)) {
             return null;
         }

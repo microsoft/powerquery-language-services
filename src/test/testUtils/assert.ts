@@ -23,6 +23,7 @@ import { ValidationResult } from "../../powerquery-language-services/validate/va
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
+
     return value;
 }
 
@@ -81,8 +82,10 @@ export function assertGetInspectionCacheItem(document: MockDocument, position: P
         TestConstants.SimpleInspectionSettings,
         position,
     );
+
     assertIsDefined(cacheItem);
     assertInspectionCacheItemOk(cacheItem);
+
     return cacheItem;
 }
 

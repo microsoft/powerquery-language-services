@@ -14,10 +14,12 @@ export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): T
         inspectTypeRecord.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsRecord(xorNode);
 
     const fields: Map<string, Type.TPowerQueryType> = new Map();
+
     for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
             fields.set(keyValuePair.keyLiteral, inspectXor(state, keyValuePair.maybeValue));
@@ -33,6 +35,7 @@ export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): T
         fields,
         isOpen: false,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

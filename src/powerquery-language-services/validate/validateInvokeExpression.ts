@@ -21,11 +21,13 @@ export function validateInvokeExpression(
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.InvokeExpression,
     );
+
     if (maybeInvokeExpressionIds === undefined) {
         return [];
     }
 
     const result: Diagnostic[] = [];
+
     for (const nodeId of maybeInvokeExpressionIds) {
         const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
             validationSettings,
@@ -33,6 +35,7 @@ export function validateInvokeExpression(
             nodeId,
             maybeCache,
         );
+
         if (ResultUtils.isError(triedInvokeExpression)) {
             throw triedInvokeExpression;
         }
@@ -55,6 +58,7 @@ function invokeExpressionToDiagnostics(
     if (inspected.maybeArguments !== undefined) {
         const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
         const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
+
         const invokeExpressionRange: Range = Assert.asDefined(
             PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
@@ -83,6 +87,7 @@ function invokeExpressionToDiagnostics(
         }
 
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
+
         if (
             numGivenArguments < invokeExpressionArguments.numMinExpectedArguments ||
             numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
@@ -156,6 +161,7 @@ function createDiagnosticForArgumentMismatch(
 
 function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
     return Localization.error_validation_invokeExpression_missingMandatory(templates, maybeFunctionName, argName);
 }
 
@@ -167,6 +173,7 @@ function createTypeMismatchMessage(
     actual: string,
 ): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
     return Localization.error_validation_invokeExpression_typeMismatch(
         templates,
         maybeFunctionName,

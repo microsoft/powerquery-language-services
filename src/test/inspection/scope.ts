@@ -127,6 +127,7 @@ function createAbridgedParameterScopeItems(nodeScope: Inspection.NodeScope): Rea
 
     for (const [identifier, scopeItem] of nodeScope.entries()) {
         const abridged: TAbridgedNodeScopeItem = createAbridgedNodeScopeItem(identifier, scopeItem);
+
         if (abridged.kind === Inspection.ScopeItemKind.Parameter) {
             result.push(abridged);
         }
@@ -144,9 +145,11 @@ function assertNodeScopeOk(
         nodeIdMapCollection,
         position,
     );
+
     if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return new Map();
     }
+
     const activeNode: Inspection.ActiveNode = maybeActiveNode;
 
     const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
@@ -155,6 +158,7 @@ function assertNodeScopeOk(
         activeNode.ancestry[0].node.id,
         new Map(),
     );
+
     Assert.isOk(triedNodeScope);
 
     return triedNodeScope.value;
@@ -166,6 +170,7 @@ export function assertGetParseOkScopeOk(
     position: Position,
 ): Inspection.NodeScope {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
+
     return assertNodeScopeOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
@@ -175,6 +180,7 @@ export function assertGetParseErrScopeOk(
     position: Position,
 ): Inspection.NodeScope {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+
     return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, position);
 }
 
@@ -184,23 +190,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|each 1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|each 1`);
                 const expected: ReadonlyArray<TAbridgedNodeScopeItem> = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`each| 1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each| 1`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`each |1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |1`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -209,14 +220,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`each 1|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each 1|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -225,14 +239,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`each each 1|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each each 1|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -241,9 +258,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 3,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -252,14 +271,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`each|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each|`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`each |`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "_",
@@ -268,9 +290,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         eachExpressionNodeId: 1,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -279,32 +303,39 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|(x) => z`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) => z`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x|, y) => z`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) => z`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x, y)| => z`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| => z`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x, y) => z|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) => z|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -323,9 +354,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeType: undefined,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -334,32 +367,39 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|(x) =>`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) =>`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x|, y) =>`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) =>`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x, y)| =>`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| =>`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`(x, y) =>|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) =>|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -378,9 +418,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeType: undefined,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -389,6 +431,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`let x = 1, y = x in 1|`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let x = 1, y = x in 1|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -405,9 +448,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -416,23 +461,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|[a=1]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1]`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[|a=1]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1]`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1|]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|]`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -442,14 +492,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1, b=2|]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|]`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -466,14 +519,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1, b=2|, c=3]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3]`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -497,23 +553,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 28,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1]|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1]|`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=[|b=1]]`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1]]`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -523,9 +584,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -534,23 +597,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`|[a=1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[|a=1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1`);
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=|1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=|1`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -560,14 +628,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -577,14 +648,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 12,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1, b=|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -601,14 +675,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=1, b=2|, c=3`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -632,14 +709,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 28,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=[|b=1`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -649,14 +729,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`[a=[b=|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[b=|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -673,9 +756,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 19,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -684,16 +769,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`s|ection foo; x = 1; y = 2;`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`s|ection foo; x = 1; y = 2;`);
+
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`section foo; x = 1|; y = 2;`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2;`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@x",
@@ -710,15 +799,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`section foo; x = 1; y = 2|;`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2|;`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -735,19 +827,24 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`section foo; x = 1; y = 2;|`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2;|`);
+
                 const expected: AbridgedNodeScope = [];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
@@ -755,6 +852,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
                 );
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -785,9 +883,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 35,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -796,16 +896,20 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             it(`s|ection foo; x = 1; y = 2`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`s|ection foo; x = 1; y = 2`);
+
                 const expected: AbridgedNodeScope = [];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`section foo; x = 1|; y = 2`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@x",
@@ -822,15 +926,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`section foo; x = 1; y = 2|`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -847,9 +954,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
@@ -857,6 +966,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section foo; x = 1; y = () => 10|`,
                 );
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -873,9 +983,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -883,6 +995,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
             it(`let a = 1 in |x`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |x`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -892,14 +1005,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = 1 in x|`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in x|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -909,14 +1025,17 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = |1 in x`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = |1 in x`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -926,15 +1045,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = 1, b = 2 in x|`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let a = 1, b = 2 in x|`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -951,15 +1073,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = 1|, b = 2 in x`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in x`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -976,9 +1101,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
@@ -986,6 +1113,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `(p1, p2) => let a = 1, b = 2, c = 3| in c`,
                 );
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "p1",
@@ -1025,9 +1153,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 39,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
@@ -1035,6 +1165,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`,
                 );
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "eggs",
@@ -1058,9 +1189,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 37,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
@@ -1068,6 +1201,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`,
                 );
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@eggs",
@@ -1098,9 +1232,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 17,
                     },
                 ];
+
                 const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
                     assertGetParseOkScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -1108,6 +1244,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
             it(`let a = 1 in |`, () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -1117,15 +1254,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 10,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = 1, b = 2 in |`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let a = 1, b = 2 in |`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "a",
@@ -1142,15 +1282,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let a = 1|, b = 2 in`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in `);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@a",
@@ -1167,15 +1310,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 18,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let x = (let y = 1 in z|) in`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let x = (let y = 1 in z|) in`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "@x",
@@ -1192,15 +1338,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 20,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
 
             it(`let x = (let y = 1 in z) in |`, () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`let x = (let y = 1 in z) in |`);
+
                 const expected: AbridgedNodeScope = [
                     {
                         identifier: "x",
@@ -1210,9 +1359,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         maybeValueNodeId: 9,
                     },
                 ];
+
                 const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
                     assertGetParseErrScopeOk(DefaultSettings, text, position),
                 );
+
                 expect(actual).to.deep.equal(expected);
             });
         });
@@ -1223,6 +1374,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
             );
+
             const expected: ReadonlyArray<AbridgedParameterScopeItem> = [
                 {
                     identifier: "a",
@@ -1265,9 +1417,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     maybeType: Constant.PrimitiveTypeConstant.Table,
                 },
             ];
+
             const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedParameterScopeItems(
                 assertGetParseOkScopeOk(DefaultSettings, text, position),
             );
+
             expect(actual).to.deep.equal(expected);
         });
     });

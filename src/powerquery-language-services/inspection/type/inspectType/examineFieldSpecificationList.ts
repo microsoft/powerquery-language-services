@@ -30,6 +30,7 @@ export function examineFieldSpecificationList(
         examineFieldSpecificationList.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(xorNode, Ast.NodeKind.FieldSpecificationList);
 
@@ -50,6 +51,7 @@ export function examineFieldSpecificationList(
         if (maybeName === undefined) {
             break;
         }
+
         const type: Type.TPowerQueryType = inspectTypeFieldSpecification(state, fieldSpecification);
         fields.push([maybeName.literal, type]);
     }
@@ -62,6 +64,7 @@ export function examineFieldSpecificationList(
         fields: new Map(fields),
         isOpen,
     };
+
     trace.exit();
 
     return result;

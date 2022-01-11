@@ -26,20 +26,20 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     ) => NullSymbolProvider.singleton(),
 };
 
-async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-async function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Hover> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-async function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<SignatureHelp> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
-describe(`SimpleLibraryProvider`, async () => {
-    describe(`getAutocompleteItems`, async () => {
+describe(`SimpleLibraryProvider`, () => {
+    describe(`getAutocompleteItems`, () => {
         it(`match`, async () => {
             const expected: ReadonlyArray<string> = [TestConstants.TestLibraryName.NumberOne];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.NumberO|");
@@ -48,10 +48,12 @@ describe(`SimpleLibraryProvider`, async () => {
 
         it(`match multiple`, async () => {
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.Numbe|");
+
             const expected: ReadonlyArray<string> = [
                 TestConstants.TestLibraryName.Number,
                 TestConstants.TestLibraryName.NumberOne,
             ];
+
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
@@ -59,12 +61,13 @@ describe(`SimpleLibraryProvider`, async () => {
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                 "Unknown|Identifier",
             );
+
             const expected: ReadonlyArray<string> = [];
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
     });
 
-    describe(`getHover`, async () => {
+    describe(`getHover`, () => {
         it(`constant`, async () => {
             const hover: Hover = await createHover("Test.Num|ber");
             TestUtils.assertHover("[library constant] Test.Number: number", hover);
@@ -81,7 +84,7 @@ describe(`SimpleLibraryProvider`, async () => {
         });
     });
 
-    describe(`getSignatureHelp`, async () => {
+    describe(`getSignatureHelp`, () => {
         it(`unknown identifier`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
             expect(actual).to.equal(EmptySignatureHelp);
@@ -89,30 +92,36 @@ describe(`SimpleLibraryProvider`, async () => {
 
         it(`first parameter, no literal`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, no comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });
 
         it(`first parameter, literal, comma`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1,|");
+
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 1,
                 activeSignature: 0,
             };
+
             TestUtils.assertSignatureHelp(expected, actual);
             Assert.isDefined(actual.signatures[0].documentation);
         });

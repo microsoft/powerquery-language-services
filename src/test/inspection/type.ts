@@ -97,11 +97,13 @@ function assertGetParseOkScopeTypeOk(
     const activeNodeLeaf: TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
         Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, position),
     );
+
     const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         activeNodeLeaf.node.id,
     );
+
     Assert.isOk(triedScopeType);
 
     return triedScopeType.value;
@@ -138,10 +140,12 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
             it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
                 const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
+
                 const expected: Inspection.ScopeTypeByKey = new Map([
                     ["foo", Type.NumberInstance],
                     ["bar", Type.NullableNumberInstance],
                 ]);
+
                 assertParseOkScopeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -169,6 +173,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.EachExpression}`, () => {
             it(`each 1`, () => {
                 const expression: string = `each 1`;
+
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [
@@ -181,6 +186,7 @@ describe(`Inspection - Type`, () => {
                     ],
                     TypeUtils.createNumberLiteral(false, "1"),
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -188,6 +194,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try 1`, () => {
                 const expression: string = `try 1`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
@@ -198,10 +205,12 @@ describe(`Inspection - Type`, () => {
 
             it(`try 1 otherwise false`, () => {
                 const expression: string = `try 1 otherwise false`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -217,11 +226,13 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.FieldProjection}`, () => {
             it(`[a = 1][[a]]`, () => {
                 const expression: string = `[a = 1][[a]]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["a", TypeUtils.createNumberLiteral(false, "1")]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -239,21 +250,25 @@ describe(`Inspection - Type`, () => {
 
             it(`(1 as record)[[a]]`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["a", Type.AnyInstance]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`(1 as record)[[a]]?`, () => {
                 const expression: string = `let x = (1 as record) in x[[a]]?`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["a", Type.AnyInstance]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -293,6 +308,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.FunctionExpression}`, () => {
             it(`() => 1`, () => {
                 const expression: string = `() => 1`;
+
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [],
@@ -305,6 +321,7 @@ describe(`Inspection - Type`, () => {
             // Test AnyUnion return
             it(`() => if true then 1 else ""`, () => {
                 const expression: string = `() => if true then 1 else ""`;
+
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [],
@@ -319,6 +336,7 @@ describe(`Inspection - Type`, () => {
 
             it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
                 const expression: string = `(a, b as number, c as nullable number, optional d) => 1`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
                     false,
                     [
@@ -349,6 +367,7 @@ describe(`Inspection - Type`, () => {
                     ],
                     TypeUtils.createNumberLiteral(false, "1"),
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -368,6 +387,7 @@ describe(`Inspection - Type`, () => {
 
             it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, () => {
                 const expression: string = `type function (foo as number, bar as nullable text, optional baz as date) as text`;
+
                 const expected: Type.FunctionType = TypeUtils.createFunctionType(
                     false,
                     [
@@ -392,6 +412,7 @@ describe(`Inspection - Type`, () => {
                     ],
                     Type.TextInstance,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -419,6 +440,7 @@ describe(`Inspection - Type`, () => {
 
             it(`if true then 1 else false`, () => {
                 const expression: string = `if true then 1 else false`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
@@ -429,10 +451,12 @@ describe(`Inspection - Type`, () => {
 
             it(`if if true then true else false then 1 else 0`, () => {
                 const expression: string = `if if true then true else false then 1 else ""`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -462,19 +486,23 @@ describe(`Inspection - Type`, () => {
 
             it(`if 1 as any then "a" else "b"`, () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createTextLiteral(false, `"a"`),
                     TypeUtils.createTextLiteral(false, `"b"`),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`if true then 1`, () => {
                 const expression: string = `if true then 1`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Unknown),
                 ]);
+
                 assertParseErrNodeTypeEqual(expression, expected);
             });
         });
@@ -498,18 +526,22 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.ListExpression}`, () => {
             it(`{1}`, () => {
                 const expression: string = `{1}`;
+
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createNumberLiteral(false, "1"),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`{1, ""}`, () => {
                 const expression: string = `{1, ""}`;
+
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -517,10 +549,12 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.ListType}`, () => {
             it(`type { number }`, () => {
                 const expression: string = `type { number }`;
+
                 const expected: Type.ListType = TypeUtils.createListType(
                     false,
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Number),
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -555,6 +589,7 @@ describe(`Inspection - Type`, () => {
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, []);
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
+
             it(`[]`, () => {
                 const expression: string = `[]`;
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
@@ -579,19 +614,23 @@ describe(`Inspection - Type`, () => {
 
             it(`1 ?? 2`, () => {
                 const expression: string = `1 ?? 2`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createNumberLiteral(false, `2`),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`1 ?? ""`, () => {
                 const expression: string = `1 ?? ""`;
+
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -605,6 +644,7 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
             it(`[foo = 1] & [bar = 2]`, () => {
                 const expression: string = `[foo = 1] & [bar = 2]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([
@@ -613,56 +653,67 @@ describe(`Inspection - Type`, () => {
                     ]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] & [bar = 2]`, () => {
                 const expression: string = `[] & [bar = 2]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["bar", TypeUtils.createNumberLiteral(false, "2")]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & []`, () => {
                 const expression: string = `[foo = 1] & []`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & [foo = ""]`, () => {
                 const expression: string = `[foo = 1] & [foo = ""]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["foo", TypeUtils.createTextLiteral(false, `""`)]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[] as record & [foo = 1]`, () => {
                 const expression: string = `[] as record & [foo = 1]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
                     true,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`[foo = 1] & [] as record`, () => {
                 const expression: string = `[foo = 1] & [] as record`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
                     true,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -676,26 +727,31 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.RecordType}`, () => {
             it(`type [foo]`, () => {
                 const expression: string = `type [foo]`;
+
                 const expected: Type.RecordType = TypeUtils.createRecordType(
                     false,
                     new Map([["foo", Type.AnyInstance]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo, ...]`, () => {
                 const expression: string = `type [foo, ...]`;
+
                 const expected: Type.RecordType = TypeUtils.createRecordType(
                     false,
                     new Map([["foo", Type.AnyInstance]]),
                     true,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type [foo = number, bar = nullable text]`, () => {
                 const expression: string = `type [foo = number, bar = nullable text]`;
+
                 const expected: Type.RecordType = TypeUtils.createRecordType(
                     false,
                     new Map([
@@ -704,6 +760,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -744,10 +801,12 @@ describe(`Inspection - Type`, () => {
 
                 it(`${Ast.NodeKind.FieldProjection}`, () => {
                     const expression: string = `let x = (_ as any) in x[[foo]]`;
+
                     const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
                         TypeUtils.createDefinedRecord(false, new Map([["foo", Type.AnyInstance]]), false),
                         TypeUtils.createDefinedTable(false, new PQP.OrderedMap([["foo", Type.AnyInstance]]), false),
                     ]);
+
                     assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
@@ -768,16 +827,19 @@ describe(`Inspection - Type`, () => {
         describe(`Recursive identifiers`, () => {
             it(`let foo = 1 in [foo = foo]`, () => {
                 const expression: string = `let foo = 1 in [foo = foo]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([["foo", TypeUtils.createNumberLiteral(false, "1")]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`let foo = 1 in [foo = foo, bar = foo]`, () => {
                 const expression: string = `let foo = 1 in [foo = foo, bar = foo]`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([
@@ -786,6 +848,7 @@ describe(`Inspection - Type`, () => {
                     ]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
@@ -803,6 +866,7 @@ describe(`Inspection - Type`, () => {
                 ]
 in
     result`;
+
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
                     false,
                     new Map([
@@ -811,6 +875,7 @@ in
                     ]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
@@ -818,26 +883,31 @@ in
         describe(`${Ast.NodeKind.TableType}`, () => {
             it(`type table [foo]`, () => {
                 const expression: string = `type table [foo]`;
+
                 const expected: Type.TableType = TypeUtils.createTableType(
                     false,
                     new Map([["foo", Type.AnyInstance]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo]`, () => {
                 const expression: string = `type table [foo]`;
+
                 const expected: Type.TableType = TypeUtils.createTableType(
                     false,
                     new Map([["foo", Type.AnyInstance]]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             it(`type table [foo = number, bar = nullable text]`, () => {
                 const expression: string = `type table [foo = number, bar = nullable text]`;
+
                 const expected: Type.TableType = TypeUtils.createTableType(
                     false,
                     new Map([
@@ -846,6 +916,7 @@ in
                     ]),
                     false,
                 );
+
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });

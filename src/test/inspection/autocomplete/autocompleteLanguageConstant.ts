@@ -27,85 +27,103 @@ function assertGetLanguageConstantAutocomplete(
 describe(`Inspection - Autocomplete - Language constants`, () => {
     it(`a as |`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as |`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Nullable,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`a as n|`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as n|`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Nullable,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`(a as |`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as |`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Nullable,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`(a as n|`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as n|`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Nullable,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`(x, |`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, |`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Optional,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 
     it(`(x, op|`, () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, op|`);
+
         const expected: AbridgedAutocompleteItem | undefined = {
             jaroWinklerScore: 1,
             label: Constant.LanguageConstant.Optional,
         };
+
         const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
         );
+
         expect(actual).to.deep.equal(expected);
     });
 });

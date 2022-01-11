@@ -14,6 +14,7 @@ export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: 
         inspectTypeFieldSpecification.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
@@ -25,6 +26,7 @@ export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: 
 
     const result: Type.TPowerQueryType =
         maybeFieldTypeSpecification !== undefined ? inspectXor(state, maybeFieldTypeSpecification) : Type.AnyInstance;
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

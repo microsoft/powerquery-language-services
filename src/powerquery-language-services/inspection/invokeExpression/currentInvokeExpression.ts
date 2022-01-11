@@ -49,6 +49,7 @@ export function tryCurrentInvokeExpression(
     const result: TriedCurrentInvokeExpression = ResultUtils.ensureResult(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
+
     trace.exit();
 
     return result;
@@ -72,12 +73,14 @@ function inspectInvokeExpression(
     }
 
     const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = maybeInvokeExpression;
+
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
         settings,
         nodeIdMapCollection,
         invokeExpressionXorNode.node.id,
         typeCache,
     );
+
     if (ResultUtils.isError(triedInvokeExpression)) {
         throw triedInvokeExpression;
     }
@@ -86,6 +89,7 @@ function inspectInvokeExpression(
     const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.maybeArguments;
 
     let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
+
     if (maybeArguments !== undefined) {
         maybeWithArgumentOrdinal = {
             ...maybeArguments,
@@ -117,6 +121,7 @@ function getArgumentOrdinal(
         2,
         Ast.NodeKind.Csv,
     );
+
     if (maybeAncestoryCsv !== undefined) {
         return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
     }
@@ -133,6 +138,7 @@ function getArgumentOrdinal(
     );
 
     let arrayWrapperXorNode: TXorNode;
+
     switch (maybePreviousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
             arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked(

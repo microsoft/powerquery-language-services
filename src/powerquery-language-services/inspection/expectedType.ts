@@ -29,6 +29,7 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TPowerQueryType 
     for (let index: number = 0; index < upperBound; index += 1) {
         const parent: TXorNode = ancestry[index + 1];
         const child: TXorNode = ancestry[index];
+
         const childAttributeIndex: number = Assert.asDefined(
             child.node.maybeAttributeIndex,
             `Expected child to have an attribute index.`,
@@ -41,6 +42,7 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TPowerQueryType 
                 : childAttributeIndex;
 
         const allowedType: Type.TPowerQueryType = expectedType(parent, attributeIndex);
+
         if (allowedType.kind !== Type.TypeKind.NotApplicable) {
             bestMatch = allowedType;
         }
@@ -78,43 +80,19 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            switch (childIndex) {
-                case 0:
-                case 2:
-                    return Type.TypeExpressionInstance;
-
-                case 1:
-                    return Type.NotApplicableInstance;
-
-                default:
-                    throw unknownChildIndexError(parentXorNode, childIndex);
-            }
+            return expectTypeBinOpExpression(parentXorNode, childIndex);
 
         case Ast.NodeKind.AsExpression:
         case Ast.NodeKind.IsExpression:
-            switch (childIndex) {
-                case 0:
-                    return Type.TypeExpressionInstance;
+            return expectTypeAsOrIsExpression(parentXorNode, childIndex);
 
-                case 1:
-                    return Type.NotApplicableInstance;
-
-                case 2:
-                    return Type.NullablePrimitiveInstance;
-
-                default:
-                    throw unknownChildIndexError(parentXorNode, childIndex);
-            }
+        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
+        case Ast.NodeKind.IdentifierPairedExpression:
+            return expectTypeIdentifierPairedExpression(parentXorNode, childIndex);
 
         case Ast.NodeKind.Section:
         case Ast.NodeKind.SectionMember:
-            switch (childIndex) {
-                case 0:
-                    return Type.RecordInstance;
-
-                default:
-                    return Type.NotApplicableInstance;
-            }
+            return expectTypeSectionOrSectionMember(childIndex);
 
         case Ast.NodeKind.AsType:
             switch (childIndex) {
@@ -179,20 +157,6 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
 
                 case 2:
                     return Type.AnyLiteralInstance;
-
-                default:
-                    throw unknownChildIndexError(parentXorNode, childIndex);
-            }
-
-        case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
-        case Ast.NodeKind.IdentifierPairedExpression:
-            switch (childIndex) {
-                case 0:
-                case 1:
-                    return Type.NotApplicableInstance;
-
-                case 2:
-                    return Type.ExpressionInstance;
 
                 default:
                     throw unknownChildIndexError(parentXorNode, childIndex);
@@ -459,11 +423,66 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
     }
 }
 
+function expectTypeAsOrIsExpression(parentXorNode: TXorNode, childIndex: number): Type.TPowerQueryType {
+    switch (childIndex) {
+        case 0:
+            return Type.TypeExpressionInstance;
+
+        case 1:
+            return Type.NotApplicableInstance;
+
+        case 2:
+            return Type.NullablePrimitiveInstance;
+
+        default:
+            throw unknownChildIndexError(parentXorNode, childIndex);
+    }
+}
+
+function expectTypeBinOpExpression(parentXorNode: TXorNode, childIndex: number): Type.TPowerQueryType {
+    switch (childIndex) {
+        case 0:
+        case 2:
+            return Type.TypeExpressionInstance;
+
+        case 1:
+            return Type.NotApplicableInstance;
+
+        default:
+            throw unknownChildIndexError(parentXorNode, childIndex);
+    }
+}
+
+function expectTypeIdentifierPairedExpression(parentXorNode: TXorNode, childIndex: number): Type.TPowerQueryType {
+    switch (childIndex) {
+        case 0:
+        case 1:
+            return Type.NotApplicableInstance;
+
+        case 2:
+            return Type.ExpressionInstance;
+
+        default:
+            throw unknownChildIndexError(parentXorNode, childIndex);
+    }
+}
+
+function expectTypeSectionOrSectionMember(childIndex: number): Type.TPowerQueryType {
+    switch (childIndex) {
+        case 0:
+            return Type.RecordInstance;
+
+        default:
+            return Type.NotApplicableInstance;
+    }
+}
+
 function unknownChildIndexError(parent: TXorNode, childIndex: number): PQP.CommonError.InvariantError {
     const details: object = {
         parentId: parent.node.kind,
         parentNodeKind: parent.node.kind,
         childIndex,
     };
+
     return new PQP.CommonError.InvariantError(`unknown childIndex`, details);
 }

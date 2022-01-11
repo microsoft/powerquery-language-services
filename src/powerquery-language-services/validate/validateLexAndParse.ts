@@ -33,19 +33,23 @@ function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: Valida
 
     const error: PQP.Lexer.LexError.LexError = triedLex.error;
     const diagnostics: Diagnostic[] = [];
+
     // TODO: handle other types of lexer errors
     if (error instanceof PQP.Lexer.LexError.ErrorLineMapError) {
         for (const errorLine of error.errorLineMap.values()) {
             const innerError: PQP.Lexer.LexError.TInnerLexError = errorLine.error.innerError;
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if ((innerError as any).graphemePosition) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const graphemePosition: PQP.StringUtils.GraphemePosition = (innerError as any).graphemePosition;
                 const message: string = innerError.message;
+
                 const position: Position = {
                     line: graphemePosition.lineNumber,
                     character: graphemePosition.lineCodeUnit,
                 };
+
                 // TODO: "lex" errors aren't that useful to display to end user. Should we make it more generic?
                 diagnostics.push({
                     code: DiagnosticErrorCode.LexError,
@@ -75,6 +79,7 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
     const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
 
     let maybeErrorToken: PQP.Language.Token.Token | undefined;
+
     if (
         (innerError instanceof PQP.Parser.ParseError.ExpectedAnyTokenKindError ||
             innerError instanceof PQP.Parser.ParseError.ExpectedTokenKindError) &&
@@ -92,6 +97,7 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
     }
 
     let range: Range;
+
     if (maybeErrorToken !== undefined) {
         range = {
             start: {
@@ -105,6 +111,7 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
         };
     } else {
         const maybeRoot: ParseContext.TNode | undefined = parseContextState.maybeRoot;
+
         if (maybeRoot === undefined) {
             return [];
         }
@@ -113,9 +120,11 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );
+
         if (maybeLeaf === undefined) {
             return [];
         }
+
         const leafTokenRange: PQP.Language.Token.TokenRange = maybeLeaf.tokenRange;
 
         range = {

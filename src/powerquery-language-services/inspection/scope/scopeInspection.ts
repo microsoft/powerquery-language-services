@@ -44,13 +44,16 @@ export function tryNodeScope(
 
     const result: TriedNodeScope = ResultUtils.ensureResult(settings.locale, () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
+
         if (ancestry.length === 0) {
             return new Map();
         }
 
         const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
+
         return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
+
     trace.exit();
 
     return result;
@@ -69,6 +72,7 @@ export function assertGetOrCreateNodeScope(
     );
 
     const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
+
     if (maybeScope !== undefined) {
         trace.exit({ [TraceConstant.IsThrowing]: false });
 
@@ -76,6 +80,7 @@ export function assertGetOrCreateNodeScope(
     }
 
     const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
+
     if (ResultUtils.isError(triedNodeScope)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
@@ -102,6 +107,7 @@ export function maybeDereferencedIdentifier(
         maybeDereferencedIdentifier.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
@@ -109,6 +115,7 @@ export function maybeDereferencedIdentifier(
 
         return ResultUtils.boxOk(undefined);
     }
+
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
         | Ast.Identifier
         | Ast.IdentifierExpression;
@@ -137,6 +144,7 @@ export function maybeDereferencedIdentifier(
         xorNode.node.id,
         scopeById,
     );
+
     if (ResultUtils.isError(triedNodeScope)) {
         trace.exit({ [TraceConstant.Result]: triedNodeScope.kind });
 
@@ -145,6 +153,7 @@ export function maybeDereferencedIdentifier(
 
     const nodeScope: NodeScope = triedNodeScope.value;
     const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
+
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.
@@ -154,9 +163,11 @@ export function maybeDereferencedIdentifier(
 
         return ResultUtils.boxOk(undefined);
     }
+
     const scopeItem: TScopeItem = maybeScopeItem;
 
     let maybeNextXorNode: TXorNode | undefined;
+
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
@@ -177,6 +188,7 @@ export function maybeDereferencedIdentifier(
     }
 
     let result: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>;
+
     if (maybeNextXorNode === undefined) {
         result = ResultUtils.boxOk(xorNode);
     } else if (
@@ -188,6 +200,7 @@ export function maybeDereferencedIdentifier(
     } else {
         result = maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
+
     trace.exit({ [TraceConstant.Result]: result.kind });
 
     return result;
@@ -213,6 +226,7 @@ function inspectScope(
 
     // A scope for the given ancestry has already been generated.
     const maybeCached: NodeScope | undefined = scopeById.get(rootId);
+
     if (maybeCached !== undefined) {
         trace.exit();
 
@@ -222,6 +236,7 @@ function inspectScope(
     // Store the delta between the given scope and what's found in a temporary map.
     // This will prevent mutation in the given map if an error is thrown.
     const scopeChanges: ScopeById = new Map();
+
     const state: ScopeInspectionState = {
         traceManager: settings.traceManager,
         givenScope: scopeById,
@@ -233,12 +248,14 @@ function inspectScope(
 
     // Build up the scope through a top-down inspection.
     const numNodes: number = ancestry.length;
+
     for (let ancestryIndex: number = numNodes - 1; ancestryIndex >= 0; ancestryIndex -= 1) {
         state.ancestryIndex = ancestryIndex;
         const xorNode: TXorNode = ancestry[ancestryIndex];
 
         inspectNode(state, xorNode);
     }
+
     trace.exit();
 
     return state.deltaScope;
@@ -282,6 +299,7 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode): void {
     XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(eachExpr, Ast.NodeKind.EachExpression);
+
     expandChildScope(
         state,
         eachExpr,
@@ -309,24 +327,23 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
     const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = pseudoType.parameters.map(
-        (parameter: PseudoFunctionParameterType) => {
-            return [
-                parameter.name.literal,
-                {
-                    kind: ScopeItemKind.Parameter,
-                    id: parameter.id,
-                    isRecursive: false,
-                    name: parameter.name,
-                    isOptional: parameter.isOptional,
-                    isNullable: parameter.isNullable,
-                    maybeType:
-                        parameter.maybeType !== undefined
-                            ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
-                            : undefined,
-                },
-            ];
-        },
+        (parameter: PseudoFunctionParameterType) => [
+            parameter.name.literal,
+            {
+                kind: ScopeItemKind.Parameter,
+                id: parameter.id,
+                isRecursive: false,
+                name: parameter.name,
+                isOptional: parameter.isOptional,
+                isNullable: parameter.isNullable,
+                maybeType:
+                    parameter.maybeType !== undefined
+                        ? TypeUtils.maybePrimitiveTypeConstantKindFromTypeKind(parameter.maybeType)
+                        : undefined,
+            },
+        ],
     );
+
     expandChildScope(state, fnExpr, [3], newEntries, nodeScope);
 }
 
@@ -349,6 +366,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode): v
         -1,
         createLetVariableScopeItem,
     );
+
     expandChildScope(state, letExpr, [3], newEntries, nodeScope);
 }
 
@@ -362,6 +380,7 @@ function inspectRecordExpressionOrRecordLiteral(state: ScopeInspectionState, rec
         state.nodeIdMapCollection,
         record,
     );
+
     inspectKeyValuePairs(state, nodeScope, keyValuePairs, createRecordMemberScopeItem);
 }
 
@@ -383,6 +402,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode): void {
             kvp.key.id,
             createSectionMemberScopeItem,
         );
+
         if (newScopeItems.length !== 0) {
             expandScope(state, kvp.maybeValue, newScopeItems, new Map());
         }
@@ -406,6 +426,7 @@ function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterato
             kvp.key.id,
             createFn,
         );
+
         if (newScopeItems.length !== 0) {
             expandScope(state, kvp.maybeValue, newScopeItems, parentScope);
         }
@@ -419,6 +440,7 @@ function expandScope(
     maybeDefaultScope: NodeScope | undefined,
 ): void {
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, maybeDefaultScope);
+
     for (const [key, value] of newEntries) {
         nodeScope.set(value.isRecursive ? `@${key}` : key, value);
     }
@@ -441,6 +463,7 @@ function expandChildScope(
             parentId,
             attributeId,
         );
+
         if (maybeChild !== undefined) {
             expandScope(state, maybeChild, newEntries, maybeDefaultScope);
         }
@@ -459,6 +482,7 @@ function localGetOrCreateNodeScope(
 
     // If scopeFor has already been called then there should be a nodeId in the deltaScope.
     const maybeDeltaScope: NodeScope | undefined = state.deltaScope.get(nodeId);
+
     if (maybeDeltaScope !== undefined) {
         trace.exit({ [TraceConstant.Result]: "deltaScope cache hit" });
 
@@ -468,6 +492,7 @@ function localGetOrCreateNodeScope(
     // If given a scope with an existing value then assume it's valid.
     // Cache and return.
     const maybeGivenScope: NodeScope | undefined = state.givenScope.get(nodeId);
+
     if (maybeGivenScope !== undefined) {
         const shallowCopy: NodeScope = new Map(maybeGivenScope.entries());
         state.deltaScope.set(nodeId, shallowCopy);
@@ -486,10 +511,12 @@ function localGetOrCreateNodeScope(
 
     // Default to a parent's scope if the node has a parent.
     const maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(state.nodeIdMapCollection, nodeId);
+
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
 
         const maybeParentDeltaScope: NodeScope | undefined = state.deltaScope.get(parentNodeId);
+
         if (maybeParentDeltaScope !== undefined) {
             const shallowCopy: NodeScope = new Map(maybeParentDeltaScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
@@ -499,6 +526,7 @@ function localGetOrCreateNodeScope(
         }
 
         const maybeParentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
+
         if (maybeParentGivenScope !== undefined) {
             const shallowCopy: NodeScope = new Map(maybeParentGivenScope.entries());
             state.deltaScope.set(nodeId, shallowCopy);
@@ -523,9 +551,10 @@ function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMap
 ): ReadonlyArray<[string, T]> {
     return keyValuePairs
         .filter((keyValuePair: KVP) => keyValuePair.maybeValue !== undefined)
-        .map((keyValuePair: KVP) => {
-            return [keyValuePair.keyLiteral, createFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id)];
-        });
+        .map((keyValuePair: KVP) => [
+            keyValuePair.keyLiteral,
+            createFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id),
+        ]);
 }
 
 function createSectionMemberScopeItem(

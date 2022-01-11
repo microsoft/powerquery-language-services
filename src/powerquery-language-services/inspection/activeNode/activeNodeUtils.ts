@@ -36,6 +36,7 @@ import { PositionUtils } from "../..";
 export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TMaybeActiveNode {
     // Search for the closest Ast node on or to the left of Position, as well as the closest shifted right Ast node.
     const astSearch: AstNodeSearch = maybeFindAstNodes(nodeIdMapCollection, position);
+
     // Search for the closest Context node on or to the right of the closest Ast node.
     const maybeContextNode: PQP.Parser.ParseContext.TNode | undefined = maybeFindContext(
         nodeIdMapCollection,
@@ -44,6 +45,7 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     let maybeLeaf: TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
+
     // Order of node priority:
     //  * shifted
     //  * anchor
@@ -63,6 +65,7 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
         leafKind = ActiveNodeLeafKind.ContextNode;
     } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
         maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeBestOnOrBeforeNode);
+
         leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
@@ -105,6 +108,7 @@ export function createOutOfBoundPosition(position: Position): OutOfBoundPosition
 export function assertActiveNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): ActiveNode {
     const maybeValue: TMaybeActiveNode = maybeActiveNode(nodeIdMapCollection, position);
     assertPositionInBounds(maybeValue);
+
     return maybeValue;
 }
 
@@ -199,12 +203,15 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
     //  the closest leaf to the right of position.
     for (const nodeId of nodeIdMapCollection.leafIds) {
         const maybeCandidate: Ast.TNode | undefined = astNodeById.get(nodeId);
+
         if (maybeCandidate === undefined) {
             continue;
         }
+
         const candidate: Ast.TNode = maybeCandidate;
 
         let isBoundIncluded: boolean;
+
         if (
             // let x|=1
             (candidate.kind === Ast.NodeKind.Constant &&
@@ -264,10 +271,12 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
                     Ast.NodeKind.InvokeExpression,
                 ],
             );
+
             const arrayWrapper: Ast.TArrayWrapper = NodeIdMapUtils.assertUnboxArrayWrapperAst(
                 nodeIdMapCollection,
                 parent.id,
             );
+
             maybeShiftedRightNode = arrayWrapper;
         }
         // Requires a shift to the right.
@@ -295,9 +304,11 @@ function maybeFindContext(
     if (astNodeSearch.maybeBestOnOrBeforeNode === undefined) {
         return undefined;
     }
+
     const tokenIndexLowBound: number = astNodeSearch.maybeBestOnOrBeforeNode.tokenRange.tokenIndexStart;
 
     let maybeCurrent: PQP.Parser.ParseContext.TNode | undefined = undefined;
+
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.maybeTokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {
@@ -327,15 +338,19 @@ function findIdentifierUnderPosition(
     // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
     if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstant.AtSign) {
         const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
+
         if (maybeParentId === undefined) {
             return undefined;
         }
+
         const parentId: number = maybeParentId;
 
         const parent: Ast.TNode = NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, parentId);
+
         if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
             return undefined;
         }
+
         identifier = parent.identifier;
     } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
         identifier = leaf.node;

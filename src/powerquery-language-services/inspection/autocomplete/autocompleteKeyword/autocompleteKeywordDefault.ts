@@ -19,6 +19,7 @@ export function autocompleteKeywordDefault(
         return autocompleteDefaultExpression(state);
     } else {
         const maybeMappedKeywordKind: Keyword.KeywordKind | undefined = AutocompleteConstantMap.get(key);
+
         return maybeMappedKeywordKind !== undefined
             ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
             : undefined;

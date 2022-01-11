@@ -14,10 +14,12 @@ export function inspectTypeNullCoalescingExpression(state: InspectTypeState, xor
         inspectTypeNullCoalescingExpression.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.NullCoalescingExpression>(xorNode, Ast.NodeKind.NullCoalescingExpression);
 
     const maybeLeftType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+
     const maybeNullCoalescingOperator: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
         state.nodeIdMapCollection,
         xorNode.node.id,
@@ -26,17 +28,20 @@ export function inspectTypeNullCoalescingExpression(state: InspectTypeState, xor
     );
 
     let result: Type.TPowerQueryType;
+
     // '??' isn't present, treat it as an Expression.
     if (maybeNullCoalescingOperator === undefined) {
         result = maybeLeftType;
     } else {
         const maybeRightType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+
         if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
         } else {
             result = TypeUtils.createAnyUnion([maybeLeftType, maybeRightType]);
         }
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;

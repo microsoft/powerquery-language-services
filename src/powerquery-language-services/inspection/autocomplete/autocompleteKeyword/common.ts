@@ -20,6 +20,7 @@ export function autocompleteKeywordRightMostLeaf(
         xorNodeId,
         undefined,
     );
+
     if (maybeRightMostAstLeafForLastValue === undefined) {
         return undefined;
     }
@@ -29,7 +30,9 @@ export function autocompleteKeywordRightMostLeaf(
         state.nodeIdMapCollection,
         maybeRightMostAstLeafForLastValue.id,
     );
+
     Assert.isTrue(shiftedAncestry.length >= 2, "shiftedAncestry.length >= 2");
+
     const shiftedActiveNode: ActiveNode = {
         ...state.activeNode,
         ancestry: shiftedAncestry,

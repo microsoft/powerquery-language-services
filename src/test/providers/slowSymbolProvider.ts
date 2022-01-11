@@ -24,20 +24,23 @@ export class SlowSymbolProvider extends LibrarySymbolProvider {
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
         await this.delay();
+
         return super.getAutocompleteItems(context);
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         await this.delay();
+
         return super.getHover(context);
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         await this.delay();
+
         return super.getSignatureHelp(context);
     }
 
-    private async delay(): Promise<void> {
+    private delay(): Promise<void> {
         return new Promise((resolve: (value: void | PromiseLike<void>) => void) => {
             setTimeout(() => {
                 resolve();

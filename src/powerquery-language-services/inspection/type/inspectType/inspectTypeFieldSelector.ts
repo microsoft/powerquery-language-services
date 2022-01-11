@@ -15,6 +15,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
         inspectTypeFieldSelector.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
@@ -23,18 +24,22 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
         xorNode.node.id,
         Ast.NodeKind.GeneralizedIdentifier,
     );
+
     if (maybeFieldName === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
+
     const fieldName: string = maybeFieldName.literal;
 
     const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
+
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
             state.nodeIdMapCollection,
@@ -44,6 +49,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
         ) !== undefined;
 
     let result: Type.TPowerQueryType;
+
     switch (previousSiblingType.kind) {
         case Type.TypeKind.Any:
             result = Type.AnyInstance;
@@ -61,30 +67,37 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
                     break;
 
                 case Type.ExtendedTypeKind.DefinedRecord:
-                case Type.ExtendedTypeKind.DefinedTable: {
-                    const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
-                    if (maybeNamedField !== undefined) {
-                        result = maybeNamedField;
-                        break;
-                    } else if (previousSiblingType.isOpen) {
-                        result = Type.AnyInstance;
-                        break;
-                    } else {
-                        result = isOptional ? Type.NullInstance : Type.NoneInstance;
-                        break;
-                    }
-                }
+                case Type.ExtendedTypeKind.DefinedTable:
+                    return inspectDefinedRecordOrDefinedTable(previousSiblingType, fieldName, isOptional);
 
                 default:
                     throw Assert.isNever(previousSiblingType);
             }
+
             break;
 
         default:
             result = Type.NoneInstance;
             break;
     }
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
+}
+
+function inspectDefinedRecordOrDefinedTable(
+    previousSiblingType: Type.DefinedRecord | Type.DefinedTable,
+    fieldName: string,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
+
+    if (maybeNamedField !== undefined) {
+        return maybeNamedField;
+    } else if (previousSiblingType.isOpen) {
+        return Type.AnyInstance;
+    } else {
+        return isOptional ? Type.NullInstance : Type.NoneInstance;
+    }
 }

@@ -40,6 +40,7 @@ export function inspection(
     let triedNodeScope: TriedNodeScope;
     let triedScopeType: TriedScopeType;
     let triedExpectedType: TriedExpectedType;
+
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const activeNode: ActiveNode = maybeActiveNode;
 

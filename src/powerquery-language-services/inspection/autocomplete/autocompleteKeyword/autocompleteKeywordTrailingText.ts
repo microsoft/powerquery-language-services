@@ -15,6 +15,7 @@ export function autocompleteKeywordTrailingText(
     if (trailingToken.isInOrOnPosition === false) {
         return inspected;
     }
+
     Assert.isTrue(trailingToken.data.length > 0, "trailingToken.data.length > 0");
     const token: PQP.Language.Token.Token = trailingToken;
 

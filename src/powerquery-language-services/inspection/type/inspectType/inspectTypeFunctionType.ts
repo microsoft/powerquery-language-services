@@ -21,6 +21,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         inspectTypeFunctionType.name,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionType>(xorNode, Ast.NodeKind.FunctionType);
 
@@ -31,6 +32,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
             1,
             Ast.NodeKind.ParameterList,
         );
+
     if (maybeParameters === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
@@ -41,6 +43,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         state.nodeIdMapCollection,
         maybeParameters.node.id,
     );
+
     if (maybeArrayWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
@@ -57,6 +60,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         .filter(PQP.TypeScriptUtils.isDefined);
 
     const returnType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+
     const result: Type.TPowerQueryType = {
         kind: Type.TypeKind.Type,
         maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
@@ -64,6 +68,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         parameters: parameterTypes,
         returnType,
     };
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
