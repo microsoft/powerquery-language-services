@@ -168,11 +168,15 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
-    private static promiseWithTimeout<T>(promise: Promise<T>, timeoutReturnValue: T, timeoutInMS?: number): Promise<T> {
+    private static promiseWithTimeout<T>(
+        valueFn: () => Promise<T>,
+        timeoutReturnValue: T,
+        timeoutInMS?: number,
+    ): Promise<T> {
         if (timeoutInMS !== undefined) {
             // TODO: Enabling trace entry when timeout occurs
             return Promise.race([
-                promise,
+                valueFn(),
                 new Promise<T>((resolve: (value: T | PromiseLike<T>) => void) =>
                     setTimeout(() => {
                         resolve(timeoutReturnValue);
@@ -181,7 +185,7 @@ export abstract class AnalysisBase implements Analysis {
             ]);
         }
 
-        return promise;
+        return valueFn();
     }
 
     private static async resolveProviders<T>(
@@ -208,11 +212,7 @@ export abstract class AnalysisBase implements Analysis {
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
         return providers.map((provider: AutocompleteItemProvider) =>
-            this.promiseWithTimeout(
-                provider.getAutocompleteItems(context).catch(() => []),
-                [],
-                timeoutInMS,
-            ),
+            this.promiseWithTimeout(() => provider.getAutocompleteItems(context), [], timeoutInMS),
         );
     }
 
@@ -223,11 +223,7 @@ export abstract class AnalysisBase implements Analysis {
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
         return providers.map((provider: HoverProvider) =>
-            this.promiseWithTimeout(
-                provider.getHover(context).catch(() => null),
-                null,
-                timeoutInMS,
-            ),
+            this.promiseWithTimeout(() => provider.getHover(context), null, timeoutInMS),
         );
     }
 
@@ -238,11 +234,7 @@ export abstract class AnalysisBase implements Analysis {
     ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
         return providers.map((provider: SignatureHelpProvider) =>
-            this.promiseWithTimeout(
-                provider.getSignatureHelp(context).catch(() => null),
-                null,
-                timeoutInMS,
-            ),
+            this.promiseWithTimeout(() => provider.getSignatureHelp(context), null, timeoutInMS),
         );
     }
 

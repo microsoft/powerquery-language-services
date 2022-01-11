@@ -26,20 +26,20 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     ) => NullSymbolProvider.singleton(),
 };
 
-async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-async function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Hover> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-async function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<SignatureHelp> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
-describe(`SimpleLibraryProvider`, async () => {
-    describe(`getAutocompleteItems`, async () => {
+describe(`SimpleLibraryProvider`, () => {
+    describe(`getAutocompleteItems`, () => {
         it(`match`, async () => {
             const expected: ReadonlyArray<string> = [TestConstants.TestLibraryName.NumberOne];
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.NumberO|");
@@ -67,7 +67,7 @@ describe(`SimpleLibraryProvider`, async () => {
         });
     });
 
-    describe(`getHover`, async () => {
+    describe(`getHover`, () => {
         it(`constant`, async () => {
             const hover: Hover = await createHover("Test.Num|ber");
             TestUtils.assertHover("[library constant] Test.Number: number", hover);
@@ -84,7 +84,7 @@ describe(`SimpleLibraryProvider`, async () => {
         });
     });
 
-    describe(`getSignatureHelp`, async () => {
+    describe(`getSignatureHelp`, () => {
         it(`unknown identifier`, async () => {
             const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
             expect(actual).to.equal(EmptySignatureHelp);

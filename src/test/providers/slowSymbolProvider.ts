@@ -40,7 +40,7 @@ export class SlowSymbolProvider extends LibrarySymbolProvider {
         return super.getSignatureHelp(context);
     }
 
-    private async delay(): Promise<void> {
+    private delay(): Promise<void> {
         return new Promise((resolve: (value: void | PromiseLike<void>) => void) => {
             setTimeout(() => {
                 resolve();
