@@ -26,6 +26,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         this.signatureInformationByLabel = new Map();
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -43,6 +44,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         return partial;
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!context.identifier) {
             return null;
@@ -71,6 +73,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         };
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         if (!context.functionName) {
             return null;

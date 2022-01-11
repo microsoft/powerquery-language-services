@@ -28,6 +28,7 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {

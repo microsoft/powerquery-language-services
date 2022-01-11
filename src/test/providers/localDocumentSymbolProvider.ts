@@ -26,22 +26,22 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
 };
 
-async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-async function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Hover> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-async function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<SignatureHelp> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
-describe(`SimpleLocalDocumentSymbolProvider`, async () => {
-    describe(`getAutocompleteItems`, async () => {
-        describe(`scope`, async () => {
-            describe(`${Inspection.ScopeItemKind.LetVariable}`, async () => {
+describe(`SimpleLocalDocumentSymbolProvider`, () => {
+    describe(`getAutocompleteItems`, () => {
+        describe(`scope`, () => {
+            describe(`${Inspection.ScopeItemKind.LetVariable}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
 
@@ -63,7 +63,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.Parameter}`, async () => {
+            describe(`${Inspection.ScopeItemKind.Parameter}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
 
@@ -85,7 +85,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.RecordField}`, async () => {
+            describe(`${Inspection.ScopeItemKind.RecordField}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
 
@@ -107,7 +107,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.SectionMember}`, async () => {
+            describe(`${Inspection.ScopeItemKind.SectionMember}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
 
@@ -130,8 +130,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             });
         });
 
-        describe(`fieldAccess`, async () => {
-            describe(`fieldProjection`, async () => {
+        describe(`fieldAccess`, () => {
+            describe(`fieldProjection`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
 
@@ -163,7 +163,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 });
             });
 
-            describe(`fieldSelection`, async () => {
+            describe(`fieldSelection`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
 
@@ -220,8 +220,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    describe(`getHover`, async () => {
-        describe(`simple`, async () => {
+    describe(`getHover`, () => {
+        describe(`simple`, () => {
             it(`let-variable`, async () => {
                 const hover: Hover = await createHover("let x = 1 in x|");
                 TestUtils.assertHover("[let-variable] x: 1", hover);
@@ -276,7 +276,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    describe(`getSignatureHelp`, async () => {
+    describe(`getSignatureHelp`, () => {
         it(`no closing bracket`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
@@ -330,7 +330,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    describe(`.pq tests`, async () => {
+    describe(`.pq tests`, () => {
         it("DirectQueryForSQL file", async () => {
             const postion: Position = {
                 line: 40,

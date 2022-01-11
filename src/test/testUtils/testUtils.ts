@@ -75,14 +75,14 @@ export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSet
     return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
 }
 
-export async function createAutocompleteItems(
+export function createAutocompleteItems(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return createAnalysis(text, maybeAnalysisSettings).getAutocompleteItems();
 }
 
-export async function createAutocompleteItemsForFile(
+export function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeAnalysisSettings?: AnalysisSettings,
@@ -90,14 +90,11 @@ export async function createAutocompleteItemsForFile(
     return createFileAnalysis(fileName, position, maybeAnalysisSettings).getAutocompleteItems();
 }
 
-export async function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
+export function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
     return createAnalysis(text, maybeAnalysisSettings).getHover();
 }
 
-export async function createSignatureHelp(
-    text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
-): Promise<SignatureHelp> {
+export function createSignatureHelp(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<SignatureHelp> {
     return createAnalysis(text, maybeAnalysisSettings).getSignatureHelp();
 }
 

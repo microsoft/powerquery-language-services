@@ -100,6 +100,7 @@ export abstract class AnalysisBase implements Analysis {
         return partial.sort(AutocompleteItemUtils.compareFn);
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(): Promise<Hover> {
         const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
             this.getMaybePositionIdentifier();
@@ -130,6 +131,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(): Promise<SignatureHelp> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem)) {
             return EmptySignatureHelp;

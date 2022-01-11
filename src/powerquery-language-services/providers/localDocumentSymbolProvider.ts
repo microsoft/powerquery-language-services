@@ -35,6 +35,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -50,6 +51,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         ];
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
             return null;
@@ -63,7 +65,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
-        let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
+        let maybeHover: Hover | undefined = LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
             this.maybeTriedInspection,
@@ -78,7 +80,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return null;
         }
 
-        maybeHover = await LocalDocumentSymbolProvider.getHoverForScopeItem(
+        maybeHover = LocalDocumentSymbolProvider.getHoverForScopeItem(
             context,
             inspection.triedNodeScope.value,
             inspection.triedScopeType.value,
@@ -87,6 +89,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         return maybeHover ?? null;
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
             this.getMaybeInspectionInvokeExpression();
@@ -109,12 +112,12 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     //  * GeneralizedIdentifierPairedAnyLiteral
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
-    protected static async getHoverForIdentifierPairedExpression(
+    protected static getHoverForIdentifierPairedExpression(
         context: HoverProviderContext,
         inspectionSettings: InspectionSettings,
         inspectionTask: WorkspaceCache.InspectionTask,
         activeNode: Inspection.ActiveNode,
-    ): Promise<Hover | undefined> {
+    ): Hover | undefined {
         const parseState: ParseState = inspectionTask.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
@@ -198,11 +201,11 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         };
     }
 
-    protected static async getHoverForScopeItem(
+    protected static getHoverForScopeItem(
         context: HoverProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
-    ): Promise<Hover | undefined> {
+    ): Hover | undefined {
         const identifierLiteral: string = context.identifier;
         const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
 

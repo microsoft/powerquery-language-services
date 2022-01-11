@@ -26,16 +26,19 @@ export class NullSymbolProvider implements ISymbolProvider {
         return NullSymbolProvider.instance;
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
         return [];
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
         return null;
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
         return null;
     }
