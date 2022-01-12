@@ -20,10 +20,10 @@ export function createFromFieldAccess(
     const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: PQP.StringUtils.IdentifierKind = PQP.StringUtils.identifierKind(label, false);
+    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
 
     const normalizedLabel: string =
-        identifierKind === PQP.StringUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
+        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
 
     return {
         jaroWinklerScore,
