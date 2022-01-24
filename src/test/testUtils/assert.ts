@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
 import * as PQP from "@microsoft/powerquery-parser";
-import * as TestUtils from "./testUtils";
-
 import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
+import { expect } from "chai";
 
 import * as TestConstants from "../testConstants";
-
+import * as TestUtils from "./testUtils";
+import { ActiveNodeUtils, TypeCacheUtils } from "../../powerquery-language-services/inspection";
 import {
     Inspection,
     InspectionSettings,
@@ -20,13 +17,13 @@ import {
     WorkspaceCache,
     WorkspaceCacheUtils,
 } from "../../powerquery-language-services";
-import { ActiveNodeUtils, TypeCacheUtils } from "../../powerquery-language-services/inspection";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 import { CacheItem } from "../../powerquery-language-services/workspaceCache/workspaceCache";
 import { MockDocument } from "../mockDocument";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
+
     return value;
 }
 
@@ -85,8 +82,10 @@ export function assertGetInspectionCacheItem(document: MockDocument, position: P
         TestConstants.SimpleInspectionSettings,
         position,
     );
+
     assertIsDefined(cacheItem);
     assertInspectionCacheItemOk(cacheItem);
+
     return cacheItem;
 }
 

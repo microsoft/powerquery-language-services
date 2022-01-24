@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
@@ -48,7 +47,7 @@ export interface IScopeItem {
 
 export interface IKeyValuePairScopeItem<
     Key extends Ast.Identifier | Ast.GeneralizedIdentifier,
-    Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember
+    Kind extends ScopeItemKind.LetVariable | ScopeItemKind.RecordField | ScopeItemKind.SectionMember,
 > extends IScopeItem {
     readonly kind: Kind;
     readonly key: Key;

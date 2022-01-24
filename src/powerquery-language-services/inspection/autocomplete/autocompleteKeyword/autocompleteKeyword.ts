@@ -2,12 +2,10 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../../..";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
 import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
@@ -19,6 +17,7 @@ import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpr
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,
@@ -35,9 +34,9 @@ export function tryAutocompleteKeyword(
         ]);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken);
-    });
+    return ResultUtils.ensureResult(settings.locale, () =>
+        autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
+    );
 }
 
 export function autocompleteKeyword(
@@ -76,6 +75,7 @@ export function autocompleteKeyword(
     };
 
     const maybeEdgeCase: ReadonlyArray<AutocompleteItem> | undefined = getMaybeEdgeCase(state, maybeTrailingToken);
+
     if (maybeEdgeCase !== undefined) {
         return maybeEdgeCase;
     }
@@ -103,6 +103,7 @@ function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArra
     const numNodes: number = ancestry.length;
 
     let maybeInspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
+
     for (let ancestryIndex: number = 1; ancestryIndex < numNodes; ancestryIndex += 1) {
         state.ancestryIndex = ancestryIndex;
         state.parent = ancestry[ancestryIndex];
@@ -158,6 +159,7 @@ function getMaybeEdgeCase(
         XorNodeUtils.isNodeKind(ancestry[1], Ast.NodeKind.IdentifierExpression)
     ) {
         const identifier: string = ancestry[0].node.literal;
+
         maybeInspected = Keyword.StartOfDocumentKeywords.map((keywordKind: Keyword.KeywordKind) =>
             AutocompleteItemUtils.createFromKeywordKind(keywordKind, identifier),
         );
@@ -224,6 +226,7 @@ function handleConjunctions(
     }
 
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
+
     // `let x = 1 a|`
     if (maybeTrailingToken !== undefined && maybeTrailingToken.isInOrOnPosition) {
         return autocompleteKeywordTrailingText(inspected, maybeTrailingToken, undefined);

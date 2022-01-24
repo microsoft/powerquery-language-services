@@ -2,18 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { InspectionSettings } from "../../inspectionSettings";
-
-import { TMaybeActiveNode } from "../activeNode";
-import { TypeCache } from "../typeCache";
-import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
-import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
-import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
-import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
-import { createTrailingToken } from "./common";
 import {
     Autocomplete,
     TrailingToken,
@@ -22,6 +13,15 @@ import {
     TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
+import { AutocompleteTraceConstant } from "../..";
+import { createTrailingToken } from "./common";
+import { InspectionSettings } from "../../inspectionSettings";
+import { TMaybeActiveNode } from "../activeNode";
+import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
+import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
+import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
+import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
+import { TypeCache } from "../typeCache";
 
 export function autocomplete(
     settings: InspectionSettings,
@@ -30,13 +30,17 @@ export function autocomplete(
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Autocomplete {
+    const trace: Trace = settings.traceManager.entry(AutocompleteTraceConstant.Autocomplete, autocomplete.name);
+
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     let maybeTrailingToken: TrailingToken | undefined;
+
     if (maybeParseError !== undefined) {
         const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(
             maybeParseError.innerError,
         );
+
         if (maybeParseErrorToken !== undefined) {
             maybeTrailingToken = createTrailingToken(maybeActiveNode.position, maybeParseErrorToken);
         }
@@ -66,6 +70,8 @@ export function autocomplete(
         maybeActiveNode,
         maybeTrailingToken,
     );
+
+    trace.exit();
 
     return {
         triedFieldAccess,

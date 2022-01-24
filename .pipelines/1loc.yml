@@ -30,7 +30,6 @@ jobs:
             displayName: "Localization Build: src/powerquery-language-services/localization/LocProject.json"
             inputs:
                 locProj: "src/powerquery-language-services/localization/LocProject.json"
-                isCreatePrSelected: true
                 repoType: gitHub
                 gitHubPatVariable: "$(GitHubPat)"
                 packageSourceAuth: patAuth

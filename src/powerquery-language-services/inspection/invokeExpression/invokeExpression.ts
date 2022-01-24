@@ -2,9 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -12,12 +10,13 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { InspectionSettings } from "../../inspectionSettings";
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
+import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { IInvokeExpression, InvokeExpressionArguments } from "./common";
+import { InspectionSettings } from "../../inspectionSettings";
 
 // An inspection of an arbitrary invoke expression.
 export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
@@ -44,6 +43,7 @@ function inspectInvokeExpression(
     typeCache: TypeCache,
 ): InvokeExpression {
     settings.maybeCancellationToken?.throwIfCancelled();
+
     const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(
         nodeIdMapCollection,
         invokeExpressionId,
@@ -54,6 +54,7 @@ function inspectInvokeExpression(
             invokeExpressionId,
         });
     }
+
     const invokeExpressionXorNode: TXorNode = maybeInvokeExpressionXorNode;
 
     XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
@@ -66,12 +67,14 @@ function inspectInvokeExpression(
     const functionType: Type.TPowerQueryType = Assert.unboxOk(
         tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
+
     const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
         nodeIdMapCollection,
         invokeExpressionId,
     );
 
     let maybeInvokeExpressionArgs: InvokeExpressionArguments | undefined;
+
     if (TypeUtils.isDefinedFunction(functionType)) {
         const iterableArguments: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
             nodeIdMapCollection,
@@ -84,9 +87,11 @@ function inspectInvokeExpression(
             typeCache,
             iterableArguments,
         );
+
         const givenArguments: ReadonlyArray<TXorNode> = iterableArguments.slice(0, givenArgumentTypes.length);
 
-        const [numMinExpectedArguments, numMaxExpectedArguments] = getNumExpectedArguments(functionType);
+        const [numMinExpectedArguments, numMaxExpectedArguments]: [number, number] =
+            getNumExpectedArguments(functionType);
 
         maybeInvokeExpressionArgs = {
             givenArguments,
@@ -130,6 +135,7 @@ function getIsNameInLocalScope(
                 typeCache.scopeById,
             ),
         );
+
         const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
 
         return maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
@@ -159,15 +165,18 @@ function getArgumentTypes(
 
     for (const xorNode of argXorNodes) {
         const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
+
         if (ResultUtils.isError(triedArgType)) {
             throw triedArgType;
         }
+
         const argType: Type.TPowerQueryType = triedArgType.value;
 
         // Occurs when there's expected to be a trailing argument, but none exist.
         // Eg. `foo(|` will iterate over an TXorNode which: contains no parsed elements, and evaluates to unknown.
         if (TypeUtils.isUnknown(argType) && !NodeIdMapUtils.hasParsedToken(nodeIdMapCollection, xorNode.node.id)) {
             Assert.isTrue(xorNode === argXorNodes[argXorNodes.length - 1]);
+
             return result;
         }
 

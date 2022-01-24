@@ -3,13 +3,13 @@
 
 import * as PQF from "@microsoft/powerquery-formatter";
 import * as PQP from "@microsoft/powerquery-parser";
-
+import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types";
 
 export function tryFormat(document: TextDocument, formattingOptions: FormattingOptions, locale: string): TextEdit[] {
     let indentationLiteral: PQF.IndentationLiteral;
+
     if (formattingOptions.insertSpaces) {
         indentationLiteral = PQF.IndentationLiteral.SpaceX4;
     } else {
@@ -21,6 +21,7 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
         locale,
         indentationLiteral,
     };
+
     const triedFormat: PQF.TriedFormat = PQF.tryFormat(formatSettings, document.getText());
 
     if (ResultUtils.isOk(triedFormat)) {

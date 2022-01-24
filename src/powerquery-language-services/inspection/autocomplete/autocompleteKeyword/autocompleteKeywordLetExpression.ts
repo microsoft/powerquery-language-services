@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { PositionUtils } from "../../..";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
-import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { autocompleteKeywordRightMostLeaf } from "./common";
+import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function autocompleteKeywordLetExpression(
     state: InspectAutocompleteKeywordState,
@@ -28,6 +28,7 @@ export function autocompleteKeywordLetExpression(
                 XorNodeUtils.assertAsLetExpression(state.parent),
             ),
         );
+
         if (state.maybeTrailingToken !== undefined) {
             if (state.maybeTrailingToken.isInOrOnPosition === true) {
                 // We don't want maybeInspected to be zero legnth.
@@ -35,6 +36,7 @@ export function autocompleteKeywordLetExpression(
                 maybeInspected = autocompleteKeywordTrailingText(maybeInspected ?? [], state.maybeTrailingToken, [
                     Keyword.KeywordKind.In,
                 ]);
+
                 return maybeInspected.length ? maybeInspected : undefined;
             } else if (
                 PositionUtils.isBeforeTokenPosition(
@@ -65,6 +67,7 @@ function autocompleteLastKeyValuePair(
 
     // Grab the last value (if one exists)
     const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
+
     if (maybeLastValue === undefined) {
         return undefined;
     }

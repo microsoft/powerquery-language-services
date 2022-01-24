@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 
-import { Inspection } from "..";
-import { AutocompleteItemUtils } from "../inspection";
-import { Library, LibraryUtils } from "../library";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Library, LibraryUtils } from "../library";
+import { AutocompleteItemUtils } from "../inspection";
+import { Inspection } from "..";
 
 export class LibrarySymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
@@ -26,6 +26,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         this.signatureInformationByLabel = new Map();
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -43,18 +44,20 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         return partial;
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!context.identifier) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         const identifierLiteral: string = context.identifier;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
+
         if (maybeDefinition === undefined) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         const definition: Library.TLibraryDefinition = maybeDefinition;
 
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
@@ -70,16 +73,17 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         };
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         if (!context.functionName) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         const identifierLiteral: string = context.functionName;
 
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+
         if (!LibraryUtils.isFunction(maybeDefinition)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 

@@ -2,16 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { Inspection } from "../../..";
-import { InspectionSettings } from "../../../inspectionSettings";
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
+import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { TypeById } from "../../typeCache";
+import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -37,9 +36,10 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
+import { TypeById } from "../../typeCache";
 
-export interface InspectTypeState {
-    readonly settings: InspectionSettings;
+export interface InspectTypeState extends PQP.CommonSettings, Pick<InspectionSettings, "maybeExternalTypeResolver"> {
+    // readonly settings: InspectionSettings;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
@@ -52,19 +52,20 @@ export interface InspectTypeState {
 export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TPowerQueryType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
-            .map((type: Type.TPowerQueryType) => {
-                return type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+            .map((type: Type.TPowerQueryType) =>
+                type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
-                    : conditionFn(type);
-            })
+                    : conditionFn(type),
+            )
             .indexOf(false) === -1
     );
 }
 
 export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): NodeScope {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    state.maybeCancellationToken?.throwIfCancelled();
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
+
     if (ResultUtils.isError(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope;
     }
@@ -73,35 +74,39 @@ export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: numb
 }
 
 export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspection.TriedNodeScope {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
+
     if (maybeNodeScope !== undefined) {
         return ResultUtils.boxOk(maybeNodeScope);
     }
 
-    return tryNodeScope(state.settings, state.nodeIdMapCollection, nodeId, state.scopeById);
+    return tryNodeScope(state, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
 export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
     const nodeId: number = scopeItem.id;
 
     const maybeGivenType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
+
     if (maybeGivenType !== undefined) {
         return maybeGivenType;
     }
 
     const maybeDeltaType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
+
     if (maybeDeltaType !== undefined) {
         return maybeDeltaType;
     }
 
     const scopeType: Type.TPowerQueryType = inspectScopeItem(state, scopeItem);
+
     return scopeType;
 }
 
 export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    state.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
@@ -128,27 +133,37 @@ export function inspectTypeFromChildAttributeIndex(
     parentXorNode: TXorNode,
     attributeIndex: number,
 ): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
     );
+
     return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
 }
 
 export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectXor.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
+
     const maybeCached: Type.TPowerQueryType | undefined =
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
+
     if (maybeCached !== undefined) {
         return maybeCached;
     }
 
     let result: Type.TPowerQueryType;
+
     switch (xorNode.node.kind) {
         case Ast.NodeKind.ArrayWrapper:
         case Ast.NodeKind.FieldSpecificationList:
@@ -197,6 +212,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
                 ...inspectTypeFromChildAttributeIndex(state, xorNode, 1),
                 isNullable: true,
             };
+
             break;
 
         case Ast.NodeKind.RecordLiteral:
@@ -278,7 +294,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.LiteralExpression:
-            result = inspectTypeLiteralExpression(xorNode);
+            result = inspectTypeLiteralExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.NotImplementedExpression:
@@ -294,7 +310,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.PrimitiveType:
-            result = inspectTypePrimitiveType(xorNode);
+            result = inspectTypePrimitiveType(state, xorNode);
             break;
 
         case Ast.NodeKind.RangeExpression:
@@ -322,6 +338,8 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
     }
 
     state.deltaTypeById.set(xorNodeId, result);
+    trace.exit({ resultKind: result.kind, maybeResultExtendedKind: result.maybeExtendedKind });
+
     return result;
 }
 
@@ -329,36 +347,54 @@ export function maybeDereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: TXorNode,
 ): Type.TPowerQueryType | undefined {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        maybeDereferencedIdentifierType.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
 
     const deferenced: TXorNode = recursiveIdentifierDereference(state, xorNode);
 
     const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
+
     if (maybeDereferencedLiteral === undefined) {
         return undefined;
     }
+
     const deferencedLiteral: string = maybeDereferencedLiteral;
 
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.node.id);
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
+
+    // When referencing an identifier as a recursive identifier there's no requirements
+    // for it to resolve to a recursive reference.
+    // This if it's a recursive identifier we need to also try the identifier without the recursive `@` prefix.
+    let maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
+
+    if (deferencedLiteral.startsWith("@") && maybeScopeItem === undefined) {
+        maybeScopeItem = nodeScope.get(deferencedLiteral.slice(1));
+    }
+
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
-        const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined =
-            state.settings.maybeExternalTypeResolver;
+        const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined = state.maybeExternalTypeResolver;
 
         if (maybeResolver === undefined) {
             return undefined;
         }
 
-        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.createValueTypeRequest(
-            deferencedLiteral,
-        );
+        const request: ExternalType.ExternalValueTypeRequest =
+            ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
+
         return maybeResolver(request);
     }
+
     const scopeItem: TScopeItem = maybeScopeItem;
 
     let maybeNextXorNode: TXorNode | undefined;
+
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
@@ -380,28 +416,49 @@ export function maybeDereferencedIdentifierType(
             throw Assert.isNever(scopeItem);
     }
 
-    if (maybeNextXorNode === undefined) {
-        return undefined;
-    }
-    return inspectXor(state, maybeNextXorNode);
+    const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
+        ? inspectXor(state, maybeNextXorNode)
+        : undefined;
+
+    trace.exit();
+
+    return result;
 }
 
 // Recursively derefence an identifier if it points to another identifier.
 export function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): TXorNode {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        recursiveIdentifierDereference.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
-    return Assert.asDefined(recursiveIdentifierDereferenceHelper(state, xorNode));
+    const result: TXorNode = Assert.asDefined(recursiveIdentifierDereferenceHelper(state, xorNode));
+    trace.exit();
+
+    return result;
 }
 
 // Recursively derefence an identifier if it points to another identifier.
 function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectXor.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
+        trace.exit({ [TraceConstant.Result]: undefined });
+
         return undefined;
     }
+
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node;
     const identifierId: number = identifier.id;
 
@@ -423,24 +480,26 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(identifier);
     }
 
-    // TODO: handle recursive identifiers
-    if (isRecursiveIdentifier === true) {
-        return xorNode;
-    }
-
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, identifierId);
 
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
+    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(
+        isRecursiveIdentifier ? `@${identifierLiteral}` : identifierLiteral,
+    );
+
     if (maybeScopeItem === undefined) {
         return xorNode;
     }
+
     const scopeItem: TScopeItem = maybeScopeItem;
 
     let maybeNextXorNode: TXorNode | undefined;
+
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
         case ScopeItemKind.Parameter:
         case ScopeItemKind.Undefined:
+            trace.exit({ [TraceConstant.Result]: scopeItem.kind });
+
             return xorNode;
 
         case ScopeItemKind.LetVariable:
@@ -453,13 +512,18 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(scopeItem);
     }
 
-    return maybeNextXorNode !== undefined &&
+    const result: TXorNode | undefined =
+        maybeNextXorNode !== undefined &&
         XorNodeUtils.isAstXorChecked<Ast.Identifier | Ast.IdentifierExpression>(maybeNextXorNode, [
             Ast.NodeKind.Identifier,
             Ast.NodeKind.IdentifierExpression,
         ])
-        ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
-        : xorNode;
+            ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+            : xorNode;
+
+    trace.exit();
+
+    return result;
 }
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {

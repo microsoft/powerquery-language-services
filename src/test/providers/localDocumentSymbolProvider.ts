@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import "mocha";
 
-import { TestConstants, TestUtils } from "..";
 import {
     AnalysisSettings,
     AnalysisUtils,
@@ -17,6 +16,7 @@ import {
     SignatureHelp,
     TextDocument,
 } from "../../powerquery-language-services";
+import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
 
@@ -26,135 +26,161 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
 };
 
-async function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-async function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Hover> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-async function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<SignatureHelp> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
-describe(`SimpleLocalDocumentSymbolProvider`, async () => {
-    describe(`getAutocompleteItems`, async () => {
-        describe(`scope`, async () => {
-            describe(`${Inspection.ScopeItemKind.LetVariable}`, async () => {
+describe(`SimpleLocalDocumentSymbolProvider`, () => {
+    describe(`getAutocompleteItems`, () => {
+        describe(`scope`, () => {
+            describe(`${Inspection.ScopeItemKind.LetVariable}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "let foo = 1, bar = 2, foobar = 3 in |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "let foo = 1, bar = 2, foobar = 3 in foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.Parameter}`, async () => {
+            describe(`${Inspection.ScopeItemKind.Parameter}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "(foo as number, bar as number, foobar as number) => |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "(foo as number, bar as number, foobar as number) => foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.RecordField}`, async () => {
+            describe(`${Inspection.ScopeItemKind.RecordField}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3, x = |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3, x = foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
 
-            describe(`${Inspection.ScopeItemKind.SectionMember}`, async () => {
+            describe(`${Inspection.ScopeItemKind.SectionMember}`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "section; foo = 1; bar = 2; foobar = 3; x = |",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "section; foo = 1; bar = 2; foobar = 3; x = foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
         });
 
-        describe(`fieldAccess`, async () => {
-            describe(`fieldProjection`, async () => {
+        describe(`fieldAccess`, () => {
+            describe(`fieldProjection`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`no repeats`, async () => {
                     const expected: ReadonlyArray<string> = ["bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][[foo], [|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
 
-            describe(`fieldSelection`, async () => {
+            describe(`fieldSelection`, () => {
                 it(`match all`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
 
                 it(`match some`, async () => {
                     const expected: ReadonlyArray<string> = ["foo", "foobar"];
+
                     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
                         "[foo = 1, bar = 2, foobar = 3][foo|",
                     );
+
                     TestUtils.assertAutocompleteItemLabels(expected, actual);
                 });
             });
@@ -164,6 +190,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 "let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|",
             );
+
             const document: TextDocument = pair[0];
             const position: Position = pair[1];
 
@@ -175,12 +202,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                 },
                 position,
             ).getAutocompleteItems();
+
             expect(autocompleteItems.length).to.equal(2);
 
             const firstOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.Foo",
                 autocompleteItems,
             );
+
             const secondOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.FooBar",
                 autocompleteItems,
@@ -191,8 +220,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    describe(`getHover`, async () => {
-        describe(`simple`, async () => {
+    describe(`getHover`, () => {
+        describe(`simple`, () => {
             it(`let-variable`, async () => {
                 const hover: Hover = await createHover("let x = 1 in x|");
                 TestUtils.assertHover("[let-variable] x: 1", hover);
@@ -247,11 +276,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
         });
     });
 
-    describe(`getSignatureHelp`, async () => {
+    describe(`getSignatureHelp`, () => {
         it(`no closing bracket`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
+
             const expected: SignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
@@ -269,6 +299,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                     },
                 ],
             };
+
             expect(actual).to.deep.equal(expected);
         });
 
@@ -276,6 +307,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
             const actual: SignatureHelp = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|)",
             );
+
             const expected: SignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
@@ -293,20 +325,23 @@ describe(`SimpleLocalDocumentSymbolProvider`, async () => {
                     },
                 ],
             };
+
             expect(actual).to.deep.equal(expected);
         });
     });
 
-    describe(`.pq tests`, async () => {
+    describe(`.pq tests`, () => {
         it("DirectQueryForSQL file", async () => {
             const postion: Position = {
                 line: 40,
                 character: 25,
             };
+
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await TestUtils.createAutocompleteItemsForFile(
                 "DirectQueryForSQL.pq",
                 postion,
             );
+
             const expected: ReadonlyArray<string> = [
                 "ConnectionString",
                 "Credential",

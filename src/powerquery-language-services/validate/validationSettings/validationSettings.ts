@@ -6,4 +6,5 @@ import { InspectionSettings } from "../../inspectionSettings";
 export interface ValidationSettings extends InspectionSettings {
     readonly source: string;
     readonly checkForDuplicateIdentifiers: boolean;
+    readonly checkInvokeExpressions: boolean;
 }

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
 import type { Position } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { Analysis } from "./analysis";
 import { AnalysisSettings } from "./analysisSettings";

@@ -3,13 +3,13 @@
 
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Range } from "vscode-languageserver-textdocument";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from "..";
-import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { Localization, LocalizationUtils } from "../localization";
+import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
@@ -21,11 +21,13 @@ export function validateFunctionExpression(
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.FunctionExpression,
     );
+
     if (maybeInvokeExpressionIds === undefined) {
         return [];
     }
 
     const result: Diagnostic[] = [];
+
     for (const nodeId of maybeInvokeExpressionIds) {
         const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
             validationSettings,
@@ -33,6 +35,7 @@ export function validateFunctionExpression(
             nodeId,
             maybeCache,
         );
+
         if (ResultUtils.isError(triedInvokeExpression)) {
             throw triedInvokeExpression;
         }
@@ -55,6 +58,7 @@ function invokeExpressionToDiagnostics(
     if (inspected.maybeArguments !== undefined) {
         const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
         const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
+
         const invokeExpressionRange: Range = Assert.asDefined(
             PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
@@ -83,6 +87,7 @@ function invokeExpressionToDiagnostics(
         }
 
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
+
         if (
             numGivenArguments < invokeExpressionArguments.numMinExpectedArguments ||
             numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
@@ -156,6 +161,7 @@ function createDiagnosticForArgumentMismatch(
 
 function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
     return Localization.error_validation_invokeExpression_missingMandatory(templates, maybeFunctionName, argName);
 }
 
@@ -167,6 +173,7 @@ function createTypeMismatchMessage(
     actual: string,
 ): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
+
     return Localization.error_validation_invokeExpression_typeMismatch(
         templates,
         maybeFunctionName,

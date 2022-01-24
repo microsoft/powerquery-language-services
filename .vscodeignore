@@ -5,7 +5,6 @@
 **/tsconfig.json
 **/tsconfig.base.json
 **/tsconfig.tsbuildinfo
-**/tslint.json
 **/package-lock.json
 contributing.md
 .travis.yml

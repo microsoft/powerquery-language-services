@@ -10,6 +10,7 @@ const WinklerScoreThreshold: number = 0.7;
 
 export function calculateJaro(left: string, right: string): number {
     const [shorter, longer]: [string, string] = getNormalized(left, right);
+
     return calculateJaroForNormalized(shorter, longer);
 }
 
@@ -25,6 +26,7 @@ export function calculateJaroWinkler(left: string, right: string): number {
     // Capped at an upper bound of N leading characters, where N is most commonly `4`.
     const upperBound: number = Math.max(WinklerMaxCharacterAdjustment, shorter.length);
     let startingCharIndex: number = 0;
+
     while (shorter[startingCharIndex] === longer[startingCharIndex] && startingCharIndex < upperBound) {
         startingCharIndex += 1;
     }
@@ -42,9 +44,7 @@ function calculateJaroForNormalized(shorter: string, longer: string): number {
     // When trying to find similar characters limit the search to a window based on longer's length.
     const matchingWindowSize: number = Math.floor(longerLength / 2) - 1;
 
-    // tslint:disable-next-line: prefer-array-literal
     const shorterMatches: boolean[] = new Array(shorterLength);
-    // tslint:disable-next-line: prefer-array-literal
     const longerMatches: boolean[] = new Array(longerLength);
     let numMatches: number = 0;
 
@@ -77,6 +77,7 @@ function calculateJaroForNormalized(shorter: string, longer: string): number {
     // which will prevent double matching or a double for-loop.
     let k: number = 0;
     let numTranspositionsNeeded: number = 0;
+
     for (let longerIndex: number = 0; longerIndex < longerLength; longerIndex += 1) {
         if (!longerMatches[longerIndex]) {
             continue;

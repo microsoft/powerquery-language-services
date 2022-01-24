@@ -2,14 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { PositionUtils } from "../..";
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
@@ -17,13 +17,24 @@ export function tryAutocompletePrimitiveType(
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.PrimitiveType,
+        tryAutocompletePrimitiveType.name,
+    );
+
+    let result: TriedAutocompletePrimitiveType;
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.boxOk([]);
+        result = ResultUtils.boxOk([]);
+    } else {
+        result = ResultUtils.ensureResult(settings.locale, () =>
+            autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data),
+        );
     }
 
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data);
-    });
+    trace.exit();
+
+    return result;
 }
 
 function autocompletePrimitiveType(
@@ -50,6 +61,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
     const numAncestors: number = activeNode.ancestry.length;
+
     for (let index: number = 0; index < numAncestors; index += 1) {
         const parent: TXorNode = ancestry[index];
         const maybeChild: TXorNode | undefined = ancestry[index - 1];
@@ -80,6 +92,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
             const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(ancestry, index, 2);
+
             if (maybeGrandchild === undefined) {
                 continue;
             }

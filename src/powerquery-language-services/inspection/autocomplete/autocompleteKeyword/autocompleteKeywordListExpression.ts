@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
 
-import { PositionUtils } from "../../..";
 import { ActiveNode } from "../../activeNode";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function autocompleteKeywordListExpression(
     state: InspectAutocompleteKeywordState,
@@ -20,6 +20,7 @@ export function autocompleteKeywordListExpression(
     if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
         return undefined;
     }
+
     Assert.isTrue(child.node.maybeAttributeIndex === 1, `must be in range [0, 2]`, {
         nodeId: child.node.id,
         maybeAttributeIndex: child.node.maybeAttributeIndex,
@@ -27,6 +28,7 @@ export function autocompleteKeywordListExpression(
 
     // ListExpression -> ArrayWrapper -> Csv -> X
     const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3);
+
     if (nodeOrComma.node.maybeAttributeIndex !== 0) {
         return undefined;
     }

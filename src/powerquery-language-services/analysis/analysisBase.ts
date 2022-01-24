@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
 
 import * as InspectionUtils from "../inspectionUtils";
-
-import { CommonTypesUtils, Inspection } from "..";
-import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
-import { Library } from "../library";
-import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type {
     AutocompleteItemProvider,
     AutocompleteItemProviderContext,
@@ -22,9 +17,13 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
+import { CommonTypesUtils, Inspection } from "..";
+import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
+import { Library } from "../library";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
@@ -66,6 +65,7 @@ export abstract class AnalysisBase implements Analysis {
         let context: AutocompleteItemProviderContext = {};
 
         const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = this.getMaybePositionIdentifier();
+
         if (maybeToken !== undefined) {
             context = {
                 range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
@@ -77,15 +77,18 @@ export abstract class AnalysisBase implements Analysis {
         // TODO: intellisense improvements
         // - honor expected data type
         // - only include current query name after @
-        const [languageResponse, libraryResponse, localDocumentResponse] = await Promise.all(
-            AnalysisBase.createAutocompleteItemCalls(context, [
-                this.languageAutocompleteItemProvider,
-                this.librarySymbolProvider,
-                this.localDocumentSymbolProvider,
-            ]),
+        const [languageResponse, libraryResponse, localDocumentResponse]: ReadonlyArray<
+            ReadonlyArray<Inspection.AutocompleteItem>
+        > = await Promise.all(
+            AnalysisBase.createAutocompleteItemCalls(
+                context,
+                [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentSymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
         );
 
         const partial: AutocompleteItem[] = [];
+
         for (const collection of [localDocumentResponse, languageResponse, libraryResponse]) {
             for (const item of collection) {
                 if (partial.find((partialItem: AutocompleteItem) => partialItem.label === item.label) === undefined) {
@@ -97,16 +100,17 @@ export abstract class AnalysisBase implements Analysis {
         return partial.sort(AutocompleteItemUtils.compareFn);
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(): Promise<Hover> {
-        const identifierToken:
-            | Ast.Identifier
-            | Ast.GeneralizedIdentifier
-            | undefined = this.getMaybePositionIdentifier();
+        const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            this.getMaybePositionIdentifier();
+
         if (identifierToken === undefined) {
             return EmptyHover;
         }
 
         const maybeActiveNode: Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
+
         if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
             return EmptyHover;
         }
@@ -118,23 +122,30 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createHoverCalls(context, [this.localDocumentSymbolProvider, this.librarySymbolProvider]),
+            AnalysisBase.createHoverCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptyHover,
         );
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(): Promise<SignatureHelp> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem)) {
             return EmptySignatureHelp;
         }
+
         const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
 
-        const maybeContext: SignatureProviderContext | undefined = InspectionUtils.getMaybeContextForSignatureProvider(
-            inspected,
-        );
+        const maybeContext: SignatureProviderContext | undefined =
+            InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
         }
+
         const context: SignatureProviderContext = maybeContext;
 
         if (context.functionName === undefined) {
@@ -143,10 +154,11 @@ export abstract class AnalysisBase implements Analysis {
 
         // Result priority is based on the order of the symbol providers
         return AnalysisBase.resolveProviders(
-            AnalysisBase.createSignatureHelpCalls(context, [
-                this.localDocumentSymbolProvider,
-                this.librarySymbolProvider,
-            ]),
+            AnalysisBase.createSignatureHelpCalls(
+                context,
+                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                this.analysisSettings.symbolProviderTimeoutInMS,
+            ),
             EmptySignatureHelp,
         );
     }
@@ -156,15 +168,37 @@ export abstract class AnalysisBase implements Analysis {
     protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
+    private static promiseWithTimeout<T>(
+        valueFn: () => Promise<T>,
+        timeoutReturnValue: T,
+        timeoutInMS?: number,
+    ): Promise<T> {
+        if (timeoutInMS !== undefined) {
+            // TODO: Enabling trace entry when timeout occurs
+            return Promise.race([
+                valueFn(),
+                new Promise<T>((resolve: (value: T | PromiseLike<T>) => void) =>
+                    setTimeout(() => {
+                        resolve(timeoutReturnValue);
+                    }, timeoutInMS),
+                ),
+            ]);
+        }
+
+        return valueFn();
+    }
+
     private static async resolveProviders<T>(
         calls: ReadonlyArray<Promise<T | null>>,
         defaultReturnValue: T,
     ): Promise<T> {
         const results: (T | null)[] = await Promise.all(calls);
 
-        for (let i: number = 0; i < results.length; i++) {
-            if (results[i] !== null) {
-                return results[i]!;
+        for (let i: number = 0; i < results.length; i += 1) {
+            const result: T | null = results[i];
+
+            if (result !== null) {
+                return result;
             }
         }
 
@@ -174,43 +208,39 @@ export abstract class AnalysisBase implements Analysis {
     private static createAutocompleteItemCalls(
         context: AutocompleteItemProviderContext,
         providers: ReadonlyArray<AutocompleteItemProvider>,
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getAutocompleteItems(context).catch(() => {
-                return [];
-            }),
+        return providers.map((provider: AutocompleteItemProvider) =>
+            this.promiseWithTimeout(() => provider.getAutocompleteItems(context), [], timeoutInMS),
         );
     }
 
     private static createHoverCalls(
         context: HoverProviderContext,
         providers: HoverProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getHover(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
+        return providers.map((provider: HoverProvider) =>
+            this.promiseWithTimeout(() => provider.getHover(context), null, timeoutInMS),
         );
     }
 
     private static createSignatureHelpCalls(
         context: SignatureProviderContext,
         providers: SignatureHelpProvider[],
+        timeoutInMS?: number,
     ): ReadonlyArray<Promise<SignatureHelp | null>> {
         // TODO: add tracing to the catch case
-        return providers.map(provider =>
-            provider.getSignatureHelp(context).catch(() => {
-                // tslint:disable-next-line: no-null-keyword
-                return null;
-            }),
+        return providers.map((provider: SignatureHelpProvider) =>
+            this.promiseWithTimeout(() => provider.getSignatureHelp(context), null, timeoutInMS),
         );
     }
 
     private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+
         if (ancestry.length <= 1) {
             return true;
         }

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CompletionItemKind } from "vscode-languageserver-types";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ExternalType } from "../inspection";
 

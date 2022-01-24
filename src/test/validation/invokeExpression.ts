@@ -1,14 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
+import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import "mocha";
 
+import * as PQLS from "../../powerquery-language-services";
+import {
+    Diagnostic,
+    DiagnosticErrorCode,
+    Position,
+    TextDocument,
+    ValidationSettings,
+} from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { Diagnostic, DiagnosticErrorCode, Position, TextDocument } from "../../powerquery-language-services";
+import { SimpleValidationSettings } from "../testConstants";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 interface AbridgedInvocationDiagnostic {
@@ -33,12 +39,10 @@ function expectGetInvokeExpressionDiagnostics(textDocument: TextDocument): Reado
                 diagnostic.code === DiagnosticErrorCode.InvokeArgumentCountMismatch ||
                 diagnostic.code === DiagnosticErrorCode.InvokeArgumentTypeMismatch,
         )
-        .map((diagnostic: Diagnostic) => {
-            return {
-                message: diagnostic.message,
-                startPosition: Assert.asDefined(diagnostic.range).start,
-            };
-        });
+        .map((diagnostic: Diagnostic) => ({
+            message: diagnostic.message,
+            startPosition: Assert.asDefined(diagnostic.range).start,
+        }));
 }
 
 function expectArgumentCountMismatch(
@@ -64,10 +68,11 @@ function expectArgumentCountMismatch(
         throw new Error(`expected exactly one invocation diagnostic error, but ${matches.length} were found.`);
     }
 
-    const { regExpExecArray } = matches[0];
+    const { regExpExecArray }: { regExpExecArray: RegExpExecArray } = matches[0];
 
     const actualNumMin: number = Number.parseInt(Assert.asDefined(regExpExecArray[1], "expected capture group 1"), 10);
     const actualNumMax: number = Number.parseInt(Assert.asDefined(regExpExecArray[2], "expected capture group 2"), 10);
+
     const actualNumGiven: number = Number.parseInt(
         Assert.asDefined(regExpExecArray[3], "expected capture group 3"),
         10,
@@ -85,18 +90,36 @@ function expectInvocationDiagnosticPositions(
     const abridgedPositions: ReadonlyArray<Position> = abridgedDiagnostics.map(
         (abridged: AbridgedInvocationDiagnostic) => abridged.startPosition,
     );
+
     expect(abridgedPositions).to.deep.equal(expectedStartPositions);
 }
 
 describe("Validation - InvokeExpression", () => {
+    describe(`checkInvokeExpressions = false`, () => {
+        const validationSettings: ValidationSettings = {
+            ...SimpleValidationSettings,
+            checkInvokeExpressions: false,
+        };
+
+        it(`argument count suppressed`, () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(
+                `${TestConstants.TestLibraryName.SquareIfNumber}()`,
+            );
+
+            const validationResult: ValidationResult = PQLS.validate(textDocument, validationSettings);
+            expect(validationResult.diagnostics.length).to.equal(0);
+        });
+    });
+
     describe(`single invocation`, () => {
         it(`expects [1, 1] arguments, 0 given`, () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.SquareIfNumber}()`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
+
             expectArgumentCountMismatch(invocationDiagnostics, 1, 1, 0);
         });
 
@@ -104,9 +127,10 @@ describe("Validation - InvokeExpression", () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
+
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
         });
 
@@ -114,9 +138,10 @@ describe("Validation - InvokeExpression", () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
+
             expect(invocationDiagnostics.length).to.equal(0);
         });
     });
@@ -131,9 +156,9 @@ let
 in
     _`,
             );
-            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> = expectGetInvokeExpressionDiagnostics(
-                textDocument,
-            );
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                expectGetInvokeExpressionDiagnostics(textDocument);
 
             expect(invocationDiagnostics.length).to.equal(2);
 
@@ -147,6 +172,7 @@ in
                     line: 3,
                 },
             ];
+
             expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
         });
     });

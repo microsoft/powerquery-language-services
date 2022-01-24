@@ -10,38 +10,61 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeUnaryExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeUnaryExpression.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TUnaryExpression>(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeNthChildChecked<
-        Ast.TArrayWrapper
-    >(nodeIdMapCollection, xorNode.node.id, 0, Ast.NodeKind.ArrayWrapper);
+
+    const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
+        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
+            nodeIdMapCollection,
+            xorNode.node.id,
+            0,
+            Ast.NodeKind.ArrayWrapper,
+        );
+
     if (maybeUnaryOperatorWrapper === undefined) {
+        trace.exit({ [TraceConstant.Result]: Type.UnknownInstance });
+
         return Type.UnknownInstance;
     }
+
     const unaryOperatorWrapper: TXorNode | undefined = maybeUnaryOperatorWrapper;
 
+    let result: Type.TPowerQueryType;
     const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, xorNode.node.id, 1);
-    if (maybeExpression === undefined) {
-        return Type.UnknownInstance;
-    }
-    const expression: TXorNode = maybeExpression;
 
-    const expressionType: Type.TPowerQueryType = inspectXor(state, expression);
-    if (expressionType.kind === Type.TypeKind.Number) {
-        return inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
-    } else if (TypeUtils.isLogical(expressionType)) {
-        return inspectTypeUnaryLogical(state, expressionType, unaryOperatorWrapper.node.id);
+    if (maybeExpression === undefined) {
+        result = Type.UnknownInstance;
     } else {
-        return Type.NoneInstance;
+        const expression: TXorNode = maybeExpression;
+        const expressionType: Type.TPowerQueryType = inspectXor(state, expression);
+
+        if (expressionType.kind === Type.TypeKind.Number) {
+            result = inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
+        } else if (TypeUtils.isLogical(expressionType)) {
+            result = inspectTypeUnaryLogical(state, expressionType, unaryOperatorWrapper.node.id);
+        } else {
+            result = Type.NoneInstance;
+        }
     }
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 type NumberUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive>;
@@ -60,6 +83,7 @@ function inspectTypeUnaryNumber(
         Constant.UnaryOperator.Positive,
         Constant.UnaryOperator.Negative,
     ];
+
     const unaryOperators: (Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive)[] = [];
     let isPositive: boolean = true;
 
@@ -69,6 +93,7 @@ function inspectTypeUnaryNumber(
         }
 
         unaryOperators.push(operator.constantKind);
+
         if (operator.constantKind === Constant.UnaryOperator.Negative) {
             isPositive = !isPositive;
         }

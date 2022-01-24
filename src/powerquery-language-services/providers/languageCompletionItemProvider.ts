@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { Inspection } from "..";
-import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AutocompleteItemProvider, AutocompleteItemProviderContext } from "./commonTypes";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
+import { Inspection } from "..";
 
 export class LanguageAutocompleteItemProvider implements AutocompleteItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
@@ -28,6 +28,7 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
 
     constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {

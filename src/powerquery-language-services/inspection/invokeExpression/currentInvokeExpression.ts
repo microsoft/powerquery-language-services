@@ -2,22 +2,22 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMap,
     NodeIdMapUtils,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
-import { InspectionSettings } from "../../inspectionSettings";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
-import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
+import { TypeCache, TypeCacheUtils } from "../typeCache";
+import { InspectionSettings } from "../../inspectionSettings";
+import { LanguageServiceTraceConstant } from "../..";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 // An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
@@ -37,13 +37,22 @@ export function tryCurrentInvokeExpression(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): TriedCurrentInvokeExpression {
+    const trace: Trace = settings.traceManager.entry(
+        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        tryCurrentInvokeExpression.name,
+    );
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return ResultUtils.boxOk(undefined);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () =>
+    const result: TriedCurrentInvokeExpression = ResultUtils.ensureResult(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
+
+    trace.exit();
+
+    return result;
 }
 
 function inspectInvokeExpression(
@@ -64,12 +73,14 @@ function inspectInvokeExpression(
     }
 
     const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = maybeInvokeExpression;
+
     const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
         settings,
         nodeIdMapCollection,
         invokeExpressionXorNode.node.id,
         typeCache,
     );
+
     if (ResultUtils.isError(triedInvokeExpression)) {
         throw triedInvokeExpression;
     }
@@ -78,6 +89,7 @@ function inspectInvokeExpression(
     const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.maybeArguments;
 
     let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
+
     if (maybeArguments !== undefined) {
         maybeWithArgumentOrdinal = {
             ...maybeArguments,
@@ -109,6 +121,7 @@ function getArgumentOrdinal(
         2,
         Ast.NodeKind.Csv,
     );
+
     if (maybeAncestoryCsv !== undefined) {
         return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
     }
@@ -125,6 +138,7 @@ function getArgumentOrdinal(
     );
 
     let arrayWrapperXorNode: TXorNode;
+
     switch (maybePreviousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
             arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked(

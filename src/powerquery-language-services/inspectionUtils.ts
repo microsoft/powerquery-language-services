@@ -7,11 +7,11 @@ import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
+import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { ExternalType } from "./inspection/externalType";
 import { InspectionSettings } from "./inspectionSettings";
-import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 
 export function createInspectionSettings(
     settings: PQP.Settings,
@@ -34,8 +34,10 @@ export function getMaybeContextForSignatureProvider(
     }
 
     const invokeExpression: Inspection.CurrentInvokeExpression = inspected.triedCurrentInvokeExpression.value;
+
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
+
     const argumentOrdinal: number | undefined =
         invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
 
@@ -53,26 +55,25 @@ export function getMaybeContextForSignatureProvider(
 
 export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
+
     if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
+
     const nameOfParameters: string = context.functionType.parameters.map(TypeUtils.nameOfFunctionParameter).join(", ");
     const label: string = `${identifierLiteral}(${nameOfParameters})`;
 
     const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+
     return {
-        // tslint:disable-next-line: no-null-keyword
         activeParameter: context.argumentOrdinal ?? null,
         activeSignature: 0,
         signatures: [
             {
                 label,
-                parameters: parameters.map((parameter: Type.FunctionParameter) => {
-                    return {
-                        label: parameter.nameLiteral,
-                    };
-                }),
+                parameters: parameters.map((parameter: Type.FunctionParameter) => ({
+                    label: parameter.nameLiteral,
+                })),
             },
         ],
     };
@@ -214,7 +215,9 @@ export function getAutocompleteItemsFromScope(
     if (ResultUtils.isError(inspection.triedNodeScope)) {
         return [];
     }
+
     const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+
     const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(inspection.triedScopeType)
         ? inspection.triedScopeType.value
         : new Map();
@@ -223,14 +226,13 @@ export function getAutocompleteItemsFromScope(
     const partial: Inspection.AutocompleteItem[] = [];
 
     for (const [label, scopeItem] of nodeScope.entries()) {
-        const maybeAutocompleteItem:
-            | Inspection.AutocompleteItem
-            | undefined = AutocompleteItemUtils.maybeCreateFromScopeItem(
-            label,
-            scopeItem,
-            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
-            maybeContextTest,
-        );
+        const maybeAutocompleteItem: Inspection.AutocompleteItem | undefined =
+            AutocompleteItemUtils.maybeCreateFromScopeItem(
+                label,
+                scopeItem,
+                scopeTypeByKey.get(label) ?? Type.UnknownInstance,
+                maybeContextTest,
+            );
 
         if (maybeAutocompleteItem) {
             partial.push(maybeAutocompleteItem);

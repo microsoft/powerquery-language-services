@@ -3,11 +3,19 @@
 
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeParameter.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TParameter>(xorNode, Ast.NodeKind.Parameter);
 
     const maybeOptionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
@@ -21,8 +29,12 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
         inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );
 
-    return {
+    const result: Type.TPowerQueryType = {
         ...maybeParameterType,
         isNullable: maybeOptionalConstant !== undefined || maybeParameterType.isNullable,
     };
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }

@@ -3,12 +3,11 @@
 
 import { Keyword, Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import type { Position } from "vscode-languageserver-types";
 
+import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
 import { TrailingToken } from "../commonTypes";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordErrorHandlingExpression(
     state: InspectAutocompleteKeywordState,
@@ -18,6 +17,7 @@ export function autocompleteKeywordErrorHandlingExpression(
     const maybeTrailingText: TrailingToken | undefined = state.maybeTrailingToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.maybeAttributeIndex;
+
     if (maybeChildAttributeIndex === 0) {
         return [Keyword.KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {

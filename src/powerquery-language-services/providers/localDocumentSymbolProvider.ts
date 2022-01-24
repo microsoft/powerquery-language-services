@@ -1,27 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     NodeIdMapUtils,
     ParseState,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as InspectionUtils from "../inspectionUtils";
-
-import { Inspection, Library } from "..";
-import { InspectionSettings } from "../inspectionSettings";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Inspection, Library } from "..";
+import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
+import { InspectionSettings } from "../inspectionSettings";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
@@ -36,10 +35,12 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
         const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
+
         if (maybeInspection === undefined) {
             return [];
         }
@@ -50,20 +51,21 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         ];
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
         if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
         const activeNode: Inspection.TMaybeActiveNode = this.maybeTriedInspection.maybeActiveNode;
+
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
-        let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
+        let maybeHover: Hover | undefined = LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
             this.maybeTriedInspection,
@@ -75,32 +77,30 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         }
 
         if (!ResultUtils.isOk(inspection.triedNodeScope) || !ResultUtils.isOk(inspection.triedScopeType)) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
-        maybeHover = await LocalDocumentSymbolProvider.getHoverForScopeItem(
+        maybeHover = LocalDocumentSymbolProvider.getHoverForScopeItem(
             context,
             inspection.triedNodeScope.value,
             inspection.triedScopeType.value,
         );
 
-        // tslint:disable-next-line: no-null-keyword
         return maybeHover ?? null;
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const maybeInvokeInspection:
-            | Inspection.InvokeExpression
-            | undefined = this.getMaybeInspectionInvokeExpression();
+        const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
+            this.getMaybeInspectionInvokeExpression();
+
         if (maybeInvokeInspection === undefined) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
+
         const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
-            // tslint:disable-next-line: no-null-keyword
             return null;
         }
 
@@ -112,12 +112,12 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     //  * GeneralizedIdentifierPairedAnyLiteral
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
-    protected static async getHoverForIdentifierPairedExpression(
+    protected static getHoverForIdentifierPairedExpression(
         context: HoverProviderContext,
         inspectionSettings: InspectionSettings,
         inspectionTask: WorkspaceCache.InspectionTask,
         activeNode: Inspection.ActiveNode,
-    ): Promise<Hover | undefined> {
+    ): Hover | undefined {
         const parseState: ParseState = inspectionTask.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
@@ -130,13 +130,15 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression:
-            | TXorNode
-            | undefined = AncestryUtils.maybeNthXorChecked(activeNode.ancestry, 1, [
-            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-            Ast.NodeKind.IdentifierPairedExpression,
-        ]);
+        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.maybeNthXorChecked(
+            activeNode.ancestry,
+            1,
+            [
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
+            ],
+        );
 
         // We're on an identifier in some other context which we don't support.
         if (maybeIdentifierPairedExpression === undefined) {
@@ -169,12 +171,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         let scopeItemText: string = "unknown";
         // If it's a SectionMember
         const maybeThirdNodeKind: Ast.NodeKind = ancestry[2]?.node.kind;
+
         if (maybeThirdNodeKind === Ast.NodeKind.SectionMember) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.SectionMember);
         }
 
         // Else if it's RecordExpression or RecordLiteral
         const maybeFifthNodeKind: Ast.NodeKind = ancestry[4]?.node.kind;
+
         const isRecordNodeKind: boolean = [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral].includes(
             maybeFifthNodeKind,
         );
@@ -197,13 +201,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         };
     }
 
-    protected static async getHoverForScopeItem(
+    protected static getHoverForScopeItem(
         context: HoverProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
-    ): Promise<Hover | undefined> {
+    ): Hover | undefined {
         const identifierLiteral: string = context.identifier;
         const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
+
         if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             return undefined;
         }
@@ -211,6 +216,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
 
         const maybeScopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
+
         const scopeItemTypeText: string =
             maybeScopeItemType !== undefined ? TypeUtils.nameOf(maybeScopeItemType) : "unknown";
 

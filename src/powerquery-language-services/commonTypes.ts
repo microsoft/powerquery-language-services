@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-import type {
+import {
     CompletionItem,
+    CompletionItemKind,
     Diagnostic,
     DiagnosticRelatedInformation,
+    DiagnosticSeverity,
     DocumentSymbol,
     Hover,
     Position,
     Range,
     SignatureHelp,
+    SymbolKind,
 } from "vscode-languageserver-types";
-import { CompletionItemKind, DiagnosticSeverity, SymbolKind } from "vscode-languageserver-types";
+import type { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
 export type {
     CompletionItem,
@@ -40,8 +42,6 @@ export const EmptyHover: Hover = {
 
 export const EmptySignatureHelp: SignatureHelp = {
     signatures: [],
-    // tslint:disable-next-line: no-null-keyword
     activeParameter: null,
-    // tslint:disable-next-line: no-null-keyword
     activeSignature: null,
 };

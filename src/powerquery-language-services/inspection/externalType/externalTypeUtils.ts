@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+
 import { ExternalType } from ".";
 
 export function createValueTypeRequest(identifierLiteral: string): ExternalType.ExternalValueTypeRequest {

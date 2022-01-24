@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast, Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { AncestryUtils, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
-import { CommonError } from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
+import { Ast, Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ActiveNode } from "../../activeNode";
 import { AutocompleteItem } from "../autocompleteItem";
@@ -22,6 +20,7 @@ export function autocompleteKeywordRightMostLeaf(
         xorNodeId,
         undefined,
     );
+
     if (maybeRightMostAstLeafForLastValue === undefined) {
         return undefined;
     }
@@ -31,7 +30,9 @@ export function autocompleteKeywordRightMostLeaf(
         state.nodeIdMapCollection,
         maybeRightMostAstLeafForLastValue.id,
     );
+
     Assert.isTrue(shiftedAncestry.length >= 2, "shiftedAncestry.length >= 2");
+
     const shiftedActiveNode: ActiveNode = {
         ...state.activeNode,
         ancestry: shiftedAncestry,

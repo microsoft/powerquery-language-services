@@ -4,9 +4,9 @@
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { PositionUtils } from "../../..";
 import { ActiveNode, ActiveNodeLeafKind } from "../../activeNode";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { PositionUtils } from "../../..";
 
 export function autocompleteKeywordDefault(
     state: InspectAutocompleteKeywordState,
@@ -19,6 +19,7 @@ export function autocompleteKeywordDefault(
         return autocompleteDefaultExpression(state);
     } else {
         const maybeMappedKeywordKind: Keyword.KeywordKind | undefined = AutocompleteConstantMap.get(key);
+
         return maybeMappedKeywordKind !== undefined
             ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
             : undefined;

@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert } from "@microsoft/powerquery-parser";
 import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -16,6 +15,7 @@ export function autocompleteKeywordTrailingText(
     if (trailingToken.isInOrOnPosition === false) {
         return inspected;
     }
+
     Assert.isTrue(trailingToken.data.length > 0, "trailingToken.data.length > 0");
     const token: PQP.Language.Token.Token = trailingToken;
 

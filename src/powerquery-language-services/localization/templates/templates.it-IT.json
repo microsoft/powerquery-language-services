@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Errore che si verifica quando per una chiamata di funzione viene specificato un numero eccessivo o insufficiente di argomenti. Deve essere rivolto all'utente.",
   "error_validation_invokeExpression_missingMandatory_named": "In '{funcName}' manca un argomento per il parametro non facoltativo ' {argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Manca un argomento per il parametro non facoltativo ' {argName}'.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+  "error_validation_invokeExpression_typeMismatch_named": "' {funcName} prevedeva che l'argomento per ' {argName}' fosse ' {expected}', ma è stato ottenuto ' {actual}'.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "L'argomento per ' {argName}' prevedeva che fosse ' {expected}', ma è stato ottenuto ' {actual}'."
 }

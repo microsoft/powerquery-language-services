@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
-import { expect } from "chai";
 import "mocha";
-import { TestConstants } from ".";
+import { expect } from "chai";
 
 import {
     Analysis,
@@ -19,6 +16,7 @@ import {
     SymbolKind,
     TextDocument,
 } from "../powerquery-language-services";
+import { TestConstants } from ".";
 
 describe("External consumption", () => {
     it("Analysis", async () => {

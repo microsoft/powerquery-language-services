@@ -5,6 +5,6 @@
   "_error_validation_invokeExpression_numArgs": "Kai funkcijos iškvietimui buvo duota per mažai arba per daug argumentų, įvyko klaida. Tikimasi, kad su ja susidurs vartotojas.",
   "error_validation_invokeExpression_missingMandatory_named": "„{funcName}“ trūksta argumento nepasirenkamam parametrui „{argName}“.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Trūksta nepasirinktinio parametro „{argName}“ argumento.",
-  "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+  "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ numatomas „{argName}“ argumentas turėtų būti „{expected}“, tačiau gautas „{actual}“.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Tikėtasi, kad argumentas, skirtas „{argName}“, bus „{expected}“, tačiau gautas „{actual}“."
 }

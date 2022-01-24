@@ -2,9 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-
 import { Assert } from "@microsoft/powerquery-parser";
 
 import {
@@ -173,10 +171,12 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     if (request.args.length !== 1) {
                         return Type.NoneInstance;
                     }
+
                     const arg: Type.TPowerQueryType = Assert.asDefined(request.args[0]);
 
                     if (TypeUtils.isNumberLiteral(arg)) {
                         const newNormalizedLiteral: number = arg.normalizedLiteral * arg.normalizedLiteral;
+
                         return {
                             ...arg,
                             literal: newNormalizedLiteral.toString(),
@@ -230,6 +230,7 @@ export const SimpleInspectionSettings: InspectionSettings = {
 export const SimpleValidationSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
+    checkInvokeExpressions: true,
     source: "UNIT-TEST-SOURCE",
 };
 

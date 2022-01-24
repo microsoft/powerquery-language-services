@@ -2,35 +2,45 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AncestryUtils,
     TXorNode,
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
-import { PositionUtils } from "../..";
+
 import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
-    return ResultUtils.ensureResult(settings.locale, () => {
-        return autocompleteLanguageConstant(maybeActiveNode);
-    });
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.LanguageConstant,
+        tryAutocompleteLanguageConstant.name,
+    );
+
+    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(settings.locale, () =>
+        autocompleteLanguageConstant(maybeActiveNode),
+    );
+
+    trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });
+
+    return result;
 }
 
 function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteItem | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
+
     const activeNode: ActiveNode = maybeActiveNode;
 
     if (isNullableAllowed(activeNode)) {
@@ -54,12 +64,14 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
                 if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
                     return true;
                 }
+
                 break;
 
             case Ast.NodeKind.PrimitiveType:
                 if (XorNodeUtils.isContextXor(xorNode)) {
                     return true;
                 }
+
                 break;
 
             default:
@@ -72,9 +84,11 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
     const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
+
     if (maybeChild?.node.maybeAttributeIndex !== 1) {
         return false;
     }
+
     // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
     const paired: TXorNode = maybeChild;
     const position: Position = activeNode.position;
@@ -90,9 +104,11 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
             ancestryIndex,
             2,
         );
+
         if (maybeGrandchild === undefined) {
             return false;
         }
+
         // Ast.Constant || Ast.PrimitiveType
         const grandchild: TXorNode = maybeGrandchild;
 
@@ -114,15 +130,22 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
+
     if (maybeFnExprAncestryIndex === undefined) {
         return false;
     }
+
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const maybeParameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.maybeNthPreviousXorChecked<
-        Ast.TParameter
-    >(activeNode.ancestry, fnExprAncestryIndex, 4, Ast.NodeKind.Parameter);
+    const maybeParameter: XorNode<Ast.TParameter> | undefined =
+        AncestryUtils.maybeNthPreviousXorChecked<Ast.TParameter>(
+            activeNode.ancestry,
+            fnExprAncestryIndex,
+            4,
+            Ast.NodeKind.Parameter,
+        );
+
     if (maybeParameter === undefined) {
         return false;
     }
@@ -132,9 +155,11 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         fnExprAncestryIndex,
         5,
     );
+
     if (maybeChildOfParameter === undefined) {
         return true;
     }
+
     const childOfParameter: TXorNode = maybeChildOfParameter;
 
     switch (childOfParameter.node.maybeAttributeIndex) {
@@ -150,6 +175,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
                         childOfParameter,
                         Ast.NodeKind.Identifier,
                     );
+
                     const name: string = nameAst.literal;
 
                     return (

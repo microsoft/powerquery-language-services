@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inspection, Library } from "..";
-import { Hover, SignatureHelp } from "../commonTypes";
-import { AutocompleteItem } from "../inspection/autocomplete";
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { Hover, SignatureHelp } from "../commonTypes";
+import { Inspection, Library } from "..";
+import { AutocompleteItem } from "../inspection/autocomplete";
 
 export class NullSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
@@ -26,19 +26,20 @@ export class NullSymbolProvider implements ISymbolProvider {
         return NullSymbolProvider.instance;
     }
 
+    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
         return [];
     }
 
+    // eslint-disable-next-line require-await
     public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
 
+    // eslint-disable-next-line require-await
     public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        // tslint:disable-next-line: no-null-keyword
         return null;
     }
 }

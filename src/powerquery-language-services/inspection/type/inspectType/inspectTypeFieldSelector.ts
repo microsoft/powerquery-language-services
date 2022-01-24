@@ -1,14 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeFieldSelector.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked(
@@ -16,14 +24,17 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
         xorNode.node.id,
         Ast.NodeKind.GeneralizedIdentifier,
     );
+
     if (maybeFieldName === undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+
         return Type.UnknownInstance;
     }
+
     const fieldName: string = maybeFieldName.literal;
-
     const fieldScope: FieldScope = getFieldScope();
-
     let fieldType: Type.TPowerQueryType;
+
     switch (fieldScope) {
         case FieldScope.EachExpression:
             fieldType = inspectEachExpressionFieldSelector(state, xorNode);
@@ -45,12 +56,15 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    return getFieldSelectorType(fieldType, fieldName, isOptional);
+    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName, isOptional);
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 const enum FieldScope {
-    EachExpression,
-    RecursivePrimaryExpression,
+    EachExpression = "EachExpression",
+    RecursivePrimaryExpression = "RecursivePrimaryExpression",
 }
 
 function getFieldScope(): FieldScope {
@@ -72,28 +86,30 @@ function getFieldSelectorType(
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
-            switch (fieldType.maybeExtendedKind) {
-                case undefined:
-                    return Type.AnyInstance;
-
-                case Type.ExtendedTypeKind.DefinedRecord:
-                case Type.ExtendedTypeKind.DefinedTable: {
-                    const maybeNamedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
-                    if (maybeNamedField !== undefined) {
-                        return maybeNamedField;
-                    } else if (fieldType.isOpen) {
-                        return Type.AnyInstance;
-                    } else {
-                        return isOptional ? Type.NullInstance : Type.NoneInstance;
-                    }
-                }
-
-                default:
-                    throw Assert.isNever(fieldType);
-            }
+            return inspectRecordOrTable(fieldType, fieldName, isOptional);
 
         default:
             return Type.NoneInstance;
+    }
+}
+
+function inspectRecordOrTable(
+    fieldType: Type.TRecord | Type.TTable,
+    fieldName: string,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    if (fieldType.maybeExtendedKind === undefined) {
+        return Type.AnyInstance;
+    }
+
+    const maybeNamedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
+
+    if (maybeNamedField !== undefined) {
+        return maybeNamedField;
+    } else if (fieldType.isOpen) {
+        return Type.AnyInstance;
+    } else {
+        return isOptional ? Type.NullInstance : Type.NoneInstance;
     }
 }
 
@@ -109,5 +125,6 @@ function inspectRecursivePrimaryExpressionFieldSelector(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
+
     return inspectXor(state, previousSibling);
 }

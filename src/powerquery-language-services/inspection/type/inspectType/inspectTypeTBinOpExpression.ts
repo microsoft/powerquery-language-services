@@ -2,42 +2,55 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
 
 export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
-    state.settings.maybeCancellationToken?.throwIfCancelled();
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        inspectTypeTBinOpExpression.name,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
+    state.maybeCancellationToken?.throwIfCancelled();
+
     Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
         nodeKind: xorNode.node.kind,
     });
 
     const parentId: number = xorNode.node.id;
+
     const children: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
         parentId,
     );
 
     const maybeLeft: TXorNode | undefined = children[0];
+
     const maybeOperatorKind: Constant.TBinOpExpressionOperator | undefined =
         children[1] === undefined || XorNodeUtils.isContextXor(children[1])
             ? undefined
             : (children[1].node as Ast.IConstant<Constant.TBinOpExpressionOperator>).constantKind;
+
     const maybeRight: TXorNode | undefined = children[2];
+
+    let result: Type.TPowerQueryType;
 
     // ''
     if (maybeLeft === undefined) {
-        return Type.UnknownInstance;
+        result = Type.UnknownInstance;
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        return inspectXor(state, maybeLeft);
+        result = inspectXor(state, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || XorNodeUtils.isContextXor(maybeRight)) {
@@ -46,12 +59,14 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
         const maybeAllowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = PartialLookup.get(key);
+
         if (maybeAllowedTypeKinds === undefined) {
-            return Type.NoneInstance;
+            result = Type.NoneInstance;
         } else if (maybeAllowedTypeKinds.size === 1) {
-            return TypeUtils.createPrimitiveType(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
+            result = TypeUtils.createPrimitiveType(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
         } else {
             const unionedTypePairs: Type.TPowerQueryType[] = [];
+
             for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
@@ -59,7 +74,8 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
                     isNullable: true,
                 });
             }
-            return TypeUtils.createAnyUnion(unionedTypePairs);
+
+            result = TypeUtils.createAnyUnion(unionedTypePairs);
         }
     }
     // '1 + 1'
@@ -70,29 +86,36 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
-        if (maybeResultTypeKind === undefined) {
-            return Type.NoneInstance;
-        }
-        const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
 
-        // '[foo = 1] & [bar = 2]'
-        if (
-            operatorKind === Constant.ArithmeticOperator.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
-        ) {
-            return inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+        if (maybeResultTypeKind === undefined) {
+            result = Type.NoneInstance;
         } else {
-            return TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+
+            // '[foo = 1] & [bar = 2]'
+            if (
+                operatorKind === Constant.ArithmeticOperator.And &&
+                (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
+            ) {
+                result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+            } else {
+                result = TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            }
         }
     }
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TPowerQueryType {
     if (leftType.kind !== rightType.kind) {
-        const details: {} = {
+        const details: object = {
             leftTypeKind: leftType.kind,
             rightTypeKind: rightType.kind,
         };
+
         throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
     // '[] & []' or '#table() & #table()'
@@ -108,6 +131,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
         const extendedType: Type.DefinedRecord | Type.DefinedTable =
             leftType.maybeExtendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
+
         return {
             ...extendedType,
             isOpen: true,
@@ -130,6 +154,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
 
 function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.DefinedRecord]): Type.DefinedRecord {
     const combinedFields: Map<string, Type.TPowerQueryType> = new Map(leftType.fields);
+
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
@@ -144,6 +169,7 @@ function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.Defi
 
 function unionTableFields([leftType, rightType]: [Type.DefinedTable, Type.DefinedTable]): Type.DefinedTable {
     const combinedFields: Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
+
     for (const [key, value] of rightType.fields.entries()) {
         combinedFields.set(key, value);
     }
@@ -239,8 +265,8 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
             (
                 binaryExpressionPartialLookup: Map<string, Set<Type.TypeKind>>,
                 key: string,
-                _currentIndex,
-                _array,
+                _currentIndex: number,
+                _array: ReadonlyArray<string>,
             ): Map<string, Set<Type.TypeKind>> => {
                 const lastDeliminatorIndex: number = key.lastIndexOf(",");
                 // Grab '<first operand> , <operator>'.
@@ -250,6 +276,7 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
 
                 // Add the potentialNewValue if it's a new Type.
                 const maybeValues: Set<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(partialKey);
+
                 // First occurance of '<first operand> , <operator>'
                 if (maybeValues === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, new Set([potentialNewValue]));

@@ -2,9 +2,6 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
-import { Assert } from "@microsoft/powerquery-parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapUtils,
@@ -12,6 +9,8 @@ import {
     XorNodeKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position, Range } from "vscode-languageserver-types";
+import { Assert } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
     return {
@@ -138,9 +137,11 @@ export function isBeforeContext(
     isBoundIncluded: boolean,
 ): boolean {
     const maybeTokenStart: PQP.Language.Token.Token | undefined = contextNode.maybeTokenStart;
+
     if (maybeTokenStart === undefined) {
         return false;
     }
+
     const tokenStart: PQP.Language.Token.Token = maybeTokenStart;
 
     return isBeforeTokenPosition(position, tokenStart.positionStart, isBoundIncluded);
@@ -171,6 +172,7 @@ export function isOnContextEnd(
     contextNode: PQP.Parser.ParseContext.TNode,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+
     if (maybeLeaf === undefined) {
         return false;
     }
@@ -185,6 +187,7 @@ export function isAfterContext(
     isBoundIncluded: boolean,
 ): boolean {
     const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+
     if (maybeLeaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
@@ -194,6 +197,7 @@ export function isAfterContext(
             return isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, isBoundIncluded);
         }
     }
+
     const leaf: Ast.TNode = maybeLeaf;
 
     return isAfterAst(position, leaf, isBoundIncluded);
@@ -251,6 +255,7 @@ export function isBeforeTokenPosition(
         return false;
     } else {
         const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit + 1;
+
         return position.character < upperBound;
     }
 }
@@ -272,6 +277,7 @@ export function isAfterTokenPosition(
         return true;
     } else {
         const upperBound: number = isBoundIncluded ? tokenPosition.lineCodeUnit : tokenPosition.lineCodeUnit - 1;
+
         return position.character > upperBound;
     }
 }

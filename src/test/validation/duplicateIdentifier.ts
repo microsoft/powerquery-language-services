@@ -1,13 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// tslint:disable: no-implicit-dependencies
-
-import { Assert } from "@microsoft/powerquery-parser";
-import { assert, expect } from "chai";
 import "mocha";
+import { assert, expect } from "chai";
+import { Assert } from "@microsoft/powerquery-parser";
 
-import { TestConstants, TestUtils } from "..";
 import {
     Diagnostic,
     DiagnosticErrorCode,
@@ -18,8 +15,9 @@ import {
     TextDocumentContentChangeEvent,
     validate,
 } from "../../powerquery-language-services";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
+import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);
@@ -52,6 +50,7 @@ function validateDuplicateIdentifierDiagnostics(
     const actual: ReadonlyArray<Diagnostic> = diagnostics.filter(
         (diagnostic: Diagnostic) => diagnostic.code === DiagnosticErrorCode.DuplicateIdentifier,
     );
+
     const abridgedActual: DuplicateIdentifierError[] = [];
 
     for (const diagnostic of actual) {
@@ -82,10 +81,12 @@ describe(`Validation - duplicateIdentifier`, () => {
 
         it("let 1", () => {
             const errorSource: string = TestConstants.SimpleValidationSettings.source;
+
             const validationResult: ValidationResult = validate(
                 TestUtils.createTextMockDocument(`let 1`),
                 TestConstants.SimpleValidationSettings,
             );
+
             expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");
             expect(validationResult.diagnostics.length).to.equal(1);
             expect(validationResult.diagnostics[0].source).to.equal(errorSource);
@@ -105,10 +106,12 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("no errors after update", () => {
             const text: string = "let a = 1,";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             const diagnostics: ReadonlyArray<Diagnostic> = validate(
                 textDocument,
                 TestConstants.SimpleValidationSettings,
             ).diagnostics;
+
             expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
             const changes: ReadonlyArray<TextDocumentContentChangeEvent> = textDocument.update("1");
@@ -129,6 +132,7 @@ describe(`Validation - duplicateIdentifier`, () => {
                 textDocument,
                 TestConstants.SimpleValidationSettings,
             ).diagnostics;
+
             expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
         });
     });
@@ -137,6 +141,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("let a = 1, a = 2 in a", () => {
             const text: string = "let a = 1, a = 2 in a";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "a",
@@ -172,6 +177,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("[a = 1, b = 2, c = 3, a = 4]", () => {
             const text: string = "[a = 1, b = 2, c = 3, a = 4]";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "a",
@@ -189,6 +195,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it(`[#"a" = 1, a = 2, b = 3]`, () => {
             const text: string = `[#"a" = 1, a = 2, b = 3]`;
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "a",
@@ -206,6 +213,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it('section foo; shared a = 1; a = "hello";', () => {
             const text: string = 'section foo; shared a = 1; a = "hello";';
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "a",
@@ -223,6 +231,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("section foo; shared a = let a = 1 in a; b = let b = 1, b = 2 in b;", () => {
             const text: string = "section foo; shared a = let a = 1 in a; b = let b = 1, b = 2, b = 3 in b;";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "b",
@@ -254,6 +263,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("let a = 1 meta [ abc = 1, abc = 3 ] in a", () => {
             const text: string = "let a = 1 meta [ abc = 1, abc = 3 ] in a";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "abc",
@@ -271,6 +281,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("let a = let abc = 1, abc = 2, b = 3 in b in a", () => {
             const text: string = "let a = let abc = 1, abc = 2, b = 3 in b in a";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: "abc",
@@ -288,6 +299,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it('section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;', () => {
             const text: string = 'section foo; a = let #"s p a c e" = 2, #"s p a c e" = 3, a = 2 in a;';
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
             validateDuplicateIdentifierDiagnostics(textDocument, [
                 {
                     name: '#"s p a c e"',
