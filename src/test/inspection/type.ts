@@ -189,6 +189,25 @@ describe(`Inspection - Type`, () => {
 
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
+
+            it(`WIP let foo = each [a] in foo`, () => {
+                const expression: string = `let foo = each [a] in foo`;
+
+                const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+                    false,
+                    [
+                        {
+                            isNullable: false,
+                            isOptional: false,
+                            maybeType: Type.TypeKind.Any,
+                            nameLiteral: "_",
+                        },
+                    ],
+                    TypeUtils.createNumberLiteral(false, "1"),
+                );
+
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {

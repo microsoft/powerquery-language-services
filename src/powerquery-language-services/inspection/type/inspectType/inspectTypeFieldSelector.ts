@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    NodeIdMap,
+    NodeIdMapUtils,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
@@ -32,15 +37,15 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldScope: FieldScope = getFieldScope();
+    const fieldScope: FieldScope = getFieldScope(state, xorNode);
     let fieldType: Type.TPowerQueryType;
 
     switch (fieldScope) {
-        case FieldScope.EachExpression:
+        case Ast.NodeKind.EachExpression:
             fieldType = inspectEachExpressionFieldSelector(state, xorNode);
             break;
 
-        case FieldScope.RecursivePrimaryExpression:
+        case Ast.NodeKind.RecursivePrimaryExpression:
             fieldType = inspectRecursivePrimaryExpressionFieldSelector(state, xorNode);
             break;
 
@@ -62,14 +67,29 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     return result;
 }
 
-const enum FieldScope {
-    EachExpression = "EachExpression",
-    RecursivePrimaryExpression = "RecursivePrimaryExpression",
-}
+type FieldScope = Ast.NodeKind.EachExpression | Ast.NodeKind.RecursivePrimaryExpression;
 
-function getFieldScope(): FieldScope {
-    // TODO
-    return FieldScope.RecursivePrimaryExpression;
+function getFieldScope(state: InspectTypeState, xorNode: TXorNode): FieldScope {
+    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+
+    let maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+
+    while (maybeParent) {
+        switch (maybeParent.node.kind) {
+            case Ast.NodeKind.EachExpression:
+            case Ast.NodeKind.RecursivePrimaryExpression:
+                return maybeParent.node.kind;
+
+            default:
+                maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+                break;
+        }
+    }
+
+    throw new CommonError.InvariantError(
+        `expected FieldSelector to fall under either an EachExpression or a RecursivePrimaryExpression`,
+        { nodeId: xorNode.node.id },
+    );
 }
 
 function getFieldSelectorType(
