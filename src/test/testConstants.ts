@@ -20,6 +20,7 @@ import { LibrarySymbolProvider } from "../powerquery-language-services/providers
 
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
+    maybeEachScopeById: undefined,
     maybeExternalTypeResolver: undefined,
 };
 

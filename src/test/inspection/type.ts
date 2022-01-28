@@ -34,6 +34,7 @@ const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
 
 const TestSettings: PQP.Settings & InspectionSettings = {
     ...PQP.DefaultSettings,
+    maybeEachScopeById: undefined,
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 

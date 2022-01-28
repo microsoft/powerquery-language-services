@@ -12,13 +12,16 @@ import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { ExternalType } from "./inspection/externalType";
 import { InspectionSettings } from "./inspectionSettings";
+import { TypeById } from "./inspection";
 
 export function createInspectionSettings(
     settings: PQP.Settings,
+    maybeEachScopeById: TypeById | undefined,
     maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
 ): InspectionSettings {
     return {
         ...settings,
+        maybeEachScopeById,
         maybeExternalTypeResolver,
     };
 }

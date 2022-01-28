@@ -29,6 +29,7 @@ export function tryScopeType(
     const state: InspectTypeState = {
         locale: settings.locale,
         maybeCancellationToken: settings.maybeCancellationToken,
+        maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,
@@ -54,6 +55,7 @@ export function tryType(
     const state: InspectTypeState = {
         locale: settings.locale,
         maybeCancellationToken: settings.maybeCancellationToken,
+        maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,
