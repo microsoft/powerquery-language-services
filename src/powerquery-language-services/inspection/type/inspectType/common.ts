@@ -38,7 +38,8 @@ import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 import { TypeById } from "../../typeCache";
 
-export interface InspectTypeState extends PQP.CommonSettings, Pick<InspectionSettings, "maybeExternalTypeResolver"> {
+// Drop PQP.ParseSettings are they're not needed.
+export interface InspectTypeState extends PQP.CommonSettings, Omit<InspectionSettings, keyof PQP.ParseSettings> {
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
