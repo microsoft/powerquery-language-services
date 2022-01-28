@@ -39,7 +39,6 @@ import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 import { TypeById } from "../../typeCache";
 
 export interface InspectTypeState extends PQP.CommonSettings, Pick<InspectionSettings, "maybeExternalTypeResolver"> {
-    // readonly settings: InspectionSettings;
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
