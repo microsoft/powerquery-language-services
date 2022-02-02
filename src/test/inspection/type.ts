@@ -32,7 +32,7 @@ const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
     }
 };
 
-const TestSettings: PQP.Settings & InspectionSettings = {
+const TestSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     maybeEachScopeById: undefined,
     maybeExternalTypeResolver: ExternalTypeResolver,
@@ -172,6 +172,7 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.EachExpression}`, () => {
+            // Test for when EachExpression returns a static value
             it(`each 1`, () => {
                 const expression: string = `each 1`;
 
@@ -191,23 +192,45 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`WIP let foo = each [a] in foo`, () => {
+            // Test for when FieldSelector is used but wasn't given an eachScope
+            it(`let foo = each [a] in foo`, () => {
                 const expression: string = `let foo = each [a] in foo`;
+                const expected: Type.TPowerQueryType = Type.UnknownInstance;
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
 
-                const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+            // Test for when FieldSelector is used and was given an eachScope
+            it(`each [foo]`, () => {
+                const expression: string = `each [foo]`;
+                const expectedReturnType: Type.TPowerQueryType = TypeUtils.createTextLiteral(false, `"bar"`);
+
+                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
                     false,
-                    [
-                        {
-                            isNullable: false,
-                            isOptional: false,
-                            maybeType: Type.TypeKind.Any,
-                            nameLiteral: "_",
-                        },
-                    ],
-                    TypeUtils.createNumberLiteral(false, "1"),
+                    new Map([["foo", expectedReturnType]]),
+                    false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                const testSettingsWithEachScope: InspectionSettings = {
+                    ...TestSettings,
+                    maybeEachScopeById: new Map([[1, eachScope]]),
+                };
+
+                assertParseOkNodeTypeEqual(
+                    testSettingsWithEachScope,
+                    expression,
+                    TypeUtils.createDefinedFunction(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Any,
+                                nameLiteral: "_",
+                            },
+                        ],
+                        expectedReturnType,
+                    ),
+                );
             });
         });
 

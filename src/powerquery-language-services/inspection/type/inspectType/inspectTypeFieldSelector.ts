@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapUtils,
     TXorNode,
+    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { CommonError } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
@@ -40,17 +41,24 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     const fieldScope: FieldScope = getFieldScope(state, xorNode);
     let fieldType: Type.TPowerQueryType;
 
-    switch (fieldScope) {
+    switch (fieldScope.node.kind) {
         case Ast.NodeKind.EachExpression:
-            fieldType = inspectEachExpressionFieldSelector(state, xorNode);
+            fieldType = inspectEachExpressionFieldSelector(state, fieldScope as XorNode<Ast.EachExpression>);
             break;
 
         case Ast.NodeKind.RecursivePrimaryExpression:
-            fieldType = inspectRecursivePrimaryExpressionFieldSelector(state, xorNode);
+            fieldType = inspectRecursivePrimaryExpressionFieldSelector(
+                state,
+                fieldScope as XorNode<Ast.RecursivePrimaryExpression>,
+            );
+
             break;
 
         default:
-            throw Assert.isNever(fieldScope);
+            // I can't use a `never` assert due to a typing issue it assumes xorNode can be
+            // AstXorNode<EachExpression | RecursivePrimaryExpression>,
+            // despite that not being possible.
+            throw new CommonError.InvariantError(`should never be reached`);
     }
 
     const isOptional: boolean =
@@ -67,7 +75,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     return result;
 }
 
-type FieldScope = Ast.NodeKind.EachExpression | Ast.NodeKind.RecursivePrimaryExpression;
+type FieldScope = XorNode<Ast.EachExpression | Ast.RecursivePrimaryExpression>;
 
 function getFieldScope(state: InspectTypeState, xorNode: TXorNode): FieldScope {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
@@ -78,7 +86,7 @@ function getFieldScope(state: InspectTypeState, xorNode: TXorNode): FieldScope {
         switch (maybeParent.node.kind) {
             case Ast.NodeKind.EachExpression:
             case Ast.NodeKind.RecursivePrimaryExpression:
-                return maybeParent.node.kind;
+                return maybeParent as FieldScope;
 
             default:
                 maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
@@ -133,13 +141,17 @@ function inspectRecordOrTable(
     }
 }
 
-function inspectEachExpressionFieldSelector(_state: InspectTypeState, _xorNode: TXorNode): Type.TPowerQueryType {
-    throw new Error("TODO");
+// If we don't know what the scope is for the FieldSelector then return AnyInstance.
+function inspectEachExpressionFieldSelector(
+    state: InspectTypeState,
+    xorNode: XorNode<Ast.EachExpression>,
+): Type.TPowerQueryType {
+    return state.maybeEachScopeById?.get(xorNode.node.id) ?? Type.UnknownInstance;
 }
 
 function inspectRecursivePrimaryExpressionFieldSelector(
     state: InspectTypeState,
-    xorNode: TXorNode,
+    xorNode: XorNode<Ast.RecursivePrimaryExpression>,
 ): Type.TPowerQueryType {
     const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
