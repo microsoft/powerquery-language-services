@@ -38,8 +38,10 @@ import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 import { TypeById } from "../../typeCache";
 
-// Drop PQP.ParseSettings are they're not needed.
-export interface InspectTypeState extends PQP.CommonSettings, Omit<InspectionSettings, keyof PQP.ParseSettings> {
+// Drop PQP.LexSettings and PQP.ParseSettings as they're not needed.
+export interface InspectTypeState
+    extends PQP.CommonSettings,
+        Omit<InspectionSettings, keyof PQP.LexSettings | keyof PQP.ParseSettings> {
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
