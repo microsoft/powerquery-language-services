@@ -11,8 +11,9 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
+import { inspectFieldType } from "./common";
+import { InspectTypeState } from "../common";
 
 export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     const trace: Trace = state.traceManager.entry(
@@ -29,12 +30,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         xorNode,
     );
 
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
-
-    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+    const fieldType: Type.TPowerQueryType = inspectFieldType(state, xorNode);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
@@ -44,11 +40,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    const result: Type.TPowerQueryType = inspectFieldProjectionHelper(
-        previousSiblingType,
-        projectedFieldNames,
-        isOptional,
-    );
+    const result: Type.TPowerQueryType = inspectFieldProjectionHelper(fieldType, projectedFieldNames, isOptional);
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
