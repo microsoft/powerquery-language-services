@@ -10,10 +10,19 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { CommonError } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+
+// A field selector is an operation done on some value.
+// The target can be either an EachExpression or a RecursivePrimaryExpression.
+// In the code below that target for the FieldSelector is called the scope.
+//
+// In the case of EachExpression:
+//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
+//
+// In the case of RecursivePrimaryExpression:
+//  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     const trace: Trace = state.traceManager.entry(
@@ -38,27 +47,19 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldScope: FieldScope = getFieldScope(state, xorNode);
+
+    // travels up the AST to see if we're in an EachExpression or RecursivePrimaryExpression.
+    const maybeEachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
     let fieldType: Type.TPowerQueryType;
 
-    switch (fieldScope.node.kind) {
-        case Ast.NodeKind.EachExpression:
-            fieldType = inspectEachExpressionFieldSelector(state, fieldScope as XorNode<Ast.EachExpression>);
-            break;
-
-        case Ast.NodeKind.RecursivePrimaryExpression:
-            fieldType = inspectRecursivePrimaryExpressionFieldSelector(
-                state,
-                fieldScope as XorNode<Ast.RecursivePrimaryExpression>,
-            );
-
-            break;
-
-        default:
-            // I can't use a `never` assert due to a typing issue it assumes xorNode can be
-            // AstXorNode<EachExpression | RecursivePrimaryExpression>,
-            // despite that not being possible.
-            throw new CommonError.InvariantError(`should never be reached`);
+    // if the scope is an EachExpression
+    if (maybeEachExpression) {
+        fieldType = state.maybeEachScopeById?.get(maybeEachExpression.node.id) ?? Type.UnknownInstance;
+    }
+    // else it must be a RecursivePrimaryExpression,
+    // so grab the previous sibling of the FieldSelector
+    else {
+        fieldType = inspectRecursivePrimaryExpressionFieldSelector(state, xorNode);
     }
 
     const isOptional: boolean =
@@ -75,29 +76,22 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     return result;
 }
 
-type FieldScope = XorNode<Ast.EachExpression | Ast.RecursivePrimaryExpression>;
-
-function getFieldScope(state: InspectTypeState, xorNode: TXorNode): FieldScope {
+function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode<Ast.EachExpression> | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-
     let maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
 
     while (maybeParent) {
         switch (maybeParent.node.kind) {
             case Ast.NodeKind.EachExpression:
-            case Ast.NodeKind.RecursivePrimaryExpression:
-                return maybeParent as FieldScope;
+                return maybeParent as XorNode<Ast.EachExpression>;
 
             default:
-                maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+                maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, maybeParent.node.id);
                 break;
         }
     }
 
-    throw new CommonError.InvariantError(
-        `expected FieldSelector to fall under either an EachExpression or a RecursivePrimaryExpression`,
-        { nodeId: xorNode.node.id },
-    );
+    return undefined;
 }
 
 function getFieldSelectorType(
@@ -141,17 +135,9 @@ function inspectRecordOrTable(
     }
 }
 
-// If we don't know what the scope is for the FieldSelector then return AnyInstance.
-function inspectEachExpressionFieldSelector(
-    state: InspectTypeState,
-    xorNode: XorNode<Ast.EachExpression>,
-): Type.TPowerQueryType {
-    return state.maybeEachScopeById?.get(xorNode.node.id) ?? Type.UnknownInstance;
-}
-
 function inspectRecursivePrimaryExpressionFieldSelector(
     state: InspectTypeState,
-    xorNode: XorNode<Ast.RecursivePrimaryExpression>,
+    xorNode: TXorNode,
 ): Type.TPowerQueryType {
     const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,

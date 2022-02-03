@@ -192,11 +192,27 @@ describe(`Inspection - Type`, () => {
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            // Test for when FieldSelector is used but wasn't given an eachScope
-            it(`let foo = each [a] in foo`, () => {
+            // Test for when FieldSelector is used in an EachExpression but wasn't a scope
+            it(`WIP let foo = each [a] in foo`, () => {
                 const expression: string = `let foo = each [a] in foo`;
-                const expected: Type.TPowerQueryType = Type.UnknownInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                const expectedReturnType: Type.TPowerQueryType = Type.UnknownInstance;
+
+                assertParseOkNodeTypeEqual(
+                    TestSettings,
+                    expression,
+                    TypeUtils.createDefinedFunction(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                maybeType: Type.TypeKind.Any,
+                                nameLiteral: "_",
+                            },
+                        ],
+                        expectedReturnType,
+                    ),
+                );
             });
 
             // Test for when FieldSelector is used and was given an eachScope
