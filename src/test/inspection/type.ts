@@ -191,63 +191,6 @@ describe(`Inspection - Type`, () => {
 
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
-
-            // Test for when FieldSelector is used in an EachExpression but wasn't a scope
-            it(`WIP let foo = each [a] in foo`, () => {
-                const expression: string = `let foo = each [a] in foo`;
-                const expectedReturnType: Type.TPowerQueryType = Type.UnknownInstance;
-
-                assertParseOkNodeTypeEqual(
-                    TestSettings,
-                    expression,
-                    TypeUtils.createDefinedFunction(
-                        false,
-                        [
-                            {
-                                isNullable: false,
-                                isOptional: false,
-                                maybeType: Type.TypeKind.Any,
-                                nameLiteral: "_",
-                            },
-                        ],
-                        expectedReturnType,
-                    ),
-                );
-            });
-
-            // Test for when FieldSelector is used and was given an eachScope
-            it(`each [foo]`, () => {
-                const expression: string = `each [foo]`;
-                const expectedReturnType: Type.TPowerQueryType = TypeUtils.createTextLiteral(false, `"bar"`);
-
-                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
-                    false,
-                    new Map([["foo", expectedReturnType]]),
-                    false,
-                );
-
-                const testSettingsWithEachScope: InspectionSettings = {
-                    ...TestSettings,
-                    maybeEachScopeById: new Map([[1, eachScope]]),
-                };
-
-                assertParseOkNodeTypeEqual(
-                    testSettingsWithEachScope,
-                    expression,
-                    TypeUtils.createDefinedFunction(
-                        false,
-                        [
-                            {
-                                isNullable: false,
-                                isOptional: false,
-                                maybeType: Type.TypeKind.Any,
-                                nameLiteral: "_",
-                            },
-                        ],
-                        expectedReturnType,
-                    ),
-                );
-            });
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
@@ -330,6 +273,38 @@ describe(`Inspection - Type`, () => {
 
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
+
+            it(`(each [[foo]])([foo = "bar"])`, () => {
+                const expression: string = `(each [[foo]])([foo = "bar"])`;
+                const expected: Type.TPowerQueryType = Type.UnknownInstance;
+
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            it(`(each [[foo]])([foo = "bar", spam = "eggs"])`, () => {
+                const expression: string = `(each [[foo]])([foo = "bar", spam = "eggs"])`;
+
+                const expectedFields: Map<string, Type.TPowerQueryType> = new Map([
+                    ["foo", TypeUtils.createTextLiteral(false, `"bar"`)],
+                ]);
+
+                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([...expectedFields.entries(), ["spam", TypeUtils.createTextLiteral(false, `"eggs"`)]]),
+                    false,
+                );
+
+                const testSettingsWithEachScope: InspectionSettings = {
+                    ...TestSettings,
+                    maybeEachScopeById: new Map([[5, eachScope]]),
+                };
+
+                assertParseOkNodeTypeEqual(
+                    testSettingsWithEachScope,
+                    expression,
+                    TypeUtils.createDefinedRecord(false, expectedFields, false),
+                );
+            });
         });
 
         describe(`${Ast.NodeKind.FieldSelector}`, () => {
@@ -361,6 +336,33 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `let x = (1 as record) in x[a]?`;
                 const expected: Type.TPowerQueryType = Type.AnyInstance;
                 assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            // Test for when FieldSelector is used in an EachExpression but wasn't a scope
+            it(`(each [foo])([foo = "bar"])`, () => {
+                const expression: string = `(each [foo])([foo = "bar"])`;
+                const expected: Type.TPowerQueryType = Type.UnknownInstance;
+
+                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
+            // Test for when FieldSelector is used and was given an eachScope
+            it(`(each [foo])([foo = "bar"])`, () => {
+                const expression: string = `(each [foo])([foo = "bar"])`;
+                const expected: Type.TPowerQueryType = TypeUtils.createTextLiteral(false, `"bar"`);
+
+                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
+                    false,
+                    new Map([["foo", expected]]),
+                    false,
+                );
+
+                const testSettingsWithEachScope: InspectionSettings = {
+                    ...TestSettings,
+                    maybeEachScopeById: new Map([[5, eachScope]]),
+                };
+
+                assertParseOkNodeTypeEqual(testSettingsWithEachScope, expression, expected);
             });
         });
 
