@@ -40,73 +40,75 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    const result: Type.TPowerQueryType = inspectFieldProjectionHelper(fieldType, projectedFieldNames, isOptional);
+    let result: Type.TPowerQueryType;
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
-
-    return result;
-}
-
-function inspectFieldProjectionHelper(
-    previousSiblingType: Type.TPowerQueryType,
-    projectedFieldNames: ReadonlyArray<string>,
-    isOptional: boolean,
-): Type.TPowerQueryType {
-    switch (previousSiblingType.kind) {
+    switch (fieldType.kind) {
         case Type.TypeKind.Any: {
             const projectedFields: Type.UnorderedFields = new Map(
                 projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
             );
 
-            return {
+            result = {
                 kind: Type.TypeKind.Any,
                 maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
-                isNullable: previousSiblingType.isNullable,
+                isNullable: fieldType.isNullable,
                 unionedTypePairs: [
                     {
                         kind: Type.TypeKind.Record,
                         maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-                        isNullable: previousSiblingType.isNullable,
+                        isNullable: fieldType.isNullable,
                         fields: projectedFields,
                         isOpen: false,
                     },
                     {
                         kind: Type.TypeKind.Table,
                         maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
-                        isNullable: previousSiblingType.isNullable,
+                        isNullable: fieldType.isNullable,
                         fields: new PQP.OrderedMap([...projectedFields]),
                         isOpen: false,
                     },
                 ],
             };
+
+            break;
         }
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
-            return inspectRecordOrTableProjection(previousSiblingType, projectedFieldNames, isOptional);
+            result = inspectRecordOrTableProjection(fieldType, projectedFieldNames, isOptional);
+            break;
+
+        case Type.TypeKind.Unknown:
+            result = Type.UnknownInstance;
+            break;
 
         default:
-            return Type.NoneInstance;
+            result = Type.NoneInstance;
+            break;
     }
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+
+    return result;
 }
 
 function inspectRecordOrTableProjection(
-    previousSiblingType: Type.TRecord | Type.TTable,
+    fieldType: Type.TRecord | Type.TTable,
     projectedFieldNames: ReadonlyArray<string>,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    // All we know is previousSibling was a Record/Table.
+    // All we know is fieldType was a Record/Table.
     // Create a DefinedRecord/DefinedTable with the projected fields.
-    if (TypeUtils.isDefinedRecord(previousSiblingType)) {
-        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedRecordFields);
-    } else if (TypeUtils.isDefinedTable(previousSiblingType)) {
-        return reducedFieldsToKeys(previousSiblingType, projectedFieldNames, isOptional, reducedTableFields);
+    if (TypeUtils.isDefinedRecord(fieldType)) {
+        return reducedFieldsToKeys(fieldType, projectedFieldNames, isOptional, reducedRecordFields);
+    } else if (TypeUtils.isDefinedTable(fieldType)) {
+        return reducedFieldsToKeys(fieldType, projectedFieldNames, isOptional, reducedTableFields);
     } else {
         const newFields: Map<string, Type.TPowerQueryType> = new Map(
             projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
         );
 
-        return previousSiblingType.kind === Type.TypeKind.Record
+        return fieldType.kind === Type.TypeKind.Record
             ? TypeUtils.createDefinedRecord(false, newFields, false)
             : TypeUtils.createDefinedTable(false, new PQP.OrderedMap([...newFields]), false);
     }
