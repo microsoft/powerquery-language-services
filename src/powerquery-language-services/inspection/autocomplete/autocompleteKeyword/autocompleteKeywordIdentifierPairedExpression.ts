@@ -16,7 +16,11 @@ export function autocompleteKeywordIdentifierPairedExpression(
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        AncestryUtils.maybeNextXorChecked(state.activeNode.ancestry, state.ancestryIndex, Ast.NodeKind.SectionMember)
+        AncestryUtils.maybeNextXorChecked<Ast.SectionMember>(
+            state.activeNode.ancestry,
+            state.ancestryIndex,
+            Ast.NodeKind.SectionMember,
+        )
     ) {
         return [Keyword.KeywordKind.Shared];
     } else if (childAttributeIndex !== 2) {

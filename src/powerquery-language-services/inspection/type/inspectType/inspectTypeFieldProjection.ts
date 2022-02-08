@@ -37,7 +37,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
 
     const isOptional: boolean =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

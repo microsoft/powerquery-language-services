@@ -59,12 +59,13 @@ export function pseudoFunctionExpressionType(
         }
     }
 
-    const maybeReturnType: Ast.AsNullablePrimitiveType | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
-        nodeIdMapCollection,
-        fnExpr.node.id,
-        1,
-        Ast.NodeKind.AsNullablePrimitiveType,
-    );
+    const maybeReturnType: Ast.AsNullablePrimitiveType | undefined =
+        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
+            nodeIdMapCollection,
+            fnExpr.node.id,
+            1,
+            Ast.NodeKind.AsNullablePrimitiveType,
+        );
 
     let isReturnNullable: boolean;
     let returnType: Type.TypeKind;

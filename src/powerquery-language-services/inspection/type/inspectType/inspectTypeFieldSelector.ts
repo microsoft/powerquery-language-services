@@ -19,11 +19,12 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
-    const maybeFieldName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-        Ast.NodeKind.GeneralizedIdentifier,
-    );
+    const maybeFieldName: Ast.GeneralizedIdentifier | undefined =
+        NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked<Ast.GeneralizedIdentifier>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            Ast.NodeKind.GeneralizedIdentifier,
+        );
 
     if (maybeFieldName === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
@@ -41,7 +42,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
 
     const isOptional: boolean =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

@@ -19,7 +19,7 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecordType>(xorNode, Ast.NodeKind.RecordType);
 
-    const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked(
+    const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked<Ast.FieldSpecificationList>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,

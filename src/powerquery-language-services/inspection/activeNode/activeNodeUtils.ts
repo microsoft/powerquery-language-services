@@ -260,17 +260,15 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
                 | Ast.RecordLiteral
                 | Ast.ListExpression
                 | Ast.ListLiteral
-                | Ast.InvokeExpression = NodeIdMapUtils.assertUnboxParentAstChecked(
-                nodeIdMapCollection,
-                currentOnOrBefore.id,
-                [
-                    Ast.NodeKind.RecordExpression,
-                    Ast.NodeKind.RecordLiteral,
-                    Ast.NodeKind.ListExpression,
-                    Ast.NodeKind.ListLiteral,
-                    Ast.NodeKind.InvokeExpression,
-                ],
-            );
+                | Ast.InvokeExpression = NodeIdMapUtils.assertUnboxParentAstChecked<
+                Ast.RecordExpression | Ast.RecordLiteral | Ast.ListExpression | Ast.ListLiteral | Ast.InvokeExpression
+            >(nodeIdMapCollection, currentOnOrBefore.id, [
+                Ast.NodeKind.RecordExpression,
+                Ast.NodeKind.RecordLiteral,
+                Ast.NodeKind.ListExpression,
+                Ast.NodeKind.ListLiteral,
+                Ast.NodeKind.InvokeExpression,
+            ]);
 
             const arrayWrapper: Ast.TArrayWrapper = NodeIdMapUtils.assertUnboxArrayWrapperAst(
                 nodeIdMapCollection,
