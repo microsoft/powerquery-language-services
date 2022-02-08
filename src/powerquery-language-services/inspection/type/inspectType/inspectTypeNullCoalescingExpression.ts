@@ -20,12 +20,13 @@ export function inspectTypeNullCoalescingExpression(state: InspectTypeState, xor
 
     const maybeLeftType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
 
-    const maybeNullCoalescingOperator: Ast.TConstant | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-        1,
-        Ast.NodeKind.Constant,
-    );
+    const maybeNullCoalescingOperator: Ast.TConstant | undefined =
+        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            1,
+            Ast.NodeKind.Constant,
+        );
 
     let result: Type.TPowerQueryType;
 

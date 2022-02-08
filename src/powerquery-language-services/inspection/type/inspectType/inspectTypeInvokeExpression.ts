@@ -8,6 +8,7 @@ import {
     NodeIdMapIterator,
     NodeIdMapUtils,
     TXorNode,
+    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -70,10 +71,8 @@ function maybeExternalInvokeRequest(
     state: InspectTypeState,
     xorNode: TXorNode,
 ): ExternalType.ExternalInvocationTypeRequest | undefined {
-    const maybeIdentifier: TXorNode | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifier(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
+    const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined =
+        NodeIdMapUtils.maybeInvokeExpressionIdentifier(state.nodeIdMapCollection, xorNode.node.id);
 
     if (maybeIdentifier === undefined) {
         return undefined;

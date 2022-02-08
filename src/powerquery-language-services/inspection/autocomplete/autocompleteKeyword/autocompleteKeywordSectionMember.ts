@@ -61,7 +61,7 @@ export function autocompleteKeywordSectionMember(
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
     else if (maybeChildAttributeIndex === 3 && XorNodeUtils.isContextXor(state.child)) {
         const identifierPairedExpression: Ast.IdentifierPairedExpression =
-            NodeIdMapUtils.assertUnboxNthChildAsAstChecked(
+            NodeIdMapUtils.assertUnboxNthChildAsAstChecked<Ast.IdentifierPairedExpression>(
                 state.nodeIdMapCollection,
                 state.parent.node.id,
                 2,

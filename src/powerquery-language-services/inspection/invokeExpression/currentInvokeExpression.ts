@@ -115,7 +115,7 @@ function getArgumentOrdinal(
     invokeExpressionXorNode: TXorNode,
 ): number {
     // `foo(1|)
-    const maybeAncestoryCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorChecked(
+    const maybeAncestoryCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorChecked<Ast.TCsv>(
         activeNode.ancestry,
         ancestryIndex,
         2,
@@ -126,22 +126,20 @@ function getArgumentOrdinal(
         return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
     }
 
-    const maybePreviousXor: TXorNode | undefined = AncestryUtils.maybePreviousXorChecked(
-        activeNode.ancestry,
-        ancestryIndex,
-        [
-            // `foo(|)`
-            Ast.NodeKind.ArrayWrapper,
-            // `foo(1|`
-            Ast.NodeKind.Constant,
-        ],
-    );
+    const maybePreviousXor: TXorNode | undefined = AncestryUtils.maybePreviousXorChecked<
+        Ast.TArrayWrapper | Ast.TConstant
+    >(activeNode.ancestry, ancestryIndex, [
+        // `foo(|)`
+        Ast.NodeKind.ArrayWrapper,
+        // `foo(1|`
+        Ast.NodeKind.Constant,
+    ]);
 
     let arrayWrapperXorNode: TXorNode;
 
     switch (maybePreviousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
-            arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked(
+            arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked<Ast.TArrayWrapper>(
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 1,
