@@ -4,10 +4,20 @@
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Assert } from "@microsoft/powerquery-parser";
 
-import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
+import { inspectFieldType } from "./common";
+import { InspectTypeState } from "../common";
+
+// A field selection/projection is an operation done on some value.
+// The target can be either an EachExpression or a RecursivePrimaryExpression.
+// In the code below that target for the FieldSelector/FieldProjection is called the scope.
+//
+// In the case of EachExpression:
+//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
+//
+// In the case of RecursivePrimaryExpression:
+//  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     const trace: Trace = state.traceManager.entry(
@@ -33,13 +43,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
 
     const fieldName: string = maybeFieldName.literal;
-
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
-
-    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+    const fieldType: Type.TPowerQueryType = inspectFieldType(state, xorNode);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
@@ -49,54 +53,47 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    let result: Type.TPowerQueryType;
-
-    switch (previousSiblingType.kind) {
-        case Type.TypeKind.Any:
-            result = Type.AnyInstance;
-            break;
-
-        case Type.TypeKind.Unknown:
-            result = Type.UnknownInstance;
-            break;
-
-        case Type.TypeKind.Record:
-        case Type.TypeKind.Table:
-            switch (previousSiblingType.maybeExtendedKind) {
-                case undefined:
-                    result = Type.AnyInstance;
-                    break;
-
-                case Type.ExtendedTypeKind.DefinedRecord:
-                case Type.ExtendedTypeKind.DefinedTable:
-                    return inspectDefinedRecordOrDefinedTable(previousSiblingType, fieldName, isOptional);
-
-                default:
-                    throw Assert.isNever(previousSiblingType);
-            }
-
-            break;
-
-        default:
-            result = Type.NoneInstance;
-            break;
-    }
-
+    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName, isOptional);
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
 }
 
-function inspectDefinedRecordOrDefinedTable(
-    previousSiblingType: Type.DefinedRecord | Type.DefinedTable,
+function getFieldSelectorType(
+    fieldType: Type.TPowerQueryType,
     fieldName: string,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    const maybeNamedField: Type.TPowerQueryType | undefined = previousSiblingType.fields.get(fieldName);
+    switch (fieldType.kind) {
+        case Type.TypeKind.Any:
+            return Type.AnyInstance;
+
+        case Type.TypeKind.Unknown:
+            return Type.UnknownInstance;
+
+        case Type.TypeKind.Record:
+        case Type.TypeKind.Table:
+            return inspectRecordOrTable(fieldType, fieldName, isOptional);
+
+        default:
+            return Type.NoneInstance;
+    }
+}
+
+function inspectRecordOrTable(
+    fieldType: Type.TRecord | Type.TTable,
+    fieldName: string,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    if (fieldType.maybeExtendedKind === undefined) {
+        return Type.AnyInstance;
+    }
+
+    const maybeNamedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
 
     if (maybeNamedField !== undefined) {
         return maybeNamedField;
-    } else if (previousSiblingType.isOpen) {
+    } else if (fieldType.isOpen) {
         return Type.AnyInstance;
     } else {
         return isOptional ? Type.NullInstance : Type.NoneInstance;

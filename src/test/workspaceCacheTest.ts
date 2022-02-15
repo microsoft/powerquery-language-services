@@ -53,7 +53,11 @@ describe("workspaceCache", () => {
 
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
             postion,
         );
 
@@ -67,7 +71,11 @@ describe("workspaceCache", () => {
 
         const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
             postion,
         );
 
@@ -80,7 +88,11 @@ describe("workspaceCache", () => {
 
         let cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
             postion,
         );
 
@@ -92,7 +104,11 @@ describe("workspaceCache", () => {
 
         cacheItem = WorkspaceCacheUtils.getOrCreateInspection(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, SimpleLibrary.externalTypeResolver),
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
             postion,
         );
 

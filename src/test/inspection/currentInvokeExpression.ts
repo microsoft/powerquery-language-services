@@ -13,6 +13,26 @@ import { Inspection, InspectionSettings } from "../../powerquery-language-servic
 import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
+function assertParseOkInvokeExpressionOk(
+    settings: InspectionSettings,
+    text: string,
+    position: Position,
+): Inspection.CurrentInvokeExpression | undefined {
+    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
+
+    return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
+}
+
+function assertParseErrInvokeExpressionOk(
+    settings: InspectionSettings,
+    text: string,
+    position: Position,
+): Inspection.CurrentInvokeExpression | undefined {
+    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+
+    return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
+}
+
 function assertInvokeExpressionOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -32,26 +52,6 @@ function assertInvokeExpressionOk(
     Assert.isOk(triedInspect);
 
     return triedInspect.value;
-}
-
-function assertParseOkInvokeExpressionOk(
-    settings: InspectionSettings,
-    text: string,
-    position: Position,
-): Inspection.CurrentInvokeExpression | undefined {
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
-
-    return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
-}
-
-function assertParseErrInvokeExpressionOk(
-    settings: InspectionSettings,
-    text: string,
-    position: Position,
-): Inspection.CurrentInvokeExpression | undefined {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
-
-    return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
 }
 
 function expectNoParameters_givenExtraneousParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
