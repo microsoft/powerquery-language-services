@@ -69,7 +69,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If the node is a context PrimitiveType node,
         // which is created only when a primitive type was expected but there was nothing to parse.
         // `x as |`
-        if (XorNodeUtils.isContextXorChecked(parent, Ast.NodeKind.PrimitiveType)) {
+        if (XorNodeUtils.isContextXorChecked<Ast.PrimitiveType>(parent, Ast.NodeKind.PrimitiveType)) {
             return Constant.PrimitiveTypeConstants;
         }
         // If on the second attribute for TypePrimaryType.
@@ -88,7 +88,12 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === Ast.NodeKind.Parameter &&
-            AncestryUtils.maybeNthNextXorChecked(ancestry, index, 4, Ast.NodeKind.FunctionExpression) !== undefined
+            AncestryUtils.maybeNthNextXorChecked<Ast.FunctionExpression>(
+                ancestry,
+                index,
+                4,
+                Ast.NodeKind.FunctionExpression,
+            ) !== undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
             const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(ancestry, index, 2);
@@ -110,7 +115,12 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             else if (
                 maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
                 // Check the great grandchild
-                AncestryUtils.maybeNthPreviousXorChecked(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
+                AncestryUtils.maybeNthPreviousXorChecked<Ast.PrimitiveType>(
+                    ancestry,
+                    index,
+                    3,
+                    Ast.NodeKind.PrimitiveType,
+                )
             ) {
                 return Constant.PrimitiveTypeConstants;
             }
