@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.2.19",
+    "version": "0.2.20",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {

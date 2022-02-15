@@ -1,18 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import {
-    NodeIdMap,
-    NodeIdMapUtils,
-    TXorNode,
-    XorNodeUtils,
-} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
+import { inspectFieldType } from "./common";
+import { InspectTypeState } from "../common";
+
+// A field selection/projection is an operation done on some value.
+// The target can be either an EachExpression or a RecursivePrimaryExpression.
+// In the code below that target for the FieldSelector/FieldProjection is called the scope.
+//
+// In the case of EachExpression:
+//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
+//
+// In the case of RecursivePrimaryExpression:
+//  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
 
 export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
     const trace: Trace = state.traceManager.entry(
@@ -38,21 +43,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldScope: FieldScope = getFieldScope(state, xorNode);
-    let fieldType: Type.TPowerQueryType;
-
-    switch (fieldScope) {
-        case Ast.NodeKind.EachExpression:
-            fieldType = inspectEachExpressionFieldSelector(state, xorNode);
-            break;
-
-        case Ast.NodeKind.RecursivePrimaryExpression:
-            fieldType = inspectRecursivePrimaryExpressionFieldSelector(state, xorNode);
-            break;
-
-        default:
-            throw Assert.isNever(fieldScope);
-    }
+    const fieldType: Type.TPowerQueryType = inspectFieldType(state, xorNode);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
@@ -66,31 +57,6 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
-}
-
-type FieldScope = Ast.NodeKind.EachExpression | Ast.NodeKind.RecursivePrimaryExpression;
-
-function getFieldScope(state: InspectTypeState, xorNode: TXorNode): FieldScope {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-
-    let maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
-
-    while (maybeParent) {
-        switch (maybeParent.node.kind) {
-            case Ast.NodeKind.EachExpression:
-            case Ast.NodeKind.RecursivePrimaryExpression:
-                return maybeParent.node.kind;
-
-            default:
-                maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
-                break;
-        }
-    }
-
-    throw new CommonError.InvariantError(
-        `expected FieldSelector to fall under either an EachExpression or a RecursivePrimaryExpression`,
-        { nodeId: xorNode.node.id },
-    );
 }
 
 function getFieldSelectorType(
@@ -132,20 +98,4 @@ function inspectRecordOrTable(
     } else {
         return isOptional ? Type.NullInstance : Type.NoneInstance;
     }
-}
-
-function inspectEachExpressionFieldSelector(_state: InspectTypeState, _xorNode: TXorNode): Type.TPowerQueryType {
-    throw new Error("TODO");
-}
-
-function inspectRecursivePrimaryExpressionFieldSelector(
-    state: InspectTypeState,
-    xorNode: TXorNode,
-): Type.TPowerQueryType {
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
-
-    return inspectXor(state, previousSibling);
 }

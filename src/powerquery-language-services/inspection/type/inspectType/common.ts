@@ -14,8 +14,8 @@ import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
-import { inspectTypeFieldProjection } from "./inspectTypeFieldProjection";
-import { inspectTypeFieldSelector } from "./inspectTypeFieldSelector";
+import { inspectTypeFieldProjection } from "./inspectTypeField/inspectTypeFieldProjection";
+import { inspectTypeFieldSelector } from "./inspectTypeField/inspectTypeFieldSelector";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 import { inspectTypeFunctionExpression } from "./inspectTypeFunctionExpression";
 import { inspectTypeFunctionType } from "./inspectTypeFunctionType";
@@ -38,8 +38,10 @@ import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 import { TypeById } from "../../typeCache";
 
-// Drop PQP.ParseSettings are they're not needed.
-export interface InspectTypeState extends PQP.CommonSettings, Omit<InspectionSettings, keyof PQP.ParseSettings> {
+// Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
+export interface InspectTypeState
+    extends PQP.CommonSettings,
+        Omit<InspectionSettings, keyof PQP.LexSettings | keyof PQP.ParseSettings> {
     readonly givenTypeById: TypeById;
     readonly deltaTypeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
