@@ -87,7 +87,10 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
     return tryNodeScope(state, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
-export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
+export async function getOrCreateScopeItemType(
+    state: InspectTypeState,
+    scopeItem: TScopeItem,
+): Promise<Type.TPowerQueryType> {
     const nodeId: number = scopeItem.id;
 
     const maybeGivenType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
@@ -102,22 +105,24 @@ export function getOrCreateScopeItemType(state: InspectTypeState, scopeItem: TSc
         return maybeDeltaType;
     }
 
-    const scopeType: Type.TPowerQueryType = inspectScopeItem(state, scopeItem);
+    const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem);
 
     return scopeType;
 }
 
-export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Type.TPowerQueryType {
+export async function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Promise<Type.TPowerQueryType> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined ? Type.UnknownInstance : inspectXor(state, scopeItem.maybeValue);
+            return scopeItem.maybeValue === undefined
+                ? Type.UnknownInstance
+                : await inspectXor(state, scopeItem.maybeValue);
 
         case ScopeItemKind.Each:
-            return inspectXor(state, scopeItem.eachExpression);
+            return await inspectXor(state, scopeItem.eachExpression);
 
         case ScopeItemKind.Parameter:
             return createParameterType(scopeItem);
@@ -130,11 +135,11 @@ export function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem)
     }
 }
 
-export function inspectTypeFromChildAttributeIndex(
+export async function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
     parentXorNode: TXorNode,
     attributeIndex: number,
-): Type.TPowerQueryType {
+): Promise<Type.TPowerQueryType> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
@@ -143,10 +148,10 @@ export function inspectTypeFromChildAttributeIndex(
         attributeIndex,
     );
 
-    return maybeXorNode !== undefined ? inspectXor(state, maybeXorNode) : Type.UnknownInstance;
+    return maybeXorNode !== undefined ? await inspectXor(state, maybeXorNode) : Type.UnknownInstance;
 }
 
-export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectXor.name,
@@ -161,7 +166,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
 
     if (maybeCached !== undefined) {
-        return maybeCached;
+        return Promise.resolve(maybeCached);
     }
 
     let result: Type.TPowerQueryType;
@@ -175,7 +180,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
-            return Type.NotApplicableInstance;
+            return Promise.resolve(Type.NotApplicableInstance);
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
@@ -183,35 +188,35 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
         case Ast.NodeKind.TypePrimaryType:
-            result = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 1);
             break;
 
         case Ast.NodeKind.ArithmeticExpression:
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = inspectTypeTBinOpExpression(state, xorNode);
+            result = await inspectTypeTBinOpExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.AsExpression:
         case Ast.NodeKind.SectionMember:
-            result = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 2);
             break;
 
         case Ast.NodeKind.Csv:
         case Ast.NodeKind.MetadataExpression:
-            result = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
             break;
 
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral:
-            result = inspectTypeList(state, xorNode);
+            result = await inspectTypeList(state, xorNode);
             break;
 
         case Ast.NodeKind.NullableType:
         case Ast.NodeKind.NullablePrimitiveType:
             result = {
-                ...inspectTypeFromChildAttributeIndex(state, xorNode, 1),
+                ...(await inspectTypeFromChildAttributeIndex(state, xorNode, 1)),
                 isNullable: true,
             };
 
@@ -219,7 +224,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
 
         case Ast.NodeKind.RecordLiteral:
         case Ast.NodeKind.RecordExpression:
-            result = inspectTypeRecord(state, xorNode);
+            result = await inspectTypeRecord(state, xorNode);
             break;
 
         // TODO: how should error raising be typed?
@@ -232,43 +237,43 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.EachExpression:
-            result = inspectTypeEachExpression(state, xorNode);
+            result = await inspectTypeEachExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
-            result = inspectTypeErrorHandlingExpression(state, xorNode);
+            result = await inspectTypeErrorHandlingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldProjection:
-            result = inspectTypeFieldProjection(state, xorNode);
+            result = await inspectTypeFieldProjection(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldSelector:
-            result = inspectTypeFieldSelector(state, xorNode);
+            result = await inspectTypeFieldSelector(state, xorNode);
             break;
 
         case Ast.NodeKind.FieldSpecification:
-            result = inspectTypeFieldSpecification(state, xorNode);
+            result = await inspectTypeFieldSpecification(state, xorNode);
             break;
 
         case Ast.NodeKind.FunctionExpression:
-            result = inspectTypeFunctionExpression(state, xorNode);
+            result = await inspectTypeFunctionExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.FunctionType:
-            result = inspectTypeFunctionType(state, xorNode);
+            result = await inspectTypeFunctionType(state, xorNode);
             break;
 
         case Ast.NodeKind.Identifier:
-            result = inspectTypeIdentifier(state, xorNode);
+            result = await inspectTypeIdentifier(state, xorNode);
             break;
 
         case Ast.NodeKind.IdentifierExpression:
-            result = inspectTypeIdentifierExpression(state, xorNode);
+            result = await inspectTypeIdentifierExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IfExpression:
-            result = inspectTypeIfExpression(state, xorNode);
+            result = await inspectTypeIfExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IsExpression:
@@ -276,7 +281,7 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.InvokeExpression:
-            result = inspectTypeInvokeExpression(state, xorNode);
+            result = await inspectTypeInvokeExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
@@ -288,11 +293,11 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.LetExpression:
-            result = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 3);
             break;
 
         case Ast.NodeKind.ListType:
-            result = inspectTypeListType(state, xorNode);
+            result = await inspectTypeListType(state, xorNode);
             break;
 
         case Ast.NodeKind.LiteralExpression:
@@ -304,11 +309,11 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.NullCoalescingExpression:
-            result = inspectTypeNullCoalescingExpression(state, xorNode);
+            result = await inspectTypeNullCoalescingExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.Parameter:
-            result = inspectTypeParameter(state, xorNode);
+            result = await inspectTypeParameter(state, xorNode);
             break;
 
         case Ast.NodeKind.PrimitiveType:
@@ -316,23 +321,23 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
             break;
 
         case Ast.NodeKind.RangeExpression:
-            result = inspectTypeRangeExpression(state, xorNode);
+            result = await inspectTypeRangeExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.RecordType:
-            result = inspectTypeRecordType(state, xorNode);
+            result = await inspectTypeRecordType(state, xorNode);
             break;
 
         case Ast.NodeKind.RecursivePrimaryExpression:
-            result = inspectTypeRecursivePrimaryExpression(state, xorNode);
+            result = await inspectTypeRecursivePrimaryExpression(state, xorNode);
             break;
 
         case Ast.NodeKind.TableType:
-            result = inspectTypeTableType(state, xorNode);
+            result = await inspectTypeTableType(state, xorNode);
             break;
 
         case Ast.NodeKind.UnaryExpression:
-            result = inspectTypeUnaryExpression(state, xorNode);
+            result = await inspectTypeUnaryExpression(state, xorNode);
             break;
 
         default:
@@ -345,10 +350,10 @@ export function inspectXor(state: InspectTypeState, xorNode: TXorNode): Type.TPo
     return result;
 }
 
-export function maybeDereferencedIdentifierType(
+export async function maybeDereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: TXorNode,
-): Type.TPowerQueryType | undefined {
+): Promise<Type.TPowerQueryType | undefined> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         maybeDereferencedIdentifierType.name,
@@ -419,7 +424,7 @@ export function maybeDereferencedIdentifierType(
     }
 
     const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
-        ? inspectXor(state, maybeNextXorNode)
+        ? await inspectXor(state, maybeNextXorNode)
         : undefined;
 
     trace.exit();

@@ -24,7 +24,7 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
 
-export function inspectFieldType(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectFieldType(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectFieldType.name,
@@ -53,7 +53,7 @@ export function inspectFieldType(state: InspectTypeState, xorNode: TXorNode): Ty
             xorNode.node.id,
         );
 
-        fieldType = inspectXor(state, previousSibling);
+        fieldType = await inspectXor(state, previousSibling);
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(fieldType) });

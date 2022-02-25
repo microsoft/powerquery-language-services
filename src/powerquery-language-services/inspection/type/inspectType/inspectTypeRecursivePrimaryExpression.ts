@@ -14,10 +14,10 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 
-export function inspectTypeRecursivePrimaryExpression(
+export async function inspectTypeRecursivePrimaryExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-): Type.TPowerQueryType {
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeRecursivePrimaryExpression.name,
@@ -35,7 +35,7 @@ export function inspectTypeRecursivePrimaryExpression(
         return Type.UnknownInstance;
     }
 
-    const headType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const headType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
 
     if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(headType) });
@@ -71,7 +71,8 @@ export function inspectTypeRecursivePrimaryExpression(
     let leftType: Type.TPowerQueryType = headType;
 
     for (const right of maybeExpressions) {
-        const rightType: Type.TPowerQueryType = inspectXor(state, right);
+        // eslint-disable-next-line no-await-in-loop
+        const rightType: Type.TPowerQueryType = await inspectXor(state, right);
         leftType = rightType;
     }
 

@@ -65,7 +65,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
 
-        let maybeHover: Hover | undefined = LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
+        let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
             this.maybeTriedInspection,
@@ -112,12 +112,12 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     //  * GeneralizedIdentifierPairedAnyLiteral
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
-    protected static getHoverForIdentifierPairedExpression(
+    protected static async getHoverForIdentifierPairedExpression(
         context: HoverProviderContext,
         inspectionSettings: InspectionSettings,
         inspectionTask: WorkspaceCache.InspectionTask,
         activeNode: Inspection.ActiveNode,
-    ): Hover | undefined {
+    ): Promise<Hover | undefined> {
         const parseState: ParseState = inspectionTask.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
@@ -156,7 +156,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        const triedExpressionType: Inspection.TriedType = Inspection.tryType(
+        const triedExpressionType: Inspection.TriedType = await Inspection.tryType(
             inspectionSettings,
             parseState.contextState.nodeIdMapCollection,
             maybeExpression.node.id,

@@ -16,14 +16,14 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-export function tryScopeType(
+export async function tryScopeType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): TriedScopeType {
+): Promise<TriedScopeType> {
     const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Type, tryScopeType.name);
 
     const state: InspectTypeState = {
@@ -38,18 +38,21 @@ export function tryScopeType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedScopeType = ResultUtils.ensureResult(settings.locale, () => inspectScopeType(state, nodeId));
+    const result: TriedScopeType = await ResultUtils.ensureAsyncResult(settings.locale, () =>
+        inspectScopeType(state, nodeId),
+    );
+
     trace.exit({ [TraceConstant.IsError]: result.kind });
 
     return result;
 }
 
-export function tryType(
+export async function tryType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): TriedType {
+): Promise<TriedType> {
     const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Type, tryType.name);
 
     const state: InspectTypeState = {
@@ -64,7 +67,7 @@ export function tryType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedType = ResultUtils.ensureResult(settings.locale, () =>
+    const result: TriedType = await ResultUtils.ensureAsyncResult(settings.locale, () =>
         inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
     );
 
@@ -73,12 +76,13 @@ export function tryType(
     return result;
 }
 
-function inspectScopeType(state: InspectTypeState, nodeId: number): ScopeTypeByKey {
+async function inspectScopeType(state: InspectTypeState, nodeId: number): Promise<ScopeTypeByKey> {
     const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, nodeId);
 
     for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
-            state.deltaTypeById.set(scopeItem.id, getOrCreateScopeItemType(state, scopeItem));
+            // eslint-disable-next-line no-await-in-loop
+            state.deltaTypeById.set(scopeItem.id, await getOrCreateScopeItemType(state, scopeItem));
         }
     }
 

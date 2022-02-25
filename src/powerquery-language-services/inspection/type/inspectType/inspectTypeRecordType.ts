@@ -9,7 +9,10 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 import { InspectTypeState } from "./common";
 
-export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode): Type.RecordType | Type.Unknown {
+export async function inspectTypeRecordType(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.RecordType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeRecordType.name,
@@ -35,7 +38,7 @@ export function inspectTypeRecordType(state: InspectTypeState, xorNode: TXorNode
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
             isNullable: false,
-            ...examineFieldSpecificationList(state, maybeFields),
+            ...(await examineFieldSpecificationList(state, maybeFields)),
         };
     }
 

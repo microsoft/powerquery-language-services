@@ -29,24 +29,24 @@ export interface CurrentInvokeExpressionArguments extends InvokeExpressionArgume
     readonly argumentOrdinal: number;
 }
 
-export function tryCurrentInvokeExpression(
+export async function tryCurrentInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): TriedCurrentInvokeExpression {
+): Promise<TriedCurrentInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
         LanguageServiceTraceConstant.CurrentInvokeExpression,
         tryCurrentInvokeExpression.name,
     );
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.boxOk(undefined);
+        return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 
-    const result: TriedCurrentInvokeExpression = ResultUtils.ensureResult(settings.locale, () =>
+    const result: TriedCurrentInvokeExpression = await ResultUtils.ensureAsyncResult(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
 
@@ -55,12 +55,12 @@ export function tryCurrentInvokeExpression(
     return result;
 }
 
-function inspectInvokeExpression(
+async function inspectInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     typeCache: TypeCache,
-): CurrentInvokeExpression | undefined {
+): Promise<CurrentInvokeExpression | undefined> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
     const maybeInvokeExpression: [TXorNode, number] | undefined = AncestryUtils.maybeFirstXorAndIndexOfNodeKind(
@@ -74,7 +74,7 @@ function inspectInvokeExpression(
 
     const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = maybeInvokeExpression;
 
-    const triedInvokeExpression: TriedInvokeExpression = tryInvokeExpression(
+    const triedInvokeExpression: TriedInvokeExpression = await tryInvokeExpression(
         settings,
         nodeIdMapCollection,
         invokeExpressionXorNode.node.id,

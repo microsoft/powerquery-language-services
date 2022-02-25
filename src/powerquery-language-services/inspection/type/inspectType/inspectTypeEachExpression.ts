@@ -8,7 +8,10 @@ import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerqu
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeEachExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeEachExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeEachExpression.name,
@@ -18,7 +21,7 @@ export function inspectTypeEachExpression(state: InspectTypeState, xorNode: TXor
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(xorNode, Ast.NodeKind.EachExpression);
 
-    const expressionType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1);
 
     const result: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
         false,

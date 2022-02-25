@@ -19,7 +19,10 @@ import { InspectTypeState } from "../common";
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
 
-export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeFieldSelector(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFieldSelector.name,
@@ -43,7 +46,7 @@ export function inspectTypeFieldSelector(state: InspectTypeState, xorNode: TXorN
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldType: Type.TPowerQueryType = inspectFieldType(state, xorNode);
+    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(

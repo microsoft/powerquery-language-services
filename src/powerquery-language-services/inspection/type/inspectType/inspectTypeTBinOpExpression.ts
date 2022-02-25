@@ -10,9 +10,12 @@ import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-type TRecordOrTable = Type.Record | Type.Table | Type.DefinedRecord | Type.DefinedTable;
+type TRecordOrTable = Type.TRecord | Type.TTable;
 
-export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeTBinOpExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeTBinOpExpression.name,
@@ -50,11 +53,11 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        result = inspectXor(state, maybeLeft);
+        result = await inspectXor(state, maybeLeft);
     }
     // '1 +'
     else if (maybeRight === undefined || XorNodeUtils.isContextXor(maybeRight)) {
-        const leftType: Type.TPowerQueryType = inspectXor(state, maybeLeft);
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft);
         const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
@@ -80,9 +83,9 @@ export function inspectTypeTBinOpExpression(state: InspectTypeState, xorNode: TX
     }
     // '1 + 1'
     else {
-        const leftType: Type.TPowerQueryType = inspectXor(state, maybeLeft);
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft);
         const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TPowerQueryType = inspectXor(state, maybeRight);
+        const rightType: Type.TPowerQueryType = await inspectXor(state, maybeRight);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);

@@ -9,10 +9,10 @@ import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 
-export function inspectTypeTableType(
+export async function inspectTypeTableType(
     state: InspectTypeState,
     xorNode: TXorNode,
-): Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown {
+): Promise<Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeTableType.name,
@@ -37,14 +37,14 @@ export function inspectTypeTableType(
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.TableType,
             isNullable: false,
-            ...examineFieldSpecificationList(state, maybeRowType),
+            ...(await examineFieldSpecificationList(state, maybeRowType)),
         };
     } else {
         result = {
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
             isNullable: false,
-            primaryExpression: inspectXor(state, maybeRowType),
+            primaryExpression: await inspectXor(state, maybeRowType),
         };
     }
 

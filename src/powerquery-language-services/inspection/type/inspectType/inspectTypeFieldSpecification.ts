@@ -8,7 +8,10 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeFieldSpecification(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFieldSpecification.name,
@@ -25,7 +28,9 @@ export function inspectTypeFieldSpecification(state: InspectTypeState, xorNode: 
     );
 
     const result: Type.TPowerQueryType =
-        maybeFieldTypeSpecification !== undefined ? inspectXor(state, maybeFieldTypeSpecification) : Type.AnyInstance;
+        maybeFieldTypeSpecification !== undefined
+            ? await inspectXor(state, maybeFieldTypeSpecification)
+            : Type.AnyInstance;
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 

@@ -15,7 +15,10 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
 import { InspectTypeState } from "../common";
 
-export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeFieldProjection(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFieldProjection.name,
@@ -30,7 +33,7 @@ export function inspectTypeFieldProjection(state: InspectTypeState, xorNode: TXo
         xorNode,
     );
 
-    const fieldType: Type.TPowerQueryType = inspectFieldType(state, xorNode);
+    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(

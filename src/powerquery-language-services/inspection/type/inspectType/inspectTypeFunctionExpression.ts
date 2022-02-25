@@ -13,7 +13,10 @@ import {
     PseudoFunctionParameterType,
 } from "../../pseudoFunctionExpressionType";
 
-export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeFunctionExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFunctionExpression.name,
@@ -25,7 +28,7 @@ export function inspectTypeFunctionExpression(state: InspectTypeState, xorNode: 
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
     const pseudoReturnType: Type.TPowerQueryType = pseudoType.returnType;
-    const expressionType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3);
 
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),

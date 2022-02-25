@@ -24,12 +24,12 @@ import { TriedType, tryType } from "../type";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TypeCache } from "../typeCache";
 
-export function tryAutocompleteFieldAccess(
+export async function tryAutocompleteFieldAccess(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     maybeActiveNode: TMaybeActiveNode,
     typeCache: TypeCache,
-): TriedAutocompleteFieldAccess {
+): Promise<TriedAutocompleteFieldAccess> {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.FieldAccess,
         tryAutocompleteFieldAccess.name,
@@ -40,7 +40,7 @@ export function tryAutocompleteFieldAccess(
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
-        result = ResultUtils.ensureResult(settings.locale, () =>
+        result = await ResultUtils.ensureAsyncResult(settings.locale, () =>
             autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
         );
     }
@@ -56,12 +56,12 @@ const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKi
     Type.ExtendedTypeKind.DefinedTable,
 ];
 
-function autocompleteFieldAccess(
+async function autocompleteFieldAccess(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     activeNode: ActiveNode,
     typeCache: TypeCache,
-): AutocompleteFieldAccess | undefined {
+): Promise<AutocompleteFieldAccess | undefined> {
     let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
     // Option 1: Find a field access node in the ancestry.
@@ -113,7 +113,7 @@ function autocompleteFieldAccess(
 
     const field: TXorNode = maybeField;
 
-    const triedFieldType: TriedType = tryType(settings, nodeIdMapCollection, field.node.id, typeCache);
+    const triedFieldType: TriedType = await tryType(settings, nodeIdMapCollection, field.node.id, typeCache);
 
     if (ResultUtils.isError(triedFieldType)) {
         throw triedFieldType.error;

@@ -38,10 +38,14 @@ const TestSettings: InspectionSettings = {
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
-function assertParseOkNodeTypeEqual(settings: InspectionSettings, text: string, expected: Type.TPowerQueryType): void {
+async function assertParseOkNodeTypeEqual(
+    settings: InspectionSettings,
+    text: string,
+    expected: Type.TPowerQueryType,
+): Promise<void> {
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, text);
 
-    const actual: Type.TPowerQueryType = assertGetParseNodeOk(
+    const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         settings,
         parseOk.nodeIdMapCollection,
         XorNodeUtils.boxAst(parseOk.ast),
@@ -50,10 +54,10 @@ function assertParseOkNodeTypeEqual(settings: InspectionSettings, text: string, 
     expect(actual).deep.equal(expected);
 }
 
-function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryType): void {
+async function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryType): Promise<void> {
     const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(TestSettings, text);
 
-    const actual: Type.TPowerQueryType = assertGetParseNodeOk(
+    const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         TestSettings,
         parseError.nodeIdMapCollection,
         XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
@@ -62,26 +66,26 @@ function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryTyp
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseNodeOk(
+async function assertGetParseNodeOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-): Type.TPowerQueryType {
-    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
+): Promise<Type.TPowerQueryType> {
+    const triedType: Inspection.TriedType = await Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
     Assert.isOk(triedType);
 
     return triedType.value;
 }
 
-function assertParseOkScopeTypeEqual(
+async function assertParseOkScopeTypeEqual(
     settings: InspectionSettings,
     textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
-): void {
+): Promise<void> {
     const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
     const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
 
-    const actual: Inspection.ScopeTypeByKey = assertGetParseOkScopeTypeOk(
+    const actual: Inspection.ScopeTypeByKey = await assertGetParseOkScopeTypeOk(
         settings,
         parseOk.nodeIdMapCollection,
         position,
@@ -90,16 +94,16 @@ function assertParseOkScopeTypeEqual(
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseOkScopeTypeOk(
+async function assertGetParseOkScopeTypeOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-): Inspection.ScopeTypeByKey {
+): Promise<Inspection.ScopeTypeByKey> {
     const activeNodeLeaf: TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
         Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, position),
     );
 
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
+    const triedScopeType: Inspection.TriedScopeType = await Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         activeNodeLeaf.node.id,
