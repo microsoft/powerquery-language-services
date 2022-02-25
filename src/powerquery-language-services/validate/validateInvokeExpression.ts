@@ -13,11 +13,11 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateInvokeExpression(
+export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.InvokeExpression,
     );
@@ -26,23 +26,24 @@ export function validateInvokeExpression(
         return [];
     }
 
-    const result: Diagnostic[] = [];
+    const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of maybeInvokeExpressionIds) {
-        const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
-            validationSettings,
-            nodeIdMapCollection,
-            nodeId,
-            maybeCache,
+        inspectionTasks.push(
+            Inspection.tryInvokeExpression(validationSettings, nodeIdMapCollection, nodeId, maybeCache),
         );
+    }
 
-        if (ResultUtils.isError(triedInvokeExpression)) {
+    const result: Diagnostic[] = [];
+
+    for (const triedInvokeExpression of await Promise.all(inspectionTasks)) {
+        if (ResultUtils.isOk(triedInvokeExpression)) {
+            result.push(
+                ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+            );
+        } else {
             throw triedInvokeExpression;
         }
-
-        result.push(
-            ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
-        );
     }
 
     return result;

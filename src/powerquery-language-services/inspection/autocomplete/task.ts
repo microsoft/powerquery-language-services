@@ -23,13 +23,13 @@ import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant"
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { TypeCache } from "../typeCache";
 
-export function autocomplete(
+export async function autocomplete(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     typeCache: TypeCache,
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
-): Autocomplete {
+): Promise<Autocomplete> {
     const trace: Trace = settings.traceManager.entry(AutocompleteTraceConstant.Autocomplete, autocomplete.name);
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
@@ -46,7 +46,7 @@ export function autocomplete(
         }
     }
 
-    const triedFieldAccess: TriedAutocompleteFieldAccess = tryAutocompleteFieldAccess(
+    const triedFieldAccess: TriedAutocompleteFieldAccess = await tryAutocompleteFieldAccess(
         settings,
         parseState,
         maybeActiveNode,

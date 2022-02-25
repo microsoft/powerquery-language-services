@@ -12,7 +12,10 @@ import { validateLexAndParse } from "./validateLexAndParse";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
 
-export function validate(textDocument: TextDocument, validationSettings: ValidationSettings): ValidationResult {
+export async function validate(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings,
+): Promise<ValidationResult> {
     const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,
@@ -24,7 +27,7 @@ export function validate(textDocument: TextDocument, validationSettings: Validat
         validationSettings.checkInvokeExpressions &&
         (PQP.TaskUtils.isParseStageOk(cacheItem) || PQP.TaskUtils.isParseStageParseError(cacheItem))
     ) {
-        invokeExpressionDiagnostics = validateInvokeExpression(
+        invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
             cacheItem.nodeIdMapCollection,
             WorkspaceCacheUtils.getOrCreateTypeCache(textDocument),

@@ -118,8 +118,8 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     return [text.replace("|", ""), position];
 }
 
-export function assertGetValidationResult(document: TextDocument): ValidationResult {
-    return validate(document, TestConstants.SimpleValidationSettings);
+export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {
+    return await validate(document, TestConstants.SimpleValidationSettings);
 }
 
 export function assertHover(expected: string, actual: Hover): void {

@@ -29,8 +29,10 @@ interface ArgumentMismatchExec {
 
 const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but (\d+) were given./;
 
-function expectGetInvokeExpressionDiagnostics(textDocument: TextDocument): ReadonlyArray<AbridgedInvocationDiagnostic> {
-    const validationResult: ValidationResult = TestUtils.assertGetValidationResult(textDocument);
+async function expectGetInvokeExpressionDiagnostics(
+    textDocument: TextDocument,
+): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
+    const validationResult: ValidationResult = await TestUtils.assertGetValidationResult(textDocument);
     const diagnostics: Diagnostic[] = validationResult.diagnostics;
 
     return diagnostics
@@ -101,53 +103,53 @@ describe("Validation - InvokeExpression", () => {
             checkInvokeExpressions: false,
         };
 
-        it(`argument count suppressed`, () => {
+        it(`argument count suppressed`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.SquareIfNumber}()`,
             );
 
-            const validationResult: ValidationResult = PQLS.validate(textDocument, validationSettings);
+            const validationResult: ValidationResult = await PQLS.validate(textDocument, validationSettings);
             expect(validationResult.diagnostics.length).to.equal(0);
         });
     });
 
     describe(`single invocation`, () => {
-        it(`expects [1, 1] arguments, 0 given`, () => {
+        it(`expects [1, 1] arguments, 0 given`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.SquareIfNumber}()`,
             );
 
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                expectGetInvokeExpressionDiagnostics(textDocument);
+                await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 1, 0);
         });
 
-        it(`expects [1, 2] arguments, 0 given`, () => {
+        it(`expects [1, 2] arguments, 0 given`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
             );
 
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                expectGetInvokeExpressionDiagnostics(textDocument);
+                await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
         });
 
-        it(`expects [1, 2] arguments, 2 given`, () => {
+        it(`expects [1, 2] arguments, 2 given`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
             );
 
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                expectGetInvokeExpressionDiagnostics(textDocument);
+                await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expect(invocationDiagnostics.length).to.equal(0);
         });
     });
 
     describe(`multiple invocation`, () => {
-        it(`position for multiple errors`, () => {
+        it(`position for multiple errors`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(
                 `
 let 
@@ -158,7 +160,7 @@ in
             );
 
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                expectGetInvokeExpressionDiagnostics(textDocument);
+                await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expect(invocationDiagnostics.length).to.equal(2);
 
