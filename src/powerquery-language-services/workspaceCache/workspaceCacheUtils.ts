@@ -69,17 +69,17 @@ export function getOrCreateParse(
     return parseCacheItem;
 }
 
-export function getOrCreateInspection(
+export async function getOrCreateInspection(
     textDocument: TextDocument,
     inspectionSettings: InspectionSettings,
     position: Position,
-): InspectionCacheItem {
+): Promise<InspectionCacheItem> {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
 
     const [updatedCacheCollection, inspectionCacheItem]: [CacheCollection, InspectionCacheItem] =
-        getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
+        await getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
 
     CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
 
@@ -171,12 +171,12 @@ function getOrCreateParseCacheItem(
     return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", parseCacheItem), parseCacheItem];
 }
 
-function getOrCreateInspectionCacheItem(
+async function getOrCreateInspectionCacheItem(
     cacheCollection: CacheCollection,
     textDocument: TextDocument,
     inspectionSettings: InspectionSettings,
     position: Position,
-): [CacheCollection, InspectionCacheItem] {
+): Promise<[CacheCollection, InspectionCacheItem]> {
     if (cacheCollection.maybeInspectionByPosition) {
         const maybeInspectionByPosition: Map<Position, InspectionCacheItem> = cacheCollection.maybeInspectionByPosition;
         const maybeInspection: InspectionCacheItem | undefined = maybeInspectionByPosition.get(position);
@@ -204,7 +204,7 @@ function getOrCreateInspectionCacheItem(
         throw new PQP.CommonError.InvariantError(`this should never be reached, but 'never' doesn't catch it.`);
     }
 
-    const inspection: Inspection.Inspection = Inspection.inspection(
+    const inspection: Inspection.Inspection = await Inspection.inspection(
         inspectionSettings,
         parseState,
         PQP.TaskUtils.isParseStageParseError(parseCacheItem) ? parseCacheItem.error : undefined,

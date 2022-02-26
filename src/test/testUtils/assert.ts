@@ -31,7 +31,7 @@ export function assertGetAutocomplete(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): Inspection.Autocomplete {
+): Promise<Inspection.Autocomplete> {
     const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
@@ -76,8 +76,11 @@ export function assertGetAutocompleteItem(
     );
 }
 
-export function assertGetInspectionCacheItem(document: MockDocument, position: Position): Inspection.Inspection {
-    const cacheItem: WorkspaceCache.InspectionCacheItem = WorkspaceCacheUtils.getOrCreateInspection(
+export async function assertGetInspectionCacheItem(
+    document: MockDocument,
+    position: Position,
+): Promise<Inspection.Inspection> {
+    const cacheItem: WorkspaceCache.InspectionCacheItem = await WorkspaceCacheUtils.getOrCreateInspection(
         document,
         TestConstants.SimpleInspectionSettings,
         position,

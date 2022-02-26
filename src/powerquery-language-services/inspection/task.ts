@@ -63,7 +63,7 @@ export async function inspection(
 
     return {
         maybeActiveNode,
-        autocomplete: autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
+        autocomplete: await autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,

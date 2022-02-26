@@ -47,11 +47,11 @@ describe("workspaceCache", () => {
         TestUtils.assertParserCacheItemError(cacheItem);
     });
 
-    it("getOrCreateInspection", () => {
+    it("getOrCreateInspection", async () => {
         const [document, postion]: [MockDocument, Position] =
             TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
 
-        const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
+        const cacheItem: WorkspaceCache.CacheItem | undefined = await WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -65,11 +65,11 @@ describe("workspaceCache", () => {
         TestUtils.assertInspectionCacheItemOk(cacheItem);
     });
 
-    it("getOrCreateInspection with parser error", () => {
+    it("getOrCreateInspection with parser error", async () => {
         const [document, postion]: [MockDocument, Position] =
             TestUtils.createMockDocumentAndPosition("let c = 1, in |");
 
-        const cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
+        const cacheItem: WorkspaceCache.CacheItem | undefined = await WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -83,10 +83,10 @@ describe("workspaceCache", () => {
         TestUtils.assertInspectionCacheItemOk(cacheItem);
     });
 
-    it("cache invalidation with version change", () => {
+    it("cache invalidation with version change", async () => {
         const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition("foo|");
 
-        let cacheItem: WorkspaceCache.CacheItem | undefined = WorkspaceCacheUtils.getOrCreateInspection(
+        let cacheItem: WorkspaceCache.CacheItem | undefined = await WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -102,7 +102,7 @@ describe("workspaceCache", () => {
 
         document.setText("bar");
 
-        cacheItem = WorkspaceCacheUtils.getOrCreateInspection(
+        cacheItem = await WorkspaceCacheUtils.getOrCreateInspection(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,

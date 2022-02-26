@@ -35,12 +35,12 @@ function assertIsPostionInBounds(
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
 
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -52,12 +52,12 @@ describe("InspectedInvokeExpression", () => {
             expect(context.argumentOrdinal).to.equal(0);
         });
 
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, async () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
 
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -69,12 +69,12 @@ describe("InspectedInvokeExpression", () => {
             expect(context.argumentOrdinal).to.equal(1);
         });
 
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, async () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
 
-            const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -87,7 +87,7 @@ describe("InspectedInvokeExpression", () => {
         });
 
         describe("file", () => {
-            it("DirectQueryForSQL file", () => {
+            it("DirectQueryForSQL file", async () => {
                 const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
 
                 const position: Position = {
@@ -95,7 +95,10 @@ describe("InspectedInvokeExpression", () => {
                     character: 23,
                 };
 
-                const inspected: Inspection.Inspection = TestUtils.assertGetInspectionCacheItem(document, position);
+                const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(
+                    document,
+                    position,
+                );
 
                 expectScope(inspected, [
                     "ConnectionString",
