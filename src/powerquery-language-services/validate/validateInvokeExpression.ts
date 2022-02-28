@@ -34,26 +34,30 @@ export async function validateInvokeExpression(
         );
     }
 
-    const result: Diagnostic[] = [];
+    const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
 
-    for (const triedInvokeExpression of await Promise.all(inspectionTasks)) {
+    const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
+
+    for (const triedInvokeExpression of inspections) {
         if (ResultUtils.isOk(triedInvokeExpression)) {
-            result.push(
-                ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+            diagnosticTasks.push(
+                invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
             );
         } else {
             throw triedInvokeExpression;
         }
     }
 
-    return result;
+    const diagnostics: ReadonlyArray<ReadonlyArray<Diagnostic>> = await Promise.all(diagnosticTasks);
+
+    return diagnostics.flat();
 }
 
-function invokeExpressionToDiagnostics(
+async function invokeExpressionToDiagnostics(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const result: Diagnostic[] = [];
 
     if (inspected.maybeArguments !== undefined) {
@@ -61,7 +65,7 @@ function invokeExpressionToDiagnostics(
         const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
 
         const invokeExpressionRange: Range = Assert.asDefined(
-            PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
+            await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
         );
 
@@ -71,7 +75,8 @@ function invokeExpressionToDiagnostics(
         );
 
         for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
-            const maybeGivenArgumentRange: Range | undefined = PositionUtils.createRangeFromXorNode(
+            // eslint-disable-next-line no-await-in-loop
+            const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,
                 givenArguments[argIndex],
             );

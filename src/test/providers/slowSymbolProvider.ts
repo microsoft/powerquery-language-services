@@ -28,13 +28,13 @@ export class SlowSymbolProvider extends LibrarySymbolProvider {
         return super.getAutocompleteItems(context);
     }
 
-    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+    public override async getHover(context: HoverProviderContext): Promise<Hover | null> {
         await this.delay();
 
         return super.getHover(context);
     }
 
-    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
+    public override async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         await this.delay();
 
         return super.getSignatureHelp(context);

@@ -25,10 +25,10 @@ describe("workspaceCache", () => {
         expect(cacheItem.lexerSnapshot.lineTerminators.length).to.equal(3);
     });
 
-    it("getOrCreateParse", () => {
+    it("getOrCreateParse", async () => {
         const text: string = "let c = 1 in c";
 
-        const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
         );
@@ -36,10 +36,10 @@ describe("workspaceCache", () => {
         TestUtils.assertParserCacheItemOk(cacheItem);
     });
 
-    it("getOrCreateParse with error", () => {
+    it("getOrCreateParse with error", async () => {
         const text: string = "let c = 1, in c";
 
-        const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
         );

@@ -11,8 +11,11 @@ import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateLexAndParse(textDocument: TextDocument, validationSettings: ValidationSettings): Diagnostic[] {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+export async function validateLexAndParse(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings,
+): Promise<Diagnostic[]> {
+    const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,
     );
@@ -68,7 +71,10 @@ function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: Valida
     return diagnostics;
 }
 
-function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: ValidationSettings): Diagnostic[] {
+async function validateParse(
+    triedParse: PQP.Task.TriedParseTask,
+    validationSettings: ValidationSettings,
+): Promise<Diagnostic[]> {
     if (PQP.TaskUtils.isOk(triedParse) || !PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return [];
     }
@@ -116,7 +122,9 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
             return [];
         }
 
-        const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
+        // TODO: figure out why this exception is needed
+        // eslint-disable-next-line @typescript-eslint/await-thenable
+        const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );

@@ -18,15 +18,15 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateDuplicateIdentifiers(
+export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     if (!validationSettings.checkForDuplicateIdentifiers) {
         return [];
     }
 
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+    const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,
     );

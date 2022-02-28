@@ -16,7 +16,7 @@ export async function validate(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<ValidationResult> {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+    const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
         textDocument,
         validationSettings,
     );
@@ -38,8 +38,8 @@ export async function validate(
 
     return {
         diagnostics: [
-            ...validateDuplicateIdentifiers(textDocument, validationSettings),
-            ...validateLexAndParse(textDocument, validationSettings),
+            ...(await validateDuplicateIdentifiers(textDocument, validationSettings)),
+            ...(await validateLexAndParse(textDocument, validationSettings)),
             ...invokeExpressionDiagnostics,
         ],
         hasSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),

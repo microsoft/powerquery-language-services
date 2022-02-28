@@ -13,22 +13,22 @@ import { Inspection, InspectionSettings } from "../../powerquery-language-servic
 import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
-function assertParseOkInvokeExpressionOk(
+async function assertParseOkInvokeExpressionOk(
     settings: InspectionSettings,
     text: string,
     position: Position,
 ): Promise<Inspection.CurrentInvokeExpression | undefined> {
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(settings, text);
 
     return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
-function assertParseErrInvokeExpressionOk(
+async function assertParseErrInvokeExpressionOk(
     settings: InspectionSettings,
     text: string,
     position: Position,
 ): Promise<Inspection.CurrentInvokeExpression | undefined> {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+    const parseError: PQP.Task.ParseTaskParseError = await TestUtils.assertGetLexParseError(settings, text);
 
     return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
 }

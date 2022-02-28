@@ -29,12 +29,12 @@ function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<Ab
 }
 
 describe("Document symbol base functions", () => {
-    it(`section foo; shared a = 1; b = "abc"; c = true;`, () => {
+    it(`section foo; shared a = 1; b = "abc"; c = true;`, async () => {
         const testDocument: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
 
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             testDocument,
             PQP.DefaultSettings,
         );
@@ -48,11 +48,11 @@ describe("Document symbol base functions", () => {
         ]);
     });
 
-    it(`section foo; a = {1,2};`, () => {
+    it(`section foo; a = {1,2};`, async () => {
         const text: string = `section foo; a = {1,2};`;
         const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             textDocument,
             PQP.DefaultSettings,
         );
@@ -62,11 +62,11 @@ describe("Document symbol base functions", () => {
         expectSymbolsForNode(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
-    it(`let a = 1, b = 2, c = 3 in c`, () => {
+    it(`let a = 1, b = 2, c = 3 in c`, async () => {
         const text: string = `let a = 1, b = 2, c = 3 in c`;
         const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             textDocument,
             PQP.DefaultSettings,
         );
@@ -80,11 +80,11 @@ describe("Document symbol base functions", () => {
         ]);
     });
 
-    it("HelloWorldWithDocs file section", () => {
+    it("HelloWorldWithDocs file section", async () => {
         const text: string = TestUtils.readFile("HelloWorldWithDocs.pq");
         const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             textDocument,
             PQP.DefaultSettings,
         );
@@ -100,11 +100,11 @@ describe("Document symbol base functions", () => {
         ]);
     });
 
-    it("DirectQueryForSQL file section", () => {
+    it("DirectQueryForSQL file section", async () => {
         const text: string = TestUtils.readFile("DirectQueryForSQL.pq");
         const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+        const lexAndParseOk: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
             textDocument,
             PQP.DefaultSettings,
         );

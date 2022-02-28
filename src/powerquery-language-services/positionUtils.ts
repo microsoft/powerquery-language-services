@@ -21,20 +21,28 @@ export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Toke
 
 // Attempts to turn a TXorNode into a Range.
 // Returns undefined if there are no leafs nodes.
-export function createRangeFromXorNode(
+export async function createRangeFromXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-): Range | undefined {
+): Promise<Range | undefined> {
     const nodeId: number = xorNode.node.id;
     const maybeLeftMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(nodeIdMapCollection, nodeId);
-    const maybeRightMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, nodeId);
 
-    return maybeLeftMostLeaf === undefined || maybeRightMostLeaf === undefined
-        ? undefined
-        : createRangeFromTokenPositions(
-              maybeLeftMostLeaf.tokenRange.positionStart,
-              maybeRightMostLeaf.tokenRange.positionEnd,
-          );
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const maybeRightMostLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
+        nodeIdMapCollection,
+        nodeId,
+    );
+
+    return Promise.resolve(
+        maybeLeftMostLeaf === undefined || maybeRightMostLeaf === undefined
+            ? undefined
+            : createRangeFromTokenPositions(
+                  maybeLeftMostLeaf.tokenRange.positionStart,
+                  maybeRightMostLeaf.tokenRange.positionEnd,
+              ),
+    );
 }
 
 export function createRangeFromTokenPositions(
@@ -100,10 +108,14 @@ export function isOnXorStart(position: Position, xorNode: TXorNode): boolean {
     }
 }
 
-export function isOnXorEnd(nodeIdMapCollection: NodeIdMap.Collection, position: Position, xorNode: TXorNode): boolean {
+export function isOnXorEnd(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    position: Position,
+    xorNode: TXorNode,
+): Promise<boolean> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
-            return isOnAstEnd(position, xorNode.node);
+            return Promise.resolve(isOnAstEnd(position, xorNode.node));
 
         case XorNodeKind.Context:
             return isOnContextEnd(nodeIdMapCollection, position, xorNode.node);
@@ -118,10 +130,10 @@ export function isAfterXor(
     position: Position,
     xorNode: TXorNode,
     isBoundIncluded: boolean,
-): boolean {
+): Promise<boolean> {
     switch (xorNode.kind) {
         case XorNodeKind.Ast:
-            return isAfterAst(position, xorNode.node, isBoundIncluded);
+            return Promise.resolve(isAfterAst(position, xorNode.node, isBoundIncluded));
 
         case XorNodeKind.Context:
             return isAfterContext(nodeIdMapCollection, position, xorNode.node, isBoundIncluded);
@@ -166,41 +178,51 @@ export function isOnContextStart(position: Position, contextNode: PQP.Parser.Par
         : false;
 }
 
-export function isOnContextEnd(
+export async function isOnContextEnd(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     contextNode: PQP.Parser.ParseContext.TNode,
-): boolean {
-    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+): Promise<boolean> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
+        nodeIdMapCollection,
+        contextNode.id,
+    );
 
     if (maybeLeaf === undefined) {
-        return false;
+        return Promise.resolve(false);
     }
 
-    return isOnAstEnd(position, maybeLeaf);
+    return Promise.resolve(isOnAstEnd(position, maybeLeaf));
 }
 
-export function isAfterContext(
+export async function isAfterContext(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
     contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
-): boolean {
-    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(nodeIdMapCollection, contextNode.id);
+): Promise<boolean> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
+        nodeIdMapCollection,
+        contextNode.id,
+    );
 
     if (maybeLeaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
         if (contextNode.maybeTokenStart === undefined) {
-            return false;
+            return Promise.resolve(false);
         } else {
-            return isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, isBoundIncluded);
+            return Promise.resolve(
+                isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, isBoundIncluded),
+            );
         }
     }
 
-    const leaf: Ast.TNode = maybeLeaf;
-
-    return isAfterAst(position, leaf, isBoundIncluded);
+    return Promise.resolve(isAfterAst(position, maybeLeaf, isBoundIncluded));
 }
 
 export function isBeforeAst(position: Position, astNode: Ast.TNode, isBoundIncluded: boolean): boolean {

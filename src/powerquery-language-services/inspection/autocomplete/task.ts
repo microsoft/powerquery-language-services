@@ -53,7 +53,7 @@ export async function autocomplete(
         typeCache,
     );
 
-    const triedKeyword: TriedAutocompleteKeyword = tryAutocompleteKeyword(
+    const triedKeyword: TriedAutocompleteKeyword = await tryAutocompleteKeyword(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,

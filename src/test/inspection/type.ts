@@ -43,7 +43,7 @@ async function assertParseOkNodeTypeEqual(
     text: string,
     expected: Type.TPowerQueryType,
 ): Promise<void> {
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, text);
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(TestSettings, text);
 
     const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         settings,
@@ -55,7 +55,7 @@ async function assertParseOkNodeTypeEqual(
 }
 
 async function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryType): Promise<void> {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(TestSettings, text);
+    const parseError: PQP.Task.ParseTaskParseError = await TestUtils.assertGetLexParseError(TestSettings, text);
 
     const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         TestSettings,
@@ -83,7 +83,7 @@ async function assertParseOkScopeTypeEqual(
     expected: Inspection.ScopeTypeByKey,
 ): Promise<void> {
     const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
 
     const actual: Inspection.ScopeTypeByKey = await assertGetParseOkScopeTypeOk(
         settings,

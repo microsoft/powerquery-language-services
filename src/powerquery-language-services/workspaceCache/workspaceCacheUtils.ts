@@ -50,15 +50,15 @@ export function getOrCreateLex(textDocument: TextDocument, lexSettings: PQP.LexS
     return lexCacheItem;
 }
 
-export function getOrCreateParse(
+export async function getOrCreateParse(
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings & PQP.ParseSettings,
-): ParseCacheItem {
+): Promise<ParseCacheItem> {
     const cacheKey: string = createCacheKey(textDocument);
     const cacheVersion: number = textDocument.version;
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
 
-    const [updatedCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = getOrCreateParseCacheItem(
+    const [updatedCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = await getOrCreateParseCacheItem(
         cacheCollection,
         textDocument,
         lexSettings,
@@ -144,11 +144,11 @@ function getOrCreateLexCacheItem(
     return [updatedCacheCollection, lexCacheItem];
 }
 
-function getOrCreateParseCacheItem(
+async function getOrCreateParseCacheItem(
     cacheCollection: CacheCollection,
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-): [CacheCollection, ParseCacheItem] {
+): Promise<[CacheCollection, ParseCacheItem]> {
     if (cacheCollection.maybeParse) {
         return [cacheCollection, cacheCollection.maybeParse];
     }
@@ -163,7 +163,9 @@ function getOrCreateParseCacheItem(
         return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", lexCacheItem), lexCacheItem];
     }
 
-    const parseCacheItem: PQP.Task.TriedParseTask = PQP.TaskUtils.tryParse(
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const parseCacheItem: PQP.Task.TriedParseTask = await PQP.TaskUtils.tryParse(
         lexAndParseSettings,
         lexCacheItem.lexerSnapshot,
     );
@@ -186,7 +188,7 @@ async function getOrCreateInspectionCacheItem(
         }
     }
 
-    const [parseCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = getOrCreateParseCacheItem(
+    const [parseCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = await getOrCreateParseCacheItem(
         cacheCollection,
         textDocument,
         inspectionSettings,

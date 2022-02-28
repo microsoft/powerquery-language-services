@@ -27,12 +27,14 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
-export function assertGetAutocomplete(
+export async function assertGetAutocomplete(
     settings: InspectionSettings,
     text: string,
     position: Position,
 ): Promise<Inspection.Autocomplete> {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
     if (PQP.TaskUtils.isParseStageOk(triedLexParseTask)) {
@@ -92,15 +94,22 @@ export async function assertGetInspectionCacheItem(
     return cacheItem;
 }
 
-export function assertGetLexParseOk(settings: PQP.Settings, text: string): PQP.Task.ParseTaskOk {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;
 }
 
-export function assertGetLexParseError(settings: PQP.Settings, text: string): PQP.Task.ParseTaskParseError {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+export async function assertGetLexParseError(
+    settings: PQP.Settings,
+    text: string,
+): Promise<PQP.Task.ParseTaskParseError> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageParseError(triedLexParseTask);
 
     return triedLexParseTask;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { ArrayUtils, Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -34,26 +34,27 @@ export async function validateFunctionExpression(
         );
     }
 
-    const result: Diagnostic[] = [];
+    const inspections: Inspection.TriedInvokeExpression[] = await Promise.all(inspectionTasks);
+    const invokeExpressionTasks: Promise<Diagnostic[]>[] = [];
 
-    for (const triedInvokeExpression of await Promise.all(inspectionTasks)) {
-        if (ResultUtils.isOk(triedInvokeExpression)) {
-            result.push(
-                ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
-            );
-        } else {
-            throw triedInvokeExpression;
+    for (const inspection of inspections) {
+        if (ResultUtils.isError(inspection)) {
+            throw inspection;
         }
+
+        invokeExpressionTasks.push(
+            invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, inspection.value),
+        );
     }
 
-    return result;
+    return (await Promise.all(invokeExpressionTasks)).flat();
 }
 
-function invokeExpressionToDiagnostics(
+async function invokeExpressionToDiagnostics(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const result: Diagnostic[] = [];
 
     if (inspected.maybeArguments !== undefined) {
@@ -61,7 +62,7 @@ function invokeExpressionToDiagnostics(
         const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
 
         const invokeExpressionRange: Range = Assert.asDefined(
-            PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
+            await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
         );
 
@@ -70,22 +71,27 @@ function invokeExpressionToDiagnostics(
             inspected.invokeExpressionXorNode.node.id,
         );
 
-        for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
-            const maybeGivenArgumentRange: Range | undefined = PositionUtils.createRangeFromXorNode(
-                nodeIdMapCollection,
-                givenArguments[argIndex],
-            );
+        let result: Diagnostic[] = [];
 
-            result.push(
-                createDiagnosticForArgumentMismatch(
-                    validationSettings,
-                    mismatch,
-                    maybeFunctionName,
-                    invokeExpressionRange,
-                    maybeGivenArgumentRange,
-                ),
-            );
-        }
+        result = result.concat(
+            await ArrayUtils.asyncMap(
+                [...invokeExpressionArguments.typeChecked.invalid.entries()],
+                async ([argIndex, mismatch]: [number, TypeUtils.InvocationMismatch]) => {
+                    const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
+                        nodeIdMapCollection,
+                        givenArguments[argIndex],
+                    );
+
+                    return createDiagnosticForArgumentMismatch(
+                        validationSettings,
+                        mismatch,
+                        maybeFunctionName,
+                        invokeExpressionRange,
+                        maybeGivenArgumentRange,
+                    );
+                },
+            ),
+        );
 
         const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
 

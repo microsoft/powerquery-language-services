@@ -24,26 +24,28 @@ export function tryAutocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
-): TriedAutocompleteKeyword {
+): Promise<TriedAutocompleteKeyword> {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        return ResultUtils.boxOk([
-            ...Keyword.ExpressionKeywordKinds.map((keywordKind: Keyword.KeywordKind) =>
-                AutocompleteItemUtils.createFromKeywordKind(keywordKind),
-            ),
-            AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.Section),
-        ]);
+        return Promise.resolve(
+            ResultUtils.boxOk([
+                ...Keyword.ExpressionKeywordKinds.map((keywordKind: Keyword.KeywordKind) =>
+                    AutocompleteItemUtils.createFromKeywordKind(keywordKind),
+                ),
+                AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.Section),
+            ]),
+        );
     }
 
-    return ResultUtils.ensureResult(settings.locale, () =>
+    return ResultUtils.ensureAsyncResult(settings.locale, () =>
         autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
     );
 }
 
-export function autocompleteKeyword(
+export async function autocompleteKeyword(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
-): ReadonlyArray<AutocompleteItem> {
+): Promise<ReadonlyArray<AutocompleteItem>> {
     const ancestryLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
     let maybePositionName: string | undefined;
 
@@ -62,7 +64,9 @@ export function autocompleteKeyword(
     }
 
     if (activeNode.ancestry.length < 2) {
-        return createAutocompleteItems(handleConjunctions(activeNode, [], maybeTrailingToken), maybePositionName);
+        return Promise.resolve(
+            createAutocompleteItems(handleConjunctions(activeNode, [], maybeTrailingToken), maybePositionName),
+        );
     }
 
     const state: InspectAutocompleteKeywordState = {
@@ -77,12 +81,14 @@ export function autocompleteKeyword(
     const maybeEdgeCase: ReadonlyArray<AutocompleteItem> | undefined = getMaybeEdgeCase(state, maybeTrailingToken);
 
     if (maybeEdgeCase !== undefined) {
-        return maybeEdgeCase;
+        return Promise.resolve(maybeEdgeCase);
     }
 
-    return createAutocompleteItems(
-        handleConjunctions(state.activeNode, traverseAncestors(state), maybeTrailingToken),
-        maybePositionName,
+    return Promise.resolve(
+        createAutocompleteItems(
+            handleConjunctions(state.activeNode, await traverseAncestors(state), maybeTrailingToken),
+            maybePositionName,
+        ),
     );
 }
 
@@ -98,7 +104,7 @@ const ConjunctionKeywords: ReadonlyArray<Keyword.KeywordKind> = [
 // Without zipping the values we wouldn't know what we're completing for.
 // For example 'if true |' gives us a pair something like [IfExpression, Constant].
 // We can now know we failed to parse a 'then' constant.
-function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArray<Keyword.KeywordKind> {
+async function traverseAncestors(state: InspectAutocompleteKeywordState): Promise<ReadonlyArray<Keyword.KeywordKind>> {
     const ancestry: ReadonlyArray<TXorNode> = state.activeNode.ancestry;
     const numNodes: number = ancestry.length;
 
@@ -119,7 +125,8 @@ function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArra
                 break;
 
             case Ast.NodeKind.LetExpression:
-                maybeInspected = autocompleteKeywordLetExpression(state);
+                // eslint-disable-next-line no-await-in-loop
+                maybeInspected = await autocompleteKeywordLetExpression(state);
                 break;
 
             case Ast.NodeKind.ListExpression:
@@ -127,7 +134,8 @@ function traverseAncestors(state: InspectAutocompleteKeywordState): ReadonlyArra
                 break;
 
             case Ast.NodeKind.SectionMember:
-                maybeInspected = autocompleteKeywordSectionMember(state);
+                // eslint-disable-next-line no-await-in-loop
+                maybeInspected = await autocompleteKeywordSectionMember(state);
                 break;
 
             default:

@@ -11,12 +11,12 @@ import { AbridgedDocumentSymbol } from "./testUtils";
 import { MockDocument } from "./mockDocument";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
-function expectSymbolsForDocument(
+async function expectSymbolsForDocument(
     document: TextDocument,
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
-): void {
+): Promise<void> {
     const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
-        DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
+        await DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
     );
 
     assert.isDefined(actualSymbols);
