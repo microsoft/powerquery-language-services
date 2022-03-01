@@ -2,261 +2,155 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import type { Position } from "vscode-languageserver-types";
+import type { TextDocument } from "vscode-languageserver-textdocument";
 
-import type {
-    CacheCollection,
-    CacheItem,
-    InspectionCacheItem,
-    InspectionTask,
-    LexCacheItem,
-    ParseCacheItem,
-} from "./workspaceCache";
+import { CacheCollection } from "./workspaceCache";
 import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
 import { TypeCacheUtils } from "../inspection";
 
-export function assertIsInspectionTask(cacheItem: CacheItem): asserts cacheItem is InspectionTask {
-    if (!isInspectionTask(cacheItem)) {
-        throw new PQP.CommonError.InvariantError(`expected cacheItem to be an InspectionCacheItem`, {
-            expectedStage: "Inspection",
-            actualStage: cacheItem?.stage,
-        });
-    }
-}
+// export function assertIsInspectionTask(cacheItem: CacheItem): asserts cacheItem is InspectionTask {
+//     if (!isInspectionTask(cacheItem)) {
+//         throw new PQP.CommonError.InvariantError(`expected cacheItem to be an InspectionCacheItem`, {
+//             expectedStage: "Inspection",
+//             actualStage: cacheItem?.stage,
+//         });
+//     }
+// }
 
-export function getOrCreateTypeCache(textDocument: TextDocument): Inspection.TypeCache {
-    const cacheKey: string = createCacheKey(textDocument);
-    const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
+const CacheCollectionByCacheKey: Map<string, CacheCollection> = new Map();
+
+export function getTypeCache(textDocument: TextDocument): Inspection.TypeCache {
+    const cacheCollection: CacheCollection = getCacheCollection(textDocument);
 
     return cacheCollection.typeCache;
 }
 
-export function getOrCreateLex(textDocument: TextDocument, lexSettings: PQP.LexSettings): LexCacheItem {
-    const cacheKey: string = createCacheKey(textDocument);
-    const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
-
-    const [updatedCacheCollection, lexCacheItem]: [CacheCollection, LexCacheItem] = getOrCreateLexCacheItem(
-        cacheCollection,
-        textDocument,
-        lexSettings,
-    );
-
-    CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
-
-    return lexCacheItem;
-}
-
-export async function getOrCreateParse(
-    textDocument: TextDocument,
-    lexSettings: PQP.LexSettings & PQP.ParseSettings,
-): Promise<ParseCacheItem> {
-    const cacheKey: string = createCacheKey(textDocument);
-    const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
-
-    const [updatedCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = await getOrCreateParseCacheItem(
-        cacheCollection,
-        textDocument,
-        lexSettings,
-    );
-
-    CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
-
-    return parseCacheItem;
-}
-
-export async function getOrCreateInspection(
-    textDocument: TextDocument,
-    inspectionSettings: InspectionSettings,
-    position: Position,
-): Promise<InspectionCacheItem> {
-    const cacheKey: string = createCacheKey(textDocument);
-    const cacheVersion: number = textDocument.version;
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(cacheKey, cacheVersion);
-
-    const [updatedCacheCollection, inspectionCacheItem]: [CacheCollection, InspectionCacheItem] =
-        await getOrCreateInspectionCacheItem(cacheCollection, textDocument, inspectionSettings, position);
-
-    CacheCollectionByCacheKey.set(cacheKey, updatedCacheCollection);
-
-    return inspectionCacheItem;
-}
-
-// TODO: is the position key valid for a single intellisense operation,
-// or would it be the same for multiple invocations?
-export function close(textDocument: TextDocument): void {
-    const cacheKey: string = createCacheKey(textDocument);
-    CacheCollectionByCacheKey.delete(cacheKey);
-}
-
-export function update(
-    textDocument: TextDocument,
-    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
-    _version: number,
-): void {
-    // TODO: support incremental lexing
-    // TODO: premptively prepare cache on background thread?
-    // TODO: use document version
-    close(textDocument);
-}
-
-export function isInspectionTask(cacheItem: CacheItem): cacheItem is InspectionTask {
-    return cacheItem?.stage === "Inspection";
-}
-
-const CacheCollectionByCacheKey: Map<string, CacheCollection> = new Map();
-
-function getOrCreateCacheCollection(cacheKey: string, cacheVersion: number): CacheCollection {
-    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey) as
-        | CacheCollection
-        | undefined;
-
-    if (maybeCollection !== undefined && maybeCollection.version === cacheVersion) {
-        return maybeCollection;
-    } else {
-        const cacheCollection: CacheCollection = createEmptyCollection(cacheVersion);
-        CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
-
-        return cacheCollection;
-    }
-}
-
-function getOrCreateLexCacheItem(
-    cacheCollection: CacheCollection,
+export function getOrCreateLexPromise(
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings,
-): [CacheCollection, LexCacheItem] {
+): Promise<PQP.Task.TriedLexTask> {
+    const cacheCollection: CacheCollection = getCacheCollection(textDocument);
+
     if (cacheCollection.maybeLex) {
-        return [cacheCollection, cacheCollection.maybeLex];
+        return cacheCollection.maybeLex;
     }
 
-    const lexCacheItem: LexCacheItem = PQP.TaskUtils.tryLex(lexSettings, textDocument.getText());
+    const lexPromise: Promise<PQP.Task.TriedLexTask> = Promise.resolve(
+        PQP.TaskUtils.tryLex(lexSettings, textDocument.getText()),
+    );
 
-    const updatedCacheCollection: CacheCollection = {
-        ...cacheCollection,
-        maybeLex: lexCacheItem,
-    };
+    cacheCollection.maybeLex = lexPromise;
 
-    return [updatedCacheCollection, lexCacheItem];
+    return lexPromise;
 }
 
-async function getOrCreateParseCacheItem(
-    cacheCollection: CacheCollection,
+export async function getOrCreateParsePromise(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-): Promise<[CacheCollection, ParseCacheItem]> {
+): Promise<PQP.Task.TriedLexTask | PQP.Task.TriedParseTask> {
+    const cacheCollection: CacheCollection = getCacheCollection(textDocument);
+
     if (cacheCollection.maybeParse) {
-        return [cacheCollection, cacheCollection.maybeParse];
+        return cacheCollection.maybeParse;
     }
 
-    const [updatedCacheCollection, lexCacheItem]: [CacheCollection, LexCacheItem] = getOrCreateLexCacheItem(
-        cacheCollection,
-        textDocument,
-        lexAndParseSettings,
-    );
+    const triedLexPromise: Promise<PQP.Task.TriedLexTask> = getOrCreateLexPromise(textDocument, lexAndParseSettings);
+    const triedLex: PQP.Task.TriedLexTask = await triedLexPromise;
 
-    if (!PQP.TaskUtils.isLexStageOk(lexCacheItem)) {
-        return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", lexCacheItem), lexCacheItem];
+    if (PQP.TaskUtils.isError(triedLex)) {
+        cacheCollection.maybeParse = triedLexPromise;
+
+        return triedLexPromise;
     }
 
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
-    const parseCacheItem: PQP.Task.TriedParseTask = await PQP.TaskUtils.tryParse(
-        lexAndParseSettings,
-        lexCacheItem.lexerSnapshot,
-    );
+    cacheCollection.maybeParse = PQP.TaskUtils.tryParse(lexAndParseSettings, triedLex.lexerSnapshot);
 
-    return [updateCacheCollectionAttribute(updatedCacheCollection, "maybeParse", parseCacheItem), parseCacheItem];
+    return cacheCollection.maybeParse;
 }
 
-async function getOrCreateInspectionCacheItem(
-    cacheCollection: CacheCollection,
+export async function getOrCreateInspectionPromise(
     textDocument: TextDocument,
     inspectionSettings: InspectionSettings,
     position: Position,
-): Promise<[CacheCollection, InspectionCacheItem]> {
-    if (cacheCollection.maybeInspectionByPosition) {
-        const maybeInspectionByPosition: Map<Position, InspectionCacheItem> = cacheCollection.maybeInspectionByPosition;
-        const maybeInspection: InspectionCacheItem | undefined = maybeInspectionByPosition.get(position);
+): Promise<PQP.Task.TriedLexTask | PQP.Task.TriedParseTask | Inspection.Inspection> {
+    const cacheCollection: CacheCollection = getCacheCollection(textDocument);
+    const positionMapKey: string = createInspectionByPositionKey(position);
 
-        if (maybeInspection) {
-            return [cacheCollection, maybeInspection];
-        }
+    const maybeInspectionPromise: Promise<Inspection.Inspection> | undefined =
+        cacheCollection.inspectionByPosition.get(positionMapKey);
+
+    if (maybeInspectionPromise) {
+        return maybeInspectionPromise;
     }
 
-    const [parseCacheCollection, parseCacheItem]: [CacheCollection, ParseCacheItem] = await getOrCreateParseCacheItem(
-        cacheCollection,
+    const triedParsePromise: Promise<PQP.Task.TriedLexTask | PQP.Task.TriedParseTask> = getOrCreateParsePromise(
         textDocument,
         inspectionSettings,
     );
+
+    const triedParse: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask = await triedParsePromise;
+
+    if (!PQP.TaskUtils.isParseStage(triedParse) || PQP.TaskUtils.isParseStageCommonError(triedParse)) {
+        cacheCollection.inspectionByPosition.set(positionMapKey, undefined);
+
+        return triedParsePromise;
+    }
 
     let parseState: PQP.Parser.ParseState;
 
-    if (!PQP.TaskUtils.isParseStage(parseCacheItem) || PQP.TaskUtils.isParseStageCommonError(parseCacheItem)) {
-        return [parseCacheCollection, parseCacheItem];
-    } else if (PQP.TaskUtils.isParseStageOk(parseCacheItem)) {
-        parseState = parseCacheItem.parseState;
-    } else if (PQP.TaskUtils.isParseStageParseError(parseCacheItem)) {
-        parseState = parseCacheItem.parseState;
+    if (PQP.TaskUtils.isParseStageOk(triedParse)) {
+        parseState = triedParse.parseState;
+    } else if (PQP.TaskUtils.isParseStageParseError(triedParse)) {
+        parseState = triedParse.parseState;
     } else {
-        throw new PQP.CommonError.InvariantError(`this should never be reached, but 'never' doesn't catch it.`);
+        throw PQP.Assert.isNever(triedParse);
     }
 
-    const inspection: Inspection.Inspection = await Inspection.inspection(
+    const inspectionPromise: Promise<Inspection.Inspection> = Inspection.inspection(
         inspectionSettings,
         parseState,
-        PQP.TaskUtils.isParseStageParseError(parseCacheItem) ? parseCacheItem.error : undefined,
+        PQP.TaskUtils.isParseStageParseError(triedParse) ? triedParse.error : undefined,
         position,
         cacheCollection.typeCache,
     );
 
-    const inspectionCacheItem: InspectionCacheItem = {
-        ...inspection,
-        stage: "Inspection",
-        version: textDocument.version,
-        parseState,
-    };
+    cacheCollection.inspectionByPosition.set(positionMapKey, inspectionPromise);
 
-    const updatedByPosition: Map<Position, InspectionCacheItem> = new Map(
-        parseCacheCollection.maybeInspectionByPosition ?? [],
-    );
-
-    updatedByPosition.set(position, inspectionCacheItem);
-
-    const updatedCacheCollection: CacheCollection = updateCacheCollectionAttribute(
-        parseCacheCollection,
-        "maybeInspectionByPosition",
-        updatedByPosition,
-    );
-
-    return [updatedCacheCollection, inspectionCacheItem];
+    return inspectionPromise;
 }
 
-function updateCacheCollectionAttribute<K extends keyof CacheCollection, V = CacheCollection[K]>(
-    cacheCollection: CacheCollection,
-    key: K,
-    value: V,
-): CacheCollection {
-    return {
-        ...cacheCollection,
-        [key]: value,
-    };
+function createCacheKey(textDocument: TextDocument): string {
+    return `${textDocument.uri}`;
 }
 
-function createEmptyCollection(version: number): CacheCollection {
+function createEmptyCollection(): CacheCollection {
     return {
-        version,
         maybeLex: undefined,
         maybeParse: undefined,
-        maybeInspectionByPosition: undefined,
+        inspectionByPosition: new Map(),
         typeCache: TypeCacheUtils.createEmptyCache(),
     };
 }
 
-function createCacheKey(textDocument: TextDocument): string {
-    return textDocument.uri;
+function createInspectionByPositionKey(position: Position): string {
+    return `${position.character};${position.line}`;
+}
+
+function getCacheCollection(textDocument: TextDocument): CacheCollection {
+    const cacheKey: string = createCacheKey(textDocument);
+
+    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey) as
+        | CacheCollection
+        | undefined;
+
+    if (maybeCollection !== undefined) {
+        return maybeCollection;
+    } else {
+        const cacheCollection: CacheCollection = createEmptyCollection();
+        CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
+
+        return cacheCollection;
+    }
 }
