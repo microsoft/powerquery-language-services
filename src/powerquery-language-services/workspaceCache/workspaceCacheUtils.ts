@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import type { Position } from "vscode-languageserver-types";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 
-import { CacheCollection } from "./workspaceCache";
+import { CacheCollection, PromiseParse } from "./workspaceCache";
 import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
 import { TypeCacheUtils } from "../inspection";
@@ -49,7 +49,7 @@ export function getOrCreateLexPromise(
 export async function getOrCreateParsePromise(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-): Promise<PQP.Task.TriedLexTask | PQP.Task.TriedParseTask> {
+): PromiseParse {
     const cacheCollection: CacheCollection = getCacheCollection(textDocument);
 
     if (cacheCollection.maybeParse) {

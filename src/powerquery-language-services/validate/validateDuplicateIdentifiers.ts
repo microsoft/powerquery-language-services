@@ -13,10 +13,10 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { Localization, LocalizationUtils } from "../localization";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
+import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
@@ -26,17 +26,15 @@ export async function validateDuplicateIdentifiers(
         return [];
     }
 
-    const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
-        textDocument,
-        validationSettings,
-    );
+    const parsePromise: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask =
+        await WorkspaceCacheUtils.getOrCreateParsePromise(textDocument, validationSettings);
 
     let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
 
-    if (PQP.TaskUtils.isParseStageOk(cacheItem)) {
-        maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
-    } else if (PQP.TaskUtils.isParseStageParseError(cacheItem)) {
-        maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
+    if (PQP.TaskUtils.isParseStageOk(parsePromise)) {
+        maybeNodeIdMapCollection = parsePromise.nodeIdMapCollection;
+    } else if (PQP.TaskUtils.isParseStageParseError(parsePromise)) {
+        maybeNodeIdMapCollection = parsePromise.nodeIdMapCollection;
     }
 
     if (maybeNodeIdMapCollection === undefined) {

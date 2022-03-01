@@ -7,23 +7,21 @@ import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/p
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
+import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validateLexAndParse(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<Diagnostic[]> {
-    const cacheItem: WorkspaceCache.ParseCacheItem = await WorkspaceCacheUtils.getOrCreateParse(
-        textDocument,
-        validationSettings,
-    );
+    const parsePromise: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask =
+        await WorkspaceCacheUtils.getOrCreateParsePromise(textDocument, validationSettings);
 
-    if (PQP.TaskUtils.isLexStage(cacheItem)) {
-        return validateLex(cacheItem, validationSettings);
-    } else if (PQP.TaskUtils.isParseStage(cacheItem)) {
-        return validateParse(cacheItem, validationSettings);
+    if (PQP.TaskUtils.isLexStage(parsePromise)) {
+        return validateLex(parsePromise, validationSettings);
+    } else if (PQP.TaskUtils.isParseStage(parsePromise)) {
+        return validateParse(parsePromise, validationSettings);
     } else {
         return [];
     }
