@@ -7,23 +7,33 @@ import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/p
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
+import { WorkspaceCacheUtils } from "../workspaceCache";
 
-export function validateLexAndParse(textDocument: TextDocument, validationSettings: ValidationSettings): Diagnostic[] {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+export async function validateLexAndParse(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings,
+): Promise<Diagnostic[]> {
+    const parsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         validationSettings,
     );
 
-    if (PQP.TaskUtils.isLexStage(cacheItem)) {
-        return validateLex(cacheItem, validationSettings);
-    } else if (PQP.TaskUtils.isParseStage(cacheItem)) {
-        return validateParse(cacheItem, validationSettings);
-    } else {
-        return [];
+    if (parsePromise !== undefined) {
+        return await validateParse(parsePromise, validationSettings);
     }
+
+    const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(
+        textDocument,
+        validationSettings,
+    );
+
+    if (lexPromise !== undefined) {
+        return validateLex(lexPromise, validationSettings);
+    }
+
+    return [];
 }
 
 function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: ValidationSettings): Diagnostic[] {
@@ -68,7 +78,10 @@ function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: Valida
     return diagnostics;
 }
 
-function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: ValidationSettings): Diagnostic[] {
+async function validateParse(
+    triedParse: PQP.Task.TriedParseTask,
+    validationSettings: ValidationSettings,
+): Promise<Diagnostic[]> {
     if (PQP.TaskUtils.isOk(triedParse) || !PQP.Parser.ParseError.isParseError(triedParse.error)) {
         return [];
     }
@@ -116,7 +129,9 @@ function validateParse(triedParse: PQP.Task.TriedParseTask, validationSettings: 
             return [];
         }
 
-        const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
+        // TODO: figure out why this exception is needed
+        // eslint-disable-next-line @typescript-eslint/await-thenable
+        const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );

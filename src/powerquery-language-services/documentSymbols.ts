@@ -12,23 +12,23 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 
 import * as InspectionUtils from "./inspectionUtils";
 import { DocumentSymbol, SymbolKind, TextDocument } from "./commonTypes";
-import { WorkspaceCache, WorkspaceCacheUtils } from "./workspaceCache";
+import { WorkspaceCacheUtils } from "./workspaceCache";
 
-export function getDocumentSymbols(
+export async function getDocumentSymbols(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
     maintainWorkspaceCache: boolean,
-): DocumentSymbol[] {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+): Promise<DocumentSymbol[]> {
+    const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         lexAndParseSettings,
     );
 
-    if (!PQP.TaskUtils.isParseStageOk(cacheItem) && !PQP.TaskUtils.isParseStageParseError(cacheItem)) {
+    if (maybeTriedParse === undefined || PQP.TaskUtils.isParseStageCommonError(maybeTriedParse)) {
         return [];
     }
 
-    const nodeIdMapCollection: NodeIdMap.Collection = cacheItem.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = maybeTriedParse.nodeIdMapCollection;
     const currentSymbols: DocumentSymbol[] = [];
     const parentSymbolById: Map<number, DocumentSymbol> = new Map();
 

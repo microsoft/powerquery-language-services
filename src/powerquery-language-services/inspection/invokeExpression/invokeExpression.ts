@@ -30,18 +30,18 @@ export function tryInvokeExpression(
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): TriedInvokeExpression {
-    return ResultUtils.ensureResult(settings.locale, () =>
+): Promise<TriedInvokeExpression> {
+    return ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, invokeExpressionId, typeCache),
     );
 }
 
-function inspectInvokeExpression(
+async function inspectInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     invokeExpressionId: number,
     typeCache: TypeCache,
-): InvokeExpression {
+): Promise<InvokeExpression> {
     settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(
@@ -65,7 +65,7 @@ function inspectInvokeExpression(
     );
 
     const functionType: Type.TPowerQueryType = Assert.unboxOk(
-        tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
+        await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
 
     const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
@@ -81,7 +81,7 @@ function inspectInvokeExpression(
             invokeExpressionXorNode,
         );
 
-        const givenArgumentTypes: ReadonlyArray<Type.TPowerQueryType> = getArgumentTypes(
+        const givenArgumentTypes: ReadonlyArray<Type.TPowerQueryType> = await getArgumentTypes(
             settings,
             nodeIdMapCollection,
             typeCache,
@@ -155,16 +155,17 @@ function getNumExpectedArguments(functionType: Type.DefinedFunction): [number, n
     return [numMinExpectedArguments, numMaxExpectedArguments];
 }
 
-function getArgumentTypes(
+async function getArgumentTypes(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: TypeCache,
     argXorNodes: ReadonlyArray<TXorNode>,
-): ReadonlyArray<Type.TPowerQueryType> {
+): Promise<ReadonlyArray<Type.TPowerQueryType>> {
     const result: Type.TPowerQueryType[] = [];
 
     for (const xorNode of argXorNodes) {
-        const triedArgType: TriedType = tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
+        // eslint-disable-next-line no-await-in-loop
+        const triedArgType: TriedType = await tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
 
         if (ResultUtils.isError(triedArgType)) {
             throw triedArgType;

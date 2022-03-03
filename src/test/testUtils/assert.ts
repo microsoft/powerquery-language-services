@@ -14,11 +14,8 @@ import {
     InspectionSettings,
     TextDocument,
     validate,
-    WorkspaceCache,
     WorkspaceCacheUtils,
 } from "../../powerquery-language-services";
-import { CacheItem } from "../../powerquery-language-services/workspaceCache/workspaceCache";
-import { MockDocument } from "../mockDocument";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -27,12 +24,14 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
-export function assertGetAutocomplete(
+export async function assertGetAutocomplete(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): Inspection.Autocomplete {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+): Promise<Inspection.Autocomplete> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
     if (PQP.TaskUtils.isParseStageOk(triedLexParseTask)) {
@@ -76,28 +75,50 @@ export function assertGetAutocompleteItem(
     );
 }
 
-export function assertGetInspectionCacheItem(document: MockDocument, position: Position): Inspection.Inspection {
-    const cacheItem: WorkspaceCache.InspectionCacheItem = WorkspaceCacheUtils.getOrCreateInspection(
+// export async function assertGetInspectionCacheItem(
+//     document: MockDocument,
+//     position: Position,
+// ): Promise<InspectionTask> {
+//     const cacheItem: any = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+//         document,
+//         TestConstants.SimpleInspectionSettings,
+//         position,
+//     );
+
+//     assertIsDefined(cacheItem);
+//     assertInspectionCacheItemOk(cacheItem);
+
+//     return cacheItem;
+// }
+
+export async function assertGetInspection(document: TextDocument, position: Position): Promise<Inspection.Inspection> {
+    const inspected: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
         document,
         TestConstants.SimpleInspectionSettings,
         position,
     );
 
-    assertIsDefined(cacheItem);
-    assertInspectionCacheItemOk(cacheItem);
+    Assert.isDefined(inspected);
 
-    return cacheItem;
+    return inspected;
 }
 
-export function assertGetLexParseOk(settings: PQP.Settings, text: string): PQP.Task.ParseTaskOk {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
     return triedLexParseTask;
 }
 
-export function assertGetLexParseError(settings: PQP.Settings, text: string): PQP.Task.ParseTaskParseError {
-    const triedLexParseTask: PQP.Task.TriedLexParseTask = PQP.TaskUtils.tryLexParse(settings, text);
+export async function assertGetLexParseError(
+    settings: PQP.Settings,
+    text: string,
+): Promise<PQP.Task.ParseTaskParseError> {
+    // TODO: figure out why this exception is needed
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageParseError(triedLexParseTask);
 
     return triedLexParseTask;
@@ -118,8 +139,8 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     return [text.replace("|", ""), position];
 }
 
-export function assertGetValidationResult(document: TextDocument): ValidationResult {
-    return validate(document, TestConstants.SimpleValidationSettings);
+export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {
+    return await validate(document, TestConstants.SimpleValidationSettings);
 }
 
 export function assertHover(expected: string, actual: Hover): void {
@@ -145,44 +166,44 @@ export function assertAutocompleteItemLabels(
     expect(actualLabels).to.include.members(expected);
 }
 
-export function assertCacheItemOk(cacheItem: WorkspaceCache.CacheItem): asserts cacheItem is CacheItem {
-    if (cacheItem !== undefined && !WorkspaceCacheUtils.isInspectionTask(cacheItem)) {
-        TaskUtils.assertIsOk(cacheItem);
-    }
-}
+// export function assertCacheItemOk(
+//     cacheItem: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask | InspectionTask | undefined,
+// ): asserts cacheItem is PQP.Task.LexTaskOk | PQP.Task.ParseTaskOk | InspectionTask {
+//     if (cacheItem !== undefined && !WorkspaceCacheUtils.isInspectionTask(cacheItem)) {
+//         TaskUtils.assertIsOk(cacheItem);
+//     }
+// }
 
-export function assertInspectionCacheItemOk(
-    cacheItem: WorkspaceCache.InspectionCacheItem,
-): asserts cacheItem is WorkspaceCache.InspectionTask {
-    WorkspaceCacheUtils.assertIsInspectionTask(cacheItem);
-}
+// export function assertInspectionCacheItemOk(
+//     cacheItem: WorkspaceCache.InspectionTask,
+// ): asserts cacheItem is WorkspaceCache.InspectionTask {
+//     WorkspaceCacheUtils.assertIsInspectionTask(cacheItem);
+// }
 
-export function assertLexerCacheItemOk(cacheItem: WorkspaceCache.CacheItem): asserts cacheItem is PQP.Task.LexTaskOk {
-    assertNotInspectionCacheItem(cacheItem);
-    TaskUtils.assertIsLexStageOk(cacheItem);
-}
+// export function assertNotInspectionCacheItem(
+//     cacheItem: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask | InspectionTask | undefined,
+// ): asserts cacheItem is Exclude<
+//     PQP.Task.TriedLexTask | PQP.Task.TriedParseTask | InspectionTask | undefined,
+//     undefined | WorkspaceCache.InspectionTask
+// > {
+//     if (cacheItem === undefined || cacheItem.stage === "Inspection") {
+//         throw new Error(`expected cacheItem to not be a Inspection cache item`);
+//     }
+// }
 
-export function assertNotInspectionCacheItem(
-    cacheItem: WorkspaceCache.CacheItem,
-): asserts cacheItem is Exclude<WorkspaceCache.CacheItem, undefined | WorkspaceCache.InspectionTask> {
-    if (cacheItem === undefined || cacheItem.stage === "Inspection") {
-        throw new Error(`expected cacheItem to not be a Inspection cache item`);
-    }
-}
+// export function assertParserCacheItemOk(
+//     cacheItem: WorkspaceCache.CacheItem,
+// ): asserts cacheItem is PQP.Task.ParseTaskOk {
+//     assertNotInspectionCacheItem(cacheItem);
+//     TaskUtils.assertIsParseStageOk(cacheItem);
+// }
 
-export function assertParserCacheItemOk(
-    cacheItem: WorkspaceCache.CacheItem,
-): asserts cacheItem is PQP.Task.ParseTaskOk {
-    assertNotInspectionCacheItem(cacheItem);
-    TaskUtils.assertIsParseStageOk(cacheItem);
-}
-
-export function assertParserCacheItemError(
-    cacheItem: WorkspaceCache.CacheItem,
-): asserts cacheItem is PQP.Task.ParseTaskOk {
-    assertNotInspectionCacheItem(cacheItem);
-    TaskUtils.assertIsParseStageParseError(cacheItem);
-}
+// export function assertParserCacheItemError(
+//     cacheItem: WorkspaceCache.CacheItem,
+// ): asserts cacheItem is PQP.Task.ParseTaskOk {
+//     assertNotInspectionCacheItem(cacheItem);
+//     TaskUtils.assertIsParseStageParseError(cacheItem);
+// }
 
 export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
     expect(TestUtils.createAbridgedSignatureHelp(actual)).deep.equals(expected);

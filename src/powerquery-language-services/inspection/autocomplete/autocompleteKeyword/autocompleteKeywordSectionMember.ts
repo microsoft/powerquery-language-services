@@ -15,7 +15,7 @@ import { InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordSectionMember(
     state: InspectAutocompleteKeywordState,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     const maybeChildAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
 
     // SectionMember.namePairedExpression
@@ -31,7 +31,7 @@ export function autocompleteKeywordSectionMember(
 
         // 'shared' was parsed so we can exit.
         if (maybeSharedConstant !== undefined) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
@@ -48,14 +48,14 @@ export function autocompleteKeywordSectionMember(
                 Ast.NodeKind.IdentifierPairedExpression,
             ])
         ) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
 
         if (Keyword.KeywordKind.Shared.startsWith(maybeName.node.key.literal)) {
-            return [Keyword.KeywordKind.Shared];
+            return Promise.resolve([Keyword.KeywordKind.Shared]);
         }
 
-        return undefined;
+        return Promise.resolve(undefined);
     }
     // `section foo; bar = 1 |` would be expecting a semicolon.
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
@@ -70,6 +70,6 @@ export function autocompleteKeywordSectionMember(
 
         return autocompleteKeywordRightMostLeaf(state, identifierPairedExpression.id);
     } else {
-        return undefined;
+        return Promise.resolve(undefined);
     }
 }

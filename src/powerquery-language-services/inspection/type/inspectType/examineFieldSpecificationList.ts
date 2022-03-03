@@ -21,10 +21,10 @@ export interface ExaminedFieldSpecificationList {
 }
 
 // It's called an examination instead of inspection because it doesn't return TType.
-export function examineFieldSpecificationList(
+export async function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
-): ExaminedFieldSpecificationList {
+): Promise<ExaminedFieldSpecificationList> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         examineFieldSpecificationList.name,
@@ -52,7 +52,8 @@ export function examineFieldSpecificationList(
             break;
         }
 
-        const type: Type.TPowerQueryType = inspectTypeFieldSpecification(state, fieldSpecification);
+        // eslint-disable-next-line no-await-in-loop
+        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification);
         fields.push([maybeName.literal, type]);
     }
 

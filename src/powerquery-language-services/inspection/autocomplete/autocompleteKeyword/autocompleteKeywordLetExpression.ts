@@ -10,9 +10,9 @@ import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingTe
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
 
-export function autocompleteKeywordLetExpression(
+export async function autocompleteKeywordLetExpression(
     state: InspectAutocompleteKeywordState,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
     const child: TXorNode = state.child;
@@ -21,7 +21,7 @@ export function autocompleteKeywordLetExpression(
     // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
     // `let x = 1 |`
     if (child.node.maybeAttributeIndex === 2 && XorNodeUtils.isContextXor(child)) {
-        maybeInspected = autocompleteLastKeyValuePair(
+        maybeInspected = await autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(
                 state.nodeIdMapCollection,
@@ -60,16 +60,16 @@ export function autocompleteKeywordLetExpression(
 function autocompleteLastKeyValuePair(
     state: InspectAutocompleteKeywordState,
     keyValuePairs: ReadonlyArray<NodeIdMapIterator.TKeyValuePair>,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     if (keyValuePairs.length === 0) {
-        return undefined;
+        return Promise.resolve(undefined);
     }
 
     // Grab the last value (if one exists)
     const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
 
     if (maybeLastValue === undefined) {
-        return undefined;
+        return Promise.resolve(undefined);
     }
 
     return autocompleteKeywordRightMostLeaf(state, maybeLastValue.node.id);

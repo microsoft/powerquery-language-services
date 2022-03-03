@@ -8,7 +8,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeParameter.name,
@@ -27,7 +27,7 @@ export function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode)
         );
 
     const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
-        inspectTypeFromChildAttributeIndex(state, xorNode, 2),
+        await inspectTypeFromChildAttributeIndex(state, xorNode, 2),
     );
 
     const result: Type.TPowerQueryType = {

@@ -8,7 +8,7 @@ import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerqu
 import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeIdentifier(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeIdentifier(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeIdentifier.name,
@@ -23,7 +23,11 @@ export function inspectTypeIdentifier(state: InspectTypeState, xorNode: TXorNode
     if (XorNodeUtils.isContextXor(xorNode)) {
         result = Type.UnknownInstance;
     } else {
-        const dereferencedType: Type.TPowerQueryType | undefined = maybeDereferencedIdentifierType(state, xorNode);
+        const dereferencedType: Type.TPowerQueryType | undefined = await maybeDereferencedIdentifierType(
+            state,
+            xorNode,
+        );
+
         result = dereferencedType ?? Type.UnknownInstance;
     }
 

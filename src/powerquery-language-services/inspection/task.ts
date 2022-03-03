@@ -16,7 +16,7 @@ import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 
-export function inspection(
+export async function inspection(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
@@ -24,13 +24,13 @@ export function inspection(
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): Inspection {
+): Promise<Inspection> {
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
-    const triedCurrentInvokeExpression: TriedCurrentInvokeExpression = tryCurrentInvokeExpression(
+    const triedCurrentInvokeExpression: TriedCurrentInvokeExpression = await tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,
@@ -52,7 +52,7 @@ export function inspection(
         );
 
         const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
+        triedScopeType = await tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
@@ -63,11 +63,12 @@ export function inspection(
 
     return {
         maybeActiveNode,
-        autocomplete: autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
+        autocomplete: await autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
         triedExpectedType,
         typeCache,
+        parseState,
     };
 }

@@ -13,7 +13,10 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeErrorHandlingExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeErrorHandlingExpression.name,
@@ -32,9 +35,9 @@ export function inspectTypeErrorHandlingExpression(state: InspectTypeState, xorN
         );
 
     const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-        inspectTypeFromChildAttributeIndex(state, xorNode, 1),
+        await inspectTypeFromChildAttributeIndex(state, xorNode, 1),
         maybeOtherwiseExpression !== undefined
-            ? inspectXor(state, maybeOtherwiseExpression)
+            ? await inspectXor(state, maybeOtherwiseExpression)
             : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
     ]);
 

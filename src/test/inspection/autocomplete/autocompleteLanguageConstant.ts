@@ -11,12 +11,12 @@ import { AbridgedAutocompleteItem, createAbridgedAutocompleteItem } from "./comm
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
 
-function assertGetLanguageConstantAutocomplete(
+async function assertGetLanguageConstantAutocomplete(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): AbridgedAutocompleteItem | undefined {
-    const actual: Inspection.Autocomplete = TestUtils.assertGetAutocomplete(settings, text, position);
+): Promise<AbridgedAutocompleteItem | undefined> {
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(settings, text, position);
     Assert.isOk(actual.triedLanguageConstant);
 
     return actual.triedLanguageConstant.value
@@ -25,7 +25,7 @@ function assertGetLanguageConstantAutocomplete(
 }
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
-    it(`a as |`, () => {
+    it(`a as |`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as |`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -33,7 +33,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Nullable,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
@@ -42,7 +42,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`a as n|`, () => {
+    it(`a as n|`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a as n|`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -50,7 +50,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Nullable,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
@@ -59,7 +59,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`(a as |`, () => {
+    it(`(a as |`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as |`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -67,7 +67,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Nullable,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
@@ -76,7 +76,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`(a as n|`, () => {
+    it(`(a as n|`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(a as n|`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -84,7 +84,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Nullable,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
@@ -93,7 +93,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`(x, |`, () => {
+    it(`(x, |`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, |`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -101,7 +101,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Optional,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,
@@ -110,7 +110,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         expect(actual).to.deep.equal(expected);
     });
 
-    it(`(x, op|`, () => {
+    it(`(x, op|`, async () => {
         const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, op|`);
 
         const expected: AbridgedAutocompleteItem | undefined = {
@@ -118,7 +118,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             label: Constant.LanguageConstant.Optional,
         };
 
-        const actual: AbridgedAutocompleteItem | undefined = assertGetLanguageConstantAutocomplete(
+        const actual: AbridgedAutocompleteItem | undefined = await assertGetLanguageConstantAutocomplete(
             TestConstants.DefaultInspectionSettings,
             text,
             position,

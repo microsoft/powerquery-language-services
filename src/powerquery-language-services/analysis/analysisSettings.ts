@@ -3,8 +3,8 @@
 
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";
 import { ILibrary } from "../library/library";
+import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
-import { WorkspaceCache } from "../workspaceCache";
 
 export interface AnalysisSettings {
     readonly createInspectionSettingsFn: () => InspectionSettings;
@@ -14,7 +14,7 @@ export interface AnalysisSettings {
     readonly maybeCreateLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentSymbolProviderFn?: (
         library: ILibrary,
-        maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+        promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => ISymbolProvider;
     readonly symbolProviderTimeoutInMS?: number;

@@ -18,7 +18,10 @@ import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeInvokeExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeInvokeExpression.name,
@@ -28,7 +31,7 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
 
-    const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = maybeExternalInvokeRequest(
+    const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = await maybeExternalInvokeRequest(
         state,
         xorNode,
     );
@@ -48,7 +51,7 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
         xorNode.node.id,
     );
 
-    const previousSiblingType: Type.TPowerQueryType = inspectXor(state, previousSibling);
+    const previousSiblingType: Type.TPowerQueryType = await inspectXor(state, previousSibling);
 
     let result: Type.TPowerQueryType;
 
@@ -67,10 +70,10 @@ export function inspectTypeInvokeExpression(state: InspectTypeState, xorNode: TX
     return result;
 }
 
-function maybeExternalInvokeRequest(
+async function maybeExternalInvokeRequest(
     state: InspectTypeState,
     xorNode: TXorNode,
-): ExternalType.ExternalInvocationTypeRequest | undefined {
+): Promise<ExternalType.ExternalInvocationTypeRequest | undefined> {
     const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined =
         NodeIdMapUtils.maybeInvokeExpressionIdentifier(state.nodeIdMapCollection, xorNode.node.id);
 
@@ -86,7 +89,8 @@ function maybeExternalInvokeRequest(
         state.nodeIdMapCollection,
         XorNodeUtils.assertAsInvokeExpression(xorNode),
     )) {
-        types.push(inspectXor(state, argument));
+        // eslint-disable-next-line no-await-in-loop
+        types.push(await inspectXor(state, argument));
     }
 
     return ExternalTypeUtils.createInvocationTypeRequest(

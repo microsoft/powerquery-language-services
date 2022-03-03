@@ -13,30 +13,35 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { Localization, LocalizationUtils } from "../localization";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
+import { WorkspaceCacheUtils } from "../workspaceCache";
 
-export function validateDuplicateIdentifiers(
+export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     if (!validationSettings.checkForDuplicateIdentifiers) {
         return [];
     }
 
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+    const maybeParsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         validationSettings,
     );
 
+    if (maybeParsePromise === undefined) {
+        return [];
+    }
+
+    const triedParse: PQP.Task.TriedParseTask = maybeParsePromise;
     let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
 
-    if (PQP.TaskUtils.isParseStageOk(cacheItem)) {
-        maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
-    } else if (PQP.TaskUtils.isParseStageParseError(cacheItem)) {
-        maybeNodeIdMapCollection = cacheItem.nodeIdMapCollection;
+    if (PQP.TaskUtils.isParseStageOk(triedParse)) {
+        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
+    } else if (PQP.TaskUtils.isParseStageParseError(triedParse)) {
+        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
     }
 
     if (maybeNodeIdMapCollection === undefined) {

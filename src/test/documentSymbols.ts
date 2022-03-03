@@ -11,12 +11,12 @@ import { AbridgedDocumentSymbol } from "./testUtils";
 import { MockDocument } from "./mockDocument";
 
 // Used to check entire symbol heirarchy returned by getDocumentSymbols()
-function expectSymbolsForDocument(
+async function expectSymbolsForDocument(
     document: TextDocument,
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
-): void {
+): Promise<void> {
     const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
-        DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
+        await DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
     );
 
     assert.isDefined(actualSymbols);
@@ -28,36 +28,36 @@ function expectSymbolsForDocument(
 }
 
 describe("getDocumentSymbols", () => {
-    it(`section foo; shared a = 1;`, () => {
+    it(`section foo; shared a = 1;`, async () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared a = 1;`);
 
-        expectSymbolsForDocument(document, [{ name: "a", kind: SymbolKind.Number }]);
+        await expectSymbolsForDocument(document, [{ name: "a", kind: SymbolKind.Number }]);
     });
 
-    it(`section foo; shared query = let a = 1 in a;`, () => {
+    it(`section foo; shared query = let a = 1 in a;`, async () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared query = let a = 1 in a;`);
 
-        expectSymbolsForDocument(document, [
+        await expectSymbolsForDocument(document, [
             { name: "query", kind: SymbolKind.Variable, maybeChildren: [{ name: "a", kind: SymbolKind.Number }] },
         ]);
     });
 
-    it(`let a = 1, b = "hello", c = () => 1 in c`, () => {
+    it(`let a = 1, b = "hello", c = () => 1 in c`, async () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`let a = 1, b = "hello", c = () => 1 in c`);
 
-        expectSymbolsForDocument(document, [
+        await expectSymbolsForDocument(document, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
             { name: "c", kind: SymbolKind.Function },
         ]);
     });
 
-    it(`let a = let b = 1, c = let d = 1 in d in c in a`, () => {
+    it(`let a = let b = 1, c = let d = 1 in d in c in a`, async () => {
         const document: MockDocument = TestUtils.createTextMockDocument(
             `let a = let b = 1, c = let d = 1 in d in c in a`,
         );
 
-        expectSymbolsForDocument(document, [
+        await expectSymbolsForDocument(document, [
             {
                 name: "a",
                 kind: SymbolKind.Variable,
@@ -70,21 +70,21 @@ describe("getDocumentSymbols", () => {
     });
 
     // with syntax error
-    it(`section foo; shared a = 1; b = "hello"; c = let a1`, () => {
+    it(`section foo; shared a = 1; b = "hello"; c = let a1`, async () => {
         const document: MockDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "hello"; c = let a1`,
         );
 
-        expectSymbolsForDocument(document, [
+        await expectSymbolsForDocument(document, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
         ]);
     });
 
-    it(`HelloWorldWithDocs.pq`, () => {
+    it(`HelloWorldWithDocs.pq`, async () => {
         const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
 
-        expectSymbolsForDocument(document, [
+        await expectSymbolsForDocument(document, [
             // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },

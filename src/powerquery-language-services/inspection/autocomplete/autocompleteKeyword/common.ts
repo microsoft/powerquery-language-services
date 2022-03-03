@@ -10,12 +10,12 @@ import { AutocompleteItem } from "../autocompleteItem";
 import { autocompleteKeyword } from "./autocompleteKeyword";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 
-export function autocompleteKeywordRightMostLeaf(
+export async function autocompleteKeywordRightMostLeaf(
     state: InspectAutocompleteKeywordState,
     xorNodeId: number,
-): ReadonlyArray<Keyword.KeywordKind> | undefined {
+): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     // Grab the right-most Ast node in the last value.
-    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = NodeIdMapUtils.maybeRightMostLeaf(
+    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
         state.nodeIdMapCollection,
         xorNodeId,
         undefined,
@@ -38,7 +38,7 @@ export function autocompleteKeywordRightMostLeaf(
         ancestry: shiftedAncestry,
     };
 
-    const inspected: ReadonlyArray<AutocompleteItem> = autocompleteKeyword(
+    const inspected: ReadonlyArray<AutocompleteItem> = await autocompleteKeyword(
         state.nodeIdMapCollection,
         shiftedActiveNode,
         state.maybeTrailingToken,

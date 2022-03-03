@@ -15,7 +15,10 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNode): Type.FunctionType | Type.Unknown {
+export async function inspectTypeFunctionType(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.FunctionType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFunctionType.name,
@@ -59,7 +62,7 @@ export function inspectTypeFunctionType(state: InspectTypeState, xorNode: TXorNo
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: Type.TPowerQueryType = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2);
 
     const result: Type.TPowerQueryType = {
         kind: Type.TypeKind.Type,

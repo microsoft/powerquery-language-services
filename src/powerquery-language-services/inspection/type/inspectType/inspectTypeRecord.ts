@@ -8,7 +8,7 @@ import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): Type.DefinedRecord {
+export async function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): Promise<Type.DefinedRecord> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeRecord.name,
@@ -22,7 +22,8 @@ export function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): T
 
     for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
-            fields.set(keyValuePair.keyLiteral, inspectXor(state, keyValuePair.maybeValue));
+            // eslint-disable-next-line no-await-in-loop
+            fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue));
         } else {
             fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
         }

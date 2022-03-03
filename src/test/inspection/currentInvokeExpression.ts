@@ -13,37 +13,37 @@ import { Inspection, InspectionSettings } from "../../powerquery-language-servic
 import { TestConstants, TestUtils } from "..";
 import { CurrentInvokeExpressionArguments } from "../../powerquery-language-services/inspection";
 
-function assertParseOkInvokeExpressionOk(
+async function assertParseOkInvokeExpressionOk(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): Inspection.CurrentInvokeExpression | undefined {
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(settings, text);
+): Promise<Inspection.CurrentInvokeExpression | undefined> {
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(settings, text);
 
     return assertInvokeExpressionOk(settings, parseOk.nodeIdMapCollection, position);
 }
 
-function assertParseErrInvokeExpressionOk(
+async function assertParseErrInvokeExpressionOk(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): Inspection.CurrentInvokeExpression | undefined {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(settings, text);
+): Promise<Inspection.CurrentInvokeExpression | undefined> {
+    const parseError: PQP.Task.ParseTaskParseError = await TestUtils.assertGetLexParseError(settings, text);
 
     return assertInvokeExpressionOk(settings, parseError.nodeIdMapCollection, position);
 }
 
-function assertInvokeExpressionOk(
+async function assertInvokeExpressionOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-): Inspection.CurrentInvokeExpression | undefined {
+): Promise<Inspection.CurrentInvokeExpression | undefined> {
     const activeNode: Inspection.ActiveNode = Inspection.ActiveNodeUtils.assertActiveNode(
         nodeIdMapCollection,
         position,
     );
 
-    const triedInspect: Inspection.TriedCurrentInvokeExpression = Inspection.tryCurrentInvokeExpression(
+    const triedInspect: Inspection.TriedCurrentInvokeExpression = await Inspection.tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         activeNode,
@@ -261,12 +261,12 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | 
 
 describe(`subset Inspection - InvokeExpression`, () => {
     describe(`parse Ok`, () => {
-        it("expects no parameters, given no parameters", () => {
+        it("expects no parameters, given no parameters", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -275,12 +275,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNoParameter_givenNoParameter(inspected);
         });
 
-        it("expects no parameters, given extraneous parameter", () => {
+        it("expects no parameters, given extraneous parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -289,12 +289,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNoParameters_givenExtraneousParameter(inspected);
         });
 
-        it("expect number parameter, missing parameter", () => {
+        it("expect number parameter, missing parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -303,12 +303,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNumberParameter_missingParameter(inspected);
         });
 
-        it("expects required and optional, given required", () => {
+        it("expects required and optional, given required", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -317,12 +317,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectRequiredAndOptional_givenRequired(inspected);
         });
 
-        it("expects required and optional, given required and optional", () => {
+        it("expects required and optional, given required and optional", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -331,12 +331,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectRequiredAndOptional_givenRequiredAndOptional(inspected);
         });
 
-        it("expects text, given text", () => {
+        it("expects text, given text", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -345,12 +345,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenText(inspected);
         });
 
-        it("expects text, given nothing", () => {
+        it("expects text, given nothing", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -359,12 +359,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNothing(inspected);
         });
 
-        it("expects text, given number", () => {
+        it("expects text, given number", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -373,12 +373,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNumber(inspected);
         });
 
-        it("nested invocations, expects no parameters, missing parameter", () => {
+        it("nested invocations, expects no parameters, missing parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz)`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseOkInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseOkInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -389,12 +389,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
     });
 
     describe(`parse error`, () => {
-        it("expects no parameters, given no parameters", () => {
+        it("expects no parameters, given no parameters", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -403,12 +403,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNoParameter_givenNoParameter(inspected);
         });
 
-        it("expects no parameters, given extraneous parameter", () => {
+        it("expects no parameters, given extraneous parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -417,12 +417,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNoParameters_givenExtraneousParameter(inspected);
         });
 
-        it("expect number parameter, missing parameter", () => {
+        it("expect number parameter, missing parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -431,12 +431,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectNumberParameter_missingParameter(inspected);
         });
 
-        it("expects required and optional, given required", () => {
+        it("expects required and optional, given required", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -445,12 +445,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectRequiredAndOptional_givenRequired(inspected);
         });
 
-        it("expects required and optional, given required and optional", () => {
+        it("expects required and optional, given required and optional", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -459,12 +459,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectRequiredAndOptional_givenRequiredAndOptional(inspected);
         });
 
-        it("expects text, given text", () => {
+        it("expects text, given text", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -473,12 +473,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenText(inspected);
         });
 
-        it("expects text, given nothing", () => {
+        it("expects text, given nothing", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -487,12 +487,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNothing(inspected);
         });
 
-        it("expects text, given number", () => {
+        it("expects text, given number", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,
@@ -501,12 +501,12 @@ describe(`subset Inspection - InvokeExpression`, () => {
             expectText_givenNumber(inspected);
         });
 
-        it("nested invocations, expects no parameters, missing parameter", () => {
+        it("nested invocations, expects no parameters, missing parameter", async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
 
-            const inspected: Inspection.CurrentInvokeExpression | undefined = assertParseErrInvokeExpressionOk(
+            const inspected: Inspection.CurrentInvokeExpression | undefined = await assertParseErrInvokeExpressionOk(
                 TestConstants.SimpleInspectionSettings,
                 text,
                 position,

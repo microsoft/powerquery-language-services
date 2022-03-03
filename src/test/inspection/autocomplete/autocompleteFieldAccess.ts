@@ -8,12 +8,12 @@ import type { Position } from "vscode-languageserver-types";
 import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
 
-function assertGetFieldAccessAutocomplete(
+async function assertGetFieldAccessAutocomplete(
     settings: InspectionSettings,
     text: string,
     position: Position,
-): ReadonlyArray<Inspection.AutocompleteItem> {
-    const actual: Inspection.Autocomplete = TestUtils.assertGetAutocomplete(settings, text, position);
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(settings, text, position);
     Assert.isOk(actual.triedFieldAccess);
 
     return actual.triedFieldAccess.value ? actual.triedFieldAccess.value.autocompleteItems : [];
@@ -22,13 +22,13 @@ function assertGetFieldAccessAutocomplete(
 describe(`Inspection - Autocomplete - FieldSelection`, () => {
     describe(`Selection`, () => {
         describe(`ParseOk`, () => {
-            it(`[cat = 1, car = 2][x|]`, () => {
+            it(`[cat = 1, car = 2][x|]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][x|]`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -37,13 +37,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][c|]`, () => {
+            it(`[cat = 1, car = 2][c|]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][c|]`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -52,13 +52,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][| c]`, () => {
+            it(`[cat = 1, car = 2][| c]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][| c]`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -67,13 +67,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][c |]`, () => {
+            it(`[cat = 1, car = 2][c |]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][c |]`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -82,14 +82,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, () => {
+            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`,
                 );
 
                 const expected: ReadonlyArray<string> = ["foo", "foobar"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -100,13 +100,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         });
 
         describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][|]`, () => {
+            it(`[cat = 1, car = 2][|]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][|]`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -115,13 +115,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2]|[`, () => {
+            it(`[cat = 1, car = 2]|[`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2]|[`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -130,13 +130,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][|`, () => {
+            it(`[cat = 1, car = 2][|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][|`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -145,13 +145,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][x|`, () => {
+            it(`[cat = 1, car = 2][x|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][x|`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -160,13 +160,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][c|`, () => {
+            it(`[cat = 1, car = 2][c|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][c|`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -175,13 +175,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][c |`, () => {
+            it(`[cat = 1, car = 2][c |`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][c |`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -190,14 +190,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, () => {
+            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`,
                 );
 
                 const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -210,13 +210,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
 
     describe("Projection", () => {
         describe("ParseOk", () => {
-            it(`[cat = 1, car = 2][ [x|] ]`, () => {
+            it(`[cat = 1, car = 2][ [x|] ]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [x|] ]`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -225,13 +225,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [c|] ]`, () => {
+            it(`[cat = 1, car = 2][ [c|] ]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [c|] ]`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -241,13 +241,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [c |] ]`, () => {
+            it(`[cat = 1, car = 2][ [c |] ]`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [c |] ]`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -256,14 +256,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [x], [c|] ]`, () => {
+            it(`[cat = 1, car = 2][ [x], [c|] ]`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [x], [c|] ]`,
                 );
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -272,14 +272,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [cat], [c|] ]`, () => {
+            it(`[cat = 1, car = 2][ [cat], [c|] ]`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [cat], [c|] ]`,
                 );
 
                 const expected: ReadonlyArray<string> = ["car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -288,14 +288,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, () => {
+            it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [cat], [car], [c|] ]`,
                 );
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -306,13 +306,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         });
 
         describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][ [|`, () => {
+            it(`[cat = 1, car = 2][ [|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [|`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -321,13 +321,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ |`, () => {
+            it(`[cat = 1, car = 2][ [ |`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ |`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -336,13 +336,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ c|`, () => {
+            it(`[cat = 1, car = 2][ [ c|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ c|`);
 
                 const expected: ReadonlyArray<string> = ["cat", "car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -351,13 +351,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat|`, () => {
+            it(`[cat = 1, car = 2][ [ cat|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat|`);
 
                 const expected: ReadonlyArray<string> = ["cat"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -366,13 +366,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat |`, () => {
+            it(`[cat = 1, car = 2][ [ cat |`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat |`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -381,13 +381,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => {
+            it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat ]|`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -396,13 +396,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ] |`, () => {
+            it(`[cat = 1, car = 2][ [ cat ] |`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat ] |`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -411,13 +411,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => {
+            it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat ]|`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -426,13 +426,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => {
+            it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat ]|`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -441,13 +441,13 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ], |`, () => {
+            it(`[cat = 1, car = 2][ [ cat ], |`, async () => {
                 const [text, position]: [string, Position] =
                     TestUtils.assertGetTextWithPosition(`[cat = 1, car = 2][ [ cat ], |`);
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -456,14 +456,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ], [|`, () => {
+            it(`[cat = 1, car = 2][ [ cat ], [|`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [ cat ], [|`,
                 );
 
                 const expected: ReadonlyArray<string> = ["car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -472,14 +472,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ], [|<>`, () => {
+            it(`[cat = 1, car = 2][ [ cat ], [|<>`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [ cat ], [|<>`,
                 );
 
                 const expected: ReadonlyArray<string> = ["car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -488,14 +488,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ], [| <>`, () => {
+            it(`[cat = 1, car = 2][ [ cat ], [| <>`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [ cat ], [| <>`,
                 );
 
                 const expected: ReadonlyArray<string> = ["car"];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -504,14 +504,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 TestUtils.assertAutocompleteItemLabels(expected, actual);
             });
 
-            it(`[cat = 1, car = 2][ [ cat ], [<>|`, () => {
+            it(`[cat = 1, car = 2][ [ cat ], [<>|`, async () => {
                 const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                     `[cat = 1, car = 2][ [ cat ], [<>|`,
                 );
 
                 const expected: ReadonlyArray<string> = [];
 
-                const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+                const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                     TestConstants.DefaultInspectionSettings,
                     text,
                     position,
@@ -523,14 +523,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     });
 
     describe(`Indirection`, () => {
-        it(`let fn = () => [cat = 1, car = 2] in fn()[|`, () => {
+        it(`let fn = () => [cat = 1, car = 2] in fn()[|`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `let fn = () => [cat = 1, car = 2] in fn()[|`,
             );
 
             const expected: ReadonlyArray<string> = ["cat", "car"];
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                 TestConstants.DefaultInspectionSettings,
                 text,
                 position,
@@ -539,14 +539,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
-        it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, () => {
+        it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`,
             );
 
             const expected: ReadonlyArray<string> = ["cat", "car"];
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                 TestConstants.DefaultInspectionSettings,
                 text,
                 position,
@@ -555,14 +555,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
-        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, () => {
+        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`,
             );
 
             const expected: ReadonlyArray<string> = ["cat", "car"];
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                 TestConstants.DefaultInspectionSettings,
                 text,
                 position,
@@ -571,14 +571,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
-        it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () => {
+        it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
             );
 
             const expected: ReadonlyArray<string> = ["cat", "car"];
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                 TestConstants.DefaultInspectionSettings,
                 text,
                 position,
@@ -589,14 +589,14 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     });
 
     describe(`GeneralizedIdentifier`, () => {
-        it(`[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`, () => {
+        it(`[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
                 `[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`,
             );
 
             const expected: ReadonlyArray<string> = [`regularIdentifier`, `#"generalized identifier"`];
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = assertGetFieldAccessAutocomplete(
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetFieldAccessAutocomplete(
                 TestConstants.DefaultInspectionSettings,
                 text,
                 position,

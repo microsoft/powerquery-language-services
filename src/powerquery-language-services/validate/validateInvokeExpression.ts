@@ -13,11 +13,11 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
 
-export function validateInvokeExpression(
+export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.InvokeExpression,
     );
@@ -26,33 +26,38 @@ export function validateInvokeExpression(
         return [];
     }
 
-    const result: Diagnostic[] = [];
+    const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of maybeInvokeExpressionIds) {
-        const triedInvokeExpression: Inspection.TriedInvokeExpression = Inspection.tryInvokeExpression(
-            validationSettings,
-            nodeIdMapCollection,
-            nodeId,
-            maybeCache,
-        );
-
-        if (ResultUtils.isError(triedInvokeExpression)) {
-            throw triedInvokeExpression;
-        }
-
-        result.push(
-            ...invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+        inspectionTasks.push(
+            Inspection.tryInvokeExpression(validationSettings, nodeIdMapCollection, nodeId, maybeCache),
         );
     }
 
-    return result;
+    const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
+
+    const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
+
+    for (const triedInvokeExpression of inspections) {
+        if (ResultUtils.isOk(triedInvokeExpression)) {
+            diagnosticTasks.push(
+                invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+            );
+        } else {
+            throw triedInvokeExpression;
+        }
+    }
+
+    const diagnostics: ReadonlyArray<ReadonlyArray<Diagnostic>> = await Promise.all(diagnosticTasks);
+
+    return diagnostics.flat();
 }
 
-function invokeExpressionToDiagnostics(
+async function invokeExpressionToDiagnostics(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     inspected: Inspection.InvokeExpression,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const result: Diagnostic[] = [];
 
     if (inspected.maybeArguments !== undefined) {
@@ -60,7 +65,7 @@ function invokeExpressionToDiagnostics(
         const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
 
         const invokeExpressionRange: Range = Assert.asDefined(
-            PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
+            await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
         );
 
@@ -70,7 +75,8 @@ function invokeExpressionToDiagnostics(
         );
 
         for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
-            const maybeGivenArgumentRange: Range | undefined = PositionUtils.createRangeFromXorNode(
+            // eslint-disable-next-line no-await-in-loop
+            const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,
                 givenArguments[argIndex],
             );

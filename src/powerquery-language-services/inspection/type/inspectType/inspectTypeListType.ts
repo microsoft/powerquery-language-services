@@ -8,7 +8,10 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { InspectTypeState, inspectXor } from "./common";
 import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode): Type.ListType | Type.Unknown {
+export async function inspectTypeListType(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.ListType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeListType.name,
@@ -29,7 +32,7 @@ export function inspectTypeListType(state: InspectTypeState, xorNode: TXorNode):
     if (maybeListItem === undefined) {
         result = Type.UnknownInstance;
     } else {
-        const itemType: Type.TPowerQueryType = inspectXor(state, maybeListItem);
+        const itemType: Type.TPowerQueryType = await inspectXor(state, maybeListItem);
 
         result = {
             kind: Type.TypeKind.Type,

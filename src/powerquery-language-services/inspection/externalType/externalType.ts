@@ -26,9 +26,11 @@ export type TExternalTypeResolverFn = (request: TExternalTypeRequest) => Type.TP
 
 export type TExternalInvocationTypeResolverFn = (
     request: ExternalInvocationTypeRequest,
-) => Type.TPowerQueryType | undefined;
+) => Promise<Type.TPowerQueryType | undefined>;
 
-export type TExternalValueTypeResolverFn = (request: ExternalValueTypeRequest) => Type.TPowerQueryType | undefined;
+export type TExternalValueTypeResolverFn = (
+    request: ExternalValueTypeRequest,
+) => Promise<Type.TPowerQueryType | undefined>;
 
 export const enum ExternalTypeRequestKind {
     Invocation = "Invocation",

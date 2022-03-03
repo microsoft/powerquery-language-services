@@ -38,10 +38,14 @@ const TestSettings: InspectionSettings = {
     maybeExternalTypeResolver: ExternalTypeResolver,
 };
 
-function assertParseOkNodeTypeEqual(settings: InspectionSettings, text: string, expected: Type.TPowerQueryType): void {
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, text);
+async function assertParseOkNodeTypeEqual(
+    settings: InspectionSettings,
+    text: string,
+    expected: Type.TPowerQueryType,
+): Promise<void> {
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(TestSettings, text);
 
-    const actual: Type.TPowerQueryType = assertGetParseNodeOk(
+    const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         settings,
         parseOk.nodeIdMapCollection,
         XorNodeUtils.boxAst(parseOk.ast),
@@ -50,10 +54,10 @@ function assertParseOkNodeTypeEqual(settings: InspectionSettings, text: string, 
     expect(actual).deep.equal(expected);
 }
 
-function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryType): void {
-    const parseError: PQP.Task.ParseTaskParseError = TestUtils.assertGetLexParseError(TestSettings, text);
+async function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryType): Promise<void> {
+    const parseError: PQP.Task.ParseTaskParseError = await TestUtils.assertGetLexParseError(TestSettings, text);
 
-    const actual: Type.TPowerQueryType = assertGetParseNodeOk(
+    const actual: Type.TPowerQueryType = await assertGetParseNodeOk(
         TestSettings,
         parseError.nodeIdMapCollection,
         XorNodeUtils.boxContext(Assert.asDefined(parseError.parseState.contextState.maybeRoot)),
@@ -62,26 +66,26 @@ function assertParseErrNodeTypeEqual(text: string, expected: Type.TPowerQueryTyp
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseNodeOk(
+async function assertGetParseNodeOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-): Type.TPowerQueryType {
-    const triedType: Inspection.TriedType = Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
+): Promise<Type.TPowerQueryType> {
+    const triedType: Inspection.TriedType = await Inspection.tryType(settings, nodeIdMapCollection, xorNode.node.id);
     Assert.isOk(triedType);
 
     return triedType.value;
 }
 
-function assertParseOkScopeTypeEqual(
+async function assertParseOkScopeTypeEqual(
     settings: InspectionSettings,
     textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
-): void {
+): Promise<void> {
     const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
-    const parseOk: PQP.Task.ParseTaskOk = TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
+    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(TestSettings, textWithoutPipe);
 
-    const actual: Inspection.ScopeTypeByKey = assertGetParseOkScopeTypeOk(
+    const actual: Inspection.ScopeTypeByKey = await assertGetParseOkScopeTypeOk(
         settings,
         parseOk.nodeIdMapCollection,
         position,
@@ -90,16 +94,16 @@ function assertParseOkScopeTypeEqual(
     expect(actual).deep.equal(expected);
 }
 
-function assertGetParseOkScopeTypeOk(
+async function assertGetParseOkScopeTypeOk(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-): Inspection.ScopeTypeByKey {
+): Promise<Inspection.ScopeTypeByKey> {
     const activeNodeLeaf: TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
         Inspection.ActiveNodeUtils.assertActiveNode(nodeIdMapCollection, position),
     );
 
-    const triedScopeType: Inspection.TriedScopeType = Inspection.tryScopeType(
+    const triedScopeType: Inspection.TriedScopeType = await Inspection.tryScopeType(
         settings,
         nodeIdMapCollection,
         activeNodeLeaf.node.id,
@@ -113,33 +117,33 @@ function assertGetParseOkScopeTypeOk(
 describe(`Inspection - Type`, () => {
     describe(`static analysis`, () => {
         describe("BinOpExpression", () => {
-            it(`1 + 1`, () => {
+            it(`1 + 1`, async () => {
                 const expression: string = "1 + 1";
                 const expected: Type.Number = Type.NumberInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`true and false`, () => {
+            it(`true and false`, async () => {
                 const expression: string = `true and false`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`"hello" & "world"`, () => {
+            it(`"hello" & "world"`, async () => {
                 const expression: string = `"hello" & "world"`;
                 const expected: Type.Text = Type.TextInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`true + 1`, () => {
+            it(`true + 1`, async () => {
                 const expression: string = `true + 1`;
                 const expected: Type.None = Type.NoneInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
-            it(`(foo as number, bar as nullable number) => foo + bar|`, () => {
+            it(`(foo as number, bar as nullable number) => foo + bar|`, async () => {
                 const expression: string = `(foo as number, bar as nullable number) => foo + bar|`;
 
                 const expected: Inspection.ScopeTypeByKey = new Map([
@@ -147,33 +151,33 @@ describe(`Inspection - Type`, () => {
                     ["bar", Type.NullableNumberInstance],
                 ]);
 
-                assertParseOkScopeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkScopeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.AsExpression}`, () => {
-            it(`1 as number`, () => {
+            it(`1 as number`, async () => {
                 const expression: string = `1 as number`;
                 const expected: Type.Number = Type.NumberInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1 as text`, () => {
+            it(`1 as text`, async () => {
                 const expression: string = `1 as text`;
                 const expected: Type.Text = Type.TextInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1 as any`, () => {
+            it(`1 as any`, async () => {
                 const expression: string = `1 as any`;
                 const expected: Type.Any = Type.AnyInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.EachExpression}`, () => {
             // Test for when EachExpression returns a static value
-            it(`each 1`, () => {
+            it(`each 1`, async () => {
                 const expression: string = `each 1`;
 
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
@@ -189,12 +193,12 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createNumberLiteral(false, "1"),
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
-            it(`try 1`, () => {
+            it(`try 1`, async () => {
                 const expression: string = `try 1`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -202,10 +206,10 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`try 1 otherwise false`, () => {
+            it(`try 1 otherwise false`, async () => {
                 const expression: string = `try 1 otherwise false`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -213,20 +217,20 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
-            it(`error 1`, () => {
+            it(`error 1`, async () => {
                 const expression: string = `error 1`;
                 const expected: Type.Any = Type.AnyInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.FieldProjection}`, () => {
-            it(`[a = 1][[a]]`, () => {
+            it(`[a = 1][[a]]`, async () => {
                 const expression: string = `[a = 1][[a]]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -235,22 +239,22 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[a = 1][[b]]`, () => {
+            it(`[a = 1][[b]]`, async () => {
                 const expression: string = `[a = 1][[b]]`;
                 const expected: Type.None = Type.NoneInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[a = 1][[b]]?`, () => {
+            it(`[a = 1][[b]]?`, async () => {
                 const expression: string = `[a = 1][[b]]?`;
                 const expected: Type.Null = Type.NullInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`(1 as record)[[a]]`, () => {
+            it(`(1 as record)[[a]]`, async () => {
                 const expression: string = `let x = (1 as record) in x[[a]]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -259,10 +263,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`(1 as record)[[a]]?`, () => {
+            it(`(1 as record)[[a]]?`, async () => {
                 const expression: string = `let x = (1 as record) in x[[a]]?`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -271,17 +275,17 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`(each [[foo]])([foo = "bar"])`, () => {
+            it(`(each [[foo]])([foo = "bar"])`, async () => {
                 const expression: string = `(each [[foo]])([foo = "bar"])`;
                 const expected: Type.TPowerQueryType = Type.UnknownInstance;
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`(each [[foo]])([foo = "bar", spam = "eggs"])`, () => {
+            it(`(each [[foo]])([foo = "bar", spam = "eggs"])`, async () => {
                 const expression: string = `(each [[foo]])([foo = "bar", spam = "eggs"])`;
 
                 const expectedFields: Map<string, Type.TPowerQueryType> = new Map([
@@ -299,7 +303,7 @@ describe(`Inspection - Type`, () => {
                     maybeEachScopeById: new Map([[5, eachScope]]),
                 };
 
-                assertParseOkNodeTypeEqual(
+                await assertParseOkNodeTypeEqual(
                     testSettingsWithEachScope,
                     expression,
                     TypeUtils.createDefinedRecord(false, expectedFields, false),
@@ -308,46 +312,46 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FieldSelector}`, () => {
-            it(`[a = 1][a]`, () => {
+            it(`[a = 1][a]`, async () => {
                 const expression: string = `[a = 1][a]`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[a = 1][b]`, () => {
+            it(`[a = 1][b]`, async () => {
                 const expression: string = `[a = 1][b]`;
                 const expected: Type.TPowerQueryType = Type.NoneInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[a = 1][b]?`, () => {
+            it(`[a = 1][b]?`, async () => {
                 const expression: string = `[a = 1][b]?`;
                 const expected: Type.TPowerQueryType = Type.NullInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`let x = (1 as record) in x[a]`, () => {
+            it(`let x = (1 as record) in x[a]`, async () => {
                 const expression: string = `let x = (1 as record) in x[a]`;
                 const expected: Type.TPowerQueryType = Type.AnyInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`let x = (1 as record) in x[a]?`, () => {
+            it(`let x = (1 as record) in x[a]?`, async () => {
                 const expression: string = `let x = (1 as record) in x[a]?`;
                 const expected: Type.TPowerQueryType = Type.AnyInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             // Test for when FieldSelector is used in an EachExpression but wasn't a scope
-            it(`(each [foo])([foo = "bar"])`, () => {
+            it(`(each [foo])([foo = "bar"])`, async () => {
                 const expression: string = `(each [foo])([foo = "bar"])`;
                 const expected: Type.TPowerQueryType = Type.UnknownInstance;
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             // Test for when FieldSelector is used and was given an eachScope
-            it(`(each [foo])([foo = "bar"])`, () => {
+            it(`(each [foo])([foo = "bar"])`, async () => {
                 const expression: string = `(each [foo])([foo = "bar"])`;
                 const expected: Type.TPowerQueryType = TypeUtils.createTextLiteral(false, `"bar"`);
 
@@ -362,12 +366,12 @@ describe(`Inspection - Type`, () => {
                     maybeEachScopeById: new Map([[5, eachScope]]),
                 };
 
-                assertParseOkNodeTypeEqual(testSettingsWithEachScope, expression, expected);
+                await assertParseOkNodeTypeEqual(testSettingsWithEachScope, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.FunctionExpression}`, () => {
-            it(`() => 1`, () => {
+            it(`() => 1`, async () => {
                 const expression: string = `() => 1`;
 
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
@@ -376,11 +380,11 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createNumberLiteral(false, "1"),
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
             // Test AnyUnion return
-            it(`() => if true then 1 else ""`, () => {
+            it(`() => if true then 1 else ""`, async () => {
                 const expression: string = `() => if true then 1 else ""`;
 
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
@@ -392,10 +396,10 @@ describe(`Inspection - Type`, () => {
                     ]),
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`(a, b as number, c as nullable number, optional d) => 1`, () => {
+            it(`(a, b as number, c as nullable number, optional d) => 1`, async () => {
                 const expression: string = `(a, b as number, c as nullable number, optional d) => 1`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
@@ -429,24 +433,24 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createNumberLiteral(false, "1"),
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.FunctionType}`, () => {
-            it(`type function`, () => {
+            it(`type function`, async () => {
                 const expression: string = `type function`;
                 const expected: Type.Function = Type.FunctionInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type function () as text`, () => {
+            it(`type function () as text`, async () => {
                 const expression: string = `type function () as text`;
                 const expected: Type.FunctionType = TypeUtils.createFunctionType(false, [], Type.TextInstance);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, () => {
+            it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, async () => {
                 const expression: string = `type function (foo as number, bar as nullable text, optional baz as date) as text`;
 
                 const expected: Type.FunctionType = TypeUtils.createFunctionType(
@@ -474,32 +478,32 @@ describe(`Inspection - Type`, () => {
                     Type.TextInstance,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
-            it(`let x = true in x`, () => {
+            it(`let x = true in x`, async () => {
                 const expression: string = "let x = true in x";
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`let x = 1 in x`, () => {
+            it(`let x = 1 in x`, async () => {
                 const expression: string = "let x = 1 in x";
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.IfExpression}`, () => {
-            it(`if true then true else false`, () => {
+            it(`if true then true else false`, async () => {
                 const expression: string = `if true then true else false`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`if true then 1 else false`, () => {
+            it(`if true then 1 else false`, async () => {
                 const expression: string = `if true then 1 else false`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -507,10 +511,10 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`if if true then true else false then 1 else 0`, () => {
+            it(`if if true then true else false then 1 else 0`, async () => {
                 const expression: string = `if if true then true else false then 1 else ""`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -518,34 +522,34 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`if`, () => {
+            it(`if`, async () => {
                 const expression: string = `if`;
                 const expected: Type.TPowerQueryType = Type.UnknownInstance;
-                assertParseErrNodeTypeEqual(expression, expected);
+                await assertParseErrNodeTypeEqual(expression, expected);
             });
 
-            it(`if "a"`, () => {
+            it(`if "a"`, async () => {
                 const expression: string = `if "a"`;
                 const expected: Type.TPowerQueryType = Type.NoneInstance;
-                assertParseErrNodeTypeEqual(expression, expected);
+                await assertParseErrNodeTypeEqual(expression, expected);
             });
 
-            it(`if true or "a"`, () => {
+            it(`if true or "a"`, async () => {
                 const expression: string = `if true or "a"`;
                 const expected: Type.TPowerQueryType = Type.NoneInstance;
-                assertParseErrNodeTypeEqual(expression, expected);
+                await assertParseErrNodeTypeEqual(expression, expected);
             });
 
-            it(`if 1 as any then "a" as text else "b" as text`, () => {
+            it(`if 1 as any then "a" as text else "b" as text`, async () => {
                 const expression: string = `if 1 as any then "a"as text else "b" as text`;
                 const expected: Type.TPowerQueryType = TypeUtils.createPrimitiveType(false, Type.TypeKind.Text);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`if 1 as any then "a" else "b"`, () => {
+            it(`if 1 as any then "a" else "b"`, async () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -553,10 +557,10 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createTextLiteral(false, `"b"`),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`if true then 1`, () => {
+            it(`if true then 1`, async () => {
                 const expression: string = `if true then 1`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -564,38 +568,38 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Unknown),
                 ]);
 
-                assertParseErrNodeTypeEqual(expression, expected);
+                await assertParseErrNodeTypeEqual(expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.IsExpression}`, () => {
-            it(`1 is text`, () => {
+            it(`1 is text`, async () => {
                 const expression: string = `1 is text`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.IsNullablePrimitiveType}`, () => {
-            it(`1 is nullable text`, () => {
+            it(`1 is nullable text`, async () => {
                 const expression: string = `1 is nullable text`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.ListExpression}`, () => {
-            it(`{1}`, () => {
+            it(`{1}`, async () => {
                 const expression: string = `{1}`;
 
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, [
                     TypeUtils.createNumberLiteral(false, "1"),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`{1, ""}`, () => {
+            it(`{1, ""}`, async () => {
                 const expression: string = `{1, ""}`;
 
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, [
@@ -603,12 +607,12 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.ListType}`, () => {
-            it(`type { number }`, () => {
+            it(`type { number }`, async () => {
                 const expression: string = `type { number }`;
 
                 const expected: Type.ListType = TypeUtils.createListType(
@@ -616,64 +620,64 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Number),
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.LiteralExpression}`, () => {
-            it(`true`, () => {
+            it(`true`, async () => {
                 const expression: string = "true";
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`false`, () => {
+            it(`false`, async () => {
                 const expression: string = "false";
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1`, () => {
+            it(`1`, async () => {
                 const expression: string = "1";
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`null`, () => {
+            it(`null`, async () => {
                 const expression: string = "null";
                 const expected: Type.TPowerQueryType = TypeUtils.createPrimitiveType(true, Type.TypeKind.Null);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`{}`, () => {
+            it(`{}`, async () => {
                 const expression: string = `{}`;
                 const expected: Type.DefinedList = TypeUtils.createDefinedList(false, []);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[]`, () => {
+            it(`[]`, async () => {
                 const expression: string = `[]`;
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(false, new Map(), false);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.NullableType}`, () => {
-            it(`type nullable number`, () => {
+            it(`type nullable number`, async () => {
                 const expression: string = "type nullable number";
                 const expected: Type.TPowerQueryType = TypeUtils.createPrimitiveType(true, Type.TypeKind.Number);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
-            it(`1 ?? 1`, () => {
+            it(`1 ?? 1`, async () => {
                 const expression: string = `1 ?? 1`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1 ?? 2`, () => {
+            it(`1 ?? 2`, async () => {
                 const expression: string = `1 ?? 2`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -681,10 +685,10 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createNumberLiteral(false, `2`),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1 ?? ""`, () => {
+            it(`1 ?? ""`, async () => {
                 const expression: string = `1 ?? ""`;
 
                 const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -692,18 +696,18 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`1 ?? (1 + "")`, () => {
+            it(`1 ?? (1 + "")`, async () => {
                 const expression: string = `1 ?? (1 + "")`;
                 const expected: Type.None = Type.NoneInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
-            it(`[foo = 1] & [bar = 2]`, () => {
+            it(`[foo = 1] & [bar = 2]`, async () => {
                 const expression: string = `[foo = 1] & [bar = 2]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -715,10 +719,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[] & [bar = 2]`, () => {
+            it(`[] & [bar = 2]`, async () => {
                 const expression: string = `[] & [bar = 2]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -727,10 +731,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[foo = 1] & []`, () => {
+            it(`[foo = 1] & []`, async () => {
                 const expression: string = `[foo = 1] & []`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -739,10 +743,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[foo = 1] & [foo = ""]`, () => {
+            it(`[foo = 1] & [foo = ""]`, async () => {
                 const expression: string = `[foo = 1] & [foo = ""]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -751,10 +755,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[] as record & [foo = 1]`, () => {
+            it(`[] as record & [foo = 1]`, async () => {
                 const expression: string = `[] as record & [foo = 1]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -763,10 +767,10 @@ describe(`Inspection - Type`, () => {
                     true,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[foo = 1] & [] as record`, () => {
+            it(`[foo = 1] & [] as record`, async () => {
                 const expression: string = `[foo = 1] & [] as record`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -775,18 +779,18 @@ describe(`Inspection - Type`, () => {
                     true,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`[] as record & [] as record`, () => {
+            it(`[] as record & [] as record`, async () => {
                 const expression: string = `[] as record & [] as record`;
                 const expected: Type.TPowerQueryType = TypeUtils.createPrimitiveType(false, Type.TypeKind.Record);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.RecordType}`, () => {
-            it(`type [foo]`, () => {
+            it(`type [foo]`, async () => {
                 const expression: string = `type [foo]`;
 
                 const expected: Type.RecordType = TypeUtils.createRecordType(
@@ -795,10 +799,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type [foo, ...]`, () => {
+            it(`type [foo, ...]`, async () => {
                 const expression: string = `type [foo, ...]`;
 
                 const expected: Type.RecordType = TypeUtils.createRecordType(
@@ -807,10 +811,10 @@ describe(`Inspection - Type`, () => {
                     true,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type [foo = number, bar = nullable text]`, () => {
+            it(`type [foo = number, bar = nullable text]`, async () => {
                 const expression: string = `type [foo = number, bar = nullable text]`;
 
                 const expected: Type.RecordType = TypeUtils.createRecordType(
@@ -822,45 +826,45 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
             describe(`any is allowed`, () => {
-                it(`${Ast.NodeKind.InvokeExpression}`, () => {
+                it(`${Ast.NodeKind.InvokeExpression}`, async () => {
                     const expression: string = `let x = (_ as any) in x()`;
                     const expected: Type.Any = Type.AnyInstance;
-                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                    await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
-                it(`${Ast.NodeKind.ItemAccessExpression}`, () => {
+                it(`${Ast.NodeKind.ItemAccessExpression}`, async () => {
                     const expression: string = `let x = (_ as any) in x{0}`;
                     const expected: Type.Any = Type.AnyInstance;
-                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                    await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
                 describe(`${Ast.NodeKind.FieldSelector}`, () => {
-                    it("[a = 1][a]", () => {
+                    it("[a = 1][a]", async () => {
                         const expression: string = `[a = 1][a]`;
                         const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                        await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
-                    it("[a = 1][b]", () => {
+                    it("[a = 1][b]", async () => {
                         const expression: string = `[a = 1][b]`;
                         const expected: Type.None = Type.NoneInstance;
-                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                        await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
 
-                    it("a[b]?", () => {
+                    it("a[b]?", async () => {
                         const expression: string = `[a = 1][b]?`;
                         const expected: Type.Null = Type.NullInstance;
-                        assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                        await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                     });
                 });
 
-                it(`${Ast.NodeKind.FieldProjection}`, () => {
+                it(`${Ast.NodeKind.FieldProjection}`, async () => {
                     const expression: string = `let x = (_ as any) in x[[foo]]`;
 
                     const expected: Type.TPowerQueryType = TypeUtils.createAnyUnion([
@@ -868,25 +872,25 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.createDefinedTable(false, new PQP.OrderedMap([["foo", Type.AnyInstance]]), false),
                     ]);
 
-                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                    await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
 
-                it(`${Ast.NodeKind.FieldSelector}`, () => {
+                it(`${Ast.NodeKind.FieldSelector}`, async () => {
                     const expression: string = `[a = 1][a]`;
                     const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                    assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                    await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
                 });
             });
 
-            it(`let x = () as function => () as number => 1 in x()()`, () => {
+            it(`let x = () as function => () as number => 1 in x()()`, async () => {
                 const expression: string = `let x = () as function => () as number => 1 in x()()`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`Recursive identifiers`, () => {
-            it(`let foo = 1 in [foo = foo]`, () => {
+            it(`let foo = 1 in [foo = foo]`, async () => {
                 const expression: string = `let foo = 1 in [foo = foo]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -895,10 +899,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`let foo = 1 in [foo = foo, bar = foo]`, () => {
+            it(`let foo = 1 in [foo = foo, bar = foo]`, async () => {
                 const expression: string = `let foo = 1 in [foo = foo, bar = foo]`;
 
                 const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
@@ -910,10 +914,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`let someIdentifier = 1, result = let someIdentifier = 2 in [ outer = someIdentifier, inner = @someIdentifier ] in result`, () => {
+            it(`let someIdentifier = 1, result = let someIdentifier = 2 in [ outer = someIdentifier, inner = @someIdentifier ] in result`, async () => {
                 const expression: string = `
     let
         someIdentifier = 1,
@@ -937,12 +941,12 @@ in
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.TableType}`, () => {
-            it(`type table [foo]`, () => {
+            it(`type table [foo]`, async () => {
                 const expression: string = `type table [foo]`;
 
                 const expected: Type.TableType = TypeUtils.createTableType(
@@ -951,10 +955,10 @@ in
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type table [foo]`, () => {
+            it(`type table [foo]`, async () => {
                 const expression: string = `type table [foo]`;
 
                 const expected: Type.TableType = TypeUtils.createTableType(
@@ -963,10 +967,10 @@ in
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`type table [foo = number, bar = nullable text]`, () => {
+            it(`type table [foo = number, bar = nullable text]`, async () => {
                 const expression: string = `type table [foo = number, bar = nullable text]`;
 
                 const expected: Type.TableType = TypeUtils.createTableType(
@@ -978,97 +982,97 @@ in
                     false,
                 );
 
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`${Ast.NodeKind.UnaryExpression}`, () => {
-            it(`+1`, () => {
+            it(`+1`, async () => {
                 const expression: string = `+1`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "+1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`-1`, () => {
+            it(`-1`, async () => {
                 const expression: string = `-1`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "-1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`--1`, () => {
+            it(`--1`, async () => {
                 const expression: string = `--1`;
                 const expected: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "--1");
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`not true`, () => {
+            it(`not true`, async () => {
                 const expression: string = `not true`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`not false`, () => {
+            it(`not false`, async () => {
                 const expression: string = `not false`;
                 const expected: Type.Logical = Type.LogicalInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`not 1`, () => {
+            it(`not 1`, async () => {
                 const expression: string = `not 1`;
                 const expected: Type.None = Type.NoneInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`+true`, () => {
+            it(`+true`, async () => {
                 const expression: string = `+true`;
                 const expected: Type.TPowerQueryType = TypeUtils.createPrimitiveType(false, Type.TypeKind.None);
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
     });
 
     describe(`external type`, () => {
         describe(`value`, () => {
-            it(`resolves to external type`, () => {
+            it(`resolves to external type`, async () => {
                 const expression: string = `foo`;
                 const expected: Type.Function = Type.FunctionInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`indirect identifier resolves to external type`, () => {
+            it(`indirect identifier resolves to external type`, async () => {
                 const expression: string = `let bar = foo in bar`;
                 const expected: Type.Function = Type.FunctionInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`fails to resolve to external type`, () => {
+            it(`fails to resolve to external type`, async () => {
                 const expression: string = `bar`;
                 const expected: Type.Unknown = Type.UnknownInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
         });
 
         describe(`invocation`, () => {
-            it(`resolves with identifier`, () => {
+            it(`resolves with identifier`, async () => {
                 const expression: string = `foo()`;
                 const expected: Type.Text = Type.TextInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`resolves with deferenced identifier`, () => {
+            it(`resolves with deferenced identifier`, async () => {
                 const expression: string = `let bar = foo in bar()`;
                 const expected: Type.Text = Type.TextInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
             });
 
-            it(`resolves based on argument`, () => {
+            it(`resolves based on argument`, async () => {
                 const expression1: string = `foo()`;
                 const expected1: Type.Text = Type.TextInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression1, expected1);
+                await assertParseOkNodeTypeEqual(TestSettings, expression1, expected1);
 
                 const expression2: string = `foo("bar")`;
                 const expected2: Type.Number = Type.NumberInstance;
-                assertParseOkNodeTypeEqual(TestSettings, expression2, expected2);
+                await assertParseOkNodeTypeEqual(TestSettings, expression2, expected2);
             });
         });
     });

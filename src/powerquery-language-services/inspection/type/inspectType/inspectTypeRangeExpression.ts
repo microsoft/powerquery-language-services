@@ -9,7 +9,10 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
-export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXorNode): Type.TPowerQueryType {
+export async function inspectTypeRangeExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeRangeExpression.name,
@@ -19,8 +22,13 @@ export function inspectTypeRangeExpression(state: InspectTypeState, xorNode: TXo
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 0);
-    const maybeRightType: Type.TPowerQueryType | undefined = inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const maybeLeftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+
+    const maybeRightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+        state,
+        xorNode,
+        2,
+    );
 
     let result: Type.TPowerQueryType;
 

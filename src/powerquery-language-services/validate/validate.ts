@@ -5,29 +5,39 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Diagnostic } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateInvokeExpression } from "./validateInvokeExpression";
 import { validateLexAndParse } from "./validateLexAndParse";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
+import { WorkspaceCacheUtils } from "../workspaceCache";
 
-export function validate(textDocument: TextDocument, validationSettings: ValidationSettings): ValidationResult {
-    const cacheItem: WorkspaceCache.ParseCacheItem = WorkspaceCacheUtils.getOrCreateParse(
+export async function validate(
+    textDocument: TextDocument,
+    validationSettings: ValidationSettings,
+): Promise<ValidationResult> {
+    const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         validationSettings,
     );
+
+    if (maybeTriedParse === undefined) {
+        return {
+            diagnostics: [],
+            hasSyntaxError: false,
+        };
+    }
 
     let invokeExpressionDiagnostics: Diagnostic[];
 
     if (
         validationSettings.checkInvokeExpressions &&
-        (PQP.TaskUtils.isParseStageOk(cacheItem) || PQP.TaskUtils.isParseStageParseError(cacheItem))
+        (PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse))
     ) {
-        invokeExpressionDiagnostics = validateInvokeExpression(
+        invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
-            cacheItem.nodeIdMapCollection,
-            WorkspaceCacheUtils.getOrCreateTypeCache(textDocument),
+            maybeTriedParse.nodeIdMapCollection,
+            WorkspaceCacheUtils.getTypeCache(textDocument),
         );
     } else {
         invokeExpressionDiagnostics = [];
@@ -35,10 +45,11 @@ export function validate(textDocument: TextDocument, validationSettings: Validat
 
     return {
         diagnostics: [
-            ...validateDuplicateIdentifiers(textDocument, validationSettings),
-            ...validateLexAndParse(textDocument, validationSettings),
+            ...(await validateDuplicateIdentifiers(textDocument, validationSettings)),
+            ...(await validateLexAndParse(textDocument, validationSettings)),
             ...invokeExpressionDiagnostics,
         ],
-        hasSyntaxError: PQP.TaskUtils.isLexStageError(cacheItem) || PQP.TaskUtils.isParseStageError(cacheItem),
+        hasSyntaxError:
+            PQP.TaskUtils.isLexStageError(maybeTriedParse) || PQP.TaskUtils.isParseStageError(maybeTriedParse),
     };
 }
