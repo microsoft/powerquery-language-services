@@ -15,16 +15,25 @@ export async function validateLexAndParse(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<Diagnostic[]> {
-    const parsePromise: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask =
-        await WorkspaceCacheUtils.getOrCreateParsePromise(textDocument, validationSettings);
+    const parsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        textDocument,
+        validationSettings,
+    );
 
-    if (PQP.TaskUtils.isLexStage(parsePromise)) {
-        return validateLex(parsePromise, validationSettings);
-    } else if (PQP.TaskUtils.isParseStage(parsePromise)) {
+    if (parsePromise !== undefined) {
         return validateParse(parsePromise, validationSettings);
-    } else {
-        return [];
     }
+
+    const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(
+        textDocument,
+        validationSettings,
+    );
+
+    if (lexPromise !== undefined) {
+        return validateLex(lexPromise, validationSettings);
+    }
+
+    return [];
 }
 
 function validateLex(triedLex: PQP.Task.TriedLexTask, validationSettings: ValidationSettings): Diagnostic[] {

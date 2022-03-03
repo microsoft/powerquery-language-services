@@ -38,7 +38,7 @@ export async function tryScopeType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedScopeType = await ResultUtils.ensureAsyncResult(settings.locale, () =>
+    const result: TriedScopeType = await ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectScopeType(state, nodeId),
     );
 
@@ -67,7 +67,7 @@ export async function tryType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedType = await ResultUtils.ensureAsyncResult(settings.locale, () =>
+    const result: TriedType = await ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
     );
 

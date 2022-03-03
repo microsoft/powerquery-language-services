@@ -7,7 +7,11 @@ import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types"
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-export function tryFormat(document: TextDocument, formattingOptions: FormattingOptions, locale: string): TextEdit[] {
+export async function tryFormat(
+    document: TextDocument,
+    formattingOptions: FormattingOptions,
+    locale: string,
+): Promise<TextEdit[]> {
     let indentationLiteral: PQF.IndentationLiteral;
 
     if (formattingOptions.insertSpaces) {
@@ -22,7 +26,7 @@ export function tryFormat(document: TextDocument, formattingOptions: FormattingO
         indentationLiteral,
     };
 
-    const triedFormat: PQF.TriedFormat = PQF.tryFormat(formatSettings, document.getText());
+    const triedFormat: PQF.TriedFormat = await PQF.tryFormat(formatSettings, document.getText());
 
     if (ResultUtils.isOk(triedFormat)) {
         return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];

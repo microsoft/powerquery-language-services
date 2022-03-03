@@ -74,7 +74,7 @@ async function invokeExpressionToDiagnostics(
         let result: Diagnostic[] = [];
 
         result = result.concat(
-            await ArrayUtils.asyncMap(
+            await ArrayUtils.mapAsync(
                 [...invokeExpressionArguments.typeChecked.invalid.entries()],
                 async ([argIndex, mismatch]: [number, TypeUtils.InvocationMismatch]) => {
                     const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(

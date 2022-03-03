@@ -31,7 +31,7 @@ export function tryInvokeExpression(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedInvokeExpression> {
-    return ResultUtils.ensureAsyncResult(settings.locale, () =>
+    return ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, invokeExpressionId, typeCache),
     );
 }

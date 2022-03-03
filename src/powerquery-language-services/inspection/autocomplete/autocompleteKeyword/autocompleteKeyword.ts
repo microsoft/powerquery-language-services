@@ -36,7 +36,7 @@ export function tryAutocompleteKeyword(
         );
     }
 
-    return ResultUtils.ensureAsyncResult(settings.locale, () =>
+    return ResultUtils.ensureResultAsync(settings.locale, () =>
         autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
     );
 }

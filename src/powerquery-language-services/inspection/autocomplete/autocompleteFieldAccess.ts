@@ -40,7 +40,7 @@ export async function tryAutocompleteFieldAccess(
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
-        result = await ResultUtils.ensureAsyncResult(settings.locale, () =>
+        result = await ResultUtils.ensureResultAsync(settings.locale, () =>
             autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
         );
     }

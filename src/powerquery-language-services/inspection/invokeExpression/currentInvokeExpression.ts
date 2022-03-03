@@ -46,7 +46,7 @@ export async function tryCurrentInvokeExpression(
         return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 
-    const result: TriedCurrentInvokeExpression = await ResultUtils.ensureAsyncResult(settings.locale, () =>
+    const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
     );
 
