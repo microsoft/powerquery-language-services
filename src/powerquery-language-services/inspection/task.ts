@@ -52,7 +52,7 @@ export async function inspection(
         );
 
         const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = await tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
+        triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
