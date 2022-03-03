@@ -16,7 +16,7 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-export function tryScopeType(
+export async function tryScopeType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
