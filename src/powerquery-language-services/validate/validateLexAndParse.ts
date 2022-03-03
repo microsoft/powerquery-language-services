@@ -21,7 +21,7 @@ export async function validateLexAndParse(
     );
 
     if (parsePromise !== undefined) {
-        return validateParse(parsePromise, validationSettings);
+        return await validateParse(parsePromise, validationSettings);
     }
 
     const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(

@@ -13,6 +13,7 @@ module.exports = {
         "@typescript-eslint/await-thenable": "error",
         "@typescript-eslint/consistent-type-assertions": ["warn", { assertionStyle: "as" }],
         "@typescript-eslint/explicit-function-return-type": "error",
+        "@typescript-eslint/no-floating-promises": "error",
         "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-namespace": "error",
         "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
