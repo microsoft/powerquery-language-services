@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import type { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 import type { Position } from "vscode-languageserver-types";
-import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { CacheCollection } from "./workspaceCache";
 import { Inspection } from "..";
@@ -116,6 +116,14 @@ export async function getOrCreateInspectionPromise(
         position,
         cacheCollection.typeCache,
     );
+}
+
+export function update(
+    textDocument: TextDocument,
+    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
+    _version: number,
+): void {
+    close(textDocument);
 }
 
 function createCollectionCacheKey(textDocument: TextDocument): string {
