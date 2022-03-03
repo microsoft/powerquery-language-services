@@ -2,8 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { expect } from "chai";
+
 import * as PQP from "@microsoft/powerquery-parser";
-import { Inspection, TextDocument, WorkspaceCacheUtils } from "../powerquery-language-services";
+import { Inspection, TextDocument, WorkspaceCache, WorkspaceCacheUtils } from "../powerquery-language-services";
 import { assertIsOk } from "@microsoft/powerquery-parser/lib/powerquery-parser/task/taskUtils";
 import { isDefined } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/assert";
 import type { Position } from "vscode-languageserver-types";
@@ -79,6 +81,44 @@ describe("workspaceCache", () => {
         );
 
         TestUtils.assertIsDefined(cacheItem);
+    });
+
+    it("cache invalidation with version change", async () => {
+        const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition("foo|");
+
+        let cacheItem: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+            document,
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
+            postion,
+        );
+
+        TestUtils.assertIsDefined(cacheItem);
+
+        let cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
+
+        expect(cacheCollection.version).to.equal(0);
+
+        document.setText("bar");
+
+        cacheItem = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+            document,
+            PQLS.InspectionUtils.createInspectionSettings(
+                PQP.DefaultSettings,
+                undefined,
+                SimpleLibrary.externalTypeResolver,
+            ),
+            postion,
+        );
+
+        TestUtils.assertIsDefined(cacheItem);
+
+        cacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
+
+        expect(cacheCollection.version).to.equal(1);
     });
 });
 

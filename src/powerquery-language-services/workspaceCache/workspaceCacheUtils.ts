@@ -23,6 +23,24 @@ export function getTypeCache(textDocument: TextDocument): Inspection.TypeCache {
     return cacheCollection.typeCache;
 }
 
+export function getOrCreateCacheCollection(textDocument: TextDocument): CacheCollection {
+    const cacheKey: string = createCollectionCacheKey(textDocument);
+    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
+
+    if (maybeCollection !== undefined) {
+        if (textDocument.version === maybeCollection.version) {
+            return maybeCollection;
+        } else {
+            close(textDocument);
+        }
+    }
+
+    const cacheCollection: CacheCollection = createEmptyCollection(textDocument.version);
+    CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
+
+    return cacheCollection;
+}
+
 export function getOrCreateLexPromise(
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings,
@@ -130,29 +148,16 @@ function createCollectionCacheKey(textDocument: TextDocument): string {
     return `${textDocument.uri}`;
 }
 
-function createEmptyCollection(): CacheCollection {
+function createEmptyCollection(version: number): CacheCollection {
     return {
         maybeLex: undefined,
         maybeParse: undefined,
         inspectionByPosition: new Map(),
         typeCache: TypeCacheUtils.createEmptyCache(),
+        version,
     };
 }
 
 function createInspectionByPositionKey(position: Position): string {
     return `${position.character};${position.line}`;
-}
-
-function getOrCreateCacheCollection(textDocument: TextDocument): CacheCollection {
-    const cacheKey: string = createCollectionCacheKey(textDocument);
-    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
-
-    if (maybeCollection !== undefined) {
-        return maybeCollection;
-    } else {
-        const cacheCollection: CacheCollection = createEmptyCollection();
-        CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
-
-        return cacheCollection;
-    }
 }
