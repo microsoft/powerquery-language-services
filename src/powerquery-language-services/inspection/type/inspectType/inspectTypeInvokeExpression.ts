@@ -81,7 +81,7 @@ async function maybeExternalInvokeRequest(
         return undefined;
     }
 
-    const deferencedIdentifier: TXorNode = recursiveIdentifierDereference(state, maybeIdentifier);
+    const deferencedIdentifier: TXorNode = await recursiveIdentifierDereference(state, maybeIdentifier);
 
     const types: Type.TPowerQueryType[] = [];
 

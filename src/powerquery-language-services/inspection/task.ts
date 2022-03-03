@@ -30,15 +30,15 @@ export async function inspection(
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
-    const triedCurrentInvokeExpression: TriedCurrentInvokeExpression = await tryCurrentInvokeExpression(
+    const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
         maybeActiveNode,
         typeCache,
     );
 
-    let triedNodeScope: TriedNodeScope;
-    let triedScopeType: TriedScopeType;
+    let triedNodeScope: Promise<TriedNodeScope>;
+    let triedScopeType: Promise<TriedScopeType>;
     let triedExpectedType: TriedExpectedType;
 
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
@@ -52,12 +52,12 @@ export async function inspection(
         );
 
         const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = await tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
+        triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = PQP.ResultUtils.boxOk(new Map());
-        triedScopeType = PQP.ResultUtils.boxOk(new Map());
+        triedNodeScope = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
         triedExpectedType = PQP.ResultUtils.boxOk(undefined);
     }
 

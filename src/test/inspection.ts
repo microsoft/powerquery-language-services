@@ -12,12 +12,14 @@ import { Inspection, InspectionUtils, Position, SignatureProviderContext } from 
 import { TestConstants, TestUtils } from ".";
 import { MockDocument } from "./mockDocument";
 
-function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): void {
-    if (ResultUtils.isError(inspected.triedNodeScope)) {
-        throw new Error(`expected inspected.triedNodeScope to be Ok`);
+async function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): Promise<void> {
+    const triedNodeScope: Inspection.TriedNodeScope = await inspected.triedNodeScope;
+
+    if (ResultUtils.isError(triedNodeScope)) {
+        throw new Error(`expected triedNodeScope to be Ok`);
     }
 
-    const inclusiveScopeKeys: ReadonlyArray<string> = [...inspected.triedNodeScope.value.entries()]
+    const inclusiveScopeKeys: ReadonlyArray<string> = [...triedNodeScope.value.entries()]
         .filter((pair: [string, Inspection.TScopeItem]) => pair[1].isRecursive === false)
         .map((pair: [string, Inspection.TScopeItem]) => pair[0]);
 
@@ -43,7 +45,7 @@ describe("InspectedInvokeExpression", () => {
             const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
-                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
@@ -60,7 +62,7 @@ describe("InspectedInvokeExpression", () => {
             const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
-                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
@@ -77,7 +79,7 @@ describe("InspectedInvokeExpression", () => {
             const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
-                InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
@@ -97,7 +99,7 @@ describe("InspectedInvokeExpression", () => {
 
                 const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
-                expectScope(inspected, [
+                await expectScope(inspected, [
                     "ConnectionString",
                     "Credential",
                     "CredentialConnectionString",

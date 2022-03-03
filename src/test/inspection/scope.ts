@@ -137,11 +137,11 @@ function createAbridgedParameterScopeItems(nodeScope: Inspection.NodeScope): Rea
     return result;
 }
 
-function assertNodeScopeOk(
+async function assertNodeScopeOk(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-): Inspection.NodeScope {
+): Promise<Inspection.NodeScope> {
     const maybeActiveNode: Inspection.TMaybeActiveNode = Inspection.ActiveNodeUtils.maybeActiveNode(
         nodeIdMapCollection,
         position,
@@ -153,7 +153,7 @@ function assertNodeScopeOk(
 
     const activeNode: Inspection.ActiveNode = maybeActiveNode;
 
-    const triedNodeScope: Inspection.TriedNodeScope = Inspection.tryNodeScope(
+    const triedNodeScope: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
         settings,
         nodeIdMapCollection,
         activeNode.ancestry[0].node.id,

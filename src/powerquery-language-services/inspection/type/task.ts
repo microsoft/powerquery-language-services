@@ -16,7 +16,7 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-export async function tryScopeType(
+export function tryScopeType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
@@ -38,11 +38,11 @@ export async function tryScopeType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedScopeType = await ResultUtils.ensureResultAsync(settings.locale, () =>
+    const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(settings.locale, () =>
         inspectScopeType(state, nodeId),
     );
 
-    trace.exit({ [TraceConstant.IsError]: result.kind });
+    trace.exit();
 
     return result;
 }
@@ -77,7 +77,7 @@ export async function tryType(
 }
 
 async function inspectScopeType(state: InspectTypeState, nodeId: number): Promise<ScopeTypeByKey> {
-    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, nodeId);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId);
 
     for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {

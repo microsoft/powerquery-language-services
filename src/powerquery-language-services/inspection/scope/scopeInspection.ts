@@ -33,23 +33,23 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 // Builds a scope for the given node.
-export function tryNodeScope(
+export async function tryNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
-): TriedNodeScope {
+): Promise<TriedNodeScope> {
     const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Scope, tryNodeScope.name);
 
-    const result: TriedNodeScope = ResultUtils.ensureResult(settings.locale, () => {
+    const result: TriedNodeScope = await ResultUtils.ensureResultAsync(settings.locale, async () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
             return new Map();
         }
 
-        const inspected: ScopeById = inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
+        const inspected: ScopeById = await inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
 
         return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
     });
@@ -59,13 +59,13 @@ export function tryNodeScope(
     return result;
 }
 
-export function assertGetOrCreateNodeScope(
+export async function assertGetOrCreateNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
-): Inspection.TriedNodeScope {
+): Promise<Inspection.TriedNodeScope> {
     const trace: Trace = settings.traceManager.entry(
         LanguageServiceTraceConstant.Scope,
         assertGetOrCreateNodeScope.name,
@@ -79,7 +79,7 @@ export function assertGetOrCreateNodeScope(
         return ResultUtils.boxOk(maybeScope);
     }
 
-    const triedNodeScope: TriedNodeScope = tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
+    const triedNodeScope: TriedNodeScope = await tryNodeScope(settings, nodeIdMapCollection, nodeId, scopeById);
 
     if (ResultUtils.isError(triedNodeScope)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
@@ -94,14 +94,14 @@ export function assertGetOrCreateNodeScope(
 
 // Recusrive deference of the identifier until it reaches the value node.
 // Does not handle recursive identifiers.
-export function maybeDereferencedIdentifier(
+export async function maybeDereferencedIdentifier(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
     // If a map is given, then it's mutated and returned.
     // Else create a new Map instance and return that instead.
     scopeById: ScopeById = new Map(),
-): PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> {
+): Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>> {
     const trace: Trace = settings.traceManager.entry(
         LanguageServiceTraceConstant.Scope,
         maybeDereferencedIdentifier.name,
@@ -138,7 +138,7 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(identifier);
     }
 
-    const triedNodeScope: Inspection.TriedNodeScope = assertGetOrCreateNodeScope(
+    const triedNodeScope: Inspection.TriedNodeScope = await assertGetOrCreateNodeScope(
         settings,
         nodeIdMapCollection,
         xorNode.node.id,
@@ -187,21 +187,21 @@ export function maybeDereferencedIdentifier(
             throw Assert.isNever(scopeItem);
     }
 
-    let result: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>;
+    let result: Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>>;
 
     if (maybeNextXorNode === undefined) {
-        result = ResultUtils.boxOk(xorNode);
+        result = Promise.resolve(ResultUtils.boxOk(xorNode));
     } else if (
         XorNodeUtils.isContextXor(maybeNextXorNode) ||
         (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
             maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {
-        result = ResultUtils.boxOk(xorNode);
+        result = Promise.resolve(ResultUtils.boxOk(xorNode));
     } else {
         result = maybeDereferencedIdentifier(settings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
 
-    trace.exit({ [TraceConstant.Result]: result.kind });
+    trace.exit();
 
     return result;
 }
@@ -214,13 +214,13 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
     ancestryIndex: number;
 }
 
-function inspectScope(
+async function inspectScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     ancestry: ReadonlyArray<TXorNode>,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
-): ScopeById {
+): Promise<ScopeById> {
     const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Scope, inspectScope.name);
     const rootId: number = ancestry[0].node.id;
 
@@ -253,7 +253,8 @@ function inspectScope(
         state.ancestryIndex = ancestryIndex;
         const xorNode: TXorNode = ancestry[ancestryIndex];
 
-        inspectNode(state, xorNode);
+        // eslint-disable-next-line no-await-in-loop
+        await inspectNode(state, xorNode);
     }
 
     trace.exit();
@@ -261,7 +262,8 @@ function inspectScope(
     return state.deltaScope;
 }
 
-function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): void {
+// eslint-disable-next-line require-await
+async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode): Promise<void> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Scope,
         inspectNode.name,
