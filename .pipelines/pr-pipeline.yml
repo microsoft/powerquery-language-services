@@ -4,58 +4,58 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
 
 trigger:
-- master
+    - master
 
 pr:
-- master
+    - master
 
 pool:
-  vmImage: 'windows-latest'
+    vmImage: "windows-latest"
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
+    - task: NodeTool@0
+      inputs:
+          versionSpec: "16.x"
+      displayName: "Install Node.js"
 
-- task: Npm@1
-  displayName: 'npm install'
-  inputs:
-    command: 'install'
+    - task: Npm@1
+      displayName: "npm install"
+      inputs:
+          command: "install"
 
-- task: Npm@1
-  displayName: 'build'
-  inputs:
-    command: 'custom'
-    customCommand: 'run build'
+    - task: Npm@1
+      displayName: "build"
+      inputs:
+          command: "custom"
+          customCommand: "run build"
 
-- task: Npm@1
-  displayName: 'npm test'
-  inputs:
-    command: 'custom'
-    customCommand: 'test'
+    - task: Npm@1
+      displayName: "npm test"
+      inputs:
+          command: "custom"
+          customCommand: "test"
 
-- task: PoliCheck@1
-  inputs:
-    inputType: 'Basic'
-    targetType: 'F'
-    targetArgument: 'src'
-    result: 'PoliCheck.xml'
+    - task: PoliCheck@1
+      inputs:
+          inputType: "Basic"
+          targetType: "F"
+          targetArgument: "src"
+          result: "PoliCheck.xml"
 
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testRunner: JUnit
-    testResultsFiles: '**/test-results.xml'
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+          testRunner: JUnit
+          testResultsFiles: "**/test-results.xml"
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(System.DefaultWorkingDirectory)/lib'
-    ArtifactName: lib
-  displayName: 'publish lib'
+    - task: PublishBuildArtifacts@1
+      inputs:
+          PathtoPublish: "$(System.DefaultWorkingDirectory)/lib"
+          ArtifactName: lib
+      displayName: "publish lib"
 
-- task: PublishBuildArtifacts@1
-  inputs:
-   PathtoPublish: '$(System.DefaultWorkingDirectory)/../_sdt/logs/PoliCheck'
-   ArtifactName: PoliCheck
-  displayName: 'publish policheck results'
+    - task: PublishBuildArtifacts@1
+      inputs:
+          PathtoPublish: "$(System.DefaultWorkingDirectory)/../_sdt/logs/PoliCheck"
+          ArtifactName: PoliCheck
+      displayName: "publish policheck results"
