@@ -119,7 +119,7 @@ describe(`Validation - duplicateIdentifier`, () => {
             expectNoValidationErrors(textDocument);
         });
 
-        it("errors after update", async () => {
+        it("WIP errors after update", async () => {
             const text: string = "let a = 1 in a";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
             expectNoValidationErrors(textDocument);
