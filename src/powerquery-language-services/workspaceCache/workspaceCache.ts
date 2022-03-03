@@ -13,7 +13,7 @@ export interface CacheCollection {
     maybeLex: Promise<PQP.Task.TriedLexTask> | undefined;
     maybeParse: Promise<PQP.Task.TriedParseTask | undefined> | undefined;
     // Inspections are done on a given position so it requires a map for inspection promises.
-    inspectionByPosition: Map<string, Promise<Inspection.Inspection> | undefined>;
+    readonly inspectionByPosition: Map<string, Promise<Inspection.Inspection> | undefined>;
     readonly typeCache: Inspection.TypeCache;
     readonly version: number;
 }
