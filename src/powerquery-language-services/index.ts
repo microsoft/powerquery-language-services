@@ -26,12 +26,11 @@ export function createTextDocument(id: string, version: number, content: string)
 }
 
 export function documentUpdated(
-    document: TextDocument,
-    changes: ReadonlyArray<TextDocumentContentChangeEvent>,
-    version: number,
-): void {
-    WorkspaceCacheUtils.update(document, changes, version);
-}
+    _document: TextDocument,
+    _changes: ReadonlyArray<TextDocumentContentChangeEvent>,
+    _version: number,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+): void {}
 
 export function documentClosed(document: TextDocument): void {
     WorkspaceCacheUtils.close(document);

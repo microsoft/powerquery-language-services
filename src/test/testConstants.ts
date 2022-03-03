@@ -14,7 +14,6 @@ import {
     LibraryUtils,
     LocalDocumentSymbolProvider,
     ValidationSettings,
-    WorkspaceCache,
 } from "../powerquery-language-services";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
 
@@ -246,9 +245,9 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
-        maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+        maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
-    ) => new LocalDocumentSymbolProvider(library, maybeTriedInspection, createInspectionSettingsFn),
+    ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
 };
 
 export const enum TestLibraryName {

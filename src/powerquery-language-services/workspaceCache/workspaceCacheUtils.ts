@@ -12,6 +12,11 @@ import { TypeCacheUtils } from "../inspection";
 
 const CacheCollectionByCacheKey: Map<string, CacheCollection> = new Map();
 
+export function close(textDocument: TextDocument): void {
+    const collectionCacheKey: string = createCollectionCacheKey(textDocument);
+    CacheCollectionByCacheKey.delete(collectionCacheKey);
+}
+
 export function getTypeCache(textDocument: TextDocument): Inspection.TypeCache {
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
 
@@ -113,7 +118,7 @@ export async function getOrCreateInspectionPromise(
     );
 }
 
-function createCacheKey(textDocument: TextDocument): string {
+function createCollectionCacheKey(textDocument: TextDocument): string {
     return `${textDocument.uri}`;
 }
 
@@ -131,7 +136,7 @@ function createInspectionByPositionKey(position: Position): string {
 }
 
 function getOrCreateCacheCollection(textDocument: TextDocument): CacheCollection {
-    const cacheKey: string = createCacheKey(textDocument);
+    const cacheKey: string = createCollectionCacheKey(textDocument);
     const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
 
     if (maybeCollection !== undefined) {

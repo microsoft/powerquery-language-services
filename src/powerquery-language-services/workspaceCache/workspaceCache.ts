@@ -4,11 +4,6 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Inspection } from "..";
 
-export interface InspectionTask {
-    readonly stage: "Inspection";
-    readonly result: Inspection.Inspection;
-}
-
 // A collection of cached promises for a given TextDocument.uri
 //
 // If maybeLex or maybeParse is undefined, then those promises hasn't been evaluated yet.

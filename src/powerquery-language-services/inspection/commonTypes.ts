@@ -18,4 +18,5 @@ export interface Inspection {
     readonly triedScopeType: Inspection.TriedScopeType;
     readonly triedExpectedType: TriedExpectedType;
     readonly typeCache: TypeCache;
+    readonly parseState: PQP.Parser.ParseState;
 }

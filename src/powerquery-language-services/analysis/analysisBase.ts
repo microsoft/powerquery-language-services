@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Position, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -20,7 +20,6 @@ import type {
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { Library } from "../library";
@@ -32,15 +31,14 @@ export abstract class AnalysisBase implements Analysis {
 
     constructor(
         protected analysisSettings: AnalysisSettings,
-        protected maybeInspectionCacheItem: WorkspaceCache.CacheItem,
-        protected position: Position,
+        protected promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
     ) {
         const library: Library.ILibrary = analysisSettings.library;
 
         this.languageAutocompleteItemProvider =
             analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn !== undefined
                 ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()
-                : new LanguageAutocompleteItemProvider(maybeInspectionCacheItem);
+                : new LanguageAutocompleteItemProvider(promiseMaybeInspection);
 
         this.librarySymbolProvider =
             analysisSettings.maybeCreateLibrarySymbolProviderFn !== undefined
@@ -51,12 +49,12 @@ export abstract class AnalysisBase implements Analysis {
             analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
                 ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
                       library,
-                      maybeInspectionCacheItem,
+                      promiseMaybeInspection,
                       analysisSettings.createInspectionSettingsFn,
                   )
                 : new LocalDocumentSymbolProvider(
                       library,
-                      maybeInspectionCacheItem,
+                      promiseMaybeInspection,
                       analysisSettings.createInspectionSettingsFn,
                   );
     }
@@ -64,7 +62,8 @@ export abstract class AnalysisBase implements Analysis {
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
         let context: AutocompleteItemProviderContext = {};
 
-        const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = this.getMaybePositionIdentifier();
+        const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            await this.getMaybePositionIdentifier();
 
         if (maybeToken !== undefined) {
             context = {
@@ -100,24 +99,25 @@ export abstract class AnalysisBase implements Analysis {
         return partial.sort(AutocompleteItemUtils.compareFn);
     }
 
-    // eslint-disable-next-line require-await
     public async getHover(): Promise<Hover> {
-        const identifierToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-            this.getMaybePositionIdentifier();
+        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
 
-        if (identifierToken === undefined) {
+        const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            maybeActiveNode?.maybeIdentifierUnderPosition;
+
+        if (
+            maybeActiveNode === undefined ||
+            maybeIdentifierUnderPosition === undefined ||
+            !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)
+        ) {
             return EmptyHover;
         }
 
-        const maybeActiveNode: Inspection.ActiveNode | undefined = this.getMaybeActiveNode();
-
-        if (maybeActiveNode === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
-            return EmptyHover;
-        }
+        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
 
         const context: HoverProviderContext = {
-            range: CommonTypesUtils.rangeFromTokenRange(identifierToken.tokenRange),
-            identifier: identifierToken.literal,
+            range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
+            identifier: identifier.literal,
         };
 
         // Result priority is based on the order of the symbol providers
@@ -133,14 +133,14 @@ export abstract class AnalysisBase implements Analysis {
 
     // eslint-disable-next-line require-await
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        if (!WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem)) {
+        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+
+        if (maybeInspection === undefined) {
             return EmptySignatureHelp;
         }
 
-        const inspected: Inspection.Inspection = this.maybeInspectionCacheItem;
-
         const maybeContext: SignatureProviderContext | undefined =
-            InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            InspectionUtils.getMaybeContextForSignatureProvider(maybeInspection);
 
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
@@ -165,7 +165,6 @@ export abstract class AnalysisBase implements Analysis {
 
     public abstract dispose(): void;
 
-    protected abstract getLexerState(): WorkspaceCache.LexCacheItem;
     protected abstract getText(range?: Range): string;
 
     private static promiseWithTimeout<T>(
@@ -268,14 +267,21 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private getMaybePositionIdentifier(): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
-        return this.getMaybeActiveNode()?.maybeIdentifierUnderPosition;
+    private async getMaybePositionIdentifier(): Promise<Ast.Identifier | Ast.GeneralizedIdentifier | undefined> {
+        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+
+        return maybeActiveNode?.maybeIdentifierUnderPosition;
     }
 
-    private getMaybeActiveNode(): Inspection.ActiveNode | undefined {
-        return WorkspaceCacheUtils.isInspectionTask(this.maybeInspectionCacheItem) &&
-            Inspection.ActiveNodeUtils.isPositionInBounds(this.maybeInspectionCacheItem.maybeActiveNode)
-            ? this.maybeInspectionCacheItem.maybeActiveNode
+    private async getMaybeActiveNode(): Promise<Inspection.ActiveNode | undefined> {
+        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+
+        if (maybeInspection === undefined) {
+            return undefined;
+        }
+
+        return Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspection.maybeActiveNode)
+            ? maybeInspection.maybeActiveNode
             : undefined;
     }
 }

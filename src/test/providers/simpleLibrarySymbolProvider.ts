@@ -13,7 +13,6 @@ import {
     Inspection,
     NullSymbolProvider,
     SignatureHelp,
-    WorkspaceCache,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
@@ -22,7 +21,7 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLocalDocumentSymbolProviderFn: (
         _library: ILibrary,
-        _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+        _maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
     ) => NullSymbolProvider.singleton(),
 };
 

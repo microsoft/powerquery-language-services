@@ -9,7 +9,7 @@ import { DocumentSymbol, Hover, Position, SignatureHelp, SymbolKind } from "vsco
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
 import { Analysis, Inspection } from "../../powerquery-language-services";
-import { AnalysisSettings } from "../../powerquery-language-services/analysis/analysisSettings";
+import { AnalysisSettings } from "../..";
 import { MockDocument } from "../mockDocument";
 
 export interface AbridgedDocumentSymbol {

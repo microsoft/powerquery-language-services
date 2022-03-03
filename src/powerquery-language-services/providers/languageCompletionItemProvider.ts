@@ -5,7 +5,6 @@ import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { AutocompleteItemProvider, AutocompleteItemProviderContext } from "./commonTypes";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { Inspection } from "..";
 
@@ -26,17 +25,19 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
         KeywordKind.HashTime,
     ];
 
-    constructor(private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem) {}
+    constructor(private readonly maybePromiseInspection: Promise<Inspection.Inspection | undefined>) {}
 
     // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
-        if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
+        const maybeInspection: Inspection.Inspection | undefined = await this.maybePromiseInspection;
+
+        if (maybeInspection === undefined) {
             return [];
         }
 
-        const autocomplete: Inspection.Autocomplete = this.maybeTriedInspection.autocomplete;
+        const autocomplete: Inspection.Autocomplete = maybeInspection.autocomplete;
 
         return [
             ...this.getKeywords(autocomplete.triedKeyword),

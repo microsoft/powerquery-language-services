@@ -16,18 +16,27 @@ export async function validate(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<ValidationResult> {
-    const parsePromise: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask =
-        await WorkspaceCacheUtils.getOrCreateParsePromise(textDocument, validationSettings);
+    const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        textDocument,
+        validationSettings,
+    );
+
+    if (maybeTriedParse === undefined) {
+        return {
+            diagnostics: [],
+            hasSyntaxError: false,
+        };
+    }
 
     let invokeExpressionDiagnostics: Diagnostic[];
 
     if (
         validationSettings.checkInvokeExpressions &&
-        (PQP.TaskUtils.isParseStageOk(parsePromise) || PQP.TaskUtils.isParseStageParseError(parsePromise))
+        (PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse))
     ) {
         invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
-            parsePromise.nodeIdMapCollection,
+            maybeTriedParse.nodeIdMapCollection,
             WorkspaceCacheUtils.getTypeCache(textDocument),
         );
     } else {
@@ -40,6 +49,7 @@ export async function validate(
             ...(await validateLexAndParse(textDocument, validationSettings)),
             ...invokeExpressionDiagnostics,
         ],
-        hasSyntaxError: PQP.TaskUtils.isLexStageError(parsePromise) || PQP.TaskUtils.isParseStageError(parsePromise),
+        hasSyntaxError:
+            PQP.TaskUtils.isLexStageError(maybeTriedParse) || PQP.TaskUtils.isParseStageError(maybeTriedParse),
     };
 }

@@ -69,5 +69,6 @@ export async function inspection(
         triedScopeType,
         triedExpectedType,
         typeCache,
+        parseState,
     };
 }

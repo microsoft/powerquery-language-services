@@ -40,7 +40,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -57,7 +57,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -74,7 +74,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(document, position);
+            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -95,10 +95,7 @@ describe("InspectedInvokeExpression", () => {
                     character: 23,
                 };
 
-                const inspected: Inspection.Inspection = await TestUtils.assertGetInspectionCacheItem(
-                    document,
-                    position,
-                );
+                const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
 
                 expectScope(inspected, [
                     "ConnectionString",

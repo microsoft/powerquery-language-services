@@ -9,7 +9,13 @@ import { expect } from "chai";
 import * as TestConstants from "../testConstants";
 import * as TestUtils from "./testUtils";
 import { ActiveNodeUtils, TypeCacheUtils } from "../../powerquery-language-services/inspection";
-import { Inspection, InspectionSettings, TextDocument, validate } from "../../powerquery-language-services";
+import {
+    Inspection,
+    InspectionSettings,
+    TextDocument,
+    validate,
+    WorkspaceCacheUtils,
+} from "../../powerquery-language-services";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -84,6 +90,18 @@ export function assertGetAutocompleteItem(
 
 //     return cacheItem;
 // }
+
+export async function assertGetInspection(document: TextDocument, position: Position): Promise<Inspection.Inspection> {
+    const inspected: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+        document,
+        TestConstants.SimpleInspectionSettings,
+        position,
+    );
+
+    Assert.isDefined(inspected);
+
+    return inspected;
+}
 
 export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
     // TODO: figure out why this exception is needed

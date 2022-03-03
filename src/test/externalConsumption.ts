@@ -34,8 +34,8 @@ describe("External consumption", () => {
         };
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings, position);
-        const hover: Hover = await analysis.getHover();
 
+        const hover: Hover = await analysis.getHover();
         expect(hover.range === undefined);
         expect(hover.contents === null);
 

@@ -26,15 +26,22 @@ export async function validateDuplicateIdentifiers(
         return [];
     }
 
-    const parsePromise: PQP.Task.TriedLexTask | PQP.Task.TriedParseTask =
-        await WorkspaceCacheUtils.getOrCreateParsePromise(textDocument, validationSettings);
+    const maybeParsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        textDocument,
+        validationSettings,
+    );
 
+    if (maybeParsePromise === undefined) {
+        return [];
+    }
+
+    const triedParse: PQP.Task.TriedParseTask = maybeParsePromise;
     let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
 
-    if (PQP.TaskUtils.isParseStageOk(parsePromise)) {
-        maybeNodeIdMapCollection = parsePromise.nodeIdMapCollection;
-    } else if (PQP.TaskUtils.isParseStageParseError(parsePromise)) {
-        maybeNodeIdMapCollection = parsePromise.nodeIdMapCollection;
+    if (PQP.TaskUtils.isParseStageOk(triedParse)) {
+        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
+    } else if (PQP.TaskUtils.isParseStageParseError(triedParse)) {
+        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
     }
 
     if (maybeNodeIdMapCollection === undefined) {

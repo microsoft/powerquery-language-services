@@ -19,7 +19,6 @@ import {
     SignatureProviderContext,
 } from "./commonTypes";
 import { Inspection, Library } from "..";
-import { WorkspaceCache, WorkspaceCacheUtils } from "../workspaceCache";
 import { InspectionSettings } from "../inspectionSettings";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
@@ -28,7 +27,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     constructor(
         library: Library.ILibrary,
-        private readonly maybeTriedInspection: WorkspaceCache.InspectionCacheItem,
+        private readonly promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
         private readonly createInspectionSettingsFn: () => InspectionSettings,
     ) {
         this.externalTypeResolver = library.externalTypeResolver;
@@ -39,7 +38,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
+        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
 
         if (maybeInspection === undefined) {
             return [];
@@ -51,24 +50,23 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         ];
     }
 
-    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        if (!WorkspaceCacheUtils.isInspectionTask(this.maybeTriedInspection)) {
+        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+
+        if (maybeInspection === undefined) {
             return null;
         }
 
-        const activeNode: Inspection.TMaybeActiveNode = this.maybeTriedInspection.maybeActiveNode;
+        const activeNode: Inspection.TMaybeActiveNode = maybeInspection.maybeActiveNode;
 
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return null;
         }
 
-        const inspection: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
-
         let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
-            this.maybeTriedInspection,
+            maybeInspection,
             activeNode,
         );
 
@@ -76,23 +74,22 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return maybeHover;
         }
 
-        if (!ResultUtils.isOk(inspection.triedNodeScope) || !ResultUtils.isOk(inspection.triedScopeType)) {
+        if (!ResultUtils.isOk(maybeInspection.triedNodeScope) || !ResultUtils.isOk(maybeInspection.triedScopeType)) {
             return null;
         }
 
         maybeHover = LocalDocumentSymbolProvider.getHoverForScopeItem(
             context,
-            inspection.triedNodeScope.value,
-            inspection.triedScopeType.value,
+            maybeInspection.triedNodeScope.value,
+            maybeInspection.triedScopeType.value,
         );
 
         return maybeHover ?? null;
     }
 
-    // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
-            this.getMaybeInspectionInvokeExpression();
+            await this.getMaybeInspectionInvokeExpression();
 
         if (maybeInvokeInspection === undefined) {
             return null;
@@ -115,10 +112,10 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     protected static async getHoverForIdentifierPairedExpression(
         context: HoverProviderContext,
         inspectionSettings: InspectionSettings,
-        inspectionTask: WorkspaceCache.InspectionTask,
+        inspection: Inspection.Inspection,
         activeNode: Inspection.ActiveNode,
     ): Promise<Hover | undefined> {
-        const parseState: ParseState = inspectionTask.parseState;
+        const parseState: ParseState = inspection.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
 
@@ -160,7 +157,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             inspectionSettings,
             parseState.contextState.nodeIdMapCollection,
             maybeExpression.node.id,
-            inspectionTask.typeCache,
+            inspection.typeCache,
         );
 
         // TODO handle error
@@ -230,20 +227,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         };
     }
 
-    private getMaybeInspection(): Inspection.Inspection | undefined {
-        const inspectionCacheItem: WorkspaceCache.InspectionCacheItem = this.maybeTriedInspection;
+    private async getMaybeInspectionInvokeExpression(): Promise<Inspection.InvokeExpression | undefined> {
+        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
 
-        if (!WorkspaceCacheUtils.isInspectionTask(inspectionCacheItem)) {
+        if (maybeInspection === undefined) {
             return undefined;
-        } else {
-            return inspectionCacheItem;
         }
-    }
 
-    private getMaybeInspectionInvokeExpression(): Inspection.InvokeExpression | undefined {
-        const maybeInspection: Inspection.Inspection | undefined = this.getMaybeInspection();
-
-        return maybeInspection !== undefined && ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
+        return ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
             ? maybeInspection.triedCurrentInvokeExpression.value
             : undefined;
     }

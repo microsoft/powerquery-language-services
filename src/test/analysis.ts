@@ -8,9 +8,9 @@ import { expect } from "chai";
 import {
     AnalysisSettings,
     Hover,
+    Inspection,
     InspectionSettings,
     SignatureHelp,
-    WorkspaceCache,
 } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
@@ -41,7 +41,7 @@ describe("Analysis", () => {
                 symbolProviderTimeoutInMS: 0, // immediate timeout
                 maybeCreateLocalDocumentSymbolProviderFn: (
                     library: ILibrary,
-                    _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+                    _maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
                     _createInspectionSettingsFn: () => InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),
                 maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
@@ -127,7 +127,7 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
             ? {
                   maybeCreateLocalDocumentSymbolProviderFn: (
                       library: ILibrary,
-                      _maybeTriedInspection: WorkspaceCache.CacheItem | undefined,
+                      _maybePromiseInspection: Promise<Inspection.Inspection> | undefined,
                       _createInspectionSettingsFn: () => InspectionSettings,
                   ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
               }
