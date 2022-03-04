@@ -12,7 +12,7 @@ import { Inspection, InspectionUtils, Position, SignatureProviderContext } from 
 import { TestConstants, TestUtils } from ".";
 import { MockDocument } from "./mockDocument";
 
-async function expectScope(inspected: Inspection.Inspection, expected: ReadonlyArray<string>): Promise<void> {
+async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyArray<string>): Promise<void> {
     const triedNodeScope: Inspection.TriedNodeScope = await inspected.triedNodeScope;
 
     if (ResultUtils.isError(triedNodeScope)) {
@@ -42,7 +42,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
+            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -59,7 +59,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
+            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -76,7 +76,7 @@ describe("InspectedInvokeExpression", () => {
                 `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
             );
 
-            const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
+            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
             const maybeContext: SignatureProviderContext | undefined =
                 await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
@@ -97,7 +97,7 @@ describe("InspectedInvokeExpression", () => {
                     character: 23,
                 };
 
-                const inspected: Inspection.Inspection = await TestUtils.assertGetInspection(document, position);
+                const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
                 await expectScope(inspected, [
                     "ConnectionString",

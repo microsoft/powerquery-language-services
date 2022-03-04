@@ -27,7 +27,7 @@ export function createInspectionSettings(
 }
 
 export async function getMaybeContextForSignatureProvider(
-    inspected: Inspection.Inspection,
+    inspected: Inspection.Inspected,
 ): Promise<SignatureProviderContext | undefined> {
     const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
         await inspected.triedCurrentInvokeExpression;
@@ -83,10 +83,10 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
 }
 
 export async function getMaybeType(
-    inspection: Inspection.Inspection,
+    inspected: Inspection.Inspected,
     identifier: string,
 ): Promise<Type.TPowerQueryType | undefined> {
-    const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;
+    const triedScopeType: Inspection.TriedScopeType = await inspected.triedScopeType;
 
     return ResultUtils.isOk(triedScopeType) ? triedScopeType.value.get(identifier) : undefined;
 }
@@ -218,7 +218,7 @@ export function getSymbolForIdentifierPairedExpression(
 
 export async function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
-    inspection: Inspection.Inspection,
+    inspection: Inspection.Inspected,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     const triedNodeScope: Inspection.TriedNodeScope = await inspection.triedNodeScope;
     const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;

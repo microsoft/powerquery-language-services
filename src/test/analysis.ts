@@ -41,7 +41,7 @@ describe("Analysis", () => {
                 symbolProviderTimeoutInMS: 0, // immediate timeout
                 maybeCreateLocalDocumentSymbolProviderFn: (
                     library: ILibrary,
-                    _maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
+                    _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
                     _createInspectionSettingsFn: () => InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),
                 maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
@@ -127,7 +127,7 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
             ? {
                   maybeCreateLocalDocumentSymbolProviderFn: (
                       library: ILibrary,
-                      _maybePromiseInspection: Promise<Inspection.Inspection> | undefined,
+                      _maybePromiseInspected: Promise<Inspection.Inspected> | undefined,
                       _createInspectionSettingsFn: () => InspectionSettings,
                   ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
               }

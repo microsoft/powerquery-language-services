@@ -245,7 +245,7 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
-        maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
+        maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
 };

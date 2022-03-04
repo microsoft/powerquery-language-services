@@ -88,11 +88,11 @@ export async function getOrCreateParsePromise(
     return cacheCollection.maybeParse;
 }
 
-export async function getOrCreateInspectionPromise(
+export async function getOrCreateInspectedPromise(
     textDocument: TextDocument,
     inspectionSettings: InspectionSettings,
     position: Position,
-): Promise<Inspection.Inspection | undefined> {
+): Promise<Inspection.Inspected | undefined> {
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
     const positionMapKey: string = createInspectionByPositionKey(position);
 
@@ -127,7 +127,7 @@ export async function getOrCreateInspectionPromise(
         throw PQP.Assert.isNever(maybeTriedParse);
     }
 
-    return Inspection.inspection(
+    return Inspection.inspect(
         inspectionSettings,
         parseState,
         PQP.TaskUtils.isParseStageParseError(maybeTriedParse) ? maybeTriedParse.error : undefined,

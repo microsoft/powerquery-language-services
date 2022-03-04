@@ -12,7 +12,7 @@ export class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly textDocument: TextDocument, analysisSettings: AnalysisSettings, position: Position) {
         super(
             analysisSettings,
-            WorkspaceCacheUtils.getOrCreateInspectionPromise(
+            WorkspaceCacheUtils.getOrCreateInspectedPromise(
                 textDocument,
                 analysisSettings.createInspectionSettingsFn(),
                 position,

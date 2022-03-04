@@ -27,7 +27,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
     constructor(
         library: Library.ILibrary,
-        private readonly promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
+        private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         private readonly createInspectionSettingsFn: () => InspectionSettings,
     ) {
         this.externalTypeResolver = library.externalTypeResolver;
@@ -37,26 +37,26 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
-        if (maybeInspection === undefined) {
+        if (maybeInspected === undefined) {
             return [];
         }
 
         return [
-            ...this.getAutocompleteItemsFromFieldAccess(maybeInspection),
-            ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspection)),
+            ...this.getAutocompleteItemsFromFieldAccess(maybeInspected),
+            ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspected)),
         ];
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
-        if (maybeInspection === undefined) {
+        if (maybeInspected === undefined) {
             return null;
         }
 
-        const activeNode: Inspection.TMaybeActiveNode = maybeInspection.maybeActiveNode;
+        const activeNode: Inspection.TMaybeActiveNode = maybeInspected.maybeActiveNode;
 
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return null;
@@ -65,7 +65,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
-            maybeInspection,
+            maybeInspected,
             activeNode,
         );
 
@@ -73,8 +73,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return maybeHover;
         }
 
-        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspection.triedNodeScope;
-        const triedScopeType: Inspection.TriedScopeType = await maybeInspection.triedScopeType;
+        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspected.triedNodeScope;
+        const triedScopeType: Inspection.TriedScopeType = await maybeInspected.triedScopeType;
 
         if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
             return null;
@@ -114,10 +114,10 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     protected static async getHoverForIdentifierPairedExpression(
         context: HoverProviderContext,
         inspectionSettings: InspectionSettings,
-        inspection: Inspection.Inspection,
+        inspected: Inspection.Inspected,
         activeNode: Inspection.ActiveNode,
     ): Promise<Hover | undefined> {
-        const parseState: ParseState = inspection.parseState;
+        const parseState: ParseState = inspected.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
 
@@ -159,7 +159,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             inspectionSettings,
             parseState.contextState.nodeIdMapCollection,
             maybeExpression.node.id,
-            inspection.typeCache,
+            inspected.typeCache,
         );
 
         // TODO handle error
@@ -230,20 +230,20 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     private async getMaybeInspectionInvokeExpression(): Promise<Inspection.InvokeExpression | undefined> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
-        if (maybeInspection === undefined) {
+        if (maybeInspected === undefined) {
             return undefined;
         }
 
         const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
-            await maybeInspection.triedCurrentInvokeExpression;
+            await maybeInspected.triedCurrentInvokeExpression;
 
         return ResultUtils.isOk(triedCurrentInvokeExpression) ? triedCurrentInvokeExpression.value : undefined;
     }
 
     private getAutocompleteItemsFromFieldAccess(
-        inspection: Inspection.Inspection,
+        inspection: Inspection.Inspected,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
         const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
 
