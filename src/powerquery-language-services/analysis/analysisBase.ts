@@ -132,7 +132,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
             return EmptySignatureHelp;

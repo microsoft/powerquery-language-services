@@ -37,7 +37,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
             return [];
@@ -50,7 +50,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
             return null;
@@ -230,7 +230,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     private async getMaybeInspectionInvokeExpression(): Promise<Inspection.InvokeExpression | undefined> {
-        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
             return undefined;
