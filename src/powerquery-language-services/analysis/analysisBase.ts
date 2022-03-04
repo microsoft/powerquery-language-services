@@ -273,7 +273,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private async getMaybeActiveNode(): Promise<Inspection.ActiveNode | undefined> {
-        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
             return undefined;
