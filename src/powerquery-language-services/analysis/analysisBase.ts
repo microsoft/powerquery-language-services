@@ -31,14 +31,14 @@ export abstract class AnalysisBase implements Analysis {
 
     constructor(
         protected analysisSettings: AnalysisSettings,
-        protected promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
+        protected promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
     ) {
         const library: Library.ILibrary = analysisSettings.library;
 
         this.languageAutocompleteItemProvider =
             analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn !== undefined
                 ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()
-                : new LanguageAutocompleteItemProvider(promiseMaybeInspection);
+                : new LanguageAutocompleteItemProvider(promiseMaybeInspected);
 
         this.librarySymbolProvider =
             analysisSettings.maybeCreateLibrarySymbolProviderFn !== undefined
@@ -49,12 +49,12 @@ export abstract class AnalysisBase implements Analysis {
             analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
                 ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
                       library,
-                      promiseMaybeInspection,
+                      promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
                   )
                 : new LocalDocumentSymbolProvider(
                       library,
-                      promiseMaybeInspection,
+                      promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
                   );
     }
@@ -132,14 +132,14 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
-        if (maybeInspection === undefined) {
+        if (maybeInspected === undefined) {
             return EmptySignatureHelp;
         }
 
         const maybeContext: SignatureProviderContext | undefined =
-            await InspectionUtils.getMaybeContextForSignatureProvider(maybeInspection);
+            await InspectionUtils.getMaybeContextForSignatureProvider(maybeInspected);
 
         if (maybeContext === undefined) {
             return EmptySignatureHelp;
@@ -273,14 +273,14 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private async getMaybeActiveNode(): Promise<Inspection.ActiveNode | undefined> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
+        const maybemaybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
-        if (maybeInspection === undefined) {
+        if (maybeInspected === undefined) {
             return undefined;
         }
 
-        return Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspection.maybeActiveNode)
-            ? maybeInspection.maybeActiveNode
+        return Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspected.maybeActiveNode)
+            ? maybeInspected.maybeActiveNode
             : undefined;
     }
 }

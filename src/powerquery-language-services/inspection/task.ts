@@ -11,12 +11,12 @@ import { TriedNodeScope, tryNodeScope } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
-import { Inspection } from "./commonTypes";
+import { Inspected } from "./commonTypes";
 import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 
-export async function inspection(
+export async function inspect(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
@@ -24,7 +24,7 @@ export async function inspection(
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
-): Promise<Inspection> {
+): Promise<Inspected> {
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty

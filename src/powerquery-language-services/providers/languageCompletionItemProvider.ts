@@ -25,12 +25,12 @@ export class LanguageAutocompleteItemProvider implements AutocompleteItemProvide
         KeywordKind.HashTime,
     ];
 
-    constructor(private readonly maybePromiseInspection: Promise<Inspection.Inspection | undefined>) {}
+    constructor(private readonly maybePromiseInspection: Promise<Inspection.Inspected | undefined>) {}
 
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
-        const maybeInspection: Inspection.Inspection | undefined = await this.maybePromiseInspection;
+        const maybeInspection: Inspection.Inspected | undefined = await this.maybePromiseInspection;
 
         if (maybeInspection === undefined) {
             return [];

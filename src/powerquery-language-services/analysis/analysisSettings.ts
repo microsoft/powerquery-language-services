@@ -14,7 +14,7 @@ export interface AnalysisSettings {
     readonly maybeCreateLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentSymbolProviderFn?: (
         library: ILibrary,
-        promiseMaybeInspection: Promise<Inspection.Inspection | undefined>,
+        promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => ISymbolProvider;
     readonly symbolProviderTimeoutInMS?: number;

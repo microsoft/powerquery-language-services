@@ -8,9 +8,9 @@ import { TMaybeActiveNode } from "./activeNode";
 import { TriedExpectedType } from "./expectedType";
 import { TypeCache } from "./typeCache";
 
-export type TriedInspection = PQP.Result<Inspection, PQP.CommonError.CommonError>;
+export type TriedInspection = PQP.Result<Inspected, PQP.CommonError.CommonError>;
 
-export interface Inspection {
+export interface Inspected {
     readonly maybeActiveNode: TMaybeActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
     readonly triedCurrentInvokeExpression: Promise<Inspection.TriedCurrentInvokeExpression>;

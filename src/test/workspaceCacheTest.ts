@@ -53,7 +53,7 @@ describe("workspaceCache", () => {
         const [document, postion]: [MockDocument, Position] =
             TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
 
-        const cacheItem: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+        const maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -63,14 +63,14 @@ describe("workspaceCache", () => {
             postion,
         );
 
-        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertIsDefined(maybeInspected);
     });
 
     it("getOrCreateInspectionPromise with parser error", async () => {
         const [document, postion]: [MockDocument, Position] =
             TestUtils.createMockDocumentAndPosition("let c = 1, in |");
 
-        const cacheItem: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+        const maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -80,13 +80,13 @@ describe("workspaceCache", () => {
             postion,
         );
 
-        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertIsDefined(maybeInspected);
     });
 
     it("cache invalidation with version change", async () => {
         const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition("foo|");
 
-        let cacheItem: Inspection.Inspection | undefined = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+        let maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -96,7 +96,7 @@ describe("workspaceCache", () => {
             postion,
         );
 
-        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertIsDefined(maybeInspected);
 
         let cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
 
@@ -104,7 +104,7 @@ describe("workspaceCache", () => {
 
         document.setText("bar");
 
-        cacheItem = await WorkspaceCacheUtils.getOrCreateInspectionPromise(
+        maybeInspected = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(
                 PQP.DefaultSettings,
@@ -114,7 +114,7 @@ describe("workspaceCache", () => {
             postion,
         );
 
-        TestUtils.assertIsDefined(cacheItem);
+        TestUtils.assertIsDefined(maybeInspected);
 
         cacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
 

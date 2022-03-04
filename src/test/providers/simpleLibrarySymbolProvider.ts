@@ -21,7 +21,7 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLocalDocumentSymbolProviderFn: (
         _library: ILibrary,
-        _maybePromiseInspection: Promise<Inspection.Inspection | undefined>,
+        _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
     ) => NullSymbolProvider.singleton(),
 };
 
