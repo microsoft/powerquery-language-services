@@ -131,7 +131,6 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    // eslint-disable-next-line require-await
     public async getSignatureHelp(): Promise<SignatureHelp> {
         const maybeInspection: Inspection.Inspection | undefined = await this.promiseMaybeInspection;
 
@@ -140,7 +139,7 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         const maybeContext: SignatureProviderContext | undefined =
-            InspectionUtils.getMaybeContextForSignatureProvider(maybeInspection);
+            await InspectionUtils.getMaybeContextForSignatureProvider(maybeInspection);
 
         if (maybeContext === undefined) {
             return EmptySignatureHelp;

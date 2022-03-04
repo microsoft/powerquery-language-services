@@ -63,10 +63,10 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
     );
 }
 
-export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): NodeScope {
+export async function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): Promise<NodeScope> {
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const triedGetOrCreateScope: Inspection.TriedNodeScope = getOrCreateScope(state, nodeId);
+    const triedGetOrCreateScope: Inspection.TriedNodeScope = await getOrCreateScope(state, nodeId);
 
     if (ResultUtils.isError(triedGetOrCreateScope)) {
         throw triedGetOrCreateScope;
@@ -75,7 +75,7 @@ export function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: numb
     return Assert.asDefined(triedGetOrCreateScope.value);
 }
 
-export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspection.TriedNodeScope {
+export async function getOrCreateScope(state: InspectTypeState, nodeId: number): Promise<Inspection.TriedNodeScope> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
@@ -84,7 +84,7 @@ export function getOrCreateScope(state: InspectTypeState, nodeId: number): Inspe
         return ResultUtils.boxOk(maybeNodeScope);
     }
 
-    return tryNodeScope(state, state.nodeIdMapCollection, nodeId, state.scopeById);
+    return await tryNodeScope(state, state.nodeIdMapCollection, nodeId, state.scopeById);
 }
 
 export async function getOrCreateScopeItemType(
@@ -362,7 +362,7 @@ export async function maybeDereferencedIdentifierType(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const deferenced: TXorNode = recursiveIdentifierDereference(state, xorNode);
+    const deferenced: TXorNode = await recursiveIdentifierDereference(state, xorNode);
 
     const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
 
@@ -372,7 +372,7 @@ export async function maybeDereferencedIdentifierType(
 
     const deferencedLiteral: string = maybeDereferencedLiteral;
 
-    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, deferenced.node.id);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, deferenced.node.id);
 
     // When referencing an identifier as a recursive identifier there's no requirements
     // for it to resolve to a recursive reference.
@@ -433,7 +433,7 @@ export async function maybeDereferencedIdentifierType(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-export function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): TXorNode {
+export async function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): Promise<TXorNode> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         recursiveIdentifierDereference.name,
@@ -443,14 +443,17 @@ export function recursiveIdentifierDereference(state: InspectTypeState, xorNode:
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
-    const result: TXorNode = Assert.asDefined(recursiveIdentifierDereferenceHelper(state, xorNode));
+    const result: TXorNode = Assert.asDefined(await recursiveIdentifierDereferenceHelper(state, xorNode));
     trace.exit();
 
     return result;
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: TXorNode): TXorNode | undefined {
+async function recursiveIdentifierDereferenceHelper(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+): Promise<TXorNode | undefined> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectXor.name,
@@ -487,7 +490,7 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             throw Assert.isNever(identifier);
     }
 
-    const nodeScope: NodeScope = assertGetOrCreateNodeScope(state, identifierId);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, identifierId);
 
     const maybeScopeItem: TScopeItem | undefined = nodeScope.get(
         isRecursiveIdentifier ? `@${identifierLiteral}` : identifierLiteral,
@@ -525,7 +528,7 @@ function recursiveIdentifierDereferenceHelper(state: InspectTypeState, xorNode: 
             Ast.NodeKind.Identifier,
             Ast.NodeKind.IdentifierExpression,
         ])
-            ? recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+            ? await recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
             : xorNode;
 
     trace.exit();

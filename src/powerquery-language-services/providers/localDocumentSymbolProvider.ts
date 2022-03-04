@@ -34,7 +34,6 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         this.libraryDefinitions = library.libraryDefinitions;
     }
 
-    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
@@ -46,7 +45,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         return [
             ...this.getAutocompleteItemsFromFieldAccess(maybeInspection),
-            ...InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspection),
+            ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspection)),
         ];
     }
 
@@ -74,14 +73,17 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return maybeHover;
         }
 
-        if (!ResultUtils.isOk(maybeInspection.triedNodeScope) || !ResultUtils.isOk(maybeInspection.triedScopeType)) {
+        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspection.triedNodeScope;
+        const triedScopeType: Inspection.TriedScopeType = await maybeInspection.triedScopeType;
+
+        if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
             return null;
         }
 
         maybeHover = LocalDocumentSymbolProvider.getHoverForScopeItem(
             context,
-            maybeInspection.triedNodeScope.value,
-            maybeInspection.triedScopeType.value,
+            triedNodeScope.value,
+            triedScopeType.value,
         );
 
         return maybeHover ?? null;
@@ -234,9 +236,10 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return undefined;
         }
 
-        return ResultUtils.isOk(maybeInspection.triedCurrentInvokeExpression)
-            ? maybeInspection.triedCurrentInvokeExpression.value
-            : undefined;
+        const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
+            await maybeInspection.triedCurrentInvokeExpression;
+
+        return ResultUtils.isOk(triedCurrentInvokeExpression) ? triedCurrentInvokeExpression.value : undefined;
     }
 
     private getAutocompleteItemsFromFieldAccess(

@@ -26,17 +26,17 @@ export function createInspectionSettings(
     };
 }
 
-export function getMaybeContextForSignatureProvider(
+export async function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspection,
-): SignatureProviderContext | undefined {
-    if (
-        ResultUtils.isError(inspected.triedCurrentInvokeExpression) ||
-        inspected.triedCurrentInvokeExpression.value === undefined
-    ) {
+): Promise<SignatureProviderContext | undefined> {
+    const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
+        await inspected.triedCurrentInvokeExpression;
+
+    if (ResultUtils.isError(triedCurrentInvokeExpression) || triedCurrentInvokeExpression.value === undefined) {
         return undefined;
     }
 
-    const invokeExpression: Inspection.CurrentInvokeExpression = inspected.triedCurrentInvokeExpression.value;
+    const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
 
     const functionName: string | undefined =
         invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
@@ -82,8 +82,13 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
     };
 }
 
-export function getMaybeType(inspection: Inspection.Inspection, identifier: string): Type.TPowerQueryType | undefined {
-    return ResultUtils.isOk(inspection.triedScopeType) ? inspection.triedScopeType.value.get(identifier) : undefined;
+export async function getMaybeType(
+    inspection: Inspection.Inspection,
+    identifier: string,
+): Promise<Type.TPowerQueryType | undefined> {
+    const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;
+
+    return ResultUtils.isOk(triedScopeType) ? triedScopeType.value.get(identifier) : undefined;
 }
 
 export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
@@ -211,18 +216,21 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export function getAutocompleteItemsFromScope(
+export async function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
     inspection: Inspection.Inspection,
-): ReadonlyArray<Inspection.AutocompleteItem> {
-    if (ResultUtils.isError(inspection.triedNodeScope)) {
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    const triedNodeScope: Inspection.TriedNodeScope = await inspection.triedNodeScope;
+    const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;
+
+    if (ResultUtils.isError(triedNodeScope)) {
         return [];
     }
 
-    const nodeScope: Inspection.NodeScope = inspection.triedNodeScope.value;
+    const nodeScope: Inspection.NodeScope = triedNodeScope.value;
 
-    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(inspection.triedScopeType)
-        ? inspection.triedScopeType.value
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(triedScopeType)
+        ? triedScopeType.value
         : new Map();
 
     const maybeContextTest: string | undefined = context.text;

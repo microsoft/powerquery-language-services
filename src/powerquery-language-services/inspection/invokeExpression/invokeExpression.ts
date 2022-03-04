@@ -105,7 +105,7 @@ async function inspectInvokeExpression(
     return {
         invokeExpressionXorNode,
         functionType,
-        isNameInLocalScope: getIsNameInLocalScope(
+        isNameInLocalScope: await getIsNameInLocalScope(
             settings,
             nodeIdMapCollection,
             typeCache,
@@ -117,18 +117,18 @@ async function inspectInvokeExpression(
     };
 }
 
-function getIsNameInLocalScope(
+async function getIsNameInLocalScope(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: TypeCache,
     invokeExpressionXorNode: TXorNode,
     maybeName: string | undefined,
-): boolean {
+): Promise<boolean> {
     // Try to find out if the identifier is a local or external name.
     if (maybeName !== undefined) {
         // Seed local scope
         const scope: NodeScope = Assert.unboxOk(
-            assertGetOrCreateNodeScope(
+            await assertGetOrCreateNodeScope(
                 settings,
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
