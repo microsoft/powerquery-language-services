@@ -72,3 +72,26 @@ export async function inspect(
         parseState,
     };
 }
+
+export async function tryInspect(
+    settings: InspectionSettings,
+    text: string,
+    position: Position,
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+): Promise<PQP.Result<Promise<Inspected>, PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError>> {
+    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
+
+    let parseState: PQP.Parser.ParseState;
+    let maybeParseError: PQP.Parser.ParseError.ParseError | undefined;
+
+    if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
+        return PQP.ResultUtils.boxError(triedLexParse.error);
+    } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
+        parseState = triedLexParse.parseState;
+        maybeParseError = triedLexParse.error;
+    } else {
+        parseState = triedLexParse.parseState;
+    }
+
+    return PQP.ResultUtils.boxOk(inspect(settings, parseState, maybeParseError, position, typeCache));
+}
