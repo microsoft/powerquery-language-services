@@ -29,8 +29,6 @@ export async function assertGetAutocomplete(
     text: string,
     position: Position,
 ): Promise<Inspection.Autocomplete> {
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
@@ -88,8 +86,6 @@ export async function assertGetInspection(document: TextDocument, position: Posi
 }
 
 export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageOk(triedLexParseTask);
 
@@ -100,8 +96,6 @@ export async function assertGetLexParseError(
     settings: PQP.Settings,
     text: string,
 ): Promise<PQP.Task.ParseTaskParseError> {
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStageParseError(triedLexParseTask);
 

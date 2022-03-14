@@ -129,8 +129,6 @@ async function validateParse(
             return [];
         }
 
-        // TODO: figure out why this exception is needed
-        // eslint-disable-next-line @typescript-eslint/await-thenable
         const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
             error.state.contextState.nodeIdMapCollection,
             maybeRoot.id,

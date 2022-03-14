@@ -28,8 +28,6 @@ export async function createRangeFromXorNode(
     const nodeId: number = xorNode.node.id;
     const maybeLeftMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(nodeIdMapCollection, nodeId);
 
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const maybeRightMostLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
         nodeIdMapCollection,
         nodeId,
@@ -183,8 +181,6 @@ export async function isOnContextEnd(
     position: Position,
     contextNode: PQP.Parser.ParseContext.TNode,
 ): Promise<boolean> {
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
         nodeIdMapCollection,
         contextNode.id,
@@ -203,8 +199,6 @@ export async function isAfterContext(
     contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): Promise<boolean> {
-    // TODO: figure out why this exception is needed
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
         nodeIdMapCollection,
         contextNode.id,
