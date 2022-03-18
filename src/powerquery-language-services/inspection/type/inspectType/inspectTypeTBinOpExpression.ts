@@ -189,6 +189,8 @@ function unionTableFields([leftType, rightType]: [Type.DefinedTable, Type.Define
 // Values: the resulting type of the binary operation expression.
 // Eg. '1 > 3' -> Type.TypeKind.Number
 export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
+    ...createLookupsForNullEquality(),
+
     ...createLookupsForRelational(Type.TypeKind.Null),
     ...createLookupsForEquality(Type.TypeKind.Null),
 
@@ -320,6 +322,34 @@ function createLookupsForEquality(typeKind: Type.TypeKind): ReadonlyArray<[strin
         [lookupKey(typeKind, Constant.EqualityOperator.EqualTo, typeKind), Type.TypeKind.Logical],
         [lookupKey(typeKind, Constant.EqualityOperator.NotEqualTo, typeKind), Type.TypeKind.Logical],
     ];
+}
+
+function createLookupsForNullEquality(): ReadonlyArray<[string, Type.TypeKind]> {
+    const results: [string, Type.TypeKind][] = [];
+
+    for (const typeKind of Type.TypeKinds) {
+        results.push([
+            lookupKey(typeKind, Constant.EqualityOperator.EqualTo, Type.TypeKind.Null),
+            Type.TypeKind.Logical,
+        ]);
+
+        results.push([
+            lookupKey(typeKind, Constant.EqualityOperator.NotEqualTo, Type.TypeKind.Null),
+            Type.TypeKind.Logical,
+        ]);
+
+        results.push([
+            lookupKey(Type.TypeKind.Null, Constant.EqualityOperator.EqualTo, typeKind),
+            Type.TypeKind.Logical,
+        ]);
+
+        results.push([
+            lookupKey(Type.TypeKind.Null, Constant.EqualityOperator.NotEqualTo, typeKind),
+            Type.TypeKind.Logical,
+        ]);
+    }
+
+    return results;
 }
 
 // Note: does not include the and <'&'> Constant.
