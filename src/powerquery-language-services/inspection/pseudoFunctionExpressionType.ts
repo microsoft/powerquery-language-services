@@ -52,8 +52,10 @@ export function pseudoFunctionExpressionType(
 
         if (maybeExaminable !== undefined) {
             examinedParameters.push({
-                ...maybeExaminable,
                 id: parameter.node.id,
+                isNullable: maybeExaminable.isNullable,
+                isOptional: maybeExaminable.isOptional,
+                maybeType: maybeExaminable.maybeType,
                 name: maybeName,
             });
         }

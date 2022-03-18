@@ -371,6 +371,40 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+            it(`(optional x as text) => if x <> null then 1 else 2`, async () => {
+                const expression: string = `(optional x as text) => if x <> null then 1 else 2`;
+
+                const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+                    false,
+                    [
+                        {
+                            isNullable: false,
+                            isOptional: true,
+                            maybeType: Type.TypeKind.Text,
+                            nameLiteral: "x",
+                        },
+                    ],
+                    TypeUtils.createAnyUnion([
+                        {
+                            isNullable: false,
+                            kind: Type.TypeKind.Number,
+                            literal: "1",
+                            maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+                            normalizedLiteral: 1,
+                        },
+                        {
+                            isNullable: false,
+                            kind: Type.TypeKind.Number,
+                            literal: "2",
+                            maybeExtendedKind: Type.ExtendedTypeKind.NumberLiteral,
+                            normalizedLiteral: 2,
+                        },
+                    ]),
+                );
+
+                await assertParseOkNodeTypeEqual(TestSettings, expression, expected);
+            });
+
             it(`() => 1`, async () => {
                 const expression: string = `() => 1`;
 

@@ -544,6 +544,6 @@ export function createParameterType(parameter: ParameterScopeItem): Type.TPrimit
     return {
         kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
         maybeExtendedKind: undefined,
-        isNullable: parameter.isNullable,
+        isNullable: parameter.isNullable || parameter.isOptional,
     };
 }
