@@ -3,9 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Diagnostic } from "vscode-languageserver-types";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
+import { validateFunctionExpression } from "./validateFunctionExpression";
 import { validateInvokeExpression } from "./validateInvokeExpression";
 import { validateLexAndParse } from "./validateLexAndParse";
 import type { ValidationResult } from "./validationResult";
@@ -28,18 +30,24 @@ export async function validate(
         };
     }
 
+    let functionExpressionDiagnostics: Diagnostic[];
     let invokeExpressionDiagnostics: Diagnostic[];
 
     if (
         validationSettings.checkInvokeExpressions &&
         (PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse))
     ) {
+        const nodeIdMapCollection: NodeIdMap.Collection = maybeTriedParse.nodeIdMapCollection;
+
+        functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
+
         invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
-            maybeTriedParse.nodeIdMapCollection,
+            nodeIdMapCollection,
             WorkspaceCacheUtils.getTypeCache(textDocument),
         );
     } else {
+        functionExpressionDiagnostics = [];
         invokeExpressionDiagnostics = [];
     }
 
@@ -47,6 +55,7 @@ export async function validate(
         diagnostics: [
             ...(await validateDuplicateIdentifiers(textDocument, validationSettings)),
             ...(await validateLexAndParse(textDocument, validationSettings)),
+            ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,
         ],
         hasSyntaxError:

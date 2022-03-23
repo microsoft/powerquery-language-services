@@ -1,191 +1,96 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
-import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    NodeIdMapUtils,
+    TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Range } from "vscode-languageserver-textdocument";
 
-import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
+import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
 
-export async function validateFunctionExpression(
+// Check for repeat parameter names for FunctionExpressions.
+export function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeCache?: Inspection.TypeCache,
-): Promise<Diagnostic[]> {
-    const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+): Diagnostic[] {
+    const maybeFnExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.FunctionExpression,
     );
 
-    if (maybeInvokeExpressionIds === undefined) {
+    if (maybeFnExpressionIds === undefined) {
         return [];
     }
 
-    const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
+    const diagnostics: Diagnostic[][] = [];
 
-    for (const nodeId of maybeInvokeExpressionIds) {
-        inspectionTasks.push(
-            Inspection.tryInvokeExpression(validationSettings, nodeIdMapCollection, nodeId, maybeCache),
-        );
+    for (const nodeId of maybeFnExpressionIds) {
+        diagnostics.push(validateNoDuplicateParameter(validationSettings, nodeIdMapCollection, nodeId));
     }
 
-    const inspections: Inspection.TriedInvokeExpression[] = await Promise.all(inspectionTasks);
-    const invokeExpressionTasks: Promise<Diagnostic[]>[] = [];
-
-    for (const inspection of inspections) {
-        if (ResultUtils.isError(inspection)) {
-            throw inspection;
-        }
-
-        invokeExpressionTasks.push(
-            invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, inspection.value),
-        );
-    }
-
-    return (await Promise.all(invokeExpressionTasks)).flat();
+    return diagnostics.flat();
 }
 
-async function invokeExpressionToDiagnostics(
+function validateNoDuplicateParameter(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    inspected: Inspection.InvokeExpression,
-): Promise<Diagnostic[]> {
-    const result: Diagnostic[] = [];
+    fnExpressionId: number,
+): Diagnostic[] {
+    const fnExpression: TXorNode = NodeIdMapUtils.assertGetXorChecked<Ast.FunctionExpression>(
+        nodeIdMapCollection,
+        fnExpressionId,
+        Ast.NodeKind.FunctionExpression,
+    );
 
-    if (inspected.maybeArguments !== undefined) {
-        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
-        const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
+    const parameterNames: Map<string, Ast.Identifier[]> = new Map();
 
-        const invokeExpressionRange: Range = Assert.asDefined(
-            await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
-            "expected at least one leaf node under InvokeExpression",
-        );
+    for (const parameter of NodeIdMapIterator.iterFunctionExpressionParameterNames(nodeIdMapCollection, fnExpression)) {
+        const existingNames: Ast.Identifier[] = parameterNames.get(parameter.literal) ?? [];
+        existingNames.push(parameter);
+        parameterNames.set(parameter.literal, existingNames);
+    }
 
-        const maybeFunctionName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
-            nodeIdMapCollection,
-            inspected.invokeExpressionXorNode.node.id,
-        );
+    const diagnostics: Diagnostic[] = [];
 
-        let result: Diagnostic[] = [];
+    for (const [identifierLiteral, nodes] of parameterNames) {
+        if (nodes.length > 1) {
+            diagnostics.push(
+                ...nodes.map((identifier: Ast.Identifier) => {
+                    const parameterRange: Range = PositionUtils.createRangeFromTokenRange(identifier.tokenRange);
 
-        result = result.concat(
-            await ArrayUtils.mapAsync(
-                [...invokeExpressionArguments.typeChecked.invalid.entries()],
-                async ([argIndex, mismatch]: [number, TypeUtils.InvocationMismatch]) => {
-                    const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
-                        nodeIdMapCollection,
-                        givenArguments[argIndex],
-                    );
-
-                    return createDiagnosticForArgumentMismatch(
+                    return createDiagnosticForDuplicateParameterName(
                         validationSettings,
-                        mismatch,
-                        maybeFunctionName,
-                        invokeExpressionRange,
-                        maybeGivenArgumentRange,
+                        parameterRange,
+                        identifierLiteral,
                     );
-                },
-            ),
-        );
-
-        const numGivenArguments: number = invokeExpressionArguments.givenArguments.length;
-
-        if (
-            numGivenArguments < invokeExpressionArguments.numMinExpectedArguments ||
-            numGivenArguments > invokeExpressionArguments.numMaxExpectedArguments
-        ) {
-            result.push(
-                createDiagnosticForArgumentNumberMismatch(
-                    validationSettings,
-                    invokeExpressionRange,
-                    invokeExpressionArguments.numMinExpectedArguments,
-                    invokeExpressionArguments.numMaxExpectedArguments,
-                    numGivenArguments,
-                ),
+                }),
             );
         }
     }
 
-    return result;
+    return diagnostics;
 }
 
-function createDiagnosticForArgumentNumberMismatch(
+function createDiagnosticForDuplicateParameterName(
     validationSettings: ValidationSettings,
     invokeExpressionRange: Range,
-    numMin: number,
-    numMax: number,
-    numGiven: number,
+    parameterName: string,
 ): Diagnostic {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(validationSettings.locale);
 
     return {
-        code: DiagnosticErrorCode.InvokeArgumentCountMismatch,
-        message: Localization.error_validation_invokeExpression_numArgs(templates, numMin, numMax, numGiven),
+        code: DiagnosticErrorCode.DuplicateIdentifier,
+        message: Localization.error_validation_duplicate_identifier(templates, parameterName),
         range: invokeExpressionRange,
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,
     };
-}
-
-function createDiagnosticForArgumentMismatch(
-    validationSettings: ValidationSettings,
-    mismatch: TypeUtils.InvocationMismatch,
-    maybeFunctionName: string | undefined,
-    invokeExpressionRange: Range,
-    maybeGivenArgumentRange: Range | undefined,
-): Diagnostic {
-    let range: Range;
-    let message: string;
-
-    const parameter: Type.FunctionParameter = mismatch.expected;
-    const argName: string = parameter.nameLiteral;
-    const expected: string = TypeUtils.nameOfTypeKind(parameter.maybeType ?? Type.AnyInstance.kind);
-
-    // An argument containing at least one leaf node was given.
-    if (maybeGivenArgumentRange) {
-        const actual: string = TypeUtils.nameOfTypeKind(Assert.asDefined(mismatch.actual).kind);
-
-        range = maybeGivenArgumentRange;
-        message = createTypeMismatchMessage(validationSettings.locale, maybeFunctionName, argName, expected, actual);
-    } else {
-        range = invokeExpressionRange;
-        message = createMissingMandatoryMessage(validationSettings.locale, maybeFunctionName, argName);
-    }
-
-    return {
-        code: DiagnosticErrorCode.InvokeArgumentTypeMismatch,
-        message,
-        range,
-        severity: DiagnosticSeverity.Error,
-        source: validationSettings.source,
-    };
-}
-
-function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
-    const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
-
-    return Localization.error_validation_invokeExpression_missingMandatory(templates, maybeFunctionName, argName);
-}
-
-function createTypeMismatchMessage(
-    locale: string,
-    maybeFunctionName: string | undefined,
-    argName: string,
-    expected: string,
-    actual: string,
-): string {
-    const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
-
-    return Localization.error_validation_invokeExpression_typeMismatch(
-        templates,
-        maybeFunctionName,
-        argName,
-        expected,
-        actual,
-    );
 }
