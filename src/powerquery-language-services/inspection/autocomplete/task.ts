@@ -23,6 +23,7 @@ import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant"
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { TypeCache } from "../typeCache";
 
+// Given some Position and ParseState, return autocomplete suggestions.
 export async function autocomplete(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,

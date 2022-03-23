@@ -29,6 +29,12 @@ export interface CurrentInvokeExpressionArguments extends InvokeExpressionArgume
     readonly argumentOrdinal: number;
 }
 
+// If the cursor is in an InvokeExpression then return:
+//  * the number of given arguments
+//  * the number of expected arguments
+//  * the given argument nodes
+//  * the given argument types
+//  * type checking for parameter types vs given types
 export async function tryCurrentInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
