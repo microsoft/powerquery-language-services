@@ -34,6 +34,7 @@ export function validateFunctionExpression(
 
     for (const nodeId of maybeFnExpressionIds) {
         diagnostics.push(validateNoDuplicateParameter(validationSettings, nodeIdMapCollection, nodeId));
+        validationSettings.maybeCancellationToken?.throwIfCancelled();
     }
 
     return diagnostics.flat();
