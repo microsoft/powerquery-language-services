@@ -4,7 +4,7 @@
 import "mocha";
 import { expect } from "chai";
 
-import { calculateJaroWinkler } from "../../powerquery-language-services/inspection";
+import { calculateJaroWinkler } from "../../powerquery-language-services/jaroWinkler";
 
 describe(`Jaro-Winkler`, () => {
     it(`case insensitive`, () => {

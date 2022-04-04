@@ -25,6 +25,8 @@ interface ILocalization {
         expected: string,
         actual: string,
     ) => string;
+
+    error_validation_unknownIdentifier: (templates: ILocalizationTemplates, identifier: string) => string;
 }
 
 export const Localization: ILocalization = {
@@ -98,4 +100,10 @@ export const Localization: ILocalization = {
             );
         }
     },
+
+    error_validation_unknownIdentifier: (templates: ILocalizationTemplates, identifierLiteral: string) =>
+        StringUtils.assertGetFormatted(
+            templates.error_validation_invokeExpression_typeMismatch_named,
+            new Map([["identifierLiteral", identifierLiteral]]),
+        ),
 };
