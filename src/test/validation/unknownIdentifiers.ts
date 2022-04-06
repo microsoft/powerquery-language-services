@@ -12,7 +12,7 @@ import {
     ValidationSettings,
 } from "../../powerquery-language-services";
 import { expectLessWhenSurpressed } from "./common";
-import { SimpleValidationSettings } from "../testConstants";
+import { SimpleValidateNoneSettings } from "../testConstants";
 import { TestUtils } from "..";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
@@ -22,6 +22,11 @@ interface AbridgedUnknownIdentifierDiagnostic {
 }
 
 const ExpectedNamePattern: RegExp = /Unknown name '([^']+)'/;
+
+const UnknownIdentifierSettings: ValidationSettings = {
+    ...SimpleValidateNoneSettings,
+    checkForDuplicateIdentifiers: true,
+};
 
 async function expectGetInvokeExpressionDiagnostics(
     textDocument: TextDocument,
@@ -65,20 +70,17 @@ describe("Validation - UnknownIdentifier", () => {
             const text: string = `let foo = 1 in bar`;
 
             const withInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidationSettings,
+                ...UnknownIdentifierSettings,
                 checkUnknownIdentifiers: true,
             };
 
-            const withoutInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidationSettings,
-                checkUnknownIdentifiers: false,
-            };
+            const withoutInvokeCheckSettings: ValidationSettings = SimpleValidateNoneSettings;
 
             await expectLessWhenSurpressed(text, withInvokeCheckSettings, withoutInvokeCheckSettings);
         });
     });
 
-    describe(`WIP simple`, () => {
+    describe(`simple`, () => {
         it(`expression`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(`bar`);
 

@@ -227,11 +227,19 @@ export const SimpleInspectionSettings: InspectionSettings = {
     maybeExternalTypeResolver: SimpleExternalTypeResolver,
 };
 
-export const SimpleValidationSettings: ValidationSettings = {
+export const SimpleValidateAllSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
     checkInvokeExpressions: true,
     checkUnknownIdentifiers: true,
+    source: "UNIT-TEST-SOURCE",
+};
+
+export const SimpleValidateNoneSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: false,
+    checkInvokeExpressions: false,
+    checkUnknownIdentifiers: false,
     source: "UNIT-TEST-SOURCE",
 };
 

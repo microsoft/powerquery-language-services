@@ -14,7 +14,7 @@ import {
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { expectLessWhenSurpressed } from "./common";
-import { SimpleValidationSettings } from "../testConstants";
+import { SimpleValidateAllSettings } from "../testConstants";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
 interface AbridgedInvocationDiagnostic {
@@ -102,12 +102,12 @@ describe("Validation - InvokeExpression", () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;
 
             const withInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidationSettings,
+                ...SimpleValidateAllSettings,
                 checkInvokeExpressions: true,
             };
 
             const withoutInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidationSettings,
+                ...SimpleValidateAllSettings,
                 checkInvokeExpressions: false,
             };
 
