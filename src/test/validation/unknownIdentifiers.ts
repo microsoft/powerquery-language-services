@@ -21,7 +21,7 @@ interface AbridgedUnknownIdentifierDiagnostic {
     readonly startPosition: Position;
 }
 
-const ExpectedNamePattern: RegExp = /Unknown name '[^']+'/;
+const ExpectedNamePattern: RegExp = /Unknown name '([^']+)'/;
 
 async function expectGetInvokeExpressionDiagnostics(
     textDocument: TextDocument,
@@ -44,7 +44,8 @@ function expectUnknownIdentifiers(
     const unknowns: Set<string> = new Set(unknownIdentifiers);
 
     for (const abridgedDiagnostic of abridgedDiagnostics) {
-        const diagnosticLiteral: string = Assert.asDefined(ExpectedNamePattern.exec(abridgedDiagnostic.message))[1];
+        const regExpExecArray: RegExpExecArray = Assert.asDefined(ExpectedNamePattern.exec(abridgedDiagnostic.message));
+        const diagnosticLiteral: string = regExpExecArray[1];
 
         if (!unknowns.has(diagnosticLiteral)) {
             throw new Error(`Found an unknown identifier that wasn't expected: '${diagnosticLiteral}'`);
@@ -77,9 +78,9 @@ describe("Validation - UnknownIdentifier", () => {
         });
     });
 
-    describe(`simple`, () => {
-        it(`expects [1, 1] arguments, 0 given`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in bar`);
+    describe(`WIP simple`, () => {
+        it(`expression`, async () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(`bar`);
 
             const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
                 await expectGetInvokeExpressionDiagnostics(textDocument);
