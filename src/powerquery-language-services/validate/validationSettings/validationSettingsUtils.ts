@@ -9,11 +9,13 @@ export function createValidationSettings(
     source: string,
     checkForDuplicateIdentifiers?: boolean,
     checkInvokeExpressions?: boolean,
+    checkUnknownIdentifiers?: boolean,
 ): ValidationSettings {
     return {
         ...inspectionSettings,
         checkForDuplicateIdentifiers: checkForDuplicateIdentifiers ?? true,
         checkInvokeExpressions: checkInvokeExpressions ?? true,
+        checkUnknownIdentifiers: checkUnknownIdentifiers ?? true,
         source,
     };
 }

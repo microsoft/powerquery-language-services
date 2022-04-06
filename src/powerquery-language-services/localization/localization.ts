@@ -103,7 +103,7 @@ export const Localization: ILocalization = {
 
     error_validation_unknownIdentifier: (templates: ILocalizationTemplates, identifierLiteral: string) =>
         StringUtils.assertGetFormatted(
-            templates.error_validation_invokeExpression_typeMismatch_named,
+            templates.error_validation_unknownIdentifier,
             new Map([["identifierLiteral", identifierLiteral]]),
         ),
 };
