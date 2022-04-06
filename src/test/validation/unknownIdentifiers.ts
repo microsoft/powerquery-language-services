@@ -3,9 +3,7 @@
 
 import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 
-import * as PQLS from "../../powerquery-language-services";
 import {
     Diagnostic,
     DiagnosticErrorCode,
@@ -13,6 +11,7 @@ import {
     TextDocument,
     ValidationSettings,
 } from "../../powerquery-language-services";
+import { expectLessWhenSurpressed } from "./common";
 import { SimpleValidationSettings } from "../testConstants";
 import { TestUtils } from "..";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
@@ -61,16 +60,20 @@ function expectUnknownIdentifiers(
 
 describe("Validation - UnknownIdentifier", () => {
     describe(`checkUnknownIdentifiers = false`, () => {
-        const validationSettings: ValidationSettings = {
-            ...SimpleValidationSettings,
-            checkUnknownIdentifiers: false,
-        };
+        it(`argument count suppressed`, async () => {
+            const text: string = `let foo = 1 in bar`;
 
-        it(`suppressed`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let x = 1 in y`);
+            const withInvokeCheckSettings: ValidationSettings = {
+                ...SimpleValidationSettings,
+                checkUnknownIdentifiers: true,
+            };
 
-            const validationResult: ValidationResult = await PQLS.validate(textDocument, validationSettings);
-            expect(validationResult.diagnostics.length).to.equal(0);
+            const withoutInvokeCheckSettings: ValidationSettings = {
+                ...SimpleValidationSettings,
+                checkUnknownIdentifiers: false,
+            };
+
+            await expectLessWhenSurpressed(text, withInvokeCheckSettings, withoutInvokeCheckSettings);
         });
     });
 

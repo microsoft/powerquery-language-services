@@ -5,7 +5,6 @@ import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import * as PQLS from "../../powerquery-language-services";
 import {
     Diagnostic,
     DiagnosticErrorCode,
@@ -14,6 +13,7 @@ import {
     ValidationSettings,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
+import { expectLessWhenSurpressed } from "./common";
 import { SimpleValidationSettings } from "../testConstants";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
@@ -98,18 +98,20 @@ function expectInvocationDiagnosticPositions(
 
 describe("Validation - InvokeExpression", () => {
     describe(`checkInvokeExpressions = false`, () => {
-        const validationSettings: ValidationSettings = {
-            ...SimpleValidationSettings,
-            checkInvokeExpressions: false,
-        };
-
         it(`argument count suppressed`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `${TestConstants.TestLibraryName.SquareIfNumber}()`,
-            );
+            const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;
 
-            const validationResult: ValidationResult = await PQLS.validate(textDocument, validationSettings);
-            expect(validationResult.diagnostics.length).to.equal(0);
+            const withInvokeCheckSettings: ValidationSettings = {
+                ...SimpleValidationSettings,
+                checkInvokeExpressions: true,
+            };
+
+            const withoutInvokeCheckSettings: ValidationSettings = {
+                ...SimpleValidationSettings,
+                checkInvokeExpressions: false,
+            };
+
+            await expectLessWhenSurpressed(text, withInvokeCheckSettings, withoutInvokeCheckSettings);
         });
     });
 
