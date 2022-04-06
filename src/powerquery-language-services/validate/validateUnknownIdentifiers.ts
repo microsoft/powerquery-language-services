@@ -3,8 +3,8 @@
 
 import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
-import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
@@ -46,11 +46,7 @@ function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): Readon
     const result: Ast.Identifier[] = [];
 
     for (const identifierId of maybeIdentifiers.values()) {
-        const maybeIdentifier: Ast.Identifier | undefined = NodeIdMapUtils.assertUnboxAstChecked<Ast.Identifier>(
-            astNodeById,
-            identifierId,
-            Ast.NodeKind.Identifier,
-        );
+        const maybeIdentifier: Ast.Identifier | undefined = astNodeById.get(identifierId) as Ast.Identifier;
 
         if (
             maybeIdentifier !== undefined &&
