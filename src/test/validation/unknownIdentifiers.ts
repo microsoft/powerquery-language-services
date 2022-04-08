@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, MapUtils } from "@microsoft/powerquery-parser";
 
 import {
     Diagnostic,
@@ -21,7 +21,8 @@ interface AbridgedUnknownIdentifierDiagnostic {
     readonly startPosition: Position;
 }
 
-const ExpectedNamePattern: RegExp = /Unknown name '([^']+)'/;
+const ExpectedNamePattern: RegExp = /Cannot find the name '([^']+)'/;
+const ExpectedNameAndSuggestionPattern: RegExp = /Cannot find the name '([^']+)', did you mean '([^']+)'\?/;
 
 const UnknownIdentifierSettings: ValidationSettings = {
     ...SimpleValidateNoneSettings,
@@ -50,13 +51,49 @@ function expectUnknownIdentifiers(
 
     for (const abridgedDiagnostic of abridgedDiagnostics) {
         const regExpExecArray: RegExpExecArray = Assert.asDefined(ExpectedNamePattern.exec(abridgedDiagnostic.message));
+
         const diagnosticLiteral: string = regExpExecArray[1];
 
         if (!unknowns.has(diagnosticLiteral)) {
             throw new Error(`Found an unknown identifier that wasn't expected: '${diagnosticLiteral}'`);
-        } else {
-            unknowns.delete(diagnosticLiteral);
         }
+
+        unknowns.delete(diagnosticLiteral);
+    }
+
+    if (unknowns.size !== 0) {
+        throw new Error(`at least one expected unknown identifier wasn't found: ${[...unknowns.values()]}`);
+    }
+}
+
+function expectUnknownIdentifierSuggestions(
+    abridgedDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>,
+    unknownIdentifiers: Map<string, string>,
+): void {
+    const unknowns: Set<string> = new Set(unknownIdentifiers.keys());
+
+    for (const abridgedDiagnostic of abridgedDiagnostics) {
+        const regExpExecArray: RegExpExecArray = Assert.asDefined(
+            ExpectedNameAndSuggestionPattern.exec(abridgedDiagnostic.message),
+        );
+
+        const diagnosticLiteral: string = regExpExecArray[1];
+        const diagnosticSuggestion: string = regExpExecArray[2];
+
+        const expectedSuggestion: string = MapUtils.assertGet(unknownIdentifiers, diagnosticLiteral);
+
+        if (!unknowns.has(diagnosticLiteral)) {
+            throw new Error(`Found an unknown identifier that wasn't expected: '${diagnosticLiteral}'`);
+        } else if (expectedSuggestion !== diagnosticSuggestion) {
+            throw new Error(
+                `Found an unknown identifier that had an unexpected suggestion: ${JSON.stringify({
+                    diagnosticSuggestion,
+                    expectedSuggestion,
+                })}`,
+            );
+        }
+
+        unknowns.delete(diagnosticLiteral);
     }
 
     if (unknowns.size !== 0) {
@@ -80,7 +117,7 @@ describe("Validation - UnknownIdentifier", () => {
         });
     });
 
-    describe(`simple`, () => {
+    describe(`no suggestion`, () => {
         it(`expression`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(`bar`);
 
@@ -88,6 +125,17 @@ describe("Validation - UnknownIdentifier", () => {
                 await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expectUnknownIdentifiers(invocationDiagnostics, ["bar"]);
+        });
+    });
+
+    describe(`suggestion`, () => {
+        it(`simple`, async () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in fo`);
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+                await expectGetInvokeExpressionDiagnostics(textDocument);
+
+            expectUnknownIdentifierSuggestions(invocationDiagnostics, new Map<string, string>([["fo", "foo"]]));
         });
     });
 });

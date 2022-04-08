@@ -26,7 +26,11 @@ interface ILocalization {
         actual: string,
     ) => string;
 
-    error_validation_unknownIdentifier: (templates: ILocalizationTemplates, identifier: string) => string;
+    error_validation_unknownIdentifier: (
+        templates: ILocalizationTemplates,
+        identifier: string,
+        maybeSuggestion: string | undefined,
+    ) => string;
 }
 
 export const Localization: ILocalization = {
@@ -101,9 +105,24 @@ export const Localization: ILocalization = {
         }
     },
 
-    error_validation_unknownIdentifier: (templates: ILocalizationTemplates, identifierLiteral: string) =>
-        StringUtils.assertGetFormatted(
-            templates.error_validation_unknownIdentifier,
-            new Map([["identifierLiteral", identifierLiteral]]),
-        ),
+    error_validation_unknownIdentifier: (
+        templates: ILocalizationTemplates,
+        identifier: string,
+        maybeSuggestion: string | undefined,
+    ) => {
+        if (maybeSuggestion === undefined) {
+            return StringUtils.assertGetFormatted(
+                templates.error_validation_unknownIdentifier_noSuggestion,
+                new Map([["identifier", identifier]]),
+            );
+        } else {
+            return StringUtils.assertGetFormatted(
+                templates.error_validation_unknownIdentifier_suggestion,
+                new Map([
+                    ["identifier", identifier],
+                    ["suggestion", maybeSuggestion],
+                ]),
+            );
+        }
+    },
 };

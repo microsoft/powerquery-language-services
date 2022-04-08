@@ -8,10 +8,13 @@ import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/pa
 
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
+import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";
+
+const JaroWinklerSuggestionThreshold: number = 0.5;
 
 export async function validateUnknownIdentifiers(
     validationSettings: ValidationSettings,
@@ -30,7 +33,8 @@ export async function validateUnknownIdentifiers(
         await Inspection.tryNodeScope(validationSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
     ]);
 
-    const unknownIdentifiers: ReadonlyArray<Ast.Identifier> = findUnknownIdentifiers(identifiersAndTriedNodeScopes);
+    const unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]> =
+        findUnknownIdentifiers(identifiersAndTriedNodeScopes);
 
     return unknownIdentifiersToDiagnostics(validationSettings, unknownIdentifiers);
 }
@@ -61,8 +65,8 @@ function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): Readon
 
 function findUnknownIdentifiers(
     identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, TriedNodeScope]>,
-): ReadonlyArray<Ast.Identifier> {
-    const unknownIdentifiers: Ast.Identifier[] = [];
+): ReadonlyArray<[Ast.Identifier, string | undefined]> {
+    const unknownIdentifiers: [Ast.Identifier, string | undefined][] = [];
     const numIdentifiers: number = identifiersAndTriedNodeScopes.length;
 
     for (let index: number = 0; index < numIdentifiers; index += 1) {
@@ -75,7 +79,18 @@ function findUnknownIdentifiers(
         const nodeScope: Inspection.NodeScope = triedNodeScope.value;
 
         if (nodeScope && !nodeScope.has(identifier.literal)) {
-            unknownIdentifiers.push(identifier);
+            if (nodeScope.size) {
+                const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(identifier.literal, [
+                    ...nodeScope.keys(),
+                ]);
+
+                unknownIdentifiers.push([
+                    identifier,
+                    jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
+                ]);
+            } else {
+                unknownIdentifiers.push([identifier, undefined]);
+            }
         }
     }
 
@@ -84,13 +99,13 @@ function findUnknownIdentifiers(
 
 function unknownIdentifiersToDiagnostics(
     validationSettings: ValidationSettings,
-    unknownIdentifiers: ReadonlyArray<Ast.Identifier>,
+    unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]>,
 ): Diagnostic[] {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(validationSettings.locale);
 
-    return unknownIdentifiers.map((identifier: Ast.Identifier) => ({
+    return unknownIdentifiers.map(([identifier, maybeSuggestion]: [Ast.Identifier, string | undefined]) => ({
         code: DiagnosticErrorCode.UnknownIdentifier,
-        message: Localization.error_validation_unknownIdentifier(templates, identifier.literal),
+        message: Localization.error_validation_unknownIdentifier(templates, identifier.literal, maybeSuggestion),
         range: PositionUtils.createRangeFromTokenRange(identifier.tokenRange),
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,

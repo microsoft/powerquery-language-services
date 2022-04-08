@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ArrayUtils } from "@microsoft/powerquery-parser";
+
 // https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance
 
 // The standard magic numbers for Winkler adjustments.
@@ -36,6 +38,25 @@ export function calculateJaroWinkler(left: string, right: string): number {
     }
 
     return jaroScore;
+}
+
+// Returns [score, string] for the string with the highest jaro winkler score.
+export function calculateJaroWinklers(source: string, options: ReadonlyArray<string>): [number, string] {
+    ArrayUtils.assertNonZeroLength(options);
+
+    let bestScore: number = -1;
+    let bestOption: string = "";
+
+    for (const option of options) {
+        const currentScore: number = calculateJaroWinkler(source, option);
+
+        if (currentScore > bestScore) {
+            bestScore = currentScore;
+            bestOption = option;
+        }
+    }
+
+    return [bestScore, bestOption];
 }
 
 function calculateJaroForNormalized(shorter: string, longer: string): number {
