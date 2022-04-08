@@ -20,6 +20,9 @@
     "error_validation_invokeExpression_typeMismatch_unnamed": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
     "_error_validation_invokeExpression_typeMismatch_unnamed.comment": "An error when an unnamed function call is missing a mandatory argument. Expected to be user facing.",
 
-    "error_validation_unknownIdentifier": "Cannot find the name '{identifier}'.",
-    "_error_validation_unknownIdentifier.comment": "An error when an unknown variable is referenced. Expected to be user facing."
+    "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+    "_error_validation_unknownIdentifier_noSuggestion.comment": "An error when an unknown variable is referenced. Expected to be user facing.",
+
+    "error_validation_unknownIdentifier_suggestion": "Cannot find the name '{identifier}', did you mean '{suggestion}'?",
+    "_error_validation_unknownIdentifier_suggestion.comment": "An error when an unknown variable is referenced, but a similarly named variable is in scope. Expected to be user facing."
 }
