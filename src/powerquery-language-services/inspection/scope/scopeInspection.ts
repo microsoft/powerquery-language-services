@@ -51,7 +51,7 @@ export async function tryNodeScope(
 
         const inspectedDeltaScope: ScopeById = await inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
 
-        MapUtils.assertGet(inspectedDeltaScope, nodeId, `expected nodeId in scope result`, {
+        const result: NodeScope = MapUtils.assertGet(inspectedDeltaScope, nodeId, `expected nodeId in scope result`, {
             nodeId,
         });
 
@@ -59,7 +59,7 @@ export async function tryNodeScope(
             scopeById.set(key, value);
         }
 
-        return scopeById;
+        return result;
     });
 
     trace.exit();
