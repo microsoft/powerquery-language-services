@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Hover, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -19,6 +19,8 @@ import type {
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { findScopeItemByLiteral, findTheCreatorIdentifierOfOneScopeItem } from "../inspection/scope/scopeUtils";
+import { IdentifierContextKind, NodeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
@@ -160,6 +162,95 @@ export abstract class AnalysisBase implements Analysis {
             ),
             EmptySignatureHelp,
         );
+    }
+
+    public async getRenameEdits(newName: string): Promise<TextEdit[]> {
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const activeNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+        const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
+
+        const maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            activeNode?.maybeIdentifierIncludedUnderPosition;
+
+        if (maybeInspected && maybeIdentifierIncludedUnderPosition) {
+            const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+
+            if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                // merely modify the GeneralizedIdentifier
+                identifiersToBeEdited.push(maybeIdentifierIncludedUnderPosition);
+            } else if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
+                // need to find this key value and modify all referring it
+                const theIdentifierNode: Ast.Identifier = maybeIdentifierIncludedUnderPosition as Ast.Identifier;
+                let theValueCreator: Ast.Identifier | undefined = undefined;
+
+                switch (theIdentifierNode.identifierContextKind) {
+                    case IdentifierContextKind.Key:
+                    case IdentifierContextKind.Parameter:
+                        // it is the identifier creating the value
+                        theValueCreator = theIdentifierNode;
+                        break;
+
+                    case IdentifierContextKind.Value: {
+                        // it is the identifier referring the value
+                        const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
+                            theIdentifierNode.id,
+                        );
+
+                        const theScopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
+                            nodeScope,
+                            maybeIdentifierIncludedUnderPosition.literal,
+                        );
+
+                        if (theScopeItem) {
+                            const potentialValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                                findTheCreatorIdentifierOfOneScopeItem(theScopeItem);
+
+                            if (potentialValueCreator?.kind === NodeKind.Identifier) {
+                                if (
+                                    potentialValueCreator.identifierContextKind === IdentifierContextKind.Key ||
+                                    potentialValueCreator.identifierContextKind === IdentifierContextKind.Parameter
+                                ) {
+                                    theValueCreator = potentialValueCreator;
+                                } else {
+                                    identifiersToBeEdited.push(potentialValueCreator);
+                                }
+                            } else if (potentialValueCreator) {
+                                identifiersToBeEdited.push(potentialValueCreator);
+                            }
+                        }
+
+                        break;
+                    }
+
+                    case IdentifierContextKind.Keyword:
+                    default:
+                        // only modify once
+                        identifiersToBeEdited.push(theIdentifierNode);
+                        break;
+                }
+
+                if (theValueCreator) {
+                    // need to populate the other identifiers referring it
+                    identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(theValueCreator)));
+                }
+            }
+
+            return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+                range: {
+                    start: {
+                        line: one.tokenRange.positionStart.lineNumber,
+                        character: one.tokenRange.positionStart.lineCodeUnit,
+                    },
+                    end: {
+                        line: one.tokenRange.positionEnd.lineNumber,
+                        character: one.tokenRange.positionEnd.lineCodeUnit,
+                    },
+                },
+                newText: newName,
+            }));
+        }
+
+        return [];
     }
 
     public abstract dispose(): void;

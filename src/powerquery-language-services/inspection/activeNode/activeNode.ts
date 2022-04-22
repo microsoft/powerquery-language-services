@@ -32,6 +32,8 @@ export interface ActiveNode extends IActiveNode {
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier.
     readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    // A conditional indirection to the leaf if it's an Ast identifier of an included range.
+    readonly maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {

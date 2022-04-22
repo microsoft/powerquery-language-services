@@ -16,6 +16,8 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 import { PositionUtils } from "../..";
 
+type MaybeAstIdentifier = Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
 // 'let x=|1 in x' -> the value part of the key-value-pair.
@@ -75,11 +77,23 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
+    const maybeIdentifierIncludedUnderPosition: MaybeAstIdentifier = findIdentifierUnderPosition(
+        nodeIdMapCollection,
+        leaf,
+    );
+
+    const maybeIdentifierExcludedUnderPosition: MaybeAstIdentifier =
+        maybeIdentifierIncludedUnderPosition &&
+        PositionUtils.isInAst(position, maybeIdentifierIncludedUnderPosition, false, true)
+            ? maybeIdentifierIncludedUnderPosition
+            : undefined;
+
     return createActiveNode(
         leafKind,
         position,
         AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        findIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
+        maybeIdentifierExcludedUnderPosition,
+        maybeIdentifierIncludedUnderPosition,
     );
 }
 
@@ -87,14 +101,16 @@ export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
     ancestry: ReadonlyArray<TXorNode>,
-    maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeIdentifierExcludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
 ): ActiveNode {
     return {
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
         position,
         ancestry,
-        maybeIdentifierUnderPosition,
+        maybeIdentifierUnderPosition: maybeIdentifierExcludedUnderPosition,
+        maybeIdentifierIncludedUnderPosition,
     };
 }
 
@@ -324,7 +340,6 @@ function maybeFindContext(
 
 function findIdentifierUnderPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
-    position: Position,
     leaf: TXorNode,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (XorNodeUtils.isContextXor(leaf)) {
@@ -356,9 +371,5 @@ function findIdentifierUnderPosition(
         return undefined;
     }
 
-    if (PositionUtils.isInAst(position, identifier, false, true)) {
-        return identifier;
-    } else {
-        return undefined;
-    }
+    return identifier;
 }
