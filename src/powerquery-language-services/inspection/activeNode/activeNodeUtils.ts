@@ -77,23 +77,23 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
-    const maybeIdentifierIncludedUnderPosition: MaybeAstIdentifier = findIdentifierUnderPosition(
+    const maybeInclusiveIdentifierUnderPosition: MaybeAstIdentifier = findIdentifierUnderPosition(
         nodeIdMapCollection,
         leaf,
     );
 
-    const maybeIdentifierExcludedUnderPosition: MaybeAstIdentifier =
-        maybeIdentifierIncludedUnderPosition &&
-        PositionUtils.isInAst(position, maybeIdentifierIncludedUnderPosition, false, true)
-            ? maybeIdentifierIncludedUnderPosition
+    const maybeExclusiveIdentifierUnderPosition: MaybeAstIdentifier =
+        maybeInclusiveIdentifierUnderPosition &&
+        PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition, false, true)
+            ? maybeInclusiveIdentifierUnderPosition
             : undefined;
 
     return createActiveNode(
         leafKind,
         position,
         AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeIdentifierExcludedUnderPosition,
-        maybeIdentifierIncludedUnderPosition,
+        maybeExclusiveIdentifierUnderPosition,
+        maybeInclusiveIdentifierUnderPosition,
     );
 }
 
@@ -101,16 +101,16 @@ export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
     ancestry: ReadonlyArray<TXorNode>,
-    maybeIdentifierExcludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
-    maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
 ): ActiveNode {
     return {
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
         position,
         ancestry,
-        maybeIdentifierUnderPosition: maybeIdentifierExcludedUnderPosition,
-        maybeIdentifierIncludedUnderPosition,
+        maybeExclusiveIdentifierUnderPosition,
+        maybeInclusiveIdentifierUnderPosition,
     };
 }
 

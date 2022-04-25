@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+import * as PQP from "@microsoft/powerquery-parser";
 import {
     AstNodeById,
     ParentIdById,
@@ -57,32 +58,30 @@ export function findScopeItemByLiteral(
     nodeScope: NodeScope | undefined,
     literalString: string,
 ): TScopeItem | undefined {
-    // eslint-disable-next-line no-nested-ternary
-    return nodeScope?.has(`@${literalString}`)
-        ? nodeScope.get(`@${literalString}`)
-        : nodeScope?.has(literalString)
-        ? nodeScope.get(literalString)
-        : undefined;
+    return nodeScope?.get(`@${literalString}`) ?? nodeScope?.get(literalString);
 }
 
 export function findTheCreatorIdentifierOfOneScopeItem(
     scopeItem: TScopeItem | undefined,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
-    if (!scopeItem) return undefined;
+    if (!scopeItem) {
+        return undefined;
+    }
 
     switch (scopeItem.kind) {
-        case ScopeItemKind.Parameter:
-            return scopeItem.name;
+        case ScopeItemKind.Each:
+        case ScopeItemKind.Undefined:
+            return undefined;
         case ScopeItemKind.LetVariable:
             return scopeItem.key;
+        case ScopeItemKind.Parameter:
+            return scopeItem.name;
         case ScopeItemKind.RecordField:
             return scopeItem.key;
         case ScopeItemKind.SectionMember:
             return scopeItem.key;
-        case ScopeItemKind.Each:
-        case ScopeItemKind.Undefined:
         default:
-            return undefined;
+            throw PQP.Assert.isNever(scopeItem);
     }
 }
 
@@ -93,22 +92,22 @@ export function findDirectUpperScopeExpression(
     const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
     const parentIdById: ParentIdById = nodeIdMapCollection.parentIdById;
 
-    let theNode: Ast.TNode | undefined = astNodeById.get(nodeId);
+    let currentNode: Ast.TNode | undefined = astNodeById.get(nodeId);
 
     while (
-        theNode &&
-        theNode.kind !== Ast.NodeKind.EachExpression &&
-        theNode.kind !== Ast.NodeKind.FunctionExpression &&
-        theNode.kind !== Ast.NodeKind.LetExpression &&
-        theNode.kind !== Ast.NodeKind.RecordExpression &&
-        theNode.kind !== Ast.NodeKind.RecordLiteral &&
-        theNode.kind !== Ast.NodeKind.Section
+        currentNode &&
+        currentNode.kind !== Ast.NodeKind.EachExpression &&
+        currentNode.kind !== Ast.NodeKind.FunctionExpression &&
+        currentNode.kind !== Ast.NodeKind.LetExpression &&
+        currentNode.kind !== Ast.NodeKind.RecordExpression &&
+        currentNode.kind !== Ast.NodeKind.RecordLiteral &&
+        currentNode.kind !== Ast.NodeKind.Section
     ) {
-        const curParentId: number = parentIdById.get(theNode.id) || -1;
-        theNode = astNodeById.get(curParentId);
+        const currentParentId: number = parentIdById.get(currentNode.id) || -1;
+        currentNode = astNodeById.get(currentParentId);
     }
 
-    return theNode as
+    return currentNode as
         | EachExpression
         | FunctionExpression
         | LetExpression
