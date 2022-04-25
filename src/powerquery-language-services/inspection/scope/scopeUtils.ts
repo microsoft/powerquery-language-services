@@ -68,7 +68,9 @@ export function findScopeItemByLiteral(
 export function findTheCreatorIdentifierOfOneScopeItem(
     scopeItem: TScopeItem | undefined,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
-    if (!scopeItem) return undefined;
+    if (!scopeItem) {
+        return undefined;
+    }
 
     switch (scopeItem.kind) {
         case ScopeItemKind.Parameter:
