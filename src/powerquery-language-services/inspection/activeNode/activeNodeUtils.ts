@@ -16,8 +16,6 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
 import { PositionUtils } from "../..";
 
-type MaybeAstIdentifier = Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
-
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
 // ' 1 + |' -> the second operand, a Context node, in an ArithmeticExpression.
 // 'let x=|1 in x' -> the value part of the key-value-pair.
@@ -77,12 +75,10 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
-    const maybeInclusiveIdentifierUnderPosition: MaybeAstIdentifier = findIdentifierUnderPosition(
-        nodeIdMapCollection,
-        leaf,
-    );
+    const maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+        findIdentifierUnderPosition(nodeIdMapCollection, leaf);
 
-    const maybeExclusiveIdentifierUnderPosition: MaybeAstIdentifier =
+    const maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
         maybeInclusiveIdentifierUnderPosition &&
         PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition, false, true)
             ? maybeInclusiveIdentifierUnderPosition

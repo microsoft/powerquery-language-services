@@ -172,76 +172,76 @@ export abstract class AnalysisBase implements Analysis {
         const maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
             activeNode?.maybeInclusiveIdentifierUnderPosition;
 
-        if (maybeInspected && maybeIdentifierIncludedUnderPosition) {
-            const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
-
-            if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
-                // merely modify the GeneralizedIdentifier
-                identifiersToBeEdited.push(maybeIdentifierIncludedUnderPosition);
-            } else if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
-                // need to find this key value and modify all referring it
-                const theIdentifierNode: Ast.Identifier = maybeIdentifierIncludedUnderPosition as Ast.Identifier;
-                let valueCreator: Ast.Identifier | undefined = undefined;
-
-                switch (theIdentifierNode.identifierContextKind) {
-                    case Ast.IdentifierContextKind.Key:
-                    case Ast.IdentifierContextKind.Parameter:
-                        // it is the identifier creating the value
-                        valueCreator = theIdentifierNode;
-                        break;
-
-                    case Ast.IdentifierContextKind.Value: {
-                        // it is the identifier referring the value
-                        const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
-                            theIdentifierNode.id,
-                        );
-
-                        const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
-                            nodeScope,
-                            maybeIdentifierIncludedUnderPosition.literal,
-                        );
-
-                        if (scopeItem) {
-                            const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                                findTheCreatorIdentifierOfOneScopeItem(scopeItem);
-
-                            if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
-                                if (
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
-                                ) {
-                                    valueCreator = maybeValueCreator;
-                                } else {
-                                    identifiersToBeEdited.push(maybeValueCreator);
-                                }
-                            } else if (maybeValueCreator) {
-                                identifiersToBeEdited.push(maybeValueCreator);
-                            }
-                        }
-
-                        break;
-                    }
-
-                    case Ast.IdentifierContextKind.Keyword:
-                    default:
-                        // only modify once
-                        identifiersToBeEdited.push(theIdentifierNode);
-                        break;
-                }
-
-                if (valueCreator) {
-                    // need to populate the other identifiers referring it
-                    identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
-                }
-            }
-
-            return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
-                range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
-                newText: newName,
-            }));
+        if (maybeInspected === undefined || maybeIdentifierIncludedUnderPosition === undefined) {
+            return [];
         }
 
-        return [];
+        const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+
+        if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
+            // merely modify the GeneralizedIdentifier
+            identifiersToBeEdited.push(maybeIdentifierIncludedUnderPosition);
+        } else if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
+            // need to find this key value and modify all referring it
+            const theIdentifierNode: Ast.Identifier = maybeIdentifierIncludedUnderPosition as Ast.Identifier;
+            let valueCreator: Ast.Identifier | undefined = undefined;
+
+            switch (theIdentifierNode.identifierContextKind) {
+                case Ast.IdentifierContextKind.Key:
+                case Ast.IdentifierContextKind.Parameter:
+                    // it is the identifier creating the value
+                    valueCreator = theIdentifierNode;
+                    break;
+
+                case Ast.IdentifierContextKind.Value: {
+                    // it is the identifier referring the value
+                    const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
+                        theIdentifierNode.id,
+                    );
+
+                    const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
+                        nodeScope,
+                        maybeIdentifierIncludedUnderPosition.literal,
+                    );
+
+                    if (scopeItem) {
+                        const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            findTheCreatorIdentifierOfOneScopeItem(scopeItem);
+
+                        if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                            if (
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                            ) {
+                                valueCreator = maybeValueCreator;
+                            } else {
+                                identifiersToBeEdited.push(maybeValueCreator);
+                            }
+                        } else if (maybeValueCreator) {
+                            identifiersToBeEdited.push(maybeValueCreator);
+                        }
+                    }
+
+                    break;
+                }
+
+                case Ast.IdentifierContextKind.Keyword:
+                default:
+                    // only modify once
+                    identifiersToBeEdited.push(theIdentifierNode);
+                    break;
+            }
+
+            if (valueCreator) {
+                // need to populate the other identifiers referring it
+                identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+            }
+        }
+
+        return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+            range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
+            newText: newName,
+        }));
     }
 
     public abstract dispose(): void;
