@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Inspection } from "..";
 import { TMaybeActiveNode } from "./activeNode";
 import { TriedExpectedType } from "./expectedType";
@@ -19,4 +20,6 @@ export interface Inspected {
     readonly triedExpectedType: TriedExpectedType;
     readonly typeCache: TypeCache;
     readonly parseState: PQP.Parser.ParseState;
+
+    readonly collectAllIdentifiersBeneath: (entryNodeId: Ast.Identifier) => Promise<Ast.Identifier[]>;
 }

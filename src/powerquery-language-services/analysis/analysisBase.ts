@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Hover, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -19,10 +19,12 @@ import type {
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
+import { findScopeItemByLiteral, findTheCreatorIdentifierOfOneScopeItem } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { Library } from "../library";
+import { PositionUtils } from "../..";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
@@ -103,7 +105,7 @@ export abstract class AnalysisBase implements Analysis {
         const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
 
         const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-            maybeActiveNode?.maybeIdentifierUnderPosition;
+            maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
 
         if (
             maybeActiveNode === undefined ||
@@ -160,6 +162,86 @@ export abstract class AnalysisBase implements Analysis {
             ),
             EmptySignatureHelp,
         );
+    }
+
+    public async getRenameEdits(newName: string): Promise<TextEdit[]> {
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const activeNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+        const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
+
+        const maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            activeNode?.maybeInclusiveIdentifierUnderPosition;
+
+        if (maybeInspected === undefined || maybeIdentifierIncludedUnderPosition === undefined) {
+            return [];
+        }
+
+        const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+
+        if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
+            // merely modify the GeneralizedIdentifier
+            identifiersToBeEdited.push(maybeIdentifierIncludedUnderPosition);
+        } else if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
+            // need to find this key value and modify all referring it
+            const theIdentifierNode: Ast.Identifier = maybeIdentifierIncludedUnderPosition as Ast.Identifier;
+            let valueCreator: Ast.Identifier | undefined = undefined;
+
+            switch (theIdentifierNode.identifierContextKind) {
+                case Ast.IdentifierContextKind.Key:
+                case Ast.IdentifierContextKind.Parameter:
+                    // it is the identifier creating the value
+                    valueCreator = theIdentifierNode;
+                    break;
+
+                case Ast.IdentifierContextKind.Value: {
+                    // it is the identifier referring the value
+                    const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
+                        theIdentifierNode.id,
+                    );
+
+                    const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
+                        nodeScope,
+                        maybeIdentifierIncludedUnderPosition.literal,
+                    );
+
+                    if (scopeItem) {
+                        const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            findTheCreatorIdentifierOfOneScopeItem(scopeItem);
+
+                        if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                            if (
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                            ) {
+                                valueCreator = maybeValueCreator;
+                            } else {
+                                identifiersToBeEdited.push(maybeValueCreator);
+                            }
+                        } else if (maybeValueCreator) {
+                            identifiersToBeEdited.push(maybeValueCreator);
+                        }
+                    }
+
+                    break;
+                }
+
+                case Ast.IdentifierContextKind.Keyword:
+                default:
+                    // only modify once
+                    identifiersToBeEdited.push(theIdentifierNode);
+                    break;
+            }
+
+            if (valueCreator) {
+                // need to populate the other identifiers referring it
+                identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+            }
+        }
+
+        return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+            range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
+            newText: newName,
+        }));
     }
 
     public abstract dispose(): void;
@@ -269,7 +351,7 @@ export abstract class AnalysisBase implements Analysis {
     private async getMaybePositionIdentifier(): Promise<Ast.Identifier | Ast.GeneralizedIdentifier | undefined> {
         const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
 
-        return maybeActiveNode?.maybeIdentifierUnderPosition;
+        return maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
     }
 
     private async getMaybeActiveNode(): Promise<Inspection.ActiveNode | undefined> {
