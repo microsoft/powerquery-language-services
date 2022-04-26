@@ -121,7 +121,9 @@ describe("InspectedInvokeExpression", () => {
                     "expecting identifier",
                 );
 
-                const identifier: Ast.GeneralizedIdentifier | Ast.Identifier = activeNode.maybeExclusiveIdentifierUnderPosition;
+                const identifier: Ast.GeneralizedIdentifier | Ast.Identifier =
+                    activeNode.maybeExclusiveIdentifierUnderPosition;
+
                 expect(identifier.literal).equals("OdbcDataSource");
                 expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
             });
