@@ -7,6 +7,7 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import * as InspectionUtils from "../inspectionUtils";
+import * as PositionUtils from "../positionUtils";
 import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
 import type {
     AutocompleteItemProvider,
@@ -24,7 +25,6 @@ import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentS
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { Library } from "../library";
-import { PositionUtils } from "../..";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
