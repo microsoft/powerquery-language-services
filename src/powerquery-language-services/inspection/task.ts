@@ -16,7 +16,6 @@ import {
     findScopeItemByLiteral,
     findTheCreatorIdentifierOfOneScopeItem,
 } from "./scope/scopeUtils";
-import { IdentifierContextKind, NodeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
@@ -42,7 +41,9 @@ class InspectionInstance implements Inspected {
         public readonly parseState: PQP.Parser.ParseState,
     ) {}
 
-    public async collectAllIdentifiersBeneath(valueCreator: Ast.Identifier): Promise<Ast.Identifier[]> {
+    public async collectAllIdentifiersBeneath(
+        valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
+    ): Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>> {
         const astNodeById: AstNodeById = this.nodeIdMapCollection.astNodeById;
         const childIdsById: ChildIdsById = this.nodeIdMapCollection.childIdsById;
         const originLiteral: string = valueCreator.literal;
@@ -53,12 +54,18 @@ class InspectionInstance implements Inspected {
             const allIdentifierIdSet: Set<number> =
                 this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) || new Set();
 
+            const allGeneralizedIdentifierIdSet: Set<number> =
+                this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.GeneralizedIdentifier) || new Set();
+
             const current: Ast.TNode = entry;
             const idsByTiers: number[][] = [];
             let currentTier: number[] = (childIdsById.get(current.id) || []).slice();
 
             while (currentTier.length) {
-                const toBePushed: number[] = currentTier.filter((one: number) => allIdentifierIdSet.has(one));
+                const toBePushed: number[] = currentTier.filter(
+                    (one: number) => allIdentifierIdSet.has(one) || allGeneralizedIdentifierIdSet.has(one),
+                );
+
                 toBePushed.length && idsByTiers.push(toBePushed);
                 currentTier = currentTier.slice();
                 let nextTier: number[] = [];
@@ -73,23 +80,25 @@ class InspectionInstance implements Inspected {
             }
 
             // filter literal names
-            const completeIdentifierNodes: Ast.Identifier[] = idsByTiers
+            const completeIdentifierNodes: Array<Ast.Identifier | Ast.GeneralizedIdentifier> = idsByTiers
                 .reduce((previousValue: number[], currentValue: number[]) => currentValue.concat(previousValue), [])
                 .map((one: number) => astNodeById.get(one))
-                .filter(Boolean) as Ast.Identifier[];
+                .filter(Boolean) as Array<Ast.Identifier | Ast.GeneralizedIdentifier>;
 
-            let filteredIdentifierNodes: Ast.Identifier[] = completeIdentifierNodes.filter(
-                (one: Ast.Identifier) => one.literal === originLiteral,
-            );
+            let filteredIdentifierNodes: Array<Ast.Identifier | Ast.GeneralizedIdentifier> =
+                completeIdentifierNodes.filter(
+                    (one: Ast.Identifier | Ast.GeneralizedIdentifier) => one.literal === originLiteral,
+                );
 
             // populate the scope items for each
             await Promise.all(
                 filteredIdentifierNodes
                     .filter(
-                        (oneIdentifier: Ast.Identifier) =>
-                            oneIdentifier.identifierContextKind === IdentifierContextKind.Value,
+                        (oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
+                            oneIdentifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+                            oneIdentifier.identifierContextKind === Ast.IdentifierContextKind.Value,
                     )
-                    .map((oneIdentifier: Ast.Identifier) =>
+                    .map((oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
                         tryNodeScope(
                             this.settings,
                             this.nodeIdMapCollection,
@@ -99,31 +108,31 @@ class InspectionInstance implements Inspected {
                     ),
             );
 
-            filteredIdentifierNodes = filteredIdentifierNodes.filter((oneIdentifierNode: Ast.Identifier) => {
-                if (oneIdentifierNode.identifierContextKind === IdentifierContextKind.Value) {
-                    const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
-                        oneIdentifierNode.id,
-                    );
+            filteredIdentifierNodes = filteredIdentifierNodes.filter(
+                (oneIdentifierNode: Ast.Identifier | Ast.GeneralizedIdentifier) => {
+                    if (oneIdentifierNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                        return oneIdentifierNode.id === valueCreator.id;
+                    } else if (oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Value) {
+                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
+                            oneIdentifierNode.id,
+                        );
 
-                    const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
+                        const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
-                    const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                        findTheCreatorIdentifierOfOneScopeItem(theScopeItem);
+                        const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            findTheCreatorIdentifierOfOneScopeItem(theScopeItem);
 
-                    return (
-                        theCreatorIdentifier &&
-                        theCreatorIdentifier.kind === NodeKind.Identifier &&
-                        theCreatorIdentifier.id === valueCreator.id
-                    );
-                } else if (
-                    oneIdentifierNode.identifierContextKind === IdentifierContextKind.Key ||
-                    oneIdentifierNode.identifierContextKind === IdentifierContextKind.Parameter
-                ) {
-                    return oneIdentifierNode.id === valueCreator.id;
-                }
+                        return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
+                    } else if (
+                        oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                        oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                    ) {
+                        return oneIdentifierNode.id === valueCreator.id;
+                    }
 
-                return false;
-            });
+                    return false;
+                },
+            );
 
             return filteredIdentifierNodes;
         }

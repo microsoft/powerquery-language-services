@@ -21,5 +21,7 @@ export interface Inspected {
     readonly typeCache: TypeCache;
     readonly parseState: PQP.Parser.ParseState;
 
-    readonly collectAllIdentifiersBeneath: (entryNodeId: Ast.Identifier) => Promise<Ast.Identifier[]>;
+    readonly collectAllIdentifiersBeneath: (
+        entryNodeId: Ast.Identifier | Ast.GeneralizedIdentifier,
+    ) => Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>>;
 }
