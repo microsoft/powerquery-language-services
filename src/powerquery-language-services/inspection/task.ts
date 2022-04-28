@@ -52,14 +52,14 @@ class InspectionInstance implements Inspected {
 
         if (entry) {
             const allIdentifierIdSet: Set<number> =
-                this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) || new Set();
+                this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) ?? new Set();
 
             const allGeneralizedIdentifierIdSet: Set<number> =
-                this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.GeneralizedIdentifier) || new Set();
+                this.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.GeneralizedIdentifier) ?? new Set();
 
             const current: Ast.TNode = entry;
             const idsByTiers: number[][] = [];
-            let currentTier: number[] = (childIdsById.get(current.id) || []).slice();
+            let currentTier: number[] = (childIdsById.get(current.id) ?? []).slice();
 
             while (currentTier.length) {
                 const toBePushed: number[] = currentTier.filter(
@@ -71,8 +71,8 @@ class InspectionInstance implements Inspected {
                 let nextTier: number[] = [];
 
                 while (currentTier.length) {
-                    const oneNode: number = currentTier.shift() || -1;
-                    const childrenOfTheNode: number[] = (childIdsById.get(oneNode) || []).slice();
+                    const oneNode: number = currentTier.shift() ?? -1;
+                    const childrenOfTheNode: number[] = (childIdsById.get(oneNode) ?? []).slice();
                     nextTier = nextTier.concat(childrenOfTheNode);
                 }
 
@@ -81,7 +81,7 @@ class InspectionInstance implements Inspected {
 
             // filter literal names
             const completeIdentifierNodes: Array<Ast.Identifier | Ast.GeneralizedIdentifier> = idsByTiers
-                .reduce((previousValue: number[], currentValue: number[]) => currentValue.concat(previousValue), [])
+                .flat(1)
                 .map((one: number) => astNodeById.get(one))
                 .filter(Boolean) as Array<Ast.Identifier | Ast.GeneralizedIdentifier>;
 
