@@ -169,22 +169,21 @@ export abstract class AnalysisBase implements Analysis {
         const activeNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
         const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
 
-        const maybeIdentifierIncludedUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+        const maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
             activeNode?.maybeInclusiveIdentifierUnderPosition;
 
-        if (maybeInspected === undefined || maybeIdentifierIncludedUnderPosition === undefined) {
+        if (maybeInspected === undefined || maybeInclusiveIdentifierUnderPosition === undefined) {
             return [];
         }
 
         const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+        let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
 
-        if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
-            // merely modify the GeneralizedIdentifier
-            identifiersToBeEdited.push(maybeIdentifierIncludedUnderPosition);
-        } else if (maybeIdentifierIncludedUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
+        if (maybeInclusiveIdentifierUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
+            valueCreator = maybeInclusiveIdentifierUnderPosition;
+        } else if (maybeInclusiveIdentifierUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
             // need to find this key value and modify all referring it
-            const theIdentifierNode: Ast.Identifier = maybeIdentifierIncludedUnderPosition as Ast.Identifier;
-            let valueCreator: Ast.Identifier | undefined = undefined;
+            const theIdentifierNode: Ast.Identifier = maybeInclusiveIdentifierUnderPosition as Ast.Identifier;
 
             switch (theIdentifierNode.identifierContextKind) {
                 case Ast.IdentifierContextKind.Key:
@@ -195,13 +194,19 @@ export abstract class AnalysisBase implements Analysis {
 
                 case Ast.IdentifierContextKind.Value: {
                     // it is the identifier referring the value
-                    const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
+                    let nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
                         theIdentifierNode.id,
                     );
 
+                    // there might be a chance that its scope did not get populated yet, do another try
+                    if (!nodeScope) {
+                        await maybeInspected.tryNodeScope(theIdentifierNode.id);
+                        nodeScope = maybeInspected.typeCache.scopeById.get(theIdentifierNode.id);
+                    }
+
                     const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
                         nodeScope,
-                        maybeIdentifierIncludedUnderPosition.literal,
+                        maybeInclusiveIdentifierUnderPosition.literal,
                     );
 
                     if (scopeItem) {
@@ -217,6 +222,8 @@ export abstract class AnalysisBase implements Analysis {
                             } else {
                                 identifiersToBeEdited.push(maybeValueCreator);
                             }
+                        } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                            valueCreator = maybeValueCreator;
                         } else if (maybeValueCreator) {
                             identifiersToBeEdited.push(maybeValueCreator);
                         }
@@ -231,11 +238,16 @@ export abstract class AnalysisBase implements Analysis {
                     identifiersToBeEdited.push(theIdentifierNode);
                     break;
             }
+        }
 
-            if (valueCreator) {
-                // need to populate the other identifiers referring it
-                identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
-            }
+        if (valueCreator) {
+            // need to populate the other identifiers referring it
+            identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+        }
+
+        // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
+        if (identifiersToBeEdited.length === 0 && maybeInclusiveIdentifierUnderPosition) {
+            identifiersToBeEdited.push(maybeInclusiveIdentifierUnderPosition);
         }
 
         return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
