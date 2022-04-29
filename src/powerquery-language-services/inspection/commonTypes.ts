@@ -7,6 +7,7 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { Inspection } from "..";
 import { TMaybeActiveNode } from "./activeNode";
 import { TriedExpectedType } from "./expectedType";
+import { TriedNodeScope } from "./scope";
 import { TypeCache } from "./typeCache";
 
 export type TriedInspection = PQP.Result<Inspected, PQP.CommonError.CommonError>;
@@ -21,6 +22,7 @@ export interface Inspected {
     readonly typeCache: TypeCache;
     readonly parseState: PQP.Parser.ParseState;
 
+    readonly tryNodeScope: (id: number) => Promise<TriedNodeScope>;
     readonly collectAllIdentifiersBeneath: (
         entryNodeId: Ast.Identifier | Ast.GeneralizedIdentifier,
     ) => Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>>;

@@ -194,9 +194,15 @@ export abstract class AnalysisBase implements Analysis {
 
                 case Ast.IdentifierContextKind.Value: {
                     // it is the identifier referring the value
-                    const nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
+                    let nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
                         theIdentifierNode.id,
                     );
+
+                    // there might be a chance that its scope did not get populated yet, do another try
+                    if (!nodeScope) {
+                        await maybeInspected.tryNodeScope(theIdentifierNode.id);
+                        nodeScope = maybeInspected.typeCache.scopeById.get(theIdentifierNode.id);
+                    }
 
                     const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
                         nodeScope,
@@ -237,6 +243,11 @@ export abstract class AnalysisBase implements Analysis {
         if (valueCreator) {
             // need to populate the other identifiers referring it
             identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+        }
+
+        // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
+        if (identifiersToBeEdited.length === 0 && maybeInclusiveIdentifierUnderPosition) {
+            identifiersToBeEdited.push(maybeInclusiveIdentifierUnderPosition);
         }
 
         return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({

@@ -11,13 +11,13 @@ import {
     AstNodeById,
     ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
+import { tryNodeScope as doTryNodeScope, TriedNodeScope, TScopeItem } from "./scope";
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
     findTheCreatorIdentifierOfOneScopeItem,
 } from "./scope/scopeUtils";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
-import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
@@ -27,7 +27,7 @@ import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 
-class InspectionInstance implements Inspected {
+export class InspectionInstance implements Inspected {
     constructor(
         public readonly settings: InspectionSettings,
         public readonly nodeIdMapCollection: NodeIdMap.Collection,
@@ -40,6 +40,10 @@ class InspectionInstance implements Inspected {
         public readonly typeCache: TypeCache,
         public readonly parseState: PQP.Parser.ParseState,
     ) {}
+
+    public tryNodeScope(id: number): Promise<TriedNodeScope> {
+        return doTryNodeScope(this.settings, this.nodeIdMapCollection, id, this.typeCache.scopeById);
+    }
 
     public async collectAllIdentifiersBeneath(
         valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
@@ -99,12 +103,7 @@ class InspectionInstance implements Inspected {
                             oneIdentifier.identifierContextKind === Ast.IdentifierContextKind.Value,
                     )
                     .map((oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
-                        tryNodeScope(
-                            this.settings,
-                            this.nodeIdMapCollection,
-                            oneIdentifier.id,
-                            this.typeCache.scopeById,
-                        ),
+                        this.tryNodeScope(oneIdentifier.id),
                     ),
             );
 
@@ -169,7 +168,7 @@ export async function inspect(
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const activeNode: ActiveNode = maybeActiveNode;
 
-        triedNodeScope = tryNodeScope(
+        triedNodeScope = doTryNodeScope(
             settings,
             nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
