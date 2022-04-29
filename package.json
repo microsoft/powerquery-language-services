@@ -4,7 +4,7 @@
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "prepublishOnly": "git clean -xdf && npm install && npm run lint && npm run build && npm run test",
+        "prepublishOnly": "git clean -xdf && npm install-clean && npm run lint && npm run build && npm run test",
         "build": ".\\node_modules\\.bin\\tsc",
         "watch": ".\\node_modules\\.bin\\tsc -b -watch",
         "lint": "eslint src --ext ts",
@@ -21,6 +21,9 @@
     "description": "Language services for the Power Query/M formula language.",
     "main": "lib/powerquery-language-services/index.js",
     "types": "lib/powerquery-language-services/index.d.ts",
+    "engines": {
+        "node": ">=16.13.2"
+    },
     "keywords": [
         "power query",
         "power bi"
