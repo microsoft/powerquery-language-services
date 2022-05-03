@@ -58,7 +58,7 @@ export function findScopeItemByLiteral(
     nodeScope: NodeScope | undefined,
     literalString: string,
 ): TScopeItem | undefined {
-    return nodeScope?.get(`@${literalString}`) ?? nodeScope?.get(literalString);
+    return nodeScope?.get(literalString);
 }
 
 export function findTheCreatorIdentifierOfOneScopeItem(

@@ -175,9 +175,9 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
             expect(textEdits.length).eq(2);
             expect(textEdits[0].newText).eq(nextStr);
             expect(textEdits[0].range.start.line).eq(0);
-            expect(textEdits[0].range.start.character).eq(72);
+            expect(textEdits[0].range.start.character).eq(4);
             expect(textEdits[0].range.end.line).eq(0);
-            expect(textEdits[0].range.end.character).eq(75);
+            expect(textEdits[0].range.end.character).eq(7);
             expect(textEdits[1].newText).eq(nextStr);
             expect(textEdits[1].range.start.line).eq(0);
             expect(textEdits[1].range.start.character).eq(78);
@@ -202,6 +202,39 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
             ].join(" ");
 
             const nextStr: string = "foo1";
+
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+
+            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
+                TestConstants.DefaultInspectionSettings,
+                text,
+                position,
+            );
+
+            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
+
+            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
+
+            assertExpectedRecordTextEdits(textEdits, nextStr);
+        });
+
+        it(`Rename one identifier in its paired assignment expression creator`, async () => {
+            const rawText: string = [
+                "let",
+                "|foo = 1,",
+                "bar = 1,",
+                "ThirdPQConn = [",
+                "Authentication = [",
+                "Implicit = [],",
+                "foo = foo",
+                "],",
+                'Label = Extension.LoadString("DataSourceLabel")',
+                "]",
+                "in",
+                "ThirdPQConn",
+            ].join(" ");
+
+            const nextStr: string = "foo2";
 
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
 
@@ -248,7 +281,12 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
 
-            assertExpectedRecordTextEdits(textEdits, nextStr);
+            expect(textEdits.length).eq(1);
+            expect(textEdits[0].newText).eq(nextStr);
+            expect(textEdits[0].range.start.line).eq(0);
+            expect(textEdits[0].range.start.character).eq(72);
+            expect(textEdits[0].range.end.line).eq(0);
+            expect(textEdits[0].range.end.character).eq(75);
         });
 
         it(`Rename one identifier within a statement`, async () => {
@@ -259,7 +297,7 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 "ThirdPQConn = [",
                 "Authentication = [",
                 "Implicit = [],",
-                "foo2 = foo",
+                "foo = foo",
                 "],",
                 'Label = Extension.LoadString("DataSourceLabel")',
                 "]",
@@ -289,9 +327,92 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
             expect(textEdits[0].range.end.character).eq(7);
             expect(textEdits[1].newText).eq(nextStr);
             expect(textEdits[1].range.start.line).eq(0);
+            expect(textEdits[1].range.start.character).eq(78);
+            expect(textEdits[1].range.end.line).eq(0);
+            expect(textEdits[1].range.end.character).eq(81);
+        });
+
+        const assertExpectedRecordTextEditsWithAtSymbols: (textEdits: TextEdit[], nextStr: string) => void = (
+            textEdits: TextEdit[],
+            nextStr: string,
+        ) => {
+            expect(textEdits.length).eq(2);
+            expect(textEdits[0].newText).eq(nextStr);
+            expect(textEdits[0].range.start.line).eq(0);
+            expect(textEdits[0].range.start.character).eq(57);
+            expect(textEdits[0].range.end.line).eq(0);
+            expect(textEdits[0].range.end.character).eq(65);
+            expect(textEdits[1].newText).eq(nextStr);
+            expect(textEdits[1].range.start.line).eq(0);
             expect(textEdits[1].range.start.character).eq(79);
             expect(textEdits[1].range.end.line).eq(0);
-            expect(textEdits[1].range.end.character).eq(82);
+            expect(textEdits[1].range.end.character).eq(87);
+        };
+
+        it(`Rename one generalized identifier within a statement with constant at symbol`, async () => {
+            const rawText: string = [
+                "let",
+                "foo = 1,",
+                "bar = 1,",
+                "ThirdPQConn = [",
+                "Authentication = [",
+                "|Implicit = [],",
+                "foo = @Implicit",
+                "],",
+                'Label = Extension.LoadString("DataSourceLabel")',
+                "]",
+                "in",
+                "ThirdPQConn",
+            ].join(" ");
+
+            const nextStr: string = "Implicit4";
+
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+
+            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
+                TestConstants.DefaultInspectionSettings,
+                text,
+                position,
+            );
+
+            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
+
+            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
+
+            assertExpectedRecordTextEditsWithAtSymbols(textEdits, nextStr);
+        });
+
+        it(`Rename one referred generalized identifier within a statement with constant at symbol`, async () => {
+            const rawText: string = [
+                "let",
+                "foo = 1,",
+                "bar = 1,",
+                "ThirdPQConn = [",
+                "Authentication = [",
+                "Implicit = [],",
+                "foo = @Implicit|",
+                "],",
+                'Label = Extension.LoadString("DataSourceLabel")',
+                "]",
+                "in",
+                "ThirdPQConn",
+            ].join(" ");
+
+            const nextStr: string = "Implicit4";
+
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+
+            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
+                TestConstants.DefaultInspectionSettings,
+                text,
+                position,
+            );
+
+            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
+
+            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
+
+            assertExpectedRecordTextEditsWithAtSymbols(textEdits, nextStr);
         });
     });
 });
