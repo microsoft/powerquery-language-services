@@ -10,7 +10,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../..";
@@ -49,9 +49,17 @@ export async function tryNodeScope(
             return new Map();
         }
 
-        const inspected: ScopeById = await inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
+        const inspectedDeltaScope: ScopeById = await inspectScope(settings, nodeIdMapCollection, ancestry, scopeById);
 
-        return Assert.asDefined(inspected.get(nodeId), `expected nodeId in scope result`, { nodeId });
+        const result: NodeScope = MapUtils.assertGet(inspectedDeltaScope, nodeId, `expected nodeId in scope result`, {
+            nodeId,
+        });
+
+        for (const [key, value] of inspectedDeltaScope.entries()) {
+            scopeById.set(key, value);
+        }
+
+        return result;
     });
 
     trace.exit();
@@ -233,14 +241,12 @@ async function inspectScope(
         return scopeById;
     }
 
-    // Store the delta between the given scope and what's found in a temporary map.
-    // This will prevent mutation in the given map if an error is thrown.
-    const scopeChanges: ScopeById = new Map();
-
     const state: ScopeInspectionState = {
         traceManager: settings.traceManager,
         givenScope: scopeById,
-        deltaScope: scopeChanges,
+        // Store the delta between the given scope and what's found in a temporary map.
+        // This will prevent mutation in the given map if an error is thrown.
+        deltaScope: new Map(),
         ancestry,
         nodeIdMapCollection,
         ancestryIndex: 0,

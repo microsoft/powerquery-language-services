@@ -50,8 +50,8 @@ export async function autocompleteKeyword(
     let maybePositionName: string | undefined;
 
     if (PositionUtils.isInXor(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
-        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-            maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
+        if (activeNode.maybeExclusiveIdentifierUnderPosition !== undefined) {
+            maybePositionName = activeNode.maybeExclusiveIdentifierUnderPosition.literal;
         }
         // Matches 'null', 'true', and 'false'.
         else if (
