@@ -75,11 +75,21 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
+    const maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+        findIdentifierUnderPosition(nodeIdMapCollection, leaf);
+
+    const maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+        maybeInclusiveIdentifierUnderPosition &&
+        PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition, false, true)
+            ? maybeInclusiveIdentifierUnderPosition
+            : undefined;
+
     return createActiveNode(
         leafKind,
         position,
         AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        findIdentifierUnderPosition(nodeIdMapCollection, position, leaf),
+        maybeExclusiveIdentifierUnderPosition,
+        maybeInclusiveIdentifierUnderPosition,
     );
 }
 
@@ -87,14 +97,16 @@ export function createActiveNode(
     leafKind: ActiveNodeLeafKind,
     position: Position,
     ancestry: ReadonlyArray<TXorNode>,
-    maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
+    maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
 ): ActiveNode {
     return {
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
         position,
         ancestry,
-        maybeIdentifierUnderPosition,
+        maybeExclusiveIdentifierUnderPosition,
+        maybeInclusiveIdentifierUnderPosition,
     };
 }
 
@@ -324,7 +336,6 @@ function maybeFindContext(
 
 function findIdentifierUnderPosition(
     nodeIdMapCollection: NodeIdMap.Collection,
-    position: Position,
     leaf: TXorNode,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (XorNodeUtils.isContextXor(leaf)) {
@@ -356,9 +367,5 @@ function findIdentifierUnderPosition(
         return undefined;
     }
 
-    if (PositionUtils.isInAst(position, identifier, false, true)) {
-        return identifier;
-    } else {
-        return undefined;
-    }
+    return identifier;
 }

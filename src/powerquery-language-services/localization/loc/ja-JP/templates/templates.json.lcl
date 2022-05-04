@@ -94,6 +94,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";error_validation_unknownIdentifier_suggestion" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Cannot find the name '{identifier}', did you mean '{suggestion}'?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
     </Item>
   </Item>
 </LCX>
