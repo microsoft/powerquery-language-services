@@ -85,7 +85,7 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";error_validation_unknownIdentifier_noSuggestion" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
+      <Item ItemId=";error_validation_unknownIdentifier" ItemType="0" PsrId="306" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Cannot find the name '{identifier}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
