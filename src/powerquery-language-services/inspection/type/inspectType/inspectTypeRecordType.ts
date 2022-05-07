@@ -12,10 +12,12 @@ import { InspectTypeState } from "./common";
 export async function inspectTypeRecordType(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.RecordType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeRecordType.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -38,7 +40,7 @@ export async function inspectTypeRecordType(
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
             isNullable: false,
-            ...(await examineFieldSpecificationList(state, maybeFields)),
+            ...(await examineFieldSpecificationList(state, maybeFields, trace.id)),
         };
     }
 

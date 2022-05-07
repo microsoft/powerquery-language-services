@@ -11,17 +11,19 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeNullCoalescingExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeNullCoalescingExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.NullCoalescingExpression>(xorNode, Ast.NodeKind.NullCoalescingExpression);
 
-    const maybeLeftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeLeftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
     const maybeNullCoalescingOperator: Ast.TConstant | undefined =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
@@ -37,7 +39,12 @@ export async function inspectTypeNullCoalescingExpression(
     if (maybeNullCoalescingOperator === undefined) {
         result = maybeLeftType;
     } else {
-        const maybeRightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+        const maybeRightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
+            state,
+            xorNode,
+            2,
+            trace.id,
+        );
 
         if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;

@@ -33,6 +33,7 @@ export async function tryAutocompleteFieldAccess(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.FieldAccess,
         tryAutocompleteFieldAccess.name,
+        settings.maybeInitialCorrelationId,
     );
 
     let result: TriedAutocompleteFieldAccess;
@@ -40,8 +41,9 @@ export async function tryAutocompleteFieldAccess(
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
-        result = await ResultUtils.ensureResultAsync(settings.locale, () =>
-            autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
+        result = await ResultUtils.ensureResultAsync(
+            () => autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
+            settings.locale,
         );
     }
 

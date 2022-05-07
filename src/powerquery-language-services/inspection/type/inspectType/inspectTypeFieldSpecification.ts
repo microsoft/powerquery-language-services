@@ -11,10 +11,12 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeFieldSpecification(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFieldSpecification.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -29,7 +31,7 @@ export async function inspectTypeFieldSpecification(
 
     const result: Type.TPowerQueryType =
         maybeFieldTypeSpecification !== undefined
-            ? await inspectXor(state, maybeFieldTypeSpecification)
+            ? await inspectXor(state, maybeFieldTypeSpecification, trace.id)
             : Type.AnyInstance;
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });

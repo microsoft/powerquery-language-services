@@ -5,17 +5,34 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
+import { InspectionTraceConstant } from "../trace";
 
 export type TriedExpectedType = PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError>;
 
 export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.Inspection,
+        tryExpectedType.name,
+        settings.maybeInitialCorrelationId,
+    );
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        trace.exit();
+
         return ResultUtils.boxOk(undefined);
     }
 
-    return ResultUtils.ensureResult(settings.locale, () => maybeExpectedType(maybeActiveNode));
+    const result: PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError> = ResultUtils.ensureResult(
+        () => maybeExpectedType(maybeActiveNode),
+        settings.locale,
+    );
+
+    trace.exit();
+
+    return result;
 }
 
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.

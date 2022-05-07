@@ -11,18 +11,20 @@ import {
     AstNodeById,
     ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
-import { tryNodeScope as doTryNodeScope, TriedNodeScope, TScopeItem } from "./scope";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
     findTheCreatorIdentifierOfOneScopeItem,
 } from "./scope/scopeUtils";
+import { Inspection, InspectionTraceConstant } from "..";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
+import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
 import { Inspected } from "./commonTypes";
-import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
@@ -42,7 +44,27 @@ export class InspectionInstance implements Inspected {
     ) {}
 
     public tryNodeScope(id: number): Promise<TriedNodeScope> {
-        return doTryNodeScope(this.settings, this.nodeIdMapCollection, id, this.typeCache.scopeById);
+        const trace: Trace = this.settings.traceManager.entry(
+            InspectionTraceConstant.Inspection,
+            tryNodeScope.name,
+            this.settings.maybeInitialCorrelationId,
+        );
+
+        const updatedSettings: InspectionSettings = {
+            ...this.settings,
+            maybeInitialCorrelationId: trace.id,
+        };
+
+        const result: Promise<Inspection.TriedNodeScope> = tryNodeScope(
+            updatedSettings,
+            this.nodeIdMapCollection,
+            id,
+            this.typeCache.scopeById,
+        );
+
+        trace.exit();
+
+        return result;
     }
 
     public async collectAllIdentifiersBeneath(
@@ -149,13 +171,24 @@ export async function inspect(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<Inspected> {
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.Inspection,
+        inspect.name,
+        settings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
     const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
     const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
-        settings,
+        updatedSettings,
         nodeIdMapCollection,
         maybeActiveNode,
         typeCache,
@@ -168,28 +201,28 @@ export async function inspect(
     if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         const activeNode: ActiveNode = maybeActiveNode;
 
-        triedNodeScope = doTryNodeScope(
-            settings,
+        triedNodeScope = tryNodeScope(
+            updatedSettings,
             nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             typeCache.scopeById,
         );
 
         const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);
-        triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
+        triedScopeType = tryScopeType(updatedSettings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
-        triedExpectedType = tryExpectedType(settings, activeNode);
+        triedExpectedType = tryExpectedType(updatedSettings, activeNode);
     } else {
         triedNodeScope = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
         triedScopeType = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
         triedExpectedType = PQP.ResultUtils.boxOk(undefined);
     }
 
-    return new InspectionInstance(
-        settings,
+    const result: InspectionInstance = new InspectionInstance(
+        updatedSettings,
         nodeIdMapCollection,
         maybeActiveNode,
-        await autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
+        await autocomplete(updatedSettings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
@@ -197,6 +230,10 @@ export async function inspect(
         typeCache,
         parseState,
     );
+
+    trace.exit();
+
+    return result;
 }
 
 export async function tryInspect(
@@ -205,12 +242,25 @@ export async function tryInspect(
     position: Position,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<PQP.Result<Promise<Inspected>, PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError>> {
-    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.Inspection,
+        tryInspect.name,
+        settings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
+    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(updatedSettings, text);
 
     let parseState: PQP.Parser.ParseState;
     let maybeParseError: PQP.Parser.ParseError.ParseError | undefined;
 
     if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
+        trace.exit({ [TraceConstant.IsError]: true });
+
         return PQP.ResultUtils.boxError(triedLexParse.error);
     } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
         parseState = triedLexParse.parseState;
@@ -219,5 +269,11 @@ export async function tryInspect(
         parseState = triedLexParse.parseState;
     }
 
-    return PQP.ResultUtils.boxOk(inspect(settings, parseState, maybeParseError, position, typeCache));
+    const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.boxOk(
+        inspect(updatedSettings, parseState, maybeParseError, position, typeCache),
+    );
+
+    trace.exit({ [TraceConstant.IsError]: false });
+
+    return result;
 }

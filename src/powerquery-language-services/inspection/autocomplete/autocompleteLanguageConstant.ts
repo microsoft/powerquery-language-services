@@ -25,10 +25,12 @@ export function tryAutocompleteLanguageConstant(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.LanguageConstant,
         tryAutocompleteLanguageConstant.name,
+        settings.maybeInitialCorrelationId,
     );
 
-    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(settings.locale, () =>
-        autocompleteLanguageConstant(maybeActiveNode),
+    const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
+        () => autocompleteLanguageConstant(maybeActiveNode),
+        settings.locale,
     );
 
     trace.exit({ [TraceConstant.IsError]: ResultUtils.isError(result) });

@@ -24,10 +24,12 @@ export interface ExaminedFieldSpecificationList {
 export async function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<ExaminedFieldSpecificationList> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         examineFieldSpecificationList.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -53,7 +55,7 @@ export async function examineFieldSpecificationList(
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification);
+        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification, trace.id);
         fields.push([maybeName.literal, type]);
     }
 

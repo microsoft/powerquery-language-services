@@ -8,6 +8,7 @@ import {
     NodeIdMapUtils,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
@@ -17,7 +18,6 @@ import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../../inspectionSettings";
 import { LanguageServiceTraceConstant } from "../..";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 // An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
@@ -46,14 +46,16 @@ export async function tryCurrentInvokeExpression(
     const trace: Trace = settings.traceManager.entry(
         LanguageServiceTraceConstant.CurrentInvokeExpression,
         tryCurrentInvokeExpression.name,
+        settings.maybeInitialCorrelationId,
     );
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 
-    const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(settings.locale, () =>
-        inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache),
+    const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(
+        () => inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache, trace.id),
+        settings.locale,
     );
 
     trace.exit();
@@ -66,7 +68,19 @@ async function inspectInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     typeCache: TypeCache,
+    maybeCorrelationId: number | undefined,
 ): Promise<CurrentInvokeExpression | undefined> {
+    const trace: Trace = settings.traceManager.entry(
+        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        inspectInvokeExpression.name,
+        maybeCorrelationId,
+    );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
     const maybeInvokeExpression: [TXorNode, number] | undefined = AncestryUtils.maybeFirstXorAndIndexOfNodeKind(
@@ -75,19 +89,23 @@ async function inspectInvokeExpression(
     );
 
     if (!maybeInvokeExpression) {
+        trace.exit();
+
         return undefined;
     }
 
     const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = maybeInvokeExpression;
 
     const triedInvokeExpression: TriedInvokeExpression = await tryInvokeExpression(
-        settings,
+        updatedSettings,
         nodeIdMapCollection,
         invokeExpressionXorNode.node.id,
         typeCache,
     );
 
     if (ResultUtils.isError(triedInvokeExpression)) {
+        trace.exit({ [TraceConstant.IsThrowing]: true });
+
         throw triedInvokeExpression;
     }
 
@@ -108,10 +126,14 @@ async function inspectInvokeExpression(
         };
     }
 
-    return {
+    const result: CurrentInvokeExpression | undefined = {
         ...invokeExpression,
         maybeArguments: maybeWithArgumentOrdinal,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 function getArgumentOrdinal(

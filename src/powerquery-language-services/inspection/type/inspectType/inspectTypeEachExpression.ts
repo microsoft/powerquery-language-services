@@ -11,17 +11,19 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeEachExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeEachExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(xorNode, Ast.NodeKind.EachExpression);
 
-    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
 
     const result: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
         false,

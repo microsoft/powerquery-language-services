@@ -9,8 +9,16 @@ export const enum AutocompleteTraceConstant {
     PrimitiveType = "PrimitiveType",
 }
 
+export const enum InspectionTraceConstant {
+    Inspection = "Inspection",
+}
+
 export const enum LanguageServiceTraceConstant {
     CurrentInvokeExpression = "CurrentInvokeExpression",
     Scope = "Scope",
     Type = "Type",
+}
+
+export const enum ValidationTraceConstant {
+    Validation = "Validation",
 }

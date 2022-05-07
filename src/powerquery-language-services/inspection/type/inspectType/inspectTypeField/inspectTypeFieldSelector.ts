@@ -22,10 +22,12 @@ import { InspectTypeState } from "../common";
 export async function inspectTypeFieldSelector(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFieldSelector.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -46,7 +48,7 @@ export async function inspectTypeFieldSelector(
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode);
+    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(

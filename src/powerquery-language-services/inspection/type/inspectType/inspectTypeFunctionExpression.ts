@@ -16,10 +16,12 @@ import {
 export async function inspectTypeFunctionExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFunctionExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -28,7 +30,7 @@ export async function inspectTypeFunctionExpression(
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
     const pseudoReturnType: Type.TPowerQueryType = pseudoType.returnType;
-    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+    const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
 
     // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
     // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),

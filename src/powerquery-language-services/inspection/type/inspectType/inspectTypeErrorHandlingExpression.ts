@@ -16,10 +16,12 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeErrorHandlingExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeErrorHandlingExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -35,9 +37,9 @@ export async function inspectTypeErrorHandlingExpression(
         );
 
     const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-        await inspectTypeFromChildAttributeIndex(state, xorNode, 1),
+        await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id),
         maybeOtherwiseExpression !== undefined
-            ? await inspectXor(state, maybeOtherwiseExpression)
+            ? await inspectXor(state, maybeOtherwiseExpression, trace.id)
             : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
     ]);
 

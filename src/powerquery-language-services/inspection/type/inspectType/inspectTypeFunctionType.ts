@@ -18,10 +18,12 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export async function inspectTypeFunctionType(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.FunctionType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeFunctionType.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -62,7 +64,7 @@ export async function inspectTypeFunctionType(
         )
         .filter(PQP.TypeScriptUtils.isDefined);
 
-    const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+    const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
 
     const result: Type.TPowerQueryType = {
         kind: Type.TypeKind.Type,

@@ -21,10 +21,12 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeInvokeExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -34,6 +36,7 @@ export async function inspectTypeInvokeExpression(
     const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = await maybeExternalInvokeRequest(
         state,
         xorNode,
+        trace.id,
     );
 
     if (maybeRequest !== undefined && state.maybeExternalTypeResolver) {
@@ -51,7 +54,7 @@ export async function inspectTypeInvokeExpression(
         xorNode.node.id,
     );
 
-    const previousSiblingType: Type.TPowerQueryType = await inspectXor(state, previousSibling);
+    const previousSiblingType: Type.TPowerQueryType = await inspectXor(state, previousSibling, trace.id);
 
     let result: Type.TPowerQueryType;
 
@@ -73,7 +76,15 @@ export async function inspectTypeInvokeExpression(
 async function maybeExternalInvokeRequest(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<ExternalType.ExternalInvocationTypeRequest | undefined> {
+    const trace: Trace = state.traceManager.entry(
+        LanguageServiceTraceConstant.Type,
+        maybeExternalInvokeRequest.name,
+        maybeCorrelationId,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
+
     const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined =
         NodeIdMapUtils.maybeInvokeExpressionIdentifier(state.nodeIdMapCollection, xorNode.node.id);
 
@@ -81,7 +92,7 @@ async function maybeExternalInvokeRequest(
         return undefined;
     }
 
-    const deferencedIdentifier: TXorNode = await recursiveIdentifierDereference(state, maybeIdentifier);
+    const deferencedIdentifier: TXorNode = await recursiveIdentifierDereference(state, maybeIdentifier, trace.id);
 
     const types: Type.TPowerQueryType[] = [];
 
@@ -90,7 +101,7 @@ async function maybeExternalInvokeRequest(
         XorNodeUtils.assertAsInvokeExpression(xorNode),
     )) {
         // eslint-disable-next-line no-await-in-loop
-        types.push(await inspectXor(state, argument));
+        types.push(await inspectXor(state, argument, trace.id));
     }
 
     return ExternalTypeUtils.createInvocationTypeRequest(

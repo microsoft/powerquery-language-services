@@ -11,10 +11,12 @@ import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 export async function inspectTypeIdentifierExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         LanguageServiceTraceConstant.Type,
         inspectTypeIdentifierExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -29,6 +31,7 @@ export async function inspectTypeIdentifierExpression(
         const dereferencedType: Type.TPowerQueryType | undefined = await maybeDereferencedIdentifierType(
             state,
             xorNode,
+            trace.id,
         );
 
         result = dereferencedType ?? Type.UnknownInstance;
