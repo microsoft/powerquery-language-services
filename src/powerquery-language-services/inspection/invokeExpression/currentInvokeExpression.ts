@@ -49,13 +49,18 @@ export async function tryCurrentInvokeExpression(
         settings.maybeInitialCorrelationId,
     );
 
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 
     const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(
-        () => inspectInvokeExpression(settings, nodeIdMapCollection, maybeActiveNode, typeCache, trace.id),
-        settings.locale,
+        () => inspectInvokeExpression(updatedSettings, nodeIdMapCollection, maybeActiveNode, typeCache, trace.id),
+        updatedSettings.locale,
     );
 
     trace.exit();

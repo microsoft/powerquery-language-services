@@ -13,7 +13,10 @@ export const enum InspectionTraceConstant {
     Inspect = "Inspect",
     InspectCurrentInvokeExpression = "Inspection.CurrentInvokeExpression",
     InspectExpectedType = "Inspection.ExpectedType",
+    InspectInvokeExpression = "Inspection.InvokeExpression",
     InspectScope = "Inspection.Scope",
+    InspectScopeItem = "Inspection.ScopeItem",
+    InspectScopeType = "Inspection.ScopeType",
     InspectType = "Inspection.Type",
 }
 

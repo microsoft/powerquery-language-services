@@ -34,13 +34,18 @@ export function tryInvokeExpression(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.InspectCurrentInvokeExpression,
+        InspectionTraceConstant.InspectInvokeExpression,
         tryInvokeExpression.name,
         settings.maybeInitialCorrelationId,
     );
 
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const result: Promise<TriedInvokeExpression> = ResultUtils.ensureResultAsync(
-        () => inspectInvokeExpression(settings, nodeIdMapCollection, invokeExpressionId, typeCache, trace.id),
+        () => inspectInvokeExpression(updatedSettings, nodeIdMapCollection, invokeExpressionId, typeCache, trace.id),
         settings.locale,
     );
 
@@ -55,7 +60,7 @@ async function inspectInvokeExpression(
     correlationId: number,
 ): Promise<InvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.InspectCurrentInvokeExpression,
+        InspectionTraceConstant.InspectInvokeExpression,
         inspectInvokeExpression.name,
         correlationId,
     );
@@ -151,7 +156,7 @@ async function getIsNameInLocalScope(
     correlationId: number,
 ): Promise<boolean> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.InspectCurrentInvokeExpression,
+        InspectionTraceConstant.InspectInvokeExpression,
         getIsNameInLocalScope.name,
         correlationId,
     );

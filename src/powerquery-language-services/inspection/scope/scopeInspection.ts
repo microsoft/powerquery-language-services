@@ -46,6 +46,11 @@ export async function tryNodeScope(
         settings.maybeInitialCorrelationId,
     );
 
+    const updatedSettings: PQP.CommonSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const result: TriedNodeScope = await ResultUtils.ensureResultAsync(async () => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
 
@@ -54,7 +59,7 @@ export async function tryNodeScope(
         }
 
         const inspectedDeltaScope: ScopeById = await inspectScope(
-            settings,
+            updatedSettings,
             nodeIdMapCollection,
             ancestry,
             scopeById,
@@ -70,7 +75,7 @@ export async function tryNodeScope(
         }
 
         return result;
-    }, settings.locale);
+    }, updatedSettings.locale);
 
     trace.exit();
 

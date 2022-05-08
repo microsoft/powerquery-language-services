@@ -70,7 +70,7 @@ export async function assertGetOrCreateNodeScope(
 ): Promise<NodeScope> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
-        getOrCreateScope.name,
+        assertGetOrCreateNodeScope.name,
         maybeCorrelationId,
     );
 
@@ -123,7 +123,7 @@ export async function getOrCreateScopeItemType(
     scopeItem: TScopeItem,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectType,
+        InspectionTraceConstant.InspectScopeItem,
         getOrCreateScopeItemType.name,
         state.maybeInitialCorrelationId,
     );

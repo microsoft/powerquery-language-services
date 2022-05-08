@@ -26,7 +26,7 @@ export async function tryScopeType(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedScopeType> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.InspectType,
+        InspectionTraceConstant.InspectScopeType,
         tryScopeType.name,
         settings.maybeInitialCorrelationId,
     );
@@ -95,7 +95,7 @@ async function inspectScopeType(
     correlationId: number,
 ): Promise<ScopeTypeByKey> {
     const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectType,
+        InspectionTraceConstant.InspectScopeType,
         inspectScopeType.name,
         correlationId,
     );

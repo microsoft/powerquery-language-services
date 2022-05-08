@@ -6,31 +6,44 @@ import { Diagnostic, DiagnosticSeverity, Position, Range } from "vscode-language
 import { NodeIdMapUtils, ParseContext } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validateLexAndParse(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<Diagnostic[]> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateLexAndParse.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const parsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
-        validationSettings,
+        updatedSettings,
     );
 
     if (parsePromise !== undefined) {
-        return await validateParse(parsePromise, validationSettings);
+        return await validateParse(parsePromise, updatedSettings);
     }
 
     const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(
         textDocument,
-        validationSettings,
+        updatedSettings,
     );
 
     if (lexPromise !== undefined) {
-        return validateLex(lexPromise, validationSettings);
+        return validateLex(lexPromise, updatedSettings);
     }
 
     return [];

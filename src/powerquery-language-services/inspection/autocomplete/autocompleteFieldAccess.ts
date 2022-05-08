@@ -36,14 +36,19 @@ export async function tryAutocompleteFieldAccess(
         settings.maybeInitialCorrelationId,
     );
 
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     let result: TriedAutocompleteFieldAccess;
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
         result = await ResultUtils.ensureResultAsync(
-            () => autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
-            settings.locale,
+            () => autocompleteFieldAccess(updatedSettings, parseState, maybeActiveNode, typeCache),
+            updatedSettings.locale,
         );
     }
 
