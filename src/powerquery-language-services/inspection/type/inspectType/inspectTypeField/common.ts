@@ -11,8 +11,8 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { InspectTypeState, inspectXor } from "../common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
 
 // A field selection/projection is an operation a target value,
 // where the target is either an EachExpression or a RecursivePrimaryExpression.
@@ -30,7 +30,7 @@ export async function inspectFieldType(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectFieldType.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

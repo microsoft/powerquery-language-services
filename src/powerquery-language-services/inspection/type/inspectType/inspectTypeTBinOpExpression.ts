@@ -7,8 +7,8 @@ import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 type TRecordOrTable = Type.TRecord | Type.TTable;
 
@@ -18,7 +18,7 @@ export async function inspectTypeTBinOpExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeTBinOpExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

@@ -8,7 +8,7 @@ import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
-import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
@@ -69,7 +69,7 @@ export async function assertGetOrCreateNodeScope(
     maybeCorrelationId: number | undefined,
 ): Promise<NodeScope> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         getOrCreateScope.name,
         maybeCorrelationId,
     );
@@ -95,7 +95,7 @@ export async function getOrCreateScope(
     maybeCorrelationId: number | undefined,
 ): Promise<Inspection.TriedNodeScope> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         getOrCreateScope.name,
         maybeCorrelationId,
     );
@@ -123,7 +123,7 @@ export async function getOrCreateScopeItemType(
     scopeItem: TScopeItem,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         getOrCreateScopeItemType.name,
         state.maybeInitialCorrelationId,
     );
@@ -187,7 +187,7 @@ export async function inspectTypeFromChildAttributeIndex(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeFromChildAttributeIndex.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(parentXorNode),
@@ -215,7 +215,7 @@ export async function inspectXor(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectXor.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -419,7 +419,7 @@ export async function maybeDereferencedIdentifierType(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType | undefined> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         maybeDereferencedIdentifierType.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -508,7 +508,7 @@ export async function recursiveIdentifierDereference(
     maybeCorrelationId: number | undefined,
 ): Promise<TXorNode> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         recursiveIdentifierDereference.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -530,7 +530,7 @@ async function recursiveIdentifierDereferenceHelper(
     correlationId: number,
 ): Promise<TXorNode | undefined> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         recursiveIdentifierDereferenceHelper.name,
         correlationId,
         TraceUtils.createXorNodeDetails(xorNode),

@@ -23,7 +23,7 @@ export function tryAutocompleteLanguageConstant(
     maybeActiveNode: TMaybeActiveNode,
 ): TriedAutocompleteLanguageConstant {
     const trace: Trace = settings.traceManager.entry(
-        AutocompleteTraceConstant.LanguageConstant,
+        AutocompleteTraceConstant.AutocompleteLanguageConstant,
         tryAutocompleteLanguageConstant.name,
         settings.maybeInitialCorrelationId,
     );

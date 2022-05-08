@@ -31,7 +31,7 @@ export async function tryAutocompleteFieldAccess(
     typeCache: TypeCache,
 ): Promise<TriedAutocompleteFieldAccess> {
     const trace: Trace = settings.traceManager.entry(
-        AutocompleteTraceConstant.FieldAccess,
+        AutocompleteTraceConstant.AutocompleteFieldAccess,
         tryAutocompleteFieldAccess.name,
         settings.maybeInitialCorrelationId,
     );

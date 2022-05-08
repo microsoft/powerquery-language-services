@@ -83,7 +83,6 @@ export async function assertGetInspectionInstance(
             nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             typeCache.scopeById,
-            undefined,
         );
 
         const ancestryLeaf: PQP.Parser.TXorNode = PQP.Parser.AncestryUtils.assertGetLeaf(activeNode.ancestry);

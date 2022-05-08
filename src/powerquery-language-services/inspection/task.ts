@@ -45,7 +45,7 @@ export class InspectionInstance implements Inspected {
 
     public tryNodeScope(id: number): Promise<TriedNodeScope> {
         const trace: Trace = this.settings.traceManager.entry(
-            InspectionTraceConstant.Inspection,
+            InspectionTraceConstant.Inspect,
             tryNodeScope.name,
             this.settings.maybeInitialCorrelationId,
         );
@@ -172,7 +172,7 @@ export async function inspect(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<Inspected> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.Inspection,
+        InspectionTraceConstant.Inspect,
         inspect.name,
         settings.maybeInitialCorrelationId,
     );
@@ -243,7 +243,7 @@ export async function tryInspect(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<PQP.Result<Promise<Inspected>, PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError>> {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.Inspection,
+        InspectionTraceConstant.Inspect,
         tryInspect.name,
         settings.maybeInitialCorrelationId,
     );

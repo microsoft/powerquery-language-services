@@ -15,8 +15,8 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -24,7 +24,7 @@ export async function inspectTypeInvokeExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeInvokeExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -79,7 +79,7 @@ async function maybeExternalInvokeRequest(
     maybeCorrelationId: number | undefined,
 ): Promise<ExternalType.ExternalInvocationTypeRequest | undefined> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         maybeExternalInvokeRequest.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

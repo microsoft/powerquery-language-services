@@ -13,7 +13,7 @@ import {
 import { Assert, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../..";
+import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
 import {
     LetVariableScopeItem,
     NodeScope,
@@ -41,7 +41,7 @@ export async function tryNodeScope(
     scopeById: ScopeById,
 ): Promise<TriedNodeScope> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         tryNodeScope.name,
         settings.maybeInitialCorrelationId,
     );
@@ -85,7 +85,7 @@ export async function assertGetOrCreateNodeScope(
     scopeById: ScopeById,
 ): Promise<Inspection.TriedNodeScope> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         assertGetOrCreateNodeScope.name,
         settings.maybeInitialCorrelationId,
     );
@@ -127,7 +127,7 @@ export async function maybeDereferencedIdentifier(
     scopeById: ScopeById = new Map(),
 ): Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         maybeDereferencedIdentifier.name,
         settings.maybeInitialCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -253,7 +253,7 @@ async function inspectScope(
     correlationId: number,
 ): Promise<ScopeById> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectScope.name,
         correlationId,
     );
@@ -299,7 +299,7 @@ async function inspectScope(
 // eslint-disable-next-line require-await
 async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlationId: number): Promise<void> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectNode.name,
         correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -336,7 +336,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, correlationId: number): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectEachExpression.name,
         correlationId,
     );
@@ -367,7 +367,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
 
 function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode, correlationId: number): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectFunctionExpression.name,
         correlationId,
     );
@@ -402,7 +402,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 
 function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, correlationId: number): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectLetExpression.name,
         correlationId,
     );
@@ -436,7 +436,7 @@ function inspectRecordExpressionOrRecordLiteral(
     correlationId: number,
 ): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectRecordExpressionOrRecordLiteral.name,
         correlationId,
     );
@@ -457,7 +457,7 @@ function inspectRecordExpressionOrRecordLiteral(
 
 function inspectSection(state: ScopeInspectionState, section: TXorNode, correlationId: number): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectSection.name,
         correlationId,
     );
@@ -497,7 +497,7 @@ function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterato
     correlationId: number,
 ): void {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         inspectKeyValuePairs.name,
         correlationId,
     );
@@ -568,7 +568,7 @@ function localGetOrCreateNodeScope(
     correlationId: number,
 ): NodeScope {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Scope,
+        InspectionTraceConstant.InspectScope,
         localGetOrCreateNodeScope.name,
         correlationId,
         {

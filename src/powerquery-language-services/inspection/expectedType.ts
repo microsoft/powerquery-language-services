@@ -14,7 +14,7 @@ export type TriedExpectedType = PQP.Result<Type.TPowerQueryType | undefined, PQP
 
 export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
     const trace: Trace = settings.traceManager.entry(
-        InspectionTraceConstant.Inspection,
+        InspectionTraceConstant.InspectExpectedType,
         tryExpectedType.name,
         settings.maybeInitialCorrelationId,
     );

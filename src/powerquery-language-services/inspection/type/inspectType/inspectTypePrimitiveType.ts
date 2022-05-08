@@ -5,7 +5,7 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from ".";
 
 export function inspectTypePrimitiveType(
@@ -14,7 +14,7 @@ export function inspectTypePrimitiveType(
     maybeCorrelationId: number | undefined,
 ): Type.TPowerQueryType {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypePrimitiveType.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

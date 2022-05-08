@@ -11,7 +11,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 import { InspectTypeState } from "./common";
 
@@ -27,7 +27,7 @@ export async function examineFieldSpecificationList(
     maybeCorrelationId: number | undefined,
 ): Promise<ExaminedFieldSpecificationList> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         examineFieldSpecificationList.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

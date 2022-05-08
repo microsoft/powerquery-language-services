@@ -6,7 +6,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
@@ -19,7 +19,7 @@ export async function inspectTypeFunctionExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeFunctionExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

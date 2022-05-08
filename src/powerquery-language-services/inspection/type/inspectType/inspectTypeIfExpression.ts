@@ -6,7 +6,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeIfExpression(
     state: InspectTypeState,
@@ -14,7 +14,7 @@ export async function inspectTypeIfExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeIfExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
@@ -59,7 +59,7 @@ async function createAnyUnion(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         createAnyUnion.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

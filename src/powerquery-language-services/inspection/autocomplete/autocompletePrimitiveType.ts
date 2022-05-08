@@ -18,7 +18,7 @@ export function tryAutocompletePrimitiveType(
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     const trace: Trace = settings.traceManager.entry(
-        AutocompleteTraceConstant.PrimitiveType,
+        AutocompleteTraceConstant.AutocompletePrimitiveType,
         tryAutocompletePrimitiveType.name,
         settings.maybeInitialCorrelationId,
     );

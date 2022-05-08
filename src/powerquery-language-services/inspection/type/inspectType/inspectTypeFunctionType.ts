@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -21,7 +21,7 @@ export async function inspectTypeFunctionType(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.FunctionType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeFunctionType.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

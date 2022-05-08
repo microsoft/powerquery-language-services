@@ -17,7 +17,7 @@ import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../../inspectionSettings";
-import { LanguageServiceTraceConstant } from "../..";
+import { InspectionTraceConstant } from "../..";
 
 // An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
@@ -44,7 +44,7 @@ export async function tryCurrentInvokeExpression(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedCurrentInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        InspectionTraceConstant.InspectCurrentInvokeExpression,
         tryCurrentInvokeExpression.name,
         settings.maybeInitialCorrelationId,
     );
@@ -71,7 +71,7 @@ async function inspectInvokeExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<CurrentInvokeExpression | undefined> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        InspectionTraceConstant.InspectCurrentInvokeExpression,
         inspectInvokeExpression.name,
         maybeCorrelationId,
     );

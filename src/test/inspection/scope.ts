@@ -158,7 +158,6 @@ async function assertNodeScopeOk(
         nodeIdMapCollection,
         activeNode.ancestry[0].node.id,
         new Map(),
-        undefined,
     );
 
     Assert.isOk(triedNodeScope);

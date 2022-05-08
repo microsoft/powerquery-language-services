@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -20,7 +20,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeRecursivePrimaryExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

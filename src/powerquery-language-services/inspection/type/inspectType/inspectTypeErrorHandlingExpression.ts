@@ -10,8 +10,8 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeErrorHandlingExpression(
     state: InspectTypeState,
@@ -19,7 +19,7 @@ export async function inspectTypeErrorHandlingExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeErrorHandlingExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

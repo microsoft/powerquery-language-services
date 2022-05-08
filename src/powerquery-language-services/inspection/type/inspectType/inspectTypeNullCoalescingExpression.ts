@@ -5,8 +5,8 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeNullCoalescingExpression(
     state: InspectTypeState,
@@ -14,7 +14,7 @@ export async function inspectTypeNullCoalescingExpression(
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeNullCoalescingExpression.name,
         maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),

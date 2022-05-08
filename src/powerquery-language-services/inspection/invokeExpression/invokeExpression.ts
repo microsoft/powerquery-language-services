@@ -18,7 +18,7 @@ import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../../inspectionSettings";
-import { LanguageServiceTraceConstant } from "../../trace";
+import { InspectionTraceConstant } from "../../trace";
 
 // An inspection of an arbitrary invoke expression.
 export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
@@ -34,7 +34,7 @@ export function tryInvokeExpression(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        InspectionTraceConstant.InspectCurrentInvokeExpression,
         tryInvokeExpression.name,
         settings.maybeInitialCorrelationId,
     );
@@ -55,7 +55,7 @@ async function inspectInvokeExpression(
     correlationId: number,
 ): Promise<InvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        InspectionTraceConstant.InspectCurrentInvokeExpression,
         inspectInvokeExpression.name,
         correlationId,
     );
@@ -151,7 +151,7 @@ async function getIsNameInLocalScope(
     correlationId: number,
 ): Promise<boolean> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.CurrentInvokeExpression,
+        InspectionTraceConstant.InspectCurrentInvokeExpression,
         getIsNameInLocalScope.name,
         correlationId,
     );

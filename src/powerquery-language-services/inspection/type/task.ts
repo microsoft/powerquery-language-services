@@ -8,7 +8,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
-import { InspectionSettings, LanguageServiceTraceConstant } from "../..";
+import { InspectionSettings, InspectionTraceConstant } from "../..";
 import { NodeScope, ScopeTypeByKey } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 
@@ -26,7 +26,7 @@ export async function tryScopeType(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedScopeType> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         tryScopeType.name,
         settings.maybeInitialCorrelationId,
     );
@@ -61,7 +61,7 @@ export async function tryType(
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedType> {
     const trace: Trace = settings.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         tryType.name,
         settings.maybeInitialCorrelationId,
     );
@@ -95,7 +95,7 @@ async function inspectScopeType(
     correlationId: number,
 ): Promise<ScopeTypeByKey> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectScopeType.name,
         correlationId,
     );

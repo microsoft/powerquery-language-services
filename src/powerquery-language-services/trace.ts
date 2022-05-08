@@ -3,20 +3,18 @@
 
 export const enum AutocompleteTraceConstant {
     Autocomplete = "Autocomplete",
-    FieldAccess = "FieldAccess",
-    Keyword = "Keyword",
-    LanguageConstant = "LanguageConstant",
-    PrimitiveType = "PrimitiveType",
+    AutocompleteFieldAccess = "FieldAccess",
+    AutocompleteKeyword = "Keyword",
+    AutocompleteLanguageConstant = "LanguageConstant",
+    AutocompletePrimitiveType = "PrimitiveType",
 }
 
 export const enum InspectionTraceConstant {
-    Inspection = "Inspection",
-}
-
-export const enum LanguageServiceTraceConstant {
-    CurrentInvokeExpression = "CurrentInvokeExpression",
-    Scope = "Scope",
-    Type = "Type",
+    Inspect = "Inspect",
+    InspectCurrentInvokeExpression = "Inspection.CurrentInvokeExpression",
+    InspectExpectedType = "Inspection.ExpectedType",
+    InspectScope = "Inspection.Scope",
+    InspectType = "Inspection.Type",
 }
 
 export const enum ValidationTraceConstant {
