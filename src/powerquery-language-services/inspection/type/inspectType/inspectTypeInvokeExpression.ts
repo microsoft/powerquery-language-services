@@ -89,6 +89,8 @@ async function maybeExternalInvokeRequest(
         NodeIdMapUtils.maybeInvokeExpressionIdentifier(state.nodeIdMapCollection, xorNode.node.id);
 
     if (maybeIdentifier === undefined) {
+        trace.exit();
+
         return undefined;
     }
 
@@ -104,8 +106,12 @@ async function maybeExternalInvokeRequest(
         types.push(await inspectXor(state, argument, trace.id));
     }
 
-    return ExternalTypeUtils.createInvocationTypeRequest(
+    const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.createInvocationTypeRequest(
         Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
         types,
     );
+
+    trace.exit();
+
+    return result;
 }

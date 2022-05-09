@@ -55,6 +55,8 @@ export async function tryCurrentInvokeExpression(
     };
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        trace.exit();
+
         return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 

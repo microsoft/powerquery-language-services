@@ -40,6 +40,8 @@ export function validateFunctionExpression(
     );
 
     if (maybeFnExpressionIds === undefined) {
+        trace.exit();
+
         return [];
     }
 

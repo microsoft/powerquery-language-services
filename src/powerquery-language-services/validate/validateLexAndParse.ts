@@ -34,7 +34,10 @@ export async function validateLexAndParse(
     );
 
     if (parsePromise !== undefined) {
-        return await validateParse(parsePromise, updatedSettings);
+        const result: Diagnostic[] = await validateParse(parsePromise, updatedSettings);
+        trace.exit();
+
+        return result;
     }
 
     const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(
@@ -43,7 +46,10 @@ export async function validateLexAndParse(
     );
 
     if (lexPromise !== undefined) {
-        return validateLex(lexPromise, updatedSettings);
+        const result: Diagnostic[] = validateLex(lexPromise, updatedSettings);
+        trace.exit();
+
+        return result;
     }
 
     return [];

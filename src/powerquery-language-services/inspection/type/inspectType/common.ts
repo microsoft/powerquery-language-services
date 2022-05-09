@@ -115,7 +115,16 @@ export async function getOrCreateScope(
         return ResultUtils.boxOk(maybeNodeScope);
     }
 
-    return await tryNodeScope(updatedState, state.nodeIdMapCollection, nodeId, state.scopeById);
+    const result: Inspection.TriedNodeScope = await tryNodeScope(
+        updatedState,
+        state.nodeIdMapCollection,
+        nodeId,
+        state.scopeById,
+    );
+
+    trace.exit();
+
+    return result;
 }
 
 export async function getOrCreateScopeItemType(
@@ -229,6 +238,8 @@ export async function inspectXor(
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
 
     if (maybeCached !== undefined) {
+        trace.exit();
+
         return Promise.resolve(maybeCached);
     }
 
@@ -243,6 +254,8 @@ export async function inspectXor(
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
+            trace.exit();
+
             return Promise.resolve(Type.NotApplicableInstance);
 
         case Ast.NodeKind.AsType:
@@ -462,7 +475,10 @@ export async function maybeDereferencedIdentifierType(
         const request: ExternalType.ExternalValueTypeRequest =
             ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
 
-        return maybeResolver(request);
+        const result: Type.TPowerQueryType | undefined = maybeResolver(request);
+        trace.exit();
+
+        return result;
     }
 
     const scopeItem: TScopeItem = maybeScopeItem;
