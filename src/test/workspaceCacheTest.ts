@@ -22,6 +22,7 @@ describe("workspaceCache", () => {
         const cacheItem: PQP.Task.TriedLexTask = await WorkspaceCacheUtils.getOrCreateLexPromise(
             TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
+            false,
         );
 
         assertIsOk(cacheItem);
@@ -33,6 +34,7 @@ describe("workspaceCache", () => {
         const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(cacheItem);
@@ -44,6 +46,7 @@ describe("workspaceCache", () => {
         const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             TestUtils.createTextMockDocument(text),
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(cacheItem);
@@ -59,6 +62,7 @@ describe("workspaceCache", () => {
                 PQP.DefaultSettings,
                 undefined,
                 SimpleLibrary.externalTypeResolver,
+                false,
             ),
             postion,
         );
@@ -76,6 +80,7 @@ describe("workspaceCache", () => {
                 PQP.DefaultSettings,
                 undefined,
                 SimpleLibrary.externalTypeResolver,
+                false,
             ),
             postion,
         );
@@ -92,13 +97,17 @@ describe("workspaceCache", () => {
                 PQP.DefaultSettings,
                 undefined,
                 SimpleLibrary.externalTypeResolver,
+                false,
             ),
             postion,
         );
 
         TestUtils.assertIsDefined(maybeInspected);
 
-        let cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
+        let cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(
+            document,
+            false,
+        );
 
         expect(cacheCollection.version).to.equal(0);
 
@@ -110,13 +119,14 @@ describe("workspaceCache", () => {
                 PQP.DefaultSettings,
                 undefined,
                 SimpleLibrary.externalTypeResolver,
+                false,
             ),
             postion,
         );
 
         TestUtils.assertIsDefined(maybeInspected);
 
-        cacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document);
+        cacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document, false);
 
         expect(cacheCollection.version).to.equal(1);
     });

@@ -17,13 +17,21 @@ export function close(textDocument: TextDocument): void {
     CacheCollectionByCacheKey.delete(collectionCacheKey);
 }
 
-export function getTypeCache(textDocument: TextDocument): Inspection.TypeCache {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
+export function getTypeCache(textDocument: TextDocument, isCacheAllowed: boolean): Inspection.TypeCache {
+    if (!isCacheAllowed) {
+        return TypeCacheUtils.createEmptyCache();
+    }
+
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isCacheAllowed);
 
     return cacheCollection.typeCache;
 }
 
-export function getOrCreateCacheCollection(textDocument: TextDocument): CacheCollection {
+export function getOrCreateCacheCollection(textDocument: TextDocument, isCacheAllowed: boolean): CacheCollection {
+    if (!isCacheAllowed) {
+        return createEmptyCacheCollection(textDocument.version);
+    }
+
     const cacheKey: string = createCollectionCacheKey(textDocument);
     const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
 
@@ -35,7 +43,7 @@ export function getOrCreateCacheCollection(textDocument: TextDocument): CacheCol
         }
     }
 
-    const cacheCollection: CacheCollection = createEmptyCollection(textDocument.version);
+    const cacheCollection: CacheCollection = createEmptyCacheCollection(textDocument.version);
     CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
 
     return cacheCollection;
@@ -44,8 +52,9 @@ export function getOrCreateCacheCollection(textDocument: TextDocument): CacheCol
 export function getOrCreateLexPromise(
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings,
+    isCacheAllowed: boolean,
 ): Promise<PQP.Task.TriedLexTask> {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isCacheAllowed);
 
     if (cacheCollection.maybeLex) {
         return cacheCollection.maybeLex;
@@ -63,8 +72,9 @@ export function getOrCreateLexPromise(
 export async function getOrCreateParsePromise(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
+    isCacheAllowed: boolean,
 ): Promise<PQP.Task.TriedParseTask | undefined> {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isCacheAllowed);
 
     if (cacheCollection.maybeParse) {
         return cacheCollection.maybeParse;
@@ -73,6 +83,7 @@ export async function getOrCreateParsePromise(
     const maybeTriedLexPromise: Promise<PQP.Task.TriedLexTask> = getOrCreateLexPromise(
         textDocument,
         lexAndParseSettings,
+        isCacheAllowed,
     );
 
     const maybeTriedLex: PQP.Task.TriedLexTask | undefined = await maybeTriedLexPromise;
@@ -93,7 +104,11 @@ export async function getOrCreateInspectedPromise(
     inspectionSettings: InspectionSettings,
     position: Position,
 ): Promise<Inspection.Inspected | undefined> {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(
+        textDocument,
+        inspectionSettings.isCacheAllowed,
+    );
+
     const positionMapKey: string = createInspectionByPositionKey(position);
 
     if (cacheCollection.inspectionByPosition.has(positionMapKey)) {
@@ -103,6 +118,7 @@ export async function getOrCreateInspectedPromise(
     const maybeTriedParsePromise: Promise<PQP.Task.TriedParseTask | undefined> = getOrCreateParsePromise(
         textDocument,
         inspectionSettings,
+        inspectionSettings.isCacheAllowed,
     );
 
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await maybeTriedParsePromise;
@@ -148,7 +164,7 @@ function createCollectionCacheKey(textDocument: TextDocument): string {
     return `${textDocument.uri}`;
 }
 
-function createEmptyCollection(version: number): CacheCollection {
+function createEmptyCacheCollection(version: number): CacheCollection {
     return {
         maybeLex: undefined,
         maybeParse: undefined,

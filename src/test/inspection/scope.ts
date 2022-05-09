@@ -24,6 +24,7 @@ type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 
 const DefaultSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
+    isCacheAllowed: false,
     maybeEachScopeById: undefined,
     maybeExternalTypeResolver: undefined,
 };

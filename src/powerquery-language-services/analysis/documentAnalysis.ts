@@ -21,9 +21,7 @@ export class DocumentAnalysis extends AnalysisBase {
     }
 
     public dispose(): void {
-        if (!this.analysisSettings.maintainWorkspaceCache) {
-            WorkspaceCacheUtils.close(this.textDocument);
-        }
+        WorkspaceCacheUtils.close(this.textDocument);
     }
 
     protected getText(range?: Range): string {
