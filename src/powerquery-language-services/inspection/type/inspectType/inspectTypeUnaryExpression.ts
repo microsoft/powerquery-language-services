@@ -13,16 +13,18 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeUnaryExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeUnaryExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -54,7 +56,7 @@ export async function inspectTypeUnaryExpression(
         result = Type.UnknownInstance;
     } else {
         const expression: TXorNode = maybeExpression;
-        const expressionType: Type.TPowerQueryType = await inspectXor(state, expression);
+        const expressionType: Type.TPowerQueryType = await inspectXor(state, expression, trace.id);
 
         if (expressionType.kind === Type.TypeKind.Number) {
             result = inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);

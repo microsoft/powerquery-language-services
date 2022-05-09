@@ -31,17 +31,24 @@ export async function tryAutocompleteFieldAccess(
     typeCache: TypeCache,
 ): Promise<TriedAutocompleteFieldAccess> {
     const trace: Trace = settings.traceManager.entry(
-        AutocompleteTraceConstant.FieldAccess,
+        AutocompleteTraceConstant.AutocompleteFieldAccess,
         tryAutocompleteFieldAccess.name,
+        settings.maybeInitialCorrelationId,
     );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
 
     let result: TriedAutocompleteFieldAccess;
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
-        result = await ResultUtils.ensureResultAsync(settings.locale, () =>
-            autocompleteFieldAccess(settings, parseState, maybeActiveNode, typeCache),
+        result = await ResultUtils.ensureResultAsync(
+            () => autocompleteFieldAccess(updatedSettings, parseState, maybeActiveNode, typeCache),
+            updatedSettings.locale,
         );
     }
 

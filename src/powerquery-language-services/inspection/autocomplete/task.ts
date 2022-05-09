@@ -31,7 +31,16 @@ export async function autocomplete(
     maybeActiveNode: TMaybeActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Promise<Autocomplete> {
-    const trace: Trace = settings.traceManager.entry(AutocompleteTraceConstant.Autocomplete, autocomplete.name);
+    const trace: Trace = settings.traceManager.entry(
+        AutocompleteTraceConstant.Autocomplete,
+        autocomplete.name,
+        settings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
@@ -48,26 +57,26 @@ export async function autocomplete(
     }
 
     const triedFieldAccess: TriedAutocompleteFieldAccess = await tryAutocompleteFieldAccess(
-        settings,
+        updatedSettings,
         parseState,
         maybeActiveNode,
         typeCache,
     );
 
     const triedKeyword: TriedAutocompleteKeyword = await tryAutocompleteKeyword(
-        settings,
+        updatedSettings,
         nodeIdMapCollection,
         maybeActiveNode,
         maybeTrailingToken,
     );
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
-        settings,
+        updatedSettings,
         maybeActiveNode,
     );
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
-        settings,
+        updatedSettings,
         maybeActiveNode,
         maybeTrailingToken,
     );

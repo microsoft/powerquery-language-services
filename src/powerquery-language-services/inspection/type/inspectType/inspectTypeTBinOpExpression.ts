@@ -4,21 +4,23 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 type TRecordOrTable = Type.TRecord | Type.TTable;
 
 export async function inspectTypeTBinOpExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeTBinOpExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -53,11 +55,11 @@ export async function inspectTypeTBinOpExpression(
     }
     // '1'
     else if (maybeOperatorKind === undefined) {
-        result = await inspectXor(state, maybeLeft);
+        result = await inspectXor(state, maybeLeft, trace.id);
     }
     // '1 +'
     else if (maybeRight === undefined || XorNodeUtils.isContextXor(maybeRight)) {
-        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft);
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft, trace.id);
         const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
@@ -83,9 +85,9 @@ export async function inspectTypeTBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft);
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft, trace.id);
         const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
-        const rightType: Type.TPowerQueryType = await inspectXor(state, maybeRight);
+        const rightType: Type.TPowerQueryType = await inspectXor(state, maybeRight, trace.id);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);

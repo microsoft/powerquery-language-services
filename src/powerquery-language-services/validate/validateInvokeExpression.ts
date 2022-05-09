@@ -5,6 +5,7 @@ import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Range } from "vscode-languageserver-textdocument";
 
 import { Inspection, PositionUtils } from "..";
@@ -12,26 +13,38 @@ import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 
 export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeCache?: Inspection.TypeCache,
 ): Promise<Diagnostic[]> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateInvokeExpression.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.InvokeExpression,
     );
 
     if (maybeInvokeExpressionIds === undefined) {
+        trace.exit();
+
         return [];
     }
 
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of maybeInvokeExpressionIds) {
-        inspectionTasks.push(
-            Inspection.tryInvokeExpression(validationSettings, nodeIdMapCollection, nodeId, maybeCache),
-        );
+        inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, maybeCache));
     }
 
     const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
@@ -41,14 +54,17 @@ export async function validateInvokeExpression(
     for (const triedInvokeExpression of inspections) {
         if (ResultUtils.isOk(triedInvokeExpression)) {
             diagnosticTasks.push(
-                invokeExpressionToDiagnostics(validationSettings, nodeIdMapCollection, triedInvokeExpression.value),
+                invokeExpressionToDiagnostics(updatedSettings, nodeIdMapCollection, triedInvokeExpression.value),
             );
         } else {
+            trace.exit({ [TraceConstant.IsThrowing]: true });
+
             throw triedInvokeExpression;
         }
     }
 
     const diagnostics: ReadonlyArray<ReadonlyArray<Diagnostic>> = await Promise.all(diagnosticTasks);
+    trace.exit();
 
     return diagnostics.flat();
 }

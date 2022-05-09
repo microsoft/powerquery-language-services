@@ -5,7 +5,7 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
 import { InspectTypeState } from "../common";
 
@@ -22,10 +22,12 @@ import { InspectTypeState } from "../common";
 export async function inspectTypeFieldSelector(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeFieldSelector.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -46,7 +48,7 @@ export async function inspectTypeFieldSelector(
     }
 
     const fieldName: string = maybeFieldName.literal;
-    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode);
+    const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
         NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(

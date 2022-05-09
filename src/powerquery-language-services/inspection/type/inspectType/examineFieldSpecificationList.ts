@@ -11,7 +11,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
 import { InspectTypeState } from "./common";
 
@@ -24,10 +24,12 @@ export interface ExaminedFieldSpecificationList {
 export async function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<ExaminedFieldSpecificationList> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         examineFieldSpecificationList.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -53,7 +55,7 @@ export async function examineFieldSpecificationList(
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification);
+        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification, trace.id);
         fields.push([maybeName.literal, type]);
     }
 

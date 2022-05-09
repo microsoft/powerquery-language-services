@@ -5,13 +5,18 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export async function inspectTypeParameter(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
+export async function inspectTypeParameter(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeParameter.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -27,7 +32,7 @@ export async function inspectTypeParameter(state: InspectTypeState, xorNode: TXo
         );
 
     const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
-        await inspectTypeFromChildAttributeIndex(state, xorNode, 2),
+        await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id),
     );
 
     const result: Type.TPowerQueryType = {

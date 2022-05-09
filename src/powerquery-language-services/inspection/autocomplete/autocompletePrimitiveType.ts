@@ -18,8 +18,9 @@ export function tryAutocompletePrimitiveType(
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     const trace: Trace = settings.traceManager.entry(
-        AutocompleteTraceConstant.PrimitiveType,
+        AutocompleteTraceConstant.AutocompletePrimitiveType,
         tryAutocompletePrimitiveType.name,
+        settings.maybeInitialCorrelationId,
     );
 
     let result: TriedAutocompletePrimitiveType;
@@ -27,8 +28,9 @@ export function tryAutocompletePrimitiveType(
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk([]);
     } else {
-        result = ResultUtils.ensureResult(settings.locale, () =>
-            autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data),
+        result = ResultUtils.ensureResult(
+            () => autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data),
+            settings.locale,
         );
     }
 

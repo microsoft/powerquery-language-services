@@ -10,6 +10,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
@@ -17,6 +18,7 @@ import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 import { InspectionSettings } from "../../inspectionSettings";
+import { InspectionTraceConstant } from "../../trace";
 
 // An inspection of an arbitrary invoke expression.
 export type TriedInvokeExpression = PQP.Result<InvokeExpression, PQP.CommonError.CommonError>;
@@ -31,9 +33,23 @@ export function tryInvokeExpression(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedInvokeExpression> {
-    return ResultUtils.ensureResultAsync(settings.locale, () =>
-        inspectInvokeExpression(settings, nodeIdMapCollection, invokeExpressionId, typeCache),
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.InspectInvokeExpression,
+        tryInvokeExpression.name,
+        settings.maybeInitialCorrelationId,
     );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
+    const result: Promise<TriedInvokeExpression> = ResultUtils.ensureResultAsync(
+        () => inspectInvokeExpression(updatedSettings, nodeIdMapCollection, invokeExpressionId, typeCache, trace.id),
+        settings.locale,
+    );
+
+    return result;
 }
 
 async function inspectInvokeExpression(
@@ -41,7 +57,14 @@ async function inspectInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     invokeExpressionId: number,
     typeCache: TypeCache,
+    correlationId: number,
 ): Promise<InvokeExpression> {
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.InspectInvokeExpression,
+        inspectInvokeExpression.name,
+        correlationId,
+    );
+
     settings.maybeCancellationToken?.throwIfCancelled();
 
     const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(
@@ -50,6 +73,8 @@ async function inspectInvokeExpression(
     );
 
     if (maybeInvokeExpressionXorNode === undefined) {
+        trace.exit({ [TraceConstant.IsThrowing]: true });
+
         throw new PQP.CommonError.InvariantError(`expected invokeExpressionId to be present in nodeIdMapCollection`, {
             invokeExpressionId,
         });
@@ -102,7 +127,7 @@ async function inspectInvokeExpression(
         };
     }
 
-    return {
+    const result: InvokeExpression = {
         invokeExpressionXorNode,
         functionType,
         isNameInLocalScope: await getIsNameInLocalScope(
@@ -111,10 +136,15 @@ async function inspectInvokeExpression(
             typeCache,
             invokeExpressionXorNode,
             maybeName,
+            trace.id,
         ),
         maybeName,
         maybeArguments: maybeInvokeExpressionArgs,
     };
+
+    trace.exit();
+
+    return result;
 }
 
 async function getIsNameInLocalScope(
@@ -123,13 +153,25 @@ async function getIsNameInLocalScope(
     typeCache: TypeCache,
     invokeExpressionXorNode: TXorNode,
     maybeName: string | undefined,
+    correlationId: number,
 ): Promise<boolean> {
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.InspectInvokeExpression,
+        getIsNameInLocalScope.name,
+        correlationId,
+    );
+
+    const updatedSettings: InspectionSettings = {
+        ...settings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     // Try to find out if the identifier is a local or external name.
     if (maybeName !== undefined) {
         // Seed local scope
         const scope: NodeScope = Assert.unboxOk(
             await assertGetOrCreateNodeScope(
-                settings,
+                updatedSettings,
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 typeCache.scopeById,
@@ -138,8 +180,12 @@ async function getIsNameInLocalScope(
 
         const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
 
+        trace.exit();
+
         return maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
     } else {
+        trace.exit();
+
         return false;
     }
 }

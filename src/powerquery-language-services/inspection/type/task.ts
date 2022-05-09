@@ -8,7 +8,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
-import { InspectionSettings, LanguageServiceTraceConstant } from "../..";
+import { InspectionSettings, InspectionTraceConstant } from "../..";
 import { NodeScope, ScopeTypeByKey } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 
@@ -25,13 +25,18 @@ export async function tryScopeType(
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedScopeType> {
-    const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Type, tryScopeType.name);
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.InspectScopeType,
+        tryScopeType.name,
+        settings.maybeInitialCorrelationId,
+    );
 
     const state: InspectTypeState = {
         locale: settings.locale,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
+        maybeInitialCorrelationId: trace.id,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
@@ -39,8 +44,9 @@ export async function tryScopeType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(settings.locale, () =>
-        inspectScopeType(state, nodeId),
+    const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(
+        () => inspectScopeType(state, nodeId, trace.id),
+        settings.locale,
     );
 
     trace.exit();
@@ -54,13 +60,18 @@ export async function tryType(
     nodeId: number,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedType> {
-    const trace: Trace = settings.traceManager.entry(LanguageServiceTraceConstant.Type, tryType.name);
+    const trace: Trace = settings.traceManager.entry(
+        InspectionTraceConstant.InspectType,
+        tryType.name,
+        settings.maybeInitialCorrelationId,
+    );
 
     const state: InspectTypeState = {
         locale: settings.locale,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
+        maybeInitialCorrelationId: trace.id,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,
         deltaTypeById: new Map(),
@@ -68,8 +79,9 @@ export async function tryType(
         scopeById: typeCache.scopeById,
     };
 
-    const result: TriedType = await ResultUtils.ensureResultAsync(settings.locale, () =>
-        inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId)),
+    const result: TriedType = await ResultUtils.ensureResultAsync(
+        () => inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId), trace.id),
+        settings.locale,
     );
 
     trace.exit({ [TraceConstant.IsError]: result.kind });
@@ -77,8 +89,18 @@ export async function tryType(
     return result;
 }
 
-async function inspectScopeType(state: InspectTypeState, nodeId: number): Promise<ScopeTypeByKey> {
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId);
+async function inspectScopeType(
+    state: InspectTypeState,
+    nodeId: number,
+    correlationId: number,
+): Promise<ScopeTypeByKey> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScopeType,
+        inspectScopeType.name,
+        correlationId,
+    );
+
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId, trace.id);
 
     for (const scopeItem of nodeScope.values()) {
         if (!state.givenTypeById.has(scopeItem.id)) {
@@ -102,6 +124,8 @@ async function inspectScopeType(state: InspectTypeState, nodeId: number): Promis
 
         result.set(key, type);
     }
+
+    trace.exit();
 
     return result;
 }
