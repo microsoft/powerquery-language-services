@@ -34,7 +34,7 @@ const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
 
 const TestSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
-    isWorkspaceCacheEnabled: false,
+    isWorkspaceCacheAllowed: false,
     maybeEachScopeById: undefined,
     maybeExternalTypeResolver: ExternalTypeResolver,
 };

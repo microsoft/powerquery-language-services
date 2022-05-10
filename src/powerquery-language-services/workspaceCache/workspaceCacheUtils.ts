@@ -17,21 +17,21 @@ export function close(textDocument: TextDocument): void {
     CacheCollectionByCacheKey.delete(collectionCacheKey);
 }
 
-export function getTypeCache(textDocument: TextDocument, isWorkspaceCacheEnabled: boolean): Inspection.TypeCache {
-    if (!isWorkspaceCacheEnabled) {
+export function getTypeCache(textDocument: TextDocument, isWorkspaceCacheAllowed: boolean): Inspection.TypeCache {
+    if (!isWorkspaceCacheAllowed) {
         return TypeCacheUtils.createEmptyCache();
     }
 
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheEnabled);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheAllowed);
 
     return cacheCollection.typeCache;
 }
 
 export function getOrCreateCacheCollection(
     textDocument: TextDocument,
-    isWorkspaceCacheEnabled: boolean,
+    isWorkspaceCacheAllowed: boolean,
 ): CacheCollection {
-    if (!isWorkspaceCacheEnabled) {
+    if (!isWorkspaceCacheAllowed) {
         return createEmptyCacheCollection(textDocument.version);
     }
 
@@ -47,7 +47,10 @@ export function getOrCreateCacheCollection(
     }
 
     const cacheCollection: CacheCollection = createEmptyCacheCollection(textDocument.version);
-    CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
+
+    if (isWorkspaceCacheAllowed) {
+        CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
+    }
 
     return cacheCollection;
 }
@@ -55,9 +58,9 @@ export function getOrCreateCacheCollection(
 export function getOrCreateLexPromise(
     textDocument: TextDocument,
     lexSettings: PQP.LexSettings,
-    isWorkspaceCacheEnabled: boolean,
+    isWorkspaceCacheAllowed: boolean,
 ): Promise<PQP.Task.TriedLexTask> {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheEnabled);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheAllowed);
 
     if (cacheCollection.maybeLex) {
         return cacheCollection.maybeLex;
@@ -75,9 +78,9 @@ export function getOrCreateLexPromise(
 export async function getOrCreateParsePromise(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-    isWorkspaceCacheEnabled: boolean,
+    isWorkspaceCacheAllowed: boolean,
 ): Promise<PQP.Task.TriedParseTask | undefined> {
-    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheEnabled);
+    const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheAllowed);
 
     if (cacheCollection.maybeParse) {
         return cacheCollection.maybeParse;
@@ -86,7 +89,7 @@ export async function getOrCreateParsePromise(
     const maybeTriedLexPromise: Promise<PQP.Task.TriedLexTask> = getOrCreateLexPromise(
         textDocument,
         lexAndParseSettings,
-        isWorkspaceCacheEnabled,
+        isWorkspaceCacheAllowed,
     );
 
     const maybeTriedLex: PQP.Task.TriedLexTask | undefined = await maybeTriedLexPromise;
@@ -109,7 +112,7 @@ export async function getOrCreateInspectedPromise(
 ): Promise<Inspection.Inspected | undefined> {
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(
         textDocument,
-        inspectionSettings.isWorkspaceCacheEnabled,
+        inspectionSettings.isWorkspaceCacheAllowed,
     );
 
     const positionMapKey: string = createInspectionByPositionKey(position);
@@ -121,7 +124,7 @@ export async function getOrCreateInspectedPromise(
     const maybeTriedParsePromise: Promise<PQP.Task.TriedParseTask | undefined> = getOrCreateParsePromise(
         textDocument,
         inspectionSettings,
-        inspectionSettings.isWorkspaceCacheEnabled,
+        inspectionSettings.isWorkspaceCacheAllowed,
     );
 
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await maybeTriedParsePromise;
@@ -131,7 +134,9 @@ export async function getOrCreateInspectedPromise(
         !PQP.TaskUtils.isParseStage(maybeTriedParse) ||
         PQP.TaskUtils.isParseStageCommonError(maybeTriedParse)
     ) {
-        cacheCollection.inspectionByPosition.set(positionMapKey, undefined);
+        if (inspectionSettings.isWorkspaceCacheAllowed) {
+            cacheCollection.inspectionByPosition.set(positionMapKey, undefined);
+        }
 
         return undefined;
     }

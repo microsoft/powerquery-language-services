@@ -198,7 +198,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 document,
                 {
                     createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
-                    isWorkspaceCacheEnabled: false,
+                    isWorkspaceCacheAllowed: false,
                     library: TestConstants.SimpleLibrary,
                 },
                 position,

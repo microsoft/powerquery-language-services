@@ -16,76 +16,130 @@ import { SimpleLibrary } from "./testConstants";
 import { TestUtils } from ".";
 
 describe("workspaceCache", () => {
-    it("getOrCreateLexPromise", async () => {
-        const text: string = `let\n   b = 1\n   in b`;
+    describe(`getOrCreate`, () => {
+        it("getOrCreateLexPromise", async () => {
+            const text: string = `let\n   b = 1\n   in b`;
 
-        const cacheItem: PQP.Task.TriedLexTask = await WorkspaceCacheUtils.getOrCreateLexPromise(
-            TestUtils.createTextMockDocument(text),
-            PQP.DefaultSettings,
-            false,
-        );
-
-        assertIsOk(cacheItem);
-    });
-
-    it("getOrCreateParsePromise", async () => {
-        const text: string = "let c = 1 in c";
-
-        const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
-            TestUtils.createTextMockDocument(text),
-            PQP.DefaultSettings,
-            false,
-        );
-
-        isDefined(cacheItem);
-    });
-
-    it("getOrCreateParsePromise with error", async () => {
-        const text: string = "let c = 1, in c";
-
-        const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
-            TestUtils.createTextMockDocument(text),
-            PQP.DefaultSettings,
-            false,
-        );
-
-        isDefined(cacheItem);
-    });
-
-    it("getOrCreateInspectionPromise", async () => {
-        const [document, postion]: [MockDocument, Position] =
-            TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
-
-        const maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
-            document,
-            PQLS.InspectionUtils.createInspectionSettings(
+            const cacheItem: PQP.Task.TriedLexTask = await WorkspaceCacheUtils.getOrCreateLexPromise(
+                TestUtils.createTextMockDocument(text),
                 PQP.DefaultSettings,
-                undefined,
-                SimpleLibrary.externalTypeResolver,
                 false,
-            ),
-            postion,
-        );
+            );
 
-        TestUtils.assertIsDefined(maybeInspected);
+            assertIsOk(cacheItem);
+        });
+
+        it("getOrCreateParsePromise", async () => {
+            const text: string = "let c = 1 in c";
+
+            const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+                TestUtils.createTextMockDocument(text),
+                PQP.DefaultSettings,
+                false,
+            );
+
+            isDefined(cacheItem);
+        });
+
+        it("getOrCreateParsePromise with error", async () => {
+            const text: string = "let c = 1, in c";
+
+            const cacheItem: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+                TestUtils.createTextMockDocument(text),
+                PQP.DefaultSettings,
+                false,
+            );
+
+            isDefined(cacheItem);
+        });
+
+        it("getOrCreateInspectionPromise", async () => {
+            const [document, postion]: [MockDocument, Position] =
+                TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
+
+            const maybeInspected: Inspection.Inspected | undefined =
+                await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+                    document,
+                    PQLS.InspectionUtils.createInspectionSettings(
+                        PQP.DefaultSettings,
+                        undefined,
+                        SimpleLibrary.externalTypeResolver,
+                        false,
+                    ),
+                    postion,
+                );
+
+            TestUtils.assertIsDefined(maybeInspected);
+        });
+
+        it("getOrCreateInspectionPromise with parser error", async () => {
+            const [document, postion]: [MockDocument, Position] =
+                TestUtils.createMockDocumentAndPosition("let c = 1, in |");
+
+            const maybeInspected: Inspection.Inspected | undefined =
+                await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+                    document,
+                    PQLS.InspectionUtils.createInspectionSettings(
+                        PQP.DefaultSettings,
+                        undefined,
+                        SimpleLibrary.externalTypeResolver,
+                        false,
+                    ),
+                    postion,
+                );
+
+            TestUtils.assertIsDefined(maybeInspected);
+        });
     });
 
-    it("getOrCreateInspectionPromise with parser error", async () => {
-        const [document, postion]: [MockDocument, Position] =
-            TestUtils.createMockDocumentAndPosition("let c = 1, in |");
+    describe(`isWorkspaceCacheAllowed`, () => {
+        it(`doesn't set a value when disallowed`, async () => {
+            const document: MockDocument = TestUtils.createTextMockDocument("foo");
 
-        const maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
-            document,
-            PQLS.InspectionUtils.createInspectionSettings(
-                PQP.DefaultSettings,
-                undefined,
-                SimpleLibrary.externalTypeResolver,
+            TestUtils.assertIsDefined(
+                await WorkspaceCacheUtils.getOrCreateParsePromise(document, PQP.DefaultSettings, false),
+                "expected to be parsed",
+            );
+
+            const cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(
+                document,
+                true,
+            );
+
+            expect(cacheCollection.maybeParse).to.be.undefined;
+        });
+
+        it(`sets a value when allowed`, async () => {
+            const document: MockDocument = TestUtils.createTextMockDocument("foo");
+
+            TestUtils.assertIsDefined(
+                await WorkspaceCacheUtils.getOrCreateParsePromise(document, PQP.DefaultSettings, true),
+                "expected to be parsed",
+            );
+
+            const cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(
+                document,
+                true,
+            );
+
+            expect(cacheCollection.maybeParse).to.not.be.undefined;
+        });
+
+        it(`fetches an empty collection when caching is disallowed`, async () => {
+            const document: MockDocument = TestUtils.createTextMockDocument("foo");
+
+            TestUtils.assertIsDefined(
+                await WorkspaceCacheUtils.getOrCreateParsePromise(document, PQP.DefaultSettings, true),
+                "expected to be parsed",
+            );
+
+            const cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(
+                document,
                 false,
-            ),
-            postion,
-        );
+            );
 
-        TestUtils.assertIsDefined(maybeInspected);
+            expect(cacheCollection.maybeParse).to.be.undefined;
+        });
     });
 
     it("cache invalidation with version change", async () => {

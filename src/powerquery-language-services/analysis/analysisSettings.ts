@@ -8,7 +8,7 @@ import { InspectionSettings } from "../inspectionSettings";
 
 export interface AnalysisSettings {
     readonly createInspectionSettingsFn: () => InspectionSettings;
-    readonly isWorkspaceCacheEnabled: boolean;
+    readonly isWorkspaceCacheAllowed: boolean;
     readonly library: ILibrary;
     readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => AutocompleteItemProvider;
     readonly maybeCreateLibrarySymbolProviderFn?: (library: ILibrary) => ISymbolProvider;

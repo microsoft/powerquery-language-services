@@ -8,7 +8,7 @@ import { TypeById } from "./inspection";
 
 export interface InspectionSettings extends PQP.Settings {
     // Allows the caching of scope and Power Query type datastructures built during an inspection.
-    readonly isWorkspaceCacheEnabled: boolean;
+    readonly isWorkspaceCacheAllowed: boolean;
     // A goal is to enable smart type resolvers for library functions.
     // Take for example `Table.AddColumn(tbl, "nameTwice", each [name] + [name])`
     // There's no way (in the general sense) that you're applying the lambda to the table input.

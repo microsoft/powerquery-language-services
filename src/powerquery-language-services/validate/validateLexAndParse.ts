@@ -31,7 +31,7 @@ export async function validateLexAndParse(
     const parsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         updatedSettings,
-        updatedSettings.isWorkspaceCacheEnabled,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (parsePromise !== undefined) {
@@ -44,7 +44,7 @@ export async function validateLexAndParse(
     const lexPromise: PQP.Task.TriedLexTask | undefined = await WorkspaceCacheUtils.getOrCreateLexPromise(
         textDocument,
         updatedSettings,
-        updatedSettings.isWorkspaceCacheEnabled,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (lexPromise !== undefined) {
