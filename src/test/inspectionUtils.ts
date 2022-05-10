@@ -39,6 +39,7 @@ describe("Document symbol base functions", () => {
         const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             testDocument,
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(lexAndParseOk);
@@ -58,6 +59,7 @@ describe("Document symbol base functions", () => {
         const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             textDocument,
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(lexAndParseOk);
@@ -73,6 +75,7 @@ describe("Document symbol base functions", () => {
         const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             textDocument,
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(lexAndParseOk);
@@ -92,6 +95,7 @@ describe("Document symbol base functions", () => {
         const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             textDocument,
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(lexAndParseOk);
@@ -113,6 +117,7 @@ describe("Document symbol base functions", () => {
         const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
             textDocument,
             PQP.DefaultSettings,
+            false,
         );
 
         isDefined(lexAndParseOk);

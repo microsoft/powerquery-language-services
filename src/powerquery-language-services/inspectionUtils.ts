@@ -18,11 +18,13 @@ export function createInspectionSettings(
     settings: PQP.Settings,
     maybeEachScopeById: TypeById | undefined,
     maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
+    isWorkspaceCacheAllowed: boolean,
 ): InspectionSettings {
     return {
         ...settings,
         maybeEachScopeById,
         maybeExternalTypeResolver,
+        isWorkspaceCacheAllowed,
     };
 }
 

@@ -34,6 +34,7 @@ export async function validate(
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         updatedSettings,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (maybeTriedParse === undefined) {
@@ -59,7 +60,7 @@ export async function validate(
         invokeExpressionDiagnostics = await validateInvokeExpression(
             updatedSettings,
             nodeIdMapCollection,
-            WorkspaceCacheUtils.getTypeCache(textDocument),
+            WorkspaceCacheUtils.getTypeCache(textDocument, validationSettings.isWorkspaceCacheAllowed),
         );
     } else {
         functionExpressionDiagnostics = [];

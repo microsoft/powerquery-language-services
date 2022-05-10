@@ -19,6 +19,7 @@ import { LibrarySymbolProvider } from "../powerquery-language-services/providers
 
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
+    isWorkspaceCacheAllowed: false,
     maybeEachScopeById: undefined,
     maybeExternalTypeResolver: undefined,
 };
@@ -241,6 +242,7 @@ export const SimpleLibrary: Library.ILibrary = {
 
 export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     createInspectionSettingsFn: () => SimpleInspectionSettings,
+    isWorkspaceCacheAllowed: false,
     library: SimpleLibrary,
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (

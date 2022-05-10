@@ -21,7 +21,7 @@ export class DocumentAnalysis extends AnalysisBase {
     }
 
     public dispose(): void {
-        if (!this.analysisSettings.maintainWorkspaceCache) {
+        if (!this.analysisSettings.isWorkspaceCacheAllowed) {
             WorkspaceCacheUtils.close(this.textDocument);
         }
     }
