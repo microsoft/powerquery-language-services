@@ -17,11 +17,12 @@ import { WorkspaceCacheUtils } from "./workspaceCache";
 export async function getDocumentSymbols(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-    maintainWorkspaceCache: boolean,
+    isWorkspaceCacheAllowed: boolean,
 ): Promise<DocumentSymbol[]> {
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         lexAndParseSettings,
+        isWorkspaceCacheAllowed,
     );
 
     if (maybeTriedParse === undefined || PQP.TaskUtils.isParseStageCommonError(maybeTriedParse)) {
@@ -34,10 +35,7 @@ export async function getDocumentSymbols(
 
     addIdentifierPairedExpressionSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
     addRecordSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
-
-    if (!maintainWorkspaceCache) {
-        WorkspaceCacheUtils.close(textDocument);
-    }
+    WorkspaceCacheUtils.close(textDocument);
 
     return currentSymbols;
 }

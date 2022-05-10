@@ -17,6 +17,7 @@ class RenameEditsAnalysis extends AnalysisBase {
         super(
             {
                 createInspectionSettingsFn: undefined as any,
+                isWorkspaceCacheAllowed: false,
                 library: {
                     externalTypeResolver: undefined as any,
                     libraryDefinitions: undefined as any,

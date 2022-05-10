@@ -44,6 +44,7 @@ export async function validateDuplicateIdentifiers(
     const maybeParsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         updatedSettings,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (maybeParsePromise === undefined) {

@@ -211,8 +211,12 @@ export function assertHover(expected: string, actual: Hover): void {
     expect(contents).to.equal(expected);
 }
 
-export function assertIsDefined<T>(maybeValue: T | undefined): asserts maybeValue is NonNullable<T> {
-    Assert.isDefined(maybeValue);
+export function assertIsDefined<T>(
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: object,
+): asserts maybeValue is NonNullable<T> {
+    Assert.isDefined(maybeValue, maybeMessage, maybeDetails);
 }
 
 export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
