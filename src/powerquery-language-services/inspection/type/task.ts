@@ -33,7 +33,7 @@ export async function tryScopeType(
 
     const state: InspectTypeState = {
         locale: settings.locale,
-        isCacheAllowed: settings.isCacheAllowed,
+        isWorkspaceCacheEnabled: settings.isWorkspaceCacheEnabled,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
@@ -69,7 +69,7 @@ export async function tryType(
 
     const state: InspectTypeState = {
         locale: settings.locale,
-        isCacheAllowed: settings.isCacheAllowed,
+        isWorkspaceCacheEnabled: settings.isWorkspaceCacheEnabled,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
         maybeExternalTypeResolver: settings.maybeExternalTypeResolver,

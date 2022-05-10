@@ -22,6 +22,7 @@ describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
             createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
+            isWorkspaceCacheEnabled: false,
             library: TestConstants.SimpleLibrary,
         };
 

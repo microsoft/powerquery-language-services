@@ -7,5 +7,5 @@ export interface ValidationSettings extends InspectionSettings {
     readonly source: string;
     readonly checkForDuplicateIdentifiers: boolean;
     readonly checkInvokeExpressions: boolean;
-    readonly isCacheAllowed: boolean;
+    readonly isWorkspaceCacheEnabled: boolean;
 }

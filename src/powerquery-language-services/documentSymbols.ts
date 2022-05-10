@@ -17,12 +17,12 @@ import { WorkspaceCacheUtils } from "./workspaceCache";
 export async function getDocumentSymbols(
     textDocument: TextDocument,
     lexAndParseSettings: PQP.LexSettings & PQP.ParseSettings,
-    isCacheAllowed: boolean,
+    isWorkspaceCacheEnabled: boolean,
 ): Promise<DocumentSymbol[]> {
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
         lexAndParseSettings,
-        isCacheAllowed,
+        isWorkspaceCacheEnabled,
     );
 
     if (maybeTriedParse === undefined || PQP.TaskUtils.isParseStageCommonError(maybeTriedParse)) {
