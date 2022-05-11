@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} saknas för den icke-valfria parametern {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Ett argument saknas för den icke-valfria parametern {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "{funcName} förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Det gick inte att hitta namnet {identifier}, menar du {suggestion}?"
 }

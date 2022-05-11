@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Za funkcijo »{funcName}« manjka argument za neizbirni parameter »{argName}«.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Manjka argument za neizbirni parameter »{argName}«.",
   "error_validation_invokeExpression_typeMismatch_named": "Za funkcijo »{funcName}« je bil za argument »{argName}« pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Za argument »{argName}« je bil pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Za argument »{argName}« je bil pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
+  "error_validation_unknownIdentifier_noSuggestion": "Imena '{identifier}' ni mogoče najti.",
+  "error_validation_unknownIdentifier_suggestion": "Imena '{identifier}' ni mogoče najti. Ali ste mislili '{suggestion}'?"
 }

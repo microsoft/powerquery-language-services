@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.",
   "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Ez da aurkitu '{identifier}' izena; '{suggestion}' esan nahi zenuen?"
 }

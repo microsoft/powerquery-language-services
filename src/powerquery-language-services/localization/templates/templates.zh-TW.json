@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' 遺漏非選擇性參數 '{argName}' 的引數。",
   "error_validation_invokeExpression_missingMandatory_unnamed": "遺漏非選擇性參數 '{argName}' 的引數。",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} 預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。"
+  "error_validation_invokeExpression_typeMismatch_unnamed": "預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "找不到名稱 '{identifier}'，您指的是 '{suggestion}' 嗎?"
 }

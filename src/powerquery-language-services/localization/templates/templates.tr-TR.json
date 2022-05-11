@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "İsteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişken eksik.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}, '{argName}' bağımsız değişkeninin '{expected}' olmasını bekliyordu, ancak bunun yerine '{actual}' alındı.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı.",
+  "error_validation_unknownIdentifier_noSuggestion": "'{identifier}' adı bulunamıyor.",
+  "error_validation_unknownIdentifier_suggestion": "'{identifier}' adı bulunamıyor. Şunu mu demek istediniz: '{suggestion}'?"
 }

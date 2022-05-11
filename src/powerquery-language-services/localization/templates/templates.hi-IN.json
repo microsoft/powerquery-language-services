@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' हेतु ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' ने '{argName}' के लिए '{expected}' तर्क की अपेक्षा की थी, लेकिन उसकी बजाय '{actual}' मिला.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "{argName} के लिए {expected} तर्क की अपेक्षा थी, लेकिन उसके बजाय {actual} मिला."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "{argName} के लिए {expected} तर्क की अपेक्षा थी, लेकिन उसके बजाय {actual} मिला.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "'{identifier}' नाम नहीं मिला, क्या आपका मतलब '{suggestion}' था?"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Λείπει ένα όρισμα από τον τύπο {funcName} για τη μη προαιρετική παράμετρο {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Λείπει ένα όρισμα για τη μη προαιρετική παράμετρο {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "{funcName} ανέμενε το όρισμα για {argName} να είναι {expected}, αλλά έλαβε το {actual} αντ' αυτού.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Αναμενόταν το όρισμα για {argName} να είναι {expected}, αλλά έλαβε το {actual} αντ ' αυτού."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Αναμενόταν το όρισμα για {argName} να είναι {expected}, αλλά έλαβε το {actual} αντ ' αυτού.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Δεν είναι δυνατή η εύρεση του ονόματος '{identifier}', μήπως εννοείτε '{suggestion}';"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} puuttuu määrite ei-valinnaiselle parametrille {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Ei-valinnaiselle parametrille {argName} puuttuu määrite.",
   "error_validation_invokeExpression_typeMismatch_named": "{funcName} odotti, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan argumentin {actual}.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Odotettiin, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan {actual}."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Odotettiin, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan {actual}.",
+  "error_validation_unknownIdentifier_noSuggestion": "Nimeä {identifier} ei löydy.",
+  "error_validation_unknownIdentifier_suggestion": "Nimeä {identifier} ei löydy, tarkoititko {suggestion}?"
 }

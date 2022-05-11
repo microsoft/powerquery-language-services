@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "\"{funcName}\" липсва аргумент за незадължителния параметър \"{argName}\".",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Липсва аргумент за незадължителния параметър \"{argName}\".",
   "error_validation_invokeExpression_typeMismatch_named": "\"{funcName}\" очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\"."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Не можем да намерим името '{identifier}', да не би да имахте предвид '{suggestion}'?"
 }
