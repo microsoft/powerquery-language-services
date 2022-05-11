@@ -5,6 +5,7 @@ import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
@@ -13,6 +14,7 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 
 const JaroWinklerSuggestionThreshold: number = 0.5;
 
@@ -21,6 +23,17 @@ export async function validateUnknownIdentifiers(
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: Inspection.TypeCache,
 ): Promise<Diagnostic[]> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateUnknownIdentifiers.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     // Grab all identifiers in the value context.
     const identifierValues: ReadonlyArray<Ast.Identifier> = findIdentifierValues(nodeIdMapCollection);
 
@@ -30,13 +43,16 @@ export async function validateUnknownIdentifiers(
         [Ast.Identifier, TriedNodeScope]
     >(identifierValues, async (identifier: Ast.Identifier) => [
         identifier,
-        await Inspection.tryNodeScope(validationSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
+        await Inspection.tryNodeScope(updatedSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
     ]);
 
     const unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]> =
         findUnknownIdentifiers(identifiersAndTriedNodeScopes);
 
-    return unknownIdentifiersToDiagnostics(validationSettings, unknownIdentifiers);
+    const result: Diagnostic[] = unknownIdentifiersToDiagnostics(updatedSettings, unknownIdentifiers);
+    trace.exit();
+
+    return result;
 }
 
 function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): ReadonlyArray<Ast.Identifier> {
