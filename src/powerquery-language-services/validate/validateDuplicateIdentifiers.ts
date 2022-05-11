@@ -11,27 +11,45 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
 ): Promise<ReadonlyArray<Diagnostic>> {
-    if (!validationSettings.checkForDuplicateIdentifiers) {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiers.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
+    if (!updatedSettings.checkForDuplicateIdentifiers) {
+        trace.exit();
+
         return [];
     }
 
     const maybeParsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
-        validationSettings,
+        updatedSettings,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (maybeParsePromise === undefined) {
+        trace.exit();
+
         return [];
     }
 
@@ -45,17 +63,23 @@ export async function validateDuplicateIdentifiers(
     }
 
     if (maybeNodeIdMapCollection === undefined) {
+        trace.exit();
+
         return [];
     }
 
     const documentUri: string = textDocument.uri;
     const nodeIdMapCollection: NodeIdMap.Collection = maybeNodeIdMapCollection;
 
-    return [
-        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, validationSettings),
-        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, validationSettings),
-        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, validationSettings),
+    const result: ReadonlyArray<Diagnostic> = [
+        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings),
+        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, updatedSettings),
+        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, updatedSettings),
     ];
+
+    trace.exit();
+
+    return result;
 }
 
 function validateDuplicateIdentifiersForLetExpresion(

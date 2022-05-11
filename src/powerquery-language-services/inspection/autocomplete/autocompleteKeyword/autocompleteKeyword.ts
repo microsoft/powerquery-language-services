@@ -36,8 +36,9 @@ export function tryAutocompleteKeyword(
         );
     }
 
-    return ResultUtils.ensureResultAsync(settings.locale, () =>
-        autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
+    return ResultUtils.ensureResultAsync(
+        () => autocompleteKeyword(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
+        settings.locale,
     );
 }
 
@@ -50,8 +51,8 @@ export async function autocompleteKeyword(
     let maybePositionName: string | undefined;
 
     if (PositionUtils.isInXor(nodeIdMapCollection, activeNode.position, ancestryLeaf, false, true)) {
-        if (activeNode.maybeIdentifierUnderPosition !== undefined) {
-            maybePositionName = activeNode.maybeIdentifierUnderPosition.literal;
+        if (activeNode.maybeExclusiveIdentifierUnderPosition !== undefined) {
+            maybePositionName = activeNode.maybeExclusiveIdentifierUnderPosition.literal;
         }
         // Matches 'null', 'true', and 'false'.
         else if (

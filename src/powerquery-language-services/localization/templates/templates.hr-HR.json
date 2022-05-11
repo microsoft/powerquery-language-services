@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Nema argumenta u '{funcName}' za neobavezni parametar '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Nema argumenta za neobavezni parametar '{argName}'.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' je očekivao da će argument za '{argName}' biti '{expected}', ali je umjesto toga dobio '{actual}'.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Očekivao da će argument za '{argName}' biti '{expected}', ali je umjesto dobio '{actual}'."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Očekivao da će argument za '{argName}' biti '{expected}', ali je umjesto dobio '{actual}'.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Nije moguće pronaći naziv '{identifier}', jeste li mislili '{suggestion}'?"
 }

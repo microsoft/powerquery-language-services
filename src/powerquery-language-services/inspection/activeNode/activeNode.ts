@@ -30,8 +30,10 @@ export interface ActiveNode extends IActiveNode {
     // [starting node, parent of starting node, parent of parent of starting node, ...].
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
-    // A conditional indirection to the leaf if it's an Ast identifier.
-    readonly maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
+    readonly maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
+    readonly maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {

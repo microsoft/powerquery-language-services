@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Falta un argument a \"{funcName}\" per al paràmetre \"{argName}\" no opcional.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Falta un argument per al paràmetre \"{argName}\" no opcional.",
   "error_validation_invokeExpression_typeMismatch_named": "\"{funcName}\" esperava que l'argument \"{argName}\" fos \"{expected}\", però va ser \"{actual}\".",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "S’esperava que l’argument per a \"{argName}\" fos \"{expected}\", però va ser \"{actual}\"."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "S’esperava que l’argument per a \"{argName}\" fos \"{expected}\", però va ser \"{actual}\".",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "No es troba el nom ”{identifier}”, volíeu dir ”{suggestion}”?"
 }

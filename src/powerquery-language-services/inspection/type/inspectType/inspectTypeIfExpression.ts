@@ -6,22 +6,24 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 
 export async function inspectTypeIfExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeIfExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.IfExpression>(xorNode, Ast.NodeKind.IfExpression);
 
-    const conditionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+    const conditionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
     let result: Type.TPowerQueryType;
 
     if (conditionType.kind === Type.TypeKind.Unknown) {
@@ -38,12 +40,12 @@ export async function inspectTypeIfExpression(
         ) {
             result = Type.NoneInstance;
         } else {
-            result = await createAnyUnion(state, xorNode);
+            result = await createAnyUnion(state, xorNode, trace.id);
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         result = Type.NoneInstance;
     } else {
-        result = await createAnyUnion(state, xorNode);
+        result = await createAnyUnion(state, xorNode, trace.id);
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
@@ -54,9 +56,19 @@ export async function inspectTypeIfExpression(
 async function createAnyUnion(
     state: InspectTypeState,
     xorNode: XorNode<Ast.IfExpression>,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
-    const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3);
-    const falseExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 5);
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectType,
+        createAnyUnion.name,
+        maybeCorrelationId,
+        TraceUtils.createXorNodeDetails(xorNode),
+    );
 
-    return TypeUtils.createAnyUnion([trueExprType, falseExprType]);
+    const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
+    const falseExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
+    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([trueExprType, falseExprType]);
+    trace.exit();
+
+    return result;
 }

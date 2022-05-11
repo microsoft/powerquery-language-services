@@ -10,32 +10,49 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Range } from "vscode-languageserver-textdocument";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 
 // Check for repeat parameter names for FunctionExpressions.
 export function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
 ): Diagnostic[] {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateFunctionExpression.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const maybeFnExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.FunctionExpression,
     );
 
     if (maybeFnExpressionIds === undefined) {
+        trace.exit();
+
         return [];
     }
 
     const diagnostics: Diagnostic[][] = [];
 
     for (const nodeId of maybeFnExpressionIds) {
-        diagnostics.push(validateNoDuplicateParameter(validationSettings, nodeIdMapCollection, nodeId));
-        validationSettings.maybeCancellationToken?.throwIfCancelled();
+        diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
+        updatedSettings.maybeCancellationToken?.throwIfCancelled();
     }
+
+    trace.exit();
 
     return diagnostics.flat();
 }

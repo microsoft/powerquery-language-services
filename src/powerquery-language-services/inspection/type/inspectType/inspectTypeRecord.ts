@@ -2,16 +2,21 @@
 // Licensed under the MIT license.
 
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-export async function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNode): Promise<Type.DefinedRecord> {
+export async function inspectTypeRecord(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
+): Promise<Type.DefinedRecord> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeRecord.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -23,7 +28,7 @@ export async function inspectTypeRecord(state: InspectTypeState, xorNode: TXorNo
     for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
         if (keyValuePair.maybeValue) {
             // eslint-disable-next-line no-await-in-loop
-            fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue));
+            fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue, trace.id));
         } else {
             fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
         }

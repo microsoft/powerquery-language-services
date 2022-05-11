@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -17,10 +17,12 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 export async function inspectTypeRecursivePrimaryExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeRecursivePrimaryExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -35,7 +37,7 @@ export async function inspectTypeRecursivePrimaryExpression(
         return Type.UnknownInstance;
     }
 
-    const headType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const headType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
     if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(headType) });
@@ -72,7 +74,7 @@ export async function inspectTypeRecursivePrimaryExpression(
 
     for (const right of maybeExpressions) {
         // eslint-disable-next-line no-await-in-loop
-        const rightType: Type.TPowerQueryType = await inspectXor(state, right);
+        const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
         leftType = rightType;
     }
 

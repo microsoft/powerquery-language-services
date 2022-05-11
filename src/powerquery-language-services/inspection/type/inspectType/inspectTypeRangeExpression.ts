@@ -5,29 +5,36 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
-
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 
 export async function inspectTypeRangeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeRangeExpression.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
-    const maybeLeftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+    const maybeLeftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+        state,
+        xorNode,
+        0,
+        trace.id,
+    );
 
     const maybeRightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
         state,
         xorNode,
         2,
+        trace.id,
     );
 
     let result: Type.TPowerQueryType;

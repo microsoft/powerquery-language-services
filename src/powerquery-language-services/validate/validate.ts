@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Diagnostic } from "vscode-languageserver-types";
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { TypeCache, TypeCacheUtils } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
@@ -14,6 +15,7 @@ import { validateLexAndParse } from "./validateLexAndParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
+import { ValidationTraceConstant } from "../trace";
 import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validate(
@@ -21,12 +23,26 @@ export async function validate(
     validationSettings: ValidationSettings,
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<ValidationResult> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validate.name,
+        validationSettings.maybeInitialCorrelationId,
+    );
+
+    const updatedSettings: ValidationSettings = {
+        ...validationSettings,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
         textDocument,
-        validationSettings,
+        updatedSettings,
+        updatedSettings.isWorkspaceCacheAllowed,
     );
 
     if (maybeTriedParse === undefined) {
+        trace.exit();
+
         return {
             diagnostics: [],
             hasSyntaxError: false,
@@ -48,7 +64,7 @@ export async function validate(
         invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
             maybeNodeIdMapCollection,
-            WorkspaceCacheUtils.getTypeCache(textDocument),
+            WorkspaceCacheUtils.getTypeCache(textDocument, validationSettings.isWorkspaceCacheAllowed),
         );
     } else {
         functionExpressionDiagnostics = [];
@@ -65,10 +81,10 @@ export async function validate(
         unknownIdentifiersDiagnostics = [];
     }
 
-    return {
+    const result: ValidationResult = {
         diagnostics: [
-            ...(await validateDuplicateIdentifiers(textDocument, validationSettings)),
-            ...(await validateLexAndParse(textDocument, validationSettings)),
+            ...(await validateDuplicateIdentifiers(textDocument, updatedSettings)),
+            ...(await validateLexAndParse(textDocument, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,
             ...unknownIdentifiersDiagnostics,
@@ -76,4 +92,8 @@ export async function validate(
         hasSyntaxError:
             PQP.TaskUtils.isLexStageError(maybeTriedParse) || PQP.TaskUtils.isParseStageError(maybeTriedParse),
     };
+
+    trace.exit();
+
+    return result;
 }

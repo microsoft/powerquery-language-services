@@ -5,17 +5,19 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
 import { InspectTypeState } from "./common";
 
 export async function inspectTypeRecordType(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.RecordType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeRecordType.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -38,7 +40,7 @@ export async function inspectTypeRecordType(
             kind: Type.TypeKind.Type,
             maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
             isNullable: false,
-            ...(await examineFieldSpecificationList(state, maybeFields)),
+            ...(await examineFieldSpecificationList(state, maybeFields, trace.id)),
         };
     }
 

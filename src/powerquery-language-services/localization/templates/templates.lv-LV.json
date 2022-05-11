@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Funkcijai {funcName} trūkst argumenta obligātajam parametram {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Trūkst argumenta obligātajam parametram {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "Funkcijā {funcName} bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Nevar atrast nosaukumu \"{identifier}\". Vai domājāt \"{suggestion}\"?"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Funktsioonil „{funcName}“ puudub mittevalikulise parameetri argument „{argName}“.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Puudub mittevalikulise parameetri argument „{argName}“.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' eeldas, et argument '{argName}' jaoks on '{expected}', kuid sai selle asemel '{actual}'.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Eeldati, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Eeldati, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Nime „{identifier}“ ei leitud. Kas pidasite silmas nime „{suggestion}“?"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Funkci {funcName} chybí argument pro povinný parametr {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Chybí argument pro povinný parametr {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "Funkce {funcName} očekávala, že argument pro {argName} bude {expected}, ale místo něj obdržela argument {actual}.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Očekávalo se, že argument pro {argName} bude {expected}, ale místo něj byl obdržen argument {actual}."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Očekávalo se, že argument pro {argName} bude {expected}, ale místo něj byl obdržen argument {actual}.",
+  "error_validation_unknownIdentifier_noSuggestion": "Nelze najít název {identifier}.",
+  "error_validation_unknownIdentifier_suggestion": "Nepovedlo se najít název {identifier}, měli jste na mysli {suggestion}?"
 }

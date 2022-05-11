@@ -8,7 +8,7 @@ import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
-import { Inspection, LanguageServiceTraceConstant, TraceUtils } from "../../..";
+import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
@@ -63,54 +63,108 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
     );
 }
 
-export async function assertGetOrCreateNodeScope(state: InspectTypeState, nodeId: number): Promise<NodeScope> {
+export async function assertGetOrCreateNodeScope(
+    state: InspectTypeState,
+    nodeId: number,
+    maybeCorrelationId: number | undefined,
+): Promise<NodeScope> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScope,
+        assertGetOrCreateNodeScope.name,
+        maybeCorrelationId,
+    );
+
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const triedGetOrCreateScope: Inspection.TriedNodeScope = await getOrCreateScope(state, nodeId);
+    const triedGetOrCreateScope: Inspection.TriedNodeScope = await getOrCreateScope(state, nodeId, trace.id);
 
     if (ResultUtils.isError(triedGetOrCreateScope)) {
+        trace.exit({ [TraceConstant.IsThrowing]: true });
+
         throw triedGetOrCreateScope;
     }
+
+    trace.exit();
 
     return Assert.asDefined(triedGetOrCreateScope.value);
 }
 
-export async function getOrCreateScope(state: InspectTypeState, nodeId: number): Promise<Inspection.TriedNodeScope> {
+export async function getOrCreateScope(
+    state: InspectTypeState,
+    nodeId: number,
+    maybeCorrelationId: number | undefined,
+): Promise<Inspection.TriedNodeScope> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScope,
+        getOrCreateScope.name,
+        maybeCorrelationId,
+    );
+
+    const updatedState: InspectTypeState = {
+        ...state,
+        maybeInitialCorrelationId: trace.id,
+    };
+
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const maybeNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
+    const maybeNodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
 
     if (maybeNodeScope !== undefined) {
+        trace.exit();
+
         return ResultUtils.boxOk(maybeNodeScope);
     }
 
-    return await tryNodeScope(state, state.nodeIdMapCollection, nodeId, state.scopeById);
+    const result: Inspection.TriedNodeScope = await tryNodeScope(
+        updatedState,
+        state.nodeIdMapCollection,
+        nodeId,
+        state.scopeById,
+    );
+
+    trace.exit();
+
+    return result;
 }
 
 export async function getOrCreateScopeItemType(
     state: InspectTypeState,
     scopeItem: TScopeItem,
 ): Promise<Type.TPowerQueryType> {
-    const nodeId: number = scopeItem.id;
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScopeItem,
+        getOrCreateScopeItemType.name,
+        state.maybeInitialCorrelationId,
+    );
 
+    const nodeId: number = scopeItem.id;
     const maybeGivenType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
 
     if (maybeGivenType !== undefined) {
+        trace.exit({ givenCacheHit: true });
+
         return maybeGivenType;
     }
 
     const maybeDeltaType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
 
     if (maybeDeltaType !== undefined) {
+        trace.exit({ deltaCacheHit: true });
+
         return maybeDeltaType;
     }
 
-    const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem);
+    const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem, trace.id);
+    trace.exit();
 
     return scopeType;
 }
 
-export async function inspectScopeItem(state: InspectTypeState, scopeItem: TScopeItem): Promise<Type.TPowerQueryType> {
+export async function inspectScopeItem(
+    state: InspectTypeState,
+    scopeItem: TScopeItem,
+    maybeCorrelationId: number | undefined,
+): Promise<Type.TPowerQueryType> {
     state.maybeCancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
@@ -119,10 +173,10 @@ export async function inspectScopeItem(state: InspectTypeState, scopeItem: TScop
         case ScopeItemKind.SectionMember:
             return scopeItem.maybeValue === undefined
                 ? Type.UnknownInstance
-                : await inspectXor(state, scopeItem.maybeValue);
+                : await inspectXor(state, scopeItem.maybeValue, maybeCorrelationId);
 
         case ScopeItemKind.Each:
-            return await inspectXor(state, scopeItem.eachExpression);
+            return await inspectXor(state, scopeItem.eachExpression, maybeCorrelationId);
 
         case ScopeItemKind.Parameter:
             return createParameterType(scopeItem);
@@ -139,7 +193,15 @@ export async function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
     parentXorNode: TXorNode,
     attributeIndex: number,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectType,
+        inspectTypeFromChildAttributeIndex.name,
+        maybeCorrelationId,
+        TraceUtils.createXorNodeDetails(parentXorNode),
+    );
+
     state.maybeCancellationToken?.throwIfCancelled();
 
     const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
@@ -148,13 +210,23 @@ export async function inspectTypeFromChildAttributeIndex(
         attributeIndex,
     );
 
-    return maybeXorNode !== undefined ? await inspectXor(state, maybeXorNode) : Type.UnknownInstance;
+    const result: Type.TPowerQueryType =
+        maybeXorNode !== undefined ? await inspectXor(state, maybeXorNode, trace.id) : Type.UnknownInstance;
+
+    trace.exit();
+
+    return result;
 }
 
-export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Promise<Type.TPowerQueryType> {
+export async function inspectXor(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
+): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectXor.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -166,6 +238,8 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
         state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
 
     if (maybeCached !== undefined) {
+        trace.exit();
+
         return Promise.resolve(maybeCached);
     }
 
@@ -180,6 +254,8 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
         case Ast.NodeKind.IdentifierPairedExpression:
         case Ast.NodeKind.ParameterList:
         case Ast.NodeKind.Section:
+            trace.exit();
+
             return Promise.resolve(Type.NotApplicableInstance);
 
         case Ast.NodeKind.AsType:
@@ -188,35 +264,35 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
         case Ast.NodeKind.TypePrimaryType:
-            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 1);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
             break;
 
         case Ast.NodeKind.ArithmeticExpression:
         case Ast.NodeKind.EqualityExpression:
         case Ast.NodeKind.LogicalExpression:
         case Ast.NodeKind.RelationalExpression:
-            result = await inspectTypeTBinOpExpression(state, xorNode);
+            result = await inspectTypeTBinOpExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.AsExpression:
         case Ast.NodeKind.SectionMember:
-            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 2);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
             break;
 
         case Ast.NodeKind.Csv:
         case Ast.NodeKind.MetadataExpression:
-            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 0);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
             break;
 
         case Ast.NodeKind.ListExpression:
         case Ast.NodeKind.ListLiteral:
-            result = await inspectTypeList(state, xorNode);
+            result = await inspectTypeList(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.NullableType:
         case Ast.NodeKind.NullablePrimitiveType:
             result = {
-                ...(await inspectTypeFromChildAttributeIndex(state, xorNode, 1)),
+                ...(await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id)),
                 isNullable: true,
             };
 
@@ -224,7 +300,7 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
 
         case Ast.NodeKind.RecordLiteral:
         case Ast.NodeKind.RecordExpression:
-            result = await inspectTypeRecord(state, xorNode);
+            result = await inspectTypeRecord(state, xorNode, trace.id);
             break;
 
         // TODO: how should error raising be typed?
@@ -237,43 +313,43 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
             break;
 
         case Ast.NodeKind.EachExpression:
-            result = await inspectTypeEachExpression(state, xorNode);
+            result = await inspectTypeEachExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.ErrorHandlingExpression:
-            result = await inspectTypeErrorHandlingExpression(state, xorNode);
+            result = await inspectTypeErrorHandlingExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.FieldProjection:
-            result = await inspectTypeFieldProjection(state, xorNode);
+            result = await inspectTypeFieldProjection(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.FieldSelector:
-            result = await inspectTypeFieldSelector(state, xorNode);
+            result = await inspectTypeFieldSelector(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.FieldSpecification:
-            result = await inspectTypeFieldSpecification(state, xorNode);
+            result = await inspectTypeFieldSpecification(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.FunctionExpression:
-            result = await inspectTypeFunctionExpression(state, xorNode);
+            result = await inspectTypeFunctionExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.FunctionType:
-            result = await inspectTypeFunctionType(state, xorNode);
+            result = await inspectTypeFunctionType(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.Identifier:
-            result = await inspectTypeIdentifier(state, xorNode);
+            result = await inspectTypeIdentifier(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.IdentifierExpression:
-            result = await inspectTypeIdentifierExpression(state, xorNode);
+            result = await inspectTypeIdentifierExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.IfExpression:
-            result = await inspectTypeIfExpression(state, xorNode);
+            result = await inspectTypeIfExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.IsExpression:
@@ -281,7 +357,7 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
             break;
 
         case Ast.NodeKind.InvokeExpression:
-            result = await inspectTypeInvokeExpression(state, xorNode);
+            result = await inspectTypeInvokeExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
@@ -293,15 +369,15 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
             break;
 
         case Ast.NodeKind.LetExpression:
-            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 3);
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
             break;
 
         case Ast.NodeKind.ListType:
-            result = await inspectTypeListType(state, xorNode);
+            result = await inspectTypeListType(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.LiteralExpression:
-            result = inspectTypeLiteralExpression(state, xorNode);
+            result = inspectTypeLiteralExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.NotImplementedExpression:
@@ -309,35 +385,35 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
             break;
 
         case Ast.NodeKind.NullCoalescingExpression:
-            result = await inspectTypeNullCoalescingExpression(state, xorNode);
+            result = await inspectTypeNullCoalescingExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.Parameter:
-            result = await inspectTypeParameter(state, xorNode);
+            result = await inspectTypeParameter(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.PrimitiveType:
-            result = inspectTypePrimitiveType(state, xorNode);
+            result = inspectTypePrimitiveType(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.RangeExpression:
-            result = await inspectTypeRangeExpression(state, xorNode);
+            result = await inspectTypeRangeExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.RecordType:
-            result = await inspectTypeRecordType(state, xorNode);
+            result = await inspectTypeRecordType(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.RecursivePrimaryExpression:
-            result = await inspectTypeRecursivePrimaryExpression(state, xorNode);
+            result = await inspectTypeRecursivePrimaryExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.TableType:
-            result = await inspectTypeTableType(state, xorNode);
+            result = await inspectTypeTableType(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.UnaryExpression:
-            result = await inspectTypeUnaryExpression(state, xorNode);
+            result = await inspectTypeUnaryExpression(state, xorNode, trace.id);
             break;
 
         default:
@@ -353,26 +429,28 @@ export async function inspectXor(state: InspectTypeState, xorNode: TXorNode): Pr
 export async function maybeDereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType | undefined> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         maybeDereferencedIdentifierType.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const deferenced: TXorNode = await recursiveIdentifierDereference(state, xorNode);
-
+    const deferenced: TXorNode = await recursiveIdentifierDereference(state, xorNode, trace.id);
     const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
 
     if (maybeDereferencedLiteral === undefined) {
+        trace.exit();
+
         return undefined;
     }
 
     const deferencedLiteral: string = maybeDereferencedLiteral;
-
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, deferenced.node.id);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, deferenced.node.id, trace.id);
 
     // When referencing an identifier as a recursive identifier there's no requirements
     // for it to resolve to a recursive reference.
@@ -389,13 +467,18 @@ export async function maybeDereferencedIdentifierType(
         const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined = state.maybeExternalTypeResolver;
 
         if (maybeResolver === undefined) {
+            trace.exit();
+
             return undefined;
         }
 
         const request: ExternalType.ExternalValueTypeRequest =
             ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
 
-        return maybeResolver(request);
+        const result: Type.TPowerQueryType | undefined = maybeResolver(request);
+        trace.exit();
+
+        return result;
     }
 
     const scopeItem: TScopeItem = maybeScopeItem;
@@ -417,6 +500,8 @@ export async function maybeDereferencedIdentifierType(
             return createParameterType(scopeItem);
 
         case ScopeItemKind.Undefined:
+            trace.exit();
+
             return undefined;
 
         default:
@@ -424,7 +509,7 @@ export async function maybeDereferencedIdentifierType(
     }
 
     const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
-        ? await inspectXor(state, maybeNextXorNode)
+        ? await inspectXor(state, maybeNextXorNode, trace.id)
         : undefined;
 
     trace.exit();
@@ -433,17 +518,22 @@ export async function maybeDereferencedIdentifierType(
 }
 
 // Recursively derefence an identifier if it points to another identifier.
-export async function recursiveIdentifierDereference(state: InspectTypeState, xorNode: TXorNode): Promise<TXorNode> {
+export async function recursiveIdentifierDereference(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
+): Promise<TXorNode> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         recursiveIdentifierDereference.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsIdentifier(xorNode);
 
-    const result: TXorNode = Assert.asDefined(await recursiveIdentifierDereferenceHelper(state, xorNode));
+    const result: TXorNode = Assert.asDefined(await recursiveIdentifierDereferenceHelper(state, xorNode, trace.id));
     trace.exit();
 
     return result;
@@ -453,10 +543,12 @@ export async function recursiveIdentifierDereference(state: InspectTypeState, xo
 async function recursiveIdentifierDereferenceHelper(
     state: InspectTypeState,
     xorNode: TXorNode,
+    correlationId: number,
 ): Promise<TXorNode | undefined> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
-        inspectXor.name,
+        InspectionTraceConstant.InspectType,
+        recursiveIdentifierDereferenceHelper.name,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -490,13 +582,15 @@ async function recursiveIdentifierDereferenceHelper(
             throw Assert.isNever(identifier);
     }
 
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, identifierId);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, identifierId, trace.id);
 
     const maybeScopeItem: TScopeItem | undefined = nodeScope.get(
         isRecursiveIdentifier ? `@${identifierLiteral}` : identifierLiteral,
     );
 
     if (maybeScopeItem === undefined) {
+        trace.exit();
+
         return xorNode;
     }
 
@@ -528,7 +622,7 @@ async function recursiveIdentifierDereferenceHelper(
             Ast.NodeKind.Identifier,
             Ast.NodeKind.IdentifierExpression,
         ])
-            ? await recursiveIdentifierDereferenceHelper(state, maybeNextXorNode)
+            ? await recursiveIdentifierDereferenceHelper(state, maybeNextXorNode, trace.id)
             : xorNode;
 
     trace.exit();

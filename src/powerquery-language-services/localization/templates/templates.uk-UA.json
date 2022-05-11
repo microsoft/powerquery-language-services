@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "У функції \"{funcName}\" відсутній аргумент для обов’язкового параметра \"{argName}\".",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Відсутній аргумент для обов’язкового параметра \"{argName}\".",
   "error_validation_invokeExpression_typeMismatch_named": "Функція «{funcName}» очікувала, що аргумент для «{argName}» матиме значення «{expected}», але натомість він має значення «{actual}».",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Очікувалося, що аргумент для \"{argName}\" матиме значення \"{expected}\", але натомість він має значення \"{actual}\"."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Очікувалося, що аргумент для \"{argName}\" матиме значення \"{expected}\", але натомість він має значення \"{actual}\".",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Не вдалося знайти ім’я '{identifier}'. Можливо, ви мали на увазі '{suggestion}'?"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Ebből: {funcName} hiányzik egy argumentum a nem válaszható {argName} paraméterhez.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Hiányzik egy argumentum a nem választható {argName} paraméterhez.",
   "error_validation_invokeExpression_typeMismatch_named": "A(z) {funcName} a(z) {expected} argumentumot várta ehhez: {argName}, de helyette {actual} argumentumot kapott.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "A rendszer várta ehhez: {argName} az argumentumot, így: {expected}, de ehelyett ezt: {actual} kapta."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "A rendszer várta ehhez: {argName} az argumentumot, így: {expected}, de ehelyett ezt: {actual} kapta.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "A(z) „{identifier}“ név nem található. Erre gondolt: „{suggestion}“?"
 }

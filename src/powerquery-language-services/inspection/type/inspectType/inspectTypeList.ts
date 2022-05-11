@@ -5,13 +5,18 @@ import { NodeIdMapIterator, TXorNode } from "@microsoft/powerquery-parser/lib/po
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { LanguageServiceTraceConstant, TraceUtils } from "../../..";
 
-export async function inspectTypeList(state: InspectTypeState, xorNode: TXorNode): Promise<Type.DefinedList> {
+export async function inspectTypeList(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    maybeCorrelationId: number | undefined,
+): Promise<Type.DefinedList> {
     const trace: Trace = state.traceManager.entry(
-        LanguageServiceTraceConstant.Type,
+        InspectionTraceConstant.InspectType,
         inspectTypeList.name,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -19,7 +24,7 @@ export async function inspectTypeList(state: InspectTypeState, xorNode: TXorNode
     const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
 
     const elements: ReadonlyArray<Type.TPowerQueryType> = await Promise.all(
-        items.map((item: TXorNode) => inspectXor(state, item)),
+        items.map((item: TXorNode) => inspectXor(state, item, trace.id)),
     );
 
     const result: Type.TPowerQueryType = {

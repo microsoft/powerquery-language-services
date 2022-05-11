@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Element „{funcName}” nie ma argumentu dla parametru nieopcjonalnego „{argName}”.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Brak argumentu dla parametru nieopcjonalnego „{argName}”.",
   "error_validation_invokeExpression_typeMismatch_named": "Element „{funcName}” oczekiwał, że argument „{argName}” będzie miał wartość „{expected}”, ale zamiast tego uzyskano wartość „{actual}”.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Oczekiwano argumentu „{argName}” na „{expected}”, ale zamiast tego otrzymano „{actual}”."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Oczekiwano argumentu „{argName}” na „{expected}”, ale zamiast tego otrzymano „{actual}”.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Nie można odnaleźć nazwy „{identifier}“. Czy chodziło Ci o „{suggestion}“?"
 }
