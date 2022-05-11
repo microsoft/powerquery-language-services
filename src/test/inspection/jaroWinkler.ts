@@ -11,4 +11,16 @@ describe(`Jaro-Winkler`, () => {
         const key: string = "Table.AddColumn";
         expect(calculateJaroWinkler(key, key.toUpperCase())).to.equal(calculateJaroWinkler(key, key.toLowerCase()));
     });
+
+    it(`one character off`, () => {
+        const left: string = "Table.AddColumn";
+        const right: string = "Tabl.AddColumn";
+        expect(calculateJaroWinkler(left, right)).to.equal(0.9866666666666667);
+    });
+
+    it(`many characters off`, () => {
+        const left: string = "Table.AddColumn";
+        const right: string = "Tbl.AsdC";
+        expect(calculateJaroWinkler(left, right)).to.equal(0.5900793650793651);
+    });
 });

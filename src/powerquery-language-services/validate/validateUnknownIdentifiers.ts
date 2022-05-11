@@ -16,7 +16,8 @@ import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
-const JaroWinklerSuggestionThreshold: number = 0.5;
+// For context, "Tbl.AsdC" has a score of ~0.59 against "Table.AddColumn"
+const JaroWinklerSuggestionThreshold: number = 0.8;
 
 export async function validateUnknownIdentifiers(
     validationSettings: ValidationSettings,
