@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "{funcName} mangler et argument for den ikke-optimale parameteren {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Mangler et argument for den ikke-valgfrie parameteren {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "{funcName} forventet at argumentet for {argName} var {expected}, men fikk {actual} i stedet.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Forventet at argumentet {argName} skulle være {expected}, men fikk {actual} i stedet."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Forventet at argumentet {argName} skulle være {expected}, men fikk {actual} i stedet.",
+  "error_validation_unknownIdentifier_noSuggestion": "Finner ikke navnet {identifier}.",
+  "error_validation_unknownIdentifier_suggestion": "Finner ikke navnet '{identifier}'. Mente du '{suggestion}'?"
 }

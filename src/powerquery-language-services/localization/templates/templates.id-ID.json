@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' tidak memiliki argumen untuk parameter non-opsional '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Tidak ada argumen untuk parameter non-opsional '{argName}'.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' mengharapkan argumen untuk '{argName}' adalah '{expected}', namun mendapatkan '{actual}' sebagai gantinya.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Argumen yang diharapkan untuk '{argName}' adalah '{expected}', namun yang didapatkan adalah '{actual}'."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Argumen yang diharapkan untuk '{argName}' adalah '{expected}', namun yang didapatkan adalah '{actual}'.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Tidak dapat menemukan nama '{identifier}', apakah maksud Anda '{suggestion}'?"
 }

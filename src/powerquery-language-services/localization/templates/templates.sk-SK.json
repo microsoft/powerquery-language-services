@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Vo {funcName} chýba argument pre nevoliteľný parameter {argName}.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Chýba argument pre nevoliteľný parameter {argName}.",
   "error_validation_invokeExpression_typeMismatch_named": "Funkcia '{funcName}' očakávala, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Očakávalo sa, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Očakávalo sa, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
+  "error_validation_unknownIdentifier_noSuggestion": "Nepodarilo sa nájsť názov {identifier}.",
+  "error_validation_unknownIdentifier_suggestion": "Nepodarilo sa nájsť názov {identifier}, mali ste na mysli {suggestion}?"
 }

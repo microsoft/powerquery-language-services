@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "Bij '{funcName}' ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Er ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Kan de naam {identifier} niet vinden. Bedoelt u {suggestion}?"
 }

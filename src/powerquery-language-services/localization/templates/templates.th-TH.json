@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' ไม่มีอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",
   "error_validation_invokeExpression_missingMandatory_unnamed": "ไม่พบอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' ต้องการอาร์กิวเมนต์สําหรับ '{argName}' เป็น '{expected}' แต่ได้รับ '{actual}' แทน",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน"
+  "error_validation_invokeExpression_typeMismatch_unnamed": "ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "ไม่พบชื่อ '{identifier}' คุณหมายถึง '{suggestion}' ใช่หรือไม่"
 }

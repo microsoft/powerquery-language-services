@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
   "error_validation_invokeExpression_missingMandatory_unnamed": "オプションではないパラメーター '{argName}' の引数がありません。",
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。"
+  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?"
 }

@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' функциясында '{argName}' міндетті параметріне аргументі жоқ.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "''{argName}' міндетті параметріне аргументі жоқ.",
   "error_validation_invokeExpression_typeMismatch_named": "\"{funcName}\" функциясы үшін \"{argName}\" аргументінің мәні \"{expected}\" болып күтілген, бірақ \"{actual}\" мәні болып шыққан.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан.",
+  "error_validation_unknownIdentifier_noSuggestion": "«{identifier}» деген атауды табу мүмкін емес.",
+  "error_validation_unknownIdentifier_suggestion": "\"{identifier}\" атауын табу мүмкін емес. Сіз \"{suggestion}\" деп енгізгіңіз келді ме?"
 }

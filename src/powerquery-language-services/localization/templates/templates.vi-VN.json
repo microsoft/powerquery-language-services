@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "'{funcName}' thiếu tham đối cho tham số không tối ưu '{argName}'.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Thiếu tham đối cho tham số không tối ưu '{argName}'.",
   "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” dự kiến đối số cho “{argName}” sẽ là “{expected}” nhưng thay vào đó lại là “{actual}”.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Dự kiến tham đối cho '{argName}' sẽ là '{expected}' nhưng thay vào đó lại là '{actual}'."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Dự kiến tham đối cho '{argName}' sẽ là '{expected}' nhưng thay vào đó lại là '{actual}'.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Không thể tìm thấy tên '{identifier}', ý bạn là '{suggestion}' phải không?"
 }

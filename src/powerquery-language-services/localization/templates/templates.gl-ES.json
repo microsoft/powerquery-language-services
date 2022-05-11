@@ -6,5 +6,7 @@
   "error_validation_invokeExpression_missingMandatory_named": "A “{funcName}” fáltalle un argumento para o parámetro “{argName}” non opcional.",
   "error_validation_invokeExpression_missingMandatory_unnamed": "Falta un argumento para o parámetro “{argName}” non opcional.",
   "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” esperaba que o argumento para “{argName}” fose “{expected}”, mais recibiu “{actual}”.",
-  "error_validation_invokeExpression_typeMismatch_unnamed": "Esperábase que o argumento para “{argName}” fose “{expected}”, mais recibiu “{actual}”."
+  "error_validation_invokeExpression_typeMismatch_unnamed": "Esperábase que o argumento para “{argName}” fose “{expected}”, mais recibiu “{actual}”.",
+  "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
+  "error_validation_unknownIdentifier_suggestion": "Non se pode atopar o nome '{identificador}', querías dicir '{suxestión}'?"
 }
