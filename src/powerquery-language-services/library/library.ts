@@ -49,3 +49,8 @@ export interface LibraryParameter {
 export interface LibraryType extends ILibraryDefinition {
     readonly kind: LibraryDefinitionKind.Type;
 }
+
+export const NoOpLibrary: ILibrary = {
+    externalTypeResolver: ExternalType.noOpExternalTypeResolver,
+    libraryDefinitions: new Map(),
+};

@@ -39,8 +39,8 @@ export async function inspectTypeInvokeExpression(
         trace.id,
     );
 
-    if (maybeRequest !== undefined && state.maybeExternalTypeResolver) {
-        const maybeType: Type.TPowerQueryType | undefined = state.maybeExternalTypeResolver(maybeRequest);
+    if (maybeRequest !== undefined) {
+        const maybeType: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(maybeRequest);
 
         if (maybeType !== undefined) {
             trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(maybeType) });

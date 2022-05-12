@@ -129,13 +129,25 @@ describe("Validation - UnknownIdentifier", () => {
     });
 
     describe(`suggestion`, () => {
-        it(`simple`, async () => {
+        it(`local scope`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in fo`);
 
             const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
                 await expectGetInvokeExpressionDiagnostics(textDocument);
 
             expectUnknownIdentifierSuggestions(invocationDiagnostics, new Map<string, string>([["fo", "foo"]]));
+        });
+
+        it(`library`, async () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(`test.n`);
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+                await expectGetInvokeExpressionDiagnostics(textDocument);
+
+            expectUnknownIdentifierSuggestions(
+                invocationDiagnostics,
+                new Map<string, string>([["test.n", "Test.Number"]]),
+            );
         });
     });
 });

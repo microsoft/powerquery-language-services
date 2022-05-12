@@ -17,7 +17,7 @@ import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // For context, "Tbl.AsdC" has a score of ~0.59 against "Table.AddColumn"
-const JaroWinklerSuggestionThreshold: number = 0.8;
+const JaroWinklerSuggestionThreshold: number = 0.9;
 
 export async function validateUnknownIdentifiers(
     validationSettings: ValidationSettings,
@@ -47,8 +47,11 @@ export async function validateUnknownIdentifiers(
         await Inspection.tryNodeScope(updatedSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
     ]);
 
-    const unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]> =
-        findUnknownIdentifiers(identifiersAndTriedNodeScopes);
+    const unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]> = findUnknownIdentifiers(
+        validationSettings,
+        identifiersAndTriedNodeScopes,
+        trace.id,
+    );
 
     const result: Diagnostic[] = unknownIdentifiersToDiagnostics(updatedSettings, unknownIdentifiers);
     trace.exit();
@@ -81,8 +84,16 @@ function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): Readon
 }
 
 function findUnknownIdentifiers(
+    validationSettings: ValidationSettings,
     identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, TriedNodeScope]>,
+    correlationId: number,
 ): ReadonlyArray<[Ast.Identifier, string | undefined]> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        findUnknownIdentifiers.name,
+        correlationId,
+    );
+
     const unknownIdentifiers: [Ast.Identifier, string | undefined][] = [];
     const numIdentifiers: number = identifiersAndTriedNodeScopes.length;
 
@@ -95,21 +106,25 @@ function findUnknownIdentifiers(
 
         const nodeScope: Inspection.NodeScope = triedNodeScope.value;
 
-        if (nodeScope && !nodeScope.has(identifier.literal)) {
-            if (nodeScope.size) {
-                const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(identifier.literal, [
-                    ...nodeScope.keys(),
-                ]);
+        if (!nodeScope.has(identifier.literal)) {
+            const knownIdentifiers: ReadonlyArray<string> = [
+                ...nodeScope.keys(),
+                ...validationSettings.library.libraryDefinitions.keys(),
+            ];
 
-                unknownIdentifiers.push([
-                    identifier,
-                    jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
-                ]);
-            } else {
-                unknownIdentifiers.push([identifier, undefined]);
-            }
+            const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(
+                identifier.literal,
+                knownIdentifiers,
+            );
+
+            unknownIdentifiers.push([
+                identifier,
+                jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
+            ]);
         }
     }
+
+    trace.exit();
 
     return unknownIdentifiers;
 }

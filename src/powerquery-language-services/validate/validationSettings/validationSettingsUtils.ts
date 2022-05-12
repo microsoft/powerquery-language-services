@@ -16,6 +16,7 @@ export function createValidationSettings(
         checkForDuplicateIdentifiers: checkForDuplicateIdentifiers ?? true,
         checkInvokeExpressions: checkInvokeExpressions ?? true,
         checkUnknownIdentifiers: checkUnknownIdentifiers ?? true,
+        library: inspectionSettings.library,
         source,
     };
 }

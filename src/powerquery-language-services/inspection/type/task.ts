@@ -32,11 +32,11 @@ export async function tryScopeType(
     );
 
     const state: InspectTypeState = {
+        library: settings.library,
         locale: settings.locale,
         isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
-        maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
         maybeInitialCorrelationId: trace.id,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,
@@ -68,11 +68,11 @@ export async function tryType(
     );
 
     const state: InspectTypeState = {
+        library: settings.library,
         locale: settings.locale,
         isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
         maybeCancellationToken: settings.maybeCancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
-        maybeExternalTypeResolver: settings.maybeExternalTypeResolver,
         maybeInitialCorrelationId: trace.id,
         traceManager: settings.traceManager,
         givenTypeById: typeCache.typeById,

@@ -85,7 +85,7 @@ describe(`Validation - duplicateIdentifier`, () => {
             await expectNoValidationErrors(TestUtils.createTextMockDocument("let b = 1 in b"));
         });
 
-        it("WIP let 1", async () => {
+        it("let 1", async () => {
             const errorSource: string = DuplicateIdentifierSettings.source;
 
             const validationResult: ValidationResult = await validate(

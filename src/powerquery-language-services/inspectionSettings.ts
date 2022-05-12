@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { ExternalType } from "./inspection/externalType";
+import { ILibrary } from "./library/library";
 import { TypeById } from "./inspection";
 
 export interface InspectionSettings extends PQP.Settings {
@@ -18,7 +18,6 @@ export interface InspectionSettings extends PQP.Settings {
     //
     // This is a "simple" hack that enables consumers of language-services to enable those smart type resolvers.
     // An initial pass can be made on InvokeExpressions where it sets the scope for an EachExpression.
+    readonly library: ILibrary;
     readonly maybeEachScopeById: TypeById | undefined;
-    // Read `externalType.ts` for comments.
-    readonly maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined;
 }

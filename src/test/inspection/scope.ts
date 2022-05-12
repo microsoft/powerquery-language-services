@@ -9,7 +9,7 @@ import { expect } from "chai";
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
-import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { Inspection, InspectionSettings, Library } from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
 export type TAbridgedNodeScopeItem =
@@ -26,7 +26,7 @@ const DefaultSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
     maybeEachScopeById: undefined,
-    maybeExternalTypeResolver: undefined,
+    library: Library.NoOpLibrary,
 };
 
 interface IAbridgedNodeScopeItem {
