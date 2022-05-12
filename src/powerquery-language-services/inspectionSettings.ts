@@ -3,12 +3,13 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 
-import { ILibrary } from "./library/library";
+import { Library } from "./library";
 import { TypeById } from "./inspection";
 
 export interface InspectionSettings extends PQP.Settings {
     // Allows the caching of scope and Power Query type datastructures built during an inspection.
     readonly isWorkspaceCacheAllowed: boolean;
+    readonly library: Library.ILibrary;
     // A goal is to enable smart type resolvers for library functions.
     // Take for example `Table.AddColumn(tbl, "nameTwice", each [name] + [name])`
     // There's no way (in the general sense) that you're applying the lambda to the table input.
@@ -18,6 +19,5 @@ export interface InspectionSettings extends PQP.Settings {
     //
     // This is a "simple" hack that enables consumers of language-services to enable those smart type resolvers.
     // An initial pass can be made on InvokeExpressions where it sets the scope for an EachExpression.
-    readonly library: ILibrary;
     readonly maybeEachScopeById: TypeById | undefined;
 }

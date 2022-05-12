@@ -8,21 +8,21 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
-import { ILibrary, NoOpLibrary } from "./library/library";
 import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { InspectionSettings } from "./inspectionSettings";
+import { Library } from "./library";
 import { TypeById } from "./inspection";
 
 export function createInspectionSettings(
     settings: PQP.Settings,
     maybeEachScopeById: TypeById | undefined,
-    maybeLibrary: ILibrary | undefined,
+    maybeLibrary: Library.ILibrary | undefined,
     isWorkspaceCacheAllowed: boolean,
 ): InspectionSettings {
     return {
         ...settings,
-        library: maybeLibrary ?? NoOpLibrary,
+        library: maybeLibrary ?? Library.NoOpLibrary,
         maybeEachScopeById,
         isWorkspaceCacheAllowed,
     };

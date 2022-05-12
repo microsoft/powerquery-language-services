@@ -5,17 +5,17 @@ import {
     AutocompleteItemProviderContext,
     Hover,
     HoverProviderContext,
+    Library,
     LibrarySymbolProvider,
     SignatureHelp,
     SignatureProviderContext,
 } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
-import { ILibrary } from "../../powerquery-language-services/library/library";
 
 export class SlowSymbolProvider extends LibrarySymbolProvider {
     private readonly delayInMS: number;
 
-    constructor(library: ILibrary, delayInMS: number) {
+    constructor(library: Library.ILibrary, delayInMS: number) {
         super(library);
         this.delayInMS = delayInMS;
     }
