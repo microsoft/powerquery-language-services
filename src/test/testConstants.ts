@@ -21,12 +21,7 @@ export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
     maybeEachScopeById: undefined,
-    maybeExternalTypeResolver: undefined,
-};
-
-export const NoOpLibrary: Library.ILibrary = {
-    externalTypeResolver: Inspection.ExternalType.noOpExternalTypeResolver,
-    libraryDefinitions: new Map(),
+    library: Library.NoOpLibrary,
 };
 
 export const CreateFooAndBarRecordDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
@@ -225,14 +220,10 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
 
 export const SimpleInspectionSettings: InspectionSettings = {
     ...DefaultInspectionSettings,
-    maybeExternalTypeResolver: SimpleExternalTypeResolver,
-};
-
-export const SimpleValidationSettings: ValidationSettings = {
-    ...SimpleInspectionSettings,
-    checkForDuplicateIdentifiers: true,
-    checkInvokeExpressions: true,
-    source: "UNIT-TEST-SOURCE",
+    library: {
+        libraryDefinitions: SimpleLibraryDefinitions,
+        externalTypeResolver: SimpleExternalTypeResolver,
+    },
 };
 
 export const SimpleLibrary: Library.ILibrary = {
@@ -250,6 +241,24 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
+};
+
+export const SimpleValidateAllSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: true,
+    checkInvokeExpressions: true,
+    checkUnknownIdentifiers: true,
+    library: SimpleLibrary,
+    source: "UNIT-TEST-SOURCE",
+};
+
+export const SimpleValidateNoneSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: false,
+    checkInvokeExpressions: false,
+    checkUnknownIdentifiers: false,
+    library: SimpleLibrary,
+    source: "UNIT-TEST-SOURCE",
 };
 
 export const enum TestLibraryName {

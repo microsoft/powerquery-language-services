@@ -15,6 +15,7 @@ export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
 export * from "./formatter";
 export * from "./inspectionSettings";
+export * from "./jaroWinkler";
 export * from "./library";
 export * from "./providers";
 export * from "./trace";

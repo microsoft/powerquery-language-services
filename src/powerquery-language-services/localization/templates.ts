@@ -140,6 +140,8 @@ export interface ILocalizationTemplates {
     readonly error_validation_invokeExpression_missingMandatory_named: string;
     readonly error_validation_invokeExpression_missingMandatory_unnamed: string;
     readonly error_validation_invokeExpression_numArgs: string;
+    readonly error_validation_unknownIdentifier_noSuggestion: string;
+    readonly error_validation_unknownIdentifier_suggestion: string;
 }
 
 export const DefaultTemplates: ILocalizationTemplates = en_US;

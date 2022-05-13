@@ -10,20 +10,20 @@ import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
-import { ExternalType } from "./inspection/externalType";
 import { InspectionSettings } from "./inspectionSettings";
+import { Library } from "./library";
 import { TypeById } from "./inspection";
 
 export function createInspectionSettings(
     settings: PQP.Settings,
     maybeEachScopeById: TypeById | undefined,
-    maybeExternalTypeResolver: ExternalType.TExternalTypeResolverFn | undefined,
+    maybeLibrary: Library.ILibrary | undefined,
     isWorkspaceCacheAllowed: boolean,
 ): InspectionSettings {
     return {
         ...settings,
+        library: maybeLibrary ?? Library.NoOpLibrary,
         maybeEachScopeById,
-        maybeExternalTypeResolver,
         isWorkspaceCacheAllowed,
     };
 }

@@ -11,16 +11,16 @@ import {
     EmptySignatureHelp,
     Hover,
     Inspection,
+    Library,
     NullSymbolProvider,
     SignatureHelp,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { ILibrary } from "../../powerquery-language-services/library/library";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLocalDocumentSymbolProviderFn: (
-        _library: ILibrary,
+        _library: Library.ILibrary,
         _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
     ) => NullSymbolProvider.singleton(),
 };

@@ -24,7 +24,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 }
 
 async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidationResult = await validate(textDocument, TestConstants.SimpleValidationSettings);
+    const validationResult: ValidationResult = await validate(textDocument, TestConstants.SimpleValidateAllSettings);
     expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
@@ -38,11 +38,11 @@ describe(`Validation - functionExpression`, () => {
         });
 
         it("(foo as number, foo as number) => foo * 2", async () => {
-            const errorSource: string = TestConstants.SimpleValidationSettings.source;
+            const errorSource: string = TestConstants.SimpleValidateAllSettings.source;
 
             const validationResult: ValidationResult = await validate(
                 TestUtils.createTextMockDocument(`(foo as number, foo as number) => foo * 2`),
-                TestConstants.SimpleValidationSettings,
+                TestConstants.SimpleValidateAllSettings,
             );
 
             expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");

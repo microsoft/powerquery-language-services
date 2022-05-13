@@ -464,18 +464,10 @@ export async function maybeDereferencedIdentifierType(
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (maybeScopeItem === undefined) {
-        const maybeResolver: ExternalType.TExternalTypeResolverFn | undefined = state.maybeExternalTypeResolver;
-
-        if (maybeResolver === undefined) {
-            trace.exit();
-
-            return undefined;
-        }
-
         const request: ExternalType.ExternalValueTypeRequest =
             ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
 
-        const result: Type.TPowerQueryType | undefined = maybeResolver(request);
+        const result: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
         trace.exit();
 
         return result;

@@ -11,19 +11,19 @@ import {
     EmptyHover,
     Hover,
     Inspection,
+    Library,
     NullSymbolProvider,
     Position,
     SignatureHelp,
     TextDocument,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { ILibrary } from "../../powerquery-language-services/library/library";
 import { MockDocument } from "../mockDocument";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
-    maybeCreateLibrarySymbolProviderFn: (_library: ILibrary) => NullSymbolProvider.singleton(),
+    maybeCreateLibrarySymbolProviderFn: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
 };
 
 function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {

@@ -8,7 +8,7 @@ import { CompletionItemKind } from "vscode-languageserver-types";
 import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import type { AutocompleteItem } from "./autocompleteItem";
-import { calculateJaroWinkler } from "../../jaroWinkler";
+import { calculateJaroWinkler } from "../../../jaroWinkler";
 import { Inspection } from "../../..";
 import { Library } from "../../../library";
 

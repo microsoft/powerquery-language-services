@@ -7,10 +7,12 @@ import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/pa
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { TypeCache, TypeCacheUtils } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
 import { validateInvokeExpression } from "./validateInvokeExpression";
 import { validateLexAndParse } from "./validateLexAndParse";
+import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
@@ -19,6 +21,7 @@ import { WorkspaceCacheUtils } from "../workspaceCache";
 export async function validate(
     textDocument: TextDocument,
     validationSettings: ValidationSettings,
+    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<ValidationResult> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -48,23 +51,34 @@ export async function validate(
 
     let functionExpressionDiagnostics: Diagnostic[];
     let invokeExpressionDiagnostics: Diagnostic[];
+    let unknownIdentifiersDiagnostics: Diagnostic[];
 
-    if (
-        updatedSettings.checkInvokeExpressions &&
-        (PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse))
-    ) {
-        const nodeIdMapCollection: NodeIdMap.Collection = maybeTriedParse.nodeIdMapCollection;
+    const maybeNodeIdMapCollection: NodeIdMap.Collection | undefined =
+        PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse)
+            ? maybeTriedParse.nodeIdMapCollection
+            : undefined;
 
-        functionExpressionDiagnostics = validateFunctionExpression(updatedSettings, nodeIdMapCollection);
+    if (validationSettings.checkInvokeExpressions && maybeNodeIdMapCollection) {
+        functionExpressionDiagnostics = validateFunctionExpression(validationSettings, maybeNodeIdMapCollection);
 
         invokeExpressionDiagnostics = await validateInvokeExpression(
-            updatedSettings,
-            nodeIdMapCollection,
+            validationSettings,
+            maybeNodeIdMapCollection,
             WorkspaceCacheUtils.getTypeCache(textDocument, validationSettings.isWorkspaceCacheAllowed),
         );
     } else {
         functionExpressionDiagnostics = [];
         invokeExpressionDiagnostics = [];
+    }
+
+    if (validationSettings.checkUnknownIdentifiers && maybeNodeIdMapCollection) {
+        unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
+            validationSettings,
+            maybeNodeIdMapCollection,
+            typeCache,
+        );
+    } else {
+        unknownIdentifiersDiagnostics = [];
     }
 
     const result: ValidationResult = {
@@ -73,6 +87,7 @@ export async function validate(
             ...(await validateLexAndParse(textDocument, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,
+            ...unknownIdentifiersDiagnostics,
         ],
         hasSyntaxError:
             PQP.TaskUtils.isLexStageError(maybeTriedParse) || PQP.TaskUtils.isParseStageError(maybeTriedParse),

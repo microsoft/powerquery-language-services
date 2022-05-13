@@ -36,7 +36,10 @@ const TestSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
     maybeEachScopeById: undefined,
-    maybeExternalTypeResolver: ExternalTypeResolver,
+    library: {
+        externalTypeResolver: ExternalTypeResolver,
+        libraryDefinitions: new Map(),
+    },
 };
 
 async function assertParseOkNodeTypeEqual(

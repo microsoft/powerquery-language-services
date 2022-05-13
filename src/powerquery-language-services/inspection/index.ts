@@ -6,7 +6,6 @@ export * from "./autocomplete";
 export * from "./commonTypes";
 export * from "./externalType";
 export * from "./invokeExpression";
-export * from "./jaroWinkler";
 export * from "./scope";
 export * from "./task";
 export * from "./type";

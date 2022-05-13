@@ -10,11 +10,11 @@ import {
     Hover,
     Inspection,
     InspectionSettings,
+    Library,
     SignatureHelp,
 } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
-import { ILibrary } from "../powerquery-language-services/library/library";
 import { ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
@@ -40,11 +40,12 @@ describe("Analysis", () => {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 symbolProviderTimeoutInMS: 0, // immediate timeout
                 maybeCreateLocalDocumentSymbolProviderFn: (
-                    library: ILibrary,
+                    library: Library.ILibrary,
                     _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
                     _createInspectionSettingsFn: () => InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),
-                maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
+                maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) =>
+                    new SlowSymbolProvider(library, 1000),
             };
 
             const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(
@@ -107,7 +108,8 @@ describe("Analysis", () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 symbolProviderTimeoutInMS: 0, // immediate timeout
-                maybeCreateLibrarySymbolProviderFn: (library: ILibrary) => new SlowSymbolProvider(library, 1000),
+                maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) =>
+                    new SlowSymbolProvider(library, 1000),
             };
 
             const signatureHelp: SignatureHelp = await TestUtils.createSignatureHelp(
@@ -126,13 +128,13 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
         provider === "local"
             ? {
                   maybeCreateLocalDocumentSymbolProviderFn: (
-                      library: ILibrary,
+                      library: Library.ILibrary,
                       _maybePromiseInspected: Promise<Inspection.Inspected> | undefined,
                       _createInspectionSettingsFn: () => InspectionSettings,
                   ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
               }
             : {
-                  maybeCreateLibrarySymbolProviderFn: (library: ILibrary): ISymbolProvider =>
+                  maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary): ISymbolProvider =>
                       new SlowSymbolProvider(library, 1000),
               };
 
