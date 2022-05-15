@@ -106,7 +106,10 @@ function findUnknownIdentifiers(
 
         const nodeScope: Inspection.NodeScope = triedNodeScope.value;
 
-        if (!nodeScope.has(identifier.literal)) {
+        if (
+            !nodeScope.has(identifier.literal) &&
+            !validationSettings.library.libraryDefinitions.has(identifier.literal)
+        ) {
             const knownIdentifiers: ReadonlyArray<string> = [
                 ...nodeScope.keys(),
                 ...validationSettings.library.libraryDefinitions.keys(),

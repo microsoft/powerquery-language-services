@@ -3,6 +3,7 @@
 
 import "mocha";
 import { Assert, MapUtils } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 
 import {
     Diagnostic,
@@ -11,8 +12,8 @@ import {
     TextDocument,
     ValidationSettings,
 } from "../../powerquery-language-services";
+import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { expectLessWhenSurpressed } from "./common";
-import { SimpleValidateNoneSettings } from "../testConstants";
 import { TestUtils } from "..";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
@@ -21,7 +22,6 @@ interface AbridgedUnknownIdentifierDiagnostic {
     readonly startPosition: Position;
 }
 
-const ExpectedNamePattern: RegExp = /Cannot find the name '([^']+)'/;
 const ExpectedNameAndSuggestionPattern: RegExp = /Cannot find the name '([^']+)', did you mean '([^']+)'\?/;
 
 const UnknownIdentifierSettings: ValidationSettings = {
@@ -43,27 +43,8 @@ async function expectGetInvokeExpressionDiagnostics(
         }));
 }
 
-function expectUnknownIdentifiers(
-    abridgedDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>,
-    unknownIdentifiers: ReadonlyArray<string>,
-): void {
-    const unknowns: Set<string> = new Set(unknownIdentifiers);
-
-    for (const abridgedDiagnostic of abridgedDiagnostics) {
-        const regExpExecArray: RegExpExecArray = Assert.asDefined(ExpectedNamePattern.exec(abridgedDiagnostic.message));
-
-        const diagnosticLiteral: string = regExpExecArray[1];
-
-        if (!unknowns.has(diagnosticLiteral)) {
-            throw new Error(`Found an unknown identifier that wasn't expected: '${diagnosticLiteral}'`);
-        }
-
-        unknowns.delete(diagnosticLiteral);
-    }
-
-    if (unknowns.size !== 0) {
-        throw new Error(`at least one expected unknown identifier wasn't found: ${[...unknowns.values()]}`);
-    }
+function expectNoUnknownIdentifiers(abridgedDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>): void {
+    expect(abridgedDiagnostics.length).equal(0);
 }
 
 function expectUnknownIdentifierSuggestions(
@@ -118,13 +99,24 @@ describe("Validation - UnknownIdentifier", () => {
     });
 
     describe(`no suggestion`, () => {
-        it(`expression`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(`bar`);
+        it(`found in library scope`, async () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in foo|`);
 
             const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
                 await expectGetInvokeExpressionDiagnostics(textDocument);
 
-            expectUnknownIdentifiers(invocationDiagnostics, ["bar"]);
+            expectNoUnknownIdentifiers(invocationDiagnostics);
+        });
+
+        it(`found in local scope`, async () => {
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(
+                `${TestLibraryName.CreateFooAndBarRecord}`,
+            );
+
+            const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+                await expectGetInvokeExpressionDiagnostics(textDocument);
+
+            expectNoUnknownIdentifiers(invocationDiagnostics);
         });
     });
 
