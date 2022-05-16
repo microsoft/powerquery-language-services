@@ -11,7 +11,6 @@ export async function tryFormat(document: TextDocument, settings: PQF.FormatSett
     const formatSettings: PQF.FormatSettings = {
         ...PQF.DefaultSettings,
         ...settings,
-        indentationLiteral: PQF.IndentationLiteral.SpaceX4,
     };
 
     const triedFormat: PQF.TriedFormat = await PQF.tryFormat(formatSettings, document.getText());
