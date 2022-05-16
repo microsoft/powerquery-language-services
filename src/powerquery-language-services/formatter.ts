@@ -3,27 +3,15 @@
 
 import * as PQF from "@microsoft/powerquery-formatter";
 import * as PQP from "@microsoft/powerquery-parser";
-import { FormattingOptions, Range, TextEdit } from "vscode-languageserver-types";
+import { Range, TextEdit } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-export async function tryFormat(
-    document: TextDocument,
-    formattingOptions: FormattingOptions,
-    locale: string,
-): Promise<TextEdit[]> {
-    let indentationLiteral: PQF.IndentationLiteral;
-
-    if (formattingOptions.insertSpaces) {
-        indentationLiteral = PQF.IndentationLiteral.SpaceX4;
-    } else {
-        indentationLiteral = PQF.IndentationLiteral.Tab;
-    }
-
+export async function tryFormat(document: TextDocument, settings: PQF.FormatSettings): Promise<TextEdit[]> {
     const formatSettings: PQF.FormatSettings = {
         ...PQF.DefaultSettings,
-        locale,
-        indentationLiteral,
+        ...settings,
+        indentationLiteral: PQF.IndentationLiteral.SpaceX4,
     };
 
     const triedFormat: PQF.TriedFormat = await PQF.tryFormat(formatSettings, document.getText());
