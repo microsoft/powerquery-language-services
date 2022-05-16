@@ -117,7 +117,7 @@ describe("Analysis", () => {
                 analysisSettings,
             );
 
-            expect(signatureHelp.activeParameter).equals(null, "Didn't expect to find symbol");
+            expect(signatureHelp.activeParameter).equals(undefined, "Didn't expect to find symbol");
             expect(signatureHelp.signatures.length).equals(0, "Didn't expect to find symbol");
         });
     });

@@ -71,7 +71,7 @@ export function getMaybeSignatureHelp(context: SignatureProviderContext): Signat
     const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
 
     return {
-        activeParameter: context.argumentOrdinal ?? null,
+        activeParameter: context.argumentOrdinal,
         activeSignature: 0,
         signatures: [
             {

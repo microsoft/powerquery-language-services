@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+
 import {
     CompletionItem,
     CompletionItemKind,
@@ -14,7 +16,6 @@ import {
     SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
-import type { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
 export type {
     CompletionItem,
@@ -42,6 +43,6 @@ export const EmptyHover: Hover = {
 
 export const EmptySignatureHelp: SignatureHelp = {
     signatures: [],
-    activeParameter: null,
-    activeSignature: null,
+    activeParameter: undefined,
+    activeSignature: undefined,
 };
