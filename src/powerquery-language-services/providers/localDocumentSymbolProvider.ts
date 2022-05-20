@@ -94,7 +94,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         );
 
         if (maybeHover !== undefined) {
-            trace.exit({ maybeHoverUndefined: true });
+            trace.exit({ maybeHover: true });
 
             return maybeHover;
         }
@@ -122,7 +122,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getHover.name,
+            this.getSignatureHelp.name,
             context.maybeInitialCorrelationId,
         );
 
@@ -130,7 +130,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             await this.getMaybeInspectionInvokeExpression();
 
         if (maybeInvokeInspection === undefined) {
-            trace.exit({ maybeInvokeInspection });
+            trace.exit({ maybeInvokeInspectionUndefined: true });
 
             return null;
         }
@@ -138,7 +138,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
-            trace.exit();
+            trace.exit({ unknownName: true });
 
             return null;
         }
