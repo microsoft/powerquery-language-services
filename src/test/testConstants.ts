@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
+import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     AnalysisSettings,
@@ -241,6 +242,8 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
+    maybeInitialCorrelationId: undefined,
+    traceManager: new NoOpTraceManager(),
 };
 
 export const SimpleValidateAllSettings: ValidationSettings = {

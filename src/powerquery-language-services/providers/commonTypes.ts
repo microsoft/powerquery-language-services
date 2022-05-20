@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
@@ -25,6 +26,8 @@ export interface HoverProviderContext extends ProviderContext {
 }
 
 export interface ProviderContext {
+    readonly traceManager: TraceManager;
+    readonly maybeInitialCorrelationId: number | undefined;
     readonly range?: Range;
 }
 

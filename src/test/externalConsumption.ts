@@ -3,6 +3,7 @@
 
 import "mocha";
 import { expect } from "chai";
+import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     Analysis,
@@ -24,6 +25,8 @@ describe("External consumption", () => {
             createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
             library: TestConstants.SimpleLibrary,
+            traceManager: new NoOpTraceManager(),
+            maybeInitialCorrelationId: undefined,
         };
 
         const textDocument: TextDocument = createTextDocument("id", 1, "let a = 1 in a");

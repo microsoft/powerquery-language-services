@@ -9,8 +9,10 @@ import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver
 
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
+import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { InspectionSettings } from "./inspectionSettings";
+import { InspectionTraceConstant } from "./trace";
 import { Library } from "./library";
 import { TypeById } from "./inspection";
 
@@ -30,11 +32,21 @@ export function createInspectionSettings(
 
 export async function getMaybeContextForSignatureProvider(
     inspected: Inspection.Inspected,
+    traceManager: TraceManager,
+    maybeCorrelationId: number | undefined,
 ): Promise<SignatureProviderContext | undefined> {
+    const trace: Trace = traceManager.entry(
+        InspectionTraceConstant.InspectionUtils,
+        getMaybeContextForSignatureProvider.name,
+        maybeCorrelationId,
+    );
+
     const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
         await inspected.triedCurrentInvokeExpression;
 
     if (ResultUtils.isError(triedCurrentInvokeExpression) || triedCurrentInvokeExpression.value === undefined) {
+        trace.exit();
+
         return undefined;
     }
 
@@ -47,13 +59,19 @@ export async function getMaybeContextForSignatureProvider(
         invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
 
     if (functionName !== undefined || argumentOrdinal !== undefined) {
+        trace.exit();
+
         return {
             argumentOrdinal,
             functionName,
             isNameInLocalScope: invokeExpression.isNameInLocalScope,
             functionType: invokeExpression.functionType,
+            traceManager,
+            maybeInitialCorrelationId: trace.id,
         };
     } else {
+        trace.exit();
+
         return undefined;
     }
 }

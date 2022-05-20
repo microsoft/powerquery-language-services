@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";
 import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
@@ -17,5 +19,7 @@ export interface AnalysisSettings {
         promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => ISymbolProvider;
+    readonly maybeInitialCorrelationId: number | undefined;
     readonly symbolProviderTimeoutInMS?: number;
+    readonly traceManager: TraceManager;
 }

@@ -10,6 +10,7 @@ import {
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../inspectionUtils";
 import {
@@ -20,6 +21,7 @@ import {
 } from "./commonTypes";
 import { Inspection, Library } from "..";
 import { InspectionSettings } from "../inspectionSettings";
+import { ProviderTraceConstant } from "../trace";
 
 export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
@@ -37,28 +39,50 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getAutocompleteItems.name,
+            context.maybeInitialCorrelationId,
+        );
+
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
+            trace.exit({ maybeInspectedUndefined: true });
+
             return [];
         }
 
-        return [
+        const result: ReadonlyArray<Inspection.AutocompleteItem> = [
             ...this.getAutocompleteItemsFromFieldAccess(maybeInspected),
             ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspected)),
         ];
+
+        trace.exit();
+
+        return result;
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getHover.name,
+            context.maybeInitialCorrelationId,
+        );
+
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
+            trace.exit({ maybeInspectedUndefined: true });
+
             return null;
         }
 
         const activeNode: Inspection.TMaybeActiveNode = maybeInspected.maybeActiveNode;
 
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
+            trace.exit({ outOfBounds: true });
+
             return null;
         }
 
@@ -70,6 +94,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         );
 
         if (maybeHover !== undefined) {
+            trace.exit({ maybeHover: true });
+
             return maybeHover;
         }
 
@@ -77,6 +103,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const triedScopeType: Inspection.TriedScopeType = await maybeInspected.triedScopeType;
 
         if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
+            trace.exit({ inspectionError: true });
+
             return null;
         }
 
@@ -86,24 +114,39 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             triedScopeType.value,
         );
 
+        trace.exit();
+
         return maybeHover ?? null;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getSignatureHelp.name,
+            context.maybeInitialCorrelationId,
+        );
+
         const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
             await this.getMaybeInspectionInvokeExpression();
 
         if (maybeInvokeInspection === undefined) {
+            trace.exit({ maybeInvokeInspectionUndefined: true });
+
             return null;
         }
 
         const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
 
         if (inspection.maybeName && !inspection.isNameInLocalScope) {
+            trace.exit({ unknownName: true });
+
             return null;
         }
 
-        return InspectionUtils.getMaybeSignatureHelp(context);
+        const result: SignatureHelp | null = InspectionUtils.getMaybeSignatureHelp(context);
+        trace.exit();
+
+        return result;
     }
 
     // When hovering over a key it should show the type for the value.

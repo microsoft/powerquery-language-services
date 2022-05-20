@@ -3,6 +3,7 @@
 
 import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
@@ -14,6 +15,7 @@ import {
 import { Library, LibraryUtils } from "../library";
 import { AutocompleteItemUtils } from "../inspection";
 import { Inspection } from "..";
+import { ProviderTraceConstant } from "../trace";
 
 export class LibrarySymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
@@ -30,7 +32,15 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LibrarySymbolProvider,
+            this.getAutocompleteItems.name,
+            context.maybeInitialCorrelationId,
+        );
+
         if (!context.text || !context.range) {
+            trace.exit({ invalidContext: true });
+
             return [];
         }
 
@@ -41,29 +51,39 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             partial.push(AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText));
         }
 
+        trace.exit();
+
         return partial;
     }
 
     // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LibrarySymbolProvider,
+            this.getHover.name,
+            context.maybeInitialCorrelationId,
+        );
+
         if (!context.identifier) {
+            trace.exit({ invalidContext: true });
+
             return null;
         }
 
         const identifierLiteral: string = context.identifier;
-
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
 
         if (maybeDefinition === undefined) {
+            trace.exit({ invalidContext: true });
+
             return null;
         }
 
         const definition: Library.TLibraryDefinition = maybeDefinition;
-
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
         const definitionTypeText: string = TypeUtils.nameOf(definition.asPowerQueryType);
 
-        return {
+        const hover: Hover = {
             contents: {
                 kind: MarkupKind.PlainText,
                 language: "powerquery",
@@ -71,27 +91,44 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             },
             range: undefined,
         };
+
+        trace.exit();
+
+        return hover;
     }
 
     // eslint-disable-next-line require-await
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LibrarySymbolProvider,
+            this.getSignatureHelp.name,
+            context.maybeInitialCorrelationId,
+        );
+
         if (!context.functionName) {
+            trace.exit({ invalidContext: true });
+
             return null;
         }
 
         const identifierLiteral: string = context.functionName;
-
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
         if (!LibraryUtils.isFunction(maybeDefinition)) {
+            trace.exit({ invalidContext: true });
+
             return null;
         }
 
-        return {
+        const result: SignatureHelp = {
             activeParameter: context.argumentOrdinal ?? 0,
             activeSignature: 0,
             signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
         };
+
+        trace.exit();
+
+        return result;
     }
 
     private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
