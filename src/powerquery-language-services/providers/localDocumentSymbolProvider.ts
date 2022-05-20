@@ -48,7 +48,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
-            trace.exit({ maybeInspectedUndefined: maybeInspected === undefined });
+            trace.exit({ maybeInspectedUndefined: true });
 
             return [];
         }
@@ -58,7 +58,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspected)),
         ];
 
-        trace.exit({ maybeInspectedUndefined: maybeInspected === undefined });
+        trace.exit();
 
         return result;
     }
@@ -73,7 +73,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
-            trace.exit({ earlyReturn: true });
+            trace.exit({ maybeInspectedUndefined: true });
 
             return null;
         }
@@ -81,7 +81,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const activeNode: Inspection.TMaybeActiveNode = maybeInspected.maybeActiveNode;
 
         if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-            trace.exit({ earlyReturn: true });
+            trace.exit({ outOfBounds: true });
 
             return null;
         }
@@ -94,7 +94,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         );
 
         if (maybeHover !== undefined) {
-            trace.exit({ earlyReturn: true });
+            trace.exit({ maybeHoverUndefined: true });
 
             return maybeHover;
         }
@@ -103,7 +103,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const triedScopeType: Inspection.TriedScopeType = await maybeInspected.triedScopeType;
 
         if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
-            trace.exit({ earlyReturn: true });
+            trace.exit({ inspectionError: true });
 
             return null;
         }
@@ -114,7 +114,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             triedScopeType.value,
         );
 
-        trace.exit({ earlyReturn: false });
+        trace.exit();
 
         return maybeHover ?? null;
     }
@@ -130,7 +130,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             await this.getMaybeInspectionInvokeExpression();
 
         if (maybeInvokeInspection === undefined) {
-            trace.exit();
+            trace.exit({ maybeInvokeInspection });
 
             return null;
         }
