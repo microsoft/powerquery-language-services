@@ -81,7 +81,12 @@ export class LibrarySymbolProvider implements ISymbolProvider {
 
         const definition: Library.TLibraryDefinition = maybeDefinition;
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
-        const definitionTypeText: string = TypeUtils.nameOf(definition.asPowerQueryType);
+
+        const definitionTypeText: string = TypeUtils.nameOf(
+            definition.asPowerQueryType,
+            context.traceManager,
+            trace.id,
+        );
 
         const hover: Hover = {
             contents: {

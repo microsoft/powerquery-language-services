@@ -56,18 +56,24 @@ export async function inspectTypeIfExpression(
 async function createAnyUnion(
     state: InspectTypeState,
     xorNode: XorNode<Ast.IfExpression>,
-    maybeCorrelationId: number | undefined,
+    correlationId: number,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         createAnyUnion.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
     const falseExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
-    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([trueExprType, falseExprType]);
+
+    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+        [trueExprType, falseExprType],
+        state.traceManager,
+        trace.id,
+    );
+
     trace.exit();
 
     return result;

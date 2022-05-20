@@ -19,7 +19,7 @@ import {
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
-import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
@@ -201,7 +201,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
                     isWorkspaceCacheAllowed: false,
                     library: TestConstants.SimpleLibrary,
-                    traceManager: new NoOpTraceManager(),
+                    traceManager: NoOpTraceManagerInstance,
                     maybeInitialCorrelationId: undefined,
                 },
                 position,

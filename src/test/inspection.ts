@@ -11,7 +11,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
 import { MockDocument } from "./mockDocument";
-import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyArray<string>): Promise<void> {
     const triedNodeScope: Inspection.TriedNodeScope = await inspected.triedNodeScope;
@@ -38,7 +38,7 @@ function assertIsPostionInBounds(
 const getMaybeContextForSignatureProvider: (
     inspected: Inspection.Inspected,
 ) => Promise<SignatureProviderContext | undefined> = (inspected: Inspection.Inspected) =>
-    InspectionUtils.getMaybeContextForSignatureProvider(inspected, new NoOpTraceManager(), undefined);
+    InspectionUtils.getMaybeContextForSignatureProvider(inspected, NoOpTraceManagerInstance, undefined);
 
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {

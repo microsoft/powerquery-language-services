@@ -49,7 +49,7 @@ export async function inspectTypeNullCoalescingExpression(
         if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
         } else {
-            result = TypeUtils.createAnyUnion([maybeLeftType, maybeRightType]);
+            result = TypeUtils.createAnyUnion([maybeLeftType, maybeRightType], state.traceManager, trace.id);
         }
     }
 
