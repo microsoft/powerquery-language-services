@@ -22,6 +22,8 @@ export const enum InspectionTraceConstant {
 }
 
 export const enum ProviderTraceConstant {
+    LanguageCompletionProvider = "LanguageCompletionProvider",
+    LibrarySymbolProvider = "LibrarySymbolProvider",
     LocalDocumentSymbolProvider = "LocalDocumentSymbolProvider",
 }
 
