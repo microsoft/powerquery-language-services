@@ -18,7 +18,6 @@ export interface AnalysisSettings {
         library: Library.ILibrary,
         promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
-        traceManager: TraceManager,
     ) => ISymbolProvider;
     readonly maybeInitialCorrelationId: number | undefined;
     readonly symbolProviderTimeoutInMS?: number;

@@ -55,7 +55,6 @@ export abstract class AnalysisBase implements Analysis {
                       library,
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
-                      analysisSettings.traceManager,
                   )
                 : new LocalDocumentSymbolProvider(
                       library,
