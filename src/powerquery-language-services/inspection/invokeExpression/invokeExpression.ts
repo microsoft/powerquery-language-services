@@ -123,7 +123,12 @@ async function inspectInvokeExpression(
             givenArgumentTypes,
             numMaxExpectedArguments,
             numMinExpectedArguments,
-            typeChecked: TypeUtils.typeCheckInvocation(givenArgumentTypes, functionType),
+            typeChecked: TypeUtils.typeCheckInvocation(
+                givenArgumentTypes,
+                functionType,
+                settings.traceManager,
+                trace.id,
+            ),
         };
     }
 

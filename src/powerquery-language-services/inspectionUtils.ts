@@ -76,14 +76,19 @@ export async function getMaybeContextForSignatureProvider(
     }
 }
 
-export function getMaybeSignatureHelp(context: SignatureProviderContext): SignatureHelp | null {
+export function getMaybeSignatureHelp(context: SignatureProviderContext, correlationId: number): SignatureHelp | null {
     const identifierLiteral: string | undefined = context.functionName;
 
     if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
         return null;
     }
 
-    const nameOfParameters: string = context.functionType.parameters.map(TypeUtils.nameOfFunctionParameter).join(", ");
+    const nameOfParameters: string = context.functionType.parameters
+        .map((parameter: Type.FunctionParameter) =>
+            TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, correlationId),
+        )
+        .join(", ");
+
     const label: string = `${identifierLiteral}(${nameOfParameters})`;
 
     const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;

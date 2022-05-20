@@ -91,6 +91,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             this.createInspectionSettingsFn(),
             maybeInspected,
             activeNode,
+            trace.id,
         );
 
         if (maybeHover !== undefined) {
@@ -112,6 +113,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             context,
             triedNodeScope.value,
             triedScopeType.value,
+            trace.id,
         );
 
         trace.exit();
@@ -143,7 +145,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             return null;
         }
 
-        const result: SignatureHelp | null = InspectionUtils.getMaybeSignatureHelp(context);
+        const result: SignatureHelp | null = InspectionUtils.getMaybeSignatureHelp(context, trace.id);
         trace.exit();
 
         return result;
@@ -159,7 +161,14 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         inspectionSettings: InspectionSettings,
         inspected: Inspection.Inspected,
         activeNode: Inspection.ActiveNode,
+        correlationId: number,
     ): Promise<Hover | undefined> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getHoverForIdentifierPairedExpression.name,
+            correlationId,
+        );
+
         const parseState: ParseState = inspected.parseState;
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
@@ -169,6 +178,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         );
 
         if (!isValidLeafNodeKind) {
+            trace.exit();
+
             return undefined;
         }
 
@@ -184,6 +195,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         // We're on an identifier in some other context which we don't support.
         if (maybeIdentifierPairedExpression === undefined) {
+            trace.exit();
+
             return undefined;
         }
 
@@ -195,6 +208,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         // We're on an identifier in some other context which we don't support.
         if (maybeExpression === undefined) {
+            trace.exit();
+
             return undefined;
         }
 
@@ -207,6 +222,8 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
 
         // TODO handle error
         if (ResultUtils.isError(triedExpressionType)) {
+            trace.exit();
+
             return undefined;
         }
 
@@ -231,9 +248,13 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.LetVariable);
         }
 
-        const nameOfExpressionType: string = TypeUtils.nameOf(triedExpressionType.value);
+        const nameOfExpressionType: string = TypeUtils.nameOf(
+            triedExpressionType.value,
+            context.traceManager,
+            trace.id,
+        );
 
-        return {
+        const result: Hover = {
             contents: {
                 kind: MarkupKind.PlainText,
                 language: "powerquery",
@@ -241,12 +262,17 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
             },
             range: undefined,
         };
+
+        trace.exit();
+
+        return result;
     }
 
     protected static getHoverForScopeItem(
         context: HoverProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
+        correlationId: number,
     ): Hover | undefined {
         const identifierLiteral: string = context.identifier;
         const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
@@ -260,7 +286,9 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         const maybeScopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
 
         const scopeItemTypeText: string =
-            maybeScopeItemType !== undefined ? TypeUtils.nameOf(maybeScopeItemType) : "unknown";
+            maybeScopeItemType !== undefined
+                ? TypeUtils.nameOf(maybeScopeItemType, context.traceManager, correlationId)
+                : "unknown";
 
         return {
             contents: {

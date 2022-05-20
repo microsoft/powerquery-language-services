@@ -36,12 +36,16 @@ export async function inspectTypeErrorHandlingExpression(
             Ast.NodeKind.OtherwiseExpression,
         );
 
-    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion([
-        await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id),
-        maybeOtherwiseExpression !== undefined
-            ? await inspectXor(state, maybeOtherwiseExpression, trace.id)
-            : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
-    ]);
+    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+        [
+            await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id),
+            maybeOtherwiseExpression !== undefined
+                ? await inspectXor(state, maybeOtherwiseExpression, trace.id)
+                : TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
+        ],
+        state.traceManager,
+        trace.id,
+    );
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 

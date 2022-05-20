@@ -80,7 +80,7 @@ export async function inspectTypeTBinOpExpression(
                 });
             }
 
-            result = TypeUtils.createAnyUnion(unionedTypePairs);
+            result = TypeUtils.createAnyUnion(unionedTypePairs, state.traceManager, trace.id);
         }
     }
     // '1 + 1'
