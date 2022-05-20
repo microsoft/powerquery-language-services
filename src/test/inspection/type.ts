@@ -118,6 +118,8 @@ async function assertGetParseOkScopeTypeOk(
     return triedScopeType.value;
 }
 
+localcreateAnyUnion
+
 describe(`Inspection - Type`, () => {
     describe(`static analysis`, () => {
         describe("BinOpExpression", () => {
