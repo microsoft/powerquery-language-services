@@ -4,6 +4,7 @@
 import type { Hover, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import * as InspectionUtils from "../inspectionUtils";
@@ -25,6 +26,7 @@ import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentS
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { Library } from "../library";
+import { ValidationTraceConstant } from "../trace";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
@@ -53,22 +55,34 @@ export abstract class AnalysisBase implements Analysis {
                       library,
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
+                      analysisSettings.traceManager,
                   )
                 : new LocalDocumentSymbolProvider(
                       library,
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
+                      analysisSettings.traceManager,
                   );
     }
 
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {
-        let context: AutocompleteItemProviderContext = {};
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getAutocompleteItems.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
+        let context: AutocompleteItemProviderContext = {
+            traceManager: this.analysisSettings.traceManager,
+            maybeInitialCorrelationId: trace.id,
+        };
 
         const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
             await this.getMaybePositionIdentifier();
 
         if (maybeToken !== undefined) {
             context = {
+                ...context,
                 range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
                 text: maybeToken.literal,
                 tokenKind: maybeToken.kind,
@@ -98,10 +112,19 @@ export abstract class AnalysisBase implements Analysis {
             }
         }
 
-        return partial.sort(AutocompleteItemUtils.compareFn);
+        const result: AutocompleteItem[] = partial.sort(AutocompleteItemUtils.compareFn);
+        trace.exit();
+
+        return result;
     }
 
     public async getHover(): Promise<Hover> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getHover.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
         const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
 
         const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
@@ -112,18 +135,22 @@ export abstract class AnalysisBase implements Analysis {
             maybeIdentifierUnderPosition === undefined ||
             !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)
         ) {
+            trace.exit();
+
             return EmptyHover;
         }
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
 
         const context: HoverProviderContext = {
+            traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier: identifier.literal,
+            maybeInitialCorrelationId: trace.id,
         };
 
         // Result priority is based on the order of the symbol providers
-        return AnalysisBase.resolveProviders(
+        const result: Promise<Hover> = AnalysisBase.resolveProviders(
             AnalysisBase.createHoverCalls(
                 context,
                 [this.localDocumentSymbolProvider, this.librarySymbolProvider],
@@ -131,30 +158,50 @@ export abstract class AnalysisBase implements Analysis {
             ),
             EmptyHover,
         );
+
+        trace.exit();
+
+        return result;
     }
 
     public async getSignatureHelp(): Promise<SignatureHelp> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getSignatureHelp.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
+            trace.exit();
+
             return EmptySignatureHelp;
         }
 
         const maybeContext: SignatureProviderContext | undefined =
-            await InspectionUtils.getMaybeContextForSignatureProvider(maybeInspected);
+            await InspectionUtils.getMaybeContextForSignatureProvider(
+                maybeInspected,
+                this.analysisSettings.traceManager,
+                trace.id,
+            );
 
         if (maybeContext === undefined) {
+            trace.exit();
+
             return EmptySignatureHelp;
         }
 
         const context: SignatureProviderContext = maybeContext;
 
         if (context.functionName === undefined) {
+            trace.exit();
+
             return EmptySignatureHelp;
         }
 
         // Result priority is based on the order of the symbol providers
-        return AnalysisBase.resolveProviders(
+        const result: Promise<SignatureHelp> = AnalysisBase.resolveProviders(
             AnalysisBase.createSignatureHelpCalls(
                 context,
                 [this.localDocumentSymbolProvider, this.librarySymbolProvider],
@@ -162,9 +209,19 @@ export abstract class AnalysisBase implements Analysis {
             ),
             EmptySignatureHelp,
         );
+
+        trace.exit();
+
+        return result;
     }
 
     public async getRenameEdits(newName: string): Promise<TextEdit[]> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getRenameEdits.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
         const activeNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
         const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
@@ -173,6 +230,8 @@ export abstract class AnalysisBase implements Analysis {
             activeNode?.maybeInclusiveIdentifierUnderPosition;
 
         if (maybeInspected === undefined || maybeInclusiveIdentifierUnderPosition === undefined) {
+            trace.exit();
+
             return [];
         }
 
@@ -250,10 +309,14 @@ export abstract class AnalysisBase implements Analysis {
             identifiersToBeEdited.push(maybeInclusiveIdentifierUnderPosition);
         }
 
-        return identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+        const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
             range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
             newText: newName,
         }));
+
+        trace.exit();
+
+        return result;
     }
 
     public abstract dispose(): void;

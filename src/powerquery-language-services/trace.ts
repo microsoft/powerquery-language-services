@@ -18,8 +18,14 @@ export const enum InspectionTraceConstant {
     InspectScopeItem = "Inspection.ScopeItem",
     InspectScopeType = "Inspection.ScopeType",
     InspectType = "Inspection.Type",
+    InspectionUtils = "InspectionUtils",
+}
+
+export const enum ProviderTraceConstant {
+    LocalDocumentSymbolProvider = "LocalDocumentSymbolProvider",
 }
 
 export const enum ValidationTraceConstant {
+    AnalysisBase = "AnalysisBase",
     Validation = "Validation",
 }

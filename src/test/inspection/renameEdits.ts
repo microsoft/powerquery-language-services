@@ -9,6 +9,7 @@ import { Inspected } from "../../powerquery-language-services/inspection";
 import type { Position, Range, TextEdit } from "vscode-languageserver-types";
 import { TestConstants, TestUtils } from "..";
 import { AnalysisBase } from "../../powerquery-language-services";
+import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 type PartialAnalysis = Pick<AnalysisBase, "getRenameEdits">;
 
@@ -22,6 +23,8 @@ class RenameEditsAnalysis extends AnalysisBase {
                     externalTypeResolver: undefined as any,
                     libraryDefinitions: undefined as any,
                 },
+                traceManager: new NoOpTraceManager(),
+                maybeInitialCorrelationId: undefined,
             },
             promiseMaybeInspected,
         );

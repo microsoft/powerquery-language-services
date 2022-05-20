@@ -11,6 +11,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
 import { MockDocument } from "./mockDocument";
+import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyArray<string>): Promise<void> {
     const triedNodeScope: Inspection.TriedNodeScope = await inspected.triedNodeScope;
@@ -34,6 +35,11 @@ function assertIsPostionInBounds(
     }
 }
 
+const getMaybeContextForSignatureProvider: (
+    inspected: Inspection.Inspected,
+) => Promise<SignatureProviderContext | undefined> = (inspected: Inspection.Inspected) =>
+    InspectionUtils.getMaybeContextForSignatureProvider(inspected, new NoOpTraceManager(), undefined);
+
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
@@ -44,8 +50,9 @@ describe("InspectedInvokeExpression", () => {
 
             const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined =
-                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+                inspected,
+            );
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
@@ -61,8 +68,9 @@ describe("InspectedInvokeExpression", () => {
 
             const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined =
-                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+                inspected,
+            );
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
@@ -78,8 +86,9 @@ describe("InspectedInvokeExpression", () => {
 
             const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined =
-                await InspectionUtils.getMaybeContextForSignatureProvider(inspected);
+            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+                inspected,
+            );
 
             assert.isDefined(maybeContext);
             const context: SignatureProviderContext = maybeContext!;
