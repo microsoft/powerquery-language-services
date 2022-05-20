@@ -9,8 +9,8 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
-import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../inspectionUtils";
 import {
@@ -31,7 +31,6 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         library: Library.ILibrary,
         private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         private readonly createInspectionSettingsFn: () => InspectionSettings,
-        private readonly traceManager: TraceManager,
     ) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
@@ -40,7 +39,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        const trace: Trace = this.traceManager.entry(
+        const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getAutocompleteItems.name,
             context.maybeInitialCorrelationId,
@@ -65,7 +64,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getHover(context: HoverProviderContext): Promise<Hover | null> {
-        const trace: Trace = this.traceManager.entry(
+        const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getHover.name,
             context.maybeInitialCorrelationId,
@@ -121,7 +120,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const trace: Trace = this.traceManager.entry(
+        const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getHover.name,
             context.maybeInitialCorrelationId,

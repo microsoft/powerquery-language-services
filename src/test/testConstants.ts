@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { NoOpTraceManager, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
+import { NoOpTraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     AnalysisSettings,
@@ -241,8 +241,7 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
         library: Library.ILibrary,
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
-        traceManager: TraceManager,
-    ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn, traceManager),
+    ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
     maybeInitialCorrelationId: undefined,
     traceManager: new NoOpTraceManager(),
 };

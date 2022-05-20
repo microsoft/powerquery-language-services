@@ -51,7 +51,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         }
 
         const identifierLiteral: string = context.identifier;
-
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
 
         if (maybeDefinition === undefined) {
@@ -59,7 +58,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         }
 
         const definition: Library.TLibraryDefinition = maybeDefinition;
-
         const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
         const definitionTypeText: string = TypeUtils.nameOf(definition.asPowerQueryType);
 
@@ -80,7 +78,6 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         }
 
         const identifierLiteral: string = context.functionName;
-
         const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
         if (!LibraryUtils.isFunction(maybeDefinition)) {
