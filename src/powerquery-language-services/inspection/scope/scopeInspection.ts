@@ -363,7 +363,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
                 },
             ],
         ],
-        undefined,
+        localGetOrCreateNodeScope(state, eachExpr.node.id, undefined, trace.id),
         trace.id,
     );
 
@@ -615,7 +615,6 @@ function localGetOrCreateNodeScope(
 
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
-
         const maybeParentDeltaScope: NodeScope | undefined = state.deltaScope.get(parentNodeId);
 
         if (maybeParentDeltaScope !== undefined) {

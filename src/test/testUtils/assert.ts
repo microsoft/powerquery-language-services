@@ -189,17 +189,30 @@ export async function assertGetLexParseError(
 
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Position] {
-    const indexOfPipe: number = text.indexOf("|");
+    const lines: ReadonlyArray<string> = text.split("\n");
+    const numLines: number = lines.length;
 
-    expect(indexOfPipe).to.be.greaterThan(-1, "text must have | marker");
-    expect(indexOfPipe).to.equal(text.lastIndexOf("|"), "text must have one and only one '|'");
+    let maybePosition: Position | undefined;
 
-    const position: Position = {
-        line: 0,
-        character: indexOfPipe,
-    };
+    for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
+        const line: string = lines[lineIndex];
+        const indexOfPipe: number = line.indexOf("|");
 
-    return [text.replace("|", ""), position];
+        if (indexOfPipe !== -1) {
+            maybePosition = {
+                line: lineIndex,
+                character: indexOfPipe,
+            };
+
+            break;
+        }
+    }
+
+    if (maybePosition === undefined) {
+        throw new Error(`couldn't find a pipe character in the input text`);
+    }
+
+    return [text.replace("|", ""), maybePosition];
 }
 
 export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {

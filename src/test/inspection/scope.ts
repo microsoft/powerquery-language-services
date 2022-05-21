@@ -1368,6 +1368,44 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
                 expect(actual).to.deep.equal(expected);
             });
+
+            it(`an EachExpression contains the parent's scope;`, async () => {
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`
+let
+    tbl = 1 as table,
+    bar = "bar"
+in
+    each |`);
+
+                const expected: AbridgedNodeScope = [
+                    {
+                        identifier: "tbl",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        maybeValueNodeId: 13,
+                    },
+                    {
+                        identifier: "bar",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 17,
+                        maybeValueNodeId: 21,
+                    },
+                    {
+                        eachExpressionNodeId: 23,
+                        identifier: "_",
+                        isRecursive: false,
+                        kind: Inspection.ScopeItemKind.Each,
+                    },
+                ];
+
+                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
+                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
+                );
+
+                expect(actual).to.deep.equal(expected);
+            });
         });
     });
 
