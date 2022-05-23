@@ -3,8 +3,8 @@
 
 import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
+import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Inspection, PositionUtils } from "..";
@@ -39,13 +39,33 @@ export async function validateUnknownIdentifiers(
     const identifierValues: ReadonlyArray<Ast.Identifier> = findIdentifierValues(nodeIdMapCollection);
 
     // Create a zipped collection of [value identifier, TriedNodeScope for the value identifier]
-    const identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, TriedNodeScope]> = await ArrayUtils.mapAsync<
-        Ast.Identifier,
-        [Ast.Identifier, TriedNodeScope]
-    >(identifierValues, async (identifier: Ast.Identifier) => [
-        identifier,
-        await Inspection.tryNodeScope(updatedSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
-    ]);
+    const identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, boolean, TriedNodeScope]> =
+        await ArrayUtils.mapAsync<Ast.Identifier, [Ast.Identifier, boolean, TriedNodeScope]>(
+            identifierValues,
+            async (identifier: Ast.Identifier) => {
+                // We need a marker to indicate if the literal has an '@' prefix.
+                const maybeParent: Ast.IdentifierExpression | undefined =
+                    NodeIdMapUtils.maybeParentAstChecked<Ast.IdentifierExpression>(
+                        nodeIdMapCollection,
+                        identifier.id,
+                        Ast.NodeKind.IdentifierExpression,
+                    );
+
+                const includesAtSign: boolean =
+                    maybeParent !== undefined && maybeParent.maybeInclusiveConstant !== undefined;
+
+                return [
+                    identifier,
+                    includesAtSign,
+                    await Inspection.tryNodeScope(
+                        updatedSettings,
+                        nodeIdMapCollection,
+                        identifier.id,
+                        typeCache.scopeById,
+                    ),
+                ];
+            },
+        );
 
     const unknownIdentifiers: ReadonlyArray<[Ast.Identifier, string | undefined]> = findUnknownIdentifiers(
         validationSettings,
@@ -85,7 +105,7 @@ function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): Readon
 
 function findUnknownIdentifiers(
     validationSettings: ValidationSettings,
-    identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, TriedNodeScope]>,
+    identifiersAndTriedNodeScopes: ReadonlyArray<[Ast.Identifier, boolean, TriedNodeScope]>,
     correlationId: number,
 ): ReadonlyArray<[Ast.Identifier, string | undefined]> {
     const trace: Trace = validationSettings.traceManager.entry(
@@ -98,27 +118,23 @@ function findUnknownIdentifiers(
     const numIdentifiers: number = identifiersAndTriedNodeScopes.length;
 
     for (let index: number = 0; index < numIdentifiers; index += 1) {
-        const [identifier, triedNodeScope]: [Ast.Identifier, TriedNodeScope] = identifiersAndTriedNodeScopes[index];
+        const [identifier, includeAtSign, triedNodeScope]: [Ast.Identifier, boolean, TriedNodeScope] =
+            identifiersAndTriedNodeScopes[index];
 
         if (ResultUtils.isError(triedNodeScope)) {
             continue;
         }
 
         const nodeScope: Inspection.NodeScope = triedNodeScope.value;
+        const literal: string = includeAtSign ? `@${identifier.literal}` : identifier.literal;
 
-        if (
-            !nodeScope.has(identifier.literal) &&
-            !validationSettings.library.libraryDefinitions.has(identifier.literal)
-        ) {
+        if (!nodeScope.has(literal) && !validationSettings.library.libraryDefinitions.has(literal)) {
             const knownIdentifiers: ReadonlyArray<string> = [
                 ...nodeScope.keys(),
                 ...validationSettings.library.libraryDefinitions.keys(),
             ];
 
-            const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(
-                identifier.literal,
-                knownIdentifiers,
-            );
+            const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(literal, knownIdentifiers);
 
             unknownIdentifiers.push([
                 identifier,
