@@ -72,9 +72,9 @@ export async function validateDuplicateIdentifiers(
     const nodeIdMapCollection: NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     const result: ReadonlyArray<Diagnostic> = [
-        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings),
-        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, updatedSettings),
-        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, updatedSettings),
+        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
+        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
+        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
     ];
 
     trace.exit();
@@ -86,54 +86,87 @@ function validateDuplicateIdentifiersForLetExpresion(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
+    correlationId: number,
 ): ReadonlyArray<Diagnostic> {
-    const letIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? []),
-    ];
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiersForLetExpresion.name,
+        correlationId,
+    );
 
-    return validateDuplicateIdentifiersForKeyValuePair(
+    const letIds: Set<number> = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? new Set();
+
+    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
-        letIds,
+        [letIds],
         NodeIdMapIterator.iterLetExpression,
         validationSettings,
+        trace.id,
     );
+
+    trace.exit();
+
+    return result;
 }
 
 function validateDuplicateIdentifiersForRecord(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
+    correlationId: number,
 ): ReadonlyArray<Diagnostic> {
-    const recordIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? []),
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? []),
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordType) ?? []),
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiersForRecord.name,
+        correlationId,
+    );
+
+    const recordIds: ReadonlyArray<Set<number>> = [
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set(),
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? new Set(),
     ];
 
-    return validateDuplicateIdentifiersForKeyValuePair(
+    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         recordIds,
         NodeIdMapIterator.iterRecord,
         validationSettings,
+        trace.id,
     );
+
+    trace.exit();
+
+    return result;
 }
 
 function validateDuplicateIdentifiersForSection(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
+    correlationId: number,
 ): ReadonlyArray<Diagnostic> {
-    const recordIds: ReadonlyArray<number> = [...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Section) ?? [])];
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiersForSection.name,
+        correlationId,
+    );
 
-    return validateDuplicateIdentifiersForKeyValuePair(
+    const sectionIds: Set<number> = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Section) ?? new Set<number>();
+
+    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
-        recordIds,
+        [sectionIds],
         NodeIdMapIterator.iterSection,
         validationSettings,
+        trace.id,
     );
+
+    trace.exit();
+
+    return result;
 }
 
 // Generalized logic for iterating over some collection and their children, essentially by doing:
@@ -143,66 +176,83 @@ function validateDuplicateIdentifiersForSection(
 function validateDuplicateIdentifiersForKeyValuePair(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
-    nodeIds: ReadonlyArray<number>,
+    nodeIdCollections: ReadonlyArray<Set<number>>,
     iterNodeFn: (
         nodeIdMapCollection: NodeIdMap.Collection,
         node: TXorNode,
     ) => ReadonlyArray<NodeIdMapIterator.TKeyValuePair>,
     validationSettings: ValidationSettings,
+    correlationId: number,
 ): ReadonlyArray<Diagnostic> {
-    if (!nodeIds.length) {
+    const numIds: number = nodeIdCollections.reduce<number>(
+        (partial: number, set: Set<number>) => partial + set.size,
+        0,
+    );
+
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiersForKeyValuePair.name,
+        correlationId,
+        { numIds },
+    );
+
+    if (!numIds) {
         return [];
     }
 
     const result: Diagnostic[] = [];
 
-    for (const nodeId of nodeIds) {
-        const node: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
-        const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
-        const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
+    for (const collection of nodeIdCollections) {
+        for (const nodeId of collection) {
+            const node: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
+            const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
+            const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
 
-        for (const field of iterNodeFn(nodeIdMapCollection, node)) {
-            const keyLiteral: string = field.normalizedKeyLiteral;
+            for (const field of iterNodeFn(nodeIdMapCollection, node)) {
+                const keyLiteral: string = field.normalizedKeyLiteral;
 
-            const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
-                duplicateFieldsByKey.get(keyLiteral);
+                const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
+                    duplicateFieldsByKey.get(keyLiteral);
 
-            const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
+                const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
-            if (maybeDuplicateFields) {
-                maybeDuplicateFields.push(field);
-            } else if (maybeKnownField) {
-                duplicateFieldsByKey.set(keyLiteral, [field, maybeKnownField]);
-            } else {
-                knownFieldByKey.set(keyLiteral, field);
+                if (maybeDuplicateFields) {
+                    maybeDuplicateFields.push(field);
+                } else if (maybeKnownField) {
+                    duplicateFieldsByKey.set(keyLiteral, [field, maybeKnownField]);
+                } else {
+                    knownFieldByKey.set(keyLiteral, field);
+                }
             }
-        }
 
-        for (const duplicates of duplicateFieldsByKey.values()) {
-            const numFields: number = duplicates.length;
+            for (const duplicates of duplicateFieldsByKey.values()) {
+                const numFields: number = duplicates.length;
 
-            const asRelatedInformation: DiagnosticRelatedInformation[] = duplicates.map(
-                (keyValuePair: NodeIdMapIterator.TKeyValuePair) => ({
-                    location: {
-                        uri: documentUri,
-                        range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
-                    },
-                    message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
-                }),
-            );
-
-            for (let index: number = 0; index < numFields; index += 1) {
-                const duplicate: NodeIdMapIterator.TKeyValuePair = duplicates[index];
-
-                // Grab all DiagnosticRelatedInformation for a given key besides the one we're iterating over.
-                const relatedInformation: DiagnosticRelatedInformation[] = asRelatedInformation.filter(
-                    (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,
+                const asRelatedInformation: DiagnosticRelatedInformation[] = duplicates.map(
+                    (keyValuePair: NodeIdMapIterator.TKeyValuePair) => ({
+                        location: {
+                            uri: documentUri,
+                            range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
+                        },
+                        message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
+                    }),
                 );
 
-                result.push(createDuplicateIdentifierDiagnostic(duplicate, relatedInformation, validationSettings));
+                for (let index: number = 0; index < numFields; index += 1) {
+                    const duplicate: NodeIdMapIterator.TKeyValuePair = duplicates[index];
+
+                    // Grab all DiagnosticRelatedInformation for a given key besides the one we're iterating over.
+                    const relatedInformation: DiagnosticRelatedInformation[] = asRelatedInformation.filter(
+                        (_: DiagnosticRelatedInformation, relatedIndex: number) => index !== relatedIndex,
+                    );
+
+                    result.push(createDuplicateIdentifierDiagnostic(duplicate, relatedInformation, validationSettings));
+                }
             }
         }
     }
+
+    trace.exit();
 
     return result;
 }
