@@ -6,6 +6,13 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Library } from "./library";
 import { TypeById } from "./inspection";
 
+export const enum TypeStrategy {
+    // Allow evaluation of extended types (such as AnyUnion).
+    Extended = "Extended",
+    // Strictly Power Query type primitives.
+    Primitive = "Primitive",
+}
+
 export interface InspectionSettings extends PQP.Settings {
     // Allows the caching of scope and Power Query type datastructures built during an inspection.
     readonly isWorkspaceCacheAllowed: boolean;
@@ -20,4 +27,10 @@ export interface InspectionSettings extends PQP.Settings {
     // This is a "simple" hack that enables consumers of language-services to enable those smart type resolvers.
     // An initial pass can be made on InvokeExpressions where it sets the scope for an EachExpression.
     readonly maybeEachScopeById: TypeById | undefined;
+    // The type system for Power Query has been expanded in this layer to include types, such as:
+    //  * AnyUnion, an extension of `any`
+    //  * DefinedTable, an extension of `table`
+    // While useful for in-depth analysis and/or Intellisense operations they can be costly in terms of time.
+    // Changing the strategy determines how types are evaluated during inspections.
+    readonly typeStrategy: TypeStrategy;
 }

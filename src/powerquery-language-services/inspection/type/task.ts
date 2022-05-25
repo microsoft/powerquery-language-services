@@ -31,19 +31,7 @@ export async function tryScopeType(
         settings.maybeInitialCorrelationId,
     );
 
-    const state: InspectTypeState = {
-        library: settings.library,
-        locale: settings.locale,
-        isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
-        maybeCancellationToken: settings.maybeCancellationToken,
-        maybeEachScopeById: settings.maybeEachScopeById,
-        maybeInitialCorrelationId: trace.id,
-        traceManager: settings.traceManager,
-        givenTypeById: typeCache.typeById,
-        deltaTypeById: new Map(),
-        nodeIdMapCollection,
-        scopeById: typeCache.scopeById,
-    };
+    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
 
     const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(
         () => inspectScopeType(state, nodeId, trace.id),
@@ -59,6 +47,8 @@ export async function tryType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeId: number,
+    // If a TypeCache is given, then potentially add to its values and include it as part of the return,
+    // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<TriedType> {
     const trace: Trace = settings.traceManager.entry(
@@ -67,19 +57,7 @@ export async function tryType(
         settings.maybeInitialCorrelationId,
     );
 
-    const state: InspectTypeState = {
-        library: settings.library,
-        locale: settings.locale,
-        isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
-        maybeCancellationToken: settings.maybeCancellationToken,
-        maybeEachScopeById: settings.maybeEachScopeById,
-        maybeInitialCorrelationId: trace.id,
-        traceManager: settings.traceManager,
-        givenTypeById: typeCache.typeById,
-        deltaTypeById: new Map(),
-        nodeIdMapCollection,
-        scopeById: typeCache.scopeById,
-    };
+    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
 
     const result: TriedType = await ResultUtils.ensureResultAsync(
         () => inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId), trace.id),
@@ -130,4 +108,26 @@ async function inspectScopeType(
     trace.exit();
 
     return result;
+}
+
+function createState(
+    settings: InspectionSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    typeCache: TypeCache,
+    correlationId: number,
+): InspectTypeState {
+    return {
+        library: settings.library,
+        locale: settings.locale,
+        isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
+        maybeCancellationToken: settings.maybeCancellationToken,
+        maybeEachScopeById: settings.maybeEachScopeById,
+        maybeInitialCorrelationId: correlationId,
+        traceManager: settings.traceManager,
+        typeStrategy: settings.typeStrategy,
+        givenTypeById: typeCache.typeById,
+        deltaTypeById: new Map(),
+        nodeIdMapCollection,
+        scopeById: typeCache.scopeById,
+    };
 }

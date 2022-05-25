@@ -9,24 +9,22 @@ import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver
 
 import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
+import { InspectionSettings, TypeStrategy } from "./inspectionSettings";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
-import { InspectionSettings } from "./inspectionSettings";
 import { InspectionTraceConstant } from "./trace";
 import { Library } from "./library";
-import { TypeById } from "./inspection";
 
 export function createInspectionSettings(
     settings: PQP.Settings,
-    maybeEachScopeById: TypeById | undefined,
-    maybeLibrary: Library.ILibrary | undefined,
-    isWorkspaceCacheAllowed: boolean,
+    overrides?: Partial<InspectionSettings>,
 ): InspectionSettings {
     return {
         ...settings,
-        library: maybeLibrary ?? Library.NoOpLibrary,
-        maybeEachScopeById,
-        isWorkspaceCacheAllowed,
+        isWorkspaceCacheAllowed: overrides?.isWorkspaceCacheAllowed ?? true,
+        library: overrides?.library ?? Library.NoOpLibrary,
+        typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,
+        maybeEachScopeById: overrides?.maybeEachScopeById ?? undefined,
     };
 }
 
