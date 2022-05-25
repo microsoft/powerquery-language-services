@@ -623,12 +623,10 @@ async function recursiveIdentifierDereferenceHelper(
 }
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
-    if (parameter.maybeType === undefined) {
-        return Type.NoneInstance;
-    }
-
     return {
-        kind: TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType),
+        kind: parameter.maybeType
+            ? TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType)
+            : Type.TypeKind.Any,
         maybeExtendedKind: undefined,
         isNullable: parameter.isNullable || parameter.isOptional,
     };
