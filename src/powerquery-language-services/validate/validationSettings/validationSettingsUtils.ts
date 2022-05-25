@@ -7,15 +7,13 @@ import { ValidationSettings } from "./validationSettings";
 export function createValidationSettings(
     inspectionSettings: InspectionSettings,
     source: string,
-    checkForDuplicateIdentifiers?: boolean,
-    checkInvokeExpressions?: boolean,
-    checkUnknownIdentifiers?: boolean,
+    overrides?: Partial<ValidationSettings>,
 ): ValidationSettings {
     return {
         ...inspectionSettings,
-        checkForDuplicateIdentifiers: checkForDuplicateIdentifiers ?? true,
-        checkInvokeExpressions: checkInvokeExpressions ?? true,
-        checkUnknownIdentifiers: checkUnknownIdentifiers ?? true,
+        checkForDuplicateIdentifiers: overrides?.checkForDuplicateIdentifiers ?? true,
+        checkInvokeExpressions: overrides?.checkInvokeExpressions ?? true,
+        checkUnknownIdentifiers: overrides?.checkUnknownIdentifiers ?? true,
         library: inspectionSettings.library,
         source,
     };
