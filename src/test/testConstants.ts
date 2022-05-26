@@ -14,6 +14,7 @@ import {
     Library,
     LibraryUtils,
     LocalDocumentSymbolProvider,
+    TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
 import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
@@ -21,8 +22,9 @@ import { LibrarySymbolProvider } from "../powerquery-language-services/providers
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
-    maybeEachScopeById: undefined,
     library: Library.NoOpLibrary,
+    maybeEachScopeById: undefined,
+    typeStrategy: TypeStrategy.Extended,
 };
 
 export const CreateFooAndBarRecordDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(

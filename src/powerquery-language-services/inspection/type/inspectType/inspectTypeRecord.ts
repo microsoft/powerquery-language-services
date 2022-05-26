@@ -3,16 +3,18 @@
 
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert } from "@microsoft/powerquery-parser";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
+import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeRecord(
     state: InspectTypeState,
     xorNode: TXorNode,
     maybeCorrelationId: number | undefined,
-): Promise<Type.DefinedRecord> {
+): Promise<Type.Record | Type.DefinedRecord> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRecord.name,
@@ -22,25 +24,39 @@ export async function inspectTypeRecord(
 
     state.maybeCancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsRecord(xorNode);
+    let result: Type.Record | Type.DefinedRecord;
 
-    const fields: Map<string, Type.TPowerQueryType> = new Map();
+    switch (state.typeStrategy) {
+        case TypeStrategy.Extended: {
+            const fields: Map<string, Type.TPowerQueryType> = new Map();
 
-    for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
-        if (keyValuePair.maybeValue) {
-            // eslint-disable-next-line no-await-in-loop
-            fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue, trace.id));
-        } else {
-            fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
+            for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
+                if (keyValuePair.maybeValue) {
+                    // eslint-disable-next-line no-await-in-loop
+                    fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue, trace.id));
+                } else {
+                    fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
+                }
+            }
+
+            result = {
+                kind: Type.TypeKind.Record,
+                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                isNullable: false,
+                fields,
+                isOpen: false,
+            };
+
+            break;
         }
-    }
 
-    const result: Type.TPowerQueryType = {
-        kind: Type.TypeKind.Record,
-        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
-        isNullable: false,
-        fields,
-        isOpen: false,
-    };
+        case TypeStrategy.Primitive:
+            result = Type.RecordInstance;
+            break;
+
+        default:
+            throw Assert.isNever(state.typeStrategy);
+    }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 

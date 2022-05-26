@@ -60,7 +60,7 @@ describe("workspaceCache", () => {
             const maybeInspected: Inspection.Inspected | undefined =
                 await WorkspaceCacheUtils.getOrCreateInspectedPromise(
                     document,
-                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, undefined, SimpleLibrary, false),
+                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
                     postion,
                 );
 
@@ -74,7 +74,7 @@ describe("workspaceCache", () => {
             const maybeInspected: Inspection.Inspected | undefined =
                 await WorkspaceCacheUtils.getOrCreateInspectedPromise(
                     document,
-                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, undefined, undefined, false),
+                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings),
                     postion,
                 );
 
@@ -137,7 +137,7 @@ describe("workspaceCache", () => {
 
         let maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, undefined, SimpleLibrary, false),
+            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
             postion,
         );
 
@@ -154,7 +154,7 @@ describe("workspaceCache", () => {
 
         maybeInspected = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
-            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, undefined, SimpleLibrary, false),
+            PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
             postion,
         );
 
