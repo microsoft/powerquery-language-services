@@ -759,19 +759,19 @@ describe(`Inspection - Type`, () => {
             it(`(foo as number) => foo|`, async () => {
                 const expression: string = "(foo as number) => foo|";
                 const expected: Type.TPowerQueryType = Type.NumberInstance;
-                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+                await assertParseOkScopeTypeEqual(ExtendedTestSettings, expression, new Map([["foo", expected]]));
             });
 
             it(`(optional foo as number) => foo|`, async () => {
                 const expression: string = "(optional foo as number) => foo|";
                 const expected: Type.TPowerQueryType = Type.NullableNumberInstance;
-                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+                await assertParseOkScopeTypeEqual(ExtendedTestSettings, expression, new Map([["foo", expected]]));
             });
 
             it(`(foo) => foo|`, async () => {
                 const expression: string = "(foo) => foo|";
                 const expected: Type.TPowerQueryType = Type.NullableAnyInstance;
-                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+                await assertParseOkScopeTypeEqual(ExtendedTestSettings, expression, new Map([["foo", expected]]));
             });
         });
 
