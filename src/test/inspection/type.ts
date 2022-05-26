@@ -755,6 +755,26 @@ describe(`Inspection - Type`, () => {
             });
         });
 
+        describe(`${Ast.NodeKind.Parameter}`, () => {
+            it(`(foo as number) => foo|`, async () => {
+                const expression: string = "(foo as number) => foo|";
+                const expected: Type.TPowerQueryType = Type.NumberInstance;
+                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+            });
+
+            it(`(optional foo as number) => foo|`, async () => {
+                const expression: string = "(optional foo as number) => foo|";
+                const expected: Type.TPowerQueryType = Type.NullableNumberInstance;
+                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+            });
+
+            it(`(foo) => foo|`, async () => {
+                const expression: string = "(foo) => foo|";
+                const expected: Type.TPowerQueryType = Type.NullableAnyInstance;
+                await assertParseOkScopeTypeEqual(TestSettings, expression, new Map([["foo", expected]]));
+            });
+        });
+
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
             it(`[foo = 1] & [bar = 2]`, async () => {
                 const expression: string = `[foo = 1] & [bar = 2]`;
