@@ -4,8 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import {
     NodeIdMap,
-    NodeIdMapIterator,
-    TXorNode,
+    NodeIdMapUtils,
+    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -48,24 +48,20 @@ function addIdentifierPairedExpressionSymbols(
     const identifierPairedExpressionIds: Set<number> =
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierPairedExpression) ?? new Set();
 
-    const identifierPairedExpressionsXorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(
-        nodeIdMapCollection,
-        [...identifierPairedExpressionIds.values()],
-    );
-
-    for (const xorNode of identifierPairedExpressionsXorNodes) {
-        if (
-            !XorNodeUtils.isAstXorChecked<Ast.IdentifierPairedExpression>(
-                xorNode,
+    for (const nodeId of identifierPairedExpressionIds) {
+        const xorNode: XorNode<Ast.IdentifierPairedExpression> =
+            NodeIdMapUtils.assertGetXorChecked<Ast.IdentifierPairedExpression>(
+                nodeIdMapCollection,
+                nodeId,
                 Ast.NodeKind.IdentifierPairedExpression,
-            )
-        ) {
+            );
+
+        if (!XorNodeUtils.isAstXor(xorNode)) {
             continue;
         }
 
-        const nodeId: number = xorNode.node.id;
-        const documentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(xorNode.node);
-
+        const astNode: Ast.IdentifierPairedExpression = xorNode.node;
+        const documentSymbol: DocumentSymbol = InspectionUtils.getSymbolForIdentifierPairedExpression(astNode);
         addDocumentSymbols(nodeIdMapCollection, parentSymbolById, nodeId, currentSymbols, documentSymbol);
         parentSymbolById.set(nodeId, documentSymbol);
     }
@@ -76,31 +72,39 @@ function addRecordSymbols(
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
 ): void {
-    const recordIds: ReadonlyArray<number> = [
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set()).values(),
-        ...(nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? new Set()).values(),
+    const recordIdCollections: ReadonlyArray<Set<number>> = [
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set(),
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? new Set(),
     ];
 
-    const recordXorNodes: ReadonlyArray<TXorNode> = NodeIdMapIterator.assertIterXor(nodeIdMapCollection, recordIds);
+    for (const collection of recordIdCollections) {
+        for (const nodeId of collection) {
+            const xorNode: XorNode<Ast.RecordExpression | Ast.RecordLiteral> = NodeIdMapUtils.assertGetXorChecked<
+                Ast.RecordExpression | Ast.RecordLiteral
+            >(nodeIdMapCollection, nodeId, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
-    for (const xorNode of recordXorNodes) {
-        if (!XorNodeUtils.isAstXor(xorNode)) {
-            continue;
-        }
+            if (!XorNodeUtils.isAstXor(xorNode)) {
+                continue;
+            }
 
-        const asAst: Ast.RecordExpression | Ast.RecordLiteral = xorNode.node as
-            | Ast.RecordExpression
-            | Ast.RecordLiteral;
+            const astNode: Ast.RecordExpression | Ast.RecordLiteral = xorNode.node;
 
-        // Process the record if the immediate parent is a Struct
-        const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(xorNode.node.id);
-        const parentSymbol: DocumentSymbol | undefined = parentId ? parentSymbolById.get(parentId) : undefined;
+            // Process the record if the immediate parent is a Struct
+            const parentId: number | undefined = nodeIdMapCollection.parentIdById.get(astNode.id);
+            const parentSymbol: DocumentSymbol | undefined = parentId ? parentSymbolById.get(parentId) : undefined;
 
-        if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
-            const fieldSymbols: ReadonlyArray<DocumentSymbol> = InspectionUtils.getSymbolsForRecord(asAst);
+            if (parentSymbol && parentSymbol.kind === SymbolKind.Struct) {
+                const fieldSymbols: ReadonlyArray<DocumentSymbol> = InspectionUtils.getSymbolsForRecord(astNode);
 
-            if (fieldSymbols.length > 0) {
-                addDocumentSymbols(nodeIdMapCollection, parentSymbolById, asAst.id, currentSymbols, ...fieldSymbols);
+                if (fieldSymbols.length > 0) {
+                    addDocumentSymbols(
+                        nodeIdMapCollection,
+                        parentSymbolById,
+                        astNode.id,
+                        currentSymbols,
+                        ...fieldSymbols,
+                    );
+                }
             }
         }
     }
