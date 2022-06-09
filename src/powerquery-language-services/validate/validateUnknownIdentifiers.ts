@@ -16,9 +16,6 @@ import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
-// For context, "Tbl.AsdC" has a score of ~0.59 against "Table.AddColumn"
-const JaroWinklerSuggestionThreshold: number = 0.9;
-
 export async function validateUnknownIdentifiers(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -35,36 +32,43 @@ export async function validateUnknownIdentifiers(
         maybeInitialCorrelationId: trace.id,
     };
 
-    // Grab all identifiers in the value context.
-    const identifierValues: ReadonlyArray<Ast.Identifier> = findIdentifierValues(nodeIdMapCollection);
+    // Grab all identifiers in the given context.
+    const identifierValues: ReadonlyArray<Ast.Identifier> = findIdentifierAsts(nodeIdMapCollection);
 
-    // Create a zipped collection of: [
-    //  value identifier,
-    //  value identifier expression | undefined (if it exists),
-    //  TriedNodeScope for the value identifier
-    // ]
-    const identifiersAndTriedNodeScopes: ReadonlyArray<
-        [Ast.Identifier, Ast.IdentifierExpression | undefined, TriedNodeScope]
-    > = await ArrayUtils.mapAsync<
+    // For each identifier create a Promise<TriedScope>, then await on all.
+    const identifiersWithNodeScope: ReadonlyArray<IdentifierWithNodeScope> = await ArrayUtils.mapAsync<
         Ast.Identifier,
-        [Ast.Identifier, Ast.IdentifierExpression | undefined, TriedNodeScope]
-    >(identifierValues, async (identifier: Ast.Identifier) => [
-        identifier,
-        NodeIdMapUtils.maybeParentAstChecked<Ast.IdentifierExpression>(
-            nodeIdMapCollection,
-            identifier.id,
-            Ast.NodeKind.IdentifierExpression,
-        ),
-        await Inspection.tryNodeScope(updatedSettings, nodeIdMapCollection, identifier.id, typeCache.scopeById),
-    ]);
+        IdentifierWithNodeScope
+    >(identifierValues, async (identifier: Ast.Identifier) => {
+        const maybeIdentifierExpression: Ast.IdentifierExpression | undefined =
+            NodeIdMapUtils.maybeParentAstChecked<Ast.IdentifierExpression>(
+                nodeIdMapCollection,
+                identifier.id,
+                Ast.NodeKind.IdentifierExpression,
+            );
 
-    // Creates a zipped collection of: [
-    //  unknown identifier | unknown identifier expression,
-    //  unknown identifier literal,
-    //  Jaro Winkler suggestion for the unknown literal if above a certain score threshold,
-    // ]
-    const unknownIdentifiers: ReadonlyArray<[Ast.Identifier | Ast.IdentifierExpression, string, string | undefined]> =
-        findUnknownIdentifiers(validationSettings, identifiersAndTriedNodeScopes, trace.id);
+        const literal: string =
+            maybeIdentifierExpression && maybeIdentifierExpression.maybeInclusiveConstant !== undefined
+                ? `@${identifier.literal}`
+                : identifier.literal;
+
+        return {
+            identifier: maybeIdentifierExpression ?? identifier,
+            literal,
+            triedNodeScope: await Inspection.tryNodeScope(
+                updatedSettings,
+                nodeIdMapCollection,
+                identifier.id,
+                typeCache.scopeById,
+            ),
+        };
+    });
+
+    const unknownIdentifiers: ReadonlyArray<UnknownIdentifier> = findUnknownIdentifiers(
+        validationSettings,
+        identifiersWithNodeScope,
+        trace.id,
+    );
 
     const result: Diagnostic[] = unknownIdentifiersToDiagnostics(updatedSettings, unknownIdentifiers);
     trace.exit();
@@ -72,7 +76,22 @@ export async function validateUnknownIdentifiers(
     return result;
 }
 
-function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): ReadonlyArray<Ast.Identifier> {
+// For context, "Tbl.AsdC" has a score of ~0.59 against "Table.AddColumn"
+const JaroWinklerSuggestionThreshold: number = 0.9;
+
+interface IdentifierWithNodeScope {
+    readonly identifier: Ast.Identifier | Ast.IdentifierExpression;
+    readonly literal: string;
+    readonly triedNodeScope: TriedNodeScope;
+}
+
+interface UnknownIdentifier {
+    readonly identifier: Ast.Identifier | Ast.IdentifierExpression;
+    readonly literal: string;
+    readonly maybeSuggestion: string | undefined;
+}
+
+function findIdentifierAsts(nodeIdMapCollection: NodeIdMap.Collection): ReadonlyArray<Ast.Identifier> {
     const maybeIdentifiers: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier);
 
     if (maybeIdentifiers === undefined) {
@@ -98,39 +117,31 @@ function findIdentifierValues(nodeIdMapCollection: NodeIdMap.Collection): Readon
 
 function findUnknownIdentifiers(
     validationSettings: ValidationSettings,
-    identifiersAndTriedNodeScopes: ReadonlyArray<
-        [Ast.Identifier, Ast.IdentifierExpression | undefined, TriedNodeScope]
-    >,
+    identifiersWithNodeScope: ReadonlyArray<IdentifierWithNodeScope>,
     correlationId: number,
-): ReadonlyArray<[Ast.Identifier | Ast.IdentifierExpression, string, string | undefined]> {
+): ReadonlyArray<UnknownIdentifier> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         findUnknownIdentifiers.name,
         correlationId,
     );
 
-    const unknownIdentifiers: [Ast.Identifier | Ast.IdentifierExpression, string, string | undefined][] = [];
-    const numIdentifiers: number = identifiersAndTriedNodeScopes.length;
+    const unknownIdentifiers: UnknownIdentifier[] = [];
 
-    for (let index: number = 0; index < numIdentifiers; index += 1) {
-        const [identifier, maybeIdentifierExpression, triedNodeScope]: [
-            Ast.Identifier,
-            Ast.IdentifierExpression | undefined,
-            TriedNodeScope,
-        ] = identifiersAndTriedNodeScopes[index];
-
-        if (ResultUtils.isError(triedNodeScope)) {
+    for (const identifierWithNodeScope of identifiersWithNodeScope) {
+        if (ResultUtils.isError(identifierWithNodeScope.triedNodeScope)) {
             continue;
         }
 
-        const nodeScope: Inspection.NodeScope = triedNodeScope.value;
+        const identifier: Ast.Identifier | Ast.IdentifierExpression = identifierWithNodeScope.identifier;
+        const nodeScope: Inspection.NodeScope = identifierWithNodeScope.triedNodeScope.value;
+        const literal: string = identifierWithNodeScope.literal;
 
-        const literal: string =
-            maybeIdentifierExpression && maybeIdentifierExpression.maybeInclusiveConstant !== undefined
-                ? `@${identifier.literal}`
-                : identifier.literal;
-
-        if (!nodeScope.has(literal) && !validationSettings.library.libraryDefinitions.has(literal)) {
+        if (
+            !nodeScope.has(literal) &&
+            !(literal[0] === "@" && nodeScope.has(literal.slice(1))) &&
+            !validationSettings.library.libraryDefinitions.has(literal)
+        ) {
             const knownIdentifiers: ReadonlyArray<string> = [
                 ...nodeScope.keys(),
                 ...validationSettings.library.libraryDefinitions.keys(),
@@ -138,11 +149,11 @@ function findUnknownIdentifiers(
 
             const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(literal, knownIdentifiers);
 
-            unknownIdentifiers.push([
-                maybeIdentifierExpression ?? identifier,
+            unknownIdentifiers.push({
+                identifier,
                 literal,
-                jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
-            ]);
+                maybeSuggestion: jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
+            });
         }
     }
 
@@ -153,21 +164,19 @@ function findUnknownIdentifiers(
 
 function unknownIdentifiersToDiagnostics(
     validationSettings: ValidationSettings,
-    unknownIdentifiers: ReadonlyArray<[Ast.Identifier | Ast.IdentifierExpression, string, string | undefined]>,
+    unknownIdentifiers: ReadonlyArray<UnknownIdentifier>,
 ): Diagnostic[] {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(validationSettings.locale);
 
-    return unknownIdentifiers.map(
-        ([identifier, literal, maybeSuggestion]: [
-            Ast.Identifier | Ast.IdentifierExpression,
-            string,
-            string | undefined,
-        ]) => ({
-            code: DiagnosticErrorCode.UnknownIdentifier,
-            message: Localization.error_validation_unknownIdentifier(templates, literal, maybeSuggestion),
-            range: PositionUtils.createRangeFromTokenRange(identifier.tokenRange),
-            severity: DiagnosticSeverity.Error,
-            source: validationSettings.source,
-        }),
-    );
+    return unknownIdentifiers.map((unknownIdentifier: UnknownIdentifier) => ({
+        code: DiagnosticErrorCode.UnknownIdentifier,
+        message: Localization.error_validation_unknownIdentifier(
+            templates,
+            unknownIdentifier.literal,
+            unknownIdentifier.maybeSuggestion,
+        ),
+        range: PositionUtils.createRangeFromTokenRange(unknownIdentifier.identifier.tokenRange),
+        severity: DiagnosticSeverity.Error,
+        source: validationSettings.source,
+    }));
 }
