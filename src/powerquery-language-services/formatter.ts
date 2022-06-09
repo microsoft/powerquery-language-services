@@ -7,13 +7,19 @@ import { Range, TextEdit } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-export async function tryFormat(document: TextDocument, settings: PQF.FormatSettings): Promise<TextEdit[]> {
+export async function tryFormat(
+    document: TextDocument,
+    settings: PQF.FormatSettings,
+    experimental: boolean,
+): Promise<TextEdit[]> {
     const formatSettings: PQF.FormatSettings = {
         ...PQF.DefaultSettings,
         ...settings,
     };
 
-    const triedFormat: PQF.TriedFormat = await PQF.tryFormat(formatSettings, document.getText());
+    const triedFormat: PQF.TriedFormat = experimental
+        ? await PQF.tryFormatV2(formatSettings, document.getText())
+        : await PQF.tryFormat(formatSettings, document.getText());
 
     if (ResultUtils.isOk(triedFormat)) {
         return [TextEdit.replace(fullDocumentRange(document), triedFormat.value)];

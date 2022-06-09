@@ -260,6 +260,7 @@ export async function inspectXor(
 
         case Ast.NodeKind.AsType:
         case Ast.NodeKind.AsNullablePrimitiveType:
+        case Ast.NodeKind.CatchExpression:
         case Ast.NodeKind.FieldTypeSpecification:
         case Ast.NodeKind.OtherwiseExpression:
         case Ast.NodeKind.ParenthesizedExpression:
