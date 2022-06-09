@@ -100,7 +100,7 @@ describe("Validation - UnknownIdentifier", () => {
 
     describe(`no suggestion`, () => {
         it(`found in local scope`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in foo|`);
+            const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in foo`);
 
             const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
                 await expectGetInvokeExpressionDiagnostics(textDocument);
@@ -152,5 +152,14 @@ describe("Validation - UnknownIdentifier", () => {
                 new Map<string, string>([["test.n", "Test.Number"]]),
             );
         });
+    });
+
+    it(`allow redundant recursive identifier`, async () => {
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(`let foo = 1 in @foo`);
+
+        const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+            await expectGetInvokeExpressionDiagnostics(textDocument);
+
+        expectNoUnknownIdentifiers(invocationDiagnostics);
     });
 });
