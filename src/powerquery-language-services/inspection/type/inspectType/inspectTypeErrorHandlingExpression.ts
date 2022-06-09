@@ -40,9 +40,14 @@ export async function inspectTypeErrorHandlingExpression(
 
     let errorHandlerResult: Type.TPowerQueryType;
 
+    // No handler exists, i.e. `try 0`
     if (maybeHandler === undefined) {
         errorHandlerResult = Type.RecordInstance;
-    } else if (maybeHandler.node.kind === Ast.NodeKind.CatchExpression) {
+    }
+    // If it's a catch handler, i.e. `try 1/0 catch () => "div by 0"`
+    else if (maybeHandler.node.kind === Ast.NodeKind.CatchExpression) {
+        // We care about the evaluation of the function,
+        // and as typing isn't allowed on a catch expression it requires an inspection on the function's body
         const maybeFnExpression: XorNode<Ast.FunctionExpression> | undefined =
             NodeIdMapUtils.maybeNthChildChecked<Ast.FunctionExpression>(
                 state.nodeIdMapCollection,
@@ -51,12 +56,17 @@ export async function inspectTypeErrorHandlingExpression(
                 [Ast.NodeKind.FunctionExpression],
             );
 
-        if (maybeFnExpression !== undefined) {
-            errorHandlerResult = await inspectTypeFromChildAttributeIndex(state, maybeFnExpression, 3, trace.id);
-        } else {
+        // If there's no function expression, i.e. `try 1/0 catch`
+        if (maybeFnExpression === undefined) {
             errorHandlerResult = Type.UnknownInstance;
         }
-    } else if (maybeHandler.node.kind === Ast.NodeKind.OtherwiseExpression) {
+        // Else examine Ast.FunctionExpression.expression
+        else {
+            errorHandlerResult = await inspectTypeFromChildAttributeIndex(state, maybeFnExpression, 3, trace.id);
+        }
+    }
+    // Much easier here, simply return the paired expression.
+    else if (maybeHandler.node.kind === Ast.NodeKind.OtherwiseExpression) {
         errorHandlerResult = await inspectTypeFromChildAttributeIndex(state, maybeHandler, 1, trace.id);
     } else {
         throw new PQP.CommonError.InvariantError(`should never be reached`);
