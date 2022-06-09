@@ -125,7 +125,7 @@ async function assertGetParseOkScopeTypeOk(
     return triedScopeType.value;
 }
 
-const noopCreateAnyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
+const noopTraceCreateAnyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
     unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
 ) => TypeUtils.createAnyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
 
@@ -216,7 +216,7 @@ describe(`Inspection - Type`, () => {
             it(`try 1`, async () => {
                 const expression: string = `try 1`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Record),
                 ]);
@@ -227,12 +227,45 @@ describe(`Inspection - Type`, () => {
             it(`try 1 otherwise false`, async () => {
                 const expression: string = `try 1 otherwise false`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
                 ]);
 
                 await assertParseOkNodeTypeEqual(ExtendedTestSettings, expression, expected);
+            });
+
+            it(`try 1 otherwise`, async () => {
+                const expression: string = `try 1 otherwise`;
+
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
+                    Type.UnknownInstance,
+                    TypeUtils.createNumberLiteral(false, "1"),
+                ]);
+
+                await assertParseErrNodeTypeEqual(expression, expected);
+            });
+
+            it(`try true catch () => 1)`, async () => {
+                const expression: string = `try true catch () => 1`;
+
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
+                    TypeUtils.createNumberLiteral(false, "1"),
+                    TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
+                ]);
+
+                await assertParseOkNodeTypeEqual(ExtendedTestSettings, expression, expected);
+            });
+
+            it(`try true catch`, async () => {
+                const expression: string = `try true catch`;
+
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
+                    TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
+                    Type.UnknownInstance,
+                ]);
+
+                await assertParseErrNodeTypeEqual(expression, expected);
             });
         });
 
@@ -399,7 +432,7 @@ describe(`Inspection - Type`, () => {
                             nameLiteral: "x",
                         },
                     ],
-                    noopCreateAnyUnion([
+                    noopTraceCreateAnyUnion([
                         {
                             isNullable: false,
                             kind: Type.TypeKind.Number,
@@ -439,7 +472,7 @@ describe(`Inspection - Type`, () => {
                 const expected: Type.DefinedFunction = TypeUtils.createDefinedFunction(
                     false,
                     [],
-                    noopCreateAnyUnion([
+                    noopTraceCreateAnyUnion([
                         TypeUtils.createNumberLiteral(false, "1"),
                         TypeUtils.createTextLiteral(false, `""`),
                     ]),
@@ -555,7 +588,7 @@ describe(`Inspection - Type`, () => {
             it(`if true then 1 else false`, async () => {
                 const expression: string = `if true then 1 else false`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical),
                 ]);
@@ -566,7 +599,7 @@ describe(`Inspection - Type`, () => {
             it(`if if true then true else false then 1 else 0`, async () => {
                 const expression: string = `if if true then true else false then 1 else ""`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
@@ -601,7 +634,7 @@ describe(`Inspection - Type`, () => {
             it(`if 1 as any then "a" else "b"`, async () => {
                 const expression: string = `if 1 as any then "a" else "b"`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createTextLiteral(false, `"a"`),
                     TypeUtils.createTextLiteral(false, `"b"`),
                 ]);
@@ -612,7 +645,7 @@ describe(`Inspection - Type`, () => {
             it(`if true then 1`, async () => {
                 const expression: string = `if true then 1`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createPrimitiveType(false, Type.TypeKind.Unknown),
                 ]);
@@ -729,7 +762,7 @@ describe(`Inspection - Type`, () => {
             it(`1 ?? 2`, async () => {
                 const expression: string = `1 ?? 2`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createNumberLiteral(false, `2`),
                 ]);
@@ -740,7 +773,7 @@ describe(`Inspection - Type`, () => {
             it(`1 ?? ""`, async () => {
                 const expression: string = `1 ?? ""`;
 
-                const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                     TypeUtils.createNumberLiteral(false, "1"),
                     TypeUtils.createTextLiteral(false, `""`),
                 ]);
@@ -936,7 +969,7 @@ describe(`Inspection - Type`, () => {
                 it(`${Ast.NodeKind.FieldProjection}`, async () => {
                     const expression: string = `let x = (_ as any) in x[[foo]]`;
 
-                    const expected: Type.TPowerQueryType = noopCreateAnyUnion([
+                    const expected: Type.TPowerQueryType = noopTraceCreateAnyUnion([
                         TypeUtils.createDefinedRecord(false, new Map([["foo", Type.AnyInstance]]), false),
                         TypeUtils.createDefinedTable(false, new PQP.OrderedMap([["foo", Type.AnyInstance]]), false),
                     ]);

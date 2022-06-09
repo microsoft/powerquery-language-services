@@ -103,6 +103,10 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
         case Ast.NodeKind.IsExpression:
             return expectTypeAsOrIsExpression(parentXorNode, childIndex);
 
+        case Ast.NodeKind.CatchExpression:
+        case Ast.NodeKind.OtherwiseExpression:
+            return expectTypeErrorHandler(parentXorNode, childIndex);
+
         case Ast.NodeKind.GeneralizedIdentifierPairedExpression:
         case Ast.NodeKind.IdentifierPairedExpression:
             return expectTypeIdentifierPairedExpression(parentXorNode, childIndex);
@@ -363,18 +367,6 @@ export function expectedType(parentXorNode: TXorNode, childIndex: number): Type.
                     throw unknownChildIndexError(parentXorNode, childIndex);
             }
 
-        case Ast.NodeKind.OtherwiseExpression:
-            switch (childIndex) {
-                case 0:
-                    return Type.NotApplicableInstance;
-
-                case 1:
-                    return Type.ExpressionInstance;
-
-                default:
-                    throw unknownChildIndexError(parentXorNode, childIndex);
-            }
-
         case Ast.NodeKind.ParenthesizedExpression:
             switch (childIndex) {
                 case 0:
@@ -450,6 +442,19 @@ function expectTypeAsOrIsExpression(parentXorNode: TXorNode, childIndex: number)
 
         case 2:
             return Type.NullablePrimitiveInstance;
+
+        default:
+            throw unknownChildIndexError(parentXorNode, childIndex);
+    }
+}
+
+function expectTypeErrorHandler(parentXorNode: TXorNode, childIndex: number): Type.TPowerQueryType {
+    switch (childIndex) {
+        case 0:
+            return Type.NotApplicableInstance;
+
+        case 1:
+            return Type.ExpressionInstance;
 
         default:
             throw unknownChildIndexError(parentXorNode, childIndex);
