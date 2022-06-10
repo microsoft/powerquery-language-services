@@ -74,6 +74,7 @@ export async function autocomplete(
         updatedSettings,
         nodeIdMapCollection,
         maybeActiveNode,
+        maybeTrailingToken,
     );
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(

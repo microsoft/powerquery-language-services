@@ -18,12 +18,13 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
-import { TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompleteLanguageConstant,
@@ -32,7 +33,7 @@ export function tryAutocompleteLanguageConstant(
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
-        () => autocompleteLanguageConstant(nodeIdMapCollection, maybeActiveNode),
+        () => autocompleteLanguageConstant(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
         settings.locale,
     );
 
@@ -44,6 +45,7 @@ export function tryAutocompleteLanguageConstant(
 function autocompleteLanguageConstant(
     nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): AutocompleteItem | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
@@ -51,7 +53,7 @@ function autocompleteLanguageConstant(
 
     const activeNode: ActiveNode = maybeActiveNode;
 
-    if (isCatchAllowed(nodeIdMapCollection, activeNode)) {
+    if (isCatchAllowed(nodeIdMapCollection, activeNode, maybeTrailingToken)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Catch);
     } else if (isNullableAllowed(activeNode)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Nullable);
@@ -62,21 +64,32 @@ function autocompleteLanguageConstant(
     }
 }
 
-function isCatchAllowed(nodeIdMapCollection: NodeIdMap.Collection, activeNode: ActiveNode): boolean {
-    // `try 1 |`
+function isCatchAllowed(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): boolean {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const numAncestors: number = ancestry.length;
 
-    return (
-        // Safety check for following indexes
-        activeNode.ancestry.length >= 2 &&
-        // We are under an ErrorHandlingExpression
-        activeNode.ancestry[1].node.kind === Ast.NodeKind.ErrorHandlingExpression &&
-        // Which was fully parsed
-        XorNodeUtils.isAstXor(activeNode.ancestry[1]) &&
-        // Yet the cursor is after the end of the Ast
-        activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
-        // And it only has two children, meaning it hasn't parsed an error handler
-        NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, activeNode.ancestry[1].node.id).length === 2
-    );
+    for (let index: number = 0; index < numAncestors; index += 1) {
+        const xorNode: TXorNode = ancestry[index];
+
+        if (
+            // We are under an ErrorHandlingExpression
+            xorNode.node.kind === Ast.NodeKind.ErrorHandlingExpression &&
+            // Which was fully parsed
+            XorNodeUtils.isAstXor(xorNode) &&
+            // Yet the cursor is after the end of the Ast
+            activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
+            // And it only has two children, meaning it hasn't parsed an error handler
+            NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
+        ) {
+            return maybeTrailingToken ? Constant.LanguageConstant.Catch.startsWith(maybeTrailingToken.data) : true;
+        }
+    }
+
+    return false;
 }
 
 function isNullableAllowed(activeNode: ActiveNode): boolean {
