@@ -22,7 +22,7 @@ export function autocompleteKeywordErrorHandlingExpression(
         return [Keyword.KeywordKind.Try];
     } else if (maybeChildAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
-        // It's ambiguous if the next token should be either 'otherwise' or 'or'.
+        // It's ambiguous if the next token should be either 'otherwise', 'or', or 'catch'.
         if (maybeTrailingText !== undefined) {
             const trailingToken: TrailingToken = maybeTrailingText;
 

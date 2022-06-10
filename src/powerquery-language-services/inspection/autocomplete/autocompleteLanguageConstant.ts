@@ -4,6 +4,8 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
     TXorNode,
     XorNode,
     XorNodeUtils,
@@ -13,14 +15,16 @@ import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parse
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
-import { TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
     maybeActiveNode: TMaybeActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompleteLanguageConstant,
@@ -29,7 +33,7 @@ export function tryAutocompleteLanguageConstant(
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
-        () => autocompleteLanguageConstant(maybeActiveNode),
+        () => autocompleteLanguageConstant(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
         settings.locale,
     );
 
@@ -38,20 +42,54 @@ export function tryAutocompleteLanguageConstant(
     return result;
 }
 
-function autocompleteLanguageConstant(maybeActiveNode: TMaybeActiveNode): AutocompleteItem | undefined {
+function autocompleteLanguageConstant(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    maybeActiveNode: TMaybeActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): AutocompleteItem | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
 
     const activeNode: ActiveNode = maybeActiveNode;
 
-    if (isNullableAllowed(activeNode)) {
+    if (isCatchAllowed(nodeIdMapCollection, activeNode, maybeTrailingToken)) {
+        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Catch);
+    } else if (isNullableAllowed(activeNode)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Nullable);
     } else if (isOptionalAllowed(activeNode)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Optional);
     } else {
         return undefined;
     }
+}
+
+function isCatchAllowed(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
+): boolean {
+    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const numAncestors: number = ancestry.length;
+
+    for (let index: number = 0; index < numAncestors; index += 1) {
+        const xorNode: TXorNode = ancestry[index];
+
+        if (
+            // We are under an ErrorHandlingExpression
+            xorNode.node.kind === Ast.NodeKind.ErrorHandlingExpression &&
+            // Which was fully parsed
+            XorNodeUtils.isAstXor(xorNode) &&
+            // Yet the cursor is after the end of the Ast
+            activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
+            // And it only has two children, meaning it hasn't parsed an error handler
+            NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
+        ) {
+            return maybeTrailingToken ? Constant.LanguageConstant.Catch.startsWith(maybeTrailingToken.data) : true;
+        }
+    }
+
+    return false;
 }
 
 function isNullableAllowed(activeNode: ActiveNode): boolean {
