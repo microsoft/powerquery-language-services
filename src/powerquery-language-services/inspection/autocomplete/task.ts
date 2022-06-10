@@ -72,6 +72,7 @@ export async function autocomplete(
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
         updatedSettings,
+        nodeIdMapCollection,
         maybeActiveNode,
     );
 
