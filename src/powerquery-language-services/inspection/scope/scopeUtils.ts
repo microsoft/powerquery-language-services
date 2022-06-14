@@ -101,7 +101,7 @@ export function findDirectUpperScopeExpression(
         currentNode.kind !== Ast.NodeKind.LetExpression &&
         currentNode.kind !== Ast.NodeKind.RecordExpression &&
         currentNode.kind !== Ast.NodeKind.RecordLiteral &&
-        currentNode.kind !== Ast.NodeKind.Section
+        currentNode.kind !== Ast.NodeKind.SectionMember
     ) {
         const currentParentId: number = parentIdById.get(currentNode.id) || -1;
         currentNode = astNodeById.get(currentParentId);
