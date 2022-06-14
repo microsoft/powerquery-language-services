@@ -2,14 +2,23 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { assertGetInspectionInstance } from "../testUtils";
 import { expect } from "chai";
-import { Inspected } from "../../powerquery-language-services/inspection";
 
 import type { Position, Range, TextEdit } from "vscode-languageserver-types";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
+import {
+    ActiveNode,
+    ActiveNodeKind,
+    Inspected,
+    InspectionInstance,
+} from "../../powerquery-language-services/inspection";
 import { TestConstants, TestUtils } from "..";
 import { AnalysisBase } from "../../powerquery-language-services";
-import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { assertGetInspectionInstance } from "../testUtils";
+import { findDirectUpperScopeExpression } from "../../powerquery-language-services/inspection/scope/scopeUtils";
+import { NodeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast";
 
 type PartialAnalysis = Pick<AnalysisBase, "getRenameEdits">;
 
@@ -397,6 +406,56 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
             const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
 
             assertExpectedRecordTextEditsWithAtSymbols(textEdits, nextStr);
+        });
+    });
+
+    describe("Utils relating to renameEdits", () => {
+        describe("findDirectUpperScopeExpression", () => {
+            (
+                [
+                    ["SectionMember", `section foo; x| = 1; y = 2; z = let a = x in a;`, NodeKind.SectionMember],
+                    [
+                        "RecordLiteral",
+                        `section foo; [u| = "v" ]shared x = 1; y = 2; z = let a = x in a;`,
+                        NodeKind.RecordLiteral,
+                    ],
+                    [
+                        "RecordExpression",
+                        `[
+                            |a = "yoo"
+                        ]`,
+                        NodeKind.RecordExpression,
+                    ],
+                    ["LetExpression", `let a| = x in a`, NodeKind.LetExpression],
+                    ["FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
+                    ["EachExpression", `each x|;`, NodeKind.EachExpression],
+                    ["undefined", `x| + 1`, undefined],
+                ] as Array<[string, string, NodeKind | undefined]>
+            ).forEach(([nodeKindString, rawTextString, nodeKind]: [string, string, NodeKind | undefined]) => {
+                it(`Find ${nodeKindString}`, async () => {
+                    const rawText: string = rawTextString.replace(/(\r\n|\n)/g, " ");
+
+                    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+
+                    const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
+                        TestConstants.DefaultInspectionSettings,
+                        text,
+                        position,
+                    );
+
+                    const inspectionInstance: InspectionInstance = (await currentInspectDeferred) as InspectionInstance;
+
+                    expect(inspectionInstance.maybeActiveNode.kind).eq(ActiveNodeKind.ActiveNode);
+
+                    const res: Ast.TNode | undefined = findDirectUpperScopeExpression(
+                        inspectionInstance.nodeIdMapCollection,
+                        (inspectionInstance.maybeActiveNode as ActiveNode).maybeInclusiveIdentifierUnderPosition
+                            ?.id as number,
+                    );
+
+                    expect(res?.kind).eq(nodeKind);
+                });
+            });
         });
     });
 });
