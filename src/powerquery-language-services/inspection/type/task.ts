@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -83,21 +83,18 @@ async function inspectScopeType(
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId, trace.id);
 
     for (const scopeItem of nodeScope.values()) {
-        if (!state.givenTypeById.has(scopeItem.id)) {
+        if (!state.typeById.has(scopeItem.id)) {
             // eslint-disable-next-line no-await-in-loop
-            state.deltaTypeById.set(scopeItem.id, await getOrCreateScopeItemType(state, scopeItem));
+            state.typeById.set(scopeItem.id, await getOrCreateScopeItemType(state, scopeItem));
         }
-    }
-
-    for (const [key, value] of state.deltaTypeById.entries()) {
-        state.givenTypeById.set(key, value);
     }
 
     const result: ScopeTypeByKey = new Map();
 
     for (const [key, scopeItem] of nodeScope.entries()) {
-        const type: Type.TPowerQueryType = Assert.asDefined(
-            state.givenTypeById.get(scopeItem.id),
+        const type: Type.TPowerQueryType = MapUtils.assertGet(
+            state.typeById,
+            scopeItem.id,
             `expected nodeId to be in givenTypeById`,
             { nodeId: scopeItem.id },
         );
@@ -125,8 +122,7 @@ function createState(
         maybeInitialCorrelationId: correlationId,
         traceManager: settings.traceManager,
         typeStrategy: settings.typeStrategy,
-        givenTypeById: typeCache.typeById,
-        deltaTypeById: new Map(),
+        typeById: typeCache.typeById,
         nodeIdMapCollection,
         scopeById: typeCache.scopeById,
     };

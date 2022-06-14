@@ -42,8 +42,7 @@ import { TypeById } from "../../typeCache";
 export interface InspectTypeState
     extends PQP.CommonSettings,
         Omit<InspectionSettings, keyof PQP.LexSettings | keyof PQP.ParseSettings> {
-    readonly givenTypeById: TypeById;
-    readonly deltaTypeById: TypeById;
+    readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
 }
@@ -81,7 +80,7 @@ export async function assertGetOrCreateNodeScope(
     if (ResultUtils.isError(triedGetOrCreateScope)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
-        throw triedGetOrCreateScope;
+        throw triedGetOrCreateScope.error;
     }
 
     trace.exit();
@@ -138,20 +137,12 @@ export async function getOrCreateScopeItemType(
     );
 
     const nodeId: number = scopeItem.id;
-    const maybeGivenType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
+    const maybeType: Type.TPowerQueryType | undefined = state.typeById.get(nodeId);
 
-    if (maybeGivenType !== undefined) {
-        trace.exit({ givenCacheHit: true });
+    if (maybeType !== undefined) {
+        trace.exit({ cacheHit: true });
 
-        return maybeGivenType;
-    }
-
-    const maybeDeltaType: Type.TPowerQueryType | undefined = state.givenTypeById.get(nodeId);
-
-    if (maybeDeltaType !== undefined) {
-        trace.exit({ deltaCacheHit: true });
-
-        return maybeDeltaType;
+        return maybeType;
     }
 
     const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem, trace.id);
@@ -233,9 +224,7 @@ export async function inspectXor(
     state.maybeCancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-
-    const maybeCached: Type.TPowerQueryType | undefined =
-        state.givenTypeById.get(xorNodeId) || state.deltaTypeById.get(xorNodeId);
+    const maybeCached: Type.TPowerQueryType | undefined = state.typeById.get(xorNodeId);
 
     if (maybeCached !== undefined) {
         trace.exit();
@@ -421,7 +410,7 @@ export async function inspectXor(
             throw Assert.isNever(xorNode.node);
     }
 
-    state.deltaTypeById.set(xorNodeId, result);
+    state.typeById.set(xorNodeId, result);
     trace.exit({ resultKind: result.kind, maybeResultExtendedKind: result.maybeExtendedKind });
 
     return result;
