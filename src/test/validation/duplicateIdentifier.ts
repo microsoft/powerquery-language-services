@@ -212,6 +212,13 @@ describe(`Validation - duplicateIdentifier`, () => {
             ]);
         });
 
+        it("type [a = number, b = number, a = logical]", async () => {
+            const text: string = "type [a = number, b = number, a = logical]";
+            const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+
+            await validateDuplicateIdentifierDiagnostics(textDocument, []);
+        });
+
         it('section foo; shared a = 1; a = "hello";', async () => {
             const text: string = 'section foo; shared a = 1; a = "hello";';
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);

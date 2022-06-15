@@ -74,6 +74,7 @@ export async function validateDuplicateIdentifiers(
     const result: ReadonlyArray<Diagnostic> = [
         ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
         ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
+        ...validateDuplicateIdentifiersForRecordType(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
         ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
     ];
 
@@ -132,6 +133,36 @@ function validateDuplicateIdentifiersForRecord(
         nodeIdMapCollection,
         recordIds,
         NodeIdMapIterator.iterRecord,
+        validationSettings,
+        trace.id,
+    );
+
+    trace.exit();
+
+    return result;
+}
+
+function validateDuplicateIdentifiersForRecordType(
+    documentUri: DocumentUri,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    validationSettings: ValidationSettings,
+    correlationId: number,
+): ReadonlyArray<Diagnostic> {
+    const trace: Trace = validationSettings.traceManager.entry(
+        ValidationTraceConstant.Validation,
+        validateDuplicateIdentifiersForRecordType.name,
+        correlationId,
+    );
+
+    const recordTypeIds: ReadonlyArray<Set<number>> = [
+        nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordType) ?? new Set(),
+    ];
+
+    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
+        documentUri,
+        nodeIdMapCollection,
+        recordTypeIds,
+        NodeIdMapIterator.iterRecordType,
         validationSettings,
         trace.id,
     );
