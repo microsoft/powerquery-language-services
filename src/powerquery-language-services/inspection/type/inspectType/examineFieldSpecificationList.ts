@@ -9,6 +9,8 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { ArrayUtils } from "@microsoft/powerquery-parser";
+import { FieldSpecificationKeyValuePair } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
@@ -37,27 +39,14 @@ export async function examineFieldSpecificationList(
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const fields: [string, Type.TPowerQueryType][] = [];
 
-    for (const fieldSpecification of NodeIdMapIterator.iterFieldSpecification(
-        nodeIdMapCollection,
-        XorNodeUtils.assertAsFunctionParameterList(xorNode),
-    )) {
-        const maybeName: Ast.GeneralizedIdentifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
-            nodeIdMapCollection,
-            fieldSpecification.node.id,
-            1,
-            Ast.NodeKind.GeneralizedIdentifier,
-        );
-
-        if (maybeName === undefined) {
-            break;
-        }
-
-        // eslint-disable-next-line no-await-in-loop
-        const type: Type.TPowerQueryType = await inspectTypeFieldSpecification(state, fieldSpecification, trace.id);
-        fields.push([maybeName.literal, type]);
-    }
+    const fields: ReadonlyArray<[string, Type.TPowerQueryType]> = await ArrayUtils.mapAsync(
+        NodeIdMapIterator.iterFieldSpecificationList(nodeIdMapCollection, xorNode),
+        async (fieldSpecification: FieldSpecificationKeyValuePair) => [
+            fieldSpecification.normalizedKeyLiteral,
+            await inspectTypeFieldSpecification(state, fieldSpecification.source, trace.id),
+        ],
+    );
 
     const isOpen: boolean =
         NodeIdMapUtils.maybeNthChildChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !==
