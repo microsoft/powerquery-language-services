@@ -226,21 +226,61 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     });
 
     describe(`getDefinition`, () => {
-        it(`let foobar = 1 in foobar|`, async () => {
+        it(`no definition`, async () => {
+            const expected: Range[] = [];
+            const actual: Location[] | undefined = await TestUtils.createDefinition("let foo = 1 in baz|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`let expression`, async () => {
             const expected: Range[] = [
                 {
-                    end: {
-                        character: 10,
-                        line: 0,
-                    },
-                    start: {
-                        character: 4,
-                        line: 0,
-                    },
+                    end: { character: 10, line: 0 },
+                    start: { character: 4, line: 0 },
                 },
             ];
 
             const actual: Location[] | undefined = await TestUtils.createDefinition("let foobar = 1 in foobar|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`record expression`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 4, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("[foo = 1, bar = foo|]");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`section expression`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 16, line: 0 },
+                    start: { character: 13, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("section foo; bar = 1; baz = bar|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`parameter`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 4, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("(foo as number) => foo|");
             Assert.isDefined(actual);
             TestUtils.assertEqualLocation(expected, actual);
         });
