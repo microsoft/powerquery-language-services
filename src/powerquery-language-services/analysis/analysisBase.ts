@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
+import type { Hover, Location, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { DocumentUri } from "vscode-languageserver-textdocument";
@@ -120,6 +120,30 @@ export abstract class AnalysisBase implements Analysis {
         return result;
     }
 
+    public async getDefinition(): Promise<Location[]> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getDefinition.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
+        const maybeIdentifierContext: IdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+            trace.id,
+        );
+
+        if (!maybeIdentifierContext) {
+            trace.exit();
+
+            return [];
+        }
+
+        const result: Location[] | null = await this.localDocumentSymbolProvider.getDefinition(maybeIdentifierContext);
+
+        trace.exit();
+
+        return result ?? [];
+    }
+
     public async getHover(): Promise<Hover> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -127,34 +151,20 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+        const maybeIdentifierContext: IdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+            trace.id,
+        );
 
-        const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-            maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
-
-        if (
-            maybeActiveNode === undefined ||
-            maybeIdentifierUnderPosition === undefined ||
-            !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)
-        ) {
+        if (!maybeIdentifierContext) {
             trace.exit();
 
             return EmptyHover;
         }
 
-        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
-
-        const context: IdentifierProviderContext = {
-            traceManager: this.analysisSettings.traceManager,
-            range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
-            identifier: identifier.literal,
-            maybeInitialCorrelationId: trace.id,
-        };
-
         // Result priority is based on the order of the symbol providers
         const result: Promise<Hover> = AnalysisBase.resolveProviders(
             AnalysisBase.createHoverCalls(
-                context,
+                maybeIdentifierContext,
                 [this.localDocumentSymbolProvider, this.librarySymbolProvider],
                 this.analysisSettings.symbolProviderTimeoutInMS,
             ),
@@ -423,6 +433,42 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         return true;
+    }
+
+    private async getMaybeIdentifierContext(correlationId: number): Promise<IdentifierProviderContext | undefined> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getDefinition.name,
+            correlationId,
+        );
+
+        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+
+        const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+            maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
+
+        if (
+            maybeActiveNode === undefined ||
+            maybeIdentifierUnderPosition === undefined ||
+            !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)
+        ) {
+            trace.exit();
+
+            return undefined;
+        }
+
+        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
+
+        const context: IdentifierProviderContext = {
+            traceManager: this.analysisSettings.traceManager,
+            range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
+            identifier: identifier.literal,
+            maybeInitialCorrelationId: trace.id,
+        };
+
+        trace.exit();
+
+        return context;
     }
 
     private async getMaybePositionIdentifier(): Promise<Ast.Identifier | Ast.GeneralizedIdentifier | undefined> {

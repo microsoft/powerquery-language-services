@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
-import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, Location, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { expect } from "chai";
 
 import * as TestConstants from "../testConstants";
@@ -219,9 +219,13 @@ export async function assertGetValidationResult(document: TextDocument): Promise
     return await validate(document, TestConstants.SimpleValidateAllSettings);
 }
 
-export function assertHover(expected: string, actual: Hover): void {
+export function assertEqualHover(expected: string, actual: Hover): void {
     const contents: string = assertAsMarkupContent(actual.contents).value;
     expect(contents).to.equal(expected);
+}
+
+export function assertEqualLocation(expected: Location[], actual: Location[]): void {
+    expect(actual).deep.equals(expected);
 }
 
 export function assertIsDefined<T>(

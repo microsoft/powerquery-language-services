@@ -70,7 +70,7 @@ describe("Analysis", () => {
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
             );
 
-            TestUtils.assertHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
+            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
         });
 
         it(`timeout library provider`, async () => {
@@ -156,7 +156,7 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
     const stopTime: number = new Date().getTime();
     const totalMS: number = stopTime - startTime;
 
-    TestUtils.assertHover(expectedHoverText, hover);
+    TestUtils.assertEqualHover(expectedHoverText, hover);
 
     expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
 }

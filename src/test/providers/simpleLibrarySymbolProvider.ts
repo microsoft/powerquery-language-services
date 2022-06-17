@@ -71,12 +71,12 @@ describe(`SimpleLibraryProvider`, () => {
     describe(`getHover`, () => {
         it(`constant`, async () => {
             const hover: Hover = await createHover("Test.Num|ber");
-            TestUtils.assertHover("[library constant] Test.Number: number", hover);
+            TestUtils.assertEqualHover("[library constant] Test.Number: number", hover);
         });
 
         it(`function`, async () => {
             const hover: Hover = await createHover("Test.Square|IfNumber");
-            TestUtils.assertHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
+            TestUtils.assertEqualHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
         });
 
         it(`no match`, async () => {

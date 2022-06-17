@@ -46,4 +46,9 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionType: Type.TPowerQueryType;
 }
 
-export interface ISymbolProvider extends AutocompleteItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}
+export interface ISymbolProvider
+    extends AutocompleteItemProvider,
+        DefinitionProvider,
+        HoverProvider,
+        SignatureHelpProvider,
+        ILibrary {}

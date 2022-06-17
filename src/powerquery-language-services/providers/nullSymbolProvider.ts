@@ -10,6 +10,7 @@ import {
 import { Hover, SignatureHelp } from "../commonTypes";
 import { Inspection, Library } from "..";
 import { AutocompleteItem } from "../inspection/autocomplete";
+import { Location } from "vscode-languageserver-types";
 
 export class NullSymbolProvider implements ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
@@ -30,6 +31,11 @@ export class NullSymbolProvider implements ISymbolProvider {
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<AutocompleteItem>> {
+        return [];
+    }
+
+    // eslint-disable-next-line require-await
+    public async getDefinition(_context: IdentifierProviderContext): Promise<Location[] | null> {
         return [];
     }
 
