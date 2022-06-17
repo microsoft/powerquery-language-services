@@ -14,7 +14,7 @@ import {
     InspectionSettings,
     Library,
     LibraryUtils,
-    LocalDocumentSymbolProvider,
+    LocalDocumentProvider,
     TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
@@ -245,7 +245,7 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
         uri: DocumentUri,
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
-    ) => new LocalDocumentSymbolProvider(library, uri, maybePromiseInspection, createInspectionSettingsFn),
+    ) => new LocalDocumentProvider(library, uri, maybePromiseInspection, createInspectionSettingsFn),
     maybeInitialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
 };

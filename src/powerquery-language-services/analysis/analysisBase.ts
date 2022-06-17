@@ -12,26 +12,26 @@ import * as InspectionUtils from "../inspectionUtils";
 import * as PositionUtils from "../positionUtils";
 import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
 import type {
-    AutocompleteItemProvider,
     AutocompleteItemProviderContext,
-    HoverProvider,
-    IdentifierProviderContext,
+    IAutocompleteItemProvider,
+    IHoverProvider,
     ILocalDocumentProvider,
     ISymbolProvider,
+    OverIdentifierProviderContext,
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { findScopeItemByLiteral, maybeScopeCreatorIdentifier } from "../inspection/scope/scopeUtils";
-import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
+import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { Library } from "../library";
 import { ValidationTraceConstant } from "../trace";
 
 export abstract class AnalysisBase implements Analysis {
-    protected languageAutocompleteItemProvider: AutocompleteItemProvider;
+    protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
     protected localDocumentProvider: ILocalDocumentProvider;
 
@@ -60,7 +60,7 @@ export abstract class AnalysisBase implements Analysis {
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
                   )
-                : new LocalDocumentSymbolProvider(
+                : new LocalDocumentProvider(
                       library,
                       uri,
                       promiseMaybeInspected,
@@ -128,7 +128,7 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: IdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+        const maybeIdentifierContext: OverIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
             trace.id,
         );
 
@@ -152,7 +152,7 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: IdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+        const maybeIdentifierContext: OverIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
             trace.id,
         );
 
@@ -375,22 +375,22 @@ export abstract class AnalysisBase implements Analysis {
 
     private static createAutocompleteItemCalls(
         context: AutocompleteItemProviderContext,
-        providers: ReadonlyArray<AutocompleteItemProvider>,
+        providers: ReadonlyArray<IAutocompleteItemProvider>,
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
         // TODO: add tracing to the catch case
-        return providers.map((provider: AutocompleteItemProvider) =>
+        return providers.map((provider: IAutocompleteItemProvider) =>
             this.promiseWithTimeout(() => provider.getAutocompleteItems(context), [], timeoutInMS),
         );
     }
 
     private static createHoverCalls(
-        context: IdentifierProviderContext,
-        providers: HoverProvider[],
+        context: OverIdentifierProviderContext,
+        providers: IHoverProvider[],
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
         // TODO: add tracing to the catch case
-        return providers.map((provider: HoverProvider) =>
+        return providers.map((provider: IHoverProvider) =>
             this.promiseWithTimeout(() => provider.getHover(context), null, timeoutInMS),
         );
     }
@@ -436,7 +436,7 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private async getMaybeIdentifierContext(correlationId: number): Promise<IdentifierProviderContext | undefined> {
+    private async getMaybeIdentifierContext(correlationId: number): Promise<OverIdentifierProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
             this.getDefinition.name,
@@ -460,7 +460,7 @@ export abstract class AnalysisBase implements Analysis {
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
 
-        const context: IdentifierProviderContext = {
+        const context: OverIdentifierProviderContext = {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier: identifier.literal,

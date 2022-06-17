@@ -5,17 +5,17 @@ import type { Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
-    DefinitionProvider,
     Hover,
-    IdentifierProviderContext,
+    IDefinitionProvider,
     Library,
     LibrarySymbolProvider,
+    OverIdentifierProviderContext,
     SignatureHelp,
     SignatureProviderContext,
 } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 
-export class SlowSymbolProvider extends LibrarySymbolProvider implements DefinitionProvider {
+export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefinitionProvider {
     private readonly delayInMS: number;
 
     constructor(library: Library.ILibrary, delayInMS: number) {
@@ -32,11 +32,11 @@ export class SlowSymbolProvider extends LibrarySymbolProvider implements Definit
     }
 
     // eslint-disable-next-line require-await
-    public async getDefinition(_context: IdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(_context: OverIdentifierProviderContext): Promise<Location[] | null> {
         throw new Error("Method not implemented.");
     }
 
-    public override async getHover(context: IdentifierProviderContext): Promise<Hover | null> {
+    public override async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
         await this.delay();
 
         return super.getHover(context);

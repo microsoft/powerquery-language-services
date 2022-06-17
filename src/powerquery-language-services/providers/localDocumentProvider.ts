@@ -16,9 +16,9 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 import * as InspectionUtils from "../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
-    DefinitionProvider,
-    IdentifierProviderContext,
+    IDefinitionProvider,
     ISymbolProvider,
+    OverIdentifierProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Inspection, Library, PositionUtils } from "..";
@@ -26,7 +26,7 @@ import { InspectionSettings } from "../inspectionSettings";
 import { ProviderTraceConstant } from "../trace";
 import { ScopeUtils } from "../inspection";
 
-export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvider {
+export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -67,7 +67,7 @@ export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvide
         return result;
     }
 
-    public async getDefinition(context: IdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(context: OverIdentifierProviderContext): Promise<Location[] | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getDefinition.name,
@@ -109,7 +109,7 @@ export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvide
         return [result];
     }
 
-    public async getHover(context: IdentifierProviderContext): Promise<Hover | null> {
+    public async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getHover.name,
@@ -203,7 +203,7 @@ export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvide
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
     protected static async getHoverForIdentifierPairedExpression(
-        context: IdentifierProviderContext,
+        context: OverIdentifierProviderContext,
         inspectionSettings: InspectionSettings,
         inspected: Inspection.Inspected,
         activeNode: Inspection.ActiveNode,
@@ -315,7 +315,7 @@ export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvide
     }
 
     protected static getHoverForScopeItem(
-        context: IdentifierProviderContext,
+        context: OverIdentifierProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
         correlationId: number,

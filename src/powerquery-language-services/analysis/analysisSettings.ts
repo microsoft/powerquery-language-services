@@ -4,7 +4,7 @@
 import { DocumentUri } from "vscode-languageserver-textdocument";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { AutocompleteItemProvider, ILocalDocumentProvider, ISymbolProvider } from "../providers/commonTypes";
+import { IAutocompleteItemProvider, ILocalDocumentProvider, ISymbolProvider } from "../providers/commonTypes";
 import { Inspection } from "..";
 import { InspectionSettings } from "../inspectionSettings";
 import { Library } from "../library";
@@ -13,7 +13,7 @@ export interface AnalysisSettings {
     readonly createInspectionSettingsFn: () => InspectionSettings;
     readonly isWorkspaceCacheAllowed: boolean;
     readonly library: Library.ILibrary;
-    readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => AutocompleteItemProvider;
+    readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => IAutocompleteItemProvider;
     readonly maybeCreateLibrarySymbolProviderFn?: (library: Library.ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentProviderFn?: (
         library: Library.ILibrary,

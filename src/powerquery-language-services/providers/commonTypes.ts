@@ -8,7 +8,7 @@ import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 
-export interface AutocompleteItemProvider {
+export interface IAutocompleteItemProvider {
     getAutocompleteItems(context: AutocompleteItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
 }
 
@@ -17,19 +17,19 @@ export interface AutocompleteItemProviderContext extends ProviderContext {
     readonly tokenKind?: string;
 }
 
-export interface DefinitionProvider {
-    getDefinition(context: IdentifierProviderContext): Promise<Location[] | null>;
+export interface IDefinitionProvider {
+    getDefinition(context: OverIdentifierProviderContext): Promise<Location[] | null>;
 }
 
-export interface HoverProvider {
-    getHover(context: IdentifierProviderContext): Promise<Hover | null>;
+export interface IHoverProvider {
+    getHover(context: OverIdentifierProviderContext): Promise<Hover | null>;
 }
 
-export interface IdentifierProviderContext extends ProviderContext {
+export interface OverIdentifierProviderContext extends ProviderContext {
     readonly identifier: string;
 }
 
-export interface ILocalDocumentProvider extends DefinitionProvider, ISymbolProvider {}
+export interface ILocalDocumentProvider extends IDefinitionProvider, ISymbolProvider {}
 
 export interface ProviderContext {
     readonly traceManager: TraceManager;
@@ -48,4 +48,4 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionType: Type.TPowerQueryType;
 }
 
-export interface ISymbolProvider extends AutocompleteItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}
+export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, SignatureHelpProvider, ILibrary {}

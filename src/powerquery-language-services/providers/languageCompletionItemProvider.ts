@@ -5,12 +5,12 @@ import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { AutocompleteItemProvider, AutocompleteItemProviderContext } from "./commonTypes";
+import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
 import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
-export class LanguageAutocompleteItemProvider implements AutocompleteItemProvider {
+export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvider {
     // Power Query defines constructor functions (ex. #table()) as keywords, but we want
     // them to be treated like library functions instead.
     private static readonly ExcludedKeywords: ReadonlyArray<string> = [
