@@ -23,7 +23,7 @@ import type {
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
-import { findScopeItemByLiteral, maybeScopeCreator } from "../inspection/scope/scopeUtils";
+import { findScopeItemByLiteral, maybeScopeCreatorIdentifier } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
@@ -283,7 +283,7 @@ export abstract class AnalysisBase implements Analysis {
 
                     if (scopeItem) {
                         const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreator(scopeItem);
+                            maybeScopeCreatorIdentifier(scopeItem);
 
                         if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
                             if (

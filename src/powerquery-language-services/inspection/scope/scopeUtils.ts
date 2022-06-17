@@ -61,7 +61,7 @@ export function findScopeItemByLiteral(
     return nodeScope?.get(literalString);
 }
 
-export function maybeScopeCreator(
+export function maybeScopeCreatorIdentifier(
     scopeItem: TScopeItem | undefined,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (!scopeItem) {

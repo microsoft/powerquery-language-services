@@ -93,7 +93,7 @@ export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvide
         }
 
         const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
-            ScopeUtils.maybeScopeCreator(maybeScopeItem);
+            ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
 
         if (creator === undefined) {
             return null;

@@ -13,7 +13,11 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { findDirectUpperScopeExpression, findScopeItemByLiteral, maybeScopeCreator } from "./scope/scopeUtils";
+import {
+    findDirectUpperScopeExpression,
+    findScopeItemByLiteral,
+    maybeScopeCreatorIdentifier,
+} from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
@@ -137,7 +141,7 @@ export class InspectionInstance implements Inspected {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreator(theScopeItem);
+                            maybeScopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (
