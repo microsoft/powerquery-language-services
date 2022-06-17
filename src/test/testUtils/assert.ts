@@ -5,6 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
 import { Hover, Location, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { expect } from "chai";
+import { Range } from "vscode-languageserver-textdocument";
 
 import * as TestConstants from "../testConstants";
 import * as TestUtils from "./testUtils";
@@ -224,8 +225,9 @@ export function assertEqualHover(expected: string, actual: Hover): void {
     expect(contents).to.equal(expected);
 }
 
-export function assertEqualLocation(expected: Location[], actual: Location[]): void {
-    expect(actual).deep.equals(expected);
+export function assertEqualLocation(expected: ReadonlyArray<Range>, actual: ReadonlyArray<Location>): void {
+    const actualRange: ReadonlyArray<Range> = actual.map((location: Location) => location.range);
+    expect(actualRange).deep.equals(expected);
 }
 
 export function assertIsDefined<T>(
