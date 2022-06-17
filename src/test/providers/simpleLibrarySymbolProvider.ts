@@ -3,6 +3,7 @@
 
 import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 
 import {
@@ -21,6 +22,7 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLocalDocumentSymbolProviderFn: (
         _library: Library.ILibrary,
+        _uri: DocumentUri,
         _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
     ) => NullSymbolProvider.singleton(),
 };

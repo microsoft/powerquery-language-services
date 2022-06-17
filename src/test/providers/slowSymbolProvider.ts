@@ -4,7 +4,7 @@
 import {
     AutocompleteItemProviderContext,
     Hover,
-    HoverProviderContext,
+    IdentifierProviderContext,
     Library,
     LibrarySymbolProvider,
     SignatureHelp,
@@ -28,7 +28,7 @@ export class SlowSymbolProvider extends LibrarySymbolProvider {
         return super.getAutocompleteItems(context);
     }
 
-    public override async getHover(context: HoverProviderContext): Promise<Hover | null> {
+    public override async getHover(context: IdentifierProviderContext): Promise<Hover | null> {
         await this.delay();
 
         return super.getHover(context);

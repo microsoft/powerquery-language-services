@@ -4,6 +4,7 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
@@ -241,9 +242,10 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
     maybeCreateLocalDocumentSymbolProviderFn: (
         library: Library.ILibrary,
+        uri: DocumentUri,
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
-    ) => new LocalDocumentSymbolProvider(library, maybePromiseInspection, createInspectionSettingsFn),
+    ) => new LocalDocumentSymbolProvider(library, uri, maybePromiseInspection, createInspectionSettingsFn),
     maybeInitialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
 };

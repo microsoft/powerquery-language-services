@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { AutocompleteItemProvider, ISymbolProvider } from "../providers/commonTypes";
@@ -16,6 +17,7 @@ export interface AnalysisSettings {
     readonly maybeCreateLibrarySymbolProviderFn?: (library: Library.ILibrary) => ISymbolProvider;
     readonly maybeCreateLocalDocumentSymbolProviderFn?: (
         library: Library.ILibrary,
+        uri: DocumentUri,
         promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         createInspectionSettingsFn: () => InspectionSettings,
     ) => ISymbolProvider;

@@ -3,7 +3,7 @@
 
 import {
     AutocompleteItemProviderContext,
-    HoverProviderContext,
+    IdentifierProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
@@ -34,7 +34,7 @@ export class NullSymbolProvider implements ISymbolProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
+    public async getHover(_context: IdentifierProviderContext): Promise<Hover | null> {
         return null;
     }
 

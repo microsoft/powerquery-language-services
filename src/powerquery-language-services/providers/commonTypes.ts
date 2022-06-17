@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Range, SignatureHelp } from "vscode-languageserver-types";
+import type { Hover, Location, Range, SignatureHelp } from "vscode-languageserver-types";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -17,11 +17,15 @@ export interface AutocompleteItemProviderContext extends ProviderContext {
     readonly tokenKind?: string;
 }
 
-export interface HoverProvider {
-    getHover(context: HoverProviderContext): Promise<Hover | null>;
+export interface DefinitionProvider {
+    getDefinition(context: IdentifierProviderContext): Promise<Location[] | null>;
 }
 
-export interface HoverProviderContext extends ProviderContext {
+export interface HoverProvider {
+    getHover(context: IdentifierProviderContext): Promise<Hover | null>;
+}
+
+export interface IdentifierProviderContext extends ProviderContext {
     readonly identifier: string;
 }
 

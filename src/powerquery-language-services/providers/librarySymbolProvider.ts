@@ -8,7 +8,7 @@ import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 
 import {
     AutocompleteItemProviderContext,
-    HoverProviderContext,
+    IdentifierProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
@@ -57,7 +57,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+    public async getHover(context: IdentifierProviderContext): Promise<Hover | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LibrarySymbolProvider,
             this.getHover.name,

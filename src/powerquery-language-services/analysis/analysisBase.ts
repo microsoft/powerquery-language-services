@@ -4,6 +4,7 @@
 import type { Hover, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
@@ -14,14 +15,14 @@ import type {
     AutocompleteItemProvider,
     AutocompleteItemProviderContext,
     HoverProvider,
-    HoverProviderContext,
+    IdentifierProviderContext,
     ISymbolProvider,
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
-import { findScopeItemByLiteral, findTheCreatorIdentifierOfOneScopeItem } from "../inspection/scope/scopeUtils";
+import { findScopeItemByLiteral, maybeScopeCreator } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentSymbolProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
@@ -34,6 +35,7 @@ export abstract class AnalysisBase implements Analysis {
     protected localDocumentSymbolProvider: ISymbolProvider;
 
     constructor(
+        protected uri: DocumentUri,
         protected analysisSettings: AnalysisSettings,
         protected promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
     ) {
@@ -53,11 +55,13 @@ export abstract class AnalysisBase implements Analysis {
             analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
                 ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
                       library,
+                      uri,
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
                   )
                 : new LocalDocumentSymbolProvider(
                       library,
+                      uri,
                       promiseMaybeInspected,
                       analysisSettings.createInspectionSettingsFn,
                   );
@@ -140,7 +144,7 @@ export abstract class AnalysisBase implements Analysis {
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
 
-        const context: HoverProviderContext = {
+        const context: IdentifierProviderContext = {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier: identifier.literal,
@@ -268,7 +272,7 @@ export abstract class AnalysisBase implements Analysis {
 
                     if (scopeItem) {
                         const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            findTheCreatorIdentifierOfOneScopeItem(scopeItem);
+                            maybeScopeCreator(scopeItem);
 
                         if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
                             if (
@@ -370,7 +374,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private static createHoverCalls(
-        context: HoverProviderContext,
+        context: IdentifierProviderContext,
         providers: HoverProvider[],
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {

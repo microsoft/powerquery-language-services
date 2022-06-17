@@ -3,6 +3,7 @@
 
 import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 
 import {
@@ -41,6 +42,7 @@ describe("Analysis", () => {
                 symbolProviderTimeoutInMS: 0, // immediate timeout
                 maybeCreateLocalDocumentSymbolProviderFn: (
                     library: Library.ILibrary,
+                    _uri: DocumentUri,
                     _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
                     _createInspectionSettingsFn: () => InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),

@@ -25,6 +25,7 @@ type PartialAnalysis = Pick<AnalysisBase, "getRenameEdits">;
 class RenameEditsAnalysis extends AnalysisBase {
     constructor(promiseMaybeInspected: Promise<Inspected | undefined>) {
         super(
+            undefined as any,
             {
                 createInspectionSettingsFn: undefined as any,
                 isWorkspaceCacheAllowed: false,

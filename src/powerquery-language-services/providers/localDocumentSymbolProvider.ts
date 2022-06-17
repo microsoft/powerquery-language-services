@@ -8,27 +8,31 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Hover, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
-    HoverProviderContext,
+    DefinitionProvider,
+    IdentifierProviderContext,
     ISymbolProvider,
     SignatureProviderContext,
 } from "./commonTypes";
-import { Inspection, Library } from "..";
+import { Inspection, Library, PositionUtils } from "..";
 import { InspectionSettings } from "../inspectionSettings";
 import { ProviderTraceConstant } from "../trace";
+import { ScopeUtils } from "../inspection";
 
-export class LocalDocumentSymbolProvider implements ISymbolProvider {
+export class LocalDocumentSymbolProvider implements DefinitionProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
     constructor(
         library: Library.ILibrary,
+        private readonly uri: DocumentUri,
         private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
         private readonly createInspectionSettingsFn: () => InspectionSettings,
     ) {
@@ -63,7 +67,49 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
         return result;
     }
 
-    public async getHover(context: HoverProviderContext): Promise<Hover | null> {
+    public async getDefinition(context: IdentifierProviderContext): Promise<Location[] | null> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getDefinition.name,
+            context.maybeInitialCorrelationId,
+        );
+
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+
+        if (maybeInspected === undefined) {
+            return null;
+        }
+
+        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspected.triedNodeScope;
+
+        if (ResultUtils.isError(triedNodeScope)) {
+            return null;
+        }
+
+        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier);
+
+        if (maybeScopeItem === undefined) {
+            return null;
+        }
+
+        const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
+            ScopeUtils.maybeScopeCreator(maybeScopeItem);
+
+        if (creator === undefined) {
+            return null;
+        }
+
+        const result: Location = {
+            range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
+            uri: this.uri,
+        };
+
+        trace.exit();
+
+        return [result];
+    }
+
+    public async getHover(context: IdentifierProviderContext): Promise<Hover | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getHover.name,
@@ -157,7 +203,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
     protected static async getHoverForIdentifierPairedExpression(
-        context: HoverProviderContext,
+        context: IdentifierProviderContext,
         inspectionSettings: InspectionSettings,
         inspected: Inspection.Inspected,
         activeNode: Inspection.ActiveNode,
@@ -269,7 +315,7 @@ export class LocalDocumentSymbolProvider implements ISymbolProvider {
     }
 
     protected static getHoverForScopeItem(
-        context: HoverProviderContext,
+        context: IdentifierProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
         correlationId: number,
