@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import type { Range, TextDocument } from "vscode-languageserver-textdocument";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import type { Location } from "vscode-languageserver-types";
-import { TextDocument } from "vscode-languageserver-textdocument";
 
 import {
     AnalysisSettings,
@@ -227,7 +227,19 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
     describe(`getDefinition`, () => {
         it(`let foobar = 1 in foobar|`, async () => {
-            const expected: Location[] = [] as Location[];
+            const expected: Range[] = [
+                {
+                    end: {
+                        character: 10,
+                        line: 0,
+                    },
+                    start: {
+                        character: 4,
+                        line: 0,
+                    },
+                },
+            ];
+
             const actual: Location[] | undefined = await TestUtils.createDefinition("let foobar = 1 in foobar|");
             Assert.isDefined(actual);
             TestUtils.assertEqualLocation(expected, actual);

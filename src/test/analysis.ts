@@ -14,9 +14,9 @@ import {
     Library,
     SignatureHelp,
 } from "../powerquery-language-services";
+import { ILocalDocumentProvider, ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
-import { ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
 describe("Analysis", () => {
@@ -40,7 +40,7 @@ describe("Analysis", () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 symbolProviderTimeoutInMS: 0, // immediate timeout
-                maybeCreateLocalDocumentSymbolProviderFn: (
+                maybeCreateLocalDocumentProviderFn: (
                     library: Library.ILibrary,
                     _uri: DocumentUri,
                     _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
@@ -126,23 +126,40 @@ describe("Analysis", () => {
 });
 
 async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverText: string): Promise<void> {
-    const baseAnalysis: any =
-        provider === "local"
-            ? {
-                  maybeCreateLocalDocumentSymbolProviderFn: (
-                      library: Library.ILibrary,
-                      _maybePromiseInspected: Promise<Inspection.Inspected> | undefined,
-                      _createInspectionSettingsFn: () => InspectionSettings,
-                  ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
-              }
-            : {
-                  maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary): ISymbolProvider =>
-                      new SlowSymbolProvider(library, 1000),
-              };
+    let maybeCreateLocalDocumentProviderFn: AnalysisSettings["maybeCreateLocalDocumentProviderFn"];
+    let maybeCreateLibrarySymbolProviderFn: AnalysisSettings["maybeCreateLibrarySymbolProviderFn"];
+
+    switch (provider) {
+        case "library":
+            maybeCreateLibrarySymbolProviderFn = (library: Library.ILibrary): ISymbolProvider =>
+                new SlowSymbolProvider(library, 1000);
+
+            maybeCreateLocalDocumentProviderFn =
+                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
+
+            break;
+
+        case "local":
+            maybeCreateLibrarySymbolProviderFn =
+                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLibrarySymbolProviderFn;
+
+            maybeCreateLocalDocumentProviderFn = (
+                library: Library.ILibrary,
+                _uri: DocumentUri,
+                _promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
+                _createInspectionSettingsFn: () => InspectionSettings,
+            ): ILocalDocumentProvider => new SlowSymbolProvider(library, 1000);
+
+            break;
+
+        default:
+            throw Assert.isNever(provider);
+    }
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        ...baseAnalysis,
+        maybeCreateLibrarySymbolProviderFn,
+        maybeCreateLocalDocumentProviderFn,
         symbolProviderTimeoutInMS: 10,
     };
 

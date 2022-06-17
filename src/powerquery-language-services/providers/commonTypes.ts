@@ -29,6 +29,8 @@ export interface IdentifierProviderContext extends ProviderContext {
     readonly identifier: string;
 }
 
+export interface ILocalDocumentProvider extends DefinitionProvider, ISymbolProvider {}
+
 export interface ProviderContext {
     readonly traceManager: TraceManager;
     readonly maybeInitialCorrelationId: number | undefined;
@@ -46,9 +48,4 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionType: Type.TPowerQueryType;
 }
 
-export interface ISymbolProvider
-    extends AutocompleteItemProvider,
-        DefinitionProvider,
-        HoverProvider,
-        SignatureHelpProvider,
-        ILibrary {}
+export interface ISymbolProvider extends AutocompleteItemProvider, HoverProvider, SignatureHelpProvider, ILibrary {}

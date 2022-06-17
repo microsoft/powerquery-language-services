@@ -240,7 +240,7 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     isWorkspaceCacheAllowed: false,
     library: SimpleLibrary,
     maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
-    maybeCreateLocalDocumentSymbolProviderFn: (
+    maybeCreateLocalDocumentProviderFn: (
         library: Library.ILibrary,
         uri: DocumentUri,
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,

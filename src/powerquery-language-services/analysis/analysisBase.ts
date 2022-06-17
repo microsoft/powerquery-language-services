@@ -4,7 +4,7 @@
 import type { Hover, Location, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DocumentUri } from "vscode-languageserver-textdocument";
+import type { DocumentUri } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
@@ -16,6 +16,7 @@ import type {
     AutocompleteItemProviderContext,
     HoverProvider,
     IdentifierProviderContext,
+    ILocalDocumentProvider,
     ISymbolProvider,
     SignatureHelpProvider,
     SignatureProviderContext,
@@ -32,7 +33,7 @@ import { ValidationTraceConstant } from "../trace";
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: AutocompleteItemProvider;
     protected librarySymbolProvider: ISymbolProvider;
-    protected localDocumentSymbolProvider: ISymbolProvider;
+    protected localDocumentProvider: ILocalDocumentProvider;
 
     constructor(
         protected uri: DocumentUri,
@@ -51,9 +52,9 @@ export abstract class AnalysisBase implements Analysis {
                 ? analysisSettings.maybeCreateLibrarySymbolProviderFn(library)
                 : new LibrarySymbolProvider(library);
 
-        this.localDocumentSymbolProvider =
-            analysisSettings.maybeCreateLocalDocumentSymbolProviderFn !== undefined
-                ? analysisSettings.maybeCreateLocalDocumentSymbolProviderFn(
+        this.localDocumentProvider =
+            analysisSettings.maybeCreateLocalDocumentProviderFn !== undefined
+                ? analysisSettings.maybeCreateLocalDocumentProviderFn(
                       library,
                       uri,
                       promiseMaybeInspected,
@@ -99,7 +100,7 @@ export abstract class AnalysisBase implements Analysis {
         > = await Promise.all(
             AnalysisBase.createAutocompleteItemCalls(
                 context,
-                [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentSymbolProvider],
+                [this.languageAutocompleteItemProvider, this.librarySymbolProvider, this.localDocumentProvider],
                 this.analysisSettings.symbolProviderTimeoutInMS,
             ),
         );
@@ -137,7 +138,7 @@ export abstract class AnalysisBase implements Analysis {
             return [];
         }
 
-        const result: Location[] | null = await this.localDocumentSymbolProvider.getDefinition(maybeIdentifierContext);
+        const result: Location[] | null = await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
 
         trace.exit();
 
@@ -165,7 +166,7 @@ export abstract class AnalysisBase implements Analysis {
         const result: Promise<Hover> = AnalysisBase.resolveProviders(
             AnalysisBase.createHoverCalls(
                 maybeIdentifierContext,
-                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                [this.localDocumentProvider, this.librarySymbolProvider],
                 this.analysisSettings.symbolProviderTimeoutInMS,
             ),
             EmptyHover,
@@ -216,7 +217,7 @@ export abstract class AnalysisBase implements Analysis {
         const result: Promise<SignatureHelp> = AnalysisBase.resolveProviders(
             AnalysisBase.createSignatureHelpCalls(
                 context,
-                [this.localDocumentSymbolProvider, this.librarySymbolProvider],
+                [this.localDocumentProvider, this.librarySymbolProvider],
                 this.analysisSettings.symbolProviderTimeoutInMS,
             ),
             EmptySignatureHelp,

@@ -26,7 +26,7 @@ import { InspectionSettings } from "../inspectionSettings";
 import { ProviderTraceConstant } from "../trace";
 import { ScopeUtils } from "../inspection";
 
-export class LocalDocumentSymbolProvider implements DefinitionProvider, ISymbolProvider {
+export class LocalDocumentProvider implements DefinitionProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -132,7 +132,7 @@ export class LocalDocumentSymbolProvider implements DefinitionProvider, ISymbolP
             return null;
         }
 
-        let maybeHover: Hover | undefined = await LocalDocumentSymbolProvider.getHoverForIdentifierPairedExpression(
+        let maybeHover: Hover | undefined = await LocalDocumentProvider.getHoverForIdentifierPairedExpression(
             context,
             this.createInspectionSettingsFn(),
             maybeInspected,
@@ -155,7 +155,7 @@ export class LocalDocumentSymbolProvider implements DefinitionProvider, ISymbolP
             return null;
         }
 
-        maybeHover = LocalDocumentSymbolProvider.getHoverForScopeItem(
+        maybeHover = LocalDocumentProvider.getHoverForScopeItem(
             context,
             triedNodeScope.value,
             triedScopeType.value,
