@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
-
 import {
     CompletionItem,
     CompletionItemKind,
@@ -16,6 +14,7 @@ import {
     SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
+import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
 export type {
     CompletionItem,

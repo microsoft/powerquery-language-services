@@ -11,6 +11,7 @@ import { WorkspaceCacheUtils } from "../workspaceCache";
 export class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly textDocument: TextDocument, analysisSettings: AnalysisSettings, position: Position) {
         super(
+            textDocument.uri,
             analysisSettings,
             WorkspaceCacheUtils.getOrCreateInspectedPromise(
                 textDocument,

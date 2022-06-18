@@ -13,6 +13,6 @@ function createHover(text: string): Promise<Hover> {
 describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     it(`getHover value in key-value-pair`, async () => {
         const hover: Hover = await createHover(`let foobar = ${TestConstants.TestLibraryName.SquareIfNumber}|`);
-        TestUtils.assertHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
+        TestUtils.assertEqualHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
     });
 });

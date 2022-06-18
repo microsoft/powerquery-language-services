@@ -4,7 +4,7 @@
 import * as File from "fs";
 import * as Path from "path";
 import { assert, expect } from "chai";
-import { DocumentSymbol, Hover, Position, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
+import { DocumentSymbol, Hover, Location, Position, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
 
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
@@ -88,6 +88,10 @@ export function createAutocompleteItemsForFile(
     maybeAnalysisSettings?: AnalysisSettings,
 ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     return createFileAnalysis(fileName, position, maybeAnalysisSettings).getAutocompleteItems();
+}
+
+export function createDefinition(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Location[]> {
+    return createAnalysis(text, maybeAnalysisSettings).getDefinition();
 }
 
 export function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {

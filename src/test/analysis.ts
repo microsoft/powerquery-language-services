@@ -3,6 +3,7 @@
 
 import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
+import { DocumentUri } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 
 import {
@@ -13,9 +14,9 @@ import {
     Library,
     SignatureHelp,
 } from "../powerquery-language-services";
+import { ILocalDocumentProvider, ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
 import type { AutocompleteItem } from "../powerquery-language-services/inspection";
-import { ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
 import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
 
 describe("Analysis", () => {
@@ -39,8 +40,9 @@ describe("Analysis", () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 symbolProviderTimeoutInMS: 0, // immediate timeout
-                maybeCreateLocalDocumentSymbolProviderFn: (
+                maybeCreateLocalDocumentProviderFn: (
                     library: Library.ILibrary,
+                    _uri: DocumentUri,
                     _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
                     _createInspectionSettingsFn: () => InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),
@@ -68,7 +70,7 @@ describe("Analysis", () => {
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
             );
 
-            TestUtils.assertHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
+            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
         });
 
         it(`timeout library provider`, async () => {
@@ -124,23 +126,40 @@ describe("Analysis", () => {
 });
 
 async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverText: string): Promise<void> {
-    const baseAnalysis: any =
-        provider === "local"
-            ? {
-                  maybeCreateLocalDocumentSymbolProviderFn: (
-                      library: Library.ILibrary,
-                      _maybePromiseInspected: Promise<Inspection.Inspected> | undefined,
-                      _createInspectionSettingsFn: () => InspectionSettings,
-                  ): ISymbolProvider => new SlowSymbolProvider(library, 1000),
-              }
-            : {
-                  maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary): ISymbolProvider =>
-                      new SlowSymbolProvider(library, 1000),
-              };
+    let maybeCreateLocalDocumentProviderFn: AnalysisSettings["maybeCreateLocalDocumentProviderFn"];
+    let maybeCreateLibrarySymbolProviderFn: AnalysisSettings["maybeCreateLibrarySymbolProviderFn"];
+
+    switch (provider) {
+        case "library":
+            maybeCreateLibrarySymbolProviderFn = (library: Library.ILibrary): ISymbolProvider =>
+                new SlowSymbolProvider(library, 1000);
+
+            maybeCreateLocalDocumentProviderFn =
+                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
+
+            break;
+
+        case "local":
+            maybeCreateLibrarySymbolProviderFn =
+                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLibrarySymbolProviderFn;
+
+            maybeCreateLocalDocumentProviderFn = (
+                library: Library.ILibrary,
+                _uri: DocumentUri,
+                _promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
+                _createInspectionSettingsFn: () => InspectionSettings,
+            ): ILocalDocumentProvider => new SlowSymbolProvider(library, 1000);
+
+            break;
+
+        default:
+            throw Assert.isNever(provider);
+    }
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        ...baseAnalysis,
+        maybeCreateLibrarySymbolProviderFn,
+        maybeCreateLocalDocumentProviderFn,
         symbolProviderTimeoutInMS: 10,
     };
 
@@ -154,7 +173,7 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
     const stopTime: number = new Date().getTime();
     const totalMS: number = stopTime - startTime;
 
-    TestUtils.assertHover(expectedHoverText, hover);
+    TestUtils.assertEqualHover(expectedHoverText, hover);
 
     expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
 }

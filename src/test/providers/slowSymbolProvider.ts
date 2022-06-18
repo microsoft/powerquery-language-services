@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import type { Location } from "vscode-languageserver-types";
+
 import {
     AutocompleteItemProviderContext,
     Hover,
-    HoverProviderContext,
+    IDefinitionProvider,
     Library,
     LibrarySymbolProvider,
+    OverIdentifierProviderContext,
     SignatureHelp,
     SignatureProviderContext,
 } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 
-export class SlowSymbolProvider extends LibrarySymbolProvider {
+export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefinitionProvider {
     private readonly delayInMS: number;
 
     constructor(library: Library.ILibrary, delayInMS: number) {
@@ -28,7 +31,12 @@ export class SlowSymbolProvider extends LibrarySymbolProvider {
         return super.getAutocompleteItems(context);
     }
 
-    public override async getHover(context: HoverProviderContext): Promise<Hover | null> {
+    // eslint-disable-next-line require-await
+    public async getDefinition(_context: OverIdentifierProviderContext): Promise<Location[] | null> {
+        throw new Error("Method not implemented.");
+    }
+
+    public override async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
         await this.delay();
 
         return super.getHover(context);

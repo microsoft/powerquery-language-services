@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Location } from "vscode-languageserver-types";
+
 import {
     AutocompleteItemProviderContext,
-    HoverProviderContext,
     ISymbolProvider,
+    OverIdentifierProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Hover, SignatureHelp } from "../commonTypes";
@@ -34,7 +36,12 @@ export class NullSymbolProvider implements ISymbolProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
+    public async getDefinition(_context: OverIdentifierProviderContext): Promise<Location[] | null> {
+        return [];
+    }
+
+    // eslint-disable-next-line require-await
+    public async getHover(_context: OverIdentifierProviderContext): Promise<Hover | null> {
         return null;
     }
 

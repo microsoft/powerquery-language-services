@@ -2,8 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import type { Range, TextDocument } from "vscode-languageserver-textdocument";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
+import type { Location } from "vscode-languageserver-types";
 
 import {
     AnalysisSettings,
@@ -15,7 +17,6 @@ import {
     NullSymbolProvider,
     Position,
     SignatureHelp,
-    TextDocument,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
@@ -224,26 +225,87 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         });
     });
 
+    describe(`getDefinition`, () => {
+        it(`no definition`, async () => {
+            const expected: Range[] = [];
+            const actual: Location[] | undefined = await TestUtils.createDefinition("let foo = 1 in baz|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`let expression`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 10, line: 0 },
+                    start: { character: 4, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("let foobar = 1 in foobar|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`record expression`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 4, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("[foo = 1, bar = foo|]");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`section expression`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 16, line: 0 },
+                    start: { character: 13, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("section foo; bar = 1; baz = bar|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
+        it(`parameter`, async () => {
+            const expected: Range[] = [
+                {
+                    end: { character: 4, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+            ];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("(foo as number) => foo|");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+    });
+
     describe(`getHover`, () => {
         describe(`simple`, () => {
             it(`let-variable`, async () => {
                 const hover: Hover = await createHover("let x = 1 in x|");
-                TestUtils.assertHover("[let-variable] x: 1", hover);
+                TestUtils.assertEqualHover("[let-variable] x: 1", hover);
             });
 
             it(`parameter`, async () => {
                 const hover: Hover = await createHover("(x as number) => x|");
-                TestUtils.assertHover("[parameter] x: number", hover);
+                TestUtils.assertEqualHover("[parameter] x: number", hover);
             });
 
             it(`record-field`, async () => {
                 const hover: Hover = await createHover("[x = 1, y = x|]");
-                TestUtils.assertHover("[record-field] x: 1", hover);
+                TestUtils.assertEqualHover("[record-field] x: 1", hover);
             });
 
             it(`section-member`, async () => {
                 const hover: Hover = await createHover("section; x = 1; y = x|;");
-                TestUtils.assertHover("[section-member] x: 1", hover);
+                TestUtils.assertEqualHover("[section-member] x: 1", hover);
             });
 
             it(`undefined`, async () => {
@@ -260,22 +322,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         describe(`hover the value when over key`, () => {
             it(`let-variable`, async () => {
                 const hover: Hover = await createHover("let foo| = 1 in foo");
-                TestUtils.assertHover("[let-variable] foo: 1", hover);
+                TestUtils.assertEqualHover("[let-variable] foo: 1", hover);
             });
 
             it(`record-field expression`, async () => {
                 const hover: Hover = await createHover("[foo| = 1]");
-                TestUtils.assertHover("[record-field] foo: 1", hover);
+                TestUtils.assertEqualHover("[record-field] foo: 1", hover);
             });
 
             it(`record-field literal`, async () => {
                 const hover: Hover = await createHover("[foo| = 1] section; bar = 1;");
-                TestUtils.assertHover("[record-field] foo: 1", hover);
+                TestUtils.assertEqualHover("[record-field] foo: 1", hover);
             });
 
             it(`section-member`, async () => {
                 const hover: Hover = await createHover("section; foo| = 1;");
-                TestUtils.assertHover("[section-member] foo: 1", hover);
+                TestUtils.assertEqualHover("[section-member] foo: 1", hover);
             });
         });
     });

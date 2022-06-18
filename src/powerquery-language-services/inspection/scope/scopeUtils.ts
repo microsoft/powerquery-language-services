@@ -61,7 +61,7 @@ export function findScopeItemByLiteral(
     return nodeScope?.get(literalString);
 }
 
-export function findTheCreatorIdentifierOfOneScopeItem(
+export function maybeScopeCreatorIdentifier(
     scopeItem: TScopeItem | undefined,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (!scopeItem) {
@@ -72,14 +72,15 @@ export function findTheCreatorIdentifierOfOneScopeItem(
         case ScopeItemKind.Each:
         case ScopeItemKind.Undefined:
             return undefined;
+
         case ScopeItemKind.LetVariable:
-            return scopeItem.key;
-        case ScopeItemKind.Parameter:
-            return scopeItem.name;
         case ScopeItemKind.RecordField:
-            return scopeItem.key;
         case ScopeItemKind.SectionMember:
             return scopeItem.key;
+
+        case ScopeItemKind.Parameter:
+            return scopeItem.name;
+
         default:
             throw PQP.Assert.isNever(scopeItem);
     }

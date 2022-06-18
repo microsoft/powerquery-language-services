@@ -16,7 +16,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
-    findTheCreatorIdentifierOfOneScopeItem,
+    maybeScopeCreatorIdentifier,
 } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
@@ -141,7 +141,7 @@ export class InspectionInstance implements Inspected {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            findTheCreatorIdentifierOfOneScopeItem(theScopeItem);
+                            maybeScopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (
