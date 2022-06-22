@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import type { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Hover, Location, Range, SignatureHelp } from "vscode-languageserver-types";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
@@ -18,15 +18,15 @@ export interface AutocompleteItemProviderContext extends ProviderContext {
 }
 
 export interface IDefinitionProvider {
-    getDefinition(context: OverIdentifierProviderContext): Promise<Location[] | null>;
+    getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null>;
 }
 
 export interface IHoverProvider {
-    getHover(context: OverIdentifierProviderContext): Promise<Hover | null>;
+    getHover(context: OnIdentifierProviderContext): Promise<Hover | null>;
 }
 
-export interface OverIdentifierProviderContext extends ProviderContext {
-    readonly identifier: string;
+export interface OnIdentifierProviderContext extends ProviderContext {
+    readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
 }
 
 export interface ILocalDocumentProvider extends IDefinitionProvider, ISymbolProvider {}
