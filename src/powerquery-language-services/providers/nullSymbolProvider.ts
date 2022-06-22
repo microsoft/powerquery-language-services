@@ -6,7 +6,7 @@ import { Location } from "vscode-languageserver-types";
 import {
     AutocompleteItemProviderContext,
     ISymbolProvider,
-    OverIdentifierProviderContext,
+    OnIdentifierProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Hover, SignatureHelp } from "../commonTypes";
@@ -36,12 +36,12 @@ export class NullSymbolProvider implements ISymbolProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getDefinition(_context: OverIdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(_context: OnIdentifierProviderContext): Promise<Location[] | null> {
         return [];
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(_context: OverIdentifierProviderContext): Promise<Hover | null> {
+    public async getHover(_context: OnIdentifierProviderContext): Promise<Hover | null> {
         return null;
     }
 

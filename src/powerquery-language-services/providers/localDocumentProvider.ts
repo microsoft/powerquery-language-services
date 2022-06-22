@@ -18,7 +18,7 @@ import {
     AutocompleteItemProviderContext,
     IDefinitionProvider,
     ISymbolProvider,
-    OverIdentifierProviderContext,
+    OnIdentifierProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Inspection, Library, PositionUtils } from "..";
@@ -67,12 +67,19 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
         return result;
     }
 
-    public async getDefinition(context: OverIdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getDefinition.name,
             context.maybeInitialCorrelationId,
         );
+
+        if (
+            context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+            context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
+        ) {
+            return null;
+        }
 
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
@@ -86,7 +93,7 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
             return null;
         }
 
-        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier);
+        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
 
         if (maybeScopeItem === undefined) {
             return null;
@@ -109,7 +116,7 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
         return [result];
     }
 
-    public async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
+    public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getHover.name,
@@ -203,7 +210,7 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
     protected static async getHoverForIdentifierPairedExpression(
-        context: OverIdentifierProviderContext,
+        context: OnIdentifierProviderContext,
         inspectionSettings: InspectionSettings,
         inspected: Inspection.Inspected,
         activeNode: Inspection.ActiveNode,
@@ -304,7 +311,7 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
             contents: {
                 kind: MarkupKind.PlainText,
                 language: "powerquery",
-                value: `[${scopeItemText}] ${context.identifier}: ${nameOfExpressionType}`,
+                value: `[${scopeItemText}] ${context.identifier.literal}: ${nameOfExpressionType}`,
             },
             range: undefined,
         };
@@ -315,12 +322,12 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
     }
 
     protected static getHoverForScopeItem(
-        context: OverIdentifierProviderContext,
+        context: OnIdentifierProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
         correlationId: number,
     ): Hover | undefined {
-        const identifierLiteral: string = context.identifier;
+        const identifierLiteral: string = context.identifier.literal;
         const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
 
         if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {

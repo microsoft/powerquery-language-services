@@ -9,7 +9,7 @@ import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import {
     AutocompleteItemProviderContext,
     ISymbolProvider,
-    OverIdentifierProviderContext,
+    OnIdentifierProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Library, LibraryUtils } from "../library";
@@ -57,7 +57,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
+    public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LibrarySymbolProvider,
             this.getHover.name,
@@ -70,8 +70,8 @@ export class LibrarySymbolProvider implements ISymbolProvider {
             return null;
         }
 
-        const identifierLiteral: string = context.identifier;
-        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(context.identifier);
+        const identifierLiteral: string = context.identifier.literal;
+        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
         if (maybeDefinition === undefined) {
             trace.exit({ invalidContext: true });

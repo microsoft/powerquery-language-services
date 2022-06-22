@@ -259,6 +259,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             TestUtils.assertEqualLocation(expected, actual);
         });
 
+        it(`WIP record expression, not on key`, async () => {
+            const expected: Range[] = [];
+
+            const actual: Location[] | undefined = await TestUtils.createDefinition("[foo = 1, bar = [foo| = 2]]");
+            Assert.isDefined(actual);
+            TestUtils.assertEqualLocation(expected, actual);
+        });
+
         it(`section expression`, async () => {
             const expected: Range[] = [
                 {

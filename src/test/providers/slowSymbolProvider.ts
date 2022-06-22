@@ -9,7 +9,7 @@ import {
     IDefinitionProvider,
     Library,
     LibrarySymbolProvider,
-    OverIdentifierProviderContext,
+    OnIdentifierProviderContext,
     SignatureHelp,
     SignatureProviderContext,
 } from "../../powerquery-language-services";
@@ -32,11 +32,11 @@ export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefini
     }
 
     // eslint-disable-next-line require-await
-    public async getDefinition(_context: OverIdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(_context: OnIdentifierProviderContext): Promise<Location[] | null> {
         throw new Error("Method not implemented.");
     }
 
-    public override async getHover(context: OverIdentifierProviderContext): Promise<Hover | null> {
+    public override async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
         await this.delay();
 
         return super.getHover(context);

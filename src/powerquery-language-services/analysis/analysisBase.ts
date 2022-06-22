@@ -17,7 +17,7 @@ import type {
     IHoverProvider,
     ILocalDocumentProvider,
     ISymbolProvider,
-    OverIdentifierProviderContext,
+    OnIdentifierProviderContext,
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
@@ -128,7 +128,7 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: OverIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+        const maybeIdentifierContext: OnIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
             trace.id,
         );
 
@@ -152,7 +152,7 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: OverIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
+        const maybeIdentifierContext: OnIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
             trace.id,
         );
 
@@ -385,7 +385,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     private static createHoverCalls(
-        context: OverIdentifierProviderContext,
+        context: OnIdentifierProviderContext,
         providers: IHoverProvider[],
         timeoutInMS?: number,
     ): ReadonlyArray<Promise<Hover | null>> {
@@ -436,7 +436,7 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private async getMaybeIdentifierContext(correlationId: number): Promise<OverIdentifierProviderContext | undefined> {
+    private async getMaybeIdentifierContext(correlationId: number): Promise<OnIdentifierProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
             this.getDefinition.name,
@@ -460,10 +460,10 @@ export abstract class AnalysisBase implements Analysis {
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
 
-        const context: OverIdentifierProviderContext = {
+        const context: OnIdentifierProviderContext = {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
-            identifier: identifier.literal,
+            identifier,
             maybeInitialCorrelationId: trace.id,
         };
 
