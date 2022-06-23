@@ -109,26 +109,9 @@ async function validateParse(
 
     const error: PQP.Parser.ParseError.ParseError = triedParse.error as PQP.Parser.ParseError.ParseError;
     const innerError: PQP.Parser.ParseError.TInnerParseError = error.innerError;
+    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(innerError);
     const message: string = error.message;
     const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
-
-    let maybeErrorToken: PQP.Language.Token.Token | undefined;
-
-    if (
-        (innerError instanceof PQP.Parser.ParseError.ExpectedAnyTokenKindError ||
-            innerError instanceof PQP.Parser.ParseError.ExpectedTokenKindError) &&
-        innerError.maybeFoundToken !== undefined
-    ) {
-        maybeErrorToken = innerError.maybeFoundToken.token;
-    } else if (innerError instanceof PQP.Parser.ParseError.InvalidPrimitiveTypeError) {
-        maybeErrorToken = innerError.token;
-    } else if (innerError instanceof PQP.Parser.ParseError.UnterminatedSequence) {
-        maybeErrorToken = innerError.startToken;
-    } else if (innerError instanceof PQP.Parser.ParseError.UnusedTokensRemainError) {
-        maybeErrorToken = innerError.firstUnusedToken;
-    } else {
-        maybeErrorToken = undefined;
-    }
 
     let range: Range;
 
