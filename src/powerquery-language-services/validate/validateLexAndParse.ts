@@ -109,9 +109,9 @@ async function validateParse(
 
     const error: PQP.Parser.ParseError.ParseError = triedParse.error as PQP.Parser.ParseError.ParseError;
     const innerError: PQP.Parser.ParseError.TInnerParseError = error.innerError;
+    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(innerError);
     const message: string = error.message;
     const parseContextState: PQP.Parser.ParseContext.State = error.state.contextState;
-    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(innerError);
 
     let range: Range;
 

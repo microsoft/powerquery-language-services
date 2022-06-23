@@ -85,12 +85,15 @@ export async function autocompleteKeyword(
         return Promise.resolve(maybeEdgeCase);
     }
 
-    return Promise.resolve(
-        createAutocompleteItems(
-            handleConjunctions(state.activeNode, await traverseAncestors(state), maybeTrailingToken),
-            maybePositionName,
-        ),
+    const keywordKinds: ReadonlyArray<Keyword.KeywordKind> = await traverseAncestors(state);
+
+    const keywordsSubset: ReadonlyArray<Keyword.KeywordKind> = handleConjunctions(
+        state.activeNode,
+        keywordKinds,
+        maybeTrailingToken,
     );
+
+    return Promise.resolve(createAutocompleteItems(keywordsSubset, maybePositionName));
 }
 
 const ConjunctionKeywords: ReadonlyArray<Keyword.KeywordKind> = [
