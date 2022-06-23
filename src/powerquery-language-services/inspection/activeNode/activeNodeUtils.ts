@@ -84,29 +84,15 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
             ? maybeInclusiveIdentifierUnderPosition
             : undefined;
 
-    return createActiveNode(
-        leafKind,
-        position,
-        AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeExclusiveIdentifierUnderPosition,
-        maybeInclusiveIdentifierUnderPosition,
-    );
-}
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id);
 
-export function createActiveNode(
-    leafKind: ActiveNodeLeafKind,
-    position: Position,
-    ancestry: ReadonlyArray<TXorNode>,
-    maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
-    maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
-): ActiveNode {
     return {
+        ancestry,
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
-        position,
-        ancestry,
         maybeExclusiveIdentifierUnderPosition,
         maybeInclusiveIdentifierUnderPosition,
+        position,
     };
 }
 
