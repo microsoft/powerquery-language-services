@@ -289,7 +289,7 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
             expect(textEdits[0].range.end.character).eq(183);
         });
 
-        it(`Rename one identifier within a statement`, async () => {
+        it(`WIP Rename one identifier within a statement`, async () => {
             const rawText: string = `let
                 foo| = 1,
                 bar = 1,
