@@ -450,7 +450,7 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
                     const res: Ast.TNode | undefined = findDirectUpperScopeExpression(
                         inspectionInstance.nodeIdMapCollection,
-                        (inspectionInstance.maybeActiveNode as ActiveNode).maybeInclusiveIdentifierUnderPosition
+                        (inspectionInstance.maybeActiveNode as ActiveNode).maybeInclusiveIdentifierUnderPosition?.node
                             ?.id as number,
                     );
 

@@ -31,13 +31,29 @@ export interface ActiveNode extends IActiveNode {
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
-    readonly maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    readonly maybeExclusiveIdentifierUnderPosition: TLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
-    readonly maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    readonly maybeInclusiveIdentifierUnderPosition: TLeafIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
     readonly kind: ActiveNodeKind.OutOfBoundPosition;
+}
+
+export type TLeafIdentifier = LeafIdentifierExpression | LeafIdentifier;
+
+export interface LeafIdentifierExpression {
+    readonly node: Ast.IdentifierExpression;
+    readonly normalizedLiteral: string;
+    readonly maybeNormalizedRecursiveLiteral: string;
+    readonly isRecursive: boolean;
+}
+
+export interface LeafIdentifier {
+    readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly normalizedLiteral: string;
+    readonly maybeNormalizedRecursiveLiteral: undefined;
+    readonly isRecursive: boolean;
 }
 
 export const enum ActiveNodeLeafKind {
