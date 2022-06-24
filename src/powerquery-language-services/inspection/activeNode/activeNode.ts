@@ -31,29 +31,31 @@ export interface ActiveNode extends IActiveNode {
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
-    readonly maybeExclusiveIdentifierUnderPosition: TLeafIdentifier | undefined;
+    readonly maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
-    readonly maybeInclusiveIdentifierUnderPosition: TLeafIdentifier | undefined;
+    readonly maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
     readonly kind: ActiveNodeKind.OutOfBoundPosition;
 }
 
-export type TLeafIdentifier = LeafIdentifierExpression | LeafIdentifier;
+export type TActiveLeafIdentifier = ActiveLeafIdentifierExpression | ActiveLeafIdentifier;
 
-export interface ILeafIdentifier<T extends Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression> {
+export interface IActiveLeafIdentifier<
+    T extends Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression,
+> {
     readonly node: T;
     readonly normalizedLiteral: string;
     readonly maybeNormalizedRecursiveLiteral: string | undefined;
     readonly isRecursive: boolean;
 }
 
-export interface LeafIdentifierExpression extends ILeafIdentifier<Ast.IdentifierExpression> {
+export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<Ast.IdentifierExpression> {
     readonly node: Ast.IdentifierExpression;
 }
 
-export interface LeafIdentifier extends ILeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
+export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
     readonly maybeNormalizedRecursiveLiteral: undefined;
     readonly isRecursive: false;

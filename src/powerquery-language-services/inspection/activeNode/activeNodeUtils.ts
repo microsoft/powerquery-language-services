@@ -18,7 +18,7 @@ import {
     ActiveNodeKind,
     ActiveNodeLeafKind,
     OutOfBoundPosition,
-    TLeafIdentifier,
+    TActiveLeafIdentifier,
     TMaybeActiveNode,
 } from "./activeNode";
 import { PositionUtils } from "../..";
@@ -82,12 +82,12 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
-    const maybeInclusiveIdentifierUnderPosition: TLeafIdentifier | undefined = findLeafIdentifier(
+    const maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
         nodeIdMapCollection,
         leaf,
     );
 
-    const maybeExclusiveIdentifierUnderPosition: TLeafIdentifier | undefined =
+    const maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
         maybeInclusiveIdentifierUnderPosition &&
         PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition.node, false, true)
             ? maybeInclusiveIdentifierUnderPosition
@@ -332,7 +332,7 @@ function maybeFindContext(
 function findLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafXorNode: TXorNode,
-): TLeafIdentifier | undefined {
+): TActiveLeafIdentifier | undefined {
     if (XorNodeUtils.isContextXor(leafXorNode)) {
         return undefined;
     }
@@ -379,7 +379,7 @@ function findLeafIdentifier(
         return undefined;
     }
 
-    let result: TLeafIdentifier;
+    let result: TActiveLeafIdentifier;
 
     switch (identifier.kind) {
         case Ast.NodeKind.Identifier:
