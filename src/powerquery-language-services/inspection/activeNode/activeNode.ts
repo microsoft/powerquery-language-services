@@ -42,18 +42,21 @@ export interface OutOfBoundPosition extends IActiveNode {
 
 export type TLeafIdentifier = LeafIdentifierExpression | LeafIdentifier;
 
-export interface LeafIdentifierExpression {
-    readonly node: Ast.IdentifierExpression;
+export interface ILeafIdentifier<T extends Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression> {
+    readonly node: T;
     readonly normalizedLiteral: string;
-    readonly maybeNormalizedRecursiveLiteral: string;
+    readonly maybeNormalizedRecursiveLiteral: string | undefined;
     readonly isRecursive: boolean;
 }
 
-export interface LeafIdentifier {
+export interface LeafIdentifierExpression extends ILeafIdentifier<Ast.IdentifierExpression> {
+    readonly node: Ast.IdentifierExpression;
+}
+
+export interface LeafIdentifier extends ILeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
-    readonly normalizedLiteral: string;
     readonly maybeNormalizedRecursiveLiteral: undefined;
-    readonly isRecursive: boolean;
+    readonly isRecursive: false;
 }
 
 export const enum ActiveNodeLeafKind {
