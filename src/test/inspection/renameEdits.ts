@@ -428,7 +428,7 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     //     NodeKind.RecordExpression,
                     // ],
                     // ["LetExpression", `let a| = x in a`, NodeKind.LetExpression],
-                    ["FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
+                    ["WIP FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
                     // ["EachExpression", `each x|;`, NodeKind.EachExpression],
                     // ["undefined", `x| + 1`, undefined],
                 ] as Array<[string, string, NodeKind | undefined]>
