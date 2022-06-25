@@ -414,23 +414,23 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
         describe("findDirectUpperScopeExpression", () => {
             (
                 [
-                    // ["SectionMember", `section foo; x| = 1; y = 2; z = let a = x in a;`, NodeKind.SectionMember],
-                    // [
-                    //     "RecordLiteral",
-                    //     `section foo; [u| = "v" ]shared x = 1; y = 2; z = let a = x in a;`,
-                    //     NodeKind.RecordLiteral,
-                    // ],
-                    // [
-                    //     "RecordExpression",
-                    //     `[
-                    //         |a = "yoo"
-                    //     ]`,
-                    //     NodeKind.RecordExpression,
-                    // ],
-                    // ["LetExpression", `let a| = x in a`, NodeKind.LetExpression],
-                    ["WIP FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
-                    // ["EachExpression", `each x|;`, NodeKind.EachExpression],
-                    // ["undefined", `x| + 1`, undefined],
+                    ["SectionMember", `section foo; x| = 1; y = 2; z = let a = x in a;`, NodeKind.SectionMember],
+                    [
+                        "RecordLiteral",
+                        `section foo; [u| = "v" ]shared x = 1; y = 2; z = let a = x in a;`,
+                        NodeKind.RecordLiteral,
+                    ],
+                    [
+                        "RecordExpression",
+                        `[
+                            |a = "yoo"
+                        ]`,
+                        NodeKind.RecordExpression,
+                    ],
+                    ["LetExpression", `let a| = x in a`, NodeKind.LetExpression],
+                    ["FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
+                    ["EachExpression", `each x|;`, NodeKind.EachExpression],
+                    ["undefined", `x| + 1`, undefined],
                 ] as Array<[string, string, NodeKind | undefined]>
             ).forEach(([nodeKindString, rawTextString, nodeKind]: [string, string, NodeKind | undefined]) => {
                 it(`Find ${nodeKindString}`, async () => {
