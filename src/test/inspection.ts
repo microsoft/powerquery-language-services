@@ -43,7 +43,7 @@ const getMaybeContextForSignatureProvider: (
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
-        it(`WIP ${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
+        it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
             const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
             );
