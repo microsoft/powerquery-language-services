@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// import * as PQP from "@microsoft/powerquery-parser";
-
+import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapIterator,
@@ -12,11 +12,11 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Assert } from "@microsoft/powerquery-parser";
 
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, inspectXor, recursiveIdentifierDereference } from "./common";
+import { InspectTypeState, inspectXor } from "./common";
+import { maybeDereferencedIdentifier } from "../../deferenceIdentifier";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -94,7 +94,17 @@ async function maybeExternalInvokeRequest(
         return undefined;
     }
 
-    const deferencedIdentifier: TXorNode = await recursiveIdentifierDereference(state, maybeIdentifier, trace.id);
+    const updatedSettings: PQP.CommonSettings = {
+        ...state,
+        maybeInitialCorrelationId: trace.id,
+    };
+
+    const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
+        await maybeDereferencedIdentifier(updatedSettings, state.nodeIdMapCollection, maybeIdentifier, state.scopeById);
+
+    if (ResultUtils.isError(triedDeferencedIdentifier) || triedDeferencedIdentifier.value === undefined) {
+        return undefined;
+    }
 
     const types: Type.TPowerQueryType[] = [];
 
@@ -107,7 +117,7 @@ async function maybeExternalInvokeRequest(
     }
 
     const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.createInvocationTypeRequest(
-        Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(deferencedIdentifier)),
+        Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(triedDeferencedIdentifier.value)),
         types,
     );
 
