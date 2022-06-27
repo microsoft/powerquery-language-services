@@ -45,17 +45,14 @@ export async function maybeDereferencedIdentifier(
         | Ast.IdentifierExpression;
 
     let identifierLiteral: string;
-    let isIdentifierRecurisve: boolean;
 
     switch (identifier.kind) {
         case Ast.NodeKind.Identifier:
             identifierLiteral = identifier.literal;
-            isIdentifierRecurisve = false;
             break;
 
         case Ast.NodeKind.IdentifierExpression:
             identifierLiteral = identifier.identifier.literal;
-            isIdentifierRecurisve = identifier.maybeInclusiveConstant !== undefined;
             break;
 
         default:
@@ -81,11 +78,11 @@ export async function maybeDereferencedIdentifier(
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.
-        maybeScopeItem?.isRecursive !== isIdentifierRecurisve
+        maybeScopeItem === undefined
     ) {
         trace.exit({ [TraceConstant.Result]: undefined });
 
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.boxOk(xorNode);
     }
 
     const scopeItem: TScopeItem = maybeScopeItem;
