@@ -31,13 +31,34 @@ export interface ActiveNode extends IActiveNode {
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
-    readonly maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    readonly maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
-    readonly maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined;
+    readonly maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
     readonly kind: ActiveNodeKind.OutOfBoundPosition;
+}
+
+export type TActiveLeafIdentifier = ActiveLeafIdentifierExpression | ActiveLeafIdentifier;
+
+export interface IActiveLeafIdentifier<
+    T extends Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression,
+> {
+    readonly node: T;
+    readonly normalizedLiteral: string;
+    readonly maybeNormalizedRecursiveLiteral: string | undefined;
+    readonly isRecursive: boolean;
+}
+
+export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<Ast.IdentifierExpression> {
+    readonly node: Ast.IdentifierExpression;
+}
+
+export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
+    readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly maybeNormalizedRecursiveLiteral: undefined;
+    readonly isRecursive: false;
 }
 
 export const enum ActiveNodeLeafKind {

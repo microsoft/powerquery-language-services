@@ -10,7 +10,7 @@ import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/par
 
 import * as InspectionUtils from "../inspectionUtils";
 import * as PositionUtils from "../positionUtils";
-import { AutocompleteItem, AutocompleteItemUtils } from "../inspection";
+import { AutocompleteItem, AutocompleteItemUtils, TActiveLeafIdentifier } from "../inspection";
 import type {
     AutocompleteItemProviderContext,
     IAutocompleteItemProvider,
@@ -80,15 +80,14 @@ export abstract class AnalysisBase implements Analysis {
             maybeInitialCorrelationId: trace.id,
         };
 
-        const maybeToken: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-            await this.getMaybePositionIdentifier();
+        const maybeActiveLeafIdentifier: TActiveLeafIdentifier | undefined = await this.getActiveLeafIdentifier();
 
-        if (maybeToken !== undefined) {
+        if (maybeActiveLeafIdentifier !== undefined) {
             context = {
                 ...context,
-                range: CommonTypesUtils.rangeFromTokenRange(maybeToken.tokenRange),
-                text: maybeToken.literal,
-                tokenKind: maybeToken.kind,
+                range: CommonTypesUtils.rangeFromTokenRange(maybeActiveLeafIdentifier.node.tokenRange),
+                text: maybeActiveLeafIdentifier.normalizedLiteral,
+                tokenKind: maybeActiveLeafIdentifier.node.kind,
             };
         }
 
@@ -128,9 +127,8 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: OnIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
-            trace.id,
-        );
+        const maybeIdentifierContext: OnIdentifierProviderContext | undefined =
+            await this.getOnIdentifierProviderContext(trace.id);
 
         if (!maybeIdentifierContext) {
             trace.exit();
@@ -152,9 +150,8 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const maybeIdentifierContext: OnIdentifierProviderContext | undefined = await this.getMaybeIdentifierContext(
-            trace.id,
-        );
+        const maybeIdentifierContext: OnIdentifierProviderContext | undefined =
+            await this.getOnIdentifierProviderContext(trace.id);
 
         if (!maybeIdentifierContext) {
             trace.exit();
@@ -235,14 +232,11 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
+        const maybeLeafIdentifier: TActiveLeafIdentifier | undefined = await this.getActiveLeafIdentifier();
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
-        const activeNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
         const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
 
-        const maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-            activeNode?.maybeInclusiveIdentifierUnderPosition;
-
-        if (maybeInspected === undefined || maybeInclusiveIdentifierUnderPosition === undefined) {
+        if (maybeInspected === undefined || maybeLeafIdentifier === undefined) {
             trace.exit();
 
             return [];
@@ -251,34 +245,41 @@ export abstract class AnalysisBase implements Analysis {
         const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
         let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
 
-        if (maybeInclusiveIdentifierUnderPosition.kind === Ast.NodeKind.GeneralizedIdentifier) {
-            valueCreator = maybeInclusiveIdentifierUnderPosition;
-        } else if (maybeInclusiveIdentifierUnderPosition.kind === Ast.NodeKind.Identifier && scopeById) {
+        if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+            valueCreator = maybeLeafIdentifier.node;
+        } else if (
+            (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
+            scopeById
+        ) {
             // need to find this key value and modify all referring it
-            const theIdentifierNode: Ast.Identifier = maybeInclusiveIdentifierUnderPosition as Ast.Identifier;
+            const identifierExpression: Ast.Identifier =
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                    ? maybeLeafIdentifier.node.identifier
+                    : maybeLeafIdentifier.node;
 
-            switch (theIdentifierNode.identifierContextKind) {
+            switch (identifierExpression.identifierContextKind) {
                 case Ast.IdentifierContextKind.Key:
                 case Ast.IdentifierContextKind.Parameter:
                     // it is the identifier creating the value
-                    valueCreator = theIdentifierNode;
+                    valueCreator = identifierExpression;
                     break;
 
                 case Ast.IdentifierContextKind.Value: {
                     // it is the identifier referring the value
                     let nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
-                        theIdentifierNode.id,
+                        identifierExpression.id,
                     );
 
                     // there might be a chance that its scope did not get populated yet, do another try
                     if (!nodeScope) {
-                        await maybeInspected.tryNodeScope(theIdentifierNode.id);
-                        nodeScope = maybeInspected.typeCache.scopeById.get(theIdentifierNode.id);
+                        await maybeInspected.tryNodeScope(identifierExpression.id);
+                        nodeScope = maybeInspected.typeCache.scopeById.get(identifierExpression.id);
                     }
 
                     const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
                         nodeScope,
-                        maybeInclusiveIdentifierUnderPosition.literal,
+                        maybeLeafIdentifier.normalizedLiteral,
                     );
 
                     if (scopeItem) {
@@ -307,7 +308,7 @@ export abstract class AnalysisBase implements Analysis {
                 case Ast.IdentifierContextKind.Keyword:
                 default:
                     // only modify once
-                    identifiersToBeEdited.push(theIdentifierNode);
+                    identifiersToBeEdited.push(identifierExpression);
                     break;
             }
         }
@@ -318,8 +319,12 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
-        if (identifiersToBeEdited.length === 0 && maybeInclusiveIdentifierUnderPosition) {
-            identifiersToBeEdited.push(maybeInclusiveIdentifierUnderPosition);
+        if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
+            identifiersToBeEdited.push(
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                    ? maybeLeafIdentifier.node.identifier
+                    : maybeLeafIdentifier.node,
+            );
         }
 
         const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
@@ -436,16 +441,18 @@ export abstract class AnalysisBase implements Analysis {
         return true;
     }
 
-    private async getMaybeIdentifierContext(correlationId: number): Promise<OnIdentifierProviderContext | undefined> {
+    private async getOnIdentifierProviderContext(
+        correlationId: number,
+    ): Promise<OnIdentifierProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
             this.getDefinition.name,
             correlationId,
         );
 
-        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
+        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getActiveNode();
 
-        const maybeIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+        const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
             maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
 
         if (
@@ -458,7 +465,10 @@ export abstract class AnalysisBase implements Analysis {
             return undefined;
         }
 
-        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier = maybeIdentifierUnderPosition;
+        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
+            maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
+                ? maybeIdentifierUnderPosition.node.identifier
+                : maybeIdentifierUnderPosition.node;
 
         const context: OnIdentifierProviderContext = {
             traceManager: this.analysisSettings.traceManager,
@@ -472,13 +482,7 @@ export abstract class AnalysisBase implements Analysis {
         return context;
     }
 
-    private async getMaybePositionIdentifier(): Promise<Ast.Identifier | Ast.GeneralizedIdentifier | undefined> {
-        const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getMaybeActiveNode();
-
-        return maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
-    }
-
-    private async getMaybeActiveNode(): Promise<Inspection.ActiveNode | undefined> {
+    private async getActiveNode(): Promise<Inspection.ActiveNode | undefined> {
         const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
 
         if (maybeInspected === undefined) {
@@ -488,5 +492,9 @@ export abstract class AnalysisBase implements Analysis {
         return Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspected.maybeActiveNode)
             ? maybeInspected.maybeActiveNode
             : undefined;
+    }
+
+    private async getActiveLeafIdentifier(): Promise<TActiveLeafIdentifier | undefined> {
+        return (await this.getActiveNode())?.maybeInclusiveIdentifierUnderPosition;
     }
 }

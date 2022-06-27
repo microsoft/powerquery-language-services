@@ -10,10 +10,17 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Constant, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeKind, ActiveNodeLeafKind, OutOfBoundPosition, TMaybeActiveNode } from "./activeNode";
+import {
+    ActiveNode,
+    ActiveNodeKind,
+    ActiveNodeLeafKind,
+    OutOfBoundPosition,
+    TActiveLeafIdentifier,
+    TMaybeActiveNode,
+} from "./activeNode";
 import { PositionUtils } from "../..";
 
 // Searches all leaf Ast.TNodes and all Context nodes to find the "active" node.
@@ -75,38 +82,26 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
-    const maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-        findIdentifierUnderPosition(nodeIdMapCollection, leaf);
+    const maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
+        nodeIdMapCollection,
+        leaf,
+    );
 
-    const maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+    const maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
         maybeInclusiveIdentifierUnderPosition &&
-        PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition, false, true)
+        PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition.node, false, true)
             ? maybeInclusiveIdentifierUnderPosition
             : undefined;
 
-    return createActiveNode(
-        leafKind,
-        position,
-        AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id),
-        maybeExclusiveIdentifierUnderPosition,
-        maybeInclusiveIdentifierUnderPosition,
-    );
-}
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id);
 
-export function createActiveNode(
-    leafKind: ActiveNodeLeafKind,
-    position: Position,
-    ancestry: ReadonlyArray<TXorNode>,
-    maybeExclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
-    maybeInclusiveIdentifierUnderPosition: Ast.Identifier | Ast.GeneralizedIdentifier | undefined,
-): ActiveNode {
     return {
+        ancestry,
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
-        position,
-        ancestry,
         maybeExclusiveIdentifierUnderPosition,
         maybeInclusiveIdentifierUnderPosition,
+        position,
     };
 }
 
@@ -334,38 +329,86 @@ function maybeFindContext(
     return maybeCurrent;
 }
 
-function findIdentifierUnderPosition(
+function findLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
-    leaf: TXorNode,
-): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
-    if (XorNodeUtils.isContextXor(leaf)) {
+    leafXorNode: TXorNode,
+): TActiveLeafIdentifier | undefined {
+    if (XorNodeUtils.isContextXor(leafXorNode)) {
         return undefined;
     }
 
-    let identifier: Ast.Identifier | Ast.GeneralizedIdentifier;
+    const leaf: Ast.TNode = leafXorNode.node;
 
-    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
-    if (leaf.node.kind === Ast.NodeKind.Constant && leaf.node.constantKind === Constant.MiscConstant.AtSign) {
-        const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.node.id);
+    let identifier: Ast.Identifier | Ast.IdentifierExpression | Ast.GeneralizedIdentifier;
 
+    const maybeParentId: number | undefined = nodeIdMapCollection.parentIdById.get(leaf.id);
+
+    if (leaf.kind === Ast.NodeKind.Identifier) {
         if (maybeParentId === undefined) {
             return undefined;
         }
 
         const parentId: number = maybeParentId;
+        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeUnboxIfAst(nodeIdMapCollection, parentId);
 
-        const parent: Ast.TNode = NodeIdMapUtils.assertUnboxAst(nodeIdMapCollection.astNodeById, parentId);
-
-        if (parent.kind !== Ast.NodeKind.IdentifierExpression) {
+        if (maybeParent?.kind === Ast.NodeKind.IdentifierPairedExpression) {
+            identifier = leaf;
+        } else if (maybeParent?.kind === Ast.NodeKind.IdentifierExpression) {
+            identifier = maybeParent;
+        } else {
+            identifier = leaf;
+        }
+    }
+    // If closestLeaf is '@', then check if it's part of an IdentifierExpression.
+    else if (leaf.kind === Ast.NodeKind.Constant && leaf.constantKind === Constant.MiscConstant.AtSign) {
+        if (maybeParentId === undefined) {
             return undefined;
         }
 
-        identifier = parent.identifier;
-    } else if (leaf.node.kind === Ast.NodeKind.Identifier || leaf.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        identifier = leaf.node;
+        const parentId: number = maybeParentId;
+        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeUnboxIfAst(nodeIdMapCollection, parentId);
+
+        if (maybeParent?.kind === Ast.NodeKind.IdentifierExpression) {
+            identifier = maybeParent;
+        } else {
+            return undefined;
+        }
+    } else if (leaf.kind === Ast.NodeKind.GeneralizedIdentifier) {
+        identifier = leaf;
     } else {
         return undefined;
     }
 
-    return identifier;
+    let result: TActiveLeafIdentifier;
+
+    switch (identifier.kind) {
+        case Ast.NodeKind.Identifier:
+        case Ast.NodeKind.GeneralizedIdentifier:
+            result = {
+                node: identifier,
+                isRecursive: false,
+                normalizedLiteral: TextUtils.normalizeIdentifier(identifier.literal),
+                maybeNormalizedRecursiveLiteral: undefined,
+            };
+
+            break;
+
+        case Ast.NodeKind.IdentifierExpression: {
+            const normalizedLiteral: string = TextUtils.normalizeIdentifier(identifier.identifier.literal);
+
+            result = {
+                node: identifier,
+                isRecursive: Boolean(identifier.maybeInclusiveConstant),
+                normalizedLiteral,
+                maybeNormalizedRecursiveLiteral: `@${normalizedLiteral}`,
+            };
+
+            break;
+        }
+
+        default:
+            throw PQP.Assert.isNever(identifier);
+    }
+
+    return result;
 }
