@@ -8,7 +8,8 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, NodeScope, ScopeById, ScopeItemKind, TScopeItem } from "./scope";
-import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
+import { Inspection, TraceUtils } from "..";
+import { InspectionTraceConstant } from "../trace";
 
 // Recusrive deference of the identifier until it reaches the value node.
 // Does not handle recursive identifiers.
