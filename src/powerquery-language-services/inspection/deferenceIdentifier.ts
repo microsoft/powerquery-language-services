@@ -12,7 +12,7 @@ import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
 
 // Recusrive deference of the identifier until it reaches the value node.
 // Does not handle recursive identifiers.
-export async function maybeDereferencedIdentifier(
+export async function tryDeferenceIdentifier(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
@@ -22,7 +22,7 @@ export async function maybeDereferencedIdentifier(
 ): Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
-        maybeDereferencedIdentifier.name,
+        tryDeferenceIdentifier.name,
         settings.maybeInitialCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
@@ -119,7 +119,7 @@ export async function maybeDereferencedIdentifier(
     ) {
         result = Promise.resolve(ResultUtils.boxOk(xorNode));
     } else {
-        result = maybeDereferencedIdentifier(updatedSettings, nodeIdMapCollection, maybeNextXorNode, scopeById);
+        result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, maybeNextXorNode, scopeById);
     }
 
     trace.exit();

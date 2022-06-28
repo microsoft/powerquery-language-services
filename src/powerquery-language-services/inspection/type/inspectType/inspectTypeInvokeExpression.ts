@@ -16,7 +16,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { ExternalType, ExternalTypeUtils } from "../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
-import { maybeDereferencedIdentifier } from "../../deferenceIdentifier";
+import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -100,7 +100,7 @@ async function maybeExternalInvokeRequest(
     };
 
     const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await maybeDereferencedIdentifier(updatedSettings, state.nodeIdMapCollection, maybeIdentifier, state.scopeById);
+        await tryDeferenceIdentifier(updatedSettings, state.nodeIdMapCollection, maybeIdentifier, state.scopeById);
 
     if (ResultUtils.isError(triedDeferencedIdentifier) || triedDeferencedIdentifier.value === undefined) {
         return undefined;

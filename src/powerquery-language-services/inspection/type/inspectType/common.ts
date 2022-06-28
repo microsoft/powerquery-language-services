@@ -36,7 +36,7 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
-import { maybeDereferencedIdentifier } from "../../deferenceIdentifier";
+import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
 import { TypeById } from "../../typeCache";
 
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
@@ -436,8 +436,12 @@ export async function maybeDereferencedIdentifierType(
         maybeInitialCorrelationId: trace.id,
     };
 
-    const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await maybeDereferencedIdentifier(updatedSettings, state.nodeIdMapCollection, xorNode, state.scopeById);
+    const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> = await tryDeferenceIdentifier(
+        updatedSettings,
+        state.nodeIdMapCollection,
+        xorNode,
+        state.scopeById,
+    );
 
     if (ResultUtils.isError(triedDeference)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
