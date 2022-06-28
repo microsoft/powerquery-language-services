@@ -4,6 +4,7 @@
 export * from "./activeNode";
 export * from "./autocomplete";
 export * from "./commonTypes";
+export * from "./deferenceIdentifier";
 export * from "./externalType";
 export * from "./invokeExpression";
 export * from "./scope";

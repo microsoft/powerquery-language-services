@@ -36,6 +36,7 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
+import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
 import { TypeById } from "../../typeCache";
 
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
@@ -430,8 +431,31 @@ export async function maybeDereferencedIdentifierType(
 
     state.maybeCancellationToken?.throwIfCancelled();
 
-    const deferenced: TXorNode = await recursiveIdentifierDereference(state, xorNode, trace.id);
-    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(deferenced);
+    const updatedSettings: PQP.CommonSettings = {
+        ...state,
+        maybeInitialCorrelationId: trace.id,
+    };
+
+    const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> = await tryDeferenceIdentifier(
+        updatedSettings,
+        state.nodeIdMapCollection,
+        xorNode,
+        state.scopeById,
+    );
+
+    if (ResultUtils.isError(triedDeference)) {
+        trace.exit({ [TraceConstant.IsThrowing]: true });
+
+        throw triedDeference.error;
+    } else if (triedDeference.value === undefined) {
+        trace.exit();
+
+        return undefined;
+    }
+
+    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(
+        triedDeference.value,
+    );
 
     if (maybeDereferencedLiteral === undefined) {
         trace.exit();
@@ -440,7 +464,7 @@ export async function maybeDereferencedIdentifierType(
     }
 
     const deferencedLiteral: string = maybeDereferencedLiteral;
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, deferenced.node.id, trace.id);
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, triedDeference.value.node.id, trace.id);
 
     // When referencing an identifier as a recursive identifier there's no requirements
     // for it to resolve to a recursive reference.
@@ -493,119 +517,6 @@ export async function maybeDereferencedIdentifierType(
     const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
         ? await inspectXor(state, maybeNextXorNode, trace.id)
         : undefined;
-
-    trace.exit();
-
-    return result;
-}
-
-// Recursively derefence an identifier if it points to another identifier.
-export async function recursiveIdentifierDereference(
-    state: InspectTypeState,
-    xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
-): Promise<TXorNode> {
-    const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectType,
-        recursiveIdentifierDereference.name,
-        maybeCorrelationId,
-        TraceUtils.createXorNodeDetails(xorNode),
-    );
-
-    state.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsIdentifier(xorNode);
-
-    const result: TXorNode = Assert.asDefined(await recursiveIdentifierDereferenceHelper(state, xorNode, trace.id));
-    trace.exit();
-
-    return result;
-}
-
-// Recursively derefence an identifier if it points to another identifier.
-async function recursiveIdentifierDereferenceHelper(
-    state: InspectTypeState,
-    xorNode: TXorNode,
-    correlationId: number,
-): Promise<TXorNode | undefined> {
-    const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectType,
-        recursiveIdentifierDereferenceHelper.name,
-        correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
-    );
-
-    state.maybeCancellationToken?.throwIfCancelled();
-    XorNodeUtils.assertIsIdentifier(xorNode);
-
-    if (XorNodeUtils.isContextXor(xorNode)) {
-        trace.exit({ [TraceConstant.Result]: undefined });
-
-        return undefined;
-    }
-
-    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node;
-    const identifierId: number = identifier.id;
-
-    let identifierLiteral: string;
-    let isRecursiveIdentifier: boolean;
-
-    switch (identifier.kind) {
-        case Ast.NodeKind.Identifier:
-            identifierLiteral = identifier.literal;
-            isRecursiveIdentifier = false;
-            break;
-
-        case Ast.NodeKind.IdentifierExpression:
-            identifierLiteral = identifier.identifier.literal;
-            isRecursiveIdentifier = identifier.maybeInclusiveConstant !== undefined;
-            break;
-
-        default:
-            throw Assert.isNever(identifier);
-    }
-
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, identifierId, trace.id);
-
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(
-        isRecursiveIdentifier ? `@${identifierLiteral}` : identifierLiteral,
-    );
-
-    if (maybeScopeItem === undefined) {
-        trace.exit();
-
-        return xorNode;
-    }
-
-    const scopeItem: TScopeItem = maybeScopeItem;
-
-    let maybeNextXorNode: TXorNode | undefined;
-
-    switch (scopeItem.kind) {
-        case ScopeItemKind.Each:
-        case ScopeItemKind.Parameter:
-        case ScopeItemKind.Undefined:
-            trace.exit({ [TraceConstant.Result]: scopeItem.kind });
-
-            return xorNode;
-
-        case ScopeItemKind.LetVariable:
-        case ScopeItemKind.RecordField:
-        case ScopeItemKind.SectionMember:
-            maybeNextXorNode = scopeItem.maybeValue;
-            break;
-
-        default:
-            throw Assert.isNever(scopeItem);
-    }
-
-    const result: TXorNode | undefined =
-        maybeNextXorNode !== undefined &&
-        XorNodeUtils.isAstXorChecked<Ast.Identifier | Ast.IdentifierExpression>(maybeNextXorNode, [
-            Ast.NodeKind.Identifier,
-            Ast.NodeKind.IdentifierExpression,
-        ])
-            ? await recursiveIdentifierDereferenceHelper(state, maybeNextXorNode, trace.id)
-            : xorNode;
 
     trace.exit();
 
