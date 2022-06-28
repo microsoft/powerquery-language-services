@@ -514,6 +514,12 @@ export async function maybeDereferencedIdentifierType(
             throw Assert.isNever(scopeItem);
     }
 
+    // Infinite recursion on an inclusive identifier.
+    // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
+    if (deferencedLiteral.startsWith("@") && maybeNextXorNode?.node.id === xorNode.node.id) {
+        return Type.AnyInstance;
+    }
+
     const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
         ? await inspectXor(state, maybeNextXorNode, trace.id)
         : undefined;

@@ -1163,6 +1163,12 @@ in
             const expected: Type.Type = Type.TypePrimitiveInstance;
             await assertParseOkNodeTypeEqual(PrimitiveTestSettings, expression, expected);
         });
+
+        it(`inclusve identifier`, async () => {
+            const expression: string = `let foo = @foo in foo`;
+            const expected: Type.Any = Type.AnyInstance;
+            await assertParseOkNodeTypeEqual(PrimitiveTestSettings, expression, expected);
+        });
     });
 
     describe(`external type`, () => {
