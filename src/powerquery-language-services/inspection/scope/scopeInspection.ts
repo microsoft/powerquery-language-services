@@ -58,21 +58,11 @@ export async function tryNodeScope(
             return new Map();
         }
 
-        const inspectedDeltaScope: ScopeById = await inspectScope(
-            updatedSettings,
-            nodeIdMapCollection,
-            ancestry,
-            scopeById,
-            trace.id,
-        );
+        await inspectScope(updatedSettings, nodeIdMapCollection, ancestry, scopeById, trace.id);
 
-        const result: NodeScope = MapUtils.assertGet(inspectedDeltaScope, nodeId, `expected nodeId in scope result`, {
+        const result: NodeScope = MapUtils.assertGet(scopeById, nodeId, `expected nodeId in scope result`, {
             nodeId,
         });
-
-        for (const [key, value] of inspectedDeltaScope.entries()) {
-            scopeById.set(key, value);
-        }
 
         return result;
     }, updatedSettings.locale);
@@ -123,7 +113,6 @@ export async function assertGetOrCreateNodeScope(
 
 interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> {
     readonly givenScope: ScopeById;
-    readonly deltaScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     ancestryIndex: number;
@@ -136,7 +125,7 @@ async function inspectScope(
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
     correlationId: number,
-): Promise<ScopeById> {
+): Promise<void> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         inspectScope.name,
@@ -151,15 +140,12 @@ async function inspectScope(
     if (maybeCached !== undefined) {
         trace.exit();
 
-        return scopeById;
+        return;
     }
 
     const state: ScopeInspectionState = {
         traceManager: settings.traceManager,
         givenScope: scopeById,
-        // Store the delta between the given scope and what's found in a temporary map.
-        // This will prevent mutation in the given map if an error is thrown.
-        deltaScope: new Map(),
         ancestry,
         nodeIdMapCollection,
         ancestryIndex: 0,
@@ -177,8 +163,6 @@ async function inspectScope(
     }
 
     trace.exit();
-
-    return state.deltaScope;
 }
 
 // eslint-disable-next-line require-await
@@ -461,30 +445,18 @@ function localGetOrCreateNodeScope(
         },
     );
 
-    // If scopeFor has already been called then there should be a nodeId in the deltaScope.
-    const maybeDeltaScope: NodeScope | undefined = state.deltaScope.get(nodeId);
-
-    if (maybeDeltaScope !== undefined) {
-        trace.exit({ [TraceConstant.Result]: "deltaScope cache hit" });
-
-        return maybeDeltaScope;
-    }
-
-    // If given a scope with an existing value then assume it's valid.
-    // Cache and return.
+    // If scopeFor has already been called then there should be a nodeId in the givenScope.
     const maybeGivenScope: NodeScope | undefined = state.givenScope.get(nodeId);
 
     if (maybeGivenScope !== undefined) {
-        const shallowCopy: NodeScope = new Map(maybeGivenScope.entries());
-        state.deltaScope.set(nodeId, shallowCopy);
         trace.exit({ [TraceConstant.Result]: "givenScope cache hit" });
 
-        return shallowCopy;
+        return maybeGivenScope;
     }
 
     if (maybeDefaultScope !== undefined) {
         const shallowCopy: NodeScope = new Map(maybeDefaultScope.entries());
-        state.deltaScope.set(nodeId, shallowCopy);
+        state.givenScope.set(nodeId, shallowCopy);
         trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
         return shallowCopy;
@@ -495,30 +467,20 @@ function localGetOrCreateNodeScope(
 
     if (maybeParent !== undefined) {
         const parentNodeId: number = maybeParent.node.id;
-        const maybeParentDeltaScope: NodeScope | undefined = state.deltaScope.get(parentNodeId);
-
-        if (maybeParentDeltaScope !== undefined) {
-            const shallowCopy: NodeScope = new Map(maybeParentDeltaScope.entries());
-            state.deltaScope.set(nodeId, shallowCopy);
-            trace.exit({ [TraceConstant.Result]: "parent deltaScope hit" });
-
-            return shallowCopy;
-        }
-
         const maybeParentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
 
         if (maybeParentGivenScope !== undefined) {
             const shallowCopy: NodeScope = new Map(maybeParentGivenScope.entries());
-            state.deltaScope.set(nodeId, shallowCopy);
+            state.givenScope.set(nodeId, shallowCopy);
             trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
 
-            return shallowCopy;
+            return maybeParentGivenScope;
         }
     }
 
     // The node has no parent or it hasn't been visited.
     const newScope: NodeScope = new Map();
-    state.deltaScope.set(nodeId, newScope);
+    state.givenScope.set(nodeId, newScope);
     trace.exit({ [TraceConstant.Result]: "set new entry" });
 
     return newScope;
