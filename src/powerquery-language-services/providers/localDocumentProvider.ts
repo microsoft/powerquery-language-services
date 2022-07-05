@@ -3,12 +3,13 @@
 
 import {
     AncestryUtils,
+    NodeIdMap,
     NodeIdMapUtils,
     ParseState,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { Hover, Location, MarkupKind, SemanticTokenTypes, SignatureHelp } from "vscode-languageserver-types";
 import { DocumentUri } from "vscode-languageserver-textdocument";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -17,8 +18,11 @@ import * as InspectionUtils from "../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
     IDefinitionProvider,
+    ISemanticTokenProvider,
     ISymbolProvider,
     OnIdentifierProviderContext,
+    PartialSemanticToken,
+    ProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Inspection, Library, PositionUtils } from "..";
@@ -26,7 +30,7 @@ import { InspectionSettings } from "../inspectionSettings";
 import { ProviderTraceConstant } from "../trace";
 import { ScopeUtils } from "../inspection";
 
-export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvider {
+export class LocalDocumentProvider implements IDefinitionProvider, ISemanticTokenProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -172,6 +176,109 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
         trace.exit();
 
         return maybeHover ?? null;
+    }
+
+    // eslint-disable-next-line require-await
+    public async getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getPartialSemanticTokens.name,
+            context.maybeInitialCorrelationId,
+        );
+
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+
+        if (maybeInspected === undefined) {
+            return [];
+        }
+
+        const tokens: PartialSemanticToken[] = [];
+        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+
+        for (const parameterId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Parameter) ?? []) {
+            const maybeParameter: Ast.TParameter | undefined = nodeIdMapCollection.astNodeById.get(parameterId) as
+                | Ast.TParameter
+                | undefined;
+
+            if (maybeParameter === undefined) {
+                continue;
+            }
+
+            tokens.push({
+                range: PositionUtils.createRangeFromTokenRange(maybeParameter.name.tokenRange),
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.parameter,
+            });
+        }
+
+        for (const asTypeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.AsType) ?? []) {
+            const maybeAsType: Ast.AsType | undefined = nodeIdMapCollection.astNodeById.get(asTypeId) as
+                | Ast.AsType
+                | undefined;
+
+            if (maybeAsType === undefined) {
+                continue;
+            }
+
+            tokens.push({
+                range: PositionUtils.createRangeFromTokenRange(maybeAsType.paired.tokenRange),
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.type,
+            });
+        }
+
+        for (const asNullablePrimitiveTypeId of nodeIdMapCollection.idsByNodeKind.get(
+            Ast.NodeKind.AsNullablePrimitiveType,
+        ) ?? []) {
+            const maybeAsNullablePrimitiveTypeId: Ast.AsNullablePrimitiveType | undefined =
+                nodeIdMapCollection.astNodeById.get(asNullablePrimitiveTypeId) as
+                    | Ast.AsNullablePrimitiveType
+                    | undefined;
+
+            if (maybeAsNullablePrimitiveTypeId === undefined) {
+                continue;
+            }
+
+            tokens.push({
+                range: PositionUtils.createRangeFromTokenRange(maybeAsNullablePrimitiveTypeId.paired.tokenRange),
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.type,
+            });
+        }
+
+        for (const literalId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LiteralExpression) ?? []) {
+            const literal: Ast.LiteralExpression = nodeIdMapCollection.astNodeById.get(
+                literalId,
+            ) as Ast.LiteralExpression;
+
+            let maybeTokenType: SemanticTokenTypes | undefined;
+
+            switch (literal.literalKind) {
+                case Ast.LiteralKind.Numeric:
+                    maybeTokenType = SemanticTokenTypes.number;
+                    break;
+
+                case Ast.LiteralKind.Text:
+                    maybeTokenType = SemanticTokenTypes.string;
+                    break;
+
+                default:
+                    maybeTokenType = undefined;
+                    break;
+            }
+
+            if (maybeTokenType) {
+                tokens.push({
+                    range: PositionUtils.createRangeFromTokenRange(literal.tokenRange),
+                    tokenModifiers: [],
+                    tokenType: maybeTokenType,
+                });
+            }
+        }
+
+        trace.exit();
+
+        return tokens;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {

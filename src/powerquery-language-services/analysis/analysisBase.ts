@@ -18,6 +18,7 @@ import type {
     ILocalDocumentProvider,
     ISymbolProvider,
     OnIdentifierProviderContext,
+    PartialSemanticToken,
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
@@ -168,6 +169,23 @@ export abstract class AnalysisBase implements Analysis {
             ),
             EmptyHover,
         );
+
+        trace.exit();
+
+        return result;
+    }
+
+    public async getPartialSemanticTokens(): Promise<PartialSemanticToken[]> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getPartialSemanticTokens.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
+        const result: PartialSemanticToken[] = await this.localDocumentProvider.getPartialSemanticTokens({
+            traceManager: this.analysisSettings.traceManager,
+            maybeInitialCorrelationId: trace.id,
+        });
 
         trace.exit();
 
