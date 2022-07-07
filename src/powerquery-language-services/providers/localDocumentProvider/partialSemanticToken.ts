@@ -5,6 +5,7 @@ import {
     NodeIdMap,
     NodeIdMapUtils,
     TXorNode,
+    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
@@ -29,16 +30,22 @@ export function createPartialSemanticTokens(
 
     let tokens: PartialSemanticToken[] = [];
 
+    // Consumed as first-come first-serve priority.
     tokens = tokens
         .concat(getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id))
         .concat(getFieldSelectorTokens(nodeIdMapCollection, traceManager, trace.id))
         .concat(getFieldProjectionTokens(nodeIdMapCollection, traceManager, trace.id))
-        .concat(getIdentifierTokens(nodeIdMapCollection, libraryDefinitions, traceManager, trace.id))
+        .concat(getGeneralizedIdentifierPairedAnyLiteralTokens(nodeIdMapCollection, traceManager, trace.id))
+        .concat(getGeneralizedIdentifierPairedExpressionTokens(nodeIdMapCollection, traceManager, trace.id))
+        .concat(getIdentifierPairedExpressionTokens(nodeIdMapCollection, traceManager, trace.id))
+        .concat(getInvokeExpressionTokens(nodeIdMapCollection, traceManager, trace.id))
         .concat(getLiteralTokens(nodeIdMapCollection, traceManager, trace.id))
-        .concat(getTBinOpExpressionTokens(nodeIdMapCollection, traceManager, trace.id))
         .concat(getNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id))
         .concat(getParameterTokens(nodeIdMapCollection, traceManager, trace.id))
-        .concat(getPrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id));
+        .concat(getPrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id))
+        .concat(getTBinOpExpressionTokens(nodeIdMapCollection, traceManager, trace.id))
+        // Should be the lowest priority
+        .concat(getIdentifierExpressionTokens(nodeIdMapCollection, libraryDefinitions, traceManager, trace.id));
 
     trace.exit();
 
@@ -173,7 +180,35 @@ function getFieldProjectionTokens(
     return tokens;
 }
 
-function getIdentifierTokens(
+function getGeneralizedIdentifierPairedExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    traceManager: TraceManager,
+    correlationId: number,
+): PartialSemanticToken[] {
+    return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedExpression>(
+        nodeIdMapCollection,
+        Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+        Ast.NodeKind.GeneralizedIdentifier,
+        traceManager,
+        correlationId,
+    );
+}
+
+function getGeneralizedIdentifierPairedAnyLiteralTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    traceManager: TraceManager,
+    correlationId: number,
+): PartialSemanticToken[] {
+    return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedAnyLiteral>(
+        nodeIdMapCollection,
+        Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+        Ast.NodeKind.GeneralizedIdentifier,
+        traceManager,
+        correlationId,
+    );
+}
+
+function getIdentifierExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
     libraryDefinitions: Library.LibraryDefinitions,
     traceManager: TraceManager,
@@ -181,7 +216,7 @@ function getIdentifierTokens(
 ): PartialSemanticToken[] {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
-        getIdentifierTokens.name,
+        getIdentifierExpressionTokens.name,
         correlationId,
     );
 
@@ -222,6 +257,53 @@ function getIdentifierTokens(
             range: PositionUtils.createRangeFromTokenRange(identifierExpr.tokenRange),
             tokenModifiers: maybeTokenModifiers,
             tokenType: maybeTokenType,
+        });
+    }
+
+    trace.exit();
+
+    return tokens;
+}
+
+function getIdentifierPairedExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    traceManager: TraceManager,
+    correlationId: number,
+): PartialSemanticToken[] {
+    return getPairedExpressionTokens<Ast.IdentifierPairedExpression>(
+        nodeIdMapCollection,
+        Ast.NodeKind.IdentifierPairedExpression,
+        Ast.NodeKind.Identifier,
+        traceManager,
+        correlationId,
+    );
+}
+
+function getInvokeExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    traceManager: TraceManager,
+    correlationId: number,
+): PartialSemanticToken[] {
+    const trace: Trace = traceManager.entry(
+        ProviderTraceConstant.LocalDocumentSymbolProvider,
+        getInvokeExpressionTokens.name,
+        correlationId,
+    );
+
+    const tokens: PartialSemanticToken[] = [];
+
+    for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression) ?? []) {
+        const maybeIdentifierXor: XorNode<Ast.IdentifierExpression> | undefined =
+            NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+
+        if (maybeIdentifierXor === undefined || !XorNodeUtils.isAstXor(maybeIdentifierXor)) {
+            continue;
+        }
+
+        tokens.push({
+            range: PositionUtils.createRangeFromTokenRange(maybeIdentifierXor.node.tokenRange),
+            tokenModifiers: [],
+            tokenType: SemanticTokenTypes.function,
         });
     }
 
@@ -464,6 +546,50 @@ function getTBinOpExpressionTokens(
             range: PositionUtils.createRangeFromTokenRange(operatorAstNode.tokenRange),
             tokenModifiers: [],
             tokenType,
+        });
+    }
+
+    trace.exit();
+
+    return tokens;
+}
+
+function getPairedExpressionTokens<
+    T extends
+        | Ast.GeneralizedIdentifierPairedAnyLiteral
+        | Ast.GeneralizedIdentifierPairedExpression
+        | Ast.IdentifierPairedExpression,
+>(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    pairedKind: T["kind"],
+    keyKind: T["key"]["kind"],
+    traceManager: TraceManager,
+    correlationId: number,
+): PartialSemanticToken[] {
+    const trace: Trace = traceManager.entry(
+        ProviderTraceConstant.LocalDocumentSymbolProvider,
+        getIdentifierExpressionTokens.name,
+        correlationId,
+    );
+
+    const tokens: PartialSemanticToken[] = [];
+
+    for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(pairedKind) ?? []) {
+        const maybeNode: T["key"] | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+            nodeIdMapCollection,
+            nodeId,
+            0,
+            keyKind,
+        );
+
+        if (maybeNode === undefined) {
+            continue;
+        }
+
+        tokens.push({
+            range: PositionUtils.createRangeFromTokenRange(maybeNode.tokenRange),
+            tokenModifiers: [SemanticTokenModifiers.declaration],
+            tokenType: SemanticTokenTypes.variable,
         });
     }
 
