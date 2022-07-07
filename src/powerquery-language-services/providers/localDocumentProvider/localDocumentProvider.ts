@@ -8,20 +8,13 @@ import {
     ParseState,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, AstUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { CommonError, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
-import {
-    Hover,
-    Location,
-    MarkupKind,
-    SemanticTokenModifiers,
-    SemanticTokenTypes,
-    SignatureHelp,
-} from "vscode-languageserver-types";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { DocumentUri } from "vscode-languageserver-textdocument";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import * as InspectionUtils from "../inspectionUtils";
+import * as InspectionUtils from "../../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
     IDefinitionProvider,
@@ -31,11 +24,12 @@ import {
     PartialSemanticToken,
     ProviderContext,
     SignatureProviderContext,
-} from "./commonTypes";
-import { Inspection, Library, PositionUtils } from "..";
-import { InspectionSettings } from "../inspectionSettings";
-import { ProviderTraceConstant } from "../trace";
-import { ScopeUtils } from "../inspection";
+} from "../commonTypes";
+import { Inspection, Library, PositionUtils } from "../..";
+import { createPartialSemanticTokens } from "./partialSemanticToken";
+import { InspectionSettings } from "../../inspectionSettings";
+import { ProviderTraceConstant } from "../../trace";
+import { ScopeUtils } from "../../inspection";
 
 export class LocalDocumentProvider implements IDefinitionProvider, ISemanticTokenProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
@@ -199,169 +193,14 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISemanticToke
             return [];
         }
 
-        const tokens: PartialSemanticToken[] = [];
         const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
 
-        for (const asNullablePrimitiveTypeId of nodeIdMapCollection.idsByNodeKind.get(
-            Ast.NodeKind.AsNullablePrimitiveType,
-        ) ?? []) {
-            const maybeAsNullablePrimitiveTypeId: Ast.AsNullablePrimitiveType | undefined =
-                nodeIdMapCollection.astNodeById.get(asNullablePrimitiveTypeId) as
-                    | Ast.AsNullablePrimitiveType
-                    | undefined;
-
-            if (maybeAsNullablePrimitiveTypeId === undefined) {
-                continue;
-            }
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(maybeAsNullablePrimitiveTypeId.paired.tokenRange),
-                tokenModifiers: [],
-                tokenType: SemanticTokenTypes.type,
-            });
-        }
-
-        for (const asTypeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.AsType) ?? []) {
-            const maybeAsType: Ast.AsType | undefined = nodeIdMapCollection.astNodeById.get(asTypeId) as
-                | Ast.AsType
-                | undefined;
-
-            if (maybeAsType === undefined) {
-                continue;
-            }
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(maybeAsType.paired.tokenRange),
-                tokenModifiers: [],
-                tokenType: SemanticTokenTypes.type,
-            });
-        }
-
-        const binOpExprNodeKinds: ReadonlyArray<Ast.NodeKind> = [
-            Ast.NodeKind.ArithmeticExpression,
-            Ast.NodeKind.AsExpression,
-            Ast.NodeKind.EqualityExpression,
-            Ast.NodeKind.IsExpression,
-            Ast.NodeKind.LogicalExpression,
-            Ast.NodeKind.MetadataExpression,
-            Ast.NodeKind.NullCoalescingExpression,
-            Ast.NodeKind.RelationalExpression,
-        ];
-
-        const binOpExprNodeIds: number[] = [];
-
-        for (const nodeKind of binOpExprNodeKinds) {
-            const maybeNodeIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(nodeKind);
-
-            if (maybeNodeIds?.size) {
-                binOpExprNodeIds.push(...maybeNodeIds.values());
-            }
-        }
-
-        for (const binOpExprId of binOpExprNodeIds) {
-            const maybeBinOpExpression: Ast.TNode = MapUtils.assertGet(nodeIdMapCollection.astNodeById, binOpExprId);
-
-            if (!AstUtils.isTBinOpExpression(maybeBinOpExpression)) {
-                throw new CommonError.InvariantError(`received a non TBinOpExpression`, { binOpExprId });
-            }
-
-            const binOpExpr: Ast.TBinOpExpression = maybeBinOpExpression;
-
-            const tokenType: SemanticTokenTypes = [
-                Ast.NodeKind.AsExpression,
-                Ast.NodeKind.IsExpression,
-                Ast.NodeKind.MetadataExpression,
-            ].includes(binOpExpr.kind)
-                ? SemanticTokenTypes.keyword
-                : SemanticTokenTypes.operator;
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(binOpExpr.operatorConstant.tokenRange),
-                tokenModifiers: [],
-                tokenType,
-            });
-        }
-
-        for (const literalId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LiteralExpression) ?? []) {
-            const literal: Ast.LiteralExpression = nodeIdMapCollection.astNodeById.get(
-                literalId,
-            ) as Ast.LiteralExpression;
-
-            let maybeTokenType: SemanticTokenTypes | undefined;
-
-            switch (literal.literalKind) {
-                case Ast.LiteralKind.Numeric:
-                    maybeTokenType = SemanticTokenTypes.number;
-                    break;
-
-                case Ast.LiteralKind.Text:
-                    maybeTokenType = SemanticTokenTypes.string;
-                    break;
-
-                default:
-                    continue;
-            }
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(literal.tokenRange),
-                tokenModifiers: [],
-                tokenType: maybeTokenType,
-            });
-        }
-
-        for (const identifierId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierExpression) ?? []) {
-            const identifierExpr: Ast.IdentifierExpression = nodeIdMapCollection.astNodeById.get(
-                identifierId,
-            ) as Ast.IdentifierExpression;
-
-            let maybeTokenType: SemanticTokenTypes | undefined;
-            let maybeTokenModifiers: SemanticTokenModifiers[] = [];
-
-            switch (identifierExpr.identifier.identifierContextKind) {
-                case Ast.IdentifierContextKind.Key:
-                    maybeTokenType = SemanticTokenTypes.property;
-                    maybeTokenModifiers = [SemanticTokenModifiers.declaration];
-                    break;
-
-                case Ast.IdentifierContextKind.Parameter:
-                    maybeTokenType = SemanticTokenTypes.parameter;
-                    break;
-
-                case Ast.IdentifierContextKind.Value:
-                    maybeTokenType = SemanticTokenTypes.variable;
-
-                    if (this.libraryDefinitions.has(identifierExpr.identifier.literal)) {
-                        maybeTokenModifiers = [SemanticTokenModifiers.defaultLibrary];
-                    }
-
-                    break;
-
-                default:
-                    continue;
-            }
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(identifierExpr.tokenRange),
-                tokenModifiers: maybeTokenModifiers,
-                tokenType: maybeTokenType,
-            });
-        }
-
-        for (const parameterId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Parameter) ?? []) {
-            const maybeParameter: Ast.TParameter | undefined = nodeIdMapCollection.astNodeById.get(parameterId) as
-                | Ast.TParameter
-                | undefined;
-
-            if (maybeParameter === undefined) {
-                continue;
-            }
-
-            tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(maybeParameter.name.tokenRange),
-                tokenModifiers: [],
-                tokenType: SemanticTokenTypes.parameter,
-            });
-        }
+        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
+            nodeIdMapCollection,
+            this.libraryDefinitions,
+            context.traceManager,
+            trace.id,
+        );
 
         trace.exit();
 
