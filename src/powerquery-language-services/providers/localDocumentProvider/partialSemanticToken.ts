@@ -118,12 +118,12 @@ function getFieldSelectorTokens(
             tokenType: SemanticTokenTypes.variable,
         });
 
-        const maybeQuestionMarkAst: Ast.GeneralizedIdentifier | undefined =
-            NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.GeneralizedIdentifier>(
+        const maybeQuestionMarkAst: Ast.TConstant | undefined =
+            NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 nodeId,
                 3,
-                Ast.NodeKind.GeneralizedIdentifier,
+                Ast.NodeKind.Constant,
             );
 
         if (maybeQuestionMarkAst === undefined) {
@@ -156,12 +156,12 @@ function getFieldProjectionTokens(
     const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldProjection) ?? []) {
-        const maybeQuestionMarkAst: Ast.GeneralizedIdentifier | undefined =
-            NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.GeneralizedIdentifier>(
+        const maybeQuestionMarkAst: Ast.TConstant | undefined =
+            NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 nodeId,
                 3,
-                Ast.NodeKind.GeneralizedIdentifier,
+                Ast.NodeKind.Constant,
             );
 
         if (maybeQuestionMarkAst === undefined) {

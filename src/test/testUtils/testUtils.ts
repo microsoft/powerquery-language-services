@@ -8,7 +8,7 @@ import { DocumentSymbol, Hover, Location, Position, SignatureHelp, SymbolKind } 
 
 import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
-import { Analysis, Inspection } from "../../powerquery-language-services";
+import { Analysis, Inspection, PartialSemanticToken } from "../../powerquery-language-services";
 import { AnalysisSettings } from "../..";
 import { MockDocument } from "../mockDocument";
 
@@ -96,6 +96,13 @@ export function createDefinition(text: string, maybeAnalysisSettings?: AnalysisS
 
 export function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
     return createAnalysis(text, maybeAnalysisSettings).getHover();
+}
+
+export function createPartialSemanticTokens(
+    text: string,
+    maybeAnalysisSettings?: AnalysisSettings,
+): Promise<PartialSemanticToken[]> {
+    return createAnalysis(text, maybeAnalysisSettings).getPartialSemanticTokens();
 }
 
 export function createSignatureHelp(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<SignatureHelp> {
