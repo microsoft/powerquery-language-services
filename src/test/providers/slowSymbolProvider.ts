@@ -7,15 +7,18 @@ import {
     AutocompleteItemProviderContext,
     Hover,
     IDefinitionProvider,
+    ISemanticTokenProvider,
     Library,
     LibrarySymbolProvider,
     OnIdentifierProviderContext,
+    PartialSemanticToken,
+    ProviderContext,
     SignatureHelp,
     SignatureProviderContext,
 } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 
-export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefinitionProvider {
+export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefinitionProvider, ISemanticTokenProvider {
     private readonly delayInMS: number;
 
     constructor(library: Library.ILibrary, delayInMS: number) {
@@ -40,6 +43,11 @@ export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefini
         await this.delay();
 
         return super.getHover(context);
+    }
+
+    // eslint-disable-next-line require-await
+    public async getPartialSemanticTokens(_context: ProviderContext): Promise<PartialSemanticToken[]> {
+        throw new Error("Method not implemented.");
     }
 
     public override async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {

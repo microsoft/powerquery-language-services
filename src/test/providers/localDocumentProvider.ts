@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Location, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range, TextDocument } from "vscode-languageserver-textdocument";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import type { Location } from "vscode-languageserver-types";
 
 import {
     AnalysisSettings,
@@ -15,6 +15,7 @@ import {
     Inspection,
     Library,
     NullSymbolProvider,
+    PartialSemanticToken,
     Position,
     SignatureHelp,
 } from "../../powerquery-language-services";
@@ -34,6 +35,10 @@ function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection
 
 function createHover(text: string): Promise<Hover> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
+}
+
+function createPartialSemanticTokens(text: string): Promise<PartialSemanticToken[]> {
+    return TestUtils.createPartialSemanticTokens(text, IsolatedAnalysisSettings);
 }
 
 function createSignatureHelp(text: string): Promise<SignatureHelp> {
@@ -347,6 +352,226 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 const hover: Hover = await createHover("section; foo| = 1;");
                 TestUtils.assertEqualHover("[section-member] foo: 1", hover);
             });
+        });
+    });
+
+    describe(`getPartialSemanticTokens`, () => {
+        it(`field projection`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`a[[b]]?|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 3, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+                {
+                    range: {
+                        end: { character: 7, line: 0 },
+                        start: { character: 6, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.operator,
+                },
+                {
+                    range: {
+                        end: { character: 1, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`field selector`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`a[b]?|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 3, line: 0 },
+                        start: { character: 2, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+                {
+                    range: {
+                        end: { character: 5, line: 0 },
+                        start: { character: 4, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.operator,
+                },
+                {
+                    range: {
+                        end: { character: 1, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`numeric literal`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`1|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 1, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.number,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`primitive type`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`text|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`parameter`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(
+                `(optional foo as number) => foo|`,
+            );
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 16, line: 0 },
+                        start: { character: 14, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+                {
+                    range: {
+                        end: { character: 9, line: 0 },
+                        start: { character: 1, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+                {
+                    range: {
+                        end: { character: 13, line: 0 },
+                        start: { character: 10, line: 0 },
+                    },
+                    tokenModifiers: [SemanticTokenModifiers.declaration],
+                    tokenType: SemanticTokenTypes.parameter,
+                },
+                {
+                    range: {
+                        end: { character: 23, line: 0 },
+                        start: { character: 17, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.type,
+                },
+                {
+                    range: {
+                        end: { character: 31, line: 0 },
+                        start: { character: 28, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`record literal`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`[foo = 1]section bar;|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 1, line: 0 },
+                    },
+                    tokenModifiers: [SemanticTokenModifiers.declaration],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+                {
+                    range: {
+                        end: { character: 8, line: 0 },
+                        start: { character: 7, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.number,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`record expression`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`[foo = 1]|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 1, line: 0 },
+                    },
+                    tokenModifiers: [SemanticTokenModifiers.declaration],
+                    tokenType: SemanticTokenTypes.variable,
+                },
+                {
+                    range: {
+                        end: { character: 8, line: 0 },
+                        start: { character: 7, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.number,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`text literal`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`""|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 2, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.string,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
         });
     });
 

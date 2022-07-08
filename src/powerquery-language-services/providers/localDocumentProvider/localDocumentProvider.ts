@@ -3,6 +3,7 @@
 
 import {
     AncestryUtils,
+    NodeIdMap,
     NodeIdMapUtils,
     ParseState,
     TXorNode,
@@ -13,20 +14,24 @@ import { DocumentUri } from "vscode-languageserver-textdocument";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import * as InspectionUtils from "../inspectionUtils";
+import * as InspectionUtils from "../../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
     IDefinitionProvider,
+    ISemanticTokenProvider,
     ISymbolProvider,
     OnIdentifierProviderContext,
+    PartialSemanticToken,
+    ProviderContext,
     SignatureProviderContext,
-} from "./commonTypes";
-import { Inspection, Library, PositionUtils } from "..";
-import { InspectionSettings } from "../inspectionSettings";
-import { ProviderTraceConstant } from "../trace";
-import { ScopeUtils } from "../inspection";
+} from "../commonTypes";
+import { Inspection, Library, PositionUtils } from "../..";
+import { createPartialSemanticTokens } from "./partialSemanticToken";
+import { InspectionSettings } from "../../inspectionSettings";
+import { ProviderTraceConstant } from "../../trace";
+import { ScopeUtils } from "../../inspection";
 
-export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvider {
+export class LocalDocumentProvider implements IDefinitionProvider, ISemanticTokenProvider, ISymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -172,6 +177,34 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISymbolProvid
         trace.exit();
 
         return maybeHover ?? null;
+    }
+
+    // eslint-disable-next-line require-await
+    public async getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getPartialSemanticTokens.name,
+            context.maybeInitialCorrelationId,
+        );
+
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+
+        if (maybeInspected === undefined) {
+            return [];
+        }
+
+        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+
+        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
+            nodeIdMapCollection,
+            this.libraryDefinitions,
+            context.traceManager,
+            trace.id,
+        );
+
+        trace.exit();
+
+        return tokens;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {

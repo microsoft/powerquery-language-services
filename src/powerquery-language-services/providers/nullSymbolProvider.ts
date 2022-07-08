@@ -5,15 +5,17 @@ import { Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
-    ISymbolProvider,
+    ILocalDocumentProvider,
     OnIdentifierProviderContext,
+    PartialSemanticToken,
+    ProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Hover, SignatureHelp } from "../commonTypes";
 import { Inspection, Library } from "..";
 import { AutocompleteItem } from "../inspection/autocomplete";
 
-export class NullSymbolProvider implements ISymbolProvider {
+export class NullSymbolProvider implements ILocalDocumentProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
         Inspection.ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
@@ -43,6 +45,11 @@ export class NullSymbolProvider implements ISymbolProvider {
     // eslint-disable-next-line require-await
     public async getHover(_context: OnIdentifierProviderContext): Promise<Hover | null> {
         return null;
+    }
+
+    // eslint-disable-next-line require-await
+    public async getPartialSemanticTokens(_context: ProviderContext): Promise<PartialSemanticToken[]> {
+        return [];
     }
 
     // eslint-disable-next-line require-await
