@@ -991,6 +991,18 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
+        it(`let x = |`, async () => {
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = |`);
+            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
+                text,
+                position,
+            );
+
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
+        });
+
         it(`() => |`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`() => |`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
