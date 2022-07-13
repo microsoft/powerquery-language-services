@@ -1354,5 +1354,31 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
+
+        it(`let x = e|`, async () => {
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = e|`);
+            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
+
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
+                text,
+                position,
+            );
+
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
+        });
+
+        it(`let x = error let x = e|`, async () => {
+            const [text, position]: [string, Position] =
+                TestUtils.assertGetTextWithPosition(`let x = error let x = e|`);
+
+            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
+
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
+                text,
+                position,
+            );
+
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
+        });
     });
 });

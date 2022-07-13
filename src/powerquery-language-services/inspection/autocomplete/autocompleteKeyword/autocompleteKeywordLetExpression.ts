@@ -1,8 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    AncestryUtils,
+    NodeIdMapIterator,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, AstUtils, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordRightMostLeaf } from "./common";
@@ -51,6 +56,22 @@ export async function autocompleteKeywordLetExpression(
             return maybeInspected !== undefined
                 ? [...maybeInspected, Keyword.KeywordKind.In]
                 : [Keyword.KeywordKind.In];
+        }
+    }
+    // `let foo = e|` where we want to treat the identifier as a potential keyword
+    else if (child.node.maybeAttributeIndex === 1) {
+        const maybeIdentifier: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+            state.activeNode.ancestry,
+            state.ancestryIndex,
+            5,
+        );
+
+        if (maybeIdentifier && XorNodeUtils.isAstXor(maybeIdentifier) && AstUtils.isIdentifier(maybeIdentifier.node)) {
+            const identifier: Ast.Identifier = maybeIdentifier.node;
+
+            maybeInspected = Keyword.ExpressionKeywordKinds.filter((value: Keyword.KeywordKind) =>
+                value.startsWith(identifier.literal),
+            );
         }
     }
 
