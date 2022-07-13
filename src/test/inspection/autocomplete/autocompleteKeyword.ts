@@ -991,18 +991,6 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             TestUtils.assertAutocompleteItemLabels(expected, actual);
         });
 
-        it(`let x = |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
         it(`() => |`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`() => |`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
@@ -1346,6 +1334,32 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         it(`let a = let b = 1, |`, async () => {
             const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = let b = 1, |`);
             const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
+                text,
+                position,
+            );
+
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
+        });
+
+        it(`let x = e|`, async () => {
+            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = e|`);
+            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
+
+            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
+                text,
+                position,
+            );
+
+            TestUtils.assertAutocompleteItemLabels(expected, actual);
+        });
+
+        it(`let x = error let x = e|`, async () => {
+            const [text, position]: [string, Position] =
+                TestUtils.assertGetTextWithPosition(`let x = error let x = e|`);
+
+            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
 
             const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
                 text,
