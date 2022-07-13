@@ -11,6 +11,7 @@ import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
+import { ExternalTypeRequestKind } from "../inspection/externalType/externalType";
 import { ILocalizationTemplates } from "../localization/templates";
 import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";
@@ -140,7 +141,12 @@ function findUnknownIdentifiers(
         if (
             !nodeScope.has(literal) &&
             !(literal[0] === "@" && nodeScope.has(literal.slice(1))) &&
-            !validationSettings.library.libraryDefinitions.has(literal)
+            !validationSettings.library.libraryDefinitions.has(literal) &&
+            // even no external type found
+            !validationSettings.library.externalTypeResolver({
+                kind: ExternalTypeRequestKind.Value,
+                identifierLiteral: literal,
+            })
         ) {
             const knownIdentifiers: ReadonlyArray<string> = [
                 ...nodeScope.keys(),
