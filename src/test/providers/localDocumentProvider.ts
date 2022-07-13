@@ -439,6 +439,47 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             expect(tokens).to.deep.equal(expected);
         });
 
+        it(`nullable primitive type`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`1 is nullable number|`);
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 1, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.number,
+                },
+                {
+                    range: {
+                        end: { character: 13, line: 0 },
+                        start: { character: 5, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+                {
+                    range: {
+                        end: { character: 20, line: 0 },
+                        start: { character: 14, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.type,
+                },
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 2, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
         it(`primitive type`, async () => {
             const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`text|`);
 
@@ -551,6 +592,57 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     },
                     tokenModifiers: [],
                     tokenType: SemanticTokenTypes.number,
+                },
+            ];
+
+            expect(tokens).to.deep.equal(expected);
+        });
+
+        it(`table type`, async () => {
+            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(
+                `type table [optional foo = nullable number]|`,
+            );
+
+            const expected: PartialSemanticToken[] = [
+                {
+                    range: {
+                        end: { character: 20, line: 0 },
+                        start: { character: 12, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+                {
+                    range: {
+                        end: { character: 35, line: 0 },
+                        start: { character: 27, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.keyword,
+                },
+                {
+                    range: {
+                        end: { character: 42, line: 0 },
+                        start: { character: 36, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.type,
+                },
+                {
+                    range: {
+                        end: { character: 10, line: 0 },
+                        start: { character: 5, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.type,
+                },
+                {
+                    range: {
+                        end: { character: 4, line: 0 },
+                        start: { character: 0, line: 0 },
+                    },
+                    tokenModifiers: [],
+                    tokenType: SemanticTokenTypes.type,
                 },
             ];
 
