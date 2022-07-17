@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Location } from "vscode-languageserver-types";
+import { FoldingRange, Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
@@ -39,6 +39,11 @@ export class NullSymbolProvider implements ILocalDocumentProvider {
 
     // eslint-disable-next-line require-await
     public async getDefinition(_context: OnIdentifierProviderContext): Promise<Location[] | null> {
+        return [];
+    }
+
+    // eslint-disable-next-line require-await
+    public async getFoldingRanges(_context: ProviderContext): Promise<FoldingRange[]> {
         return [];
     }
 

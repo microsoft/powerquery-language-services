@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Location } from "vscode-languageserver-types";
+import type { FoldingRange, Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
     Hover,
     IDefinitionProvider,
+    IFoldingRangeProvider,
     ISemanticTokenProvider,
     Library,
     LibrarySymbolProvider,
@@ -18,7 +19,10 @@ import {
 } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 
-export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefinitionProvider, ISemanticTokenProvider {
+export class SlowSymbolProvider
+    extends LibrarySymbolProvider
+    implements IDefinitionProvider, IFoldingRangeProvider, ISemanticTokenProvider
+{
     private readonly delayInMS: number;
 
     constructor(library: Library.ILibrary, delayInMS: number) {
@@ -43,6 +47,11 @@ export class SlowSymbolProvider extends LibrarySymbolProvider implements IDefini
         await this.delay();
 
         return super.getHover(context);
+    }
+
+    // eslint-disable-next-line require-await
+    public async getFoldingRanges(_context: ProviderContext): Promise<FoldingRange[]> {
+        throw new Error("Method not implemented.");
     }
 
     // eslint-disable-next-line require-await

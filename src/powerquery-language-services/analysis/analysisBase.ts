@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Hover, Location, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
+import type { FoldingRange, Hover, Location, Range, SignatureHelp, TextEdit } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { DocumentUri } from "vscode-languageserver-textdocument";
@@ -142,6 +142,23 @@ export abstract class AnalysisBase implements Analysis {
         trace.exit();
 
         return result ?? [];
+    }
+
+    public async getFoldingRanges(): Promise<FoldingRange[]> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getPartialSemanticTokens.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
+
+        const result: FoldingRange[] = await this.localDocumentProvider.getFoldingRanges({
+            traceManager: this.analysisSettings.traceManager,
+            maybeInitialCorrelationId: trace.id,
+        });
+
+        trace.exit();
+
+        return result;
     }
 
     public async getHover(): Promise<Hover> {
