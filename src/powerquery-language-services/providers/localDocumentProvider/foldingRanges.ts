@@ -66,9 +66,9 @@ function getFoldingRanges<T extends Ast.TNode>(
             continue;
         }
 
-        const tokenRange: TokenRange | undefined = maybeNode.tokenRange;
+        const tokenRange: TokenRange = maybeNode.tokenRange;
 
-        if (isRangeFoldable(tokenRange)) {
+        if (tokenRange.positionStart.lineNumber !== tokenRange.positionEnd.lineNumber) {
             foldingRanges.push(asFoldingRange(tokenRange));
         }
     }
@@ -85,11 +85,4 @@ function asFoldingRange(tokenRange: TokenRange): FoldingRange {
         endCharacter: tokenRange.positionEnd.lineCodeUnit,
         endLine: tokenRange.positionEnd.lineNumber,
     };
-}
-
-function isRangeFoldable(maybeTokenRange: TokenRange | undefined): boolean {
-    return (
-        maybeTokenRange !== undefined &&
-        maybeTokenRange.positionStart.lineNumber !== maybeTokenRange.positionEnd.lineNumber
-    );
 }
