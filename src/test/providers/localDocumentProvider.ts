@@ -316,6 +316,28 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             expect(actual).to.deep.equal(expected);
         });
 
+        it(`MetaExpression`, async () => {
+            const expected: FoldingRange[] = [
+                {
+                    endCharacter: 2,
+                    endLine: 2,
+                    startCharacter: 0,
+                    startLine: 0,
+                },
+                {
+                    endCharacter: 2,
+                    endLine: 2,
+                    startCharacter: 7,
+                    startLine: 0,
+                },
+            ];
+
+            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("1 meta [ \n foo = number \n ]|");
+
+            Assert.isDefined(actual);
+            expect(actual).to.deep.equal(expected);
+        });
+
         it(`RecordExpression`, async () => {
             const expected: FoldingRange[] = [
                 {
@@ -344,6 +366,30 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
             const actual: FoldingRange[] = await TestUtils.createFoldingRanges(
                 "[ \n a=1, \n b=2 \n ] \n section foo; bar = 1|",
+            );
+
+            Assert.isDefined(actual);
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`SectionMember`, async () => {
+            const expected: FoldingRange[] = [
+                {
+                    endCharacter: 2,
+                    endLine: 8,
+                    startCharacter: 1,
+                    startLine: 5,
+                },
+                {
+                    endCharacter: 2,
+                    endLine: 3,
+                    startCharacter: 0,
+                    startLine: 0,
+                },
+            ];
+
+            const actual: FoldingRange[] = await TestUtils.createFoldingRanges(
+                "[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1|",
             );
 
             Assert.isDefined(actual);

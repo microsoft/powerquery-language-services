@@ -29,8 +29,10 @@ export function createFoldingRanges(
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.LetExpression, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListExpression, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListLiteral, traceManager, trace.id))
+        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.MetadataExpression, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordExpression, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordLiteral, traceManager, trace.id))
+        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.SectionMember, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.TypePrimaryType, traceManager, trace.id));
 
     trace.exit();
