@@ -31,7 +31,7 @@ export function createFoldingRanges(
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListLiteral, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordExpression, traceManager, trace.id))
         .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordLiteral, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordType, traceManager, trace.id));
+        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.TypePrimaryType, traceManager, trace.id));
 
     trace.exit();
 
@@ -87,7 +87,7 @@ function asFoldingRange(tokenRange: TokenRange): FoldingRange {
 
 function isRangeFoldable(maybeTokenRange: TokenRange | undefined): boolean {
     return (
-        maybeTokenRange === undefined ||
-        maybeTokenRange.positionStart.lineNumber === maybeTokenRange.positionEnd.lineNumber
+        maybeTokenRange !== undefined &&
+        maybeTokenRange.positionStart.lineNumber !== maybeTokenRange.positionEnd.lineNumber
     );
 }

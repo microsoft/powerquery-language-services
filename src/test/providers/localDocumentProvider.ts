@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Location, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
+import { FoldingRange, Location, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range, TextDocument } from "vscode-languageserver-textdocument";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
@@ -296,6 +296,58 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             const actual: Location[] | undefined = await TestUtils.createDefinition("(foo as number) => foo|");
             Assert.isDefined(actual);
             TestUtils.assertEqualLocation(expected, actual);
+        });
+    });
+
+    describe(`getFoldingRanges`, () => {
+        it(`LetExpression`, async () => {
+            const expected: FoldingRange[] = [
+                {
+                    endCharacter: 4,
+                    endLine: 3,
+                    startCharacter: 0,
+                    startLine: 0,
+                },
+            ];
+
+            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("let \n foo = 1 \n in \n baz|");
+
+            Assert.isDefined(actual);
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`RecordExpression`, async () => {
+            const expected: FoldingRange[] = [
+                {
+                    endCharacter: 2,
+                    endLine: 3,
+                    startCharacter: 0,
+                    startLine: 0,
+                },
+            ];
+
+            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ]|");
+
+            Assert.isDefined(actual);
+            expect(actual).to.deep.equal(expected);
+        });
+
+        it(`RecordLiteral`, async () => {
+            const expected: FoldingRange[] = [
+                {
+                    endCharacter: 2,
+                    endLine: 3,
+                    startCharacter: 0,
+                    startLine: 0,
+                },
+            ];
+
+            const actual: FoldingRange[] = await TestUtils.createFoldingRanges(
+                "[ \n a=1, \n b=2 \n ] \n section foo; bar = 1|",
+            );
+
+            Assert.isDefined(actual);
+            expect(actual).to.deep.equal(expected);
         });
     });
 

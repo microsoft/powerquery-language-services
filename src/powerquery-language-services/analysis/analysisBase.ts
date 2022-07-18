@@ -147,7 +147,7 @@ export abstract class AnalysisBase implements Analysis {
     public async getFoldingRanges(): Promise<FoldingRange[]> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
-            this.getPartialSemanticTokens.name,
+            this.getFoldingRanges.name,
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
