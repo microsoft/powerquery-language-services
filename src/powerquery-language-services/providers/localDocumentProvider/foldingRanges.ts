@@ -16,19 +16,19 @@ export function tryCreateFoldingRanges(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): Result<FoldingRange[], CommonError.CommonError> {
-    return ResultUtils.ensureResult(
-        () => createFoldingRanges(nodeIdMapCollection, traceManager, correlationId, maybeCancellationToken),
+): Promise<Result<FoldingRange[], CommonError.CommonError>> {
+    return ResultUtils.ensureResultAsync(
+        async () => await createFoldingRanges(nodeIdMapCollection, traceManager, correlationId, maybeCancellationToken),
         locale,
     );
 }
 
-function createFoldingRanges(
+async function createFoldingRanges(
     nodeIdMapCollection: NodeIdMap.Collection,
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): FoldingRange[] {
+): Promise<FoldingRange[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         createFoldingRanges.name,
@@ -41,7 +41,7 @@ function createFoldingRanges(
 
     foldingRanges = foldingRanges
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.FunctionExpression,
                 traceManager,
@@ -50,7 +50,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.IfExpression,
                 traceManager,
@@ -59,7 +59,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.InvokeExpression,
                 traceManager,
@@ -68,7 +68,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.LetExpression,
                 traceManager,
@@ -77,7 +77,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.ListExpression,
                 traceManager,
@@ -86,7 +86,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.ListLiteral,
                 traceManager,
@@ -95,7 +95,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.MetadataExpression,
                 traceManager,
@@ -104,7 +104,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.RecordExpression,
                 traceManager,
@@ -113,7 +113,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.RecordLiteral,
                 traceManager,
@@ -122,7 +122,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.SectionMember,
                 traceManager,
@@ -131,7 +131,7 @@ function createFoldingRanges(
             ),
         )
         .concat(
-            getFoldingRanges(
+            await getFoldingRangesFor(
                 nodeIdMapCollection,
                 Ast.NodeKind.TypePrimaryType,
                 traceManager,
@@ -145,16 +145,16 @@ function createFoldingRanges(
     return foldingRanges;
 }
 
-function getFoldingRanges<T extends Ast.TNode>(
+function getFoldingRangesFor<T extends Ast.TNode>(
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeKind: T["kind"],
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): FoldingRange[] {
+): Promise<FoldingRange[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
-        getFoldingRanges.name,
+        getFoldingRangesFor.name,
         correlationId,
         { nodeKind },
     );
@@ -183,7 +183,7 @@ function getFoldingRanges<T extends Ast.TNode>(
 
     trace.exit();
 
-    return foldingRanges;
+    return Promise.resolve(foldingRanges);
 }
 
 function asFoldingRange(tokenRange: TokenRange): FoldingRange {

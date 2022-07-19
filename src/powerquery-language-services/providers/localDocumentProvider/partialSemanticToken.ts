@@ -24,10 +24,10 @@ export function tryCreatePartialSemanticTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): Result<PartialSemanticToken[], CommonError.CommonError> {
-    return ResultUtils.ensureResult(
-        () =>
-            createPartialSemanticTokens(
+): Promise<Result<PartialSemanticToken[], CommonError.CommonError>> {
+    return ResultUtils.ensureResultAsync(
+        async () =>
+            await partialSemanticTokens(
                 nodeIdMapCollection,
                 libraryDefinitions,
                 traceManager,
@@ -38,16 +38,16 @@ export function tryCreatePartialSemanticTokens(
     );
 }
 
-function createPartialSemanticTokens(
+async function partialSemanticTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
     libraryDefinitions: Library.LibraryDefinitions,
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
-        createPartialSemanticTokens.name,
+        partialSemanticTokens.name,
         correlationId,
     );
 
@@ -57,12 +57,14 @@ function createPartialSemanticTokens(
 
     // Consumed as first-come first-serve priority.
     tokens = tokens
-        .concat(getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getFieldSelectorTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getFieldProjectionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getFieldSpecificationTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
         .concat(
-            getGeneralizedIdentifierPairedAnyLiteralTokens(
+            await getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken),
+        )
+        .concat(await getFieldSelectorTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getFieldProjectionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getFieldSpecificationTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(
+            await getGeneralizedIdentifierPairedAnyLiteralTokens(
                 nodeIdMapCollection,
                 traceManager,
                 trace.id,
@@ -70,7 +72,7 @@ function createPartialSemanticTokens(
             ),
         )
         .concat(
-            getGeneralizedIdentifierPairedExpressionTokens(
+            await getGeneralizedIdentifierPairedExpressionTokens(
                 nodeIdMapCollection,
                 traceManager,
                 trace.id,
@@ -78,20 +80,27 @@ function createPartialSemanticTokens(
             ),
         )
         .concat(
-            getIdentifierPairedExpressionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken),
+            await getIdentifierPairedExpressionTokens(
+                nodeIdMapCollection,
+                traceManager,
+                trace.id,
+                maybeCancellationToken,
+            ),
         )
-        .concat(getInvokeExpressionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getLiteralTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getNullableTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getParameterTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getPrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getTBinOpExpressionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getTableTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
-        .concat(getTypePrimaryTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getInvokeExpressionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getLiteralTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(
+            await getNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken),
+        )
+        .concat(await getNullableTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getParameterTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getPrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getTBinOpExpressionTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getTableTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
+        .concat(await getTypePrimaryTypeTokens(nodeIdMapCollection, traceManager, trace.id, maybeCancellationToken))
         // Should be the lowest priority
         .concat(
-            getIdentifierExpressionTokens(
+            await getIdentifierExpressionTokens(
                 nodeIdMapCollection,
                 libraryDefinitions,
                 traceManager,
@@ -102,7 +111,7 @@ function createPartialSemanticTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getAsNullablePrimitiveTypeTokens(
@@ -110,7 +119,7 @@ function getAsNullablePrimitiveTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getAsNullablePrimitiveTypeTokens.name,
@@ -127,7 +136,7 @@ function getAsNullablePrimitiveTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getFieldSelectorTokens(
@@ -135,7 +144,7 @@ function getFieldSelectorTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldSelectorTokens.name,
@@ -161,7 +170,7 @@ function getFieldSelectorTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getFieldProjectionTokens(
@@ -169,7 +178,7 @@ function getFieldProjectionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldProjectionTokens.name,
@@ -186,7 +195,7 @@ function getFieldProjectionTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getFieldSpecificationTokens(
@@ -194,7 +203,7 @@ function getFieldSpecificationTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldSpecificationTokens.name,
@@ -211,7 +220,7 @@ function getFieldSpecificationTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getGeneralizedIdentifierPairedExpressionTokens(
@@ -219,7 +228,7 @@ function getGeneralizedIdentifierPairedExpressionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedExpression>(
         nodeIdMapCollection,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
@@ -235,7 +244,7 @@ function getGeneralizedIdentifierPairedAnyLiteralTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedAnyLiteral>(
         nodeIdMapCollection,
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
@@ -252,7 +261,7 @@ function getIdentifierExpressionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getIdentifierExpressionTokens.name,
@@ -303,7 +312,7 @@ function getIdentifierExpressionTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getIdentifierPairedExpressionTokens(
@@ -311,7 +320,7 @@ function getIdentifierPairedExpressionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     return getPairedExpressionTokens<Ast.IdentifierPairedExpression>(
         nodeIdMapCollection,
         Ast.NodeKind.IdentifierPairedExpression,
@@ -327,7 +336,7 @@ function getInvokeExpressionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getInvokeExpressionTokens.name,
@@ -355,7 +364,7 @@ function getInvokeExpressionTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getLiteralTokens(
@@ -363,7 +372,7 @@ function getLiteralTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getLiteralTokens.name,
@@ -403,7 +412,7 @@ function getLiteralTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getNullablePrimitiveTypeTokens(
@@ -411,7 +420,7 @@ function getNullablePrimitiveTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getNullablePrimitiveTypeTokens.name,
@@ -428,7 +437,7 @@ function getNullablePrimitiveTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getNullableTypeTokens(
@@ -436,7 +445,7 @@ function getNullableTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getNullableTypeTokens.name,
@@ -453,7 +462,7 @@ function getNullableTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getParameterTokens(
@@ -461,7 +470,7 @@ function getParameterTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getParameterTokens.name,
@@ -488,7 +497,7 @@ function getParameterTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getPrimitiveTypeTokens(
@@ -496,7 +505,7 @@ function getPrimitiveTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getPrimitiveTypeTokens.name,
@@ -527,7 +536,7 @@ function getPrimitiveTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getTBinOpExpressionTokens(
@@ -535,7 +544,7 @@ function getTBinOpExpressionTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getTBinOpExpressionTokens.name,
@@ -597,7 +606,7 @@ function getTBinOpExpressionTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getTableTypeTokens(
@@ -605,7 +614,7 @@ function getTableTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     maybeCancellationToken?.throwIfCancelled();
 
     const trace: Trace = traceManager.entry(
@@ -622,7 +631,7 @@ function getTableTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getTypePrimaryTypeTokens(
@@ -630,7 +639,7 @@ function getTypePrimaryTypeTokens(
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     maybeCancellationToken?.throwIfCancelled();
 
     const trace: Trace = traceManager.entry(
@@ -647,7 +656,7 @@ function getTypePrimaryTypeTokens(
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function getPairedExpressionTokens<
@@ -662,7 +671,7 @@ function getPairedExpressionTokens<
     traceManager: TraceManager,
     correlationId: number,
     maybeCancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): Promise<PartialSemanticToken[]> {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getIdentifierExpressionTokens.name,
@@ -694,7 +703,7 @@ function getPairedExpressionTokens<
 
     trace.exit();
 
-    return tokens;
+    return Promise.resolve(tokens);
 }
 
 function maybePushNthChild<T extends Ast.TNode>(

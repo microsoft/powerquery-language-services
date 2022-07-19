@@ -139,7 +139,7 @@ export class LocalDocumentProvider
             return [];
         }
 
-        const triedFoldingRanges: Result<FoldingRange[], CommonError.CommonError> = tryCreateFoldingRanges(
+        const triedFoldingRanges: Result<FoldingRange[], CommonError.CommonError> = await tryCreateFoldingRanges(
             maybeInspected.parseState.contextState.nodeIdMapCollection,
             this.inspectionSettings.locale,
             context.traceManager,
@@ -235,7 +235,7 @@ export class LocalDocumentProvider
         const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
 
         const triedPartialSemanticTokens: Result<PartialSemanticToken[], CommonError.CommonError> =
-            tryCreatePartialSemanticTokens(
+            await tryCreatePartialSemanticTokens(
                 nodeIdMapCollection,
                 this.libraryDefinitions,
                 this.inspectionSettings.locale,
