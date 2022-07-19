@@ -44,7 +44,7 @@ describe("Analysis", () => {
                     library: Library.ILibrary,
                     _uri: DocumentUri,
                     _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
-                    _createInspectionSettingsFn: () => InspectionSettings,
+                    _inspectionSettings: InspectionSettings,
                 ) => new SlowSymbolProvider(library, 1000),
                 maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) =>
                     new SlowSymbolProvider(library, 1000),
@@ -147,7 +147,7 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
                 library: Library.ILibrary,
                 _uri: DocumentUri,
                 _promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-                _createInspectionSettingsFn: () => InspectionSettings,
+                _inspectionSettings: InspectionSettings,
             ): ILocalDocumentProvider => new SlowSymbolProvider(library, 1000);
 
             break;

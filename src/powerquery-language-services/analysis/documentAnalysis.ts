@@ -6,18 +6,18 @@ import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { AnalysisBase } from "./analysisBase";
 import { AnalysisSettings } from "./analysisSettings";
+import { InspectionSettings } from "../inspectionSettings";
 import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export class DocumentAnalysis extends AnalysisBase {
     constructor(private readonly textDocument: TextDocument, analysisSettings: AnalysisSettings, position: Position) {
+        const inspectionSettings: InspectionSettings = analysisSettings.createInspectionSettingsFn();
+
         super(
             textDocument.uri,
             analysisSettings,
-            WorkspaceCacheUtils.getOrCreateInspectedPromise(
-                textDocument,
-                analysisSettings.createInspectionSettingsFn(),
-                position,
-            ),
+            inspectionSettings,
+            WorkspaceCacheUtils.getOrCreateInspectedPromise(textDocument, inspectionSettings, position),
         );
     }
 

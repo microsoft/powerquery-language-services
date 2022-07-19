@@ -22,7 +22,7 @@ import type {
     SignatureHelpProvider,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { CommonTypesUtils, Inspection } from "..";
+import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
 import { EmptyHover, EmptySignatureHelp } from "../commonTypes";
 import { findScopeItemByLiteral, maybeScopeCreatorIdentifier } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
@@ -39,6 +39,7 @@ export abstract class AnalysisBase implements Analysis {
     constructor(
         protected uri: DocumentUri,
         protected analysisSettings: AnalysisSettings,
+        protected inspectionSettings: InspectionSettings,
         protected promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
     ) {
         const library: Library.ILibrary = analysisSettings.library;
@@ -59,14 +60,9 @@ export abstract class AnalysisBase implements Analysis {
                       library,
                       uri,
                       promiseMaybeInspected,
-                      analysisSettings.createInspectionSettingsFn,
+                      inspectionSettings,
                   )
-                : new LocalDocumentProvider(
-                      library,
-                      uri,
-                      promiseMaybeInspected,
-                      analysisSettings.createInspectionSettingsFn,
-                  );
+                : new LocalDocumentProvider(library, uri, promiseMaybeInspected, inspectionSettings);
     }
 
     public async getAutocompleteItems(): Promise<AutocompleteItem[]> {

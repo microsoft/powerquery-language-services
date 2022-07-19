@@ -19,7 +19,7 @@ export interface AnalysisSettings {
         library: Library.ILibrary,
         uri: DocumentUri,
         promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-        createInspectionSettingsFn: () => InspectionSettings,
+        inspectionSettings: InspectionSettings,
     ) => ILocalDocumentProvider;
     readonly maybeInitialCorrelationId: number | undefined;
     readonly symbolProviderTimeoutInMS?: number;

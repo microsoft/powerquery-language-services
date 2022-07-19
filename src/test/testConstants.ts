@@ -244,8 +244,8 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
         library: Library.ILibrary,
         uri: DocumentUri,
         maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
-        createInspectionSettingsFn: () => InspectionSettings,
-    ) => new LocalDocumentProvider(library, uri, maybePromiseInspection, createInspectionSettingsFn),
+        inspectionSettings: InspectionSettings,
+    ) => new LocalDocumentProvider(library, uri, maybePromiseInspection, inspectionSettings),
     maybeInitialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
 };

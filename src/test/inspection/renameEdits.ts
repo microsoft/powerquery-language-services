@@ -36,6 +36,7 @@ class RenameEditsAnalysis extends AnalysisBase {
                 traceManager: NoOpTraceManagerInstance,
                 maybeInitialCorrelationId: undefined,
             },
+            undefined as any,
             promiseMaybeInspected,
         );
     }

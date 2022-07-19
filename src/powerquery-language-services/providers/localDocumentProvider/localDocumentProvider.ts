@@ -9,9 +9,9 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { DocumentUri } from "vscode-languageserver-textdocument";
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
@@ -27,11 +27,11 @@ import {
     SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, Library, PositionUtils } from "../..";
-import { createFoldingRanges } from "./foldingRanges";
-import { createPartialSemanticTokens } from "./partialSemanticToken";
 import { InspectionSettings } from "../../inspectionSettings";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
+import { tryCreateFoldingRanges } from "./foldingRanges";
+import { tryCreatePartialSemanticTokens } from "./partialSemanticToken";
 
 export class LocalDocumentProvider
     implements IDefinitionProvider, IFoldingRangeProvider, ISemanticTokenProvider, ISymbolProvider
@@ -43,7 +43,7 @@ export class LocalDocumentProvider
         library: Library.ILibrary,
         private readonly uri: DocumentUri,
         private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-        private readonly createInspectionSettingsFn: () => InspectionSettings,
+        private readonly inspectionSettings: InspectionSettings,
     ) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
@@ -139,8 +139,22 @@ export class LocalDocumentProvider
             return [];
         }
 
-        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
-        const result: FoldingRange[] = createFoldingRanges(nodeIdMapCollection, context.traceManager, trace.id);
+        const triedFoldingRanges: Result<FoldingRange[], CommonError.CommonError> = tryCreateFoldingRanges(
+            maybeInspected.parseState.contextState.nodeIdMapCollection,
+            this.inspectionSettings.locale,
+            context.traceManager,
+            trace.id,
+            this.inspectionSettings.maybeCancellationToken,
+        );
+
+        let result: FoldingRange[] = [];
+
+        if (ResultUtils.isOk(triedFoldingRanges)) {
+            result = triedFoldingRanges.value;
+        } else {
+            result = [];
+        }
+
         trace.exit();
 
         return result;
@@ -171,7 +185,7 @@ export class LocalDocumentProvider
 
         let maybeHover: Hover | undefined = await LocalDocumentProvider.getHoverForIdentifierPairedExpression(
             context,
-            this.createInspectionSettingsFn(),
+            this.inspectionSettings,
             maybeInspected,
             activeNode,
             trace.id,
@@ -220,16 +234,27 @@ export class LocalDocumentProvider
 
         const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
 
-        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
-            nodeIdMapCollection,
-            this.libraryDefinitions,
-            context.traceManager,
-            trace.id,
-        );
+        const triedPartialSemanticTokens: Result<PartialSemanticToken[], CommonError.CommonError> =
+            tryCreatePartialSemanticTokens(
+                nodeIdMapCollection,
+                this.libraryDefinitions,
+                this.inspectionSettings.locale,
+                context.traceManager,
+                trace.id,
+                this.inspectionSettings.maybeCancellationToken,
+            );
+
+        let result: PartialSemanticToken[] = [];
+
+        if (ResultUtils.isOk(triedPartialSemanticTokens)) {
+            result = triedPartialSemanticTokens.value;
+        } else {
+            result = [];
+        }
 
         trace.exit();
 
-        return tokens;
+        return result;
     }
 
     public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {

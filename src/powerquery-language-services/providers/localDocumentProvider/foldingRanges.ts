@@ -1,20 +1,33 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { FoldingRange } from "vscode-languageserver-types";
-import { ICancellationToken } from "@microsoft/powerquery-parser";
 import { TokenRange } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 
 import { ProviderTraceConstant } from "../../trace";
 
-export function createFoldingRanges(
+export function tryCreateFoldingRanges(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    locale: string,
+    traceManager: TraceManager,
+    correlationId: number,
+    maybeCancellationToken: ICancellationToken | undefined,
+): Result<FoldingRange[], CommonError.CommonError> {
+    return ResultUtils.ensureResult(
+        () => createFoldingRanges(nodeIdMapCollection, traceManager, correlationId, maybeCancellationToken),
+        locale,
+    );
+}
+
+function createFoldingRanges(
     nodeIdMapCollection: NodeIdMap.Collection,
     traceManager: TraceManager,
     correlationId: number,
-    cancellationToken: ICancellationToken,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): FoldingRange[] {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
@@ -22,7 +35,7 @@ export function createFoldingRanges(
         correlationId,
     );
 
-    cancellationToken?.throwIfCancelled();
+    maybeCancellationToken?.throwIfCancelled();
 
     let foldingRanges: FoldingRange[] = [];
 
@@ -33,11 +46,17 @@ export function createFoldingRanges(
                 Ast.NodeKind.FunctionExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
-            getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.IfExpression, traceManager, trace.id, cancellationToken),
+            getFoldingRanges(
+                nodeIdMapCollection,
+                Ast.NodeKind.IfExpression,
+                traceManager,
+                trace.id,
+                maybeCancellationToken,
+            ),
         )
         .concat(
             getFoldingRanges(
@@ -45,7 +64,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.InvokeExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -54,7 +73,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.LetExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -63,11 +82,17 @@ export function createFoldingRanges(
                 Ast.NodeKind.ListExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
-            getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListLiteral, traceManager, trace.id, cancellationToken),
+            getFoldingRanges(
+                nodeIdMapCollection,
+                Ast.NodeKind.ListLiteral,
+                traceManager,
+                trace.id,
+                maybeCancellationToken,
+            ),
         )
         .concat(
             getFoldingRanges(
@@ -75,7 +100,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.MetadataExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -84,7 +109,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.RecordExpression,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -93,7 +118,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.RecordLiteral,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -102,7 +127,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.SectionMember,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         )
         .concat(
@@ -111,7 +136,7 @@ export function createFoldingRanges(
                 Ast.NodeKind.TypePrimaryType,
                 traceManager,
                 trace.id,
-                cancellationToken,
+                maybeCancellationToken,
             ),
         );
 
@@ -125,7 +150,7 @@ function getFoldingRanges<T extends Ast.TNode>(
     nodeKind: T["kind"],
     traceManager: TraceManager,
     correlationId: number,
-    cancellationToken: ICancellationToken,
+    maybeCancellationToken: ICancellationToken | undefined,
 ): FoldingRange[] {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
@@ -134,7 +159,7 @@ function getFoldingRanges<T extends Ast.TNode>(
         { nodeKind },
     );
 
-    cancellationToken?.throwIfCancelled();
+    maybeCancellationToken?.throwIfCancelled();
 
     const foldingRanges: FoldingRange[] = [];
 
