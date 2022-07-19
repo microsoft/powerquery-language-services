@@ -3,6 +3,7 @@
 
 import type { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type {
+    FoldingRange,
     Hover,
     Location,
     Range,
@@ -28,11 +29,19 @@ export interface IDefinitionProvider {
     getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null>;
 }
 
+export interface IFoldingRangeProvider {
+    getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]>;
+}
+
 export interface IHoverProvider {
     getHover(context: OnIdentifierProviderContext): Promise<Hover | null>;
 }
 
-export interface ILocalDocumentProvider extends IDefinitionProvider, ISemanticTokenProvider, ISymbolProvider {}
+export interface ILocalDocumentProvider
+    extends IDefinitionProvider,
+        IFoldingRangeProvider,
+        ISemanticTokenProvider,
+        ISymbolProvider {}
 
 export interface ISemanticTokenProvider {
     getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]>;

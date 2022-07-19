@@ -9,7 +9,7 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import { FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { DocumentUri } from "vscode-languageserver-textdocument";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -18,6 +18,7 @@ import * as InspectionUtils from "../../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
     IDefinitionProvider,
+    IFoldingRangeProvider,
     ISemanticTokenProvider,
     ISymbolProvider,
     OnIdentifierProviderContext,
@@ -26,12 +27,15 @@ import {
     SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, Library, PositionUtils } from "../..";
+import { createFoldingRanges } from "./foldingRanges";
 import { createPartialSemanticTokens } from "./partialSemanticToken";
 import { InspectionSettings } from "../../inspectionSettings";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
-export class LocalDocumentProvider implements IDefinitionProvider, ISemanticTokenProvider, ISymbolProvider {
+export class LocalDocumentProvider
+    implements IDefinitionProvider, IFoldingRangeProvider, ISemanticTokenProvider, ISymbolProvider
+{
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -119,6 +123,27 @@ export class LocalDocumentProvider implements IDefinitionProvider, ISemanticToke
         trace.exit();
 
         return [result];
+    }
+
+    // eslint-disable-next-line require-await
+    public async getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getHover.name,
+            context.maybeInitialCorrelationId,
+        );
+
+        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+
+        if (maybeInspected === undefined) {
+            return [];
+        }
+
+        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+        const result: FoldingRange[] = createFoldingRanges(nodeIdMapCollection, context.traceManager, trace.id);
+        trace.exit();
+
+        return result;
     }
 
     public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
