@@ -2,30 +2,31 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { DocumentUri, FoldingRange, Location } from "vscode-languageserver-types";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
+    DefinitionProviderContext,
     FoldingRangeContext,
     IAutocompleteItemProvider,
+    IDefinitionProvider,
     IFoldingRangeProvider,
 } from "../commonTypes";
-import { Inspection, Library } from "../..";
+import { Inspection, Library, PositionUtils } from "../..";
 import { createFoldingRanges } from "./foldingRanges";
-import { FoldingRange } from "vscode-languageserver-types";
 import { ProviderTraceConstant } from "../../trace";
+import { ScopeUtils } from "../../inspection";
 
-export class LocalDocumentProvider implements IAutocompleteItemProvider, IFoldingRangeProvider {
+export class LocalDocumentProvider implements IAutocompleteItemProvider, IDefinitionProvider, IFoldingRangeProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
-    constructor(
-        library: Library.ILibrary,
-        // private readonly uri: DocumentUri,
-        // private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-        // private readonly createInspectionSettingsFn: () => InspectionSettings,
-    ) {
+    // private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
+    // private readonly createInspectionSettingsFn: () => InspectionSettings,
+    constructor(library: Library.ILibrary, private readonly uri: DocumentUri) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
     }
@@ -48,59 +49,52 @@ export class LocalDocumentProvider implements IAutocompleteItemProvider, IFoldin
         return Promise.resolve(ResultUtils.boxOk(autocompleteItems));
     }
 
-    // public async getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LocalDocumentSymbolProvider,
-    //         this.getDefinition.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    public getDefinition(
+        context: DefinitionProviderContext,
+    ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getDefinition.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     if (
-    //         context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
-    //         context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
-    //     ) {
-    //         return null;
-    //     }
+        if (
+            context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+            context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
+        ) {
+            return Promise.resolve(ResultUtils.boxOk(undefined));
+        }
 
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
 
-    //     if (maybeInspected === undefined) {
-    //         return null;
-    //     }
+        if (ResultUtils.isError(triedNodeScope)) {
+            return Promise.resolve(ResultUtils.boxOk(undefined));
+        }
 
-    //     const triedNodeScope: Inspection.TriedNodeScope = await maybeInspected.triedNodeScope;
+        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
 
-    //     if (ResultUtils.isError(triedNodeScope)) {
-    //         return null;
-    //     }
+        if (maybeScopeItem === undefined) {
+            return Promise.resolve(ResultUtils.boxOk(undefined));
+        }
 
-    //     const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
+        const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
+            ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
 
-    //     if (maybeScopeItem === undefined) {
-    //         return null;
-    //     }
+        if (creator === undefined) {
+            return Promise.resolve(ResultUtils.boxOk(undefined));
+        }
 
-    //     const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
-    //         ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
+        const location: Location = {
+            range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
+            uri: this.uri,
+        };
 
-    //     if (creator === undefined) {
-    //         return null;
-    //     }
+        trace.exit();
 
-    //     const result: Location = {
-    //         range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
-    //         uri: this.uri,
-    //     };
+        return Promise.resolve(ResultUtils.boxOk([location]));
+    }
 
-    //     trace.exit();
-
-    //     return [result];
-    // }
-
-    // eslint-disable-next-line require-await
-    public async getFoldingRanges(
-        context: FoldingRangeContext,
-    ): Promise<Result<FoldingRange[], CommonError.CommonError>> {
+    public getFoldingRanges(context: FoldingRangeContext): Promise<Result<FoldingRange[], CommonError.CommonError>> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
             this.getFoldingRanges.name,

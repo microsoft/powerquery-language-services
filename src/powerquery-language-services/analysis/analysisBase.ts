@@ -3,16 +3,20 @@
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
 import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import type { FoldingRange, Position } from "vscode-languageserver-types";
-import { ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import type { FoldingRange, Location, Position } from "vscode-languageserver-types";
+import { ParseError, ParseState, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { ActiveNodeUtils, TActiveLeafIdentifier, TMaybeActiveNode, TypeCache } from "../inspection";
 import type {
     AutocompleteItemProviderContext,
+    DefinitionProviderContext,
     IAutocompleteItemProvider,
+    IDefinitionProvider,
     IFoldingRangeProvider,
+    OnIdentifierProviderContext,
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
@@ -23,7 +27,7 @@ import { ValidationTraceConstant } from "../trace";
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
     protected librarySymbolProvider: IAutocompleteItemProvider;
-    protected localDocumentProvider: IAutocompleteItemProvider & IFoldingRangeProvider;
+    protected localDocumentProvider: IAutocompleteItemProvider & IDefinitionProvider & IFoldingRangeProvider;
 
     protected cancellableTokensByAction: Map<string, PQP.ICancellationToken> = new Map();
 
@@ -43,7 +47,10 @@ export abstract class AnalysisBase implements Analysis {
 
         this.librarySymbolProvider = new LibrarySymbolProvider(analysisSettings.inspectionSettings.library);
 
-        this.localDocumentProvider = new LocalDocumentProvider(analysisSettings.inspectionSettings.library);
+        this.localDocumentProvider = new LocalDocumentProvider(
+            analysisSettings.inspectionSettings.library,
+            this.textDocument.uri.toString(),
+        );
 
         void this.initializeState();
     }
@@ -140,28 +147,33 @@ export abstract class AnalysisBase implements Analysis {
         return PQP.ResultUtils.boxOk(autocompleteItems);
     }
 
-    // public async getDefinition(): Promise<Location[]> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getDefinition.name,
-    //         this.analysisSettings.maybeInitialCorrelationId,
-    //     );
+    public async getDefinition(position: Position): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getDefinition.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
 
-    //     const maybeIdentifierContext: OnIdentifierProviderContext | undefined =
-    //         await this.getOnIdentifierProviderContext(trace.id);
+        this.cancelPreviousTokenIfExists(this.getDefinition.name);
 
-    //     if (!maybeIdentifierContext) {
-    //         trace.exit();
+        const maybeIdentifierContext: OnIdentifierProviderContext | undefined = await this.getDefinitionProviderContext(
+            position,
+            trace.id,
+        );
 
-    //         return [];
-    //     }
+        if (!maybeIdentifierContext) {
+            trace.exit();
 
-    //     const result: Location[] | null = await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     trace.exit();
+        const result: Result<Location[] | undefined, CommonError.CommonError> =
+            await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
 
-    //     return result ?? [];
-    // }
+        trace.exit();
+
+        return result ?? [];
+    }
 
     public async getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -478,76 +490,87 @@ export abstract class AnalysisBase implements Analysis {
     //     );
     // }
 
-    // private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
-    //     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
+        const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    //     if (ancestry.length <= 1) {
-    //         return true;
-    //     }
+        if (ancestry.length <= 1) {
+            return true;
+        }
 
-    //     const leaf: TXorNode = Assert.asDefined(ancestry[0]);
-    //     const followingNode: TXorNode | undefined = ancestry[1];
+        const leaf: TXorNode = Assert.asDefined(ancestry[0]);
+        const followingNode: TXorNode | undefined = ancestry[1];
 
-    //     if (followingNode?.node?.kind === Ast.NodeKind.Parameter) {
-    //         return false;
-    //     }
+        if (followingNode?.node?.kind === Ast.NodeKind.Parameter) {
+            return false;
+        }
 
-    //     // Allow hover on either the key or value of [Generalized|Identifier]PairedExpression.
-    //     // Validate it's not an incomplete Ast or that you're on the conjunction.
-    //     else if (
-    //         [
-    //             Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-    //             Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-    //             Ast.NodeKind.IdentifierPairedExpression,
-    //         ].includes(followingNode.node.kind) &&
-    //         [undefined, 1].includes(Assert.asDefined(leaf.node.maybeAttributeIndex))
-    //     ) {
-    //         return false;
-    //     }
+        // Allow hover on either the key or value of [Generalized|Identifier]PairedExpression.
+        // Validate it's not an incomplete Ast or that you're on the conjunction.
+        else if (
+            [
+                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+                Ast.NodeKind.IdentifierPairedExpression,
+            ].includes(followingNode.node.kind) &&
+            [undefined, 1].includes(Assert.asDefined(leaf.node.maybeAttributeIndex))
+        ) {
+            return false;
+        }
 
-    //     return true;
-    // }
+        return true;
+    }
 
-    // private async getOnIdentifierProviderContext(
-    //     correlationId: number,
-    // ): Promise<OnIdentifierProviderContext | undefined> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getDefinition.name,
-    //         correlationId,
-    //     );
+    private async getDefinitionProviderContext(
+        position: Position,
+        correlationId: number,
+    ): Promise<DefinitionProviderContext | undefined> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getDefinitionProviderContext.name,
+            correlationId,
+        );
 
-    //     const maybeActiveNode: Inspection.ActiveNode | undefined = await this.getActiveNode();
+        const maybeActiveNode: Inspection.TMaybeActiveNode | undefined = await this.getActiveNode(position);
 
-    //     const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
-    //         maybeActiveNode?.maybeExclusiveIdentifierUnderPosition;
+        if (maybeActiveNode === undefined || !ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+            trace.exit();
 
-    //     if (
-    //         maybeActiveNode === undefined ||
-    //         maybeIdentifierUnderPosition === undefined ||
-    //         !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)
-    //     ) {
-    //         trace.exit();
+            return Promise.resolve(undefined);
+        }
 
-    //         return undefined;
-    //     }
+        const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
+            maybeActiveNode.maybeExclusiveIdentifierUnderPosition;
 
-    //     const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
-    //         maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
-    //             ? maybeIdentifierUnderPosition.node.identifier
-    //             : maybeIdentifierUnderPosition.node;
+        if (maybeIdentifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
+            trace.exit();
 
-    //     const context: OnIdentifierProviderContext = {
-    //         traceManager: this.analysisSettings.traceManager,
-    //         range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
-    //         identifier,
-    //         maybeInitialCorrelationId: trace.id,
-    //     };
+            return undefined;
+        }
 
-    //     trace.exit();
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getDefinitionProviderContext.name,
+        );
 
-    //     return context;
-    // }
+        const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
+            maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
+                ? maybeIdentifierUnderPosition.node.identifier
+                : maybeIdentifierUnderPosition.node;
+
+        const context: DefinitionProviderContext = {
+            traceManager: this.analysisSettings.traceManager,
+            range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
+            identifier,
+            maybeCancellationToken: newCancellationToken,
+            maybeInitialCorrelationId: trace.id,
+            triedNodeScope: Assert.asDefined(
+                await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id),
+            ),
+        };
+
+        trace.exit();
+
+        return context;
+    }
 
     // private async getActiveNode(): Promise<Inspection.ActiveNode | undefined> {
     //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
@@ -575,8 +598,7 @@ export abstract class AnalysisBase implements Analysis {
 
     private async initializeState(): Promise<void> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
-            // TODO find a const reference for this
-            "AnalysisBase",
+            ValidationTraceConstant.AnalysisBase,
             this.initializeState.name,
             this.analysisSettings.maybeInitialCorrelationId,
         );

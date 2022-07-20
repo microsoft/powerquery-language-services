@@ -35,7 +35,14 @@ export interface AutocompleteItemProviderContext extends ProviderContext {
 }
 
 export interface IDefinitionProvider {
-    getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null>;
+    getDefinition(
+        context: OnIdentifierProviderContext,
+    ): Promise<Result<Location[] | undefined, CommonError.CommonError>>;
+}
+
+export interface DefinitionProviderContext extends ProviderContext {
+    readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
 }
 
 export interface IFoldingRangeProvider {
