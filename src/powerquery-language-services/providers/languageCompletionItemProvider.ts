@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
-import { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
@@ -27,28 +26,18 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
         KeywordKind.HashTime,
     ];
 
-    constructor(private readonly maybePromiseInspection: Promise<Inspection.Inspected | undefined>) {}
-
-    public async getAutocompleteItems(
+    public getAutocompleteItems(
         context: AutocompleteItemProviderContext,
-    ): Promise<ReadonlyArray<AutocompleteItem>> {
+    ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LanguageCompletionProvider,
             this.getAutocompleteItems.name,
             context.maybeInitialCorrelationId,
         );
 
-        const maybeInspection: Inspection.Inspected | undefined = await this.maybePromiseInspection;
+        const autocomplete: Inspection.Autocomplete = context.autocomplete;
 
-        if (maybeInspection === undefined) {
-            trace.exit({ maybeInspection: undefined });
-
-            return [];
-        }
-
-        const autocomplete: Inspection.Autocomplete = maybeInspection.autocomplete;
-
-        const result: ReadonlyArray<AutocompleteItem> = [
+        const autocompleteItems: Inspection.AutocompleteItem[] = [
             ...this.getKeywords(autocomplete.triedKeyword),
             ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
             ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
@@ -56,25 +45,25 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
         trace.exit();
 
-        return result;
+        return Promise.resolve(ResultUtils.boxOk(autocompleteItems));
     }
 
     private getKeywords(
         triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
-    ): ReadonlyArray<AutocompleteItem> {
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
         if (ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
 
         return triedKeywordAutocomplete.value.filter(
-            (autocompleteItem: AutocompleteItem) =>
+            (autocompleteItem: Inspection.AutocompleteItem) =>
                 LanguageAutocompleteItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
         );
     }
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
-    ): ReadonlyArray<AutocompleteItem> {
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
         return ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
             ? [triedLanguageConstantAutocomplete.value]
             : [];
@@ -82,7 +71,7 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
-    ): ReadonlyArray<AutocompleteItem> {
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
         return ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
             ? triedPrimitiveTypeAutocomplete.value
             : [];

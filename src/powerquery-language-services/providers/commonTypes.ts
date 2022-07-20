@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import type { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
 import type {
     FoldingRange,
     Hover,
@@ -13,14 +14,21 @@ import type {
 } from "vscode-languageserver-types";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import type { Autocomplete } from "../inspection";
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
+import { Inspection } from "..";
 
 export interface IAutocompleteItemProvider {
-    getAutocompleteItems(context: AutocompleteItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
+    getAutocompleteItems(
+        context: AutocompleteItemProviderContext,
+    ): Promise<Result<AutocompleteItem[] | undefined, CommonError.CommonError>>;
 }
 
 export interface AutocompleteItemProviderContext extends ProviderContext {
+    readonly autocomplete: Autocomplete;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
+    readonly triedScopeType: Inspection.TriedScopeType;
     readonly text?: string;
     readonly tokenKind?: string;
 }
@@ -50,6 +58,7 @@ export interface ISemanticTokenProvider {
 export interface ProviderContext {
     readonly traceManager: TraceManager;
     readonly maybeInitialCorrelationId: number | undefined;
+    readonly maybeCancellationToken: ICancellationToken | undefined;
     readonly range?: Range;
 }
 

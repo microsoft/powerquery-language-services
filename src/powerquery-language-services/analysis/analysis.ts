@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { FoldingRange, Hover, Location, SignatureHelp, TextEdit } from "vscode-languageserver-types";
+import { CommonError, Result } from "@microsoft/powerquery-parser";
+import type { Position } from "vscode-languageserver-types";
 
-import { Inspection, PartialSemanticToken } from "..";
+import { AutocompleteItem } from "../inspection";
 import { IDisposable } from "../commonTypes";
 
 export interface Analysis extends IDisposable {
-    getAutocompleteItems(): Promise<Inspection.AutocompleteItem[]>;
-    getDefinition(): Promise<Location[]>;
-    getFoldingRanges(): Promise<FoldingRange[]>;
-    getHover(): Promise<Hover>;
-    getPartialSemanticTokens(): Promise<PartialSemanticToken[]>;
-    getSignatureHelp(): Promise<SignatureHelp>;
-    getRenameEdits(newName: string): Promise<TextEdit[]>;
+    getAutocompleteItems(position: Position): Promise<Result<AutocompleteItem[] | undefined, CommonError.CommonError>>;
+    // getDefinition(): Promise<Result<Location[] | undefined, CommonError.CommonError>>;
+    // getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>>;
+    // getHover(): Promise<Promise<Result<Hover | undefined, CommonError.CommonError>>>;
+    // getPartialSemanticTokens(): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>>;
+    // getSignatureHelp(): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>>;
+    // getRenameEdits(newName: string): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>>;
 }

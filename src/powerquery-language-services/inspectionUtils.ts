@@ -239,12 +239,11 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export async function getAutocompleteItemsFromScope(
+export function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
-    inspection: Inspection.Inspected,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    const triedNodeScope: Inspection.TriedNodeScope = await inspection.triedNodeScope;
-    const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;
+): ReadonlyArray<Inspection.AutocompleteItem> {
+    const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+    const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
 
     if (ResultUtils.isError(triedNodeScope)) {
         return [];

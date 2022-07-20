@@ -1,23 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
-import { Assert } from "@microsoft/powerquery-parser";
+import { SignatureInformation } from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import {
-    AutocompleteItemProviderContext,
-    ISymbolProvider,
-    OnIdentifierProviderContext,
-    SignatureProviderContext,
-} from "./commonTypes";
-import { Library, LibraryUtils } from "../library";
+import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { AutocompleteItemUtils } from "../inspection";
 import { Inspection } from "..";
+import { Library } from "../library";
 import { ProviderTraceConstant } from "../trace";
 
-export class LibrarySymbolProvider implements ISymbolProvider {
+export class LibrarySymbolProvider implements IAutocompleteItemProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
@@ -31,7 +25,7 @@ export class LibrarySymbolProvider implements ISymbolProvider {
     // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
-    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LibrarySymbolProvider,
             this.getAutocompleteItems.name,
@@ -41,123 +35,125 @@ export class LibrarySymbolProvider implements ISymbolProvider {
         if (!context.text || !context.range) {
             trace.exit({ invalidContext: true });
 
-            return [];
+            return ResultUtils.boxOk(undefined);
         }
 
-        const partial: Inspection.AutocompleteItem[] = [];
+        const autocompleteItems: Inspection.AutocompleteItem[] = [];
         const maybeContextText: string | undefined = context.text;
 
         for (const [label, definition] of this.libraryDefinitions.entries()) {
-            partial.push(AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText));
+            autocompleteItems.push(
+                AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText),
+            );
         }
 
         trace.exit();
 
-        return partial;
+        return ResultUtils.boxOk(autocompleteItems);
     }
 
-    // eslint-disable-next-line require-await
-    public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LibrarySymbolProvider,
-            this.getHover.name,
-            context.maybeInitialCorrelationId,
-        );
+    // // eslint-disable-next-line require-await
+    // public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
+    //     const trace: Trace = context.traceManager.entry(
+    //         ProviderTraceConstant.LibrarySymbolProvider,
+    //         this.getHover.name,
+    //         context.maybeInitialCorrelationId,
+    //     );
 
-        if (!context.identifier) {
-            trace.exit({ invalidContext: true });
+    //     if (!context.identifier) {
+    //         trace.exit({ invalidContext: true });
 
-            return null;
-        }
+    //         return null;
+    //     }
 
-        const identifierLiteral: string = context.identifier.literal;
-        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+    //     const identifierLiteral: string = context.identifier.literal;
+    //     const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-        if (maybeDefinition === undefined) {
-            trace.exit({ invalidContext: true });
+    //     if (maybeDefinition === undefined) {
+    //         trace.exit({ invalidContext: true });
 
-            return null;
-        }
+    //         return null;
+    //     }
 
-        const definition: Library.TLibraryDefinition = maybeDefinition;
-        const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
+    //     const definition: Library.TLibraryDefinition = maybeDefinition;
+    //     const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
 
-        const definitionTypeText: string = TypeUtils.nameOf(
-            definition.asPowerQueryType,
-            context.traceManager,
-            trace.id,
-        );
+    //     const definitionTypeText: string = TypeUtils.nameOf(
+    //         definition.asPowerQueryType,
+    //         context.traceManager,
+    //         trace.id,
+    //     );
 
-        const hover: Hover = {
-            contents: {
-                kind: MarkupKind.PlainText,
-                language: "powerquery",
-                value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
-            },
-            range: undefined,
-        };
+    //     const hover: Hover = {
+    //         contents: {
+    //             kind: MarkupKind.PlainText,
+    //             language: "powerquery",
+    //             value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
+    //         },
+    //         range: undefined,
+    //     };
 
-        trace.exit();
+    //     trace.exit();
 
-        return hover;
-    }
+    //     return hover;
+    // }
 
-    // eslint-disable-next-line require-await
-    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LibrarySymbolProvider,
-            this.getSignatureHelp.name,
-            context.maybeInitialCorrelationId,
-        );
+    // // eslint-disable-next-line require-await
+    // public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
+    //     const trace: Trace = context.traceManager.entry(
+    //         ProviderTraceConstant.LibrarySymbolProvider,
+    //         this.getSignatureHelp.name,
+    //         context.maybeInitialCorrelationId,
+    //     );
 
-        if (!context.functionName) {
-            trace.exit({ invalidContext: true });
+    //     if (!context.functionName) {
+    //         trace.exit({ invalidContext: true });
 
-            return null;
-        }
+    //         return null;
+    //     }
 
-        const identifierLiteral: string = context.functionName;
-        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+    //     const identifierLiteral: string = context.functionName;
+    //     const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-        if (!LibraryUtils.isFunction(maybeDefinition)) {
-            trace.exit({ invalidContext: true });
+    //     if (!LibraryUtils.isFunction(maybeDefinition)) {
+    //         trace.exit({ invalidContext: true });
 
-            return null;
-        }
+    //         return null;
+    //     }
 
-        const result: SignatureHelp = {
-            activeParameter: context.argumentOrdinal ?? 0,
-            activeSignature: 0,
-            signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
-        };
+    //     const result: SignatureHelp = {
+    //         activeParameter: context.argumentOrdinal ?? 0,
+    //         activeSignature: 0,
+    //         signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
+    //     };
 
-        trace.exit();
+    //     trace.exit();
 
-        return result;
-    }
+    //     return result;
+    // }
 
-    private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
-        switch (kind) {
-            case Library.LibraryDefinitionKind.Function:
-                return "library function";
+    // private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
+    //     switch (kind) {
+    //         case Library.LibraryDefinitionKind.Function:
+    //             return "library function";
 
-            case Library.LibraryDefinitionKind.Constant:
-                return "library constant";
+    //         case Library.LibraryDefinitionKind.Constant:
+    //             return "library constant";
 
-            case Library.LibraryDefinitionKind.Type:
-                return "library type";
+    //         case Library.LibraryDefinitionKind.Type:
+    //             return "library type";
 
-            default:
-                throw Assert.isNever(kind);
-        }
-    }
+    //         default:
+    //             throw Assert.isNever(kind);
+    //     }
+    // }
 
-    private getOrCreateSignatureInformation(key: string): SignatureInformation {
-        if (!this.signatureInformationByLabel.has(key)) {
-            const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
-            this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
-        }
+    // private getOrCreateSignatureInformation(key: string): SignatureInformation {
+    //     if (!this.signatureInformationByLabel.has(key)) {
+    //         const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
+    //         this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
+    //     }
 
-        return Assert.asDefined(this.signatureInformationByLabel.get(key));
-    }
+    //     return Assert.asDefined(this.signatureInformationByLabel.get(key));
+    // }
 }
