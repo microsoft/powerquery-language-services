@@ -3,13 +3,17 @@
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
 import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import type { FoldingRange, Position } from "vscode-languageserver-types";
 import { ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Position } from "vscode-languageserver-types";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { ActiveNodeUtils, TActiveLeafIdentifier, TMaybeActiveNode, TypeCache } from "../inspection";
-import type { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "../providers/commonTypes";
+import type {
+    AutocompleteItemProviderContext,
+    IAutocompleteItemProvider,
+    IFoldingRangeProvider,
+} from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
 import type { Analysis } from "./analysis";
@@ -19,7 +23,7 @@ import { ValidationTraceConstant } from "../trace";
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
     protected librarySymbolProvider: IAutocompleteItemProvider;
-    protected localDocumentProvider: IAutocompleteItemProvider;
+    protected localDocumentProvider: IAutocompleteItemProvider & IFoldingRangeProvider;
 
     protected cancellableTokensByAction: Map<string, PQP.ICancellationToken> = new Map();
 
@@ -52,6 +56,8 @@ export abstract class AnalysisBase implements Analysis {
             this.getAutocompleteItems.name,
             this.analysisSettings.maybeInitialCorrelationId,
         );
+
+        this.cancelPreviousTokenIfExists(this.getAutocompleteItems.name);
 
         const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
             this.getAutocompleteItems.name,
@@ -157,22 +163,35 @@ export abstract class AnalysisBase implements Analysis {
     //     return result ?? [];
     // }
 
-    // public async getFoldingRanges(): Promise<FoldingRange[]> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getFoldingRanges.name,
-    //         this.analysisSettings.maybeInitialCorrelationId,
-    //     );
+    public async getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getFoldingRanges.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
 
-    //     const result: FoldingRange[] = await this.localDocumentProvider.getFoldingRanges({
-    //         traceManager: this.analysisSettings.traceManager,
-    //         maybeInitialCorrelationId: trace.id,
-    //     });
+        this.cancelPreviousTokenIfExists(this.getFoldingRanges.name);
 
-    //     trace.exit();
+        const maybeParseState: ParseState | undefined = await this.getParseState();
 
-    //     return result;
-    // }
+        if (maybeParseState === undefined) {
+            trace.exit();
+
+            return ResultUtils.boxOk(undefined);
+        }
+
+        const result: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+            await this.localDocumentProvider.getFoldingRanges({
+                traceManager: this.analysisSettings.traceManager,
+                maybeInitialCorrelationId: trace.id,
+                maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(this.getFoldingRanges.name),
+                nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
+            });
+
+        trace.exit();
+
+        return result;
+    }
 
     // public async getHover(): Promise<Hover> {
     //     const trace: Trace = this.analysisSettings.traceManager.entry(

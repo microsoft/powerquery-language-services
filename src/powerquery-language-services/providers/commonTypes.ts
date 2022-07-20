@@ -18,6 +18,7 @@ import type { Autocomplete } from "../inspection";
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 import { Inspection } from "..";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export interface IAutocompleteItemProvider {
     getAutocompleteItems(
@@ -38,7 +39,11 @@ export interface IDefinitionProvider {
 }
 
 export interface IFoldingRangeProvider {
-    getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]>;
+    getFoldingRanges(context: FoldingRangeContext): Promise<Result<FoldingRange[], CommonError.CommonError>>;
+}
+
+export interface FoldingRangeContext extends ProviderContext {
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
 
 export interface IHoverProvider {

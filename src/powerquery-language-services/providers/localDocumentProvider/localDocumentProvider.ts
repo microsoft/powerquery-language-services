@@ -5,11 +5,18 @@ import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
-import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "../commonTypes";
+import {
+    AutocompleteItemProviderContext,
+    FoldingRangeContext,
+    IAutocompleteItemProvider,
+    IFoldingRangeProvider,
+} from "../commonTypes";
 import { Inspection, Library } from "../..";
+import { createFoldingRanges } from "./foldingRanges";
+import { FoldingRange } from "vscode-languageserver-types";
 import { ProviderTraceConstant } from "../../trace";
 
-export class LocalDocumentProvider implements IAutocompleteItemProvider {
+export class LocalDocumentProvider implements IAutocompleteItemProvider, IFoldingRangeProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
 
@@ -90,26 +97,26 @@ export class LocalDocumentProvider implements IAutocompleteItemProvider {
     //     return [result];
     // }
 
-    // // eslint-disable-next-line require-await
-    // public async getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LocalDocumentSymbolProvider,
-    //         this.getHover.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    // eslint-disable-next-line require-await
+    public async getFoldingRanges(
+        context: FoldingRangeContext,
+    ): Promise<Result<FoldingRange[], CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getFoldingRanges.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        const foldingRanges: FoldingRange[] = createFoldingRanges(
+            context.nodeIdMapCollection,
+            context.traceManager,
+            trace.id,
+        );
 
-    //     if (maybeInspected === undefined) {
-    //         return [];
-    //     }
+        trace.exit();
 
-    //     const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
-    //     const result: FoldingRange[] = createFoldingRanges(nodeIdMapCollection, context.traceManager, trace.id);
-    //     trace.exit();
-
-    //     return result;
-    // }
+        return Promise.resolve(ResultUtils.boxOk(foldingRanges));
+    }
 
     // public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
     //     const trace: Trace = context.traceManager.entry(
