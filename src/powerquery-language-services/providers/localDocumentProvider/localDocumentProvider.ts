@@ -17,6 +17,9 @@ import {
     IDefinitionProvider,
     IFoldingRangeProvider,
     IHoverProvider,
+    ISemanticTokenProvider,
+    PartialSemanticToken,
+    ProviderContext,
 } from "../commonTypes";
 import { Inspection, PositionUtils } from "../..";
 import { createFoldingRanges } from "./foldingRanges";
@@ -24,7 +27,12 @@ import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
 export class LocalDocumentProvider
-    implements IAutocompleteItemProvider, IDefinitionProvider, IHoverProvider, IFoldingRangeProvider
+    implements
+        IAutocompleteItemProvider,
+        IDefinitionProvider,
+        IHoverProvider,
+        IFoldingRangeProvider,
+        ISemanticTokenProvider
 {
     // private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
     // private readonly createInspectionSettingsFn: () => InspectionSettings,
@@ -144,33 +152,33 @@ export class LocalDocumentProvider
         return ResultUtils.boxOk(maybeHover ?? undefined);
     }
 
-    // // eslint-disable-next-line require-await
-    // public async getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LocalDocumentSymbolProvider,
-    //         this.getPartialSemanticTokens.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    // eslint-disable-next-line require-await
+    public async getPartialSemanticTokens(
+        context: ProviderContext,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getPartialSemanticTokens.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        if (maybeInspected === undefined) {
+            return [];
+        }
 
-    //     if (maybeInspected === undefined) {
-    //         return [];
-    //     }
+        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
 
-    //     const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
+            nodeIdMapCollection,
+            this.libraryDefinitions,
+            context.traceManager,
+            trace.id,
+        );
 
-    //     const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
-    //         nodeIdMapCollection,
-    //         this.libraryDefinitions,
-    //         context.traceManager,
-    //         trace.id,
-    //     );
+        trace.exit();
 
-    //     trace.exit();
-
-    //     return tokens;
-    // }
+        return tokens;
+    }
 
     // public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
     //     const trace: Trace = context.traceManager.entry(

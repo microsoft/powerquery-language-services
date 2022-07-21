@@ -18,6 +18,8 @@ import type {
     IDefinitionProvider,
     IFoldingRangeProvider,
     IHoverProvider,
+    ISemanticTokenProvider,
+    PartialSemanticToken,
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
@@ -31,7 +33,8 @@ export abstract class AnalysisBase implements Analysis {
     protected localDocumentProvider: IAutocompleteItemProvider &
         IDefinitionProvider &
         IHoverProvider &
-        IFoldingRangeProvider;
+        IFoldingRangeProvider &
+        ISemanticTokenProvider;
 
     protected cancellableTokensByAction: Map<string, PQP.ICancellationToken> = new Map();
 
@@ -45,8 +48,6 @@ export abstract class AnalysisBase implements Analysis {
     };
 
     constructor(protected textDocument: TextDocument, protected analysisSettings: AnalysisSettings) {
-        // const library: Library.ILibrary = analysisSettings.library;
-
         this.languageAutocompleteItemProvider = new LanguageAutocompleteItemProvider();
 
         this.librarySymbolProvider = new LibrarySymbolProvider(analysisSettings.inspectionSettings.library);
@@ -242,22 +243,24 @@ export abstract class AnalysisBase implements Analysis {
         return ResultUtils.boxOk(undefined);
     }
 
-    // public async getPartialSemanticTokens(): Promise<PartialSemanticToken[]> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getPartialSemanticTokens.name,
-    //         this.analysisSettings.maybeInitialCorrelationId,
-    //     );
+    public async getPartialSemanticTokens(): Promise<
+        Result<PartialSemanticToken[] | undefined, CommonError.CommonError>
+    > {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getPartialSemanticTokens.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
 
-    //     const result: PartialSemanticToken[] = await this.localDocumentProvider.getPartialSemanticTokens({
-    //         traceManager: this.analysisSettings.traceManager,
-    //         maybeInitialCorrelationId: trace.id,
-    //     });
+        const result: PartialSemanticToken[] = await this.localDocumentProvider.getPartialSemanticTokens({
+            traceManager: this.analysisSettings.traceManager,
+            maybeInitialCorrelationId: trace.id,
+        });
 
-    //     trace.exit();
+        trace.exit();
 
-    //     return result;
-    // }
+        return result;
+    }
 
     // public async getSignatureHelp(): Promise<SignatureHelp> {
     //     const trace: Trace = this.analysisSettings.traceManager.entry(
