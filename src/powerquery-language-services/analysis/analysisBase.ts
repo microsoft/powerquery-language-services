@@ -490,7 +490,12 @@ export abstract class AnalysisBase implements Analysis {
 
         if (valueCreator) {
             // need to populate the other identifiers referring it
-            identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+            identifiersToBeEdited.push(
+                ...(await this.collectAllIdentifiersBeneath(
+                    Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                    valueCreator,
+                )),
+            );
         }
 
         // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
@@ -657,7 +662,6 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     public async collectAllIdentifiersBeneath(
-        inspectionSettings: InspectionSettings,
         nodeIdMapCollection: NodeIdMap.Collection,
         valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
     ): Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>> {
@@ -717,7 +721,7 @@ export abstract class AnalysisBase implements Analysis {
                     )
                     .map((oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
                         Inspection.tryNodeScope(
-                            inspectionSettings,
+                            this.analysisSettings.inspectionSettings,
                             nodeIdMapCollection,
                             oneIdentifier.id,
                             this.typeCache.scopeById,
