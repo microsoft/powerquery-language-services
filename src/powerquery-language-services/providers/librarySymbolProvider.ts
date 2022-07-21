@@ -1,17 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { SignatureInformation } from "vscode-languageserver-types";
+import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { Hover, MarkupKind, SignatureInformation } from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    AutocompleteItemProviderContext,
+    HoverProviderContext,
+    IAutocompleteItemProvider,
+    IHoverProvider,
+} from "./commonTypes";
 import { AutocompleteItemUtils } from "../inspection";
 import { Inspection } from "..";
 import { Library } from "../library";
 import { ProviderTraceConstant } from "../trace";
 
-export class LibrarySymbolProvider implements IAutocompleteItemProvider {
+export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
@@ -52,51 +58,51 @@ export class LibrarySymbolProvider implements IAutocompleteItemProvider {
         return ResultUtils.boxOk(autocompleteItems);
     }
 
-    // // eslint-disable-next-line require-await
-    // public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LibrarySymbolProvider,
-    //         this.getHover.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    // eslint-disable-next-line require-await
+    public async getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LibrarySymbolProvider,
+            this.getHover.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     if (!context.identifier) {
-    //         trace.exit({ invalidContext: true });
+        if (!context.identifier) {
+            trace.exit({ invalidContext: true });
 
-    //         return null;
-    //     }
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     const identifierLiteral: string = context.identifier.literal;
-    //     const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+        const identifierLiteral: string = context.identifier.literal;
+        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-    //     if (maybeDefinition === undefined) {
-    //         trace.exit({ invalidContext: true });
+        if (maybeDefinition === undefined) {
+            trace.exit({ invalidContext: true });
 
-    //         return null;
-    //     }
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     const definition: Library.TLibraryDefinition = maybeDefinition;
-    //     const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
+        const definition: Library.TLibraryDefinition = maybeDefinition;
+        const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
 
-    //     const definitionTypeText: string = TypeUtils.nameOf(
-    //         definition.asPowerQueryType,
-    //         context.traceManager,
-    //         trace.id,
-    //     );
+        const definitionTypeText: string = TypeUtils.nameOf(
+            definition.asPowerQueryType,
+            context.traceManager,
+            trace.id,
+        );
 
-    //     const hover: Hover = {
-    //         contents: {
-    //             kind: MarkupKind.PlainText,
-    //             language: "powerquery",
-    //             value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
-    //         },
-    //         range: undefined,
-    //     };
+        const hover: Hover = {
+            contents: {
+                kind: MarkupKind.PlainText,
+                language: "powerquery",
+                value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
+            },
+            range: undefined,
+        };
 
-    //     trace.exit();
+        trace.exit();
 
-    //     return hover;
-    // }
+        return ResultUtils.boxOk(hover);
+    }
 
     // // eslint-disable-next-line require-await
     // public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
@@ -132,21 +138,21 @@ export class LibrarySymbolProvider implements IAutocompleteItemProvider {
     //     return result;
     // }
 
-    // private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
-    //     switch (kind) {
-    //         case Library.LibraryDefinitionKind.Function:
-    //             return "library function";
+    private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
+        switch (kind) {
+            case Library.LibraryDefinitionKind.Function:
+                return "library function";
 
-    //         case Library.LibraryDefinitionKind.Constant:
-    //             return "library constant";
+            case Library.LibraryDefinitionKind.Constant:
+                return "library constant";
 
-    //         case Library.LibraryDefinitionKind.Type:
-    //             return "library type";
+            case Library.LibraryDefinitionKind.Type:
+                return "library type";
 
-    //         default:
-    //             throw Assert.isNever(kind);
-    //     }
-    // }
+            default:
+                throw Assert.isNever(kind);
+        }
+    }
 
     // private getOrCreateSignatureInformation(key: string): SignatureInformation {
     //     if (!this.signatureInformationByLabel.has(key)) {
