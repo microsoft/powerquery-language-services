@@ -44,8 +44,8 @@ export abstract class AnalysisBase implements Analysis {
     protected librarySymbolProvider: IAutocompleteItemProvider & IHoverProvider & ISignatureHelpProvider;
     protected localDocumentProvider: IAutocompleteItemProvider &
         IDefinitionProvider &
-        IHoverProvider &
         IFoldingRangeProvider &
+        IHoverProvider &
         ISemanticTokenProvider &
         ISignatureHelpProvider;
 

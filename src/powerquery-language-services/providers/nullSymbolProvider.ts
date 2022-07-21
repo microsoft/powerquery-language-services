@@ -5,8 +5,8 @@ import { FoldingRange, Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
-    ILocalDocumentProvider,
-    OnIdentifierProviderContext,
+    DefinitionProviderContext,
+    HoverProviderContext,
     PartialSemanticToken,
     ProviderContext,
     SignatureProviderContext,
@@ -15,7 +15,7 @@ import { Hover, SignatureHelp } from "../commonTypes";
 import { Inspection, Library } from "..";
 import { AutocompleteItem } from "../inspection/autocomplete";
 
-export class NullSymbolProvider implements ILocalDocumentProvider {
+export class NullSymbolProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
         Inspection.ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
@@ -38,7 +38,7 @@ export class NullSymbolProvider implements ILocalDocumentProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getDefinition(_context: OnIdentifierProviderContext): Promise<Location[] | null> {
+    public async getDefinition(_context: DefinitionProviderContext): Promise<Location[] | null> {
         return [];
     }
 
@@ -48,7 +48,7 @@ export class NullSymbolProvider implements ILocalDocumentProvider {
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(_context: OnIdentifierProviderContext): Promise<Hover | null> {
+    public async getHover(_context: HoverProviderContext): Promise<Hover | null> {
         return null;
     }
 

@@ -4,6 +4,7 @@
 import * as File from "fs";
 import * as Path from "path";
 import { assert, expect } from "chai";
+import { CommonError, Result } from "@microsoft/powerquery-parser";
 import {
     DocumentSymbol,
     FoldingRange,
@@ -77,54 +78,84 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
     };
 }
 
-export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
+export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): [Analysis, Position] {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
 
-    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
+    return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings)), position];
 }
 
 export function createAutocompleteItems(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createAnalysis(text, maybeAnalysisSettings).getAutocompleteItems();
+): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+
+    return analysis.getAutocompleteItems(position);
 }
 
 export function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeAnalysisSettings?: AnalysisSettings,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return createFileAnalysis(fileName, position, maybeAnalysisSettings).getAutocompleteItems();
+): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
+    return createFileAnalysis(fileName, maybeAnalysisSettings).getAutocompleteItems(position);
 }
 
-export function createDefinition(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Location[]> {
-    return createAnalysis(text, maybeAnalysisSettings).getDefinition();
+export function createDefinition(
+    text: string,
+    maybeAnalysisSettings?: AnalysisSettings,
+): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+
+    return analysis.getDefinition(position);
 }
 
-export function createFoldingRanges(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<FoldingRange[]> {
-    return createAnalysis(text, maybeAnalysisSettings).getFoldingRanges();
+export function createFoldingRanges(
+    text: string,
+    maybeAnalysisSettings?: AnalysisSettings,
+): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
+    const analysis: Analysis = AnalysisUtils.createAnalysis(
+        createTextMockDocument(text),
+        createAnalysisSettings(maybeAnalysisSettings),
+    );
+
+    return analysis.getFoldingRanges();
 }
 
-export function createHover(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<Hover> {
-    return createAnalysis(text, maybeAnalysisSettings).getHover();
+export function createHover(
+    text: string,
+    maybeAnalysisSettings?: AnalysisSettings,
+): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+
+    return analysis.getHover(position);
 }
 
 export function createPartialSemanticTokens(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
-): Promise<PartialSemanticToken[]> {
-    return createAnalysis(text, maybeAnalysisSettings).getPartialSemanticTokens();
+): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+    const analysis: Analysis = AnalysisUtils.createAnalysis(
+        createTextMockDocument(text),
+        createAnalysisSettings(maybeAnalysisSettings),
+    );
+
+    return analysis.getPartialSemanticTokens();
 }
 
-export function createSignatureHelp(text: string, maybeAnalysisSettings?: AnalysisSettings): Promise<SignatureHelp> {
-    return createAnalysis(text, maybeAnalysisSettings).getSignatureHelp();
+export function createSignatureHelp(
+    text: string,
+    maybeAnalysisSettings?: AnalysisSettings,
+): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+
+    return analysis.getSignatureHelp(position);
 }
 
-function createFileAnalysis(fileName: string, position: Position, maybeAnalysisSettings?: AnalysisSettings): Analysis {
+function createFileAnalysis(fileName: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
 
-    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings), position);
+    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings));
 }
 
 function createAnalysisSettings(maybeAnalysisSettings?: AnalysisSettings): AnalysisSettings {
