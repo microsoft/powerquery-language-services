@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { CommonError, Result } from "@microsoft/powerquery-parser";
-import type { FoldingRange, Hover, Location, Position } from "vscode-languageserver-types";
+import type { FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
 
 import { AutocompleteItem } from "../inspection";
 import { IDisposable } from "../commonTypes";
@@ -14,6 +14,6 @@ export interface Analysis extends IDisposable {
     getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>>;
     getHover(position: Position): Promise<Result<Hover | undefined, CommonError.CommonError>>;
     getPartialSemanticTokens(): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>>;
-    // getSignatureHelp(): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>>;
+    getSignatureHelp(): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>>;
     // getRenameEdits(newName: string): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>>;
 }

@@ -40,7 +40,6 @@ export interface IDefinitionProvider {
 
 export interface DefinitionProviderContext extends ProviderContext {
     readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
-    readonly inspectionSettings: InspectionSettings;
     readonly triedNodeScope: Inspection.TriedNodeScope;
 }
 
@@ -72,7 +71,14 @@ export interface ILocalDocumentProvider
         ISymbolProvider {}
 
 export interface ISemanticTokenProvider {
-    getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]>;
+    getPartialSemanticTokens(
+        context: SemanticTokenProviderContext,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>>;
+}
+
+export interface SemanticTokenProviderContext extends ProviderContext {
+    readonly parseState: ParseState;
+    readonly library: ILibrary;
 }
 
 export interface ProviderContext {
@@ -90,8 +96,10 @@ export interface PartialSemanticToken {
     readonly tokenModifiers: ReadonlyArray<SemanticTokenModifiers>;
 }
 
-export interface SignatureHelpProvider {
-    getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null>;
+export interface ISignatureHelpProvider {
+    getSignatureHelp(
+        context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>>;
 }
 
 export interface SignatureProviderContext extends ProviderContext {
@@ -99,6 +107,7 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionName: string | undefined;
     readonly isNameInLocalScope: boolean;
     readonly functionType: Type.TPowerQueryType;
+    readonly inspectionSettings: InspectionSettings;
 }
 
-export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, SignatureHelpProvider, ILibrary {}
+export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider, ILibrary {}

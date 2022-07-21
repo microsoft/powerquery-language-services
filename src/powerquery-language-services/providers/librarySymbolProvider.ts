@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { Hover, MarkupKind, SignatureInformation } from "vscode-languageserver-types";
+import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -11,13 +11,15 @@ import {
     HoverProviderContext,
     IAutocompleteItemProvider,
     IHoverProvider,
+    ISignatureHelpProvider,
+    SignatureProviderContext,
 } from "./commonTypes";
+import { Library, LibraryUtils } from "../library";
 import { AutocompleteItemUtils } from "../inspection";
 import { Inspection } from "..";
-import { Library } from "../library";
 import { ProviderTraceConstant } from "../trace";
 
-export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverProvider {
+export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
@@ -104,39 +106,41 @@ export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverP
         return ResultUtils.boxOk(hover);
     }
 
-    // // eslint-disable-next-line require-await
-    // public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LibrarySymbolProvider,
-    //         this.getSignatureHelp.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    // eslint-disable-next-line require-await
+    public async getSignatureHelp(
+        context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LibrarySymbolProvider,
+            this.getSignatureHelp.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     if (!context.functionName) {
-    //         trace.exit({ invalidContext: true });
+        if (!context.functionName) {
+            trace.exit({ invalidContext: true });
 
-    //         return null;
-    //     }
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     const identifierLiteral: string = context.functionName;
-    //     const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+        const identifierLiteral: string = context.functionName;
+        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-    //     if (!LibraryUtils.isFunction(maybeDefinition)) {
-    //         trace.exit({ invalidContext: true });
+        if (!LibraryUtils.isFunction(maybeDefinition)) {
+            trace.exit({ invalidContext: true });
 
-    //         return null;
-    //     }
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     const result: SignatureHelp = {
-    //         activeParameter: context.argumentOrdinal ?? 0,
-    //         activeSignature: 0,
-    //         signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
-    //     };
+        const result: SignatureHelp = {
+            activeParameter: context.argumentOrdinal ?? 0,
+            activeSignature: 0,
+            signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
+        };
 
-    //     trace.exit();
+        trace.exit();
 
-    //     return result;
-    // }
+        return ResultUtils.boxOk(result);
+    }
 
     private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {
         switch (kind) {
@@ -154,12 +158,12 @@ export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverP
         }
     }
 
-    // private getOrCreateSignatureInformation(key: string): SignatureInformation {
-    //     if (!this.signatureInformationByLabel.has(key)) {
-    //         const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
-    //         this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
-    //     }
+    private getOrCreateSignatureInformation(key: string): SignatureInformation {
+        if (!this.signatureInformationByLabel.has(key)) {
+            const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
+            this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
+        }
 
-    //     return Assert.asDefined(this.signatureInformationByLabel.get(key));
-    // }
+        return Assert.asDefined(this.signatureInformationByLabel.get(key));
+    }
 }

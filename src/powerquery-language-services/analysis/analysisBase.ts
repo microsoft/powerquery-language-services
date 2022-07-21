@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
 import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import type { FoldingRange, Hover, Location, Position } from "vscode-languageserver-types";
+import type { FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
 import { ParseError, ParseState, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -19,7 +19,9 @@ import type {
     IFoldingRangeProvider,
     IHoverProvider,
     ISemanticTokenProvider,
+    ISignatureHelpProvider,
     PartialSemanticToken,
+    SignatureProviderContext,
 } from "../providers/commonTypes";
 import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
@@ -29,12 +31,13 @@ import { ValidationTraceConstant } from "../trace";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
-    protected librarySymbolProvider: IAutocompleteItemProvider & IHoverProvider;
+    protected librarySymbolProvider: IAutocompleteItemProvider & IHoverProvider & ISignatureHelpProvider;
     protected localDocumentProvider: IAutocompleteItemProvider &
         IDefinitionProvider &
         IHoverProvider &
         IFoldingRangeProvider &
-        ISemanticTokenProvider;
+        ISemanticTokenProvider &
+        ISignatureHelpProvider;
 
     protected cancellableTokensByAction: Map<string, PQP.ICancellationToken> = new Map();
 
@@ -52,7 +55,11 @@ export abstract class AnalysisBase implements Analysis {
 
         this.librarySymbolProvider = new LibrarySymbolProvider(analysisSettings.inspectionSettings.library);
 
-        this.localDocumentProvider = new LocalDocumentProvider(this.textDocument.uri.toString(), this.typeCache);
+        this.localDocumentProvider = new LocalDocumentProvider(
+            this.textDocument.uri.toString(),
+            this.typeCache,
+            analysisSettings.inspectionSettings.library,
+        );
 
         void this.initializeState();
     }
@@ -158,9 +165,14 @@ export abstract class AnalysisBase implements Analysis {
 
         this.cancelPreviousTokenIfExists(this.getDefinition.name);
 
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getDefinition.name,
+        );
+
         const maybeIdentifierContext: DefinitionProviderContext | undefined = await this.getDefinitionProviderContext(
             position,
             trace.id,
+            newCancellationToken,
         );
 
         if (!maybeIdentifierContext) {
@@ -186,6 +198,10 @@ export abstract class AnalysisBase implements Analysis {
 
         this.cancelPreviousTokenIfExists(this.getFoldingRanges.name);
 
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getFoldingRanges.name,
+        );
+
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
         if (maybeParseState === undefined) {
@@ -198,7 +214,7 @@ export abstract class AnalysisBase implements Analysis {
             await this.localDocumentProvider.getFoldingRanges({
                 traceManager: this.analysisSettings.traceManager,
                 maybeInitialCorrelationId: trace.id,
-                maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(this.getFoldingRanges.name),
+                maybeCancellationToken: newCancellationToken,
                 nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
             });
 
@@ -214,9 +230,16 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
+        this.cancelPreviousTokenIfExists(this.getHover.name);
+
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getHover.name,
+        );
+
         const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
             position,
             trace.id,
+            newCancellationToken,
         );
 
         if (!maybeHoverProviderContext) {
@@ -252,66 +275,99 @@ export abstract class AnalysisBase implements Analysis {
             this.analysisSettings.maybeInitialCorrelationId,
         );
 
-        const result: PartialSemanticToken[] = await this.localDocumentProvider.getPartialSemanticTokens({
-            traceManager: this.analysisSettings.traceManager,
-            maybeInitialCorrelationId: trace.id,
-        });
+        this.cancelPreviousTokenIfExists(this.getPartialSemanticTokens.name);
+
+        const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+            await this.localDocumentProvider.getPartialSemanticTokens({
+                traceManager: this.analysisSettings.traceManager,
+                maybeInitialCorrelationId: trace.id,
+                maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(
+                    this.getPartialSemanticTokens.name,
+                ),
+                library: this.analysisSettings.inspectionSettings.library,
+                parseState: Assert.asDefined(await this.getParseState()),
+            });
 
         trace.exit();
 
         return result;
     }
 
-    // public async getSignatureHelp(): Promise<SignatureHelp> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getSignatureHelp.name,
-    //         this.analysisSettings.maybeInitialCorrelationId,
-    //     );
+    public async getSignatureHelp(
+        position: Position,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getSignatureHelp.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
 
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+        this.cancelPreviousTokenIfExists(this.getSignatureHelp.name);
 
-    //     if (maybeInspected === undefined) {
-    //         trace.exit();
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getSignatureHelp.name,
+        );
 
-    //         return EmptySignatureHelp;
-    //     }
+        const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression | undefined =
+            await this.inspectCurrentInvokeExpression(position, trace.id, newCancellationToken);
 
-    //     const maybeContext: SignatureProviderContext | undefined =
-    //         await InspectionUtils.getMaybeContextForSignatureProvider(
-    //             maybeInspected,
-    //             this.analysisSettings.traceManager,
-    //             trace.id,
-    //         );
+        if (
+            triedCurrentInvokeExpression === undefined ||
+            ResultUtils.isError(triedCurrentInvokeExpression) ||
+            triedCurrentInvokeExpression.value === undefined
+        ) {
+            trace.exit();
 
-    //     if (maybeContext === undefined) {
-    //         trace.exit();
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //         return EmptySignatureHelp;
-    //     }
+        const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
 
-    //     const context: SignatureProviderContext = maybeContext;
+        const functionName: string | undefined =
+            invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
 
-    //     if (context.functionName === undefined) {
-    //         trace.exit();
+        const argumentOrdinal: number | undefined =
+            invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
 
-    //         return EmptySignatureHelp;
-    //     }
+        if (functionName === undefined || argumentOrdinal === undefined) {
+            trace.exit();
 
-    //     // Result priority is based on the order of the symbol providers
-    //     const result: Promise<SignatureHelp> = AnalysisBase.resolveProviders(
-    //         AnalysisBase.createSignatureHelpCalls(
-    //             context,
-    //             [this.localDocumentProvider, this.librarySymbolProvider],
-    //             this.analysisSettings.symbolProviderTimeoutInMS,
-    //         ),
-    //         EmptySignatureHelp,
-    //     );
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     trace.exit();
+        const context: SignatureProviderContext = {
+            argumentOrdinal,
+            functionName,
+            isNameInLocalScope: invokeExpression.isNameInLocalScope,
+            functionType: invokeExpression.functionType,
+            traceManager: this.analysisSettings.traceManager,
+            maybeCancellationToken: newCancellationToken,
+            maybeInitialCorrelationId: trace.id,
+            triedCurrentInvokeExpression: await Inspection.tryCurrentInvokeExpression(
+                {
+                    ...this.analysisSettings.inspectionSettings,
+                    maybeCancellationToken: newCancellationToken,
+                    maybeInitialCorrelationId: trace.id,
+                },
+                Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                Assert.asDefined(await this.getActiveNode(position)),
+                this.typeCache,
+            ),
+        };
 
-    //     return result;
-    // }
+        const signatureTasks: Result<SignatureHelp | undefined, CommonError.CommonError>[] = await Promise.all([
+            this.localDocumentProvider.getSignatureHelp(context),
+            this.librarySymbolProvider.getSignatureHelp(context),
+        ]);
+
+        for (const task of signatureTasks) {
+            if (task && ResultUtils.isOk(task)) {
+                return task;
+            }
+        }
+
+        return ResultUtils.boxOk(undefined);
+    }
 
     // public async getRenameEdits(newName: string): Promise<TextEdit[]> {
     //     const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -532,6 +588,7 @@ export abstract class AnalysisBase implements Analysis {
     private async getDefinitionProviderContext(
         position: Position,
         correlationId: number,
+        cancellationToken: ICancellationToken,
     ): Promise<DefinitionProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -556,10 +613,6 @@ export abstract class AnalysisBase implements Analysis {
             return undefined;
         }
 
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getDefinitionProviderContext.name,
-        );
-
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
             maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
                 ? maybeIdentifierUnderPosition.node.identifier
@@ -569,11 +622,9 @@ export abstract class AnalysisBase implements Analysis {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier,
-            maybeCancellationToken: newCancellationToken,
+            maybeCancellationToken: cancellationToken,
             maybeInitialCorrelationId: trace.id,
-            triedNodeScope: Assert.asDefined(
-                await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id),
-            ),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, cancellationToken, trace.id)),
         };
 
         trace.exit();
@@ -584,6 +635,7 @@ export abstract class AnalysisBase implements Analysis {
     private async getHoverProviderContext(
         position: Position,
         correlationId: number,
+        cancellationToken: ICancellationToken,
     ): Promise<HoverProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -608,10 +660,6 @@ export abstract class AnalysisBase implements Analysis {
             return undefined;
         }
 
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getHoverProviderContext.name,
-        );
-
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
             maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
                 ? maybeIdentifierUnderPosition.node.identifier
@@ -621,22 +669,17 @@ export abstract class AnalysisBase implements Analysis {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier,
-            maybeCancellationToken: newCancellationToken,
+            maybeCancellationToken: cancellationToken,
             maybeInitialCorrelationId: trace.id,
             activeNode: maybeActiveNode,
             inspectionSettings: {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: newCancellationToken,
-                // This is set later on
-                maybeInitialCorrelationId: undefined,
+                maybeCancellationToken: cancellationToken,
+                maybeInitialCorrelationId: correlationId,
             },
             parseState: Assert.asDefined(await this.getParseState()),
-            triedNodeScope: Assert.asDefined(
-                await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id),
-            ),
-            triedScopeType: Assert.asDefined(
-                await this.inspectScopeType(maybeActiveNode, newCancellationToken, trace.id),
-            ),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, cancellationToken, trace.id)),
+            triedScopeType: Assert.asDefined(await this.inspectScopeType(maybeActiveNode, cancellationToken, trace.id)),
         };
 
         trace.exit();
@@ -710,18 +753,6 @@ export abstract class AnalysisBase implements Analysis {
         return ActiveNodeUtils.maybeActiveNode(maybeParseState.contextState.nodeIdMapCollection, position);
     }
 
-    private async getActiveNodeLeafIdentifier(position: Position): Promise<TActiveLeafIdentifier | undefined> {
-        const maybeActiveNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
-
-        if (maybeActiveNode === undefined) {
-            return undefined;
-        }
-
-        return ActiveNodeUtils.isPositionInBounds(maybeActiveNode)
-            ? maybeActiveNode.maybeInclusiveIdentifierUnderPosition
-            : undefined;
-    }
-
     private async inspectAutocomplete(
         activeNode: TMaybeActiveNode,
         cancellationToken: ICancellationToken,
@@ -743,6 +774,30 @@ export abstract class AnalysisBase implements Analysis {
             this.typeCache,
             activeNode,
             await this.getParseError(),
+        );
+    }
+
+    private async inspectCurrentInvokeExpression(
+        position: Position,
+        correlationId: number,
+        cancellationToken: ICancellationToken,
+    ): Promise<Inspection.TriedCurrentInvokeExpression | undefined> {
+        const maybeActiveNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
+        const maybeParseState: PQP.Parser.ParseState | undefined = await this.getParseState();
+
+        if (maybeActiveNode === undefined || maybeParseState === undefined) {
+            return undefined;
+        }
+
+        return await Inspection.tryCurrentInvokeExpression(
+            {
+                ...this.analysisSettings.inspectionSettings,
+                maybeCancellationToken: cancellationToken,
+                maybeInitialCorrelationId: correlationId,
+            },
+            maybeParseState.contextState.nodeIdMapCollection,
+            maybeActiveNode,
+            this.typeCache,
         );
     }
 

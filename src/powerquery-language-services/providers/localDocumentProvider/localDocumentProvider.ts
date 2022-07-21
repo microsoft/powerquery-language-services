@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { AncestryUtils, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
+    TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { DocumentUri, FoldingRange, Hover, Location, MarkupKind } from "vscode-languageserver-types";
+import { DocumentUri, FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
@@ -18,11 +23,15 @@ import {
     IFoldingRangeProvider,
     IHoverProvider,
     ISemanticTokenProvider,
+    ISignatureHelpProvider,
     PartialSemanticToken,
-    ProviderContext,
+    SemanticTokenProviderContext,
+    SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, PositionUtils } from "../..";
 import { createFoldingRanges } from "./foldingRanges";
+import { createPartialSemanticTokens } from "./partialSemanticToken";
+import { ILibrary } from "../../library/library";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
@@ -32,11 +41,16 @@ export class LocalDocumentProvider
         IDefinitionProvider,
         IHoverProvider,
         IFoldingRangeProvider,
-        ISemanticTokenProvider
+        ISemanticTokenProvider,
+        ISignatureHelpProvider
 {
     // private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
     // private readonly createInspectionSettingsFn: () => InspectionSettings,
-    constructor(private readonly uri: DocumentUri, private readonly typeCache: Inspection.TypeCache) {}
+    constructor(
+        private readonly uri: DocumentUri,
+        private readonly typeCache: Inspection.TypeCache,
+        private readonly library: ILibrary,
+    ) {}
 
     public getAutocompleteItems(
         context: AutocompleteItemProviderContext,
@@ -154,7 +168,7 @@ export class LocalDocumentProvider
 
     // eslint-disable-next-line require-await
     public async getPartialSemanticTokens(
-        context: ProviderContext,
+        context: SemanticTokenProviderContext,
     ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
         const trace: Trace = context.traceManager.entry(
             ProviderTraceConstant.LocalDocumentSymbolProvider,
@@ -162,53 +176,81 @@ export class LocalDocumentProvider
             context.maybeInitialCorrelationId,
         );
 
-        if (maybeInspected === undefined) {
-            return [];
-        }
-
-        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+        const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
 
         const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
             nodeIdMapCollection,
-            this.libraryDefinitions,
+            this.library.libraryDefinitions,
             context.traceManager,
             trace.id,
         );
 
         trace.exit();
 
-        return tokens;
+        return ResultUtils.boxOk(tokens);
     }
 
-    // public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-    //     const trace: Trace = context.traceManager.entry(
-    //         ProviderTraceConstant.LocalDocumentSymbolProvider,
-    //         this.getSignatureHelp.name,
-    //         context.maybeInitialCorrelationId,
-    //     );
+    // eslint-disable-next-line require-await
+    public async getSignatureHelp(
+        context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        const trace: Trace = context.traceManager.entry(
+            ProviderTraceConstant.LocalDocumentSymbolProvider,
+            this.getSignatureHelp.name,
+            context.maybeInitialCorrelationId,
+        );
 
-    //     const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
-    //         await this.getMaybeInspectionInvokeExpression();
+        const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
+            context.triedCurrentInvokeExpression,
+        )
+            ? context.triedCurrentInvokeExpression.value
+            : undefined;
 
-    //     if (maybeInvokeInspection === undefined) {
-    //         trace.exit({ maybeInvokeInspectionUndefined: true });
+        if (maybeInvokeInspection === undefined) {
+            trace.exit({ maybeInvokeInspectionUndefined: true });
 
-    //         return null;
-    //     }
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
+        if (maybeInvokeInspection.maybeName && !maybeInvokeInspection.isNameInLocalScope) {
+            trace.exit({ unknownName: true });
 
-    //     if (inspection.maybeName && !inspection.isNameInLocalScope) {
-    //         trace.exit({ unknownName: true });
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //         return null;
-    //     }
+        const identifierLiteral: string | undefined = context.functionName;
 
-    //     const result: SignatureHelp | null = InspectionUtils.getMaybeSignatureHelp(context, trace.id);
-    //     trace.exit();
+        if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
+            return ResultUtils.boxOk(undefined);
+        }
 
-    //     return result;
-    // }
+        const nameOfParameters: string = context.functionType.parameters
+            .map((parameter: Type.FunctionParameter) =>
+                TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, trace.id),
+            )
+            .join(", ");
+
+        const label: string = `${identifierLiteral}(${nameOfParameters})`;
+
+        const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+
+        const result: SignatureHelp = {
+            activeParameter: context.argumentOrdinal,
+            activeSignature: 0,
+            signatures: [
+                {
+                    label,
+                    parameters: parameters.map((parameter: Type.FunctionParameter) => ({
+                        label: parameter.nameLiteral,
+                    })),
+                },
+            ],
+        };
+
+        trace.exit();
+
+        return ResultUtils.boxOk(result);
+    }
 
     // When hovering over a key it should show the type for the value.
     // Covers:
