@@ -15,8 +15,8 @@ import type {
 import { NodeIdMap, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import type { Autocomplete, TriedCurrentInvokeExpression } from "../inspection";
 import { Inspection, InspectionSettings } from "..";
-import type { Autocomplete } from "../inspection";
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 
@@ -107,7 +107,7 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionName: string | undefined;
     readonly isNameInLocalScope: boolean;
     readonly functionType: Type.TPowerQueryType;
-    readonly inspectionSettings: InspectionSettings;
+    readonly triedCurrentInvokeExpression: TriedCurrentInvokeExpression;
 }
 
 export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider, ILibrary {}

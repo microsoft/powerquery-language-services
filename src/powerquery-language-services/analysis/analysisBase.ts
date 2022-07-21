@@ -3,11 +3,15 @@
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
 import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    AstNodeById,
+    ChildIdsById,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import type { FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
-import { ParseError, ParseState, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { NodeIdMap, ParseError, ParseState, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import { ActiveNodeUtils, TActiveLeafIdentifier, TMaybeActiveNode, TypeCache } from "../inspection";
 import type {
@@ -23,7 +27,13 @@ import type {
     PartialSemanticToken,
     SignatureProviderContext,
 } from "../providers/commonTypes";
-import { CommonTypesUtils, Inspection, InspectionSettings } from "..";
+import { CommonTypesUtils, Inspection, InspectionSettings, PositionUtils } from "..";
+import {
+    findDirectUpperScopeExpression,
+    findScopeItemByLiteral,
+    maybeScopeCreatorIdentifier,
+    TScopeItem,
+} from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
@@ -369,191 +379,142 @@ export abstract class AnalysisBase implements Analysis {
         return ResultUtils.boxOk(undefined);
     }
 
-    // public async getRenameEdits(newName: string): Promise<TextEdit[]> {
-    //     const trace: Trace = this.analysisSettings.traceManager.entry(
-    //         ValidationTraceConstant.AnalysisBase,
-    //         this.getRenameEdits.name,
-    //         this.analysisSettings.maybeInitialCorrelationId,
-    //     );
+    public async getRenameEdits(
+        position: Position,
+        newName: string,
+    ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
+        const trace: Trace = this.analysisSettings.traceManager.entry(
+            ValidationTraceConstant.AnalysisBase,
+            this.getRenameEdits.name,
+            this.analysisSettings.maybeInitialCorrelationId,
+        );
 
-    //     const maybeLeafIdentifier: TActiveLeafIdentifier | undefined = await this.getActiveLeafIdentifier();
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
-    //     const scopeById: Inspection.ScopeById | undefined = maybeInspected?.typeCache.scopeById;
+        this.cancelPreviousTokenIfExists(this.getRenameEdits.name);
 
-    //     if (maybeInspected === undefined || maybeLeafIdentifier === undefined) {
-    //         trace.exit();
+        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+            this.getRenameEdits.name,
+        );
 
-    //         return [];
-    //     }
+        const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
 
-    //     const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
-    //     let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
+        let maybeLeafIdentifier: TActiveLeafIdentifier | undefined;
 
-    //     if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-    //         valueCreator = maybeLeafIdentifier.node;
-    //     } else if (
-    //         (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
-    //             maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
-    //         scopeById
-    //     ) {
-    //         // need to find this key value and modify all referring it
-    //         const identifierExpression: Ast.Identifier =
-    //             maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-    //                 ? maybeLeafIdentifier.node.identifier
-    //                 : maybeLeafIdentifier.node;
+        if (
+            !ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ||
+            maybeActiveNode.maybeInclusiveIdentifierUnderPosition === undefined
+        ) {
+            trace.exit();
 
-    //         switch (identifierExpression.identifierContextKind) {
-    //             case Ast.IdentifierContextKind.Key:
-    //             case Ast.IdentifierContextKind.Parameter:
-    //                 // it is the identifier creating the value
-    //                 valueCreator = identifierExpression;
-    //                 break;
+            return ResultUtils.boxOk(undefined);
+        } else {
+            maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
+        }
 
-    //             case Ast.IdentifierContextKind.Value: {
-    //                 // it is the identifier referring the value
-    //                 let nodeScope: Inspection.NodeScope | undefined = maybeInspected.typeCache.scopeById.get(
-    //                     identifierExpression.id,
-    //                 );
+        void (await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id));
+        const scopeById: Inspection.ScopeById | undefined = this.typeCache.scopeById;
 
-    //                 // there might be a chance that its scope did not get populated yet, do another try
-    //                 if (!nodeScope) {
-    //                     await maybeInspected.tryNodeScope(identifierExpression.id);
-    //                     nodeScope = maybeInspected.typeCache.scopeById.get(identifierExpression.id);
-    //                 }
+        const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+        let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
 
-    //                 const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
-    //                     nodeScope,
-    //                     maybeLeafIdentifier.normalizedLiteral,
-    //                 );
+        if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+            valueCreator = maybeLeafIdentifier.node;
+        } else if (
+            (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
+            scopeById
+        ) {
+            // need to find this key value and modify all referring it
+            const identifierExpression: Ast.Identifier =
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                    ? maybeLeafIdentifier.node.identifier
+                    : maybeLeafIdentifier.node;
 
-    //                 if (scopeItem) {
-    //                     const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-    //                         maybeScopeCreatorIdentifier(scopeItem);
+            switch (identifierExpression.identifierContextKind) {
+                case Ast.IdentifierContextKind.Key:
+                case Ast.IdentifierContextKind.Parameter:
+                    // it is the identifier creating the value
+                    valueCreator = identifierExpression;
+                    break;
 
-    //                     if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
-    //                         if (
-    //                             maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
-    //                             maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
-    //                         ) {
-    //                             valueCreator = maybeValueCreator;
-    //                         } else {
-    //                             identifiersToBeEdited.push(maybeValueCreator);
-    //                         }
-    //                     } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
-    //                         valueCreator = maybeValueCreator;
-    //                     } else if (maybeValueCreator) {
-    //                         identifiersToBeEdited.push(maybeValueCreator);
-    //                     }
-    //                 }
+                case Ast.IdentifierContextKind.Value: {
+                    // it is the identifier referring the value
+                    let nodeScope: Inspection.NodeScope | undefined = scopeById.get(identifierExpression.id);
 
-    //                 break;
-    //             }
+                    // there might be a chance that its scope did not get populated yet, do another try
+                    if (!nodeScope) {
+                        void (await Inspection.tryNodeScope(
+                            this.analysisSettings.inspectionSettings,
+                            Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                            identifierExpression.id,
+                            scopeById,
+                        ));
 
-    //             case Ast.IdentifierContextKind.Keyword:
-    //             default:
-    //                 // only modify once
-    //                 identifiersToBeEdited.push(identifierExpression);
-    //                 break;
-    //         }
-    //     }
+                        nodeScope = scopeById.get(identifierExpression.id);
+                    }
 
-    //     if (valueCreator) {
-    //         // need to populate the other identifiers referring it
-    //         identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
-    //     }
+                    const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
+                        nodeScope,
+                        maybeLeafIdentifier.normalizedLiteral,
+                    );
 
-    //     // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
-    //     if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
-    //         identifiersToBeEdited.push(
-    //             maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-    //                 ? maybeLeafIdentifier.node.identifier
-    //                 : maybeLeafIdentifier.node,
-    //         );
-    //     }
+                    if (scopeItem) {
+                        const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            maybeScopeCreatorIdentifier(scopeItem);
 
-    //     const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
-    //         range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
-    //         newText: newName,
-    //     }));
+                        if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                            if (
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                            ) {
+                                valueCreator = maybeValueCreator;
+                            } else {
+                                identifiersToBeEdited.push(maybeValueCreator);
+                            }
+                        } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                            valueCreator = maybeValueCreator;
+                        } else if (maybeValueCreator) {
+                            identifiersToBeEdited.push(maybeValueCreator);
+                        }
+                    }
 
-    //     trace.exit();
+                    break;
+                }
 
-    //     return result;
-    // }
+                case Ast.IdentifierContextKind.Keyword:
+                default:
+                    // only modify once
+                    identifiersToBeEdited.push(identifierExpression);
+                    break;
+            }
+        }
+
+        if (valueCreator) {
+            // need to populate the other identifiers referring it
+            identifiersToBeEdited.push(...(await maybeInspected.collectAllIdentifiersBeneath(valueCreator)));
+        }
+
+        // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
+        if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
+            identifiersToBeEdited.push(
+                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                    ? maybeLeafIdentifier.node.identifier
+                    : maybeLeafIdentifier.node,
+            );
+        }
+
+        const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+            range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
+            newText: newName,
+        }));
+
+        trace.exit();
+
+        return ResultUtils.boxOk(result);
+    }
 
     public abstract dispose(): void;
 
     // protected abstract getText(range?: Range): string;
-
-    // private static promiseWithTimeout<T>(
-    //     valueFn: () => Promise<T>,
-    //     timeoutReturnValue: T,
-    //     timeoutInMS?: number,
-    // ): Promise<T> {
-    //     if (timeoutInMS !== undefined) {
-    //         // TODO: Enabling trace entry when timeout occurs
-    //         return Promise.race([
-    //             valueFn(),
-    //             new Promise<T>((resolve: (value: T | PromiseLike<T>) => void) =>
-    //                 setTimeout(() => {
-    //                     resolve(timeoutReturnValue);
-    //                 }, timeoutInMS),
-    //             ),
-    //         ]);
-    //     }
-
-    //     return valueFn();
-    // }
-
-    // private static async resolveProviders<T>(
-    //     calls: ReadonlyArray<Promise<T | null>>,
-    //     defaultReturnValue: T,
-    // ): Promise<T> {
-    //     const results: (T | null)[] = await Promise.all(calls);
-
-    //     for (let i: number = 0; i < results.length; i += 1) {
-    //         const result: T | null = results[i];
-
-    //         if (result !== null) {
-    //             return result;
-    //         }
-    //     }
-
-    //     return defaultReturnValue;
-    // }
-
-    // private static createAutocompleteItemCalls(
-    //     context: AutocompleteItemProviderContext,
-    //     providers: ReadonlyArray<IAutocompleteItemProvider>,
-    //     timeoutInMS?: number,
-    // ): ReadonlyArray<Promise<ReadonlyArray<AutocompleteItem>>> {
-    //     // TODO: add tracing to the catch case
-    //     return providers.map((provider: IAutocompleteItemProvider) =>
-    //         this.promiseWithTimeout(() => provider.getAutocompleteItems(context), [], timeoutInMS),
-    //     );
-    // }
-
-    // private static createHoverCalls(
-    //     context: OnIdentifierProviderContext,
-    //     providers: IHoverProvider[],
-    //     timeoutInMS?: number,
-    // ): ReadonlyArray<Promise<Hover | null>> {
-    //     // TODO: add tracing to the catch case
-    //     return providers.map((provider: IHoverProvider) =>
-    //         this.promiseWithTimeout(() => provider.getHover(context), null, timeoutInMS),
-    //     );
-    // }
-
-    // private static createSignatureHelpCalls(
-    //     context: SignatureProviderContext,
-    //     providers: SignatureHelpProvider[],
-    //     timeoutInMS?: number,
-    // ): ReadonlyArray<Promise<SignatureHelp | null>> {
-    //     // TODO: add tracing to the catch case
-    //     return providers.map((provider: SignatureHelpProvider) =>
-    //         this.promiseWithTimeout(() => provider.getSignatureHelp(context), null, timeoutInMS),
-    //     );
-    // }
 
     private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
@@ -687,28 +648,113 @@ export abstract class AnalysisBase implements Analysis {
         return context;
     }
 
-    // private async getActiveNode(): Promise<Inspection.ActiveNode | undefined> {
-    //     const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
-
-    //     if (maybeInspected === undefined) {
-    //         return undefined;
-    //     }
-
-    //     return Inspection.ActiveNodeUtils.isPositionInBounds(maybeInspected.maybeActiveNode)
-    //         ? maybeInspected.maybeActiveNode
-    //         : undefined;
-    // }
-
-    // private async getActiveLeafIdentifier(): Promise<TActiveLeafIdentifier | undefined> {
-    //     return (await this.getActiveNode())?.maybeInclusiveIdentifierUnderPosition;
-    // }
-
     private cancelPreviousTokenIfExists(id: string): void {
         const maybePreviousToken: ICancellationToken | undefined = this.cancellableTokensByAction.get(id);
 
         if (maybePreviousToken !== undefined) {
             maybePreviousToken.cancel();
         }
+    }
+
+    public async collectAllIdentifiersBeneath(
+        inspectionSettings: InspectionSettings,
+        nodeIdMapCollection: NodeIdMap.Collection,
+        valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
+    ): Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>> {
+        const astNodeById: AstNodeById = nodeIdMapCollection.astNodeById;
+        const childIdsById: ChildIdsById = nodeIdMapCollection.childIdsById;
+        const originLiteral: string = valueCreator.literal;
+
+        const entry: Ast.TNode | undefined = findDirectUpperScopeExpression(nodeIdMapCollection, valueCreator.id);
+
+        if (entry) {
+            const allIdentifierIdSet: Set<number> =
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier) ?? new Set();
+
+            const allGeneralizedIdentifierIdSet: Set<number> =
+                nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.GeneralizedIdentifier) ?? new Set();
+
+            const current: Ast.TNode = entry;
+            const idsByTiers: number[][] = [];
+            let currentTier: number[] = (childIdsById.get(current.id) ?? []).slice();
+
+            while (currentTier.length) {
+                const toBePushed: number[] = currentTier.filter(
+                    (one: number) => allIdentifierIdSet.has(one) || allGeneralizedIdentifierIdSet.has(one),
+                );
+
+                toBePushed.length && idsByTiers.push(toBePushed);
+                currentTier = currentTier.slice();
+                let nextTier: number[] = [];
+
+                while (currentTier.length) {
+                    const oneNode: number = currentTier.shift() ?? -1;
+                    const childrenOfTheNode: number[] = (childIdsById.get(oneNode) ?? []).slice();
+                    nextTier = nextTier.concat(childrenOfTheNode);
+                }
+
+                currentTier = nextTier;
+            }
+
+            // filter literal names
+            const completeIdentifierNodes: Array<Ast.Identifier | Ast.GeneralizedIdentifier> = idsByTiers
+                .flat(1)
+                .map((one: number) => astNodeById.get(one))
+                .filter(Boolean) as Array<Ast.Identifier | Ast.GeneralizedIdentifier>;
+
+            let filteredIdentifierNodes: Array<Ast.Identifier | Ast.GeneralizedIdentifier> =
+                completeIdentifierNodes.filter(
+                    (one: Ast.Identifier | Ast.GeneralizedIdentifier) => one.literal === originLiteral,
+                );
+
+            // populate the scope items for each
+            await Promise.all(
+                filteredIdentifierNodes
+                    .filter(
+                        (oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
+                            oneIdentifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+                            oneIdentifier.identifierContextKind === Ast.IdentifierContextKind.Value,
+                    )
+                    .map((oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
+                        Inspection.tryNodeScope(
+                            inspectionSettings,
+                            nodeIdMapCollection,
+                            oneIdentifier.id,
+                            this.typeCache.scopeById,
+                        ),
+                    ),
+            );
+
+            filteredIdentifierNodes = filteredIdentifierNodes.filter(
+                (oneIdentifierNode: Ast.Identifier | Ast.GeneralizedIdentifier) => {
+                    if (oneIdentifierNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                        return oneIdentifierNode.id === valueCreator.id;
+                    } else if (oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Value) {
+                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
+                            oneIdentifierNode.id,
+                        );
+
+                        const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
+
+                        const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            maybeScopeCreatorIdentifier(theScopeItem);
+
+                        return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
+                    } else if (
+                        oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                        oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                    ) {
+                        return oneIdentifierNode.id === valueCreator.id;
+                    }
+
+                    return false;
+                },
+            );
+
+            return filteredIdentifierNodes;
+        }
+
+        return [];
     }
 
     private async initializeState(): Promise<void> {
