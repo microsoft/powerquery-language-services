@@ -168,217 +168,234 @@ export abstract class AnalysisBase implements Analysis {
         return PQP.ResultUtils.boxOk(autocompleteItems);
     }
 
-    public async getDefinition(position: Position): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getDefinition.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
+    public getDefinition(position: Position): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getDefinition.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
 
-        this.cancelPreviousTokenIfExists(this.getDefinition.name);
+            this.cancelPreviousTokenIfExists(this.getDefinition.name);
 
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getDefinition.name,
-        );
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getDefinition.name,
+            );
 
-        const maybeIdentifierContext: DefinitionProviderContext | undefined = await this.getDefinitionProviderContext(
-            position,
-            trace.id,
-            newCancellationToken,
-        );
+            const maybeIdentifierContext: DefinitionProviderContext | undefined =
+                await this.getDefinitionProviderContext(position, trace.id, newCancellationToken);
 
-        if (!maybeIdentifierContext) {
-            trace.exit();
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const result: Result<Location[] | undefined, CommonError.CommonError> =
-            await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
-
-        trace.exit();
-
-        return result ?? [];
-    }
-
-    public async getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getFoldingRanges.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
-
-        this.cancelPreviousTokenIfExists(this.getFoldingRanges.name);
-
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getFoldingRanges.name,
-        );
-
-        const maybeParseState: ParseState | undefined = await this.getParseState();
-
-        if (maybeParseState === undefined) {
-            trace.exit();
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const result: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-            await this.localDocumentProvider.getFoldingRanges({
-                traceManager: this.analysisSettings.traceManager,
-                maybeInitialCorrelationId: trace.id,
-                maybeCancellationToken: newCancellationToken,
-                nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
-            });
-
-        trace.exit();
-
-        return result;
-    }
-
-    public async getHover(position: Position): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getHover.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
-
-        this.cancelPreviousTokenIfExists(this.getHover.name);
-
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getHover.name,
-        );
-
-        const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
-            position,
-            trace.id,
-            newCancellationToken,
-        );
-
-        if (!maybeHoverProviderContext) {
-            trace.exit();
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const triedHovers: Result<Hover | undefined, CommonError.CommonError>[] = await Promise.all([
-            this.localDocumentProvider.getHover(maybeHoverProviderContext),
-            this.libraryProvider.getHover(maybeHoverProviderContext),
-        ]);
-
-        for (const triedHover of triedHovers) {
-            if (ResultUtils.isOk(triedHover) && triedHover.value) {
+            if (!maybeIdentifierContext) {
                 trace.exit();
 
-                return triedHover;
+                return undefined;
             }
-        }
 
-        trace.exit();
+            const result: Result<Location[] | undefined, CommonError.CommonError> =
+                await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
 
-        return ResultUtils.boxOk(undefined);
-    }
-
-    public async getPartialSemanticTokens(): Promise<
-        Result<PartialSemanticToken[] | undefined, CommonError.CommonError>
-    > {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getPartialSemanticTokens.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
-
-        this.cancelPreviousTokenIfExists(this.getPartialSemanticTokens.name);
-
-        const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-            await this.localDocumentProvider.getPartialSemanticTokens({
-                traceManager: this.analysisSettings.traceManager,
-                maybeInitialCorrelationId: trace.id,
-                maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(
-                    this.getPartialSemanticTokens.name,
-                ),
-                library: this.analysisSettings.inspectionSettings.library,
-                parseState: Assert.asDefined(await this.getParseState()),
-            });
-
-        trace.exit();
-
-        return result;
-    }
-
-    public async getSignatureHelp(
-        position: Position,
-    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getSignatureHelp.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
-
-        this.cancelPreviousTokenIfExists(this.getSignatureHelp.name);
-
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getSignatureHelp.name,
-        );
-
-        const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression | undefined =
-            await this.inspectCurrentInvokeExpression(position, trace.id, newCancellationToken);
-
-        if (
-            triedCurrentInvokeExpression === undefined ||
-            ResultUtils.isError(triedCurrentInvokeExpression) ||
-            triedCurrentInvokeExpression.value === undefined
-        ) {
             trace.exit();
 
-            return ResultUtils.boxOk(undefined);
-        }
+            if (ResultUtils.isError(result)) {
+                throw result.error;
+            }
 
-        const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
+            return result.value;
+        }, this.analysisSettings.inspectionSettings.locale);
+    }
 
-        const functionName: string | undefined =
-            invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
+    public getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getFoldingRanges.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
 
-        const argumentOrdinal: number | undefined =
-            invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
+            this.cancelPreviousTokenIfExists(this.getFoldingRanges.name);
 
-        if (functionName === undefined || argumentOrdinal === undefined) {
-            trace.exit();
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getFoldingRanges.name,
+            );
 
-            return ResultUtils.boxOk(undefined);
-        }
+            const maybeParseState: ParseState | undefined = await this.getParseState();
 
-        const context: SignatureProviderContext = {
-            argumentOrdinal,
-            functionName,
-            isNameInLocalScope: invokeExpression.isNameInLocalScope,
-            functionType: invokeExpression.functionType,
-            traceManager: this.analysisSettings.traceManager,
-            maybeCancellationToken: newCancellationToken,
-            maybeInitialCorrelationId: trace.id,
-            triedCurrentInvokeExpression: await Inspection.tryCurrentInvokeExpression(
-                {
-                    ...this.analysisSettings.inspectionSettings,
-                    maybeCancellationToken: newCancellationToken,
+            if (maybeParseState === undefined) {
+                trace.exit();
+
+                return undefined;
+            }
+
+            const result: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await this.localDocumentProvider.getFoldingRanges({
+                    traceManager: this.analysisSettings.traceManager,
                     maybeInitialCorrelationId: trace.id,
-                },
-                Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
-                Assert.asDefined(await this.getActiveNode(position)),
-                this.typeCache,
-            ),
-        };
+                    maybeCancellationToken: newCancellationToken,
+                    nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
+                });
 
-        const signatureTasks: Result<SignatureHelp | undefined, CommonError.CommonError>[] = await Promise.all([
-            this.localDocumentProvider.getSignatureHelp(context),
-            this.libraryProvider.getSignatureHelp(context),
-        ]);
+            trace.exit();
 
-        for (const task of signatureTasks) {
-            if (ResultUtils.isOk(task) && task.value !== undefined) {
-                return task;
+            if (ResultUtils.isError(result)) {
+                throw result.error;
             }
-        }
 
-        return ResultUtils.boxOk(undefined);
+            return result.value;
+        }, this.analysisSettings.inspectionSettings.locale);
+    }
+
+    public getHover(position: Position): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getHover.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
+
+            this.cancelPreviousTokenIfExists(this.getHover.name);
+
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getHover.name,
+            );
+
+            const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
+                position,
+                trace.id,
+                newCancellationToken,
+            );
+
+            if (!maybeHoverProviderContext) {
+                trace.exit();
+
+                return undefined;
+            }
+
+            const triedHovers: Result<Hover | undefined, CommonError.CommonError>[] = await Promise.all([
+                this.localDocumentProvider.getHover(maybeHoverProviderContext),
+                this.libraryProvider.getHover(maybeHoverProviderContext),
+            ]);
+
+            for (const triedHover of triedHovers) {
+                if (ResultUtils.isOk(triedHover) && triedHover.value) {
+                    trace.exit();
+
+                    return triedHover.value;
+                }
+            }
+
+            trace.exit();
+
+            return undefined;
+        }, this.analysisSettings.inspectionSettings.locale);
+    }
+
+    public getPartialSemanticTokens(): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getPartialSemanticTokens.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
+
+            this.cancelPreviousTokenIfExists(this.getPartialSemanticTokens.name);
+
+            const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await this.localDocumentProvider.getPartialSemanticTokens({
+                    traceManager: this.analysisSettings.traceManager,
+                    maybeInitialCorrelationId: trace.id,
+                    maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(
+                        this.getPartialSemanticTokens.name,
+                    ),
+                    library: this.analysisSettings.inspectionSettings.library,
+                    parseState: Assert.asDefined(await this.getParseState()),
+                });
+
+            trace.exit();
+
+            if (ResultUtils.isError(result)) {
+                throw result.error;
+            }
+
+            return result.value;
+        }, this.analysisSettings.inspectionSettings.locale);
+    }
+
+    public getSignatureHelp(position: Position): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getSignatureHelp.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
+
+            this.cancelPreviousTokenIfExists(this.getSignatureHelp.name);
+
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getSignatureHelp.name,
+            );
+
+            const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression | undefined =
+                await this.inspectCurrentInvokeExpression(position, trace.id, newCancellationToken);
+
+            if (
+                triedCurrentInvokeExpression === undefined ||
+                ResultUtils.isError(triedCurrentInvokeExpression) ||
+                triedCurrentInvokeExpression.value === undefined
+            ) {
+                trace.exit();
+
+                return undefined;
+            }
+
+            const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
+
+            const functionName: string | undefined =
+                invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
+
+            const argumentOrdinal: number | undefined =
+                invokeExpression.maybeArguments !== undefined
+                    ? invokeExpression.maybeArguments.argumentOrdinal
+                    : undefined;
+
+            if (functionName === undefined || argumentOrdinal === undefined) {
+                trace.exit();
+
+                return undefined;
+            }
+
+            const context: SignatureProviderContext = {
+                argumentOrdinal,
+                functionName,
+                isNameInLocalScope: invokeExpression.isNameInLocalScope,
+                functionType: invokeExpression.functionType,
+                traceManager: this.analysisSettings.traceManager,
+                maybeCancellationToken: newCancellationToken,
+                maybeInitialCorrelationId: trace.id,
+                triedCurrentInvokeExpression: await Inspection.tryCurrentInvokeExpression(
+                    {
+                        ...this.analysisSettings.inspectionSettings,
+                        maybeCancellationToken: newCancellationToken,
+                        maybeInitialCorrelationId: trace.id,
+                    },
+                    Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                    Assert.asDefined(await this.getActiveNode(position)),
+                    this.typeCache,
+                ),
+            };
+
+            const signatureTasks: Result<SignatureHelp | undefined, CommonError.CommonError>[] = await Promise.all([
+                this.localDocumentProvider.getSignatureHelp(context),
+                this.libraryProvider.getSignatureHelp(context),
+            ]);
+
+            for (const task of signatureTasks) {
+                if (ResultUtils.isOk(task) && task.value !== undefined) {
+                    return task.value;
+                }
+            }
+
+            return undefined;
+        }, this.analysisSettings.inspectionSettings.locale);
     }
 
     public async getRenameEdits(

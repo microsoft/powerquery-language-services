@@ -290,15 +290,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         });
 
         it(`record expression, not on key`, async () => {
-            const expected: Range[] = [];
-
             const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
                 "[foo = 1, bar = [foo| = 2]]",
             );
 
             Assert.isOk(actual);
-            Assert.isDefined(actual.value);
-            TestUtils.assertEqualLocation(expected, actual.value);
+            Assert.isUndefined(actual.value);
         });
 
         it(`section expression`, async () => {

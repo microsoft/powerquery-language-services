@@ -42,9 +42,7 @@ describe("External consumption", () => {
 
         const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(position);
         Assert.isOk(hover);
-        Assert.isDefined(hover.value);
-        expect(hover.value.range === undefined);
-        expect(hover.value.contents === null);
+        Assert.isUndefined(hover.value);
 
         analysis.dispose();
     });

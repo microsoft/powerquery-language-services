@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
@@ -82,10 +82,11 @@ describe("Analysis", () => {
             expect(actual.value).to.deep.equal(expected);
         });
 
-        it(`timeout`, async () => {
+        it(`WIP timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
-                maybeCreateLibraryProviderFn: (library: Library.ILibrary) => new SlowLibraryProvider(library, 1000),
+                createCancellationTokenFn: () => new TimedCancellationToken(0),
+                maybeCreateLibraryProviderFn: (library: Library.ILibrary) => new SlowLibraryProvider(library, 100),
             };
 
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
@@ -94,10 +95,7 @@ describe("Analysis", () => {
                     analysisSettings,
                 );
 
-            Assert.isOk(signatureHelp);
-            Assert.isDefined(signatureHelp.value);
-            expect(signatureHelp.value.activeParameter).equals(undefined, "Didn't expect to find symbol");
-            expect(signatureHelp.value.signatures.length).equals(0, "Didn't expect to find symbol");
+            Assert.isError(signatureHelp);
         });
     });
 });
