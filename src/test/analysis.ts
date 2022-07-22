@@ -35,33 +35,6 @@ describe("Analysis", () => {
             expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
             expect(autocompleteItem.documentation).to.equal(undefined, "local definition should have no documentation");
         });
-
-        it(`timeout providers`, async () => {
-            const analysisSettings: AnalysisSettings = {
-                ...TestConstants.SimpleLibraryAnalysisSettings,
-                symbolProviderTimeoutInMS: 0, // immediate timeout
-                maybeCreateLocalDocumentProviderFn: (
-                    library: Library.ILibrary,
-                    _uri: DocumentUri,
-                    _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
-                    _createInspectionSettingsFn: () => InspectionSettings,
-                ) => new SlowSymbolProvider(library, 1000),
-                maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) =>
-                    new SlowSymbolProvider(library, 1000),
-            };
-
-            const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
-                analysisSettings,
-            );
-
-            // TODO: The keyword/autocomplete provider runs synchronously and doesn't timeout.
-            const autocompleteItem: AutocompleteItem | undefined = autocompleteItems.find(
-                (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
-            );
-
-            expect(autocompleteItem).equals(undefined, "Didn't expect to find symbol");
-        });
     });
 
     describe(`getHoverItems`, () => {

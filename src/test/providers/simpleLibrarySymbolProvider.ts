@@ -2,40 +2,38 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
-import type { DocumentUri } from "vscode-languageserver-textdocument";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import {
     AnalysisSettings,
-    EmptyHover,
     EmptySignatureHelp,
     Hover,
     Inspection,
-    Library,
     NullSymbolProvider,
     SignatureHelp,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
+import { ILibrary } from "../../powerquery-language-services/library/library";
+import { TypeCache } from "../../powerquery-language-services/inspection";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
-    maybeCreateLocalDocumentProviderFn: (
-        _library: Library.ILibrary,
-        _uri: DocumentUri,
-        _maybePromiseInspected: Promise<Inspection.Inspected | undefined>,
-    ) => NullSymbolProvider.singleton(),
+    maybeCreateLocalDocumentProviderFn: (_uri: string, _typeCache: TypeCache, _library: ILibrary) =>
+        NullSymbolProvider.singleton(),
 };
 
-function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(
+    text: string,
+): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Result<Hover | undefined, CommonError.CommonError>> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
@@ -43,88 +41,117 @@ describe(`SimpleLibraryProvider`, () => {
     describe(`getAutocompleteItems`, () => {
         it(`match`, async () => {
             const expected: ReadonlyArray<string> = [TestConstants.TestLibraryName.NumberOne];
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.NumberO|");
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+
+            const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await createAutocompleteItems("Test.NumberO|");
+
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
         });
 
         it(`match multiple`, async () => {
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems("Test.Numbe|");
+            const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await createAutocompleteItems("Test.Numbe|");
 
             const expected: ReadonlyArray<string> = [
                 TestConstants.TestLibraryName.Number,
                 TestConstants.TestLibraryName.NumberOne,
             ];
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
         });
 
         it(`no match`, async () => {
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                "Unknown|Identifier",
-            );
+            const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await createAutocompleteItems("Unknown|Identifier");
 
             const expected: ReadonlyArray<string> = [];
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
         });
     });
 
     describe(`getHover`, () => {
         it(`constant`, async () => {
-            const hover: Hover = await createHover("Test.Num|ber");
-            TestUtils.assertEqualHover("[library constant] Test.Number: number", hover);
+            const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("Test.Num|ber");
+            Assert.isOk(hover);
+            Assert.isDefined(hover.value);
+            TestUtils.assertEqualHover("[library constant] Test.Number: number", hover.value);
         });
 
         it(`function`, async () => {
-            const hover: Hover = await createHover("Test.Square|IfNumber");
-            TestUtils.assertEqualHover("[library function] Test.SquareIfNumber: (x: any) => any", hover);
+            const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("Test.Square|IfNumber");
+            Assert.isOk(hover);
+            Assert.isDefined(hover.value);
+            TestUtils.assertEqualHover("[library function] Test.SquareIfNumber: (x: any) => any", hover.value);
         });
 
         it(`no match`, async () => {
-            const hover: Hover = await createHover("Unknown|Identifier");
-            expect(hover).to.equal(EmptyHover);
+            const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("Unknown|Identifier");
+            Assert.isOk(hover);
+            Assert.isUndefined(hover.value);
         });
     });
 
     describe(`getSignatureHelp`, () => {
         it(`unknown identifier`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("Unknown|Identifier");
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
+                "Unknown|Identifier",
+            );
+
             expect(actual).to.equal(EmptySignatureHelp);
         });
 
         it(`first parameter, no literal`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(|");
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
+                "Test.SquareIfNumber(|",
+            );
 
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
 
-            TestUtils.assertSignatureHelp(expected, actual);
-            Assert.isDefined(actual.signatures[0].documentation);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertSignatureHelp(expected, actual.value);
+            Assert.isDefined(actual.value.signatures[0].documentation);
         });
 
         it(`first parameter, literal, no comma`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1|");
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
+                "Test.SquareIfNumber(1|",
+            );
 
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 0,
                 activeSignature: 0,
             };
 
-            TestUtils.assertSignatureHelp(expected, actual);
-            Assert.isDefined(actual.signatures[0].documentation);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertSignatureHelp(expected, actual.value);
+            Assert.isDefined(actual.value.signatures[0].documentation);
         });
 
         it(`first parameter, literal, comma`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp("Test.SquareIfNumber(1,|");
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
+                "Test.SquareIfNumber(1,|",
+            );
 
             const expected: TestUtils.AbridgedSignatureHelp = {
                 activeParameter: 1,
                 activeSignature: 0,
             };
 
-            TestUtils.assertSignatureHelp(expected, actual);
-            Assert.isDefined(actual.signatures[0].documentation);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertSignatureHelp(expected, actual.value);
+            Assert.isDefined(actual.value.signatures[0].documentation);
         });
     });
 });

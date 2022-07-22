@@ -19,11 +19,8 @@ import type {
     DefinitionProviderContext,
     HoverProviderContext,
     IAutocompleteItemProvider,
-    IDefinitionProvider,
-    IFoldingRangeProvider,
-    IHoverProvider,
-    ISemanticTokenProvider,
-    ISignatureHelpProvider,
+    ILibraryProvider,
+    ILocalDocumentProvider,
     PartialSemanticToken,
     SignatureProviderContext,
 } from "../providers/commonTypes";
@@ -34,20 +31,15 @@ import {
     maybeScopeCreatorIdentifier,
     TScopeItem,
 } from "../inspection/scope/scopeUtils";
-import { LanguageAutocompleteItemProvider, LibrarySymbolProvider, LocalDocumentProvider } from "../providers";
+import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { ValidationTraceConstant } from "../trace";
 
 export abstract class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
-    protected librarySymbolProvider: IAutocompleteItemProvider & IHoverProvider & ISignatureHelpProvider;
-    protected localDocumentProvider: IAutocompleteItemProvider &
-        IDefinitionProvider &
-        IFoldingRangeProvider &
-        IHoverProvider &
-        ISemanticTokenProvider &
-        ISignatureHelpProvider;
+    protected libraryProvider: ILibraryProvider;
+    protected localDocumentProvider: ILocalDocumentProvider;
 
     protected cancellableTokensByAction: Map<string, PQP.ICancellationToken> = new Map();
 
@@ -61,15 +53,25 @@ export abstract class AnalysisBase implements Analysis {
     };
 
     constructor(protected textDocument: TextDocument, protected analysisSettings: AnalysisSettings) {
-        this.languageAutocompleteItemProvider = new LanguageAutocompleteItemProvider();
+        this.languageAutocompleteItemProvider = analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn
+            ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()
+            : new LanguageAutocompleteItemProvider();
 
-        this.librarySymbolProvider = new LibrarySymbolProvider(analysisSettings.inspectionSettings.library);
+        this.libraryProvider = analysisSettings.maybeCreateLibraryProviderFn
+            ? analysisSettings.maybeCreateLibraryProviderFn(analysisSettings.inspectionSettings.library)
+            : new LibraryProvider(analysisSettings.inspectionSettings.library);
 
-        this.localDocumentProvider = new LocalDocumentProvider(
-            this.textDocument.uri.toString(),
-            this.typeCache,
-            analysisSettings.inspectionSettings.library,
-        );
+        this.localDocumentProvider = analysisSettings.maybeCreateLocalDocumentProviderFn
+            ? analysisSettings.maybeCreateLocalDocumentProviderFn(
+                  textDocument.uri.toString(),
+                  this.typeCache,
+                  analysisSettings.inspectionSettings.library,
+              )
+            : new LocalDocumentProvider(
+                  this.textDocument.uri.toString(),
+                  this.typeCache,
+                  analysisSettings.inspectionSettings.library,
+              );
 
         void this.initializeState();
     }
@@ -144,7 +146,7 @@ export abstract class AnalysisBase implements Analysis {
             PQP.Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>
         >[] = [
             this.languageAutocompleteItemProvider.getAutocompleteItems(context),
-            this.librarySymbolProvider.getAutocompleteItems(context),
+            this.libraryProvider.getAutocompleteItems(context),
             this.localDocumentProvider.getAutocompleteItems(context),
         ];
 
@@ -260,7 +262,7 @@ export abstract class AnalysisBase implements Analysis {
 
         const triedHovers: Result<Hover | undefined, CommonError.CommonError>[] = await Promise.all([
             this.localDocumentProvider.getHover(maybeHoverProviderContext),
-            this.librarySymbolProvider.getHover(maybeHoverProviderContext),
+            this.libraryProvider.getHover(maybeHoverProviderContext),
         ]);
 
         for (const triedHover of triedHovers) {
@@ -367,7 +369,7 @@ export abstract class AnalysisBase implements Analysis {
 
         const signatureTasks: Result<SignatureHelp | undefined, CommonError.CommonError>[] = await Promise.all([
             this.localDocumentProvider.getSignatureHelp(context),
-            this.librarySymbolProvider.getSignatureHelp(context),
+            this.libraryProvider.getSignatureHelp(context),
         ]);
 
         for (const task of signatureTasks) {

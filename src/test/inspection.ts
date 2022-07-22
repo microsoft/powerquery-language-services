@@ -4,14 +4,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import "mocha";
-import { assert, expect } from "chai";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { expect } from "chai";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { Inspection, InspectionUtils, Position, SignatureProviderContext } from "../powerquery-language-services";
-import { TestConstants, TestUtils } from ".";
+import { Inspection, Position } from "../powerquery-language-services";
 import { MockDocument } from "./mockDocument";
-import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { TestUtils } from ".";
 
 async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyArray<string>): Promise<void> {
     const triedNodeScope: Inspection.TriedNodeScope = await inspected.triedNodeScope;
@@ -35,67 +34,69 @@ function assertIsPostionInBounds(
     }
 }
 
-const getMaybeContextForSignatureProvider: (
-    inspected: Inspection.Inspected,
-) => Promise<SignatureProviderContext | undefined> = (inspected: Inspection.Inspected) =>
-    InspectionUtils.getMaybeContextForSignatureProvider(inspected, NoOpTraceManagerInstance, undefined);
+// TODO delete
+// const getMaybeContextForSignatureProvider: (
+//     inspected: Inspection.Inspected,
+// ) => Promise<SignatureProviderContext | undefined> = (inspected: Inspection.Inspected) =>
+//     InspectionUtils.getMaybeContextForSignatureProvider(inspected, NoOpTraceManagerInstance, undefined);
 
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
     describe("getContextForInspected", () => {
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
-            );
+        // TODO replace tests with currentInvokeExpression tests??
+        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
+        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
+        //         `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
+        //     );
 
-            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
+        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-                inspected,
-            );
+        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+        //         inspected,
+        //     );
 
-            assert.isDefined(maybeContext);
-            const context: SignatureProviderContext = maybeContext!;
+        //     assert.isDefined(maybeContext);
+        //     const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-            expect(context.argumentOrdinal).to.equal(0);
-        });
+        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
+        //     expect(context.argumentOrdinal).to.equal(0);
+        // });
 
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, async () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
-            );
+        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, async () => {
+        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
+        //         `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
+        //     );
 
-            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
+        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-                inspected,
-            );
+        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+        //         inspected,
+        //     );
 
-            assert.isDefined(maybeContext);
-            const context: SignatureProviderContext = maybeContext!;
+        //     assert.isDefined(maybeContext);
+        //     const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-            expect(context.argumentOrdinal).to.equal(1);
-        });
+        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
+        //     expect(context.argumentOrdinal).to.equal(1);
+        // });
 
-        it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, async () => {
-            const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
-            );
+        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, async () => {
+        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
+        //         `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
+        //     );
 
-            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
+        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-            const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-                inspected,
-            );
+        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
+        //         inspected,
+        //     );
 
-            assert.isDefined(maybeContext);
-            const context: SignatureProviderContext = maybeContext!;
+        //     assert.isDefined(maybeContext);
+        //     const context: SignatureProviderContext = maybeContext!;
 
-            expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-            expect(context.argumentOrdinal).to.equal(1);
-        });
+        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
+        //     expect(context.argumentOrdinal).to.equal(1);
+        // });
 
         describe("file", () => {
             it("DirectQueryForSQL file", async () => {

@@ -64,12 +64,6 @@ export interface HoverProviderContext extends ProviderContext {
     readonly triedScopeType: Inspection.TriedScopeType;
 }
 
-export interface ILocalDocumentProvider
-    extends IDefinitionProvider,
-        IFoldingRangeProvider,
-        ISemanticTokenProvider,
-        ISymbolProvider {}
-
 export interface ISemanticTokenProvider {
     getPartialSemanticTokens(
         context: SemanticTokenProviderContext,
@@ -110,4 +104,12 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly triedCurrentInvokeExpression: TriedCurrentInvokeExpression;
 }
 
-export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider, ILibrary {}
+export interface ILibraryProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider {}
+
+export interface ILocalDocumentProvider
+    extends IAutocompleteItemProvider,
+        IDefinitionProvider,
+        IHoverProvider,
+        IFoldingRangeProvider,
+        ISemanticTokenProvider,
+        ISignatureHelpProvider {}

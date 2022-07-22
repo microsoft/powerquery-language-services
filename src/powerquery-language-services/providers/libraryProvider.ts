@@ -9,9 +9,7 @@ import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import {
     AutocompleteItemProviderContext,
     HoverProviderContext,
-    IAutocompleteItemProvider,
-    IHoverProvider,
-    ISignatureHelpProvider,
+    ILibraryProvider,
     SignatureProviderContext,
 } from "./commonTypes";
 import { Library, LibraryUtils } from "../library";
@@ -19,7 +17,7 @@ import { AutocompleteItemUtils } from "../inspection";
 import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
-export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider {
+export class LibraryProvider implements ILibraryProvider {
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
@@ -84,7 +82,7 @@ export class LibrarySymbolProvider implements IAutocompleteItemProvider, IHoverP
         }
 
         const definition: Library.TLibraryDefinition = maybeDefinition;
-        const definitionText: string = LibrarySymbolProvider.getDefinitionKindText(definition.kind);
+        const definitionText: string = LibraryProvider.getDefinitionKindText(definition.kind);
 
         const definitionTypeText: string = TypeUtils.nameOf(
             definition.asPowerQueryType,

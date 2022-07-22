@@ -18,12 +18,7 @@ import {
     DefinitionProviderContext,
     FoldingRangeProviderContext,
     HoverProviderContext,
-    IAutocompleteItemProvider,
-    IDefinitionProvider,
-    IFoldingRangeProvider,
-    IHoverProvider,
-    ISemanticTokenProvider,
-    ISignatureHelpProvider,
+    ILocalDocumentProvider,
     PartialSemanticToken,
     SemanticTokenProviderContext,
     SignatureProviderContext,
@@ -35,17 +30,7 @@ import { ILibrary } from "../../library/library";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
-export class LocalDocumentProvider
-    implements
-        IAutocompleteItemProvider,
-        IDefinitionProvider,
-        IHoverProvider,
-        IFoldingRangeProvider,
-        ISemanticTokenProvider,
-        ISignatureHelpProvider
-{
-    // private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-    // private readonly createInspectionSettingsFn: () => InspectionSettings,
+export class LocalDocumentProvider implements ILocalDocumentProvider {
     constructor(
         private readonly uri: DocumentUri,
         private readonly typeCache: Inspection.TypeCache,
