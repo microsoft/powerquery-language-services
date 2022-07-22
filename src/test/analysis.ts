@@ -77,7 +77,9 @@ describe("Analysis", () => {
                 ],
             };
 
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`timeout`, async () => {

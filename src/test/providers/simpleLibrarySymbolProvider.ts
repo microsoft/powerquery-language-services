@@ -3,11 +3,9 @@
 
 import "mocha";
 import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 
 import {
     AnalysisSettings,
-    EmptySignatureHelp,
     Hover,
     Inspection,
     NullSymbolProvider,
@@ -103,7 +101,8 @@ describe(`SimpleLibraryProvider`, () => {
                 "Unknown|Identifier",
             );
 
-            expect(actual).to.equal(EmptySignatureHelp);
+            Assert.isOk(actual);
+            Assert.isUndefined(actual.value);
         });
 
         it(`first parameter, no literal`, async () => {

@@ -10,7 +10,6 @@ import { expect } from "chai";
 import {
     AnalysisSettings,
     AnalysisUtils,
-    EmptyHover,
     Hover,
     Inspection,
     Library,
@@ -248,15 +247,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
     describe(`getDefinition`, () => {
         it(`no definition`, async () => {
-            const expected: Range[] = [];
-
             const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
                 "let foo = 1 in baz|",
             );
 
             Assert.isOk(actual);
-            Assert.isDefined(actual.value);
-            TestUtils.assertEqualLocation(expected, actual.value);
+            Assert.isUndefined(actual.value);
         });
 
         it(`let expression`, async () => {
@@ -352,10 +348,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             ];
 
             const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-                await TestUtils.createFoldingRanges("let \n foo = 1 \n in \n baz|");
+                await TestUtils.createFoldingRanges("let \n foo = 1 \n in \n baz");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`MetaExpression`, async () => {
@@ -375,10 +372,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             ];
 
             const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-                await TestUtils.createFoldingRanges("1 meta [ \n foo = number \n ]|");
+                await TestUtils.createFoldingRanges("1 meta [ \n foo = number \n ]");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`RecordExpression`, async () => {
@@ -392,10 +390,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             ];
 
             const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ]|");
+                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ]");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`RecordLiteral`, async () => {
@@ -409,10 +408,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             ];
 
             const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ] \n section foo; bar = 1|");
+                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ] \n section foo; bar = 1");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`SectionMember`, async () => {
@@ -433,11 +433,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
             const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
                 await TestUtils.createFoldingRanges(
-                    "[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1|",
+                    "[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1",
                 );
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
     });
 
@@ -479,16 +480,18 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
             it(`undefined`, async () => {
                 const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("x|");
-                expect(hover).to.equal(EmptyHover);
+                Assert.isOk(hover);
+                Assert.isUndefined(hover.value);
             });
         });
 
-        it(`null on parameter hover`, async () => {
+        it(`undefined on parameter hover`, async () => {
             const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
                 "let foo = 10, bar = (foo| as number) => foo in foo",
             );
 
-            expect(hover).to.deep.equal(EmptyHover);
+            Assert.isOk(hover);
+            Assert.isUndefined(hover.value);
         });
 
         describe(`hover the value when over key`, () => {
@@ -534,7 +537,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     describe(`getPartialSemanticTokens`, () => {
         it(`field projection`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`a[[b]]?|`);
+                await createPartialSemanticTokens(`a[[b]]?`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -570,7 +573,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`field selector`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`a[b]?|`);
+                await createPartialSemanticTokens(`a[b]?`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -606,7 +609,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`numeric literal`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`1|`);
+                await createPartialSemanticTokens(`1`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -626,7 +629,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`nullable primitive type`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`1 is nullable number|`);
+                await createPartialSemanticTokens(`1 is nullable number`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -670,7 +673,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`primitive type`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`text|`);
+                await createPartialSemanticTokens(`text`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -690,7 +693,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`parameter`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`(optional foo as number) => foo|`);
+                await createPartialSemanticTokens(`(optional foo as number) => foo`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -742,7 +745,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`record literal`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`[foo = 1]section bar;|`);
+                await createPartialSemanticTokens(`[foo = 1]section bar;`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -770,7 +773,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`record expression`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`[foo = 1]|`);
+                await createPartialSemanticTokens(`[foo = 1]`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -798,7 +801,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`table type`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`type table [optional foo = nullable number]|`);
+                await createPartialSemanticTokens(`type table [optional foo = nullable number]`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -850,7 +853,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         it(`text literal`, async () => {
             const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                await createPartialSemanticTokens(`""|`);
+                await createPartialSemanticTokens(`""`);
 
             const expected: PartialSemanticToken[] = [
                 {
