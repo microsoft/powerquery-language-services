@@ -19,12 +19,10 @@ import {
 
 export class NoOpCancellationToken implements ICancellationToken {
     isCancelled: () => boolean = () => false;
-    throwIfCancelled: () => void = () => {
-        throw new Error("This should never be called");
-    };
-    cancel: () => void = () => {
-        throw new Error("This should never be called");
-    };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    throwIfCancelled: () => void = () => {};
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    cancel: () => void = () => {};
 }
 
 export const DefaultInspectionSettings: InspectionSettings = {
