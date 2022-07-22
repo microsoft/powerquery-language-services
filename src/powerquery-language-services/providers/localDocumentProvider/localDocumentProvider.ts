@@ -46,6 +46,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         const autocompleteItems: Inspection.AutocompleteItem[] = [
             ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
         ].concat(InspectionUtils.getAutocompleteItemsFromScope(context));
@@ -63,6 +65,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             this.getDefinition.name,
             context.maybeInitialCorrelationId,
         );
+
+        context.maybeCancellationToken?.throwIfCancelled();
 
         if (
             context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
@@ -109,6 +113,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         const foldingRanges: FoldingRange[] = createFoldingRanges(
             context.nodeIdMapCollection,
             context.traceManager,
@@ -126,6 +132,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             this.getHover.name,
             context.maybeInitialCorrelationId,
         );
+
+        context.maybeCancellationToken?.throwIfCancelled();
 
         let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
 
@@ -161,6 +169,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
 
         const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
@@ -184,6 +194,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             this.getSignatureHelp.name,
             context.maybeInitialCorrelationId,
         );
+
+        context.maybeCancellationToken?.throwIfCancelled();
 
         const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
             context.triedCurrentInvokeExpression,
@@ -251,6 +263,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             this.getHoverForIdentifierPairedExpression.name,
             correlationId,
         );
+
+        context.maybeCancellationToken?.throwIfCancelled();
 
         const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;

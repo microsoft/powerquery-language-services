@@ -47,11 +47,11 @@ describe("Analysis", () => {
         });
 
         it(`timeout library provider`, async () => {
-            await runHoverTimeoutTest("library", `[let-variable] Test.SquareIfNumber: logical`);
+            await runHoverTimeoutTest("library");
         });
 
         it(`timeout local document provider`, async () => {
-            await runHoverTimeoutTest("local", `[library function] Test.SquareIfNumber: (x: any) => any`);
+            await runHoverTimeoutTest("local");
         });
     });
 
@@ -82,7 +82,7 @@ describe("Analysis", () => {
             expect(actual.value).to.deep.equal(expected);
         });
 
-        it(`WIP timeout`, async () => {
+        it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 createCancellationTokenFn: () => new TimedCancellationToken(0),
@@ -100,7 +100,7 @@ describe("Analysis", () => {
     });
 });
 
-async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverText: string): Promise<void> {
+async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void> {
     let maybeCreateLocalDocumentProviderFn: AnalysisSettings["maybeCreateLocalDocumentProviderFn"];
     let maybeCreateLibraryProviderFn: AnalysisSettings["maybeCreateLibraryProviderFn"];
 
@@ -131,23 +131,16 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
+        createCancellationTokenFn: () => new TimedCancellationToken(0),
         maybeCreateLibraryProviderFn,
         maybeCreateLocalDocumentProviderFn,
     };
-
-    const startTime: number = new Date().getTime();
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
         `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
         analysisSettings,
     );
 
-    const stopTime: number = new Date().getTime();
-    const totalMS: number = stopTime - startTime;
-
-    Assert.isOk(hover);
-    Assert.isDefined(hover.value);
-    TestUtils.assertEqualHover(expectedHoverText, hover.value);
-
-    expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
+    Assert.isError(hover);
+    Assert.isTrue(hover.error.innerError instanceof CommonError.CancellationError);
 }

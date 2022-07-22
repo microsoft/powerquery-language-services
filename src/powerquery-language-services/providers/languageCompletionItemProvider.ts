@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -35,12 +35,14 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         const autocomplete: Inspection.Autocomplete = context.autocomplete;
 
         const autocompleteItems: Inspection.AutocompleteItem[] = [
-            ...this.getKeywords(autocomplete.triedKeyword),
-            ...this.getLanguageConstants(autocomplete.triedLanguageConstant),
-            ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType),
+            ...this.getKeywords(autocomplete.triedKeyword, context.maybeCancellationToken),
+            ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.maybeCancellationToken),
+            ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.maybeCancellationToken),
         ];
 
         trace.exit();
@@ -50,7 +52,10 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getKeywords(
         triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
+        maybeCancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
+        maybeCancellationToken?.throwIfCancelled();
+
         if (ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
         }
@@ -63,7 +68,10 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
+        maybeCancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
+        maybeCancellationToken?.throwIfCancelled();
+
         return ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
             ? [triedLanguageConstantAutocomplete.value]
             : [];
@@ -71,7 +79,10 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
+        maybeCancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
+        maybeCancellationToken?.throwIfCancelled();
+
         return ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
             ? triedPrimitiveTypeAutocomplete.value
             : [];

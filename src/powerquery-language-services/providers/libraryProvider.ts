@@ -38,6 +38,8 @@ export class LibraryProvider implements ILibraryProvider {
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         if (!context.text || !context.range) {
             trace.exit({ invalidContext: true });
 
@@ -66,6 +68,8 @@ export class LibraryProvider implements ILibraryProvider {
             context.maybeInitialCorrelationId,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         if (!context.identifier) {
             trace.exit({ invalidContext: true });
 
@@ -90,6 +94,8 @@ export class LibraryProvider implements ILibraryProvider {
             trace.id,
         );
 
+        context.maybeCancellationToken?.throwIfCancelled();
+
         const hover: Hover = {
             contents: {
                 kind: MarkupKind.PlainText,
@@ -113,6 +119,8 @@ export class LibraryProvider implements ILibraryProvider {
             this.getSignatureHelp.name,
             context.maybeInitialCorrelationId,
         );
+
+        context.maybeCancellationToken?.throwIfCancelled();
 
         if (!context.functionName) {
             trace.exit({ invalidContext: true });
