@@ -9,7 +9,7 @@ import {
     LanguageAutocompleteItemProvider,
 } from "../../powerquery-language-services";
 
-export class SlowLocalDocumentProvider extends LanguageAutocompleteItemProvider {
+export class SlowLanguageAutocompleteItemProvider extends LanguageAutocompleteItemProvider {
     constructor(private readonly delayInMs: number) {
         super();
     }

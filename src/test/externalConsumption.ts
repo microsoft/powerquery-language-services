@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -37,11 +38,13 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings, position);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
 
-        const hover: Hover = await analysis.getHover();
-        expect(hover.range === undefined);
-        expect(hover.contents === null);
+        const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(position);
+        Assert.isOk(hover);
+        Assert.isDefined(hover.value);
+        expect(hover.value.range === undefined);
+        expect(hover.value.contents === null);
 
         analysis.dispose();
     });

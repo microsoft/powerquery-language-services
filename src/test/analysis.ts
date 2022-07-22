@@ -2,31 +2,29 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
-import { DocumentUri } from "vscode-languageserver-textdocument";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import {
-    AnalysisSettings,
-    Hover,
-    Inspection,
-    InspectionSettings,
-    Library,
-    SignatureHelp,
-} from "../powerquery-language-services";
-import { ILocalDocumentProvider, ISymbolProvider } from "../powerquery-language-services/providers/commonTypes";
+import { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
+import type { AutocompleteItem, TypeCache } from "../powerquery-language-services/inspection";
+import { ILibraryProvider, ILocalDocumentProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
-import type { AutocompleteItem } from "../powerquery-language-services/inspection";
-import { SlowSymbolProvider } from "./providers/slowSymbolProvider";
+import { ILibrary } from "../powerquery-language-services/library/library";
+import { SlowLibraryProvider } from "./providers/slowLibraryProvider";
+import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider";
 
 describe("Analysis", () => {
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
-            const autocompleteItems: ReadonlyArray<AutocompleteItem> = await TestUtils.createAutocompleteItems(`
+            const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await TestUtils.createAutocompleteItems(`
         let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
 
+            Assert.isOk(autocompleteItems);
+            Assert.isDefined(autocompleteItems.value);
+
             const autocompleteItem: AutocompleteItem = Assert.asDefined(
-                autocompleteItems.find(
+                autocompleteItems.value.find(
                     (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
                 ),
             );
@@ -39,11 +37,13 @@ describe("Analysis", () => {
 
     describe(`getHoverItems`, () => {
         it(`prefer local over library`, async () => {
-            const hover: Hover = await TestUtils.createHover(
+            const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
             );
 
-            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover);
+            Assert.isOk(hover);
+            Assert.isDefined(hover.value);
+            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover.value);
         });
 
         it(`timeout library provider`, async () => {
@@ -57,9 +57,10 @@ describe("Analysis", () => {
 
     describe(`getSignatureHelp`, () => {
         it(`prefer local over library`, async () => {
-            const actual: SignatureHelp = await TestUtils.createSignatureHelp(
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
-            );
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> =
+                await TestUtils.createSignatureHelp(
+                    `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                );
 
             const expected: SignatureHelp = {
                 activeParameter: 0,
@@ -82,30 +83,31 @@ describe("Analysis", () => {
         it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
-                symbolProviderTimeoutInMS: 0, // immediate timeout
-                maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) =>
-                    new SlowSymbolProvider(library, 1000),
+                maybeCreateLibraryProviderFn: (library: Library.ILibrary) => new SlowLibraryProvider(library, 1000),
             };
 
-            const signatureHelp: SignatureHelp = await TestUtils.createSignatureHelp(
-                `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
-                analysisSettings,
-            );
+            const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
+                await TestUtils.createSignatureHelp(
+                    `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                    analysisSettings,
+                );
 
-            expect(signatureHelp.activeParameter).equals(undefined, "Didn't expect to find symbol");
-            expect(signatureHelp.signatures.length).equals(0, "Didn't expect to find symbol");
+            Assert.isOk(signatureHelp);
+            Assert.isDefined(signatureHelp.value);
+            expect(signatureHelp.value.activeParameter).equals(undefined, "Didn't expect to find symbol");
+            expect(signatureHelp.value.signatures.length).equals(0, "Didn't expect to find symbol");
         });
     });
 });
 
 async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverText: string): Promise<void> {
     let maybeCreateLocalDocumentProviderFn: AnalysisSettings["maybeCreateLocalDocumentProviderFn"];
-    let maybeCreateLibrarySymbolProviderFn: AnalysisSettings["maybeCreateLibrarySymbolProviderFn"];
+    let maybeCreateLibraryProviderFn: AnalysisSettings["maybeCreateLibraryProviderFn"];
 
     switch (provider) {
         case "library":
-            maybeCreateLibrarySymbolProviderFn = (library: Library.ILibrary): ISymbolProvider =>
-                new SlowSymbolProvider(library, 1000);
+            maybeCreateLibraryProviderFn = (library: Library.ILibrary): ILibraryProvider =>
+                new SlowLibraryProvider(library, 1000);
 
             maybeCreateLocalDocumentProviderFn =
                 TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
@@ -113,15 +115,13 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
             break;
 
         case "local":
-            maybeCreateLibrarySymbolProviderFn =
-                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLibrarySymbolProviderFn;
+            maybeCreateLibraryProviderFn = TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLibraryProviderFn;
 
             maybeCreateLocalDocumentProviderFn = (
-                library: Library.ILibrary,
-                _uri: DocumentUri,
-                _promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-                _createInspectionSettingsFn: () => InspectionSettings,
-            ): ILocalDocumentProvider => new SlowSymbolProvider(library, 1000);
+                uri: string,
+                typeCache: TypeCache,
+                library: ILibrary,
+            ): ILocalDocumentProvider => new SlowLocalDocumentProvider(uri, typeCache, library, 1000);
 
             break;
 
@@ -131,14 +131,13 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        maybeCreateLibrarySymbolProviderFn,
+        maybeCreateLibraryProviderFn,
         maybeCreateLocalDocumentProviderFn,
-        symbolProviderTimeoutInMS: 10,
     };
 
     const startTime: number = new Date().getTime();
 
-    const hover: Hover = await TestUtils.createHover(
+    const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
         `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
         analysisSettings,
     );
@@ -146,7 +145,9 @@ async function runHoverTimeoutTest(provider: "local" | "library", expectedHoverT
     const stopTime: number = new Date().getTime();
     const totalMS: number = stopTime - startTime;
 
-    TestUtils.assertEqualHover(expectedHoverText, hover);
+    Assert.isOk(hover);
+    Assert.isDefined(hover.value);
+    TestUtils.assertEqualHover(expectedHoverText, hover.value);
 
     expect(totalMS).to.be.lessThanOrEqual(500, `Did we timeout the hover request? [${totalMS}ms]`);
 }
