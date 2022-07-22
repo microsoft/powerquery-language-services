@@ -76,57 +76,56 @@ export abstract class AnalysisBase implements Analysis {
         void this.initializeState();
     }
 
-    public async getAutocompleteItems(
+    public getAutocompleteItems(
         position: Position,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getAutocompleteItems.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getAutocompleteItems.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
 
-        this.cancelPreviousTokenIfExists(this.getAutocompleteItems.name);
+            this.cancelPreviousTokenIfExists(this.getAutocompleteItems.name);
 
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getAutocompleteItems.name,
-        );
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getAutocompleteItems.name,
+            );
 
-        const maybeContext: AutocompleteItemProviderContext | undefined = await this.getAutocompleteItemProviderContext(
-            position,
-            trace.id,
-            newCancellationToken,
-        );
+            const maybeContext: AutocompleteItemProviderContext | undefined =
+                await this.getAutocompleteItemProviderContext(position, trace.id, newCancellationToken);
 
-        if (maybeContext === undefined) {
-            trace.exit();
+            if (maybeContext === undefined) {
+                trace.exit();
 
-            return ResultUtils.boxOk(undefined);
-        }
+                return undefined;
+            }
 
-        const autocompleteItemTasks: Promise<
-            Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>
-        >[] = [
-            this.languageAutocompleteItemProvider.getAutocompleteItems(maybeContext),
-            this.libraryProvider.getAutocompleteItems(maybeContext),
-            this.localDocumentProvider.getAutocompleteItems(maybeContext),
-        ];
+            const autocompleteItemTasks: Promise<
+                Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>
+            >[] = [
+                this.languageAutocompleteItemProvider.getAutocompleteItems(maybeContext),
+                this.libraryProvider.getAutocompleteItems(maybeContext),
+                this.localDocumentProvider.getAutocompleteItems(maybeContext),
+            ];
 
-        const autocompleteItems: Inspection.AutocompleteItem[] = [];
+            const autocompleteItems: Inspection.AutocompleteItem[] = [];
 
-        // TODO: intellisense improvements
-        // - honor expected data type
+            // TODO: intellisense improvements
+            // - honor expected data type
 
-        for (const result of await Promise.all(autocompleteItemTasks)) {
-            if (ResultUtils.isOk(result) && result.value !== undefined) {
-                for (const item of result.value) {
-                    autocompleteItems.push(item);
+            for (const result of await Promise.all(autocompleteItemTasks)) {
+                if (ResultUtils.isOk(result) && result.value !== undefined) {
+                    for (const item of result.value) {
+                        autocompleteItems.push(item);
+                    }
                 }
             }
-        }
 
-        trace.exit();
+            trace.exit();
 
-        return ResultUtils.boxOk(autocompleteItems);
+            return autocompleteItems;
+        }, this.analysisSettings.inspectionSettings.locale);
     }
 
     public getDefinition(position: Position): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
