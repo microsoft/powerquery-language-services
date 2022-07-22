@@ -326,142 +326,144 @@ export abstract class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public async getRenameEdits(
+    public getRenameEdits(
         position: Position,
         newName: string,
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = this.analysisSettings.traceManager.entry(
-            ValidationTraceConstant.AnalysisBase,
-            this.getRenameEdits.name,
-            this.analysisSettings.maybeInitialCorrelationId,
-        );
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = this.analysisSettings.traceManager.entry(
+                ValidationTraceConstant.AnalysisBase,
+                this.getRenameEdits.name,
+                this.analysisSettings.maybeInitialCorrelationId,
+            );
 
-        this.cancelPreviousTokenIfExists(this.getRenameEdits.name);
+            this.cancelPreviousTokenIfExists(this.getRenameEdits.name);
 
-        const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-            this.getRenameEdits.name,
-        );
+            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
+                this.getRenameEdits.name,
+            );
 
-        const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
+            const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
 
-        let maybeLeafIdentifier: TActiveLeafIdentifier | undefined;
+            let maybeLeafIdentifier: TActiveLeafIdentifier | undefined;
 
-        if (
-            !ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ||
-            maybeActiveNode.maybeInclusiveIdentifierUnderPosition === undefined
-        ) {
-            trace.exit();
+            if (
+                !ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ||
+                maybeActiveNode.maybeInclusiveIdentifierUnderPosition === undefined
+            ) {
+                trace.exit();
 
-            return ResultUtils.boxOk(undefined);
-        } else {
-            maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
-        }
+                return undefined;
+            } else {
+                maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
+            }
 
-        void (await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id));
-        const scopeById: Inspection.ScopeById | undefined = this.typeCache.scopeById;
+            void (await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id));
+            const scopeById: Inspection.ScopeById | undefined = this.typeCache.scopeById;
 
-        const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
-        let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
+            const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
+            let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
 
-        if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-            valueCreator = maybeLeafIdentifier.node;
-        } else if (
-            (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
-                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
-            scopeById
-        ) {
-            // need to find this key value and modify all referring it
-            const identifierExpression: Ast.Identifier =
-                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-                    ? maybeLeafIdentifier.node.identifier
-                    : maybeLeafIdentifier.node;
+            if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                valueCreator = maybeLeafIdentifier.node;
+            } else if (
+                (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
+                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
+                scopeById
+            ) {
+                // need to find this key value and modify all referring it
+                const identifierExpression: Ast.Identifier =
+                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                        ? maybeLeafIdentifier.node.identifier
+                        : maybeLeafIdentifier.node;
 
-            switch (identifierExpression.identifierContextKind) {
-                case Ast.IdentifierContextKind.Key:
-                case Ast.IdentifierContextKind.Parameter:
-                    // it is the identifier creating the value
-                    valueCreator = identifierExpression;
-                    break;
+                switch (identifierExpression.identifierContextKind) {
+                    case Ast.IdentifierContextKind.Key:
+                    case Ast.IdentifierContextKind.Parameter:
+                        // it is the identifier creating the value
+                        valueCreator = identifierExpression;
+                        break;
 
-                case Ast.IdentifierContextKind.Value: {
-                    // it is the identifier referring the value
-                    let nodeScope: Inspection.NodeScope | undefined = scopeById.get(identifierExpression.id);
+                    case Ast.IdentifierContextKind.Value: {
+                        // it is the identifier referring the value
+                        let nodeScope: Inspection.NodeScope | undefined = scopeById.get(identifierExpression.id);
 
-                    // there might be a chance that its scope did not get populated yet, do another try
-                    if (!nodeScope) {
-                        void (await Inspection.tryNodeScope(
-                            this.analysisSettings.inspectionSettings,
-                            Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
-                            identifierExpression.id,
-                            scopeById,
-                        ));
+                        // there might be a chance that its scope did not get populated yet, do another try
+                        if (!nodeScope) {
+                            void (await Inspection.tryNodeScope(
+                                this.analysisSettings.inspectionSettings,
+                                Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                                identifierExpression.id,
+                                scopeById,
+                            ));
 
-                        nodeScope = scopeById.get(identifierExpression.id);
-                    }
+                            nodeScope = scopeById.get(identifierExpression.id);
+                        }
 
-                    const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
-                        nodeScope,
-                        maybeLeafIdentifier.normalizedLiteral,
-                    );
+                        const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
+                            nodeScope,
+                            maybeLeafIdentifier.normalizedLiteral,
+                        );
 
-                    if (scopeItem) {
-                        const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreatorIdentifier(scopeItem);
+                        if (scopeItem) {
+                            const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                                maybeScopeCreatorIdentifier(scopeItem);
 
-                        if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
-                            if (
-                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
-                                maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
-                            ) {
+                            if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                                if (
+                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                                ) {
+                                    valueCreator = maybeValueCreator;
+                                } else {
+                                    identifiersToBeEdited.push(maybeValueCreator);
+                                }
+                            } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
                                 valueCreator = maybeValueCreator;
-                            } else {
+                            } else if (maybeValueCreator) {
                                 identifiersToBeEdited.push(maybeValueCreator);
                             }
-                        } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
-                            valueCreator = maybeValueCreator;
-                        } else if (maybeValueCreator) {
-                            identifiersToBeEdited.push(maybeValueCreator);
                         }
+
+                        break;
                     }
 
-                    break;
+                    case Ast.IdentifierContextKind.Keyword:
+                    default:
+                        // only modify once
+                        identifiersToBeEdited.push(identifierExpression);
+                        break;
                 }
-
-                case Ast.IdentifierContextKind.Keyword:
-                default:
-                    // only modify once
-                    identifiersToBeEdited.push(identifierExpression);
-                    break;
             }
-        }
 
-        if (valueCreator) {
-            // need to populate the other identifiers referring it
-            identifiersToBeEdited.push(
-                ...(await this.collectAllIdentifiersBeneath(
-                    Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
-                    valueCreator,
-                )),
-            );
-        }
+            if (valueCreator) {
+                // need to populate the other identifiers referring it
+                identifiersToBeEdited.push(
+                    ...(await this.collectAllIdentifiersBeneath(
+                        Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                        valueCreator,
+                    )),
+                );
+            }
 
-        // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
-        if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
-            identifiersToBeEdited.push(
-                maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-                    ? maybeLeafIdentifier.node.identifier
-                    : maybeLeafIdentifier.node,
-            );
-        }
+            // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
+            if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
+                identifiersToBeEdited.push(
+                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                        ? maybeLeafIdentifier.node.identifier
+                        : maybeLeafIdentifier.node,
+                );
+            }
 
-        const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
-            range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
-            newText: newName,
-        }));
+            const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
+                range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
+                newText: newName,
+            }));
 
-        trace.exit();
+            trace.exit();
 
-        return ResultUtils.boxOk(result);
+            return result;
+        }, this.analysisSettings.inspectionSettings.locale);
     }
 
     public abstract dispose(): void;
