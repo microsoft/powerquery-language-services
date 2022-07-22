@@ -373,7 +373,7 @@ export abstract class AnalysisBase implements Analysis {
         ]);
 
         for (const task of signatureTasks) {
-            if (task && ResultUtils.isOk(task)) {
+            if (ResultUtils.isOk(task) && task.value !== undefined) {
                 return task;
             }
         }
