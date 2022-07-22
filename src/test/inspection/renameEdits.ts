@@ -4,9 +4,11 @@
 import "mocha";
 import { expect } from "chai";
 
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import type { Position, Range, TextEdit } from "vscode-languageserver-types";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import type { TextDocument } from "vscode-languageserver-textdocument";
 
 import {
     ActiveNode,
@@ -18,26 +20,16 @@ import { TestConstants, TestUtils } from "..";
 import { AnalysisBase } from "../../powerquery-language-services";
 import { assertGetInspectionInstance } from "../testUtils";
 import { findDirectUpperScopeExpression } from "../../powerquery-language-services/inspection/scope/scopeUtils";
-import { NodeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast";
-
-type PartialAnalysis = Pick<AnalysisBase, "getRenameEdits">;
 
 class RenameEditsAnalysis extends AnalysisBase {
-    constructor(promiseMaybeInspected: Promise<Inspected | undefined>) {
-        super(
-            undefined as any,
-            {
-                createInspectionSettingsFn: undefined as any,
-                isWorkspaceCacheAllowed: false,
-                library: {
-                    externalTypeResolver: undefined as any,
-                    libraryDefinitions: undefined as any,
-                },
-                traceManager: NoOpTraceManagerInstance,
-                maybeInitialCorrelationId: undefined,
-            },
-            promiseMaybeInspected,
-        );
+    constructor(textDocument: TextDocument) {
+        super(textDocument, {
+            createCancellationTokenFn: () => new TestConstants.NoOpCancellationToken(),
+            inspectionSettings: TestConstants.SimpleInspectionSettings,
+            isWorkspaceCacheAllowed: false,
+            traceManager: NoOpTraceManagerInstance,
+            maybeInitialCorrelationId: undefined,
+        });
     }
 
     dispose(): void {
@@ -47,6 +39,17 @@ class RenameEditsAnalysis extends AnalysisBase {
     getText(_range?: Range): string {
         return "";
     }
+}
+
+function getRenameEdits(
+    rawText: string,
+    nextStr: string,
+): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
+    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+    const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
+    const partialAnalysis: RenameEditsAnalysis = new RenameEditsAnalysis(textDocument);
+
+    return partialAnalysis.getRenameEdits(position, nextStr);
 }
 
 describe(`Inspection - RenameEdits - Identifiers`, () => {
@@ -79,19 +82,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "a1";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedTextEdits(textEdits.value, nextStr);
         });
 
         it(`Rename one in-expression identifier from left`, async () => {
@@ -105,19 +103,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "a2";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedTextEdits(textEdits.value, nextStr);
         });
 
         it(`Rename one constructor identifier`, async () => {
@@ -131,19 +124,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "a3";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedTextEdits(textEdits.value, nextStr);
         });
 
         it(`Rename one constructor identifier from left`, async () => {
@@ -157,19 +145,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "a4";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedTextEdits(textEdits.value, nextStr);
         });
     });
 
@@ -207,19 +190,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "foo1";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedRecordTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedRecordTextEdits(textEdits.value, nextStr);
         });
 
         it(`Rename one identifier in its paired assignment expression creator`, async () => {
@@ -238,19 +216,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "foo2";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedRecordTextEdits(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedRecordTextEdits(textEdits.value, nextStr);
         });
 
         it(`Rename one record-expression identifier creator`, async () => {
@@ -269,24 +242,20 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "foo2";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
 
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            expect(textEdits.length).eq(1);
-            expect(textEdits[0].newText).eq(nextStr);
-            expect(textEdits[0].range.start.line).eq(0);
-            expect(textEdits[0].range.start.character).eq(180);
-            expect(textEdits[0].range.end.line).eq(0);
-            expect(textEdits[0].range.end.character).eq(183);
+            expect(textEdits.value.length).eq(1);
+            expect(textEdits.value[0].newText).eq(nextStr);
+            expect(textEdits.value[0].range.start.line).eq(0);
+            expect(textEdits.value[0].range.start.character).eq(180);
+            expect(textEdits.value[0].range.end.line).eq(0);
+            expect(textEdits.value[0].range.end.character).eq(183);
         });
 
         it(`Rename one identifier within a statement`, async () => {
@@ -305,29 +274,25 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "foo3";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
 
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            expect(textEdits.length).eq(2);
-            expect(textEdits[0].newText).eq(nextStr);
-            expect(textEdits[0].range.start.line).eq(0);
-            expect(textEdits[0].range.start.character).eq(20);
-            expect(textEdits[0].range.end.line).eq(0);
-            expect(textEdits[0].range.end.character).eq(23);
-            expect(textEdits[1].newText).eq(nextStr);
-            expect(textEdits[1].range.start.line).eq(0);
-            expect(textEdits[1].range.start.character).eq(186);
-            expect(textEdits[1].range.end.line).eq(0);
-            expect(textEdits[1].range.end.character).eq(189);
+            expect(textEdits.value.length).eq(2);
+            expect(textEdits.value[0].newText).eq(nextStr);
+            expect(textEdits.value[0].range.start.line).eq(0);
+            expect(textEdits.value[0].range.start.character).eq(20);
+            expect(textEdits.value[0].range.end.line).eq(0);
+            expect(textEdits.value[0].range.end.character).eq(23);
+            expect(textEdits.value[1].newText).eq(nextStr);
+            expect(textEdits.value[1].range.start.line).eq(0);
+            expect(textEdits.value[1].range.start.character).eq(186);
+            expect(textEdits.value[1].range.end.line).eq(0);
+            expect(textEdits.value[1].range.end.character).eq(189);
         });
 
         const assertExpectedRecordTextEditsWithAtSymbols: (textEdits: TextEdit[], nextStr: string) => void = (
@@ -363,19 +328,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "Implicit4";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedRecordTextEditsWithAtSymbols(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedRecordTextEditsWithAtSymbols(textEdits.value, nextStr);
         });
 
         it(`Rename one referred generalized identifier within a statement with constant at symbol`, async () => {
@@ -394,19 +354,14 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
             const nextStr: string = "Implicit4";
 
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
-
-            const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
-                TestConstants.DefaultInspectionSettings,
-                text,
-                position,
+            const textEdits: Result<TextEdit[] | undefined, CommonError.CommonError> = await getRenameEdits(
+                rawText,
+                nextStr,
             );
 
-            const partialAnalysis: PartialAnalysis = new RenameEditsAnalysis(currentInspectDeferred);
-
-            const textEdits: TextEdit[] = await partialAnalysis.getRenameEdits(nextStr);
-
-            assertExpectedRecordTextEditsWithAtSymbols(textEdits, nextStr);
+            Assert.isOk(textEdits);
+            Assert.isDefined(textEdits.value);
+            assertExpectedRecordTextEditsWithAtSymbols(textEdits.value, nextStr);
         });
     });
 
@@ -414,25 +369,25 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
         describe("findDirectUpperScopeExpression", () => {
             (
                 [
-                    ["SectionMember", `section foo; x| = 1; y = 2; z = let a = x in a;`, NodeKind.SectionMember],
+                    ["SectionMember", `section foo; x| = 1; y = 2; z = let a = x in a;`, Ast.NodeKind.SectionMember],
                     [
                         "RecordLiteral",
                         `section foo; [u| = "v" ]shared x = 1; y = 2; z = let a = x in a;`,
-                        NodeKind.RecordLiteral,
+                        Ast.NodeKind.RecordLiteral,
                     ],
                     [
                         "RecordExpression",
                         `[
                             |a = "yoo"
                         ]`,
-                        NodeKind.RecordExpression,
+                        Ast.NodeKind.RecordExpression,
                     ],
-                    ["LetExpression", `let a| = x in a`, NodeKind.LetExpression],
-                    ["FunctionExpression", `(a|) => let x  = a in x`, NodeKind.FunctionExpression],
-                    ["EachExpression", `each x|;`, NodeKind.EachExpression],
+                    ["LetExpression", `let a| = x in a`, Ast.NodeKind.LetExpression],
+                    ["FunctionExpression", `(a|) => let x  = a in x`, Ast.NodeKind.FunctionExpression],
+                    ["EachExpression", `each x|;`, Ast.NodeKind.EachExpression],
                     ["undefined", `x| + 1`, undefined],
-                ] as Array<[string, string, NodeKind | undefined]>
-            ).forEach(([nodeKindString, rawTextString, nodeKind]: [string, string, NodeKind | undefined]) => {
+                ] as Array<[string, string, Ast.NodeKind | undefined]>
+            ).forEach(([nodeKindString, rawTextString, nodeKind]: [string, string, Ast.NodeKind | undefined]) => {
                 it(`Find ${nodeKindString}`, async () => {
                     const rawText: string = rawTextString.replace(/(\r\n|\n)/g, " ");
 

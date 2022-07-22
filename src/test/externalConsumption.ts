@@ -17,14 +17,15 @@ import {
     SymbolKind,
     TextDocument,
 } from "../powerquery-language-services";
+import { NoOpCancellationToken } from "./testConstants";
 import { TestConstants } from ".";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
-            createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
+            createCancellationTokenFn: () => new NoOpCancellationToken(),
+            inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
-            library: TestConstants.SimpleLibrary,
             traceManager: NoOpTraceManagerInstance,
             maybeInitialCorrelationId: undefined,
         };
