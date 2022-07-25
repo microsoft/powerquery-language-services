@@ -477,7 +477,7 @@ export abstract class AnalysisBase implements Analysis {
 
     // protected abstract getText(range?: Range): string;
 
-    private static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
+    protected static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
         if (ancestry.length <= 1) {
@@ -739,7 +739,7 @@ export abstract class AnalysisBase implements Analysis {
         return result;
     }
 
-    private cancelPreviousTokenIfExists(id: string): void {
+    protected cancelPreviousTokenIfExists(id: string): void {
         const maybePreviousToken: ICancellationToken | undefined = this.cancellableTokensByAction.get(id);
 
         if (maybePreviousToken !== undefined) {
@@ -847,7 +847,7 @@ export abstract class AnalysisBase implements Analysis {
         return [];
     }
 
-    private async initializeState(): Promise<void> {
+    protected async initializeState(): Promise<void> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
             this.initializeState.name,
@@ -879,7 +879,7 @@ export abstract class AnalysisBase implements Analysis {
     }
 
     // We should only get an undefined for activeNode iff no parsing has occurred
-    private async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
+    protected async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
         if (maybeParseState === undefined) {
@@ -889,7 +889,7 @@ export abstract class AnalysisBase implements Analysis {
         return ActiveNodeUtils.maybeActiveNode(maybeParseState.contextState.nodeIdMapCollection, position);
     }
 
-    private async inspectAutocomplete(
+    protected async inspectAutocomplete(
         activeNode: TMaybeActiveNode,
         cancellationToken: ICancellationToken,
         correlationId: number,
@@ -913,7 +913,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private async inspectCurrentInvokeExpression(
+    protected async inspectCurrentInvokeExpression(
         position: Position,
         correlationId: number,
         cancellationToken: ICancellationToken,
@@ -937,7 +937,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private async inspectNodeScope(
+    protected async inspectNodeScope(
         activeNode: TMaybeActiveNode,
         cancellationToken: ICancellationToken,
         correlationId: number,
@@ -960,7 +960,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private async inspectScopeType(
+    protected async inspectScopeType(
         activeNode: TMaybeActiveNode,
         cancellationToken: ICancellationToken,
         correlationId: number,
@@ -983,7 +983,7 @@ export abstract class AnalysisBase implements Analysis {
         );
     }
 
-    private async getParseState(): Promise<ParseState | undefined> {
+    protected async getParseState(): Promise<ParseState | undefined> {
         if (this.triedLexParse === undefined) {
             await this.initializeState();
         }
@@ -991,7 +991,7 @@ export abstract class AnalysisBase implements Analysis {
         return this.parseState;
     }
 
-    private async getParseError(): Promise<ParseError.ParseError | undefined> {
+    protected async getParseError(): Promise<ParseError.ParseError | undefined> {
         if (this.triedLexParse === undefined) {
             await this.initializeState();
         }
