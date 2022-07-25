@@ -26,28 +26,33 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
         KeywordKind.HashTime,
     ];
 
-    public getAutocompleteItems(
+    constructor(protected readonly locale: string) {}
+
+    public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LanguageCompletionProvider,
-            this.getAutocompleteItems.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return await ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LanguageCompletionProvider,
+                this.getAutocompleteItems.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        const autocomplete: Inspection.Autocomplete = context.autocomplete;
+            const autocomplete: Inspection.Autocomplete = context.autocomplete;
 
-        const autocompleteItems: Inspection.AutocompleteItem[] = [
-            ...this.getKeywords(autocomplete.triedKeyword, context.maybeCancellationToken),
-            ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.maybeCancellationToken),
-            ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.maybeCancellationToken),
-        ];
+            const autocompleteItems: Inspection.AutocompleteItem[] = [
+                ...this.getKeywords(autocomplete.triedKeyword, context.maybeCancellationToken),
+                ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.maybeCancellationToken),
+                ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.maybeCancellationToken),
+            ];
 
-        trace.exit();
+            trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk(autocompleteItems));
+            return autocompleteItems;
+        }, this.locale);
     }
 
     private getKeywords(

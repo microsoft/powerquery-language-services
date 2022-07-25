@@ -54,23 +54,31 @@ export abstract class AnalysisBase implements Analysis {
 
     constructor(protected textDocument: TextDocument, protected analysisSettings: AnalysisSettings) {
         this.languageAutocompleteItemProvider = analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn
-            ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn()
-            : new LanguageAutocompleteItemProvider();
+            ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn(analysisSettings.inspectionSettings.locale)
+            : new LanguageAutocompleteItemProvider(analysisSettings.inspectionSettings.locale);
 
         this.libraryProvider = analysisSettings.maybeCreateLibraryProviderFn
-            ? analysisSettings.maybeCreateLibraryProviderFn(analysisSettings.inspectionSettings.library)
-            : new LibraryProvider(analysisSettings.inspectionSettings.library);
+            ? analysisSettings.maybeCreateLibraryProviderFn(
+                  analysisSettings.inspectionSettings.library,
+                  analysisSettings.inspectionSettings.locale,
+              )
+            : new LibraryProvider(
+                  analysisSettings.inspectionSettings.library,
+                  analysisSettings.inspectionSettings.locale,
+              );
 
         this.localDocumentProvider = analysisSettings.maybeCreateLocalDocumentProviderFn
             ? analysisSettings.maybeCreateLocalDocumentProviderFn(
                   textDocument.uri.toString(),
                   this.typeCache,
                   analysisSettings.inspectionSettings.library,
+                  analysisSettings.inspectionSettings.locale,
               )
             : new LocalDocumentProvider(
                   this.textDocument.uri.toString(),
                   this.typeCache,
                   analysisSettings.inspectionSettings.library,
+                  analysisSettings.inspectionSettings.locale,
               );
 
         void this.initializeState();

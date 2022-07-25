@@ -22,130 +22,140 @@ export class LibraryProvider implements ILibraryProvider {
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
 
-    constructor(library: Library.ILibrary) {
+    constructor(library: Library.ILibrary, protected readonly locale: string) {
         this.externalTypeResolver = library.externalTypeResolver;
         this.libraryDefinitions = library.libraryDefinitions;
         this.signatureInformationByLabel = new Map();
     }
 
-    // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LibrarySymbolProvider,
-            this.getAutocompleteItems.name,
-            context.maybeInitialCorrelationId,
-        );
-
-        context.maybeCancellationToken?.throwIfCancelled();
-
-        if (!context.text || !context.range) {
-            trace.exit({ invalidContext: true });
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const autocompleteItems: Inspection.AutocompleteItem[] = [];
-        const maybeContextText: string | undefined = context.text;
-
-        for (const [label, definition] of this.libraryDefinitions.entries()) {
-            autocompleteItems.push(
-                AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText),
+        // eslint-disable-next-line require-await
+        return await ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LibrarySymbolProvider,
+                this.getAutocompleteItems.name,
+                context.maybeInitialCorrelationId,
             );
-        }
 
-        trace.exit();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        return ResultUtils.boxOk(autocompleteItems);
+            if (!context.text || !context.range) {
+                trace.exit({ invalidContext: true });
+
+                return undefined;
+            }
+
+            const autocompleteItems: Inspection.AutocompleteItem[] = [];
+            const maybeContextText: string | undefined = context.text;
+
+            for (const [label, definition] of this.libraryDefinitions.entries()) {
+                autocompleteItems.push(
+                    AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText),
+                );
+            }
+
+            trace.exit();
+
+            return autocompleteItems;
+        }, this.locale);
     }
 
-    // eslint-disable-next-line require-await
     public async getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LibrarySymbolProvider,
-            this.getHover.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return await ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LibrarySymbolProvider,
+                this.getHover.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        if (!context.identifier) {
-            trace.exit({ invalidContext: true });
+            if (!context.identifier) {
+                trace.exit({ invalidContext: true });
 
-            return ResultUtils.boxOk(undefined);
-        }
+                return undefined;
+            }
 
-        const identifierLiteral: string = context.identifier.literal;
-        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+            const identifierLiteral: string = context.identifier.literal;
 
-        if (maybeDefinition === undefined) {
-            trace.exit({ invalidContext: true });
+            const maybeDefinition: Library.TLibraryDefinition | undefined =
+                this.libraryDefinitions.get(identifierLiteral);
 
-            return ResultUtils.boxOk(undefined);
-        }
+            if (maybeDefinition === undefined) {
+                trace.exit({ invalidContext: true });
 
-        const definition: Library.TLibraryDefinition = maybeDefinition;
-        const definitionText: string = LibraryProvider.getDefinitionKindText(definition.kind);
+                return undefined;
+            }
 
-        const definitionTypeText: string = TypeUtils.nameOf(
-            definition.asPowerQueryType,
-            context.traceManager,
-            trace.id,
-        );
+            const definition: Library.TLibraryDefinition = maybeDefinition;
+            const definitionText: string = LibraryProvider.getDefinitionKindText(definition.kind);
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            const definitionTypeText: string = TypeUtils.nameOf(
+                definition.asPowerQueryType,
+                context.traceManager,
+                trace.id,
+            );
 
-        const hover: Hover = {
-            contents: {
-                kind: MarkupKind.PlainText,
-                language: "powerquery",
-                value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
-            },
-            range: undefined,
-        };
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        trace.exit();
+            const hover: Hover = {
+                contents: {
+                    kind: MarkupKind.PlainText,
+                    language: "powerquery",
+                    value: `[${definitionText}] ${identifierLiteral}: ${definitionTypeText}`,
+                },
+                range: undefined,
+            };
 
-        return ResultUtils.boxOk(hover);
+            trace.exit();
+
+            return hover;
+        }, this.locale);
     }
 
-    // eslint-disable-next-line require-await
     public async getSignatureHelp(
         context: SignatureProviderContext,
     ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LibrarySymbolProvider,
-            this.getSignatureHelp.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return await ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LibrarySymbolProvider,
+                this.getSignatureHelp.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        if (!context.functionName) {
-            trace.exit({ invalidContext: true });
+            if (!context.functionName) {
+                trace.exit({ invalidContext: true });
 
-            return ResultUtils.boxOk(undefined);
-        }
+                return undefined;
+            }
 
-        const identifierLiteral: string = context.functionName;
-        const maybeDefinition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+            const identifierLiteral: string = context.functionName;
 
-        if (!LibraryUtils.isFunction(maybeDefinition)) {
-            trace.exit({ invalidContext: true });
+            const maybeDefinition: Library.TLibraryDefinition | undefined =
+                this.libraryDefinitions.get(identifierLiteral);
 
-            return ResultUtils.boxOk(undefined);
-        }
+            if (!LibraryUtils.isFunction(maybeDefinition)) {
+                trace.exit({ invalidContext: true });
 
-        const result: SignatureHelp = {
-            activeParameter: context.argumentOrdinal ?? 0,
-            activeSignature: 0,
-            signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
-        };
+                return undefined;
+            }
 
-        trace.exit();
+            const result: SignatureHelp = {
+                activeParameter: context.argumentOrdinal ?? 0,
+                activeSignature: 0,
+                signatures: [this.getOrCreateSignatureInformation(identifierLiteral)],
+            };
 
-        return ResultUtils.boxOk(result);
+            trace.exit();
+
+            return result;
+        }, this.locale);
     }
 
     private static getDefinitionKindText(kind: Library.LibraryDefinitionKind): string {

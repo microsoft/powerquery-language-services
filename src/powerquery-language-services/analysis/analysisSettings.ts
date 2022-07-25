@@ -11,12 +11,13 @@ import { TypeCache } from "../inspection";
 
 export interface AnalysisSettings {
     readonly createCancellationTokenFn: (action: string) => ICancellationToken;
-    readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => IAutocompleteItemProvider;
-    readonly maybeCreateLibraryProviderFn?: (library: ILibrary) => ILibraryProvider;
+    readonly maybeCreateLanguageAutocompleteItemProviderFn?: (locale: string) => IAutocompleteItemProvider;
+    readonly maybeCreateLibraryProviderFn?: (library: ILibrary, locale: string) => ILibraryProvider;
     readonly maybeCreateLocalDocumentProviderFn?: (
         uri: string,
         typeCache: TypeCache,
         library: ILibrary,
+        locale: string,
     ) => ILocalDocumentProvider;
     readonly inspectionSettings: InspectionSettings;
     readonly isWorkspaceCacheAllowed: boolean;

@@ -15,8 +15,8 @@ import {
 import { ILibrary } from "../../powerquery-language-services/library/library";
 
 export class SlowLibraryProvider extends LibraryProvider {
-    constructor(library: ILibrary, private readonly delayInMs: number) {
-        super(library);
+    constructor(library: ILibrary, locale: string, private readonly delayInMs: number) {
+        super(library, locale);
     }
 
     public override async getAutocompleteItems(

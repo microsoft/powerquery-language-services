@@ -21,8 +21,14 @@ import { ILibrary } from "../../powerquery-language-services/library/library";
 import { TypeCache } from "../../powerquery-language-services/inspection";
 
 export class SlowLocalDocumentProvider extends LocalDocumentProvider {
-    constructor(uri: string, typeCache: TypeCache, library: ILibrary, private readonly delayInMs: number) {
-        super(uri, typeCache, library);
+    constructor(
+        uri: string,
+        typeCache: TypeCache,
+        library: ILibrary,
+        locale: string,
+        private readonly delayInMs: number,
+    ) {
+        super(uri, typeCache, library, locale);
     }
 
     public override async getAutocompleteItems(

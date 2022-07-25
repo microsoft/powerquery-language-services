@@ -35,218 +35,236 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         private readonly uri: DocumentUri,
         private readonly typeCache: Inspection.TypeCache,
         private readonly library: ILibrary,
+        protected readonly locale: string,
     ) {}
 
     public getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getAutocompleteItems.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getAutocompleteItems.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        const autocompleteItems: Inspection.AutocompleteItem[] = [
-            ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
-        ].concat(InspectionUtils.getAutocompleteItemsFromScope(context));
+            const autocompleteItems: Inspection.AutocompleteItem[] = [
+                ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
+            ].concat(InspectionUtils.getAutocompleteItemsFromScope(context));
 
-        trace.exit();
+            trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk(autocompleteItems));
+            return autocompleteItems;
+        }, this.locale);
     }
 
     public getDefinition(
         context: DefinitionProviderContext,
     ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getDefinition.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getDefinition.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        if (
-            context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
-            context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
-        ) {
-            return Promise.resolve(ResultUtils.boxOk(undefined));
-        }
+            if (
+                context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+                context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
+            ) {
+                return undefined;
+            }
 
-        const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+            const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
 
-        if (ResultUtils.isError(triedNodeScope)) {
-            return Promise.resolve(ResultUtils.boxOk(undefined));
-        }
+            if (ResultUtils.isError(triedNodeScope)) {
+                return undefined;
+            }
 
-        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
+            const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(
+                context.identifier.literal,
+            );
 
-        if (maybeScopeItem === undefined) {
-            return Promise.resolve(ResultUtils.boxOk(undefined));
-        }
+            if (maybeScopeItem === undefined) {
+                return undefined;
+            }
 
-        const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
-            ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
+            const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
+                ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
 
-        if (creator === undefined) {
-            return Promise.resolve(ResultUtils.boxOk(undefined));
-        }
+            if (creator === undefined) {
+                return undefined;
+            }
 
-        const location: Location = {
-            range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
-            uri: this.uri,
-        };
+            const location: Location = {
+                range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
+                uri: this.uri,
+            };
 
-        trace.exit();
+            trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk([location]));
+            return [location];
+        }, this.locale);
     }
 
     public getFoldingRanges(
         context: FoldingRangeProviderContext,
     ): Promise<Result<FoldingRange[], CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getFoldingRanges.name,
-            context.maybeInitialCorrelationId,
-        );
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getFoldingRanges.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        const foldingRanges: FoldingRange[] = createFoldingRanges(
-            context.nodeIdMapCollection,
-            context.traceManager,
-            trace.id,
-        );
+            const foldingRanges: FoldingRange[] = createFoldingRanges(
+                context.nodeIdMapCollection,
+                context.traceManager,
+                trace.id,
+            );
 
-        trace.exit();
+            trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk(foldingRanges));
+            return foldingRanges;
+        }, this.locale);
     }
 
-    public async getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getHover.name,
-            context.maybeInitialCorrelationId,
-        );
+    public getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getHover.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
+            let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
 
-        if (maybeHover !== undefined) {
-            trace.exit({ maybeHover: true });
+            if (maybeHover !== undefined) {
+                trace.exit({ maybeHover: true });
 
-            return ResultUtils.boxOk(maybeHover);
-        }
+                return maybeHover;
+            }
 
-        const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
-        const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
+            const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+            const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
 
-        if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
-            trace.exit({ inspectionError: true });
+            if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
+                trace.exit({ inspectionError: true });
 
-            return ResultUtils.boxOk(undefined);
-        }
+                return undefined;
+            }
 
-        maybeHover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
+            maybeHover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
 
-        trace.exit();
+            trace.exit();
 
-        return ResultUtils.boxOk(maybeHover ?? undefined);
+            return maybeHover ?? undefined;
+        }, this.locale);
     }
 
     // eslint-disable-next-line require-await
     public async getPartialSemanticTokens(
         context: SemanticTokenProviderContext,
     ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getPartialSemanticTokens.name,
-            context.maybeInitialCorrelationId,
-        );
+        return ResultUtils.ensureResult(() => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getPartialSemanticTokens.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
+            const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
 
-        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
-            nodeIdMapCollection,
-            this.library.libraryDefinitions,
-            context.traceManager,
-            trace.id,
-        );
+            const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
+                nodeIdMapCollection,
+                this.library.libraryDefinitions,
+                context.traceManager,
+                trace.id,
+            );
 
-        trace.exit();
+            trace.exit();
 
-        return ResultUtils.boxOk(tokens);
+            return tokens;
+        }, this.locale);
     }
 
     // eslint-disable-next-line require-await
     public async getSignatureHelp(
         context: SignatureProviderContext,
     ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getSignatureHelp.name,
-            context.maybeInitialCorrelationId,
-        );
+        return ResultUtils.ensureResult(() => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getSignatureHelp.name,
+                context.maybeInitialCorrelationId,
+            );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+            context.maybeCancellationToken?.throwIfCancelled();
 
-        const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
-            context.triedCurrentInvokeExpression,
-        )
-            ? context.triedCurrentInvokeExpression.value
-            : undefined;
-
-        if (maybeInvokeInspection === undefined) {
-            trace.exit({ maybeInvokeInspectionUndefined: true });
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        if (maybeInvokeInspection.maybeName && !maybeInvokeInspection.isNameInLocalScope) {
-            trace.exit({ unknownName: true });
-
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const identifierLiteral: string | undefined = context.functionName;
-
-        if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
-            return ResultUtils.boxOk(undefined);
-        }
-
-        const nameOfParameters: string = context.functionType.parameters
-            .map((parameter: Type.FunctionParameter) =>
-                TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, trace.id),
+            const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
+                context.triedCurrentInvokeExpression,
             )
-            .join(", ");
+                ? context.triedCurrentInvokeExpression.value
+                : undefined;
 
-        const label: string = `${identifierLiteral}(${nameOfParameters})`;
+            if (maybeInvokeInspection === undefined) {
+                trace.exit({ maybeInvokeInspectionUndefined: true });
 
-        const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+                return undefined;
+            }
 
-        const result: SignatureHelp = {
-            activeParameter: context.argumentOrdinal,
-            activeSignature: 0,
-            signatures: [
-                {
-                    label,
-                    parameters: parameters.map((parameter: Type.FunctionParameter) => ({
-                        label: parameter.nameLiteral,
-                    })),
-                },
-            ],
-        };
+            if (maybeInvokeInspection.maybeName && !maybeInvokeInspection.isNameInLocalScope) {
+                trace.exit({ unknownName: true });
 
-        trace.exit();
+                return undefined;
+            }
 
-        return ResultUtils.boxOk(result);
+            const identifierLiteral: string | undefined = context.functionName;
+
+            if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
+                return undefined;
+            }
+
+            const nameOfParameters: string = context.functionType.parameters
+                .map((parameter: Type.FunctionParameter) =>
+                    TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, trace.id),
+                )
+                .join(", ");
+
+            const label: string = `${identifierLiteral}(${nameOfParameters})`;
+
+            const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+
+            const result: SignatureHelp = {
+                activeParameter: context.argumentOrdinal,
+                activeSignature: 0,
+                signatures: [
+                    {
+                        label,
+                        parameters: parameters.map((parameter: Type.FunctionParameter) => ({
+                            label: parameter.nameLiteral,
+                        })),
+                    },
+                ],
+            };
+
+            trace.exit();
+
+            return result;
+        }, this.locale);
     }
 
     // When hovering over a key it should show the type for the value.

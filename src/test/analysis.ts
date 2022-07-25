@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, DefaultLocale, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
@@ -86,7 +86,8 @@ describe("Analysis", () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
                 createCancellationTokenFn: () => new TimedCancellationToken(0),
-                maybeCreateLibraryProviderFn: (library: Library.ILibrary) => new SlowLibraryProvider(library, 100),
+                maybeCreateLibraryProviderFn: (library: Library.ILibrary) =>
+                    new SlowLibraryProvider(library, DefaultLocale, 100),
             };
 
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
@@ -107,7 +108,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
     switch (provider) {
         case "library":
             maybeCreateLibraryProviderFn = (library: Library.ILibrary): ILibraryProvider =>
-                new SlowLibraryProvider(library, 1000);
+                new SlowLibraryProvider(library, DefaultLocale, 1000);
 
             maybeCreateLocalDocumentProviderFn =
                 TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
@@ -121,7 +122,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
                 uri: string,
                 typeCache: TypeCache,
                 library: ILibrary,
-            ): ILocalDocumentProvider => new SlowLocalDocumentProvider(uri, typeCache, library, 1000);
+            ): ILocalDocumentProvider => new SlowLocalDocumentProvider(uri, typeCache, library, DefaultLocale, 1000);
 
             break;
 
