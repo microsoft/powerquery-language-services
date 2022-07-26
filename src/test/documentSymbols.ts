@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { assert, expect } from "chai";
 import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 
 import { Analysis, AnalysisUtils, DocumentSymbol, SymbolKind, TextDocument } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
@@ -23,11 +23,15 @@ async function expectSymbolsForDocument(
     Assert.isOk(actualSymbols);
     Assert.isDefined(actualSymbols.value);
 
-    assert.isDefined(actualSymbols);
+    const abridgedActualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
+        actualSymbols.value,
+    );
 
-    expect(actualSymbols).deep.equals(
+    expect(abridgedActualSymbols).deep.equals(
         expectedSymbols,
-        `Expected document symbols to match.\n${JSON.stringify(actualSymbols)}`,
+        `Expected document symbols to match.\nExpected:${JSON.stringify(expectedSymbols)}\nActual:${JSON.stringify(
+            abridgedActualSymbols,
+        )}`,
     );
 }
 

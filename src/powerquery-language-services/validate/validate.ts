@@ -1,27 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Diagnostic } from "vscode-languageserver-types";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { TypeCache, TypeCacheUtils } from "../inspection";
+import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
+import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
 import { validateInvokeExpression } from "./validateInvokeExpression";
-import { validateLexAndParse } from "./validateLexAndParse";
+import { validateParse } from "./validateParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
 import type { ValidationResult } from "./validationResult";
 import type { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
-import { WorkspaceCacheUtils } from "../workspaceCache";
 
 export async function validate(
     textDocument: TextDocument,
+    analysisSettings: AnalysisSettings,
     validationSettings: ValidationSettings,
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
 ): Promise<ValidationResult> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -34,13 +33,11 @@ export async function validate(
         maybeInitialCorrelationId: trace.id,
     };
 
-    const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
-        textDocument,
-        updatedSettings,
-        updatedSettings.isWorkspaceCacheAllowed,
-    );
+    const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
+    const maybeParseState: ParseState | undefined = await analysis.getParseState();
+    const maybeParseError: ParseError.ParseError | undefined = await analysis.getParseError();
 
-    if (maybeTriedParse === undefined) {
+    if (maybeParseState === undefined) {
         trace.exit();
 
         return {
@@ -53,28 +50,26 @@ export async function validate(
     let invokeExpressionDiagnostics: Diagnostic[];
     let unknownIdentifiersDiagnostics: Diagnostic[];
 
-    const maybeNodeIdMapCollection: NodeIdMap.Collection | undefined =
-        PQP.TaskUtils.isParseStageOk(maybeTriedParse) || PQP.TaskUtils.isParseStageParseError(maybeTriedParse)
-            ? maybeTriedParse.nodeIdMapCollection
-            : undefined;
+    const nodeIdMapCollection: NodeIdMap.Collection = maybeParseState.contextState.nodeIdMapCollection;
+    const typeCache: TypeCache = analysis.getTypeCache();
 
-    if (validationSettings.checkInvokeExpressions && maybeNodeIdMapCollection) {
-        functionExpressionDiagnostics = validateFunctionExpression(validationSettings, maybeNodeIdMapCollection);
+    if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
+        functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
 
         invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
-            maybeNodeIdMapCollection,
-            WorkspaceCacheUtils.getTypeCache(textDocument, validationSettings.isWorkspaceCacheAllowed),
+            nodeIdMapCollection,
+            typeCache,
         );
     } else {
         functionExpressionDiagnostics = [];
         invokeExpressionDiagnostics = [];
     }
 
-    if (validationSettings.checkUnknownIdentifiers && maybeNodeIdMapCollection) {
+    if (validationSettings.checkUnknownIdentifiers && nodeIdMapCollection) {
         unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
             validationSettings,
-            maybeNodeIdMapCollection,
+            nodeIdMapCollection,
             typeCache,
         );
     } else {
@@ -83,14 +78,13 @@ export async function validate(
 
     const result: ValidationResult = {
         diagnostics: [
-            ...(await validateDuplicateIdentifiers(textDocument, updatedSettings)),
-            ...(await validateLexAndParse(textDocument, updatedSettings)),
+            ...validateDuplicateIdentifiers(textDocument, nodeIdMapCollection, updatedSettings),
+            ...(await validateParse(maybeParseError, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,
             ...unknownIdentifiersDiagnostics,
         ],
-        hasSyntaxError:
-            PQP.TaskUtils.isLexStageError(maybeTriedParse) || PQP.TaskUtils.isParseStageError(maybeTriedParse),
+        hasSyntaxError: Boolean(await analysis.getParseError()),
     };
 
     trace.exit();

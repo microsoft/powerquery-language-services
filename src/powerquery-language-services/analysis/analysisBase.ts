@@ -292,6 +292,22 @@ export abstract class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
+    public async getParseError(): Promise<ParseError.ParseError | undefined> {
+        if (this.triedLexParse === undefined) {
+            await this.initializeState();
+        }
+
+        return this.parseError;
+    }
+
+    public async getParseState(): Promise<ParseState | undefined> {
+        if (this.triedLexParse === undefined) {
+            await this.initializeState();
+        }
+
+        return this.parseState;
+    }
+
     public getPartialSemanticTokens(): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -774,6 +790,10 @@ export abstract class AnalysisBase implements Analysis {
         return result;
     }
 
+    public getTypeCache(): TypeCache {
+        return this.typeCache;
+    }
+
     protected cancelPreviousTokenIfExists(id: string): void {
         const maybePreviousToken: ICancellationToken | undefined = this.cancellableTokensByAction.get(id);
 
@@ -782,7 +802,7 @@ export abstract class AnalysisBase implements Analysis {
         }
     }
 
-    public async collectAllIdentifiersBeneath(
+    protected async collectAllIdentifiersBeneath(
         nodeIdMapCollection: NodeIdMap.Collection,
         valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
     ): Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>> {
@@ -1016,22 +1036,6 @@ export abstract class AnalysisBase implements Analysis {
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             this.typeCache,
         );
-    }
-
-    protected async getParseState(): Promise<ParseState | undefined> {
-        if (this.triedLexParse === undefined) {
-            await this.initializeState();
-        }
-
-        return this.parseState;
-    }
-
-    protected async getParseError(): Promise<ParseError.ParseError | undefined> {
-        if (this.triedLexParse === undefined) {
-            await this.initializeState();
-        }
-
-        return this.parseError;
     }
 }
 

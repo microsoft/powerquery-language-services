@@ -29,7 +29,12 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 }
 
 async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidationResult = await validate(textDocument, DuplicateIdentifierSettings);
+    const validationResult: ValidationResult = await validate(
+        textDocument,
+        TestConstants.SimpleLibraryAnalysisSettings,
+        DuplicateIdentifierSettings,
+    );
+
     expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
     expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
 }
@@ -49,7 +54,12 @@ async function validateDuplicateIdentifierDiagnostics(
     textDocument: MockDocument,
     expected: ReadonlyArray<DuplicateIdentifierError>,
 ): Promise<void> {
-    const validationResult: ValidationResult = await validate(textDocument, DuplicateIdentifierSettings);
+    const validationResult: ValidationResult = await validate(
+        textDocument,
+        TestConstants.SimpleLibraryAnalysisSettings,
+        DuplicateIdentifierSettings,
+    );
+
     const errorSource: string = DuplicateIdentifierSettings.source;
     const diagnostics: ReadonlyArray<Diagnostic> = validationResult.diagnostics;
 
@@ -90,6 +100,7 @@ describe(`Validation - duplicateIdentifier`, () => {
 
             const validationResult: ValidationResult = await validate(
                 TestUtils.createTextMockDocument(`let 1`),
+                TestConstants.SimpleLibraryAnalysisSettings,
                 DuplicateIdentifierSettings,
             );
 
@@ -113,8 +124,9 @@ describe(`Validation - duplicateIdentifier`, () => {
             const text: string = "let a = 1,";
             const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
 
-            const diagnostics: ReadonlyArray<Diagnostic> = (await validate(textDocument, DuplicateIdentifierSettings))
-                .diagnostics;
+            const diagnostics: ReadonlyArray<Diagnostic> = (
+                await validate(textDocument, TestConstants.SimpleLibraryAnalysisSettings, DuplicateIdentifierSettings)
+            ).diagnostics;
 
             expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
 
@@ -132,8 +144,9 @@ describe(`Validation - duplicateIdentifier`, () => {
             const changes: ReadonlyArray<TextDocumentContentChangeEvent> = textDocument.update(";;;;;;");
             documentUpdated(textDocument, changes, textDocument.version);
 
-            const diagnostics: ReadonlyArray<Diagnostic> = (await validate(textDocument, DuplicateIdentifierSettings))
-                .diagnostics;
+            const diagnostics: ReadonlyArray<Diagnostic> = (
+                await validate(textDocument, TestConstants.SimpleLibraryAnalysisSettings, DuplicateIdentifierSettings)
+            ).diagnostics;
 
             expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
         });

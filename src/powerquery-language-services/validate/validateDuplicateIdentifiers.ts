@@ -18,12 +18,12 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
-import { WorkspaceCacheUtils } from "../workspaceCache";
 
-export async function validateDuplicateIdentifiers(
+export function validateDuplicateIdentifiers(
     textDocument: TextDocument,
+    nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
-): Promise<ReadonlyArray<Diagnostic>> {
+): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiers.name,
@@ -41,35 +41,7 @@ export async function validateDuplicateIdentifiers(
         return [];
     }
 
-    const maybeParsePromise: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
-        textDocument,
-        updatedSettings,
-        updatedSettings.isWorkspaceCacheAllowed,
-    );
-
-    if (maybeParsePromise === undefined) {
-        trace.exit();
-
-        return [];
-    }
-
-    const triedParse: PQP.Task.TriedParseTask = maybeParsePromise;
-    let maybeNodeIdMapCollection: NodeIdMap.Collection | undefined;
-
-    if (PQP.TaskUtils.isParseStageOk(triedParse)) {
-        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
-    } else if (PQP.TaskUtils.isParseStageParseError(triedParse)) {
-        maybeNodeIdMapCollection = triedParse.nodeIdMapCollection;
-    }
-
-    if (maybeNodeIdMapCollection === undefined) {
-        trace.exit();
-
-        return [];
-    }
-
     const documentUri: string = textDocument.uri;
-    const nodeIdMapCollection: NodeIdMap.Collection = maybeNodeIdMapCollection;
 
     const result: ReadonlyArray<Diagnostic> = [
         ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings, trace.id),

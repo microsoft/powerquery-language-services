@@ -10,8 +10,9 @@ import type {
     Position,
     SignatureHelp,
 } from "vscode-languageserver-types";
+import { ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { AutocompleteItem } from "../inspection";
+import { AutocompleteItem, TypeCache } from "../inspection";
 import { IDisposable } from "../commonTypes";
 import { PartialSemanticToken } from "../providers";
 import { TextEdit } from "vscode-languageserver-textdocument";
@@ -28,4 +29,8 @@ export interface Analysis extends IDisposable {
         position: Position,
         newName: string,
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>>;
+
+    getParseError(): Promise<ParseError.ParseError | undefined>;
+    getParseState(): Promise<ParseState | undefined>;
+    getTypeCache(): TypeCache;
 }

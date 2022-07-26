@@ -217,7 +217,11 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
 }
 
 export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {
-    return await validate(document, TestConstants.SimpleValidateAllSettings);
+    return await validate(
+        document,
+        TestConstants.SimpleLibraryAnalysisSettings,
+        TestConstants.SimpleValidateAllSettings,
+    );
 }
 
 export function assertEqualHover(expected: string, actual: Hover): void {

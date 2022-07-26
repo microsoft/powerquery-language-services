@@ -46,7 +46,7 @@ describe("Analysis", () => {
             TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover.value);
         });
 
-        it(`timeout library provider`, async () => {
+        it(`WIP timeout library provider`, async () => {
             await runHoverTimeoutTest("library");
         });
 
@@ -132,7 +132,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        createCancellationTokenFn: () => new TimedCancellationToken(0),
+        createCancellationTokenFn: () => new TimedCancellationToken(1),
         maybeCreateLibraryProviderFn,
         maybeCreateLocalDocumentProviderFn,
     };

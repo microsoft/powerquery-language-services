@@ -5,7 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import * as PQLS from "../../powerquery-language-services";
-import { TestUtils } from "..";
+import { TestConstants, TestUtils } from "..";
 
 export async function expectLessWhenSurpressed(
     text: string,
@@ -14,9 +14,17 @@ export async function expectLessWhenSurpressed(
 ): Promise<void> {
     const textDocument: PQLS.TextDocument = TestUtils.createTextMockDocument(text);
 
-    const withCheckResult: PQLS.ValidationResult = await PQLS.validate(textDocument, withCheckSettings);
+    const withCheckResult: PQLS.ValidationResult = await PQLS.validate(
+        textDocument,
+        TestConstants.SimpleLibraryAnalysisSettings,
+        withCheckSettings,
+    );
 
-    const withoutCheckResult: PQLS.ValidationResult = await PQLS.validate(textDocument, withoutCheckSettings);
+    const withoutCheckResult: PQLS.ValidationResult = await PQLS.validate(
+        textDocument,
+        TestConstants.SimpleLibraryAnalysisSettings,
+        withoutCheckSettings,
+    );
 
     expect(withoutCheckResult.diagnostics.length).to.be.lessThan(withCheckResult.diagnostics.length);
 }
