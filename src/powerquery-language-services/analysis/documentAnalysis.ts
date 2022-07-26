@@ -4,19 +4,12 @@
 import type { Range } from "vscode-languageserver-types";
 import type { TextDocument } from "vscode-languageserver-textdocument";
 
-import { AnalysisBase } from "./analysisBase";
 import { AnalysisSettings } from "./analysisSettings";
-import { WorkspaceCacheUtils } from "../workspaceCache";
+import { MemoizedAnalysis } from "./memoizedAnalysis";
 
-export class DocumentAnalysis extends AnalysisBase {
+export class DocumentAnalysis extends MemoizedAnalysis {
     constructor(textDocument: TextDocument, analysisSettings: AnalysisSettings) {
         super(textDocument, analysisSettings);
-    }
-
-    public dispose(): void {
-        if (!this.analysisSettings.isWorkspaceCacheAllowed) {
-            WorkspaceCacheUtils.close(this.textDocument);
-        }
     }
 
     protected getText(range?: Range): string {

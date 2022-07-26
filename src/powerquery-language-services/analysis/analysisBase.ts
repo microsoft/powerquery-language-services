@@ -365,7 +365,7 @@ export abstract class AnalysisBase implements Analysis {
                 maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
             }
 
-            void (await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id));
+            void (await this.inspectNodeScope(maybeActiveNode, trace.id, newCancellationToken));
             const scopeById: Inspection.ScopeById | undefined = this.typeCache.scopeById;
 
             const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
@@ -527,15 +527,15 @@ export abstract class AnalysisBase implements Analysis {
         }
 
         const autocomplete: Inspection.Autocomplete = Assert.asDefined(
-            await this.inspectAutocomplete(maybeActiveNode, newCancellationToken, trace.id),
+            await this.inspectAutocomplete(maybeActiveNode, trace.id, newCancellationToken),
         );
 
         const triedNodeScope: Inspection.TriedNodeScope = Assert.asDefined(
-            await this.inspectNodeScope(maybeActiveNode, newCancellationToken, trace.id),
+            await this.inspectNodeScope(maybeActiveNode, trace.id, newCancellationToken),
         );
 
         const triedScopeType: Inspection.TriedScopeType = Assert.asDefined(
-            await this.inspectScopeType(maybeActiveNode, newCancellationToken, trace.id),
+            await this.inspectScopeType(maybeActiveNode, trace.id, newCancellationToken),
         );
 
         const maybeActiveLeafIdentifier: TActiveLeafIdentifier | undefined = ActiveNodeUtils.isPositionInBounds(
@@ -613,7 +613,7 @@ export abstract class AnalysisBase implements Analysis {
             identifier,
             maybeCancellationToken: cancellationToken,
             maybeInitialCorrelationId: trace.id,
-            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, cancellationToken, trace.id)),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
         };
 
         trace.exit();
@@ -667,8 +667,8 @@ export abstract class AnalysisBase implements Analysis {
                 maybeInitialCorrelationId: correlationId,
             },
             parseState: Assert.asDefined(await this.getParseState()),
-            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, cancellationToken, trace.id)),
-            triedScopeType: Assert.asDefined(await this.inspectScopeType(maybeActiveNode, cancellationToken, trace.id)),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
+            triedScopeType: Assert.asDefined(await this.inspectScopeType(maybeActiveNode, trace.id, cancellationToken)),
         };
 
         trace.exit();
@@ -891,8 +891,8 @@ export abstract class AnalysisBase implements Analysis {
 
     protected async inspectAutocomplete(
         activeNode: TMaybeActiveNode,
-        cancellationToken: ICancellationToken,
         correlationId: number,
+        cancellationToken: ICancellationToken,
     ): Promise<Inspection.Autocomplete | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
@@ -939,8 +939,8 @@ export abstract class AnalysisBase implements Analysis {
 
     protected async inspectNodeScope(
         activeNode: TMaybeActiveNode,
-        cancellationToken: ICancellationToken,
         correlationId: number,
+        cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedNodeScope | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
@@ -962,8 +962,8 @@ export abstract class AnalysisBase implements Analysis {
 
     protected async inspectScopeType(
         activeNode: TMaybeActiveNode,
-        cancellationToken: ICancellationToken,
         correlationId: number,
+        cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedScopeType | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
