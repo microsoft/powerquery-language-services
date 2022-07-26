@@ -15,7 +15,7 @@ import {
 import { AnalysisBase } from "./analysisBase";
 
 export class MemoizedAnalysis extends AnalysisBase {
-    private readonly activeNodeCache: Map<string, TMaybeActiveNode | undefined> = new Map();
+    private readonly activeNodeCache: Map<string, Promise<TMaybeActiveNode | undefined>> = new Map();
     private readonly autocompleteCache: Map<number | undefined, Promise<Autocomplete | undefined>> = new Map();
     private readonly currentInvokeExpressionCache: Map<string, Promise<TriedCurrentInvokeExpression | undefined>> =
         new Map();
@@ -30,18 +30,12 @@ export class MemoizedAnalysis extends AnalysisBase {
         this.scopeTypeCache.clear();
     }
 
-    protected override async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
-        const cacheKey: string = `${position.line}:${position.character}`;
-        const maybeResult: TMaybeActiveNode | undefined = this.activeNodeCache.get(cacheKey);
-
-        if (maybeResult !== undefined) {
-            return Promise.resolve(maybeResult);
-        }
-
-        const result: TMaybeActiveNode | undefined = await super.getActiveNode(position);
-        this.activeNodeCache.set(cacheKey, result);
-
-        return Promise.resolve(result);
+    protected override getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
+        return this.getOrCreate<string, TMaybeActiveNode | undefined>(
+            this.activeNodeCache,
+            () => `${position.line}:${position.character}`,
+            () => super.getActiveNode(position),
+        );
     }
 
     protected override inspectAutocomplete(
