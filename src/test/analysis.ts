@@ -46,7 +46,7 @@ describe("Analysis", () => {
             TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover.value);
         });
 
-        it(`WIP timeout library provider`, async () => {
+        it(`timeout library provider`, async () => {
             await runHoverTimeoutTest("library");
         });
 
@@ -108,7 +108,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
     switch (provider) {
         case "library":
             maybeCreateLibraryProviderFn = (library: Library.ILibrary): ILibraryProvider =>
-                new SlowLibraryProvider(library, DefaultLocale, 1000);
+                new SlowLibraryProvider(library, DefaultLocale, 10);
 
             maybeCreateLocalDocumentProviderFn =
                 TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
@@ -122,7 +122,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
                 uri: string,
                 typeCache: TypeCache,
                 library: ILibrary,
-            ): ILocalDocumentProvider => new SlowLocalDocumentProvider(uri, typeCache, library, DefaultLocale, 1000);
+            ): ILocalDocumentProvider => new SlowLocalDocumentProvider(uri, typeCache, library, DefaultLocale, 10);
 
             break;
 
@@ -132,7 +132,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        createCancellationTokenFn: () => new TimedCancellationToken(1),
+        createCancellationTokenFn: () => new TimedCancellationToken(0),
         maybeCreateLibraryProviderFn,
         maybeCreateLocalDocumentProviderFn,
     };

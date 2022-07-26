@@ -278,17 +278,29 @@ export abstract class AnalysisBase implements Analysis {
                 this.libraryProvider.getHover(maybeHoverProviderContext),
             ]);
 
-            for (const triedHover of triedHovers) {
-                if (ResultUtils.isOk(triedHover) && triedHover.value) {
-                    trace.exit();
+            // Keep track if any error was thrown, prioritized by the order of the providers
+            let maybeFirstError: CommonError.CommonError | undefined;
 
-                    return triedHover.value;
+            for (const triedHover of triedHovers) {
+                if (ResultUtils.isOk(triedHover)) {
+                    if (triedHover.value !== undefined) {
+                        trace.exit();
+
+                        return triedHover.value;
+                    }
+                } else if (maybeFirstError === undefined) {
+                    maybeFirstError = triedHover.error;
                 }
             }
 
             trace.exit();
 
-            return undefined;
+            if (maybeFirstError !== undefined) {
+                // This is safe as the ensureResultAsync function catch the error.
+                throw maybeFirstError;
+            } else {
+                return undefined;
+            }
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
