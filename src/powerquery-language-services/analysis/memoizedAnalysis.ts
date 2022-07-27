@@ -14,6 +14,7 @@ import {
 } from "../inspection";
 import { AnalysisBase } from "./analysisBase";
 
+// Adds caching to AnalysisBase.
 export class MemoizedAnalysis extends AnalysisBase {
     private readonly activeNodeCache: Map<string, Promise<TMaybeActiveNode | undefined>> = new Map();
     private readonly autocompleteCache: Map<number | undefined, Promise<Autocomplete | undefined>> = new Map();
@@ -86,6 +87,8 @@ export class MemoizedAnalysis extends AnalysisBase {
         );
     }
 
+    // Assumes the first call to getOrCreate will be the one that will be cached,
+    // and any subsequent calls will return the cached value.
     private async getOrCreate<K, V>(
         cache: Map<K, Promise<V>>,
         createCacheKeyFn: () => K,

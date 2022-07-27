@@ -304,6 +304,7 @@ export abstract class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
+    // Assumes that initializeState sets parseError to some value, which may include undefined.
     public async getParseError(): Promise<ParseError.ParseError | undefined> {
         if (this.triedLexParse === undefined) {
             await this.initializeState();
@@ -312,6 +313,7 @@ export abstract class AnalysisBase implements Analysis {
         return this.parseError;
     }
 
+    // Assumes that initializeState sets parseState to some value, which may include undefined.
     public async getParseState(): Promise<ParseState | undefined> {
         if (this.triedLexParse === undefined) {
             await this.initializeState();
@@ -914,6 +916,8 @@ export abstract class AnalysisBase implements Analysis {
         return [];
     }
 
+    // Performs a lex + parse of the document, then caches the results into local variables.
+    // Any code which operates on the parse state should use this method to ensure that the parse state is initialized.
     protected async initializeState(): Promise<void> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -945,7 +949,7 @@ export abstract class AnalysisBase implements Analysis {
         trace.exit();
     }
 
-    // We should only get an undefined for activeNode iff no parsing has occurred
+    // We should only get an undefined for an activeNode iff no parsing has occurred
     protected async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
