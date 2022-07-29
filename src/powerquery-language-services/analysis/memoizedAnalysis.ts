@@ -87,7 +87,7 @@ export class MemoizedAnalysis extends AnalysisBase {
         );
     }
 
-    // Assumes the first call to getOrCreate will be the one that will be cached,
+    // Assumes the first call to getOrCreate will create the cache entry,
     // and any subsequent calls will return the cached value.
     private async getOrCreate<K, V>(
         cache: Map<K, Promise<V>>,
