@@ -34,109 +34,46 @@ function assertIsPostionInBounds(
     }
 }
 
-// TODO delete
-// const getMaybeContextForSignatureProvider: (
-//     inspected: Inspection.Inspected,
-// ) => Promise<SignatureProviderContext | undefined> = (inspected: Inspection.Inspected) =>
-//     InspectionUtils.getMaybeContextForSignatureProvider(inspected, NoOpTraceManagerInstance, undefined);
-
 // Unit testing for analysis operations related to power query parser inspection results.
 describe("InspectedInvokeExpression", () => {
-    describe("getContextForInspected", () => {
-        // TODO replace tests with currentInvokeExpression tests??
-        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(1|,`, async () => {
-        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-        //         `${TestConstants.TestLibraryName.SquareIfNumber}(1|,`,
-        //     );
+    describe("file", () => {
+        it("DirectQueryForSQL file", async () => {
+            const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
 
-        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
+            const position: Position = {
+                line: 68,
+                character: 23,
+            };
 
-        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-        //         inspected,
-        //     );
+            const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
 
-        //     assert.isDefined(maybeContext);
-        //     const context: SignatureProviderContext = maybeContext!;
+            await expectScope(inspected, [
+                "ConnectionString",
+                "Credential",
+                "CredentialConnectionString",
+                "DirectSQL",
+                "DirectSQL.Icons",
+                "DirectSQL.UI",
+                "OdbcDataSource",
+                "database",
+                "server",
+            ]);
 
-        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-        //     expect(context.argumentOrdinal).to.equal(0);
-        // });
+            const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
+            assertIsPostionInBounds(activeNode);
 
-        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,|`, async () => {
-        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-        //         `${TestConstants.TestLibraryName.SquareIfNumber}(d,|`,
-        //     );
+            TestUtils.assertIsDefined(activeNode.maybeExclusiveIdentifierUnderPosition);
 
-        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
+            expect(activeNode.maybeExclusiveIdentifierUnderPosition.node.kind).equals(
+                Ast.NodeKind.IdentifierExpression,
+                "expecting identifier",
+            );
 
-        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-        //         inspected,
-        //     );
+            const identifier: Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression =
+                activeNode.maybeExclusiveIdentifierUnderPosition.node;
 
-        //     assert.isDefined(maybeContext);
-        //     const context: SignatureProviderContext = maybeContext!;
-
-        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-        //     expect(context.argumentOrdinal).to.equal(1);
-        // });
-
-        // it(`${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`, async () => {
-        //     const [document, position]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-        //         `${TestConstants.TestLibraryName.SquareIfNumber}(d,1|`,
-        //     );
-
-        //     const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
-
-        //     const maybeContext: SignatureProviderContext | undefined = await getMaybeContextForSignatureProvider(
-        //         inspected,
-        //     );
-
-        //     assert.isDefined(maybeContext);
-        //     const context: SignatureProviderContext = maybeContext!;
-
-        //     expect(context.functionName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
-        //     expect(context.argumentOrdinal).to.equal(1);
-        // });
-
-        describe("file", () => {
-            it("DirectQueryForSQL file", async () => {
-                const document: MockDocument = TestUtils.createFileMockDocument("DirectQueryForSQL.pq");
-
-                const position: Position = {
-                    line: 68,
-                    character: 23,
-                };
-
-                const inspected: Inspection.Inspected = await TestUtils.assertGetInspection(document, position);
-
-                await expectScope(inspected, [
-                    "ConnectionString",
-                    "Credential",
-                    "CredentialConnectionString",
-                    "DirectSQL",
-                    "DirectSQL.Icons",
-                    "DirectSQL.UI",
-                    "OdbcDataSource",
-                    "database",
-                    "server",
-                ]);
-
-                const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
-                assertIsPostionInBounds(activeNode);
-
-                TestUtils.assertIsDefined(activeNode.maybeExclusiveIdentifierUnderPosition);
-
-                expect(activeNode.maybeExclusiveIdentifierUnderPosition.node.kind).equals(
-                    Ast.NodeKind.IdentifierExpression,
-                    "expecting identifier",
-                );
-
-                const identifier: Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression =
-                    activeNode.maybeExclusiveIdentifierUnderPosition.node;
-
-                expect(activeNode.maybeExclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
-                expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
-            });
+            expect(activeNode.maybeExclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
+            expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
         });
     });
 });
