@@ -23,12 +23,14 @@ export class MemoizedAnalysis extends AnalysisBase {
     private readonly nodeScopeCache: Map<number | undefined, Promise<TriedNodeScope | undefined>> = new Map();
     private readonly scopeTypeCache: Map<number | undefined, Promise<TriedScopeType | undefined>> = new Map();
 
-    public dispose(): void {
+    public override dispose(): void {
         this.activeNodeCache.clear();
         this.autocompleteCache.clear();
         this.currentInvokeExpressionCache.clear();
         this.nodeScopeCache.clear();
         this.scopeTypeCache.clear();
+
+        super.dispose();
     }
 
     protected override getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
@@ -46,7 +48,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     ): Promise<Autocomplete | undefined> {
         return this.getOrCreate(
             this.autocompleteCache,
-            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node.id : undefined),
+            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
             () => super.inspectAutocomplete(activeNode, correlationId, cancellationToken),
         );
     }
@@ -70,7 +72,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     ): Promise<TriedNodeScope | undefined> {
         return this.getOrCreate<number | undefined, TriedNodeScope | undefined>(
             this.nodeScopeCache,
-            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node.id : undefined),
+            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
             () => super.inspectNodeScope(activeNode, correlationId, cancellationToken),
         );
     }
@@ -82,7 +84,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     ): Promise<TriedScopeType | undefined> {
         return this.getOrCreate(
             this.scopeTypeCache,
-            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node.id : undefined),
+            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
             () => super.inspectScopeType(activeNode, correlationId, cancellationToken),
         );
     }

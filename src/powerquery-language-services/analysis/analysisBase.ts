@@ -52,7 +52,9 @@ import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { ValidationTraceConstant } from "../trace";
 
-export abstract class AnalysisBase implements Analysis {
+// Implementation of Analysis, subclass it as needed.
+// Does not implement `dispose`.
+export class AnalysisBase implements Analysis {
     protected languageAutocompleteItemProvider: IAutocompleteItemProvider;
     protected libraryProvider: ILibraryProvider;
     protected localDocumentProvider: ILocalDocumentProvider;
@@ -538,7 +540,16 @@ export abstract class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public abstract dispose(): void;
+    public dispose(): void {
+        this.typeCache.scopeById.clear();
+        this.typeCache.typeById.clear();
+
+        for (const token of this.cancellableTokensByAction.values()) {
+            token.cancel();
+        }
+
+        this.cancellableTokensByAction.clear();
+    }
 
     // protected abstract getText(range?: Range): string;
 
@@ -655,7 +666,7 @@ export abstract class AnalysisBase implements Analysis {
         if (maybeActiveNode === undefined || !ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
             trace.exit();
 
-            return Promise.resolve(undefined);
+            return undefined;
         }
 
         const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
@@ -702,7 +713,7 @@ export abstract class AnalysisBase implements Analysis {
         if (maybeActiveNode === undefined || !ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
             trace.exit();
 
-            return Promise.resolve(undefined);
+            return undefined;
         }
 
         const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
