@@ -10,7 +10,9 @@ import { InspectionSettings } from "../inspectionSettings";
 import { TypeCache } from "../inspection";
 
 export interface AnalysisSettings {
+    // Each Analysis action generates a cancellation token with this function.
     readonly createCancellationTokenFn: (action: string) => ICancellationToken;
+    // Allows injection of custom providers.
     readonly maybeCreateLanguageAutocompleteItemProviderFn?: (locale: string) => IAutocompleteItemProvider;
     readonly maybeCreateLibraryProviderFn?: (library: ILibrary, locale: string) => ILibraryProvider;
     readonly maybeCreateLocalDocumentProviderFn?: (

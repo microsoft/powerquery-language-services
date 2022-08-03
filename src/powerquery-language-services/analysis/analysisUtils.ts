@@ -9,6 +9,8 @@ import { DocumentAnalysis } from "./documentAnalysis";
 
 const analysisByUri: Map<string, [Analysis, number]> = new Map();
 
+// If AnalysisSettings.isWorkspaceCacheAllowed is true then the analysis will be cached by its URI.
+// A URI with an updated version will cause a new Analysis to be generated and cached.
 export function createAnalysis(document: TextDocument, analysisSettings: AnalysisSettings): Analysis {
     const cacheKey: string = document.uri.toString();
 
