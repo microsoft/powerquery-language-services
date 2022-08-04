@@ -32,7 +32,7 @@ class RenameEditsAnalysis extends AnalysisBase {
         });
     }
 
-    dispose(): void {
+    override dispose(): void {
         // noop
     }
 
