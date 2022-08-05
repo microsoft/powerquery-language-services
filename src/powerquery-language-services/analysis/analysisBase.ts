@@ -433,7 +433,7 @@ export class AnalysisBase implements Analysis {
             }
 
             void (await this.inspectNodeScope(maybeActiveNode, trace.id, newCancellationToken));
-            const scopeById: Inspection.ScopeById | undefined = this.typeCache.scopeById;
+            const scopeById: Inspection.ScopeById = this.typeCache.scopeById;
 
             const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
             let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
@@ -960,7 +960,7 @@ export class AnalysisBase implements Analysis {
         trace.exit();
     }
 
-    // We should only get an undefined for an activeNode iff no parsing has occurred
+    // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
     protected async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
         const maybeParseState: ParseState | undefined = await this.getParseState();
 
