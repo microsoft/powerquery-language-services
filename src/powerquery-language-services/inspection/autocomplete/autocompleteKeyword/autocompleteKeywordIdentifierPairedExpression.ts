@@ -27,14 +27,11 @@ export function autocompleteKeywordIdentifierPairedExpression(
         return [];
     }
 
-    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.leftMostLeaf(
-        state.nodeIdMapCollection,
-        state.child.node.id,
-    );
+    const leaf: Ast.TNode | undefined = NodeIdMapUtils.leftMostLeaf(state.nodeIdMapCollection, state.child.node.id);
 
     // `x = |`
     // `x = |1`
-    if (maybeLeaf === undefined || PositionUtils.isBeforeAst(state.activeNode.position, maybeLeaf, false)) {
+    if (leaf === undefined || PositionUtils.isBeforeAst(state.activeNode.position, leaf, false)) {
         return Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;

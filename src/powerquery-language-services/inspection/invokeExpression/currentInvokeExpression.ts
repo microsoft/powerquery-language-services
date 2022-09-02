@@ -90,18 +90,18 @@ async function inspectInvokeExpression(
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    const maybeInvokeExpression: [TXorNode, number] | undefined = AncestryUtils.findXorAndIndexOfNodeKind(
+    const findResult: [TXorNode, number] | undefined = AncestryUtils.findXorAndIndexOfNodeKind(
         ancestry,
         Ast.NodeKind.InvokeExpression,
     );
 
-    if (!maybeInvokeExpression) {
+    if (!findResult) {
         trace.exit();
 
         return undefined;
     }
 
-    const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = maybeInvokeExpression;
+    const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = findResult;
 
     const triedInvokeExpression: TriedInvokeExpression = await tryInvokeExpression(
         updatedSettings,
@@ -117,13 +117,13 @@ async function inspectInvokeExpression(
     }
 
     const invokeExpression: InvokeExpression = triedInvokeExpression.value;
-    const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.arguments;
+    const args: InvokeExpressionArguments | undefined = invokeExpression.arguments;
 
-    let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
+    let argumentOrdinal: CurrentInvokeExpressionArguments | undefined;
 
-    if (maybeArguments !== undefined) {
-        maybeWithArgumentOrdinal = {
-            ...maybeArguments,
+    if (args !== undefined) {
+        argumentOrdinal = {
+            ...args,
             argumentOrdinal: getArgumentOrdinal(
                 nodeIdMapCollection,
                 activeNode,
@@ -135,7 +135,7 @@ async function inspectInvokeExpression(
 
     const result: CurrentInvokeExpression | undefined = {
         ...invokeExpression,
-        arguments: maybeWithArgumentOrdinal,
+        arguments: argumentOrdinal,
     };
 
     trace.exit();

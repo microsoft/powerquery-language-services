@@ -33,19 +33,19 @@ export async function inspectTypeInvokeExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
 
-    const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = await maybeExternalInvokeRequest(
+    const request: ExternalType.ExternalInvocationTypeRequest | undefined = await externalInvokeRequest(
         state,
         xorNode,
         trace.id,
     );
 
-    if (maybeRequest !== undefined) {
-        const maybeType: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(maybeRequest);
+    if (request !== undefined) {
+        const type: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
 
-        if (maybeType !== undefined) {
-            trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(maybeType) });
+        if (type !== undefined) {
+            trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(type) });
 
-            return maybeType;
+            return type;
         }
     }
 
@@ -73,24 +73,24 @@ export async function inspectTypeInvokeExpression(
     return result;
 }
 
-async function maybeExternalInvokeRequest(
+async function externalInvokeRequest(
     state: InspectTypeState,
     xorNode: TXorNode,
     correlationId: number | undefined,
 ): Promise<ExternalType.ExternalInvocationTypeRequest | undefined> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
-        maybeExternalInvokeRequest.name,
+        externalInvokeRequest.name,
         correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
+    const identifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
 
-    if (maybeIdentifier === undefined) {
+    if (identifier === undefined) {
         trace.exit();
 
         return undefined;
@@ -102,7 +102,7 @@ async function maybeExternalInvokeRequest(
     };
 
     const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await tryDeferenceIdentifier(updatedSettings, state.nodeIdMapCollection, maybeIdentifier, state.scopeById);
+        await tryDeferenceIdentifier(updatedSettings, state.nodeIdMapCollection, identifier, state.scopeById);
 
     if (ResultUtils.isError(triedDeferencedIdentifier) || triedDeferencedIdentifier.value === undefined) {
         return undefined;

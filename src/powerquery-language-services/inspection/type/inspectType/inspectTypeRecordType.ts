@@ -30,21 +30,21 @@ export async function inspectTypeRecordType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeFields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
+            const fields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 0,
                 Ast.NodeKind.FieldSpecificationList,
             );
 
-            if (maybeFields === undefined) {
+            if (fields === undefined) {
                 result = Type.UnknownInstance;
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.RecordType,
                     isNullable: false,
-                    ...(await examineFieldSpecificationList(state, maybeFields, trace.id)),
+                    ...(await examineFieldSpecificationList(state, fields, trace.id)),
                 };
             }
 

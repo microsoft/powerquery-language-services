@@ -466,22 +466,22 @@ export class AnalysisBase implements Analysis {
                         );
 
                         if (scopeItem) {
-                            const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                            const valueCreatorSearch: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
                                 scopeCreatorIdentifier(scopeItem);
 
-                            if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                            if (valueCreatorSearch?.kind === Ast.NodeKind.Identifier) {
                                 if (
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                                    valueCreatorSearch.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                    valueCreatorSearch.identifierContextKind === Ast.IdentifierContextKind.Parameter
                                 ) {
-                                    valueCreator = maybeValueCreator;
+                                    valueCreator = valueCreatorSearch;
                                 } else {
-                                    identifiersToBeEdited.push(maybeValueCreator);
+                                    identifiersToBeEdited.push(valueCreatorSearch);
                                 }
-                            } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
-                                valueCreator = maybeValueCreator;
-                            } else if (maybeValueCreator) {
-                                identifiersToBeEdited.push(maybeValueCreator);
+                            } else if (valueCreatorSearch?.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                                valueCreator = valueCreatorSearch;
+                            } else if (valueCreatorSearch) {
+                                identifiersToBeEdited.push(valueCreatorSearch);
                             }
                         }
 
@@ -506,7 +506,7 @@ export class AnalysisBase implements Analysis {
                 );
             }
 
-            // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
+            // if none found, directly put inclusiveIdentifierUnderPosition in if it exists
             if (identifiersToBeEdited.length === 0 && leafIdentifier) {
                 identifiersToBeEdited.push(
                     leafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression

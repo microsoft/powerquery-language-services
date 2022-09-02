@@ -14,7 +14,7 @@ import { InspectTypeState } from "../common";
 // In the code below that target for the FieldSelector/FieldProjection is called the scope.
 //
 // In the case of EachExpression:
-//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
+//  use whatever scope was provided in InspectionTypeState.eachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
@@ -34,20 +34,19 @@ export async function inspectTypeFieldSelector(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
-    const maybeFieldName: Ast.GeneralizedIdentifier | undefined =
+    const fieldName: Ast.GeneralizedIdentifier | undefined =
         NodeIdMapUtils.unboxWrappedContentIfAstChecked<Ast.GeneralizedIdentifier>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             Ast.NodeKind.GeneralizedIdentifier,
         );
 
-    if (maybeFieldName === undefined) {
+    if (fieldName === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
 
-    const fieldName: string = maybeFieldName.literal;
     const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
@@ -58,7 +57,7 @@ export async function inspectTypeFieldSelector(
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName, isOptional);
+    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName.literal, isOptional);
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
 
     return result;
@@ -94,10 +93,10 @@ function inspectRecordOrTable(
         return Type.AnyInstance;
     }
 
-    const maybeNamedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
+    const namedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
 
-    if (maybeNamedField !== undefined) {
-        return maybeNamedField;
+    if (namedField !== undefined) {
+        return namedField;
     } else if (fieldType.isOpen) {
         return Type.AnyInstance;
     } else {
