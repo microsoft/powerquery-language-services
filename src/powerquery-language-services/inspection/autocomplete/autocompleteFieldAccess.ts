@@ -16,7 +16,7 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
@@ -27,7 +27,7 @@ import { TypeCache } from "../typeCache";
 export async function tryAutocompleteFieldAccess(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
-    maybeActiveNode: TMaybeActiveNode,
+    activeNode: TActiveNode,
     typeCache: TypeCache,
 ): Promise<TriedAutocompleteFieldAccess> {
     const trace: Trace = settings.traceManager.entry(
@@ -43,11 +43,11 @@ export async function tryAutocompleteFieldAccess(
 
     let result: TriedAutocompleteFieldAccess;
 
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
         result = await ResultUtils.ensureResultAsync(
-            () => autocompleteFieldAccess(updatedSettings, parseState, maybeActiveNode, typeCache),
+            () => autocompleteFieldAccess(updatedSettings, parseState, activeNode, typeCache),
             updatedSettings.locale,
         );
     }

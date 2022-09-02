@@ -7,14 +7,14 @@ import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parse
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
-    maybeActiveNode: TMaybeActiveNode,
+    maybeActiveNode: TActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     const trace: Trace = settings.traceManager.entry(

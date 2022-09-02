@@ -21,12 +21,12 @@ import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeInvokeExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -76,12 +76,12 @@ export async function inspectTypeInvokeExpression(
 async function maybeExternalInvokeRequest(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<ExternalType.ExternalInvocationTypeRequest | undefined> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         maybeExternalInvokeRequest.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 

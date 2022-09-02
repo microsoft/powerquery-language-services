@@ -5,7 +5,7 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import type { Position } from "vscode-languageserver-types";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-export type TMaybeActiveNode =
+export type TActiveNode =
     // A Position located inside an Ast (either fully or partially parsed).
     | ActiveNode
     // A Position located outside of an Ast (either fully or partially parsed).

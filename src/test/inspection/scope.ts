@@ -144,7 +144,7 @@ async function assertNodeScopeOk(
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
 ): Promise<Inspection.NodeScope> {
-    const maybeActiveNode: Inspection.TMaybeActiveNode = Inspection.ActiveNodeUtils.maybeActiveNode(
+    const maybeActiveNode: Inspection.TActiveNode = Inspection.ActiveNodeUtils.activeNode(
         nodeIdMapCollection,
         position,
     );

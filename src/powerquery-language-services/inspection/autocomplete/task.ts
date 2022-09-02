@@ -16,7 +16,7 @@ import {
 import { AutocompleteTraceConstant } from "../..";
 import { createTrailingToken } from "./common";
 import { InspectionSettings } from "../../inspectionSettings";
-import { TMaybeActiveNode } from "../activeNode";
+import { TActiveNode } from "../activeNode";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
@@ -28,7 +28,7 @@ export async function autocomplete(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     typeCache: TypeCache,
-    maybeActiveNode: TMaybeActiveNode,
+    maybeActiveNode: TActiveNode,
     maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Promise<Autocomplete> {
     const trace: Trace = settings.traceManager.entry(

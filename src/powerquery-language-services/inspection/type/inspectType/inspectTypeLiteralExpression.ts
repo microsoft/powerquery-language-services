@@ -12,12 +12,12 @@ import { InspectTypeState } from ".";
 export function inspectTypeLiteralExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Type.TPrimitiveType | Type.TextLiteral | Type.NumberLiteral {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeLiteralExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
