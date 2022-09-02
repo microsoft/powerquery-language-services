@@ -34,7 +34,7 @@ export function pseudoFunctionExpressionType(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.Identifier>(
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
@@ -55,14 +55,14 @@ export function pseudoFunctionExpressionType(
                 id: parameter.node.id,
                 isNullable: maybeExaminable.isNullable,
                 isOptional: maybeExaminable.isOptional,
-                maybeType: maybeExaminable.maybeType,
+                type: maybeExaminable.type,
                 name: maybeName,
             });
         }
     }
 
     const maybeReturnType: Ast.AsNullablePrimitiveType | undefined =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
+        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
             nodeIdMapCollection,
             fnExpr.node.id,
             1,
@@ -85,7 +85,7 @@ export function pseudoFunctionExpressionType(
         parameters: examinedParameters,
         returnType: {
             kind: returnType,
-            maybeExtendedKind: undefined,
+            extendedKind: undefined,
             isNullable: isReturnNullable,
         },
     };
@@ -96,7 +96,7 @@ function functionParameterXorNodes(
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
     const maybeParameterList: XorNode<Ast.TParameterList> | undefined =
-        NodeIdMapUtils.maybeNthChildChecked<Ast.TParameterList>(
+        NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
             nodeIdMapCollection,
             fnExpr.node.id,
             0,
@@ -107,7 +107,7 @@ function functionParameterXorNodes(
         return [];
     }
 
-    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.maybeUnboxWrappedContent(
+    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
         nodeIdMapCollection,
         maybeParameterList.node.id,
     );

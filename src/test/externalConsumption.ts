@@ -26,7 +26,7 @@ describe("External consumption", () => {
             inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
             traceManager: NoOpTraceManagerInstance,
-            maybeInitialCorrelationId: undefined,
+            initialCorrelationId: undefined,
         };
 
         const textDocument: TextDocument = createTextDocument("id", 1, "let a = 1 in a");

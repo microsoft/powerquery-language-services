@@ -55,13 +55,13 @@ export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction =
             isNullable: false,
             isOptional: false,
             nameLiteral: "firstArg",
-            maybeType: Type.TypeKind.Number,
+            type: Type.TypeKind.Number,
         },
         {
             isNullable: false,
             isOptional: true,
             nameLiteral: "secondArg",
-            maybeType: Type.TypeKind.Text,
+            type: Type.TypeKind.Text,
         },
     ],
     Type.NullInstance,
@@ -73,7 +73,7 @@ export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.cre
         {
             isNullable: false,
             isOptional: false,
-            maybeType: undefined,
+            type: undefined,
             nameLiteral: "x",
         },
     ],
@@ -86,7 +86,7 @@ export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.crea
         {
             isNullable: false,
             isOptional: false,
-            maybeType: Type.TypeKind.Text,
+            type: Type.TypeKind.Text,
             nameLiteral: "txt",
         },
     ],
@@ -241,7 +241,7 @@ export const SimpleInspectionSettings: InspectionSettings = {
 
 export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     isWorkspaceCacheAllowed: false,
-    maybeInitialCorrelationId: undefined,
+    initialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
     inspectionSettings: SimpleInspectionSettings,
 };

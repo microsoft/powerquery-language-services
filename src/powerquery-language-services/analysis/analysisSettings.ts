@@ -20,6 +20,6 @@ export interface AnalysisSettings {
     ) => ILocalDocumentProvider;
     readonly inspectionSettings: InspectionSettings;
     readonly isWorkspaceCacheAllowed: boolean;
-    readonly maybeInitialCorrelationId: number | undefined;
+    readonly initialCorrelationId: number | undefined;
     readonly traceManager: TraceManager;
 }

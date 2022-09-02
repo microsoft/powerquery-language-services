@@ -27,7 +27,7 @@ class RenameEditsAnalysis extends AnalysisBase {
             inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
             traceManager: NoOpTraceManagerInstance,
-            maybeInitialCorrelationId: undefined,
+            initialCorrelationId: undefined,
         });
     }
 

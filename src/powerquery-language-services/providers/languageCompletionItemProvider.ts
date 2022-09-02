@@ -36,17 +36,17 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LanguageCompletionProvider,
                 this.getAutocompleteItems.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const autocomplete: Inspection.Autocomplete = context.autocomplete;
 
             const autocompleteItems: Inspection.AutocompleteItem[] = [
-                ...this.getKeywords(autocomplete.triedKeyword, context.maybeCancellationToken),
-                ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.maybeCancellationToken),
-                ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.maybeCancellationToken),
+                ...this.getKeywords(autocomplete.triedKeyword, context.cancellationToken),
+                ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.cancellationToken),
+                ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.cancellationToken),
             ];
 
             trace.exit();
@@ -57,9 +57,9 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getKeywords(
         triedKeywordAutocomplete: Inspection.TriedAutocompleteKeyword,
-        maybeCancellationToken: ICancellationToken | undefined,
+        cancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         if (ResultUtils.isError(triedKeywordAutocomplete)) {
             return [];
@@ -73,9 +73,9 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getLanguageConstants(
         triedLanguageConstantAutocomplete: Inspection.TriedAutocompleteLanguageConstant,
-        maybeCancellationToken: ICancellationToken | undefined,
+        cancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         return ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
             ? [triedLanguageConstantAutocomplete.value]
@@ -84,9 +84,9 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
     private getPrimitiveTypes(
         triedPrimitiveTypeAutocomplete: Inspection.TriedAutocompletePrimitiveType,
-        maybeCancellationToken: ICancellationToken | undefined,
+        cancellationToken: ICancellationToken | undefined,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
-        maybeCancellationToken?.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         return ResultUtils.isOk(triedPrimitiveTypeAutocomplete) && triedPrimitiveTypeAutocomplete.value
             ? triedPrimitiveTypeAutocomplete.value

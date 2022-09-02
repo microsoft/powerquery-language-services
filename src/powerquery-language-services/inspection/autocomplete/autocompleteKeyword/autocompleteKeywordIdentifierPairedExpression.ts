@@ -10,13 +10,13 @@ import { PositionUtils } from "../../..";
 export function autocompleteKeywordIdentifierPairedExpression(
     state: InspectAutocompleteKeywordState,
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
-    const childAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
+    const childAttributeIndex: number | undefined = state.child.node.attributeIndex;
 
     // `section; s|`
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        AncestryUtils.maybeNextXorChecked<Ast.SectionMember>(
+        AncestryUtils.nextXorChecked<Ast.SectionMember>(
             state.activeNode.ancestry,
             state.ancestryIndex,
             Ast.NodeKind.SectionMember,
@@ -27,7 +27,7 @@ export function autocompleteKeywordIdentifierPairedExpression(
         return [];
     }
 
-    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(
+    const maybeLeaf: Ast.TNode | undefined = NodeIdMapUtils.leftMostLeaf(
         state.nodeIdMapCollection,
         state.child.node.id,
     );

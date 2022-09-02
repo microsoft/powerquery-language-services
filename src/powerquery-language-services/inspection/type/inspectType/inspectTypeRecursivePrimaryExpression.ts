@@ -26,10 +26,10 @@ export async function inspectTypeRecursivePrimaryExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecursivePrimaryExpression>(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
-    const maybeHead: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
+    const maybeHead: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
 
     if (maybeHead === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
@@ -45,13 +45,12 @@ export async function inspectTypeRecursivePrimaryExpression(
         return headType;
     }
 
-    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined =
-        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
-            state.nodeIdMapCollection,
-            xorNode.node.id,
-            1,
-            Ast.NodeKind.ArrayWrapper,
-        );
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        1,
+        Ast.NodeKind.ArrayWrapper,
+    );
 
     if (maybeArrayWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });

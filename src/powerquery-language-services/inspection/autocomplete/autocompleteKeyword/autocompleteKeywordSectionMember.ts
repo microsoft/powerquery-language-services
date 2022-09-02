@@ -16,18 +16,17 @@ import { InspectAutocompleteKeywordState } from "./commonTypes";
 export function autocompleteKeywordSectionMember(
     state: InspectAutocompleteKeywordState,
 ): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
-    const maybeChildAttributeIndex: number | undefined = state.child.node.maybeAttributeIndex;
+    const maybeChildAttributeIndex: number | undefined = state.child.node.attributeIndex;
 
     // SectionMember.namePairedExpression
     if (maybeChildAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const maybeSharedConstant: XorNode<Ast.TConstant> | undefined =
-            NodeIdMapUtils.maybeNthChildChecked<Ast.TConstant>(
-                state.nodeIdMapCollection,
-                state.parent.node.id,
-                1,
-                Ast.NodeKind.Constant,
-            );
+        const maybeSharedConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TConstant>(
+            state.nodeIdMapCollection,
+            state.parent.node.id,
+            1,
+            Ast.NodeKind.Constant,
+        );
 
         // 'shared' was parsed so we can exit.
         if (maybeSharedConstant !== undefined) {
@@ -35,7 +34,7 @@ export function autocompleteKeywordSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const maybeName: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        const maybeName: TXorNode | undefined = AncestryUtils.nthPreviousXor(
             state.activeNode.ancestry,
             state.ancestryIndex,
             2,

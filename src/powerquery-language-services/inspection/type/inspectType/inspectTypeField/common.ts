@@ -22,7 +22,7 @@ import { InspectTypeState, inspectXor } from "../common";
 //  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
-//  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
+//  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
 
 export async function inspectFieldType(
     state: InspectTypeState,
@@ -53,7 +53,7 @@ export async function inspectFieldType(
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector
     else {
-        const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+        const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
             state.nodeIdMapCollection,
             xorNode.node.id,
         );
@@ -68,7 +68,7 @@ export async function inspectFieldType(
 
 function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode<Ast.EachExpression> | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    let maybeParent: TXorNode | undefined = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, xorNode.node.id);
+    let maybeParent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
 
     while (maybeParent) {
         switch (maybeParent.node.kind) {
@@ -76,7 +76,7 @@ function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode
                 return maybeParent as XorNode<Ast.EachExpression>;
 
             default:
-                maybeParent = NodeIdMapUtils.maybeParentXor(nodeIdMapCollection, maybeParent.node.id);
+                maybeParent = NodeIdMapUtils.parentXor(nodeIdMapCollection, maybeParent.node.id);
                 break;
         }
     }

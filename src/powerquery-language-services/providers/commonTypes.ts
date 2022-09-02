@@ -77,8 +77,8 @@ export interface SemanticTokenProviderContext extends ProviderContext {
 
 export interface ProviderContext {
     readonly traceManager: TraceManager;
-    readonly maybeInitialCorrelationId: number | undefined;
-    readonly maybeCancellationToken: ICancellationToken | undefined;
+    readonly initialCorrelationId: number | undefined;
+    readonly cancellationToken: ICancellationToken | undefined;
     readonly range?: Range;
 }
 

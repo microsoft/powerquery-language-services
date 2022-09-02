@@ -22,14 +22,14 @@ export async function inspectTypeListType(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.ListType>(xorNode, Ast.NodeKind.ListType);
 
     let result: Type.Type | Type.ListType | Type.Unknown;
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeListItem: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
+            const maybeListItem: TXorNode | undefined = NodeIdMapUtils.nthChild(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,
@@ -42,7 +42,7 @@ export async function inspectTypeListType(
 
                 result = {
                     kind: Type.TypeKind.Type,
-                    maybeExtendedKind: Type.ExtendedTypeKind.ListType,
+                    extendedKind: Type.ExtendedTypeKind.ListType,
                     isNullable: false,
                     itemType,
                 };

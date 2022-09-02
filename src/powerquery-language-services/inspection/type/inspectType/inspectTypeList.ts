@@ -26,7 +26,7 @@ export async function inspectTypeList(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            state.maybeCancellationToken?.throwIfCancelled();
+            state.cancellationToken?.throwIfCancelled();
             const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
 
             const elements: ReadonlyArray<Type.TPowerQueryType> = await Promise.all(
@@ -36,7 +36,7 @@ export async function inspectTypeList(
             result = {
                 kind: Type.TypeKind.List,
                 isNullable: false,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedList,
+                extendedKind: Type.ExtendedTypeKind.DefinedList,
                 elements,
             };
 

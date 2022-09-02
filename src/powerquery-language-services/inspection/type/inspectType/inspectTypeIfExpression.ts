@@ -20,7 +20,7 @@ export async function inspectTypeIfExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.IfExpression>(xorNode, Ast.NodeKind.IfExpression);
 
     const conditionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
@@ -32,7 +32,7 @@ export async function inspectTypeIfExpression(
     // Any is allowed so long as AnyUnion only contains Any or Logical.
     else if (conditionType.kind === Type.TypeKind.Any) {
         if (
-            conditionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
+            conditionType.extendedKind === Type.ExtendedTypeKind.AnyUnion &&
             !allForAnyUnion(
                 conditionType,
                 (type: Type.TPowerQueryType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,

@@ -222,7 +222,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     inspectionSettings: TestConstants.SimpleInspectionSettings,
                     isWorkspaceCacheAllowed: false,
                     traceManager: NoOpTraceManagerInstance,
-                    maybeInitialCorrelationId: undefined,
+                    initialCorrelationId: undefined,
                 }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
 
             Assert.isOk(autocompleteItems);

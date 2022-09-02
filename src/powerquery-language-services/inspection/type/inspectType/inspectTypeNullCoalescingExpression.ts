@@ -20,13 +20,13 @@ export async function inspectTypeNullCoalescingExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.NullCoalescingExpression>(xorNode, Ast.NodeKind.NullCoalescingExpression);
 
     const maybeLeftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
     const maybeNullCoalescingOperator: Ast.TConstant | undefined =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
+        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             1,

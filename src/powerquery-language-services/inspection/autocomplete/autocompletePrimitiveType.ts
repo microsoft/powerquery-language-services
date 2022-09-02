@@ -20,7 +20,7 @@ export function tryAutocompletePrimitiveType(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompletePrimitiveType,
         tryAutocompletePrimitiveType.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     let result: TriedAutocompletePrimitiveType;
@@ -80,7 +80,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             if (maybeChild === undefined) {
                 return Constant.PrimitiveTypeConstants;
             } else if (
-                maybeChild.node.maybeAttributeIndex === 0 &&
+                maybeChild.node.attributeIndex === 0 &&
                 XorNodeUtils.isAstXor(maybeChild) &&
                 PositionUtils.isAfterAst(activeNode.position, maybeChild.node, true)
             ) {
@@ -90,7 +90,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === Ast.NodeKind.Parameter &&
-            AncestryUtils.maybeNthNextXorChecked<Ast.FunctionExpression>(
+            AncestryUtils.nthNextXorChecked<Ast.FunctionExpression>(
                 ancestry,
                 index,
                 4,
@@ -98,7 +98,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             ) !== undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
-            const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(ancestry, index, 2);
+            const maybeGrandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(ancestry, index, 2);
 
             if (maybeGrandchild === undefined) {
                 continue;
@@ -117,12 +117,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             else if (
                 maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
                 // Check the great grandchild
-                AncestryUtils.maybeNthPreviousXorChecked<Ast.PrimitiveType>(
-                    ancestry,
-                    index,
-                    3,
-                    Ast.NodeKind.PrimitiveType,
-                )
+                AncestryUtils.nthPreviousXorChecked<Ast.PrimitiveType>(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
             ) {
                 return Constant.PrimitiveTypeConstants;
             }

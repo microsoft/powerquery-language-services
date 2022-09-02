@@ -26,12 +26,12 @@ export async function inspectTypeErrorHandlingExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     // Grabs Ast.ErrorHandlingExpression.maybeHandler
     const maybeHandler: XorNode<Ast.CatchExpression | Ast.OtherwiseExpression> | undefined =
-        NodeIdMapUtils.maybeNthChildChecked<Ast.CatchExpression | Ast.OtherwiseExpression>(
+        NodeIdMapUtils.nthChildChecked<Ast.CatchExpression | Ast.OtherwiseExpression>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             2,
@@ -49,12 +49,9 @@ export async function inspectTypeErrorHandlingExpression(
         // We care about the evaluation of the function,
         // and as typing isn't allowed on a catch expression it requires an inspection on the function's body
         const maybeFnExpression: XorNode<Ast.FunctionExpression> | undefined =
-            NodeIdMapUtils.maybeNthChildChecked<Ast.FunctionExpression>(
-                state.nodeIdMapCollection,
-                maybeHandler.node.id,
-                1,
-                [Ast.NodeKind.FunctionExpression],
-            );
+            NodeIdMapUtils.nthChildChecked<Ast.FunctionExpression>(state.nodeIdMapCollection, maybeHandler.node.id, 1, [
+                Ast.NodeKind.FunctionExpression,
+            ]);
 
         // If there's no function expression, i.e. `try 1/0 catch`
         if (maybeFnExpression === undefined) {

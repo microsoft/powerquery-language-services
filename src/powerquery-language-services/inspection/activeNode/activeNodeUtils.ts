@@ -133,11 +133,11 @@ export function isPositionInBounds(maybeValue: TMaybeActiveNode): maybeValue is 
     return maybeValue.kind === ActiveNodeKind.ActiveNode;
 }
 
-export function maybeFirstXorOfNodeKind<T extends Ast.TNode>(
+export function findXorOfNodeKind<T extends Ast.TNode>(
     activeNode: ActiveNode,
     nodeKind: T["kind"],
 ): XorNode<T> | undefined {
-    return AncestryUtils.maybeFirstXorOfNodeKind(activeNode.ancestry, nodeKind);
+    return AncestryUtils.findXorOfNodeKind(activeNode.ancestry, nodeKind);
 }
 
 interface AstNodeSearch {
@@ -315,7 +315,7 @@ function maybeFindContext(
     let maybeCurrent: PQP.Parser.ParseContext.TNode | undefined = undefined;
 
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
-        if (candidate.maybeTokenStart) {
+        if (candidate.tokenStart) {
             if (candidate.tokenIndexStart < tokenIndexLowBound) {
                 continue;
             }
@@ -349,7 +349,7 @@ function findLeafIdentifier(
         }
 
         const parentId: number = maybeParentId;
-        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeUnboxIfAst(nodeIdMapCollection, parentId);
+        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
 
         if (maybeParent?.kind === Ast.NodeKind.IdentifierPairedExpression) {
             identifier = leaf;
@@ -366,7 +366,7 @@ function findLeafIdentifier(
         }
 
         const parentId: number = maybeParentId;
-        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.maybeUnboxIfAst(nodeIdMapCollection, parentId);
+        const maybeParent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
 
         if (maybeParent?.kind === Ast.NodeKind.IdentifierExpression) {
             identifier = maybeParent;
@@ -398,7 +398,7 @@ function findLeafIdentifier(
 
             result = {
                 node: identifier,
-                isRecursive: Boolean(identifier.maybeInclusiveConstant),
+                isRecursive: Boolean(identifier.inclusiveConstant),
                 normalizedLiteral,
                 maybeNormalizedRecursiveLiteral: `@${normalizedLiteral}`,
             };

@@ -18,7 +18,7 @@ export async function validateParse(
     }
 
     const innerError: ParseError.TInnerParseError = maybeParseError.innerError;
-    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(innerError);
+    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(innerError);
     const message: string = maybeParseError.message;
     const parseContextState: PQP.Parser.ParseContext.State = maybeParseError.state.contextState;
 
@@ -36,13 +36,13 @@ export async function validateParse(
             },
         };
     } else {
-        const maybeRoot: ParseContext.TNode | undefined = parseContextState.maybeRoot;
+        const maybeRoot: ParseContext.TNode | undefined = parseContextState.root;
 
         if (maybeRoot === undefined) {
             return [];
         }
 
-        const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
+        const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
             maybeParseError.state.contextState.nodeIdMapCollection,
             maybeRoot.id,
         );

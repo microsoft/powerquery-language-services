@@ -30,7 +30,7 @@ export async function inspectTypeInvokeExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
 
     const maybeRequest: ExternalType.ExternalInvocationTypeRequest | undefined = await maybeExternalInvokeRequest(
@@ -49,7 +49,7 @@ export async function inspectTypeInvokeExpression(
         }
     }
 
-    const previousSibling: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
@@ -62,7 +62,7 @@ export async function inspectTypeInvokeExpression(
         result = Type.AnyInstance;
     } else if (previousSiblingType.kind !== Type.TypeKind.Function) {
         result = Type.NoneInstance;
-    } else if (previousSiblingType.maybeExtendedKind === Type.ExtendedTypeKind.DefinedFunction) {
+    } else if (previousSiblingType.extendedKind === Type.ExtendedTypeKind.DefinedFunction) {
         result = previousSiblingType.returnType;
     } else {
         result = Type.AnyInstance;
@@ -85,8 +85,10 @@ async function maybeExternalInvokeRequest(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined =
-        NodeIdMapUtils.maybeInvokeExpressionIdentifier(state.nodeIdMapCollection, xorNode.node.id);
+    const maybeIdentifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
 
     if (maybeIdentifier === undefined) {
         trace.exit();
@@ -96,7 +98,7 @@ async function maybeExternalInvokeRequest(
 
     const updatedSettings: PQP.CommonSettings = {
         ...state,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
@@ -117,7 +119,7 @@ async function maybeExternalInvokeRequest(
     }
 
     const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.createInvocationTypeRequest(
-        Assert.asDefined(XorNodeUtils.maybeIdentifierExpressionLiteral(triedDeferencedIdentifier.value)),
+        Assert.asDefined(XorNodeUtils.identifierExpressionLiteral(triedDeferencedIdentifier.value)),
         types,
     );
 

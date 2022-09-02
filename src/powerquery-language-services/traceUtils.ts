@@ -7,7 +7,7 @@ import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/par
 export function createTypeDetails(powerQueryType: Type.TPowerQueryType): TypeDetails {
     return {
         kind: powerQueryType.kind,
-        maybeExtendedKind: powerQueryType.maybeExtendedKind,
+        extendedType: powerQueryType.extendedKind,
         isNullable: powerQueryType.isNullable,
     };
 }
@@ -21,7 +21,7 @@ export function createXorNodeDetails(xorNode: TXorNode): XorNodeDetails {
 
 interface TypeDetails {
     readonly kind: Type.TypeKind;
-    readonly maybeExtendedKind: Type.ExtendedTypeKind | undefined;
+    readonly extendedType: Type.ExtendedTypeKind | undefined;
     readonly isNullable: boolean;
 }
 

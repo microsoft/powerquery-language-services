@@ -28,13 +28,13 @@ export async function inspectTypeUnaryExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TUnaryExpression>(xorNode, Ast.NodeKind.UnaryExpression);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
-        NodeIdMapUtils.maybeNthChildChecked<Ast.TArrayWrapper>(
+        NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
             xorNode.node.id,
             0,
@@ -50,7 +50,7 @@ export async function inspectTypeUnaryExpression(
     const unaryOperatorWrapper: TXorNode | undefined = maybeUnaryOperatorWrapper;
 
     let result: Type.TPowerQueryType;
-    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(nodeIdMapCollection, xorNode.node.id, 1);
+    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, xorNode.node.id, 1);
 
     if (maybeExpression === undefined) {
         result = Type.UnknownInstance;
@@ -81,7 +81,7 @@ function inspectTypeUnaryNumber(
     unaryOperatorWrapperId: number,
 ): Type.TNumber | Type.None {
     const unaryNodeOperators: ReadonlyArray<NumberUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
+        NodeIdMapIterator.iterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<NumberUnaryNodeOperator>;
 
     const expectedUnaryOperators: ReadonlyArray<Constant.UnaryOperator> = [
@@ -104,7 +104,7 @@ function inspectTypeUnaryNumber(
         }
     }
 
-    switch (unaryExpressionType.maybeExtendedKind) {
+    switch (unaryExpressionType.extendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
             return TypeUtils.createNumberLiteral(
                 unaryExpressionType.isNullable,
@@ -125,7 +125,7 @@ function inspectTypeUnaryLogical(
     unaryOperatorWrapperId: number,
 ): Type.TLogical | Type.None {
     const unaryNodeOperators: ReadonlyArray<LogicalUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.maybeIterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
+        NodeIdMapIterator.iterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
     ) as ReadonlyArray<LogicalUnaryNodeOperator>;
 
     for (const operator of unaryNodeOperators) {

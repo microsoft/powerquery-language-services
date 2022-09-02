@@ -36,10 +36,10 @@ export class LibraryProvider implements ILibraryProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LibrarySymbolProvider,
                 this.getAutocompleteItems.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             if (!context.text || !context.range) {
                 trace.exit({ invalidContext: true });
@@ -68,10 +68,10 @@ export class LibraryProvider implements ILibraryProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LibrarySymbolProvider,
                 this.getHover.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             if (!context.identifier) {
                 trace.exit({ invalidContext: true });
@@ -99,7 +99,7 @@ export class LibraryProvider implements ILibraryProvider {
                 trace.id,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const hover: Hover = {
                 contents: {
@@ -124,10 +124,10 @@ export class LibraryProvider implements ILibraryProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LibrarySymbolProvider,
                 this.getSignatureHelp.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             if (!context.functionName) {
                 trace.exit({ invalidContext: true });

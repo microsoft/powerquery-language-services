@@ -13,7 +13,7 @@ export function autocompleteKeywordDefault(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const activeNode: ActiveNode = state.activeNode;
     const child: TXorNode = state.child;
-    const key: string = createMapKey(state.parent.node.kind, child.node.maybeAttributeIndex);
+    const key: string = createMapKey(state.parent.node.kind, child.node.attributeIndex);
 
     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
         return autocompleteDefaultExpression(state);
@@ -103,7 +103,7 @@ function autocompleteKeywordConstant(
 
 // A tuple can't easily be used as a Map key as it does a shallow comparison.
 // The work around is to stringify the tuple key, even though we lose typing by doing so.
-// [parent XorNode.node.kind, child XorNode.node.maybeAttributeIndex].join(",")
-function createMapKey(nodeKind: Ast.NodeKind, maybeAttributeIndex: number | undefined): string {
-    return [nodeKind, maybeAttributeIndex].join(",");
+// [parent XorNode.node.kind, child XorNode.node.attributeIndex].join(",")
+function createMapKey(nodeKind: Ast.NodeKind, attributeIndex: number | undefined): string {
+    return [nodeKind, attributeIndex].join(",");
 }

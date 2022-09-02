@@ -24,7 +24,7 @@ export async function inspectTypeTBinOpExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     Assert.isTrue(AstUtils.isTBinOpExpressionKind(xorNode.node.kind), `xorNode isn't a TBinOpExpression`, {
         nodeId: xorNode.node.id,
@@ -75,7 +75,7 @@ export async function inspectTypeTBinOpExpression(
             for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
-                    maybeExtendedKind: undefined,
+                    extendedKind: undefined,
                     isNullable: true,
                 });
             }
@@ -124,26 +124,26 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
     // '[] & []' or '#table() & #table()'
-    else if (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind === undefined) {
+    else if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
         return TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
     else if (
-        (leftType.maybeExtendedKind !== undefined && rightType.maybeExtendedKind === undefined) ||
-        (leftType.maybeExtendedKind === undefined && rightType.maybeExtendedKind !== undefined)
+        (leftType.extendedKind !== undefined && rightType.extendedKind === undefined) ||
+        (leftType.extendedKind === undefined && rightType.extendedKind !== undefined)
     ) {
         // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
-        const extendedType: Type.DefinedRecord | Type.DefinedTable =
-            leftType.maybeExtendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
+        const extendedKind: Type.DefinedRecord | Type.DefinedTable =
+            leftType.extendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
 
         return {
-            ...extendedType,
+            ...extendedKind,
             isOpen: true,
         };
     }
     // '[foo=value] & [bar=value] or #table(...) & #table(...)'
-    else if (leftType?.maybeExtendedKind === rightType?.maybeExtendedKind) {
+    else if (leftType?.extendedKind === rightType?.extendedKind) {
         // The cast should be safe since the first if statement tests their the same kind,
         // and the above checks if they're the same extended kind.
 

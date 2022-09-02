@@ -25,12 +25,12 @@ export async function validate(
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validate.name,
-        validationSettings.maybeInitialCorrelationId,
+        validationSettings.initialCorrelationId,
     );
 
     const updatedSettings: ValidationSettings = {
         ...validationSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);

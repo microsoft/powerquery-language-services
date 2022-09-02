@@ -99,7 +99,7 @@ function createAbridgedNodeScopeItem(identifier: string, scopeItem: Inspection.T
                 kind: scopeItem.kind,
                 isNullable: scopeItem.isNullable,
                 isOptional: scopeItem.isOptional,
-                maybeType: scopeItem.maybeType,
+                maybeType: scopeItem.type,
             };
 
         case Inspection.ScopeItemKind.Undefined:

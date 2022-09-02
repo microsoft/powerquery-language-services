@@ -267,7 +267,7 @@ function getInvokeExpressionTokens(
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression) ?? []) {
         const maybeIdentifierXor: XorNode<Ast.IdentifierExpression> | undefined =
-            NodeIdMapUtils.maybeInvokeExpressionIdentifier(nodeIdMapCollection, nodeId);
+            NodeIdMapUtils.invokeExpressionIdentifier(nodeIdMapCollection, nodeId);
 
         if (maybeIdentifierXor === undefined || !XorNodeUtils.isAstXor(maybeIdentifierXor)) {
             continue;
@@ -420,7 +420,7 @@ function getPrimitiveTypeTokens(
     const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.PrimitiveType) ?? []) {
-        const maybeNode: Ast.PrimitiveType | undefined = NodeIdMapUtils.maybeUnboxIfAstChecked<Ast.PrimitiveType>(
+        const maybeNode: Ast.PrimitiveType | undefined = NodeIdMapUtils.unboxIfAstChecked<Ast.PrimitiveType>(
             nodeIdMapCollection,
             nodeId,
             Ast.NodeKind.PrimitiveType,
@@ -468,14 +468,14 @@ function getTBinOpExpressionTokens(
 
     for (const nodeKind of binOpExprNodeKinds) {
         for (const binOpExprId of nodeIdMapCollection.idsByNodeKind.get(nodeKind) ?? []) {
-            const maybeExprXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(nodeIdMapCollection, binOpExprId);
+            const maybeExprXorNode: TXorNode | undefined = NodeIdMapUtils.xor(nodeIdMapCollection, binOpExprId);
 
             if (maybeExprXorNode === undefined) {
                 continue;
             }
 
             const maybeOperatorNode: Ast.TConstant | undefined =
-                NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
+                NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
                     nodeIdMapCollection,
                     maybeExprXorNode.node.id,
                     1,
@@ -572,7 +572,7 @@ function getPairedExpressionTokens<
     const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(pairedKind) ?? []) {
-        const maybeNode: T["key"] | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked(
+        const maybeNode: T["key"] | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
             nodeIdMapCollection,
             nodeId,
             0,
@@ -604,7 +604,7 @@ function maybePushNthChild<T extends Ast.TNode>(
     tokenType: SemanticTokenTypes,
     tokenModifiers: SemanticTokenModifiers[] = [],
 ): void {
-    const maybeTypeConstant: T | undefined = NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<T>(
+    const maybeTypeConstant: T | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<T>(
         nodeIdMapCollection,
         parentId,
         attributeIndex,

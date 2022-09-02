@@ -46,10 +46,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getAutocompleteItems.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const autocompleteItems: Inspection.AutocompleteItem[] = [
                 ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
@@ -69,10 +69,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getDefinition.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             if (
                 context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
@@ -121,10 +121,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getFoldingRanges.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const foldingRanges: FoldingRange[] = createFoldingRanges(
                 context.nodeIdMapCollection,
@@ -143,10 +143,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getHover.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
 
@@ -181,10 +181,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getPartialSemanticTokens.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
 
@@ -209,10 +209,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
                 this.getSignatureHelp.name,
-                context.maybeInitialCorrelationId,
+                context.initialCorrelationId,
             );
 
-            context.maybeCancellationToken?.throwIfCancelled();
+            context.cancellationToken?.throwIfCancelled();
 
             const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
                 context.triedCurrentInvokeExpression,
@@ -282,7 +282,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             correlationId,
         );
 
-        context.maybeCancellationToken?.throwIfCancelled();
+        context.cancellationToken?.throwIfCancelled();
 
         const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
@@ -297,7 +297,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.maybeNthXorChecked<
+        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.nthXorChecked<
             | Ast.GeneralizedIdentifierPairedAnyLiteral
             | Ast.GeneralizedIdentifierPairedExpression
             | Ast.IdentifierPairedExpression
@@ -314,7 +314,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
+        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.nthChild(
             context.parseState.contextState.nodeIdMapCollection,
             maybeIdentifierPairedExpression.node.id,
             2,
@@ -330,7 +330,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         const triedExpressionType: Inspection.TriedType = await Inspection.tryType(
             {
                 ...context.inspectionSettings,
-                maybeInitialCorrelationId: trace.id,
+                initialCorrelationId: trace.id,
             },
             context.parseState.contextState.nodeIdMapCollection,
             maybeExpression.node.id,

@@ -25,12 +25,12 @@ export async function validateUnknownIdentifiers(
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateUnknownIdentifiers.name,
-        validationSettings.maybeInitialCorrelationId,
+        validationSettings.initialCorrelationId,
     );
 
     const updatedSettings: ValidationSettings = {
         ...validationSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     // Grab all identifiers in the given context.
@@ -42,14 +42,14 @@ export async function validateUnknownIdentifiers(
         IdentifierWithNodeScope
     >(identifierValues, async (identifier: Ast.Identifier) => {
         const maybeIdentifierExpression: Ast.IdentifierExpression | undefined =
-            NodeIdMapUtils.maybeParentAstChecked<Ast.IdentifierExpression>(
+            NodeIdMapUtils.parentAstChecked<Ast.IdentifierExpression>(
                 nodeIdMapCollection,
                 identifier.id,
                 Ast.NodeKind.IdentifierExpression,
             );
 
         const literal: string =
-            maybeIdentifierExpression && maybeIdentifierExpression.maybeInclusiveConstant !== undefined
+            maybeIdentifierExpression && maybeIdentifierExpression.inclusiveConstant !== undefined
                 ? `@${identifier.literal}`
                 : identifier.literal;
 

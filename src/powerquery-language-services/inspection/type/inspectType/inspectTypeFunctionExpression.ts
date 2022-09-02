@@ -27,7 +27,7 @@ export async function inspectTypeFunctionExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(xorNode, Ast.NodeKind.FunctionExpression);
 
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, xorNode);
@@ -58,7 +58,7 @@ export async function inspectTypeFunctionExpression(
             // If the return type is Any then see if we can narrow it to the stated return Type.
             else if (
                 expressionType.kind === Type.TypeKind.Any &&
-                expressionType.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion &&
+                expressionType.extendedKind === Type.ExtendedTypeKind.AnyUnion &&
                 allForAnyUnion(
                     expressionType,
                     (type: Type.TPowerQueryType) =>
@@ -84,13 +84,13 @@ export async function inspectTypeFunctionExpression(
 
             result = {
                 kind: Type.TypeKind.Function,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedFunction,
+                extendedKind: Type.ExtendedTypeKind.DefinedFunction,
                 isNullable: false,
                 parameters: pseudoType.parameters.map((pseudoParameter: PseudoFunctionParameterType) => ({
                     nameLiteral: pseudoParameter.name.literal,
                     isNullable: pseudoParameter.isNullable,
                     isOptional: pseudoParameter.isOptional,
-                    maybeType: pseudoParameter.maybeType,
+                    type: pseudoParameter.type,
                 })),
                 returnType,
             };

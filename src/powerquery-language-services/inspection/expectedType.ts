@@ -16,7 +16,7 @@ export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: T
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectExpectedType,
         tryExpectedType.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
@@ -48,7 +48,7 @@ export function maybeExpectedType(activeNode: ActiveNode): Type.TPowerQueryType 
         const child: TXorNode = ancestry[index];
 
         const childAttributeIndex: number = Assert.asDefined(
-            child.node.maybeAttributeIndex,
+            child.node.attributeIndex,
             `Expected child to have an attribute index.`,
             { childId: child.node.id },
         );

@@ -33,12 +33,12 @@ export async function tryAutocompleteFieldAccess(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompleteFieldAccess,
         tryAutocompleteFieldAccess.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     let result: TriedAutocompleteFieldAccess;
@@ -144,15 +144,12 @@ async function autocompleteFieldAccess(
 }
 
 function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
-    switch (type.maybeExtendedKind) {
+    switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
             let fields: [string, Type.TPowerQueryType][] = [];
 
             for (const field of type.unionedTypePairs) {
-                if (
-                    field.maybeExtendedKind &&
-                    AllowedExtendedTypeKindsForFieldEntries.includes(field.maybeExtendedKind)
-                ) {
+                if (field.extendedKind && AllowedExtendedTypeKindsForFieldEntries.includes(field.extendedKind)) {
                     fields = fields.concat(fieldEntriesFromFieldType(field));
                 }
             }
@@ -337,18 +334,15 @@ function maybeTypablePrimaryExpression(
 
             // If we're coming from the head node,
             // then return undefined as there can be no nodes before the head ode.
-            if (xorNodeBeforeRpe.node.maybeAttributeIndex === 0) {
+            if (xorNodeBeforeRpe.node.attributeIndex === 0) {
                 return undefined;
             }
             // Else if we're coming from the ArrayWrapper,
             // then grab the previous sibling.
-            else if (xorNodeBeforeRpe.node.maybeAttributeIndex === 1) {
+            else if (xorNodeBeforeRpe.node.attributeIndex === 1) {
                 const rpeChild: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index, 2);
 
-                return NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
-                    nodeIdMapCollection,
-                    rpeChild.node.id,
-                );
+                return NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(nodeIdMapCollection, rpeChild.node.id);
             } else {
                 throw new PQP.CommonError.InvariantError(
                     `the child of a ${Ast.NodeKind.RecursivePrimaryExpression} should have an attribute index of either 1 or 2`,

@@ -24,13 +24,13 @@ export async function tryDeferenceIdentifier(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         tryDeferenceIdentifier.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     const updatedSettings: PQP.CommonSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     XorNodeUtils.assertIsIdentifier(xorNode);

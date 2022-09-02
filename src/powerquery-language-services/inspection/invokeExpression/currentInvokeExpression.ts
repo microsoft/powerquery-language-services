@@ -46,12 +46,12 @@ export async function tryCurrentInvokeExpression(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectCurrentInvokeExpression,
         tryCurrentInvokeExpression.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
@@ -85,12 +85,12 @@ async function inspectInvokeExpression(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    const maybeInvokeExpression: [TXorNode, number] | undefined = AncestryUtils.maybeFirstXorAndIndexOfNodeKind(
+    const maybeInvokeExpression: [TXorNode, number] | undefined = AncestryUtils.findXorAndIndexOfNodeKind(
         ancestry,
         Ast.NodeKind.InvokeExpression,
     );
@@ -150,7 +150,7 @@ function getArgumentOrdinal(
     invokeExpressionXorNode: TXorNode,
 ): number {
     // `foo(1|)
-    const maybeAncestoryCsv: TXorNode | undefined = AncestryUtils.maybeNthPreviousXorChecked<Ast.TCsv>(
+    const maybeAncestoryCsv: TXorNode | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TCsv>(
         activeNode.ancestry,
         ancestryIndex,
         2,
@@ -158,17 +158,19 @@ function getArgumentOrdinal(
     );
 
     if (maybeAncestoryCsv !== undefined) {
-        return maybeAncestoryCsv.node.maybeAttributeIndex ?? 0;
+        return maybeAncestoryCsv.node.attributeIndex ?? 0;
     }
 
-    const maybePreviousXor: TXorNode | undefined = AncestryUtils.maybePreviousXorChecked<
-        Ast.TArrayWrapper | Ast.TConstant
-    >(activeNode.ancestry, ancestryIndex, [
-        // `foo(|)`
-        Ast.NodeKind.ArrayWrapper,
-        // `foo(1|`
-        Ast.NodeKind.Constant,
-    ]);
+    const maybePreviousXor: TXorNode | undefined = AncestryUtils.previousXorChecked<Ast.TArrayWrapper | Ast.TConstant>(
+        activeNode.ancestry,
+        ancestryIndex,
+        [
+            // `foo(|)`
+            Ast.NodeKind.ArrayWrapper,
+            // `foo(1|`
+            Ast.NodeKind.Constant,
+        ],
+    );
 
     let arrayWrapperXorNode: TXorNode;
 

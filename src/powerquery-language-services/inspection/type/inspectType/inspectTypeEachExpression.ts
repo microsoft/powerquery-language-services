@@ -20,7 +20,7 @@ export async function inspectTypeEachExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(xorNode, Ast.NodeKind.EachExpression);
 
     const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
@@ -31,7 +31,7 @@ export async function inspectTypeEachExpression(
             {
                 isNullable: false,
                 isOptional: false,
-                maybeType: Type.TypeKind.Any,
+                type: Type.TypeKind.Any,
                 nameLiteral: "_",
             },
         ],

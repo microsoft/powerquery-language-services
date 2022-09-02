@@ -22,7 +22,7 @@ export async function inspectTypeRecord(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsRecord(xorNode);
     let result: Type.Record | Type.DefinedRecord;
 
@@ -31,9 +31,9 @@ export async function inspectTypeRecord(
             const fields: Map<string, Type.TPowerQueryType> = new Map();
 
             for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
-                if (keyValuePair.maybeValue) {
+                if (keyValuePair.value) {
                     // eslint-disable-next-line no-await-in-loop
-                    fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.maybeValue, trace.id));
+                    fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.value, trace.id));
                 } else {
                     fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
                 }
@@ -41,7 +41,7 @@ export async function inspectTypeRecord(
 
             result = {
                 kind: Type.TypeKind.Record,
-                maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                extendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
                 fields,
                 isOpen: false,

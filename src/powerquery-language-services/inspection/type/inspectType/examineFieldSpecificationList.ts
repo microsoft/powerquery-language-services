@@ -35,7 +35,7 @@ export async function examineFieldSpecificationList(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecificationList>(xorNode, Ast.NodeKind.FieldSpecificationList);
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
@@ -49,8 +49,7 @@ export async function examineFieldSpecificationList(
     );
 
     const isOpen: boolean =
-        NodeIdMapUtils.maybeNthChildChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !==
-        undefined;
+        NodeIdMapUtils.nthChildChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !== undefined;
 
     const result: ExaminedFieldSpecificationList = {
         fields: new Map(fields),

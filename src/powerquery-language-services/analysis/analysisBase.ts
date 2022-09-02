@@ -110,7 +110,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getAutocompleteItems.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeContext: AutocompleteItemProviderContext | undefined =
@@ -157,7 +157,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getDefinition.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeIdentifierContext: DefinitionProviderContext | undefined =
@@ -216,7 +216,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getFoldingRanges.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeParseState: ParseState | undefined = await this.getParseState();
@@ -230,8 +230,8 @@ export class AnalysisBase implements Analysis {
             const result: Result<FoldingRange[] | undefined, CommonError.CommonError> =
                 await this.localDocumentProvider.getFoldingRanges({
                     traceManager: this.analysisSettings.traceManager,
-                    maybeInitialCorrelationId: trace.id,
-                    maybeCancellationToken: cancellationToken,
+                    initialCorrelationId: trace.id,
+                    cancellationToken,
                     nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
                 });
 
@@ -253,7 +253,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getHover.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
@@ -324,14 +324,14 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getPartialSemanticTokens.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
                 await this.localDocumentProvider.getPartialSemanticTokens({
                     traceManager: this.analysisSettings.traceManager,
-                    maybeInitialCorrelationId: trace.id,
-                    maybeCancellationToken: cancellationToken,
+                    initialCorrelationId: trace.id,
+                    cancellationToken,
                     library: this.analysisSettings.inspectionSettings.library,
                     parseState: Assert.asDefined(await this.getParseState()),
                 });
@@ -354,7 +354,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getSignatureHelp.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeContext: SignatureProviderContext | undefined = await this.getSignatureProviderContext(
@@ -397,7 +397,7 @@ export class AnalysisBase implements Analysis {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getRenameEdits.name,
-                this.analysisSettings.maybeInitialCorrelationId,
+                this.analysisSettings.initialCorrelationId,
             );
 
             const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
@@ -558,7 +558,7 @@ export class AnalysisBase implements Analysis {
                 Ast.NodeKind.GeneralizedIdentifierPairedExpression,
                 Ast.NodeKind.IdentifierPairedExpression,
             ].includes(followingNode.node.kind) &&
-            [undefined, 1].includes(Assert.asDefined(leaf.node.maybeAttributeIndex))
+            [undefined, 1].includes(Assert.asDefined(leaf.node.attributeIndex))
         ) {
             return false;
         }
@@ -611,8 +611,8 @@ export class AnalysisBase implements Analysis {
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.analysisSettings.traceManager,
-                maybeCancellationToken: newCancellationToken,
-                maybeInitialCorrelationId: trace.id,
+                cancellationToken: newCancellationToken,
+                initialCorrelationId: trace.id,
                 range: CommonTypesUtils.rangeFromTokenRange(maybeActiveLeafIdentifier.node.tokenRange),
                 text: maybeActiveLeafIdentifier.normalizedLiteral,
                 tokenKind: maybeActiveLeafIdentifier.node.kind,
@@ -623,8 +623,8 @@ export class AnalysisBase implements Analysis {
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.analysisSettings.traceManager,
-                maybeCancellationToken: newCancellationToken,
-                maybeInitialCorrelationId: trace.id,
+                cancellationToken: newCancellationToken,
+                initialCorrelationId: trace.id,
             };
         }
 
@@ -670,8 +670,8 @@ export class AnalysisBase implements Analysis {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier,
-            maybeCancellationToken: cancellationToken,
-            maybeInitialCorrelationId: trace.id,
+            cancellationToken,
+            initialCorrelationId: trace.id,
             triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
         };
 
@@ -717,13 +717,13 @@ export class AnalysisBase implements Analysis {
             traceManager: this.analysisSettings.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             identifier,
-            maybeCancellationToken: cancellationToken,
-            maybeInitialCorrelationId: trace.id,
+            cancellationToken,
+            initialCorrelationId: trace.id,
             activeNode: maybeActiveNode,
             inspectionSettings: {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: cancellationToken,
-                maybeInitialCorrelationId: correlationId,
+                cancellationToken,
+                initialCorrelationId: correlationId,
             },
             parseState: Assert.asDefined(await this.getParseState()),
             triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
@@ -779,13 +779,13 @@ export class AnalysisBase implements Analysis {
             isNameInLocalScope: invokeExpression.isNameInLocalScope,
             functionType: invokeExpression.functionType,
             traceManager: this.analysisSettings.traceManager,
-            maybeCancellationToken: newCancellationToken,
-            maybeInitialCorrelationId: trace.id,
+            cancellationToken: newCancellationToken,
+            initialCorrelationId: trace.id,
             triedCurrentInvokeExpression: await Inspection.tryCurrentInvokeExpression(
                 {
                     ...this.analysisSettings.inspectionSettings,
-                    maybeCancellationToken: newCancellationToken,
-                    maybeInitialCorrelationId: trace.id,
+                    cancellationToken: newCancellationToken,
+                    initialCorrelationId: trace.id,
                 },
                 Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
                 Assert.asDefined(await this.getActiveNode(position)),
@@ -916,12 +916,12 @@ export class AnalysisBase implements Analysis {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
             this.initializeState.name,
-            this.analysisSettings.maybeInitialCorrelationId,
+            this.analysisSettings.initialCorrelationId,
         );
 
         const updatedSettings: InspectionSettings = {
             ...this.analysisSettings.inspectionSettings,
-            maybeInitialCorrelationId: trace.id,
+            initialCorrelationId: trace.id,
         };
 
         const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
@@ -968,8 +968,8 @@ export class AnalysisBase implements Analysis {
         return await Inspection.autocomplete(
             {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: cancellationToken,
-                maybeInitialCorrelationId: correlationId,
+                cancellationToken,
+                initialCorrelationId: correlationId,
             },
             maybeParseState,
             this.typeCache,
@@ -993,8 +993,8 @@ export class AnalysisBase implements Analysis {
         return await Inspection.tryCurrentInvokeExpression(
             {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: cancellationToken,
-                maybeInitialCorrelationId: correlationId,
+                cancellationToken,
+                initialCorrelationId: correlationId,
             },
             maybeParseState.contextState.nodeIdMapCollection,
             maybeActiveNode,
@@ -1016,8 +1016,8 @@ export class AnalysisBase implements Analysis {
         return await Inspection.tryNodeScope(
             {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: cancellationToken,
-                maybeInitialCorrelationId: correlationId,
+                cancellationToken,
+                initialCorrelationId: correlationId,
             },
             maybeParseState.contextState.nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
@@ -1039,8 +1039,8 @@ export class AnalysisBase implements Analysis {
         return await Inspection.tryScopeType(
             {
                 ...this.analysisSettings.inspectionSettings,
-                maybeCancellationToken: cancellationToken,
-                maybeInitialCorrelationId: correlationId,
+                cancellationToken,
+                initialCorrelationId: correlationId,
             },
             maybeParseState.contextState.nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,

@@ -20,10 +20,10 @@ export async function inspectTypeFieldSpecification(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
-    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
+    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.nthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,

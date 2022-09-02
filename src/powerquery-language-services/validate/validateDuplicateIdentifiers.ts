@@ -27,12 +27,12 @@ export function validateDuplicateIdentifiers(
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiers.name,
-        validationSettings.maybeInitialCorrelationId,
+        validationSettings.initialCorrelationId,
     );
 
     const updatedSettings: ValidationSettings = {
         ...validationSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     if (!updatedSettings.checkForDuplicateIdentifiers) {
