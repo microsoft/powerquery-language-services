@@ -117,7 +117,7 @@ async function inspectInvokeExpression(
     }
 
     const invokeExpression: InvokeExpression = triedInvokeExpression.value;
-    const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.maybeArguments;
+    const maybeArguments: InvokeExpressionArguments | undefined = invokeExpression.arguments;
 
     let maybeWithArgumentOrdinal: CurrentInvokeExpressionArguments | undefined;
 
@@ -135,7 +135,7 @@ async function inspectInvokeExpression(
 
     const result: CurrentInvokeExpression | undefined = {
         ...invokeExpression,
-        maybeArguments: maybeWithArgumentOrdinal,
+        arguments: maybeWithArgumentOrdinal,
     };
 
     trace.exit();

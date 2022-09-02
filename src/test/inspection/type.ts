@@ -40,7 +40,7 @@ const ExtendedTestSettings: InspectionSettings = {
         externalTypeResolver: ExternalTypeResolver,
         libraryDefinitions: new Map(),
     },
-    maybeEachScopeById: undefined,
+    eachScopeById: undefined,
     typeStrategy: TypeStrategy.Extended,
 };
 
@@ -348,7 +348,7 @@ describe(`Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedTestSettings,
-                    maybeEachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[5, eachScope]]),
                 };
 
                 await assertParseOkNodeTypeEqual(
@@ -411,7 +411,7 @@ describe(`Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedTestSettings,
-                    maybeEachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[5, eachScope]]),
                 };
 
                 await assertParseOkNodeTypeEqual(testSettingsWithEachScope, expression, expected);

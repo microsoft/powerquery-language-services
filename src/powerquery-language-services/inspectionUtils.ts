@@ -21,7 +21,7 @@ export function createInspectionSettings(
         isWorkspaceCacheAllowed: overrides?.isWorkspaceCacheAllowed ?? true,
         library: overrides?.library ?? Library.NoOpLibrary,
         typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,
-        maybeEachScopeById: overrides?.maybeEachScopeById ?? undefined,
+        eachScopeById: overrides?.eachScopeById ?? undefined,
     };
 }
 
@@ -175,20 +175,19 @@ export function getAutocompleteItemsFromScope(
         ? triedScopeType.value
         : new Map();
 
-    const maybeContextTest: string | undefined = context.text;
+    const contextText: string | undefined = context.text;
     const partial: Inspection.AutocompleteItem[] = [];
 
     for (const [label, scopeItem] of nodeScope.entries()) {
-        const maybeAutocompleteItem: Inspection.AutocompleteItem | undefined =
-            AutocompleteItemUtils.maybeCreateFromScopeItem(
-                label,
-                scopeItem,
-                scopeTypeByKey.get(label) ?? Type.UnknownInstance,
-                maybeContextTest,
-            );
+        const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
+            label,
+            scopeItem,
+            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
+            contextText,
+        );
 
-        if (maybeAutocompleteItem) {
-            partial.push(maybeAutocompleteItem);
+        if (autocompleteItem) {
+            partial.push(autocompleteItem);
         }
     }
 

@@ -24,8 +24,8 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
-    maybeCreateLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
-    maybeCreateLibraryProviderFn: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
+    languageAutocompleteItemProviderFactory: () => NullSymbolProvider.singleton(),
+    libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
 };
 
 function createAutocompleteItems(

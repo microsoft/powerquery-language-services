@@ -118,7 +118,7 @@ function createState(
         locale: settings.locale,
         isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
         cancellationToken: settings.cancellationToken,
-        maybeEachScopeById: settings.maybeEachScopeById,
+        eachScopeById: settings.eachScopeById,
         initialCorrelationId: correlationId,
         traceManager: settings.traceManager,
         typeStrategy: settings.typeStrategy,

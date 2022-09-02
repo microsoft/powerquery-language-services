@@ -163,9 +163,9 @@ export async function inspectScopeItem(
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined
+            return scopeItem.value === undefined
                 ? Type.UnknownInstance
-                : await inspectXor(state, scopeItem.maybeValue, maybeCorrelationId);
+                : await inspectXor(state, scopeItem.value, maybeCorrelationId);
 
         case ScopeItemKind.Each:
             return await inspectXor(state, scopeItem.eachExpression, maybeCorrelationId);
@@ -493,7 +493,7 @@ export async function maybeDereferencedIdentifierType(
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            maybeNextXorNode = scopeItem.maybeValue;
+            maybeNextXorNode = scopeItem.value;
             break;
 
         case ScopeItemKind.Each:

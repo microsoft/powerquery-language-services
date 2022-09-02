@@ -87,7 +87,7 @@ export function createFromPrimitiveTypeConstant(
     };
 }
 
-export function maybeCreateFromScopeItem(
+export function fromScopeItem(
     label: string,
     scopeItem: Inspection.TScopeItem,
     powerQueryType: Type.TPowerQueryType,
@@ -97,7 +97,7 @@ export function maybeCreateFromScopeItem(
         case Inspection.ScopeItemKind.LetVariable:
         case Inspection.ScopeItemKind.RecordField:
         case Inspection.ScopeItemKind.SectionMember:
-            if (scopeItem.maybeValue === undefined) {
+            if (scopeItem.value === undefined) {
                 return undefined;
             }
 

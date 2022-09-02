@@ -48,7 +48,7 @@ export async function inspectFieldType(
 
     // if the scope is an EachExpression
     if (maybeEachExpression) {
-        fieldType = state.maybeEachScopeById?.get(maybeEachExpression.node.id) ?? Type.UnknownInstance;
+        fieldType = state.eachScopeById?.get(maybeEachExpression.node.id) ?? Type.UnknownInstance;
     }
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector

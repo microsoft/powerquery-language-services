@@ -31,7 +31,7 @@ export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
     library: Library.NoOpLibrary,
-    maybeEachScopeById: undefined,
+    eachScopeById: undefined,
     typeStrategy: TypeStrategy.Extended,
 };
 
