@@ -214,15 +214,15 @@ function validateDuplicateIdentifiersForKeyValuePair(
             for (const field of iterNodeFn(nodeIdMapCollection, node)) {
                 const keyLiteral: string = field.normalizedKeyLiteral;
 
-                const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
+                const duplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
                     duplicateFieldsByKey.get(keyLiteral);
 
-                const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
+                const knownFeld: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
-                if (maybeDuplicateFields) {
-                    maybeDuplicateFields.push(field);
-                } else if (maybeKnownField) {
-                    duplicateFieldsByKey.set(keyLiteral, [field, maybeKnownField]);
+                if (duplicateFields) {
+                    duplicateFields.push(field);
+                } else if (knownFeld) {
+                    duplicateFieldsByKey.set(keyLiteral, [field, knownFeld]);
                 } else {
                     knownFieldByKey.set(keyLiteral, field);
                 }

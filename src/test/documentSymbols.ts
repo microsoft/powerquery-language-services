@@ -46,7 +46,7 @@ describe("getDocumentSymbols", () => {
         const document: MockDocument = TestUtils.createTextMockDocument(`section foo; shared query = let a = 1 in a;`);
 
         await expectSymbolsForDocument(document, [
-            { name: "query", kind: SymbolKind.Variable, maybeChildren: [{ name: "a", kind: SymbolKind.Number }] },
+            { name: "query", kind: SymbolKind.Variable, children: [{ name: "a", kind: SymbolKind.Number }] },
         ]);
     });
 
@@ -69,9 +69,9 @@ describe("getDocumentSymbols", () => {
             {
                 name: "a",
                 kind: SymbolKind.Variable,
-                maybeChildren: [
+                children: [
                     { name: "b", kind: SymbolKind.Number },
-                    { name: "c", kind: SymbolKind.Variable, maybeChildren: [{ name: "d", kind: SymbolKind.Number }] },
+                    { name: "c", kind: SymbolKind.Variable, children: [{ name: "d", kind: SymbolKind.Number }] },
                 ],
             },
         ]);
@@ -99,7 +99,7 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldImpl",
                 kind: SymbolKind.Function,
-                maybeChildren: [
+                children: [
                     { name: "_count", kind: SymbolKind.Variable },
                     { name: "listOfMessages", kind: SymbolKind.Variable },
                     { name: "table", kind: SymbolKind.Variable },
@@ -108,12 +108,12 @@ describe("getDocumentSymbols", () => {
             {
                 name: "HelloWorldWithDocs",
                 kind: SymbolKind.Struct,
-                maybeChildren: [{ name: "Authentication", kind: SymbolKind.Field }],
+                children: [{ name: "Authentication", kind: SymbolKind.Field }],
             },
             {
                 name: "HelloWorldWithDocs.Publish",
                 kind: SymbolKind.Struct,
-                maybeChildren: [
+                children: [
                     { name: "Beta", kind: SymbolKind.Field },
                     { name: "Category", kind: SymbolKind.Field },
                     { name: "ButtonText", kind: SymbolKind.Field },

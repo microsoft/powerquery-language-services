@@ -23,7 +23,7 @@ export async function inspectTypeParameter(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TParameter>(xorNode, Ast.NodeKind.Parameter);
 
-    const maybeOptionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+    const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
@@ -36,7 +36,7 @@ export async function inspectTypeParameter(
 
     const result: Type.TPowerQueryType = {
         ...maybeParameterType,
-        isNullable: maybeOptionalConstant !== undefined || maybeParameterType.isNullable,
+        isNullable: optionalConstant !== undefined || maybeParameterType.isNullable,
     };
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });

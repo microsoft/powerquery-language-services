@@ -14,7 +14,7 @@ export function autocompleteKeywordErrorHandlingExpression(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
-    const maybeTrailingText: TrailingToken | undefined = state.maybeTrailingToken;
+    const maybeTrailingText: TrailingToken | undefined = state.trailingToken;
 
     const maybeChildAttributeIndex: number | undefined = child.node.attributeIndex;
 

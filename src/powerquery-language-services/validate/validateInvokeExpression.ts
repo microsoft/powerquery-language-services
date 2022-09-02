@@ -18,7 +18,7 @@ import { ValidationTraceConstant } from "../trace";
 export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeCache?: Inspection.TypeCache,
+    typeCache?: Inspection.TypeCache,
 ): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -31,11 +31,11 @@ export async function validateInvokeExpression(
         initialCorrelationId: trace.id,
     };
 
-    const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+    const invokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.InvokeExpression,
     );
 
-    if (maybeInvokeExpressionIds === undefined) {
+    if (invokeExpressionIds === undefined) {
         trace.exit();
 
         return [];
@@ -43,8 +43,8 @@ export async function validateInvokeExpression(
 
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
-    for (const nodeId of maybeInvokeExpressionIds) {
-        inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, maybeCache));
+    for (const nodeId of invokeExpressionIds) {
+        inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
     const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
@@ -85,14 +85,14 @@ async function invokeExpressionToDiagnostics(
             "expected at least one leaf node under InvokeExpression",
         );
 
-        const maybeFunctionName: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
+        const functionName: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
             nodeIdMapCollection,
             inspected.invokeExpressionXorNode.node.id,
         );
 
         for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
             // eslint-disable-next-line no-await-in-loop
-            const maybeGivenArgumentRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
+            const givenArgRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,
                 givenArguments[argIndex],
             );
@@ -101,9 +101,9 @@ async function invokeExpressionToDiagnostics(
                 createDiagnosticForArgumentMismatch(
                     validationSettings,
                     mismatch,
-                    maybeFunctionName,
+                    functionName,
                     invokeExpressionRange,
-                    maybeGivenArgumentRange,
+                    givenArgRange,
                 ),
             );
         }
@@ -150,9 +150,9 @@ function createDiagnosticForArgumentNumberMismatch(
 function createDiagnosticForArgumentMismatch(
     validationSettings: ValidationSettings,
     mismatch: TypeUtils.InvocationMismatch,
-    maybeFunctionName: string | undefined,
+    functionName: string | undefined,
     invokeExpressionRange: Range,
-    maybeGivenArgumentRange: Range | undefined,
+    givenArgRange: Range | undefined,
 ): Diagnostic {
     let range: Range;
     let message: string;
@@ -162,14 +162,14 @@ function createDiagnosticForArgumentMismatch(
     const expected: string = TypeUtils.nameOfTypeKind(parameter.type ?? Type.AnyInstance.kind);
 
     // An argument containing at least one leaf node was given.
-    if (maybeGivenArgumentRange) {
+    if (givenArgRange) {
         const actual: string = TypeUtils.nameOfTypeKind(Assert.asDefined(mismatch.actual).kind);
 
-        range = maybeGivenArgumentRange;
-        message = createTypeMismatchMessage(validationSettings.locale, maybeFunctionName, argName, expected, actual);
+        range = givenArgRange;
+        message = createTypeMismatchMessage(validationSettings.locale, functionName, argName, expected, actual);
     } else {
         range = invokeExpressionRange;
-        message = createMissingMandatoryMessage(validationSettings.locale, maybeFunctionName, argName);
+        message = createMissingMandatoryMessage(validationSettings.locale, functionName, argName);
     }
 
     return {
@@ -181,15 +181,15 @@ function createDiagnosticForArgumentMismatch(
     };
 }
 
-function createMissingMandatoryMessage(locale: string, maybeFunctionName: string | undefined, argName: string): string {
+function createMissingMandatoryMessage(locale: string, functionName: string | undefined, argName: string): string {
     const templates: ILocalizationTemplates = LocalizationUtils.getLocalizationTemplates(locale);
 
-    return Localization.error_validation_invokeExpression_missingMandatory(templates, maybeFunctionName, argName);
+    return Localization.error_validation_invokeExpression_missingMandatory(templates, functionName, argName);
 }
 
 function createTypeMismatchMessage(
     locale: string,
-    maybeFunctionName: string | undefined,
+    functionName: string | undefined,
     argName: string,
     expected: string,
     actual: string,
@@ -198,7 +198,7 @@ function createTypeMismatchMessage(
 
     return Localization.error_validation_invokeExpression_typeMismatch(
         templates,
-        maybeFunctionName,
+        functionName,
         argName,
         expected,
         actual,

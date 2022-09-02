@@ -10,48 +10,48 @@ import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ValidationSettings } from "./validationSettings";
 
 export async function validateParse(
-    maybeParseError: ParseError.ParseError | undefined,
+    parseError: ParseError.ParseError | undefined,
     validationSettings: ValidationSettings,
 ): Promise<Diagnostic[]> {
-    if (maybeParseError === undefined || !ParseError.isParseError(maybeParseError)) {
+    if (parseError === undefined || !ParseError.isParseError(parseError)) {
         return [];
     }
 
-    const innerError: ParseError.TInnerParseError = maybeParseError.innerError;
-    const maybeErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(innerError);
-    const message: string = maybeParseError.message;
-    const parseContextState: PQP.Parser.ParseContext.State = maybeParseError.state.contextState;
+    const innerError: ParseError.TInnerParseError = parseError.innerError;
+    const errorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(innerError);
+    const message: string = parseError.message;
+    const parseContextState: PQP.Parser.ParseContext.State = parseError.state.contextState;
 
     let range: Range;
 
-    if (maybeErrorToken !== undefined) {
+    if (errorToken !== undefined) {
         range = {
             start: {
-                line: maybeErrorToken.positionStart.lineNumber,
-                character: maybeErrorToken.positionStart.lineCodeUnit,
+                line: errorToken.positionStart.lineNumber,
+                character: errorToken.positionStart.lineCodeUnit,
             },
             end: {
-                line: maybeErrorToken.positionEnd.lineNumber,
-                character: maybeErrorToken.positionEnd.lineCodeUnit,
+                line: errorToken.positionEnd.lineNumber,
+                character: errorToken.positionEnd.lineCodeUnit,
             },
         };
     } else {
-        const maybeRoot: ParseContext.TNode | undefined = parseContextState.root;
+        const root: ParseContext.TNode | undefined = parseContextState.root;
 
-        if (maybeRoot === undefined) {
+        if (root === undefined) {
             return [];
         }
 
-        const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
-            maybeParseError.state.contextState.nodeIdMapCollection,
-            maybeRoot.id,
+        const leaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
+            parseError.state.contextState.nodeIdMapCollection,
+            root.id,
         );
 
-        if (maybeLeaf === undefined) {
+        if (leaf === undefined) {
             return [];
         }
 
-        const leafTokenRange: PQP.Language.Token.TokenRange = maybeLeaf.tokenRange;
+        const leafTokenRange: PQP.Language.Token.TokenRange = leaf.tokenRange;
 
         range = {
             start: {

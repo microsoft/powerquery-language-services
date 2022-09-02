@@ -42,7 +42,7 @@ export interface LibraryParameter {
     readonly isOptional: boolean;
     readonly isNullable: boolean;
     readonly label: string;
-    readonly maybeDocumentation: string | undefined;
+    readonly documentation: string | undefined;
     readonly typeKind: Type.TypeKind;
 }
 

@@ -30,28 +30,28 @@ import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/pa
 export * from "./scope";
 export * from "./scopeInspection";
 
-export function isEach(maybeValue: TScopeItem | undefined): maybeValue is EachScopeItem {
-    return maybeValue?.kind === ScopeItemKind.Each;
+export function isEach(value: TScopeItem | undefined): value is EachScopeItem {
+    return value?.kind === ScopeItemKind.Each;
 }
 
-export function isLetVariable(maybeValue: TScopeItem | undefined): maybeValue is LetVariableScopeItem {
-    return maybeValue?.kind === ScopeItemKind.LetVariable;
+export function isLetVariable(value: TScopeItem | undefined): value is LetVariableScopeItem {
+    return value?.kind === ScopeItemKind.LetVariable;
 }
 
-export function isParameter(maybeValue: TScopeItem | undefined): maybeValue is ParameterScopeItem {
-    return maybeValue?.kind === ScopeItemKind.Parameter;
+export function isParameter(value: TScopeItem | undefined): value is ParameterScopeItem {
+    return value?.kind === ScopeItemKind.Parameter;
 }
 
-export function isRecordField(maybeValue: TScopeItem | undefined): maybeValue is RecordFieldScopeItem {
-    return maybeValue?.kind === ScopeItemKind.RecordField;
+export function isRecordField(value: TScopeItem | undefined): value is RecordFieldScopeItem {
+    return value?.kind === ScopeItemKind.RecordField;
 }
 
-export function isSectionMember(maybeValue: TScopeItem | undefined): maybeValue is SectionMemberScopeItem {
-    return maybeValue?.kind === ScopeItemKind.SectionMember;
+export function isSectionMember(value: TScopeItem | undefined): value is SectionMemberScopeItem {
+    return value?.kind === ScopeItemKind.SectionMember;
 }
 
-export function isUndefined(maybeValue: TScopeItem | undefined): maybeValue is UndefinedScopeItem {
-    return maybeValue?.kind === ScopeItemKind.Undefined;
+export function isUndefined(value: TScopeItem | undefined): value is UndefinedScopeItem {
+    return value?.kind === ScopeItemKind.Undefined;
 }
 
 export function findScopeItemByLiteral(
@@ -61,7 +61,7 @@ export function findScopeItemByLiteral(
     return nodeScope?.get(literalString);
 }
 
-export function maybeScopeCreatorIdentifier(
+export function scopeCreatorIdentifier(
     scopeItem: TScopeItem | undefined,
 ): Ast.Identifier | Ast.GeneralizedIdentifier | undefined {
     if (!scopeItem) {

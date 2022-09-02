@@ -87,16 +87,14 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(
-                context.identifier.literal,
-            );
+            const scopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
 
-            if (maybeScopeItem === undefined) {
+            if (scopeItem === undefined) {
                 return undefined;
             }
 
             const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
-                ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
+                ScopeUtils.scopeCreatorIdentifier(scopeItem);
 
             if (creator === undefined) {
                 return undefined;
@@ -148,12 +146,12 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
             context.cancellationToken?.throwIfCancelled();
 
-            let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
+            let hover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
 
-            if (maybeHover !== undefined) {
-                trace.exit({ maybeHover: true });
+            if (hover !== undefined) {
+                trace.exit({ hover: true });
 
-                return maybeHover;
+                return hover;
             }
 
             const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
@@ -165,11 +163,11 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            maybeHover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
+            hover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
 
             trace.exit();
 
-            return maybeHover ?? undefined;
+            return hover ?? undefined;
         }, this.locale);
     }
 
@@ -214,19 +212,19 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
             context.cancellationToken?.throwIfCancelled();
 
-            const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
+            const invokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
                 context.triedCurrentInvokeExpression,
             )
                 ? context.triedCurrentInvokeExpression.value
                 : undefined;
 
-            if (maybeInvokeInspection === undefined) {
-                trace.exit({ maybeInvokeInspectionUndefined: true });
+            if (invokeInspection === undefined) {
+                trace.exit({ invokeInspectionUndefined: true });
 
                 return undefined;
             }
 
-            if (maybeInvokeInspection.name && !maybeInvokeInspection.isNameInLocalScope) {
+            if (invokeInspection.name && !invokeInspection.isNameInLocalScope) {
                 trace.exit({ unknownName: true });
 
                 return undefined;
@@ -285,10 +283,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         context.cancellationToken?.throwIfCancelled();
 
         const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
-        const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
+        const leafKInd: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
 
         const isValidLeafNodeKind: boolean = [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier].includes(
-            maybeLeafKind,
+            leafKInd,
         );
 
         if (!isValidLeafNodeKind) {
@@ -297,7 +295,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.nthXorChecked<
+        const identifierPairedExpression: TXorNode | undefined = AncestryUtils.nthXorChecked<
             | Ast.GeneralizedIdentifierPairedAnyLiteral
             | Ast.GeneralizedIdentifierPairedExpression
             | Ast.IdentifierPairedExpression
@@ -308,20 +306,20 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         ]);
 
         // We're on an identifier in some other context which we don't support.
-        if (maybeIdentifierPairedExpression === undefined) {
+        if (identifierPairedExpression === undefined) {
             trace.exit();
 
             return undefined;
         }
 
-        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.nthChild(
+        const expression: TXorNode | undefined = NodeIdMapUtils.nthChild(
             context.parseState.contextState.nodeIdMapCollection,
-            maybeIdentifierPairedExpression.node.id,
+            identifierPairedExpression.node.id,
             2,
         );
 
         // We're on an identifier in some other context which we don't support.
-        if (maybeExpression === undefined) {
+        if (expression === undefined) {
             trace.exit();
 
             return undefined;
@@ -333,7 +331,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 initialCorrelationId: trace.id,
             },
             context.parseState.contextState.nodeIdMapCollection,
-            maybeExpression.node.id,
+            expression.node.id,
             this.typeCache,
         );
 
@@ -346,22 +344,22 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
         let scopeItemText: string = "unknown";
         // If it's a SectionMember
-        const maybeThirdNodeKind: Ast.NodeKind = ancestry[2]?.node.kind;
+        const thirdNodeKind: Ast.NodeKind = ancestry[2]?.node.kind;
 
-        if (maybeThirdNodeKind === Ast.NodeKind.SectionMember) {
+        if (thirdNodeKind === Ast.NodeKind.SectionMember) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.SectionMember);
         }
 
         // Else if it's RecordExpression or RecordLiteral
-        const maybeFifthNodeKind: Ast.NodeKind = ancestry[4]?.node.kind;
+        const fifthNodeKind: Ast.NodeKind = ancestry[4]?.node.kind;
 
         const isRecordNodeKind: boolean = [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral].includes(
-            maybeFifthNodeKind,
+            fifthNodeKind,
         );
 
         if (isRecordNodeKind) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.RecordField);
-        } else if (maybeFifthNodeKind === Ast.NodeKind.LetExpression) {
+        } else if (fifthNodeKind === Ast.NodeKind.LetExpression) {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.LetVariable);
         }
 
@@ -392,19 +390,19 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         correlationId: number,
     ): Hover | undefined {
         const identifierLiteral: string = context.identifier.literal;
-        const maybeScopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
+        const scopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
 
-        if (maybeScopeItem === undefined || maybeScopeItem.kind === Inspection.ScopeItemKind.Undefined) {
+        if (scopeItem === undefined || scopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             return undefined;
         }
 
-        const scopeItemText: string = InspectionUtils.getScopeItemKindText(maybeScopeItem.kind);
+        const scopeItemText: string = InspectionUtils.getScopeItemKindText(scopeItem.kind);
 
-        const maybeScopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
+        const scopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
 
         const scopeItemTypeText: string =
-            maybeScopeItemType !== undefined
-                ? TypeUtils.nameOf(maybeScopeItemType, context.traceManager, correlationId)
+            scopeItemType !== undefined
+                ? TypeUtils.nameOf(scopeItemType, context.traceManager, correlationId)
                 : "unknown";
 
         return {

@@ -13,11 +13,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import {
-    findDirectUpperScopeExpression,
-    findScopeItemByLiteral,
-    maybeScopeCreatorIdentifier,
-} from "./scope/scopeUtils";
+import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
@@ -141,7 +137,7 @@ export class InspectionInstance implements Inspected {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreatorIdentifier(theScopeItem);
+                            scopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (
@@ -165,7 +161,7 @@ export class InspectionInstance implements Inspected {
 export async function inspect(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
-    maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
+    parseError: PQP.Parser.ParseError.ParseError | undefined,
     position: Position,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
@@ -220,7 +216,7 @@ export async function inspect(
         updatedSettings,
         nodeIdMapCollection,
         activeNode,
-        await autocomplete(updatedSettings, parseState, typeCache, activeNode, maybeParseError),
+        await autocomplete(updatedSettings, parseState, typeCache, activeNode, parseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
@@ -254,7 +250,7 @@ export async function tryInspect(
     const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(updatedSettings, text);
 
     let parseState: PQP.Parser.ParseState;
-    let maybeParseError: PQP.Parser.ParseError.ParseError | undefined;
+    let parseError: PQP.Parser.ParseError.ParseError | undefined;
 
     if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
         trace.exit({ [TraceConstant.IsError]: true });
@@ -262,13 +258,13 @@ export async function tryInspect(
         return PQP.ResultUtils.boxError(triedLexParse.error);
     } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
         parseState = triedLexParse.parseState;
-        maybeParseError = triedLexParse.error;
+        parseError = triedLexParse.error;
     } else {
         parseState = triedLexParse.parseState;
     }
 
     const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.boxOk(
-        inspect(updatedSettings, parseState, maybeParseError, position, typeCache),
+        inspect(updatedSettings, parseState, parseError, position, typeCache),
     );
 
     trace.exit({ [TraceConstant.IsError]: false });

@@ -24,7 +24,7 @@ import { MockDocument } from "../mockDocument";
 export interface AbridgedDocumentSymbol {
     readonly name: string;
     readonly kind: SymbolKind;
-    readonly maybeChildren?: ReadonlyArray<AbridgedDocumentSymbol>;
+    readonly children?: ReadonlyArray<AbridgedDocumentSymbol>;
 }
 
 export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
@@ -60,7 +60,7 @@ export function createAbridgedDocumentSymbols(
             return {
                 name: documentSymbol.name,
                 kind: documentSymbol.kind,
-                maybeChildren: createAbridgedDocumentSymbols(documentSymbol.children),
+                children: createAbridgedDocumentSymbols(documentSymbol.children),
             };
         } else {
             return {
@@ -78,18 +78,18 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
     };
 }
 
-export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSettings): [Analysis, Position] {
+export function createAnalysis(text: string, analysisSettings?: AnalysisSettings): [Analysis, Position] {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
 
-    return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings)), position];
+    return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings)), position];
 }
 
 export function createAutocompleteItems(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
 
     return analysis.getAutocompleteItems(position, cancellationToken);
 }
@@ -97,30 +97,30 @@ export function createAutocompleteItems(
 export function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    return createFileAnalysis(fileName, maybeAnalysisSettings).getAutocompleteItems(position, cancellationToken);
+    return createFileAnalysis(fileName, analysisSettings).getAutocompleteItems(position, cancellationToken);
 }
 
 export function createDefinition(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
 
     return analysis.getDefinition(position, cancellationToken);
 }
 
 export function createFoldingRanges(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
     const analysis: Analysis = AnalysisUtils.createAnalysis(
         createTextMockDocument(text),
-        createAnalysisSettings(maybeAnalysisSettings),
+        createAnalysisSettings(analysisSettings),
     );
 
     return analysis.getFoldingRanges(cancellationToken);
@@ -128,22 +128,22 @@ export function createFoldingRanges(
 
 export function createHover(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
 
     return analysis.getHover(position, cancellationToken);
 }
 
 export function createPartialSemanticTokens(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
     const analysis: Analysis = AnalysisUtils.createAnalysis(
         createTextMockDocument(text),
-        createAnalysisSettings(maybeAnalysisSettings),
+        createAnalysisSettings(analysisSettings),
     );
 
     return analysis.getPartialSemanticTokens(cancellationToken);
@@ -151,24 +151,24 @@ export function createPartialSemanticTokens(
 
 export function createSignatureHelp(
     text: string,
-    maybeAnalysisSettings?: AnalysisSettings,
+    analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
 
     return analysis.getSignatureHelp(position, cancellationToken);
 }
 
-function createFileAnalysis(fileName: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {
+function createFileAnalysis(fileName: string, analysisSettings?: AnalysisSettings): Analysis {
     const document: MockDocument = createTextMockDocument(readFile(fileName));
 
-    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(maybeAnalysisSettings));
+    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings));
 }
 
-function createAnalysisSettings(maybeAnalysisSettings?: AnalysisSettings): AnalysisSettings {
+function createAnalysisSettings(analysisSettings?: AnalysisSettings): AnalysisSettings {
     return {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        ...(maybeAnalysisSettings ?? {}),
+        ...(analysisSettings ?? {}),
     };
 }
 

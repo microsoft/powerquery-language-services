@@ -41,7 +41,7 @@ export async function validateUnknownIdentifiers(
         Ast.Identifier,
         IdentifierWithNodeScope
     >(identifierValues, async (identifier: Ast.Identifier) => {
-        const maybeIdentifierExpression: Ast.IdentifierExpression | undefined =
+        const identifierExpression: Ast.IdentifierExpression | undefined =
             NodeIdMapUtils.parentAstChecked<Ast.IdentifierExpression>(
                 nodeIdMapCollection,
                 identifier.id,
@@ -49,12 +49,12 @@ export async function validateUnknownIdentifiers(
             );
 
         const literal: string =
-            maybeIdentifierExpression && maybeIdentifierExpression.inclusiveConstant !== undefined
+            identifierExpression && identifierExpression.inclusiveConstant !== undefined
                 ? `@${identifier.literal}`
                 : identifier.literal;
 
         return {
-            identifier: maybeIdentifierExpression ?? identifier,
+            identifier: identifierExpression ?? identifier,
             literal,
             triedNodeScope: await Inspection.tryNodeScope(
                 updatedSettings,
@@ -89,27 +89,24 @@ interface IdentifierWithNodeScope {
 interface UnknownIdentifier {
     readonly identifier: Ast.Identifier | Ast.IdentifierExpression;
     readonly literal: string;
-    readonly maybeSuggestion: string | undefined;
+    readonly suggestion: string | undefined;
 }
 
 function findIdentifierAsts(nodeIdMapCollection: NodeIdMap.Collection): ReadonlyArray<Ast.Identifier> {
-    const maybeIdentifiers: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier);
+    const identifiers: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Identifier);
 
-    if (maybeIdentifiers === undefined) {
+    if (identifiers === undefined) {
         return [];
     }
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     const result: Ast.Identifier[] = [];
 
-    for (const identifierId of maybeIdentifiers.values()) {
-        const maybeIdentifier: Ast.Identifier | undefined = astNodeById.get(identifierId) as Ast.Identifier;
+    for (const identifierId of identifiers.values()) {
+        const identifier: Ast.Identifier | undefined = astNodeById.get(identifierId) as Ast.Identifier;
 
-        if (
-            maybeIdentifier !== undefined &&
-            maybeIdentifier.identifierContextKind === Ast.IdentifierContextKind.Value
-        ) {
-            result.push(maybeIdentifier);
+        if (identifier !== undefined && identifier.identifierContextKind === Ast.IdentifierContextKind.Value) {
+            result.push(identifier);
         }
     }
 
@@ -158,7 +155,7 @@ function findUnknownIdentifiers(
             unknownIdentifiers.push({
                 identifier,
                 literal,
-                maybeSuggestion: jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
+                suggestion: jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
             });
         }
     }
@@ -179,7 +176,7 @@ function unknownIdentifiersToDiagnostics(
         message: Localization.error_validation_unknownIdentifier(
             templates,
             unknownIdentifier.literal,
-            unknownIdentifier.maybeSuggestion,
+            unknownIdentifier.suggestion,
         ),
         range: PositionUtils.createRangeFromTokenRange(unknownIdentifier.identifier.tokenRange),
         severity: DiagnosticSeverity.Error,
