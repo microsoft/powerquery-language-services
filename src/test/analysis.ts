@@ -85,7 +85,6 @@ describe("Analysis", () => {
         it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
-                createCancellationTokenFn: () => new TimedCancellationToken(0),
                 maybeCreateLibraryProviderFn: (library: Library.ILibrary) =>
                     new SlowLibraryProvider(library, DefaultLocale, 100),
             };
@@ -94,6 +93,7 @@ describe("Analysis", () => {
                 await TestUtils.createSignatureHelp(
                     `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
                     analysisSettings,
+                    new TimedCancellationToken(0),
                 );
 
             Assert.isError(signatureHelp);
@@ -132,7 +132,6 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        createCancellationTokenFn: () => new TimedCancellationToken(0),
         maybeCreateLibraryProviderFn,
         maybeCreateLocalDocumentProviderFn,
     };
@@ -140,6 +139,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
     const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
         `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
         analysisSettings,
+        new TimedCancellationToken(0),
     );
 
     Assert.isError(hover);

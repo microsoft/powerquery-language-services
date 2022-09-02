@@ -25,6 +25,8 @@ export class NoOpCancellationToken implements ICancellationToken {
     cancel: () => void = () => {};
 }
 
+export const NoOpCancellationTokenInstance: NoOpCancellationToken = new NoOpCancellationToken();
+
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
@@ -242,7 +244,6 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     maybeInitialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
     inspectionSettings: SimpleInspectionSettings,
-    createCancellationTokenFn: (_action: string) => new NoOpCancellationToken(),
 };
 
 export const SimpleValidateAllSettings: ValidationSettings = {

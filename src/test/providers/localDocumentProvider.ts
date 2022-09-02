@@ -219,12 +219,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
             const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
                 await AnalysisUtils.createAnalysis(document, {
-                    createCancellationTokenFn: () => new TestConstants.NoOpCancellationToken(),
                     inspectionSettings: TestConstants.SimpleInspectionSettings,
                     isWorkspaceCacheAllowed: false,
                     traceManager: NoOpTraceManagerInstance,
                     maybeInitialCorrelationId: undefined,
-                }).getAutocompleteItems(position);
+                }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
 
             Assert.isOk(autocompleteItems);
             Assert.isDefined(autocompleteItems.value);

@@ -4,7 +4,7 @@
 import * as File from "fs";
 import * as Path from "path";
 import { assert, expect } from "chai";
-import { CommonError, Result } from "@microsoft/powerquery-parser";
+import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
 import {
     DocumentSymbol,
     FoldingRange,
@@ -87,69 +87,76 @@ export function createAnalysis(text: string, maybeAnalysisSettings?: AnalysisSet
 export function createAutocompleteItems(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
     const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
 
-    return analysis.getAutocompleteItems(position);
+    return analysis.getAutocompleteItems(position, cancellationToken);
 }
 
 export function createAutocompleteItemsForFile(
     fileName: string,
     position: Position,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    return createFileAnalysis(fileName, maybeAnalysisSettings).getAutocompleteItems(position);
+    return createFileAnalysis(fileName, maybeAnalysisSettings).getAutocompleteItems(position, cancellationToken);
 }
 
 export function createDefinition(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
     const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
 
-    return analysis.getDefinition(position);
+    return analysis.getDefinition(position, cancellationToken);
 }
 
 export function createFoldingRanges(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
     const analysis: Analysis = AnalysisUtils.createAnalysis(
         createTextMockDocument(text),
         createAnalysisSettings(maybeAnalysisSettings),
     );
 
-    return analysis.getFoldingRanges();
+    return analysis.getFoldingRanges(cancellationToken);
 }
 
 export function createHover(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
     const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
 
-    return analysis.getHover(position);
+    return analysis.getHover(position, cancellationToken);
 }
 
 export function createPartialSemanticTokens(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
     const analysis: Analysis = AnalysisUtils.createAnalysis(
         createTextMockDocument(text),
         createAnalysisSettings(maybeAnalysisSettings),
     );
 
-    return analysis.getPartialSemanticTokens();
+    return analysis.getPartialSemanticTokens(cancellationToken);
 }
 
 export function createSignatureHelp(
     text: string,
     maybeAnalysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
     const [analysis, position]: [Analysis, Position] = createAnalysis(text, maybeAnalysisSettings);
 
-    return analysis.getSignatureHelp(position);
+    return analysis.getSignatureHelp(position, cancellationToken);
 }
 
 function createFileAnalysis(fileName: string, maybeAnalysisSettings?: AnalysisSettings): Analysis {

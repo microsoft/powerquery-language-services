@@ -104,6 +104,7 @@ export class AnalysisBase implements Analysis {
 
     public getAutocompleteItems(
         position: Position,
+        cancellationToken: ICancellationToken,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -112,14 +113,8 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.maybeInitialCorrelationId,
             );
 
-            this.cancelPreviousTokenIfExists(this.getAutocompleteItems.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getAutocompleteItems.name,
-            );
-
             const maybeContext: AutocompleteItemProviderContext | undefined =
-                await this.getAutocompleteItemProviderContext(position, trace.id, newCancellationToken);
+                await this.getAutocompleteItemProviderContext(position, trace.id, cancellationToken);
 
             if (maybeContext === undefined) {
                 trace.exit();
@@ -154,7 +149,10 @@ export class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public getDefinition(position: Position): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+    public getDefinition(
+        position: Position,
+        cancellationToken: ICancellationToken,
+    ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
@@ -162,14 +160,8 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.maybeInitialCorrelationId,
             );
 
-            this.cancelPreviousTokenIfExists(this.getDefinition.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getDefinition.name,
-            );
-
             const maybeIdentifierContext: DefinitionProviderContext | undefined =
-                await this.getDefinitionProviderContext(position, trace.id, newCancellationToken);
+                await this.getDefinitionProviderContext(position, trace.id, cancellationToken);
 
             if (!maybeIdentifierContext) {
                 trace.exit();
@@ -190,7 +182,9 @@ export class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public getDocumentSymbols(): Promise<PQP.Result<DocumentSymbol[] | undefined, CommonError.CommonError>> {
+    public getDocumentSymbols(
+        cancellationToken: ICancellationToken,
+    ): Promise<PQP.Result<DocumentSymbol[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const maybeParseState: ParseState | undefined = await this.getParseState();
 
@@ -202,25 +196,27 @@ export class AnalysisBase implements Analysis {
             const currentSymbols: DocumentSymbol[] = [];
             const parentSymbolById: Map<number, DocumentSymbol> = new Map();
 
-            addIdentifierPairedExpressionSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
-            addRecordSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById);
+            addIdentifierPairedExpressionSymbols(
+                nodeIdMapCollection,
+                currentSymbols,
+                parentSymbolById,
+                cancellationToken,
+            );
+
+            addRecordSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById, cancellationToken);
 
             return currentSymbols;
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public getFoldingRanges(): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
+    public getFoldingRanges(
+        cancellationToken: ICancellationToken,
+    ): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getFoldingRanges.name,
                 this.analysisSettings.maybeInitialCorrelationId,
-            );
-
-            this.cancelPreviousTokenIfExists(this.getFoldingRanges.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getFoldingRanges.name,
             );
 
             const maybeParseState: ParseState | undefined = await this.getParseState();
@@ -235,7 +231,7 @@ export class AnalysisBase implements Analysis {
                 await this.localDocumentProvider.getFoldingRanges({
                     traceManager: this.analysisSettings.traceManager,
                     maybeInitialCorrelationId: trace.id,
-                    maybeCancellationToken: newCancellationToken,
+                    maybeCancellationToken: cancellationToken,
                     nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
                 });
 
@@ -249,7 +245,10 @@ export class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public getHover(position: Position): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+    public getHover(
+        position: Position,
+        cancellationToken: ICancellationToken,
+    ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
@@ -257,16 +256,10 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.maybeInitialCorrelationId,
             );
 
-            this.cancelPreviousTokenIfExists(this.getHover.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getHover.name,
-            );
-
             const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
                 position,
                 trace.id,
-                newCancellationToken,
+                cancellationToken,
             );
 
             if (!maybeHoverProviderContext) {
@@ -324,7 +317,9 @@ export class AnalysisBase implements Analysis {
         return this.parseState;
     }
 
-    public getPartialSemanticTokens(): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+    public getPartialSemanticTokens(
+        cancellationToken: ICancellationToken,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
@@ -332,15 +327,11 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.maybeInitialCorrelationId,
             );
 
-            this.cancelPreviousTokenIfExists(this.getPartialSemanticTokens.name);
-
             const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
                 await this.localDocumentProvider.getPartialSemanticTokens({
                     traceManager: this.analysisSettings.traceManager,
                     maybeInitialCorrelationId: trace.id,
-                    maybeCancellationToken: this.analysisSettings.createCancellationTokenFn(
-                        this.getPartialSemanticTokens.name,
-                    ),
+                    maybeCancellationToken: cancellationToken,
                     library: this.analysisSettings.inspectionSettings.library,
                     parseState: Assert.asDefined(await this.getParseState()),
                 });
@@ -355,7 +346,10 @@ export class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    public getSignatureHelp(position: Position): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+    public getSignatureHelp(
+        position: Position,
+        cancellationToken: ICancellationToken,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
@@ -363,16 +357,10 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.maybeInitialCorrelationId,
             );
 
-            this.cancelPreviousTokenIfExists(this.getSignatureHelp.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getSignatureHelp.name,
-            );
-
             const maybeContext: SignatureProviderContext | undefined = await this.getSignatureProviderContext(
                 position,
                 trace.id,
-                newCancellationToken,
+                cancellationToken,
             );
 
             if (maybeContext === undefined) {
@@ -403,18 +391,13 @@ export class AnalysisBase implements Analysis {
     public getRenameEdits(
         position: Position,
         newName: string,
+        cancellationToken: ICancellationToken,
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getRenameEdits.name,
                 this.analysisSettings.maybeInitialCorrelationId,
-            );
-
-            this.cancelPreviousTokenIfExists(this.getRenameEdits.name);
-
-            const newCancellationToken: ICancellationToken = this.analysisSettings.createCancellationTokenFn(
-                this.getRenameEdits.name,
             );
 
             const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
@@ -432,7 +415,7 @@ export class AnalysisBase implements Analysis {
                 maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
             }
 
-            void (await this.inspectNodeScope(maybeActiveNode, trace.id, newCancellationToken));
+            void (await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken));
             const scopeById: Inspection.ScopeById = this.typeCache.scopeById;
 
             const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
@@ -1070,11 +1053,14 @@ function addIdentifierPairedExpressionSymbols(
     nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
+    cancellationToken: ICancellationToken,
 ): void {
     const identifierPairedExpressionIds: Set<number> =
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierPairedExpression) ?? new Set();
 
     for (const nodeId of identifierPairedExpressionIds) {
+        cancellationToken.throwIfCancelled();
+
         const xorNode: XorNode<Ast.IdentifierPairedExpression> =
             NodeIdMapUtils.assertGetXorChecked<Ast.IdentifierPairedExpression>(
                 nodeIdMapCollection,
@@ -1097,6 +1083,7 @@ function addRecordSymbols(
     nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
+    cancellationToken: ICancellationToken,
 ): void {
     const recordIdCollections: ReadonlyArray<Set<number>> = [
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set(),
@@ -1105,6 +1092,8 @@ function addRecordSymbols(
 
     for (const collection of recordIdCollections) {
         for (const nodeId of collection) {
+            cancellationToken.throwIfCancelled();
+
             const xorNode: XorNode<Ast.RecordExpression | Ast.RecordLiteral> = NodeIdMapUtils.assertGetXorChecked<
                 Ast.RecordExpression | Ast.RecordLiteral
             >(nodeIdMapCollection, nodeId, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);

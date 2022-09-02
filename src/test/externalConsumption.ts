@@ -18,13 +18,11 @@ import {
     SymbolKind,
     TextDocument,
 } from "../powerquery-language-services";
-import { NoOpCancellationToken } from "./testConstants";
 import { TestConstants } from ".";
 
 describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
-            createCancellationTokenFn: () => new NoOpCancellationToken(),
             inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
             traceManager: NoOpTraceManagerInstance,
@@ -40,7 +38,11 @@ describe("External consumption", () => {
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
 
-        const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(position);
+        const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
+            position,
+            TestConstants.NoOpCancellationTokenInstance,
+        );
+
         Assert.isOk(hover);
         Assert.isUndefined(hover.value);
 

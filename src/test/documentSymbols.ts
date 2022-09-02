@@ -18,7 +18,7 @@ async function expectSymbolsForDocument(
     const analysis: Analysis = AnalysisUtils.createAnalysis(document, TestConstants.SimpleLibraryAnalysisSettings);
 
     const actualSymbols: Result<DocumentSymbol[] | undefined, CommonError.CommonError> =
-        await analysis.getDocumentSymbols();
+        await analysis.getDocumentSymbols(TestConstants.NoOpCancellationTokenInstance);
 
     Assert.isOk(actualSymbols);
     Assert.isDefined(actualSymbols.value);

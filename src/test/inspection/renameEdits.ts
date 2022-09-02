@@ -24,7 +24,6 @@ import { findDirectUpperScopeExpression } from "../../powerquery-language-servic
 class RenameEditsAnalysis extends AnalysisBase {
     constructor(textDocument: TextDocument) {
         super(textDocument, {
-            createCancellationTokenFn: () => new TestConstants.NoOpCancellationToken(),
             inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
             traceManager: NoOpTraceManagerInstance,
@@ -49,7 +48,7 @@ function getRenameEdits(
     const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
     const partialAnalysis: RenameEditsAnalysis = new RenameEditsAnalysis(textDocument);
 
-    return partialAnalysis.getRenameEdits(position, nextStr);
+    return partialAnalysis.getRenameEdits(position, nextStr, TestConstants.NoOpCancellationTokenInstance);
 }
 
 describe(`Inspection - RenameEdits - Identifiers`, () => {
