@@ -30,7 +30,7 @@ function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<Ab
 }
 
 describe("Document symbol base functions", () => {
-    it(`WIP section foo; shared a = 1; b = "abc"; c = true;`, async () => {
+    it(`section foo; shared a = 1; b = "abc"; c = true;`, async () => {
         const textDocument: TextDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
