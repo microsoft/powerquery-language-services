@@ -11,12 +11,12 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export async function inspectTypeEachExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeEachExpression.name,
-        correlationId,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 

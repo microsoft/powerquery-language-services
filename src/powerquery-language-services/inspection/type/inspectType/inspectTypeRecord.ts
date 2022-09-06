@@ -13,12 +13,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeRecord(
     state: InspectTypeState,
     xorNode: TXorNode,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.Record | Type.DefinedRecord> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRecord.name,
-        correlationId,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 

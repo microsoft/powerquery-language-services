@@ -7,7 +7,7 @@ import { Position } from "vscode-languageserver-types";
 import {
     ActiveNodeUtils,
     Autocomplete,
-    TActiveNode,
+    TMaybeActiveNode,
     TriedCurrentInvokeExpression,
     TriedNodeScope,
     TriedScopeType,
@@ -16,7 +16,7 @@ import { AnalysisBase } from "./analysisBase";
 
 // Adds caching to AnalysisBase.
 export class MemoizedAnalysis extends AnalysisBase {
-    private readonly activeNodeCache: Map<string, Promise<TActiveNode | undefined>> = new Map();
+    private readonly activeNodeCache: Map<string, Promise<TMaybeActiveNode | undefined>> = new Map();
     private readonly autocompleteCache: Map<number | undefined, Promise<Autocomplete | undefined>> = new Map();
     private readonly currentInvokeExpressionCache: Map<string, Promise<TriedCurrentInvokeExpression | undefined>> =
         new Map();
@@ -33,8 +33,8 @@ export class MemoizedAnalysis extends AnalysisBase {
         super.dispose();
     }
 
-    protected override getActiveNode(position: Position): Promise<TActiveNode | undefined> {
-        return this.getOrCreate<string, TActiveNode | undefined>(
+    protected override getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
+        return this.getOrCreate<string, TMaybeActiveNode | undefined>(
             this.activeNodeCache,
             () => `${position.line}:${position.character}`,
             () => super.getActiveNode(position),
@@ -42,7 +42,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     }
 
     protected override inspectAutocomplete(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Autocomplete | undefined> {
@@ -66,7 +66,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     }
 
     protected override inspectNodeScope(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<TriedNodeScope | undefined> {
@@ -78,7 +78,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     }
 
     protected override inspectScopeType(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<TriedScopeType | undefined> {

@@ -20,12 +20,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeFunctionType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.FunctionType | Type.Type | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeFunctionType.name,
-        correlationId,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 

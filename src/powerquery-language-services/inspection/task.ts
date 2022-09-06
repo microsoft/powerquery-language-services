@@ -6,7 +6,7 @@ import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNodeUtils, TActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import {
     AstNodeById,
     ChildIdsById,
@@ -33,7 +33,7 @@ export class InspectionInstance implements Inspected {
     constructor(
         public readonly settings: InspectionSettings,
         public readonly nodeIdMapCollection: NodeIdMap.Collection,
-        public readonly activeNode: TActiveNode,
+        public readonly maybeActiveNode: TMaybeActiveNode,
         public readonly autocomplete: Inspection.Autocomplete,
         public readonly triedCurrentInvokeExpression: Promise<Inspection.TriedCurrentInvokeExpression>,
         public readonly triedNodeScope: Promise<Inspection.TriedNodeScope>,
@@ -185,12 +185,12 @@ export async function inspect(
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
-    const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
     const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
         updatedSettings,
         nodeIdMapCollection,
-        activeNode,
+        maybeActiveNode,
         typeCache,
     );
 
@@ -198,7 +198,9 @@ export async function inspect(
     let triedScopeType: Promise<TriedScopeType>;
     let triedExpectedType: TriedExpectedType;
 
-    if (ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        const activeNode: ActiveNode = maybeActiveNode;
+
         triedNodeScope = tryNodeScope(
             updatedSettings,
             nodeIdMapCollection,
@@ -219,8 +221,8 @@ export async function inspect(
     const result: InspectionInstance = new InspectionInstance(
         updatedSettings,
         nodeIdMapCollection,
-        activeNode,
-        await autocomplete(updatedSettings, parseState, typeCache, activeNode, maybeParseError),
+        maybeActiveNode,
+        await autocomplete(updatedSettings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,

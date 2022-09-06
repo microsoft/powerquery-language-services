@@ -29,7 +29,7 @@ import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument"
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ActiveNodeUtils, TActiveLeafIdentifier, TActiveNode, TypeCache } from "../inspection";
+import { ActiveNodeUtils, TActiveLeafIdentifier, TMaybeActiveNode, TypeCache } from "../inspection";
 import type {
     AutocompleteItemProviderContext,
     DefinitionProviderContext,
@@ -403,7 +403,7 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const activeNode: TActiveNode = Assert.asDefined(await this.getActiveNode(position));
+            const activeNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
 
             let leafIdentifier: TActiveLeafIdentifier | undefined;
 
@@ -580,7 +580,7 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
 
         if (activeNode === undefined) {
             trace.exit();
@@ -645,7 +645,7 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: Inspection.TMaybeActiveNode | undefined = await this.getActiveNode(position);
 
         if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             trace.exit();
@@ -691,7 +691,7 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: Inspection.TMaybeActiveNode | undefined = await this.getActiveNode(position);
 
         if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             trace.exit();
@@ -935,18 +935,18 @@ export class AnalysisBase implements Analysis {
     }
 
     // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
-    protected async getActiveNode(position: Position): Promise<TActiveNode | undefined> {
+    protected async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
         const parseState: ParseState | undefined = await this.getParseState();
 
         if (parseState === undefined) {
             return undefined;
         }
 
-        return ActiveNodeUtils.activeNode(parseState.contextState.nodeIdMapCollection, position);
+        return ActiveNodeUtils.maybeActiveNode(parseState.contextState.nodeIdMapCollection, position);
     }
 
     protected async inspectAutocomplete(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.Autocomplete | undefined> {
@@ -974,7 +974,7 @@ export class AnalysisBase implements Analysis {
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedCurrentInvokeExpression | undefined> {
-        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
         const parseState: ParseState | undefined = await this.getParseState();
 
         if (activeNode === undefined || parseState === undefined) {
@@ -994,7 +994,7 @@ export class AnalysisBase implements Analysis {
     }
 
     protected async inspectNodeScope(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedNodeScope | undefined> {
@@ -1017,7 +1017,7 @@ export class AnalysisBase implements Analysis {
     }
 
     protected async inspectScopeType(
-        activeNode: TActiveNode,
+        activeNode: TMaybeActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedScopeType | undefined> {

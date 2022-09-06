@@ -15,7 +15,7 @@ import {
     autocomplete,
     Inspected,
     InspectionInstance,
-    TActiveNode,
+    TMaybeActiveNode,
     TriedCurrentInvokeExpression,
     TriedNodeScope,
     TriedScopeType,
@@ -63,7 +63,7 @@ export async function assertGetInspectionInstance(
     }
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const maybeActiveNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
+    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
 
     const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
         settings,
@@ -123,7 +123,7 @@ export async function assertGetAutocomplete(
             settings,
             triedLexParseTask.parseState,
             TypeCacheUtils.createEmptyCache(),
-            ActiveNodeUtils.activeNode(triedLexParseTask.nodeIdMapCollection, position),
+            ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             undefined,
         );
     } else if (PQP.TaskUtils.isParseStageError(triedLexParseTask)) {
@@ -135,7 +135,7 @@ export async function assertGetAutocomplete(
             settings,
             triedLexParseTask.parseState,
             TypeCacheUtils.createEmptyCache(),
-            ActiveNodeUtils.activeNode(triedLexParseTask.nodeIdMapCollection, position),
+            ActiveNodeUtils.maybeActiveNode(triedLexParseTask.nodeIdMapCollection, position),
             triedLexParseTask.error,
         );
     } else {

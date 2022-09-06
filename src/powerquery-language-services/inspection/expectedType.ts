@@ -7,26 +7,26 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
 import { InspectionTraceConstant } from "../trace";
 
 export type TriedExpectedType = PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError>;
 
-export function tryExpectedType(settings: PQP.CommonSettings, activeNode: TActiveNode): TriedExpectedType {
+export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectExpectedType,
         tryExpectedType.name,
         settings.initialCorrelationId,
     );
 
-    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         trace.exit();
 
         return ResultUtils.boxOk(undefined);
     }
 
     const result: PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError> = ResultUtils.ensureResult(
-        () => maybeExpectedType(activeNode),
+        () => maybeExpectedType(maybeActiveNode),
         settings.locale,
     );
 

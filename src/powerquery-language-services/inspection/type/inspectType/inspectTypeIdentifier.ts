@@ -5,18 +5,18 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { dereferencedIdentifierType, InspectTypeState } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
+import { InspectTypeState, maybeDereferencedIdentifierType } from "./common";
 
 export async function inspectTypeIdentifier(
     state: InspectTypeState,
     xorNode: TXorNode,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeIdentifier.name,
-        correlationId,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -28,7 +28,7 @@ export async function inspectTypeIdentifier(
     if (XorNodeUtils.isContextXor(xorNode)) {
         result = Type.UnknownInstance;
     } else {
-        const dereferencedType: Type.TPowerQueryType | undefined = await dereferencedIdentifierType(
+        const dereferencedType: Type.TPowerQueryType | undefined = await maybeDereferencedIdentifierType(
             state,
             xorNode,
             trace.id,

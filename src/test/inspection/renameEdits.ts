@@ -400,11 +400,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
                     const inspectionInstance: InspectionInstance = (await currentInspectDeferred) as InspectionInstance;
 
-                    expect(inspectionInstance.activeNode.kind).eq(ActiveNodeKind.ActiveNode);
+                    expect(inspectionInstance.maybeActiveNode.kind).eq(ActiveNodeKind.ActiveNode);
 
                     const res: Ast.TNode | undefined = findDirectUpperScopeExpression(
                         inspectionInstance.nodeIdMapCollection,
-                        (inspectionInstance.activeNode as ActiveNode).inclusiveIdentifierUnderPosition?.node
+                        (inspectionInstance.maybeActiveNode as ActiveNode).inclusiveIdentifierUnderPosition?.node
                             ?.id as number,
                     );
 

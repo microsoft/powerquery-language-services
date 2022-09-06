@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Inspection } from "..";
-import { TActiveNode } from "./activeNode";
+import { TMaybeActiveNode } from "./activeNode";
 import { TriedExpectedType } from "./expectedType";
 import { TriedNodeScope } from "./scope";
 import { TypeCache } from "./typeCache";
@@ -13,7 +13,7 @@ import { TypeCache } from "./typeCache";
 export type TriedInspection = PQP.Result<Inspected, PQP.CommonError.CommonError>;
 
 export interface Inspected {
-    readonly activeNode: TActiveNode;
+    readonly maybeActiveNode: TMaybeActiveNode;
     readonly autocomplete: Inspection.Autocomplete;
     readonly triedCurrentInvokeExpression: Promise<Inspection.TriedCurrentInvokeExpression>;
     readonly triedNodeScope: Promise<Inspection.TriedNodeScope>;

@@ -26,12 +26,12 @@ export interface ExaminedFieldSpecificationList {
 export async function examineFieldSpecificationList(
     state: InspectTypeState,
     xorNode: TXorNode,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<ExaminedFieldSpecificationList> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         examineFieldSpecificationList.name,
-        correlationId,
+        maybeCorrelationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 

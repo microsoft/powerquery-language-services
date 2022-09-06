@@ -27,7 +27,7 @@ async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyAr
 }
 
 function assertIsPostionInBounds(
-    maybeActiveNode: Inspection.TActiveNode,
+    maybeActiveNode: Inspection.TMaybeActiveNode,
 ): asserts maybeActiveNode is Inspection.ActiveNode {
     if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         throw new Error(`expected maybeActiveNode to be an ActiveNode`);
@@ -59,7 +59,7 @@ describe("InspectedInvokeExpression", () => {
                 "server",
             ]);
 
-            const activeNode: Inspection.TActiveNode = inspected.activeNode;
+            const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
             assertIsPostionInBounds(activeNode);
 
             TestUtils.assertIsDefined(activeNode.exclusiveIdentifierUnderPosition);

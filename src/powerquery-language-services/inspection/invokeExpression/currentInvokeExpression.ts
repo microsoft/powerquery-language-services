@@ -12,7 +12,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
@@ -38,7 +38,7 @@ export interface CurrentInvokeExpressionArguments extends InvokeExpressionArgume
 export async function tryCurrentInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeActiveNode: TActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
@@ -75,12 +75,12 @@ async function inspectInvokeExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     typeCache: TypeCache,
-    correlationId: number | undefined,
+    maybeCorrelationId: number | undefined,
 ): Promise<CurrentInvokeExpression | undefined> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectCurrentInvokeExpression,
         inspectInvokeExpression.name,
-        correlationId,
+        maybeCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {

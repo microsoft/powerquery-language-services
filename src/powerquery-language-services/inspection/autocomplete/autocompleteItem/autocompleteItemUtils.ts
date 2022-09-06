@@ -15,9 +15,9 @@ import { Library } from "../../../library";
 export function createFromFieldAccess(
     label: string,
     powerQueryType: Type.TPowerQueryType,
-    other?: string,
+    maybeOther?: string,
 ): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
     const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
@@ -33,8 +33,8 @@ export function createFromFieldAccess(
     };
 }
 
-export function createFromKeywordKind(label: Keyword.KeywordKind, other?: string): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+export function createFromKeywordKind(label: Keyword.KeywordKind, maybeOther?: string): AutocompleteItem {
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,
@@ -44,8 +44,8 @@ export function createFromKeywordKind(label: Keyword.KeywordKind, other?: string
     };
 }
 
-export function createFromLanguageConstant(label: Constant.LanguageConstant, other?: string): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+export function createFromLanguageConstant(label: Constant.LanguageConstant, maybeOther?: string): AutocompleteItem {
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,
@@ -58,9 +58,9 @@ export function createFromLanguageConstant(label: Constant.LanguageConstant, oth
 export function createFromLibraryDefinition(
     label: string,
     libraryDefinition: Library.TLibraryDefinition,
-    other?: string,
+    maybeOther?: string,
 ): Inspection.AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,
@@ -72,9 +72,9 @@ export function createFromLibraryDefinition(
 
 export function createFromPrimitiveTypeConstant(
     label: Constant.PrimitiveTypeConstant,
-    other?: string,
+    maybeOther?: string,
 ): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,
@@ -91,7 +91,7 @@ export function fromScopeItem(
     label: string,
     scopeItem: Inspection.TScopeItem,
     powerQueryType: Type.TPowerQueryType,
-    other?: string,
+    maybeOther?: string,
 ): AutocompleteItem | undefined {
     switch (scopeItem.kind) {
         case Inspection.ScopeItemKind.LetVariable:
@@ -122,7 +122,7 @@ export function fromScopeItem(
             throw Assert.isNever(scopeItem);
     }
 
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+    const jaroWinklerScore: number = maybeOther !== undefined ? calculateJaroWinkler(label, maybeOther) : 1;
 
     return {
         jaroWinklerScore,

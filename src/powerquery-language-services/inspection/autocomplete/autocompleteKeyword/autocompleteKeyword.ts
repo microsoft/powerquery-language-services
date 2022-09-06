@@ -6,7 +6,7 @@ import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../../activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
 import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
@@ -22,7 +22,7 @@ import { PositionUtils } from "../../..";
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeActiveNode: TActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): Promise<TriedAutocompleteKeyword> {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {

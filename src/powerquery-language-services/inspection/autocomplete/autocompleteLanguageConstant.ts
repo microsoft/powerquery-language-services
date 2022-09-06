@@ -15,7 +15,7 @@ import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parse
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes";
@@ -23,7 +23,7 @@ import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes"
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeActiveNode: TActiveNode,
+    maybeActiveNode: TMaybeActiveNode,
     maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
     const trace: Trace = settings.traceManager.entry(
@@ -44,8 +44,8 @@ export function tryAutocompleteLanguageConstant(
 
 function autocompleteLanguageConstant(
     nodeIdMapCollection: NodeIdMap.Collection,
-    maybeActiveNode: TActiveNode,
-    trailingToken: TrailingToken | undefined,
+    maybeActiveNode: TMaybeActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): AutocompleteItem | undefined {
     if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
@@ -53,7 +53,7 @@ function autocompleteLanguageConstant(
 
     const activeNode: ActiveNode = maybeActiveNode;
 
-    if (isCatchAllowed(nodeIdMapCollection, activeNode, trailingToken)) {
+    if (isCatchAllowed(nodeIdMapCollection, activeNode, maybeTrailingToken)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Catch);
     } else if (isNullableAllowed(activeNode)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Nullable);

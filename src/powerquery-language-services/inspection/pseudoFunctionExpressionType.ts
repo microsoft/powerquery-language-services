@@ -34,14 +34,14 @@ export function pseudoFunctionExpressionType(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const name: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
+        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
             Ast.NodeKind.Identifier,
         );
 
-        if (name === undefined) {
+        if (maybeName === undefined) {
             break;
         }
 
@@ -56,7 +56,7 @@ export function pseudoFunctionExpressionType(
                 isNullable: examinable.isNullable,
                 isOptional: examinable.isOptional,
                 type: examinable.type,
-                name,
+                name: maybeName,
             });
         }
     }
