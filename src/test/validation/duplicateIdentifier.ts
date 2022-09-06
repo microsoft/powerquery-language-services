@@ -10,9 +10,7 @@ import {
     DiagnosticErrorCode,
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
-    documentUpdated,
     Position,
-    TextDocumentContentChangeEvent,
     validate,
     ValidationSettings,
 } from "../../powerquery-language-services";
@@ -116,39 +114,6 @@ describe(`Validation - duplicateIdentifier`, () => {
 
         it("DirectQueryForSQL.pq", async () => {
             await expectNoValidationErrors(TestUtils.createFileMockDocument("DirectQueryForSQL.pq"));
-        });
-    });
-
-    describe("validation with workspace cache", () => {
-        it("no errors after update", async () => {
-            const text: string = "let a = 1,";
-            const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
-
-            const diagnostics: ReadonlyArray<Diagnostic> = (
-                await validate(textDocument, TestConstants.SimpleLibraryAnalysisSettings, DuplicateIdentifierSettings)
-            ).diagnostics;
-
-            expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
-
-            const changes: ReadonlyArray<TextDocumentContentChangeEvent> = textDocument.update("1");
-            documentUpdated(textDocument, changes, textDocument.version);
-
-            await expectNoValidationErrors(textDocument);
-        });
-
-        it("errors after update", async () => {
-            const text: string = "let a = 1 in a";
-            const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
-            await expectNoValidationErrors(textDocument);
-
-            const changes: ReadonlyArray<TextDocumentContentChangeEvent> = textDocument.update(";;;;;;");
-            documentUpdated(textDocument, changes, textDocument.version);
-
-            const diagnostics: ReadonlyArray<Diagnostic> = (
-                await validate(textDocument, TestConstants.SimpleLibraryAnalysisSettings, DuplicateIdentifierSettings)
-            ).diagnostics;
-
-            expect(diagnostics.length).to.be.greaterThan(0, "validation result is expected to have errors");
         });
     });
 

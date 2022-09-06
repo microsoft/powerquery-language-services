@@ -7,11 +7,10 @@ import { assert, expect } from "chai";
 import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import * as TestUtils from "./testUtils";
-import { InspectionUtils, SymbolKind, WorkspaceCacheUtils } from "../powerquery-language-services";
+import { Analysis, AnalysisUtils, InspectionUtils, SymbolKind, TextDocument } from "../powerquery-language-services";
 import { AbridgedDocumentSymbol } from "./testUtils";
 import { isDefined } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/assert";
-import { MockDocument } from "./mockDocument";
-import { TaskUtils } from "@microsoft/powerquery-parser";
+import { TestConstants } from ".";
 
 // Used to test symbols at a specific level of inspection
 function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>): void {
@@ -31,21 +30,23 @@ function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<Ab
 }
 
 describe("Document symbol base functions", () => {
-    it(`section foo; shared a = 1; b = "abc"; c = true;`, async () => {
-        const testDocument: MockDocument = TestUtils.createTextMockDocument(
+    it(`WIP section foo; shared a = 1; b = "abc"; c = true;`, async () => {
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(
             `section foo; shared a = 1; b = "abc"; c = true;`,
         );
 
-        const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
-            testDocument,
-            PQP.DefaultSettings,
-            false,
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
+            textDocument,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        isDefined(lexAndParseOk);
-        TaskUtils.assertIsOk(lexAndParseOk);
+        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
+        isDefined(parseContext);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
+        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
+        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
 
-        expectSymbolsForNode(lexAndParseOk.ast, [
+        expectSymbolsForNode(root, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.String },
             { name: "c", kind: SymbolKind.Boolean },
@@ -54,34 +55,38 @@ describe("Document symbol base functions", () => {
 
     it(`section foo; a = {1,2};`, async () => {
         const text: string = `section foo; a = {1,2};`;
-        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
             textDocument,
-            PQP.DefaultSettings,
-            false,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        isDefined(lexAndParseOk);
-        TaskUtils.assertIsOk(lexAndParseOk);
+        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
+        isDefined(parseContext);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
+        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
+        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
 
-        expectSymbolsForNode(lexAndParseOk.ast, [{ name: "a", kind: SymbolKind.Array }]);
+        expectSymbolsForNode(root, [{ name: "a", kind: SymbolKind.Array }]);
     });
 
     it(`let a = 1, b = 2, c = 3 in c`, async () => {
         const text: string = `let a = 1, b = 2, c = 3 in c`;
-        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
             textDocument,
-            PQP.DefaultSettings,
-            false,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        isDefined(lexAndParseOk);
-        TaskUtils.assertIsOk(lexAndParseOk);
+        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
+        isDefined(parseContext);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
+        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
+        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
 
-        expectSymbolsForNode(lexAndParseOk.ast, [
+        expectSymbolsForNode(root, [
             { name: "a", kind: SymbolKind.Number },
             { name: "b", kind: SymbolKind.Number },
             { name: "c", kind: SymbolKind.Number },
@@ -90,18 +95,20 @@ describe("Document symbol base functions", () => {
 
     it("HelloWorldWithDocs file section", async () => {
         const text: string = TestUtils.readFile("HelloWorldWithDocs.pq");
-        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
             textDocument,
-            PQP.DefaultSettings,
-            false,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        isDefined(lexAndParseOk);
-        TaskUtils.assertIsOk(lexAndParseOk);
+        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
+        isDefined(parseContext);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
+        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
+        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
 
-        expectSymbolsForNode(lexAndParseOk.ast, [
+        expectSymbolsForNode(root, [
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
             { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
             { name: "HelloWorldImpl", kind: SymbolKind.Function },
@@ -112,18 +119,20 @@ describe("Document symbol base functions", () => {
 
     it("DirectQueryForSQL file section", async () => {
         const text: string = TestUtils.readFile("DirectQueryForSQL.pq");
-        const textDocument: MockDocument = TestUtils.createTextMockDocument(text);
+        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
 
-        const lexAndParseOk: PQP.Task.TriedParseTask | undefined = await WorkspaceCacheUtils.getOrCreateParsePromise(
+        const analysis: Analysis = AnalysisUtils.createAnalysis(
             textDocument,
-            PQP.DefaultSettings,
-            false,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        isDefined(lexAndParseOk);
-        TaskUtils.assertIsOk(lexAndParseOk);
+        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
+        isDefined(parseContext);
+        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
+        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
+        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
 
-        expectSymbolsForNode(lexAndParseOk.ast, [
+        expectSymbolsForNode(root, [
             { name: "DirectSQL.Database", kind: SymbolKind.Function },
             { name: "DirectSQL", kind: SymbolKind.Struct },
             { name: "DirectSQL.UI", kind: SymbolKind.Struct },
