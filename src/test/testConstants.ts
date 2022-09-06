@@ -125,14 +125,14 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isNullable: false,
                     isOptional: false,
                     label: "firstArg",
-                    documentation: undefined,
+                    maybeDocumentation: undefined,
                     typeKind: Type.TypeKind.Number,
                 },
                 {
                     isNullable: false,
                     isOptional: true,
                     label: "secondArg",
-                    documentation: undefined,
+                    maybeDocumentation: undefined,
                     typeKind: Type.TypeKind.Text,
                 },
             ],
@@ -159,7 +159,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isNullable: false,
                     isOptional: false,
                     label: "x",
-                    documentation:
+                    maybeDocumentation:
                         "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
                     typeKind: Type.TypeKind.Any,
                 },

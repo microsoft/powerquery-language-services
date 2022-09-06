@@ -10,7 +10,7 @@ import { TrailingToken } from "../commonTypes";
 export function autocompleteKeywordTrailingText(
     inspected: ReadonlyArray<Keyword.KeywordKind>,
     trailingToken: TrailingToken,
-    allowedKeywords: ReadonlyArray<Keyword.KeywordKind> | undefined,
+    maybeAllowedKeywords: ReadonlyArray<Keyword.KeywordKind> | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
     if (trailingToken.isInOrOnPosition === false) {
         return inspected;
@@ -19,19 +19,19 @@ export function autocompleteKeywordTrailingText(
     Assert.isTrue(trailingToken.data.length > 0, "trailingToken.data.length > 0");
     const token: PQP.Language.Token.Token = trailingToken;
 
-    allowedKeywords = allowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(token.data[0]);
+    maybeAllowedKeywords = maybeAllowedKeywords ?? PartialConjunctionKeywordAutocompleteMap.get(token.data[0]);
 
-    if (allowedKeywords !== undefined) {
+    if (maybeAllowedKeywords !== undefined) {
         return PQP.ArrayUtils.concatUnique(
             inspected,
-            allowedKeywords.filter((keyword: Keyword.KeywordKind) => keyword.startsWith(token.data)),
+            maybeAllowedKeywords.filter((keyword: Keyword.KeywordKind) => keyword.startsWith(token.data)),
         );
     } else {
         return inspected;
     }
 }
 
-// Used with parseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
+// Used with maybeParseError to see if a user could be typing a conjunctive keyword such as 'or'. Eg.
 // 'Details[UserName] <> "" o|'
 const PartialConjunctionKeywordAutocompleteMap: Map<string, ReadonlyArray<Keyword.KeywordKind>> = new Map<
     string,

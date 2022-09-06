@@ -57,26 +57,28 @@ describe("workspaceCache", () => {
             const [document, postion]: [MockDocument, Position] =
                 TestUtils.createMockDocumentAndPosition("let c = 1 in |c");
 
-            const inspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
-                document,
-                PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
-                postion,
-            );
+            const maybeInspected: Inspection.Inspected | undefined =
+                await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+                    document,
+                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
+                    postion,
+                );
 
-            TestUtils.assertIsDefined(inspected);
+            TestUtils.assertIsDefined(maybeInspected);
         });
 
         it("getOrCreateInspectionPromise with parser error", async () => {
             const [document, postion]: [MockDocument, Position] =
                 TestUtils.createMockDocumentAndPosition("let c = 1, in |");
 
-            const inspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
-                document,
-                PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings),
-                postion,
-            );
+            const maybeInspected: Inspection.Inspected | undefined =
+                await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+                    document,
+                    PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings),
+                    postion,
+                );
 
-            TestUtils.assertIsDefined(inspected);
+            TestUtils.assertIsDefined(maybeInspected);
         });
     });
 
@@ -94,7 +96,7 @@ describe("workspaceCache", () => {
                 true,
             );
 
-            expect(cacheCollection.parse).to.be.undefined;
+            expect(cacheCollection.maybeParse).to.be.undefined;
         });
 
         it(`sets a value when allowed`, async () => {
@@ -110,7 +112,7 @@ describe("workspaceCache", () => {
                 true,
             );
 
-            expect(cacheCollection.parse).to.not.be.undefined;
+            expect(cacheCollection.maybeParse).to.not.be.undefined;
         });
 
         it(`fetches an empty collection when caching is disallowed`, async () => {
@@ -126,20 +128,20 @@ describe("workspaceCache", () => {
                 false,
             );
 
-            expect(cacheCollection.parse).to.be.undefined;
+            expect(cacheCollection.maybeParse).to.be.undefined;
         });
     });
 
     it("cache invalidation with version change", async () => {
         const [document, postion]: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition("foo|");
 
-        let inspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+        let maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
             postion,
         );
 
-        TestUtils.assertIsDefined(inspected);
+        TestUtils.assertIsDefined(maybeInspected);
 
         let cacheCollection: WorkspaceCache.CacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(
             document,
@@ -150,13 +152,13 @@ describe("workspaceCache", () => {
 
         document.setText("bar");
 
-        inspected = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+        maybeInspected = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
             document,
             PQLS.InspectionUtils.createInspectionSettings(PQP.DefaultSettings, { library: SimpleLibrary }),
             postion,
         );
 
-        TestUtils.assertIsDefined(inspected);
+        TestUtils.assertIsDefined(maybeInspected);
 
         cacheCollection = WorkspaceCacheUtils.getOrCreateCacheCollection(document, false);
 

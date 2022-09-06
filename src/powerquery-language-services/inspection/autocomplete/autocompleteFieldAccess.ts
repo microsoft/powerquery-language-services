@@ -72,7 +72,7 @@ async function autocompleteFieldAccess(
     let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
     // Option 1: Find a field access node in the ancestry.
-    let fieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
+    let maybeFieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
 
     for (const ancestor of activeNode.ancestry) {
         if (
@@ -81,16 +81,16 @@ async function autocompleteFieldAccess(
                 Ast.NodeKind.FieldProjection,
             ])
         ) {
-            fieldAccessAncestor = ancestor;
+            maybeFieldAccessAncestor = ancestor;
         }
     }
 
-    if (fieldAccessAncestor !== undefined) {
+    if (maybeFieldAccessAncestor !== undefined) {
         maybeInspectedFieldAccess = inspectFieldAccess(
             parseState.lexerSnapshot,
             parseState.contextState.nodeIdMapCollection,
             activeNode.position,
-            fieldAccessAncestor,
+            maybeFieldAccessAncestor,
         );
     }
 
@@ -191,7 +191,7 @@ function inspectFieldProjection(
     fieldProjection: TXorNode,
 ): InspectedFieldAccess {
     let isAutocompleteAllowed: boolean = false;
-    let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
+    let maybeIdentifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     const fieldNames: string[] = [];
 
     for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
@@ -202,9 +202,9 @@ function inspectFieldProjection(
             fieldSelector,
         );
 
-        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.identifierUnderPosition) {
+        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.maybeIdentifierUnderPosition) {
             isAutocompleteAllowed = true;
-            identifierUnderPosition = inspectedFieldSelector.identifierUnderPosition;
+            maybeIdentifierUnderPosition = inspectedFieldSelector.maybeIdentifierUnderPosition;
         }
 
         fieldNames.push(...inspectedFieldSelector.fieldNames);
@@ -212,7 +212,7 @@ function inspectFieldProjection(
 
     return {
         isAutocompleteAllowed,
-        identifierUnderPosition,
+        maybeIdentifierUnderPosition,
         fieldNames,
     };
 }
@@ -220,7 +220,7 @@ function inspectFieldProjection(
 function createInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
     return {
         isAutocompleteAllowed,
-        identifierUnderPosition: undefined,
+        maybeIdentifierUnderPosition: undefined,
         fieldNames: [],
     };
 }
@@ -255,7 +255,7 @@ function inspectFieldSelector(
 
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
-                identifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
+                maybeIdentifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
                 fieldNames: [generalizedIdentifier.literal],
             };
         }
@@ -282,7 +282,7 @@ function inspectFieldSelector(
 
             return {
                 isAutocompleteAllowed,
-                identifierUnderPosition: undefined,
+                maybeIdentifierUnderPosition: undefined,
                 fieldNames: [],
             };
         }
@@ -300,7 +300,7 @@ function createAutocompleteItems(
     const autocompleteItems: AutocompleteItem[] = [];
 
     const maybeIdentifierUnderPositionLiteral: string | undefined =
-        inspectedFieldAccess.identifierUnderPosition?.literal;
+        inspectedFieldAccess.maybeIdentifierUnderPosition?.literal;
 
     for (const [label, powerQueryType] of fieldEntries) {
         if (fieldAccessNames.includes(label) && label !== maybeIdentifierUnderPositionLiteral) {

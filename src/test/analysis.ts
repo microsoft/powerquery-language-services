@@ -102,22 +102,23 @@ describe("Analysis", () => {
 });
 
 async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void> {
-    let libraryProviderFactory: AnalysisSettings["libraryProviderFactory"];
-    let localDocumentProviderFactory: AnalysisSettings["localDocumentProviderFactory"];
+    let maybeCreateLocalDocumentProviderFn: AnalysisSettings["localDocumentProviderFactory"];
+    let maybeCreateLibraryProviderFn: AnalysisSettings["libraryProviderFactory"];
 
     switch (provider) {
         case "library":
-            libraryProviderFactory = (library: Library.ILibrary): ILibraryProvider =>
+            maybeCreateLibraryProviderFn = (library: Library.ILibrary): ILibraryProvider =>
                 new SlowLibraryProvider(library, DefaultLocale, 10);
 
-            localDocumentProviderFactory = TestConstants.SimpleLibraryAnalysisSettings.localDocumentProviderFactory;
+            maybeCreateLocalDocumentProviderFn =
+                TestConstants.SimpleLibraryAnalysisSettings.localDocumentProviderFactory;
 
             break;
 
         case "local":
-            libraryProviderFactory = TestConstants.SimpleLibraryAnalysisSettings.libraryProviderFactory;
+            maybeCreateLibraryProviderFn = TestConstants.SimpleLibraryAnalysisSettings.libraryProviderFactory;
 
-            localDocumentProviderFactory = (
+            maybeCreateLocalDocumentProviderFn = (
                 uri: string,
                 typeCache: TypeCache,
                 library: ILibrary,
@@ -131,8 +132,8 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        libraryProviderFactory,
-        localDocumentProviderFactory,
+        libraryProviderFactory: maybeCreateLibraryProviderFn,
+        localDocumentProviderFactory: maybeCreateLocalDocumentProviderFn,
     };
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(

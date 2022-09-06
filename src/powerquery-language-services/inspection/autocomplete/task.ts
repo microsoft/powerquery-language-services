@@ -28,8 +28,8 @@ export async function autocomplete(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     typeCache: TypeCache,
-    activeNode: TActiveNode,
-    parseError: PQP.Parser.ParseError.ParseError | undefined,
+    maybeActiveNode: TActiveNode,
+    maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
 ): Promise<Autocomplete> {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.Autocomplete,
@@ -44,43 +44,43 @@ export async function autocomplete(
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
-    let trailingToken: TrailingToken | undefined;
+    let maybeTrailingToken: TrailingToken | undefined;
 
-    if (parseError !== undefined) {
-        const parseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(
-            parseError.innerError,
+    if (maybeParseError !== undefined) {
+        const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(
+            maybeParseError.innerError,
         );
 
-        if (parseErrorToken !== undefined) {
-            trailingToken = createTrailingToken(activeNode.position, parseErrorToken);
+        if (maybeParseErrorToken !== undefined) {
+            maybeTrailingToken = createTrailingToken(maybeActiveNode.position, maybeParseErrorToken);
         }
     }
 
     const triedFieldAccess: TriedAutocompleteFieldAccess = await tryAutocompleteFieldAccess(
         updatedSettings,
         parseState,
-        activeNode,
+        maybeActiveNode,
         typeCache,
     );
 
     const triedKeyword: TriedAutocompleteKeyword = await tryAutocompleteKeyword(
         updatedSettings,
         nodeIdMapCollection,
-        activeNode,
-        trailingToken,
+        maybeActiveNode,
+        maybeTrailingToken,
     );
 
     const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
         updatedSettings,
         nodeIdMapCollection,
-        activeNode,
-        trailingToken,
+        maybeActiveNode,
+        maybeTrailingToken,
     );
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
         updatedSettings,
-        activeNode,
-        trailingToken,
+        maybeActiveNode,
+        maybeTrailingToken,
     );
 
     trace.exit();

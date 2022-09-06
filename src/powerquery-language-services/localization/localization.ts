@@ -7,7 +7,7 @@ interface ILocalization {
 
     error_validation_invokeExpression_missingMandatory: (
         templates: ILocalizationTemplates,
-        functionName: string | undefined,
+        maybeFuncName: string | undefined,
         argName: string,
     ) => string;
 
@@ -20,7 +20,7 @@ interface ILocalization {
 
     error_validation_invokeExpression_typeMismatch: (
         templates: ILocalizationTemplates,
-        functionName: string | undefined,
+        maybeFuncName: string | undefined,
         argName: string,
         expected: string,
         actual: string,
@@ -29,7 +29,7 @@ interface ILocalization {
     error_validation_unknownIdentifier: (
         templates: ILocalizationTemplates,
         identifier: string,
-        suggestion: string | undefined,
+        maybeSuggestion: string | undefined,
     ) => string;
 }
 
@@ -42,14 +42,14 @@ export const Localization: ILocalization = {
 
     error_validation_invokeExpression_missingMandatory: (
         templates: ILocalizationTemplates,
-        functionName: string | undefined,
+        maybeFuncName: string | undefined,
         argName: string,
     ) => {
-        if (functionName) {
+        if (maybeFuncName) {
             return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_missingMandatory_named,
                 new Map([
-                    ["functionName", functionName],
+                    ["funcName", maybeFuncName],
                     ["argName", argName],
                 ]),
             );
@@ -78,16 +78,16 @@ export const Localization: ILocalization = {
 
     error_validation_invokeExpression_typeMismatch: (
         templates: ILocalizationTemplates,
-        functionName: string | undefined,
+        maybeFuncName: string | undefined,
         argName: string,
         expected: string,
         actual: string,
     ) => {
-        if (functionName) {
+        if (maybeFuncName) {
             return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_typeMismatch_named,
                 new Map([
-                    ["functionName", functionName],
+                    ["funcName", maybeFuncName],
                     ["argName", argName],
                     ["expected", expected],
                     ["actual", actual],
@@ -108,9 +108,9 @@ export const Localization: ILocalization = {
     error_validation_unknownIdentifier: (
         templates: ILocalizationTemplates,
         identifier: string,
-        suggestion: string | undefined,
+        maybeSuggestion: string | undefined,
     ) => {
-        if (suggestion === undefined) {
+        if (maybeSuggestion === undefined) {
             return StringUtils.assertGetFormatted(
                 templates.error_validation_unknownIdentifier_noSuggestion,
                 new Map([["identifier", identifier]]),
@@ -120,7 +120,7 @@ export const Localization: ILocalization = {
                 templates.error_validation_unknownIdentifier_suggestion,
                 new Map([
                     ["identifier", identifier],
-                    ["suggestion", suggestion],
+                    ["suggestion", maybeSuggestion],
                 ]),
             );
         }

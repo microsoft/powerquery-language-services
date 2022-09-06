@@ -10,6 +10,7 @@ import { Range } from "vscode-languageserver-textdocument";
 import * as TestConstants from "../testConstants";
 import * as TestUtils from "./testUtils";
 import {
+    ActiveNode,
     ActiveNodeUtils,
     autocomplete,
     Inspected,
@@ -50,24 +51,24 @@ export async function assertGetInspectionInstance(
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
     let parseState: PQP.Parser.ParseState;
-    let parseError: PQP.Parser.ParseError.ParseError | undefined;
+    let maybeParseError: PQP.Parser.ParseError.ParseError | undefined;
 
     if (PQP.TaskUtils.isLexStageError(triedLexParseTask) || PQP.TaskUtils.isParseStageCommonError(triedLexParseTask)) {
         throw new Error("should never be reached");
     } else if (PQP.TaskUtils.isParseStageError(triedLexParseTask)) {
         parseState = triedLexParseTask.parseState;
-        parseError = triedLexParseTask.error;
+        maybeParseError = triedLexParseTask.error;
     } else {
         parseState = triedLexParseTask.parseState;
     }
 
     const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
+    const maybeActiveNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
 
     const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
         settings,
         nodeIdMapCollection,
-        activeNode,
+        maybeActiveNode,
         typeCache,
     );
 
@@ -75,7 +76,9 @@ export async function assertGetInspectionInstance(
     let triedScopeType: Promise<TriedScopeType>;
     let triedExpectedType: TriedExpectedType;
 
-    if (ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        const activeNode: ActiveNode = maybeActiveNode;
+
         triedNodeScope = tryNodeScope(
             settings,
             nodeIdMapCollection,
@@ -96,8 +99,8 @@ export async function assertGetInspectionInstance(
     return new InspectionInstance(
         settings,
         nodeIdMapCollection,
-        activeNode,
-        await autocomplete(settings, parseState, typeCache, activeNode, parseError),
+        maybeActiveNode,
+        await autocomplete(settings, parseState, typeCache, maybeActiveNode, maybeParseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
@@ -157,15 +160,15 @@ export function assertGetAutocompleteItem(
 }
 
 export async function assertGetInspection(document: TextDocument, position: Position): Promise<Inspection.Inspected> {
-    const inspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
+    const maybeInspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
         document,
         TestConstants.SimpleInspectionSettings,
         position,
     );
 
-    Assert.isDefined(inspected);
+    Assert.isDefined(maybeInspected);
 
-    return inspected;
+    return maybeInspected;
 }
 
 export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
@@ -190,14 +193,14 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     const lines: ReadonlyArray<string> = text.split("\n");
     const numLines: number = lines.length;
 
-    let position: Position | undefined;
+    let maybePosition: Position | undefined;
 
     for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
         const line: string = lines[lineIndex];
         const indexOfPipe: number = line.indexOf("|");
 
         if (indexOfPipe !== -1) {
-            position = {
+            maybePosition = {
                 line: lineIndex,
                 character: indexOfPipe,
             };
@@ -206,11 +209,11 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
         }
     }
 
-    if (position === undefined) {
+    if (maybePosition === undefined) {
         throw new Error(`couldn't find a pipe character in the input text`);
     }
 
-    return [text.replace("|", ""), position];
+    return [text.replace("|", ""), maybePosition];
 }
 
 export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {
@@ -232,11 +235,11 @@ export function assertEqualLocation(expected: ReadonlyArray<Range>, actual: Read
 }
 
 export function assertIsDefined<T>(
-    value: T | undefined,
-    message?: string,
-    details?: object,
-): asserts value is NonNullable<T> {
-    Assert.isDefined(value, message, details);
+    maybeValue: T | undefined,
+    maybeMessage?: string,
+    maybeDetails?: object,
+): asserts maybeValue is NonNullable<T> {
+    Assert.isDefined(maybeValue, maybeMessage, maybeDetails);
 }
 
 export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {

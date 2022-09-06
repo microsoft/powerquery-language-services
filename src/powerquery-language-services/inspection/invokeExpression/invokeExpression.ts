@@ -67,15 +67,20 @@ async function inspectInvokeExpression(
 
     settings.cancellationToken?.throwIfCancelled();
 
-    const invokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.xor(nodeIdMapCollection, invokeExpressionId);
+    const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.xor(
+        nodeIdMapCollection,
+        invokeExpressionId,
+    );
 
-    if (invokeExpressionXorNode === undefined) {
+    if (maybeInvokeExpressionXorNode === undefined) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
         throw new PQP.CommonError.InvariantError(`expected invokeExpressionId to be present in nodeIdMapCollection`, {
             invokeExpressionId,
         });
     }
+
+    const invokeExpressionXorNode: TXorNode = maybeInvokeExpressionXorNode;
 
     XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
 
@@ -88,12 +93,12 @@ async function inspectInvokeExpression(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
 
-    const name: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
+    const maybeName: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
         nodeIdMapCollection,
         invokeExpressionId,
     );
 
-    let invokeExpressionArgs: InvokeExpressionArguments | undefined;
+    let maybeInvokeExpressionArgs: InvokeExpressionArguments | undefined;
 
     if (TypeUtils.isDefinedFunction(functionType)) {
         const iterableArguments: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
@@ -113,7 +118,7 @@ async function inspectInvokeExpression(
         const [numMinExpectedArguments, numMaxExpectedArguments]: [number, number] =
             getNumExpectedArguments(functionType);
 
-        invokeExpressionArgs = {
+        maybeInvokeExpressionArgs = {
             givenArguments,
             givenArgumentTypes,
             numMaxExpectedArguments,
@@ -135,11 +140,11 @@ async function inspectInvokeExpression(
             nodeIdMapCollection,
             typeCache,
             invokeExpressionXorNode,
-            name,
+            maybeName,
             trace.id,
         ),
-        name,
-        arguments: invokeExpressionArgs,
+        name: maybeName,
+        arguments: maybeInvokeExpressionArgs,
     };
 
     trace.exit();
@@ -152,7 +157,7 @@ async function getIsNameInLocalScope(
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: TypeCache,
     invokeExpressionXorNode: TXorNode,
-    name: string | undefined,
+    maybeName: string | undefined,
     correlationId: number,
 ): Promise<boolean> {
     const trace: Trace = settings.traceManager.entry(
@@ -167,7 +172,7 @@ async function getIsNameInLocalScope(
     };
 
     // Try to find out if the identifier is a local or external name.
-    if (name !== undefined) {
+    if (maybeName !== undefined) {
         // Seed local scope
         const scope: NodeScope = Assert.unboxOk(
             await assertGetOrCreateNodeScope(
@@ -178,11 +183,11 @@ async function getIsNameInLocalScope(
             ),
         );
 
-        const nameScopeItem: TScopeItem | undefined = scope.get(name);
+        const maybeNameScopeItem: TScopeItem | undefined = scope.get(maybeName);
 
         trace.exit();
 
-        return nameScopeItem !== undefined && nameScopeItem.kind !== ScopeItemKind.Undefined;
+        return maybeNameScopeItem !== undefined && maybeNameScopeItem.kind !== ScopeItemKind.Undefined;
     } else {
         trace.exit();
 

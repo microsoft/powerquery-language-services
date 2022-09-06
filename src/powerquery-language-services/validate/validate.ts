@@ -34,10 +34,10 @@ export async function validate(
     };
 
     const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
-    const parseState: ParseState | undefined = await analysis.getParseState();
-    const parseError: ParseError.ParseError | undefined = await analysis.getParseError();
+    const maybeParseState: ParseState | undefined = await analysis.getParseState();
+    const maybeParseError: ParseError.ParseError | undefined = await analysis.getParseError();
 
-    if (parseState === undefined) {
+    if (maybeParseState === undefined) {
         trace.exit();
 
         return {
@@ -50,7 +50,7 @@ export async function validate(
     let invokeExpressionDiagnostics: Diagnostic[];
     let unknownIdentifiersDiagnostics: Diagnostic[];
 
-    const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.Collection = maybeParseState.contextState.nodeIdMapCollection;
     const typeCache: TypeCache = analysis.getTypeCache();
 
     if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
@@ -79,7 +79,7 @@ export async function validate(
     const result: ValidationResult = {
         diagnostics: [
             ...validateDuplicateIdentifiers(textDocument, nodeIdMapCollection, updatedSettings),
-            ...(await validateParse(parseError, updatedSettings)),
+            ...(await validateParse(maybeParseError, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,
             ...unknownIdentifiersDiagnostics,

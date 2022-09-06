@@ -22,7 +22,7 @@ import { InspectionTraceConstant } from "../..";
 // An inspection of the inner most invoke expression for an ActiveNode.
 export type TriedCurrentInvokeExpression = PQP.Result<CurrentInvokeExpression | undefined, PQP.CommonError.CommonError>;
 
-// Identical to InvokeExpression except arguments has an extra field, `argumentOrdinal`.
+// Identical to InvokeExpression except maybeArguments has an extra field, `argumentOrdinal`.
 export type CurrentInvokeExpression = IInvokeExpression<CurrentInvokeExpressionArguments>;
 
 export interface CurrentInvokeExpressionArguments extends InvokeExpressionArguments {
@@ -38,7 +38,7 @@ export interface CurrentInvokeExpressionArguments extends InvokeExpressionArgume
 export async function tryCurrentInvokeExpression(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: TActiveNode,
+    maybeActiveNode: TActiveNode,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
@@ -54,14 +54,14 @@ export async function tryCurrentInvokeExpression(
         initialCorrelationId: trace.id,
     };
 
-    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         trace.exit();
 
         return Promise.resolve(ResultUtils.boxOk(undefined));
     }
 
     const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(
-        () => inspectInvokeExpression(updatedSettings, nodeIdMapCollection, activeNode, typeCache, trace.id),
+        () => inspectInvokeExpression(updatedSettings, nodeIdMapCollection, maybeActiveNode, typeCache, trace.id),
         updatedSettings.locale,
     );
 
@@ -150,18 +150,18 @@ function getArgumentOrdinal(
     invokeExpressionXorNode: TXorNode,
 ): number {
     // `foo(1|)
-    const ancestryCsv: TXorNode | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TCsv>(
+    const maybeAncestoryCsv: TXorNode | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TCsv>(
         activeNode.ancestry,
         ancestryIndex,
         2,
         Ast.NodeKind.Csv,
     );
 
-    if (ancestryCsv !== undefined) {
-        return ancestryCsv.node.attributeIndex ?? 0;
+    if (maybeAncestoryCsv !== undefined) {
+        return maybeAncestoryCsv.node.attributeIndex ?? 0;
     }
 
-    const previousXor: TXorNode | undefined = AncestryUtils.previousXorChecked<Ast.TArrayWrapper | Ast.TConstant>(
+    const maybePreviousXor: TXorNode | undefined = AncestryUtils.previousXorChecked<Ast.TArrayWrapper | Ast.TConstant>(
         activeNode.ancestry,
         ancestryIndex,
         [
@@ -174,7 +174,7 @@ function getArgumentOrdinal(
 
     let arrayWrapperXorNode: TXorNode;
 
-    switch (previousXor?.node.kind) {
+    switch (maybePreviousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
             arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked<Ast.TArrayWrapper>(
                 nodeIdMapCollection,
@@ -187,7 +187,7 @@ function getArgumentOrdinal(
         }
 
         case Ast.NodeKind.ArrayWrapper: {
-            arrayWrapperXorNode = previousXor;
+            arrayWrapperXorNode = maybePreviousXor;
             break;
         }
 
@@ -199,9 +199,9 @@ function getArgumentOrdinal(
             });
     }
 
-    const arrayWrapperChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
+    const maybeArrayWrapperChildIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(
         arrayWrapperXorNode.node.id,
     );
 
-    return arrayWrapperChildIds !== undefined ? arrayWrapperChildIds.length - 1 : 0;
+    return maybeArrayWrapperChildIds !== undefined ? maybeArrayWrapperChildIds.length - 1 : 0;
 }

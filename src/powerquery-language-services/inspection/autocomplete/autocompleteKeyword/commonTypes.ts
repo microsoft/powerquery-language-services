@@ -9,7 +9,7 @@ import { TrailingToken } from "../commonTypes";
 export interface InspectAutocompleteKeywordState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly activeNode: ActiveNode;
-    readonly trailingToken: TrailingToken | undefined;
+    readonly maybeTrailingToken: TrailingToken | undefined;
     parent: TXorNode;
     child: TXorNode;
     ancestryIndex: number;

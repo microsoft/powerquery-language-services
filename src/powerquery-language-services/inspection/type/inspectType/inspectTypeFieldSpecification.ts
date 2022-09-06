@@ -23,15 +23,15 @@ export async function inspectTypeFieldSpecification(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
-    const fieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.nthChild(
+    const maybeFieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.nthChild(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,
     );
 
     const result: Type.TPowerQueryType =
-        fieldTypeSpecification !== undefined
-            ? await inspectXor(state, fieldTypeSpecification, trace.id)
+        maybeFieldTypeSpecification !== undefined
+            ? await inspectXor(state, maybeFieldTypeSpecification, trace.id)
             : Type.AnyInstance;
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });

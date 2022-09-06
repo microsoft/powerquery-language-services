@@ -23,8 +23,8 @@ import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes"
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: TActiveNode,
-    trailingToken: TrailingToken | undefined,
+    maybeActiveNode: TActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompleteLanguageConstant,
@@ -33,7 +33,7 @@ export function tryAutocompleteLanguageConstant(
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
-        () => autocompleteLanguageConstant(nodeIdMapCollection, activeNode, trailingToken),
+        () => autocompleteLanguageConstant(nodeIdMapCollection, maybeActiveNode, maybeTrailingToken),
         settings.locale,
     );
 
@@ -44,12 +44,14 @@ export function tryAutocompleteLanguageConstant(
 
 function autocompleteLanguageConstant(
     nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: TActiveNode,
+    maybeActiveNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): AutocompleteItem | undefined {
-    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         return undefined;
     }
+
+    const activeNode: ActiveNode = maybeActiveNode;
 
     if (isCatchAllowed(nodeIdMapCollection, activeNode, trailingToken)) {
         return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Catch);
@@ -65,7 +67,7 @@ function autocompleteLanguageConstant(
 function isCatchAllowed(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
-    trailingToken: TrailingToken | undefined,
+    maybeTrailingToken: TrailingToken | undefined,
 ): boolean {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
@@ -83,7 +85,7 @@ function isCatchAllowed(
             // And it only has two children, meaning it hasn't parsed an error handler
             NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
         ) {
-            return trailingToken ? Constant.LanguageConstant.Catch.startsWith(trailingToken.data) : true;
+            return maybeTrailingToken ? Constant.LanguageConstant.Catch.startsWith(maybeTrailingToken.data) : true;
         }
     }
 
@@ -121,14 +123,14 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 }
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
-    const child: TXorNode | undefined = AncestryUtils.previousXor(activeNode.ancestry, ancestryIndex);
+    const maybeChild: TXorNode | undefined = AncestryUtils.previousXor(activeNode.ancestry, ancestryIndex);
 
-    if (child?.node.attributeIndex !== 1) {
+    if (maybeChild?.node.attributeIndex !== 1) {
         return false;
     }
 
     // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
-    const paired: TXorNode = child;
+    const paired: TXorNode = maybeChild;
     const position: Position = activeNode.position;
 
     // Ast.PrimitiveType
@@ -137,11 +139,18 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
     }
     // Ast.NullablePrimitiveType
     else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-        const grandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(activeNode.ancestry, ancestryIndex, 2);
+        const maybeGrandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(
+            activeNode.ancestry,
+            ancestryIndex,
+            2,
+        );
 
-        if (grandchild === undefined) {
+        if (maybeGrandchild === undefined) {
             return false;
         }
+
+        // Ast.Constant || Ast.PrimitiveType
+        const grandchild: TXorNode = maybeGrandchild;
 
         return (
             // Ast.Constant
@@ -157,39 +166,43 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
 }
 
 function isOptionalAllowed(activeNode: ActiveNode): boolean {
-    const fnExprAncestryIndex: number | undefined = AncestryUtils.findIndexOfNodeKind(
+    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.findIndexOfNodeKind(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
 
-    if (fnExprAncestryIndex === undefined) {
+    if (maybeFnExprAncestryIndex === undefined) {
         return false;
     }
 
+    const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
+
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const parameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TParameter>(
+    const maybeParameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TParameter>(
         activeNode.ancestry,
         fnExprAncestryIndex,
         4,
         Ast.NodeKind.Parameter,
     );
 
-    if (parameter === undefined) {
+    if (maybeParameter === undefined) {
         return false;
     }
 
-    const childOfParameter: TXorNode | undefined = AncestryUtils.nthPreviousXor(
+    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.nthPreviousXor(
         activeNode.ancestry,
         fnExprAncestryIndex,
         5,
     );
 
-    if (childOfParameter === undefined) {
+    if (maybeChildOfParameter === undefined) {
         return true;
     }
 
+    const childOfParameter: TXorNode = maybeChildOfParameter;
+
     switch (childOfParameter.node.attributeIndex) {
-        // IParameter.optionalConstant
+        // IParameter.maybeOptionalConstant
         case 0:
             return true;
 

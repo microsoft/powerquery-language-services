@@ -14,8 +14,8 @@ import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
-    activeNode: TActiveNode,
-    trailingToken: TrailingToken | undefined,
+    maybeActiveNode: TActiveNode,
+    maybeTrailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompletePrimitiveType,
@@ -25,11 +25,11 @@ export function tryAutocompletePrimitiveType(
 
     let result: TriedAutocompletePrimitiveType;
 
-    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
         result = ResultUtils.boxOk([]);
     } else {
         result = ResultUtils.ensureResult(
-            () => autocompletePrimitiveType(activeNode, trailingToken?.data),
+            () => autocompletePrimitiveType(maybeActiveNode, maybeTrailingToken?.data),
             settings.locale,
         );
     }
@@ -41,17 +41,17 @@ export function tryAutocompletePrimitiveType(
 
 function autocompletePrimitiveType(
     activeNode: ActiveNode,
-    trailingText: string | undefined,
+    maybeTrailingText: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    return createAutocompleteItems(traverseAncestors(activeNode), trailingText);
+    return createAutocompleteItems(traverseAncestors(activeNode), maybeTrailingText);
 }
 
 function createAutocompleteItems(
     PrimitiveTypeConstants: ReadonlyArray<Constant.PrimitiveTypeConstant>,
-    trailingText: string | undefined,
+    maybeTrailingText: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
     return PrimitiveTypeConstants.map((PrimitiveTypeConstant: Constant.PrimitiveTypeConstant) =>
-        AutocompleteItemUtils.createFromPrimitiveTypeConstant(PrimitiveTypeConstant, trailingText),
+        AutocompleteItemUtils.createFromPrimitiveTypeConstant(PrimitiveTypeConstant, maybeTrailingText),
     );
 }
 
@@ -66,7 +66,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
 
     for (let index: number = 0; index < numAncestors; index += 1) {
         const parent: TXorNode = ancestry[index];
-        const child: TXorNode | undefined = ancestry[index - 1];
+        const maybeChild: TXorNode | undefined = ancestry[index - 1];
 
         // If the node is a context PrimitiveType node,
         // which is created only when a primitive type was expected but there was nothing to parse.
@@ -77,12 +77,12 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If on the second attribute for TypePrimaryType.
         // `type |`
         else if (parent.node.kind === Ast.NodeKind.TypePrimaryType) {
-            if (child === undefined) {
+            if (maybeChild === undefined) {
                 return Constant.PrimitiveTypeConstants;
             } else if (
-                child.node.attributeIndex === 0 &&
-                XorNodeUtils.isAstXor(child) &&
-                PositionUtils.isAfterAst(activeNode.position, child.node, true)
+                maybeChild.node.attributeIndex === 0 &&
+                XorNodeUtils.isAstXor(maybeChild) &&
+                PositionUtils.isAfterAst(activeNode.position, maybeChild.node, true)
             ) {
                 return Constant.PrimitiveTypeConstants;
             }
@@ -98,24 +98,24 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             ) !== undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
-            const grandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(ancestry, index, 2);
+            const maybeGrandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(ancestry, index, 2);
 
-            if (grandchild === undefined) {
+            if (maybeGrandchild === undefined) {
                 continue;
             }
             // On primitive type.
             // `(x as |) => 0`
             else if (
-                XorNodeUtils.isAstXorChecked<Ast.TConstant>(grandchild, Ast.NodeKind.Constant) &&
-                grandchild.node.constantKind === Constant.KeywordConstant.As &&
-                PositionUtils.isAfterAst(activeNode.position, grandchild.node, true)
+                XorNodeUtils.isAstXorChecked<Ast.TConstant>(maybeGrandchild, Ast.NodeKind.Constant) &&
+                maybeGrandchild.node.constantKind === Constant.KeywordConstant.As &&
+                PositionUtils.isAfterAst(activeNode.position, maybeGrandchild.node, true)
             ) {
                 return Constant.PrimitiveTypeConstants;
             }
             // On nullable primitive type
             // `(x as nullable |) => 0`
             else if (
-                grandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
+                maybeGrandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
                 // Check the great grandchild
                 AncestryUtils.nthPreviousXorChecked<Ast.PrimitiveType>(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
             ) {

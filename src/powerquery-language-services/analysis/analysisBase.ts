@@ -44,7 +44,7 @@ import { CommonTypesUtils, Inspection, InspectionSettings, InspectionUtils, Posi
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
-    scopeCreatorIdentifier,
+    maybeScopeCreatorIdentifier,
     TScopeItem,
 } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
@@ -467,7 +467,7 @@ export class AnalysisBase implements Analysis {
 
                         if (scopeItem) {
                             const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                                scopeCreatorIdentifier(scopeItem);
+                                maybeScopeCreatorIdentifier(scopeItem);
 
                             if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
                                 if (
@@ -881,7 +881,7 @@ export class AnalysisBase implements Analysis {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            scopeCreatorIdentifier(theScopeItem);
+                            maybeScopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (

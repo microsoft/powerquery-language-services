@@ -26,9 +26,11 @@ async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyAr
     expect(inclusiveScopeKeys).to.have.members(expected);
 }
 
-function assertIsPostionInBounds(activeNode: Inspection.TActiveNode): asserts activeNode is Inspection.ActiveNode {
-    if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        throw new Error(`expected activeNode to be in bounds`);
+function assertIsPostionInBounds(
+    maybeActiveNode: Inspection.TActiveNode,
+): asserts maybeActiveNode is Inspection.ActiveNode {
+    if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        throw new Error(`expected maybeActiveNode to be an ActiveNode`);
     }
 }
 

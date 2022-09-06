@@ -44,9 +44,9 @@ export async function inspectTypeFunctionExpression(
                 trace.id,
             );
 
-            // FunctionExpression.functionReturnType doesn't always match FunctionExpression.expression.
+            // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
             // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
-            // or discover an error (eg. functionReturnType is Number but expression is Text).
+            // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
 
             let returnType: Type.TPowerQueryType;
 
