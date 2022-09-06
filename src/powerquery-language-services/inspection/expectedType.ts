@@ -26,7 +26,7 @@ export function tryExpectedType(settings: PQP.CommonSettings, activeNode: TActiv
     }
 
     const result: PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError> = ResultUtils.ensureResult(
-        () => findExpectedType(activeNode),
+        () => maybeExpectedType(activeNode),
         settings.locale,
     );
 
@@ -38,7 +38,7 @@ export function tryExpectedType(settings: PQP.CommonSettings, activeNode: TActiv
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
-export function findExpectedType(activeNode: ActiveNode): Type.TPowerQueryType | undefined {
+export function maybeExpectedType(activeNode: ActiveNode): Type.TPowerQueryType | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const upperBound: number = ancestry.length - 1;
     let bestMatch: Type.TPowerQueryType | undefined;

@@ -36,7 +36,7 @@ export async function inspectTypeFunctionType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const parameters: XorNode<Ast.TParameterList> | undefined =
+            const maybeParameters: XorNode<Ast.TParameterList> | undefined =
                 NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
                     state.nodeIdMapCollection,
                     xorNode.node.id,
@@ -44,18 +44,18 @@ export async function inspectTypeFunctionType(
                     Ast.NodeKind.ParameterList,
                 );
 
-            if (parameters === undefined) {
+            if (maybeParameters === undefined) {
                 trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
             }
 
-            const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+            const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
                 state.nodeIdMapCollection,
-                parameters.node.id,
+                maybeParameters.node.id,
             );
 
-            if (arrayWrapper === undefined) {
+            if (maybeArrayWrapper === undefined) {
                 trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
@@ -63,7 +63,7 @@ export async function inspectTypeFunctionType(
 
             const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
                 state.nodeIdMapCollection,
-                arrayWrapper,
+                maybeArrayWrapper,
             )
                 .map((parameter: TXorNode) =>
                     TypeUtils.inspectParameter(state.nodeIdMapCollection, XorNodeUtils.assertAsParameter(parameter)),

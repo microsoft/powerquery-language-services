@@ -19,7 +19,7 @@ import { InspectTypeState, inspectXor } from "../common";
 // In the code below that target for the FieldSelector/FieldProjection is called the scope.
 //
 // In the case of EachExpression:
-//  use whatever scope was provided in InspectionTypeState.eEachScopeById, else Unknown
+//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
@@ -42,13 +42,13 @@ export async function inspectFieldType(
     ]);
 
     // travels up the AST to see if we're in an EachExpression or RecursivePrimaryExpression.
-    const eachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
+    const maybeEachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
 
     let fieldType: Type.TPowerQueryType;
 
     // if the scope is an EachExpression
-    if (eachExpression) {
-        fieldType = state.eachScopeById?.get(eachExpression.node.id) ?? Type.UnknownInstance;
+    if (maybeEachExpression) {
+        fieldType = state.eachScopeById?.get(maybeEachExpression.node.id) ?? Type.UnknownInstance;
     }
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector
@@ -68,15 +68,15 @@ export async function inspectFieldType(
 
 function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode<Ast.EachExpression> | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    let parent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
+    let maybeParent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
 
-    while (parent) {
-        switch (parent.node.kind) {
+    while (maybeParent) {
+        switch (maybeParent.node.kind) {
             case Ast.NodeKind.EachExpression:
-                return parent as XorNode<Ast.EachExpression>;
+                return maybeParent as XorNode<Ast.EachExpression>;
 
             default:
-                parent = NodeIdMapUtils.parentXor(nodeIdMapCollection, parent.node.id);
+                maybeParent = NodeIdMapUtils.parentXor(nodeIdMapCollection, maybeParent.node.id);
                 break;
         }
     }

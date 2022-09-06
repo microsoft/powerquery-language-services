@@ -29,32 +29,32 @@ export async function inspectTypeRangeExpression(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const leftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+            const maybeLeftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
                 state,
                 xorNode,
                 0,
                 trace.id,
             );
 
-            const rightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+            const maybeRightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
                 state,
                 xorNode,
                 2,
                 trace.id,
             );
 
-            if (leftType === undefined || rightType === undefined) {
+            if (maybeLeftType === undefined || maybeRightType === undefined) {
                 result = Type.UnknownInstance;
-            } else if (leftType.kind === Type.TypeKind.Number && rightType.kind === Type.TypeKind.Number) {
+            } else if (maybeLeftType.kind === Type.TypeKind.Number && maybeRightType.kind === Type.TypeKind.Number) {
                 // TODO: handle isNullable better
-                if (leftType.isNullable === true || rightType.isNullable === true) {
+                if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
                     result = Type.NoneInstance;
                 } else {
                     result = Type.ListInstance;
                 }
-            } else if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
+            } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
                 result = Type.NoneInstance;
-            } else if (leftType.kind === Type.TypeKind.Unknown || rightType.kind === Type.TypeKind.Unknown) {
+            } else if (maybeLeftType.kind === Type.TypeKind.Unknown || maybeRightType.kind === Type.TypeKind.Unknown) {
                 result = Type.UnknownInstance;
             } else {
                 result = Type.NoneInstance;

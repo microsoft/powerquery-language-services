@@ -29,9 +29,9 @@ export async function inspectTypeRecursivePrimaryExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecursivePrimaryExpression>(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
-    const head: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
+    const maybeHead: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
 
-    if (head === undefined) {
+    if (maybeHead === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
@@ -45,25 +45,25 @@ export async function inspectTypeRecursivePrimaryExpression(
         return headType;
     }
 
-    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
         Ast.NodeKind.ArrayWrapper,
     );
 
-    if (arrayWrapper === undefined) {
+    if (maybeArrayWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
 
-    const expressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
+    const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
-        arrayWrapper.node.id,
+        maybeArrayWrapper.node.id,
     );
 
-    if (expressions === undefined) {
+    if (maybeExpressions === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
@@ -71,7 +71,7 @@ export async function inspectTypeRecursivePrimaryExpression(
 
     let leftType: Type.TPowerQueryType = headType;
 
-    for (const right of expressions) {
+    for (const right of maybeExpressions) {
         // eslint-disable-next-line no-await-in-loop
         const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
         leftType = rightType;

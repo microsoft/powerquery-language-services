@@ -38,40 +38,41 @@ export async function inspectTypeTBinOpExpression(
         parentId,
     );
 
-    const left: TXorNode | undefined = children[0];
+    const maybeLeft: TXorNode | undefined = children[0];
 
-    const operatorKind: Constant.TBinOpExpressionOperator | undefined =
+    const maybeOperatorKind: Constant.TBinOpExpressionOperator | undefined =
         children[1] === undefined || XorNodeUtils.isContextXor(children[1])
             ? undefined
             : (children[1].node as Ast.IConstant<Constant.TBinOpExpressionOperator>).constantKind;
 
-    const right: TXorNode | undefined = children[2];
+    const maybeRight: TXorNode | undefined = children[2];
 
     let result: Type.TPowerQueryType;
 
     // ''
-    if (left === undefined) {
+    if (maybeLeft === undefined) {
         result = Type.UnknownInstance;
     }
     // '1'
-    else if (operatorKind === undefined) {
-        result = await inspectXor(state, left, trace.id);
+    else if (maybeOperatorKind === undefined) {
+        result = await inspectXor(state, maybeLeft, trace.id);
     }
     // '1 +'
-    else if (right === undefined || XorNodeUtils.isContextXor(right)) {
-        const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
+    else if (maybeRight === undefined || XorNodeUtils.isContextXor(maybeRight)) {
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft, trace.id);
+        const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
-        const allowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = PartialLookup.get(key);
+        const maybeAllowedTypeKinds: ReadonlySet<Type.TypeKind> | undefined = PartialLookup.get(key);
 
-        if (allowedTypeKinds === undefined) {
+        if (maybeAllowedTypeKinds === undefined) {
             result = Type.NoneInstance;
-        } else if (allowedTypeKinds.size === 1) {
-            result = TypeUtils.createPrimitiveType(leftType.isNullable, allowedTypeKinds.values().next().value);
+        } else if (maybeAllowedTypeKinds.size === 1) {
+            result = TypeUtils.createPrimitiveType(leftType.isNullable, maybeAllowedTypeKinds.values().next().value);
         } else {
             const unionedTypePairs: Type.TPowerQueryType[] = [];
 
-            for (const kind of allowedTypeKinds.values()) {
+            for (const kind of maybeAllowedTypeKinds.values()) {
                 unionedTypePairs.push({
                     kind,
                     extendedKind: undefined,
@@ -84,21 +85,27 @@ export async function inspectTypeTBinOpExpression(
     }
     // '1 + 1'
     else {
-        const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
-        const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
+        const leftType: Type.TPowerQueryType = await inspectXor(state, maybeLeft, trace.id);
+        const operatorKind: Constant.TBinOpExpressionOperator = maybeOperatorKind;
+        const rightType: Type.TPowerQueryType = await inspectXor(state, maybeRight, trace.id);
 
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
-        const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
+        const maybeResultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
 
-        if (resultTypeKind === undefined) {
+        if (maybeResultTypeKind === undefined) {
             result = Type.NoneInstance;
-        } else if (
-            operatorKind === Constant.ArithmeticOperator.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
-        ) {
-            result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            result = TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            const resultTypeKind: Type.TypeKind = maybeResultTypeKind;
+
+            // '[foo = 1] & [bar = 2]'
+            if (
+                operatorKind === Constant.ArithmeticOperator.And &&
+                (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
+            ) {
+                result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+            } else {
+                result = TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            }
         }
     }
 
@@ -275,13 +282,13 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
                 const potentialNewValue: Type.TypeKind = key.slice(lastDeliminatorIndex + 1) as Type.TypeKind;
 
                 // Add the potentialNewValue if it's a new Type.
-                const values: Set<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(partialKey);
+                const maybeValues: Set<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(partialKey);
 
                 // First occurance of '<first operand> , <operator>'
-                if (values === undefined) {
+                if (maybeValues === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, new Set([potentialNewValue]));
                 } else {
-                    values.add(potentialNewValue);
+                    maybeValues.add(potentialNewValue);
                 }
 
                 return binaryExpressionPartialLookup;

@@ -30,27 +30,27 @@ export async function inspectTypeTableType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const rowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            const maybeRowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,
             );
 
-            if (rowType === undefined) {
+            if (maybeRowType === undefined) {
                 result = Type.UnknownInstance;
-            } else if (rowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
+            } else if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.TableType,
                     isNullable: false,
-                    ...(await examineFieldSpecificationList(state, rowType, trace.id)),
+                    ...(await examineFieldSpecificationList(state, maybeRowType, trace.id)),
                 };
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
                     isNullable: false,
-                    primaryExpression: await inspectXor(state, rowType, trace.id),
+                    primaryExpression: await inspectXor(state, maybeRowType, trace.id),
                 };
             }
 

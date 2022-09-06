@@ -29,16 +29,16 @@ export async function inspectTypeListType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const listItem: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            const maybeListItem: TXorNode | undefined = NodeIdMapUtils.nthChild(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,
             );
 
-            if (listItem === undefined) {
+            if (maybeListItem === undefined) {
                 result = Type.UnknownInstance;
             } else {
-                const itemType: Type.TPowerQueryType = await inspectXor(state, listItem, trace.id);
+                const itemType: Type.TPowerQueryType = await inspectXor(state, maybeListItem, trace.id);
 
                 result = {
                     kind: Type.TypeKind.Type,

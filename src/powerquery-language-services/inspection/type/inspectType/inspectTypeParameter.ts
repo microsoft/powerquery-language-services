@@ -30,13 +30,13 @@ export async function inspectTypeParameter(
         Ast.NodeKind.Constant,
     );
 
-    const parameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
+    const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
         await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id),
     );
 
     const result: Type.TPowerQueryType = {
-        ...parameterType,
-        isNullable: optionalConstant !== undefined || parameterType.isNullable,
+        ...maybeParameterType,
+        isNullable: optionalConstant !== undefined || maybeParameterType.isNullable,
     };
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });

@@ -48,11 +48,11 @@ export class LibraryProvider implements ILibraryProvider {
             }
 
             const autocompleteItems: Inspection.AutocompleteItem[] = [];
-            const contextText: string | undefined = context.text;
+            const maybeContextText: string | undefined = context.text;
 
             for (const [label, definition] of this.libraryDefinitions.entries()) {
                 autocompleteItems.push(
-                    AutocompleteItemUtils.createFromLibraryDefinition(label, definition, contextText),
+                    AutocompleteItemUtils.createFromLibraryDefinition(label, definition, maybeContextText),
                 );
             }
 
@@ -80,14 +80,17 @@ export class LibraryProvider implements ILibraryProvider {
             }
 
             const identifierLiteral: string = context.identifier.literal;
-            const definition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-            if (definition === undefined) {
+            const maybeDefinition: Library.TLibraryDefinition | undefined =
+                this.libraryDefinitions.get(identifierLiteral);
+
+            if (maybeDefinition === undefined) {
                 trace.exit({ invalidContext: true });
 
                 return undefined;
             }
 
+            const definition: Library.TLibraryDefinition = maybeDefinition;
             const definitionText: string = LibraryProvider.getDefinitionKindText(definition.kind);
 
             const definitionTypeText: string = TypeUtils.nameOf(
@@ -133,9 +136,11 @@ export class LibraryProvider implements ILibraryProvider {
             }
 
             const identifierLiteral: string = context.functionName;
-            const definition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-            if (!LibraryUtils.isFunction(definition)) {
+            const maybeDefinition: Library.TLibraryDefinition | undefined =
+                this.libraryDefinitions.get(identifierLiteral);
+
+            if (!LibraryUtils.isFunction(maybeDefinition)) {
                 trace.exit({ invalidContext: true });
 
                 return undefined;

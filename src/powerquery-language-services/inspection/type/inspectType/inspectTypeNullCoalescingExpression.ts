@@ -23,27 +23,33 @@ export async function inspectTypeNullCoalescingExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.NullCoalescingExpression>(xorNode, Ast.NodeKind.NullCoalescingExpression);
 
-    const leftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
+    const maybeLeftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
-    const nullCoalescingOperator: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-        1,
-        Ast.NodeKind.Constant,
-    );
+    const maybeNullCoalescingOperator: Ast.TConstant | undefined =
+        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            1,
+            Ast.NodeKind.Constant,
+        );
 
     let result: Type.TPowerQueryType;
 
     // '??' isn't present, treat it as an Expression.
-    if (nullCoalescingOperator === undefined) {
-        result = leftType;
+    if (maybeNullCoalescingOperator === undefined) {
+        result = maybeLeftType;
     } else {
-        const rightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
+        const maybeRightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
+            state,
+            xorNode,
+            2,
+            trace.id,
+        );
 
-        if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
+        if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
         } else {
-            result = TypeUtils.createAnyUnion([leftType, rightType], state.traceManager, trace.id);
+            result = TypeUtils.createAnyUnion([maybeLeftType, maybeRightType], state.traceManager, trace.id);
         }
     }
 

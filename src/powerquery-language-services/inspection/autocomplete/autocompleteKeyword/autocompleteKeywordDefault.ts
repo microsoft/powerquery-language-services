@@ -18,10 +18,10 @@ export function autocompleteKeywordDefault(
     if (AutocompleteExpressionKeys.indexOf(key) !== -1) {
         return autocompleteDefaultExpression(state);
     } else {
-        const mappedKeywordKind: Keyword.KeywordKind | undefined = AutocompleteConstantMap.get(key);
+        const maybeMappedKeywordKind: Keyword.KeywordKind | undefined = AutocompleteConstantMap.get(key);
 
-        return mappedKeywordKind !== undefined
-            ? autocompleteKeywordConstant(activeNode, child, mappedKeywordKind)
+        return maybeMappedKeywordKind !== undefined
+            ? autocompleteKeywordConstant(activeNode, child, maybeMappedKeywordKind)
             : undefined;
     }
 }
