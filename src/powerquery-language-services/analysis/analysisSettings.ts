@@ -10,9 +10,9 @@ import { TypeCache } from "../inspection";
 
 export interface AnalysisSettings {
     // Allows injection of custom providers.
-    readonly languageAutocompleteItemProviderFactory?: (locale: string) => IAutocompleteItemProvider;
-    readonly libraryProviderFactory?: (library: ILibrary, locale: string) => ILibraryProvider;
-    readonly localDocumentProviderFactory?: (
+    readonly maybeCreateLanguageAutocompleteItemProviderFn?: (locale: string) => IAutocompleteItemProvider;
+    readonly maybeCreateLibraryProviderFn?: (library: ILibrary, locale: string) => ILibraryProvider;
+    readonly maybeCreateLocalDocumentProviderFn?: (
         uri: string,
         typeCache: TypeCache,
         library: ILibrary,

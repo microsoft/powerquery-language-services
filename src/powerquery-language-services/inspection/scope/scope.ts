@@ -51,7 +51,7 @@ export interface IKeyValuePairScopeItem<
 > extends IScopeItem {
     readonly kind: Kind;
     readonly key: Key;
-    readonly value: TXorNode | undefined;
+    readonly maybeValue: TXorNode | undefined;
 }
 
 export interface EachScopeItem extends IScopeItem {

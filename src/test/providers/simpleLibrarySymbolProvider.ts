@@ -17,7 +17,7 @@ import { TypeCache } from "../../powerquery-language-services/inspection";
 
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
-    localDocumentProviderFactory: (_uri: string, _typeCache: TypeCache, _library: ILibrary) =>
+    maybeCreateLocalDocumentProviderFn: (_uri: string, _typeCache: TypeCache, _library: ILibrary) =>
         NullSymbolProvider.singleton(),
 };
 

@@ -76,9 +76,9 @@ async function invokeExpressionToDiagnostics(
 ): Promise<Diagnostic[]> {
     const result: Diagnostic[] = [];
 
-    if (inspected.arguments !== undefined) {
-        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.arguments;
-        const givenArguments: ReadonlyArray<TXorNode> = inspected.arguments.givenArguments;
+    if (inspected.maybeArguments !== undefined) {
+        const invokeExpressionArguments: Inspection.InvokeExpressionArguments = inspected.maybeArguments;
+        const givenArguments: ReadonlyArray<TXorNode> = inspected.maybeArguments.givenArguments;
 
         const invokeExpressionRange: Range = Assert.asDefined(
             await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),

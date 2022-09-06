@@ -57,10 +57,10 @@ async function assertInvokeExpressionOk(
 function expectNoParameters_givenExtraneousParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, `1`)]);
@@ -78,10 +78,10 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
 function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.DuplicateText);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
@@ -99,10 +99,10 @@ function expectText_givenNothing(inspected: Inspection.CurrentInvokeExpression |
 function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.DuplicateText);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createTextLiteral(false, `"foo"`)]);
@@ -120,10 +120,10 @@ function expectText_givenText(inspected: Inspection.CurrentInvokeExpression | un
 function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.SquareIfNumber);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
@@ -141,10 +141,10 @@ function expectNumberParameter_missingParameter(inspected: Inspection.CurrentInv
 function expectNoParameter_givenNoParameter(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);
@@ -160,10 +160,10 @@ function expectNoParameter_givenNoParameter(inspected: Inspection.CurrentInvokeE
 function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, "1")]);
@@ -183,11 +183,11 @@ function expectRequiredAndOptional_givenRequiredAndOptional(
 ): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CombineNumberAndOptionalText);
 
-    Assert.isDefined(inspected.arguments);
+    Assert.isDefined(inspected.maybeArguments);
 
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(1);
 
@@ -216,10 +216,10 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | 
 
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.DuplicateText);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([actualArgument]);
@@ -243,10 +243,10 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression | 
 function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | undefined): void {
     Assert.isDefined(inspected);
 
-    expect(inspected.name).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
+    expect(inspected.maybeName).to.equal(TestConstants.TestLibraryName.CreateFooAndBarRecord);
 
-    Assert.isDefined(inspected.arguments);
-    const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
+    Assert.isDefined(inspected.maybeArguments);
+    const invokeArgs: CurrentInvokeExpressionArguments = inspected.maybeArguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([]);

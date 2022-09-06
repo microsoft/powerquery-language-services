@@ -58,19 +58,22 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
     //  * anchor
     //  * Context
     //  * Ast
-    if (astSearch.shiftedRightNode !== undefined) {
-        maybeLeaf = XorNodeUtils.boxAst(astSearch.shiftedRightNode);
+    if (astSearch.maybeShiftedRightNode !== undefined) {
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeShiftedRightNode);
         leafKind = ActiveNodeLeafKind.ShiftedRight;
-    } else if (astSearch.bestOnOrBeforeNode !== undefined && isAnchorNode(position, astSearch.bestOnOrBeforeNode)) {
-        maybeLeaf = XorNodeUtils.boxAst(astSearch.bestOnOrBeforeNode);
+    } else if (
+        astSearch.maybeBestOnOrBeforeNode !== undefined &&
+        isAnchorNode(position, astSearch.maybeBestOnOrBeforeNode)
+    ) {
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeBestOnOrBeforeNode);
         leafKind = ActiveNodeLeafKind.Anchored;
     } else if (maybeContextNode !== undefined) {
         maybeLeaf = XorNodeUtils.boxContext(maybeContextNode);
         leafKind = ActiveNodeLeafKind.ContextNode;
-    } else if (astSearch.bestOnOrBeforeNode !== undefined) {
-        maybeLeaf = XorNodeUtils.boxAst(astSearch.bestOnOrBeforeNode);
+    } else if (astSearch.maybeBestOnOrBeforeNode !== undefined) {
+        maybeLeaf = XorNodeUtils.boxAst(astSearch.maybeBestOnOrBeforeNode);
 
-        leafKind = PositionUtils.isAfterAst(position, astSearch.bestOnOrBeforeNode, false)
+        leafKind = PositionUtils.isAfterAst(position, astSearch.maybeBestOnOrBeforeNode, false)
             ? ActiveNodeLeafKind.AfterAstNode
             : ActiveNodeLeafKind.OnAstNode;
     } else {
@@ -79,15 +82,15 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
 
     const leaf: TXorNode = maybeLeaf;
 
-    const inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
+    const maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
         nodeIdMapCollection,
         leaf,
     );
 
-    const exclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
-        inclusiveIdentifierUnderPosition &&
-        PositionUtils.isInAst(position, inclusiveIdentifierUnderPosition.node, false, true)
-            ? inclusiveIdentifierUnderPosition
+    const maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
+        maybeInclusiveIdentifierUnderPosition &&
+        PositionUtils.isInAst(position, maybeInclusiveIdentifierUnderPosition.node, false, true)
+            ? maybeInclusiveIdentifierUnderPosition
             : undefined;
 
     const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id);
@@ -96,8 +99,8 @@ export function maybeActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posit
         ancestry,
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
-        exclusiveIdentifierUnderPosition,
-        inclusiveIdentifierUnderPosition,
+        maybeExclusiveIdentifierUnderPosition,
+        maybeInclusiveIdentifierUnderPosition,
         position,
     };
 }
@@ -138,8 +141,8 @@ export function findXorOfNodeKind<T extends Ast.TNode>(
 }
 
 interface AstNodeSearch {
-    readonly bestOnOrBeforeNode: Ast.TNode | undefined;
-    readonly shiftedRightNode: Ast.TNode | undefined;
+    readonly maybeBestOnOrBeforeNode: Ast.TNode | undefined;
+    readonly maybeShiftedRightNode: Ast.TNode | undefined;
 }
 
 const DrilldownConstantKind: ReadonlyArray<string> = [
@@ -198,19 +201,21 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
 
 function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: Position): AstNodeSearch {
     const astNodeById: PQP.Parser.NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
-    let bestOnOrBeforeNode: Ast.TNode | undefined;
-    let bestAfter: Ast.TNode | undefined;
-    let shiftedRightNode: Ast.TNode | undefined;
+    let maybeBestOnOrBeforeNode: Ast.TNode | undefined;
+    let maybeBestAfter: Ast.TNode | undefined;
+    let maybeShiftedRightNode: Ast.TNode | undefined;
 
     // Find:
     //  the closest leaf to the left or on position.
     //  the closest leaf to the right of position.
     for (const nodeId of nodeIdMapCollection.leafIds) {
-        const candidate: Ast.TNode | undefined = astNodeById.get(nodeId);
+        const maybeCandidate: Ast.TNode | undefined = astNodeById.get(nodeId);
 
-        if (candidate === undefined) {
+        if (maybeCandidate === undefined) {
             continue;
         }
+
+        const candidate: Ast.TNode = maybeCandidate;
 
         let isBoundIncluded: boolean;
 
@@ -219,8 +224,8 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
             (candidate.kind === Ast.NodeKind.Constant &&
                 ShiftRightConstantKinds.indexOf(candidate.constantKind) !== -1) ||
             // let x=|1
-            (bestOnOrBeforeNode?.kind === Ast.NodeKind.Constant &&
-                ShiftRightConstantKinds.indexOf(bestOnOrBeforeNode.constantKind) !== -1)
+            (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant &&
+                ShiftRightConstantKinds.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1)
         ) {
             isBoundIncluded = false;
         } else {
@@ -229,32 +234,32 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
 
         if (!PositionUtils.isBeforeTokenPosition(position, candidate.tokenRange.positionStart, isBoundIncluded)) {
             if (
-                bestOnOrBeforeNode === undefined ||
-                candidate.tokenRange.tokenIndexStart > bestOnOrBeforeNode.tokenRange.tokenIndexStart
+                maybeBestOnOrBeforeNode === undefined ||
+                candidate.tokenRange.tokenIndexStart > maybeBestOnOrBeforeNode.tokenRange.tokenIndexStart
             ) {
-                bestOnOrBeforeNode = candidate;
+                maybeBestOnOrBeforeNode = candidate;
             }
         }
         // Check if after position.
         else if (
-            bestAfter === undefined ||
-            candidate.tokenRange.tokenIndexStart < bestAfter.tokenRange.tokenIndexStart
+            maybeBestAfter === undefined ||
+            candidate.tokenRange.tokenIndexStart < maybeBestAfter.tokenRange.tokenIndexStart
         ) {
-            bestAfter = candidate;
+            maybeBestAfter = candidate;
         }
     }
 
     // Might need to shift.
-    if (bestOnOrBeforeNode?.kind === Ast.NodeKind.Constant) {
-        const currentOnOrBefore: Ast.TConstant = bestOnOrBeforeNode;
+    if (maybeBestOnOrBeforeNode?.kind === Ast.NodeKind.Constant) {
+        const currentOnOrBefore: Ast.TConstant = maybeBestOnOrBeforeNode;
 
         // Requires a shift into an empty ArrayWrapper.
         if (
-            DrilldownConstantKind.indexOf(bestOnOrBeforeNode.constantKind) !== -1 &&
-            bestAfter?.kind === Ast.NodeKind.Constant &&
+            DrilldownConstantKind.indexOf(maybeBestOnOrBeforeNode.constantKind) !== -1 &&
+            maybeBestAfter?.kind === Ast.NodeKind.Constant &&
             PQP.Language.ConstantUtils.isPairedWrapperConstantKinds(
-                bestOnOrBeforeNode.constantKind,
-                bestAfter.constantKind,
+                maybeBestOnOrBeforeNode.constantKind,
+                maybeBestAfter.constantKind,
             )
         ) {
             const parent:
@@ -277,23 +282,23 @@ function maybeFindAstNodes(nodeIdMapCollection: NodeIdMap.Collection, position: 
                 parent.id,
             );
 
-            shiftedRightNode = arrayWrapper;
+            maybeShiftedRightNode = arrayWrapper;
         }
         // Requires a shift to the right.
         else if (ShiftRightConstantKinds.indexOf(currentOnOrBefore.constantKind) !== -1) {
-            shiftedRightNode = bestAfter;
+            maybeShiftedRightNode = maybeBestAfter;
         }
         // No shifting.
         else {
-            shiftedRightNode = undefined;
+            maybeShiftedRightNode = undefined;
         }
     } else {
-        shiftedRightNode = undefined;
+        maybeShiftedRightNode = undefined;
     }
 
     return {
-        bestOnOrBeforeNode,
-        shiftedRightNode,
+        maybeBestOnOrBeforeNode,
+        maybeShiftedRightNode,
     };
 }
 
@@ -301,11 +306,11 @@ function maybeFindContext(
     nodeIdMapCollection: NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
 ): PQP.Parser.ParseContext.TNode | undefined {
-    if (astNodeSearch.bestOnOrBeforeNode === undefined) {
+    if (astNodeSearch.maybeBestOnOrBeforeNode === undefined) {
         return undefined;
     }
 
-    const tokenIndexLowBound: number = astNodeSearch.bestOnOrBeforeNode.tokenRange.tokenIndexStart;
+    const tokenIndexLowBound: number = astNodeSearch.maybeBestOnOrBeforeNode.tokenRange.tokenIndexStart;
 
     let maybeCurrent: PQP.Parser.ParseContext.TNode | undefined = undefined;
 
@@ -383,7 +388,7 @@ function findLeafIdentifier(
                 node: identifier,
                 isRecursive: false,
                 normalizedLiteral: TextUtils.normalizeIdentifier(identifier.literal),
-                normalizedRecursiveLiteral: undefined,
+                maybeNormalizedRecursiveLiteral: undefined,
             };
 
             break;
@@ -395,7 +400,7 @@ function findLeafIdentifier(
                 node: identifier,
                 isRecursive: Boolean(identifier.inclusiveConstant),
                 normalizedLiteral,
-                normalizedRecursiveLiteral: `@${normalizedLiteral}`,
+                maybeNormalizedRecursiveLiteral: `@${normalizedLiteral}`,
             };
 
             break;

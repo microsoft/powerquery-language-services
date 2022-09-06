@@ -97,13 +97,13 @@ export class MemoizedAnalysis extends AnalysisBase {
         createValueFn: () => Promise<V>,
     ): Promise<V> {
         const cacheKey: K = createCacheKeyFn();
-        let result: Promise<V> | undefined = cache.get(cacheKey);
+        const maybeResult: Promise<V> | undefined = cache.get(cacheKey);
 
-        if (result !== undefined) {
-            return await result;
+        if (maybeResult !== undefined) {
+            return await maybeResult;
         }
 
-        result = createValueFn();
+        const result: Promise<V> = createValueFn();
         cache.set(cacheKey, result);
 
         return result;

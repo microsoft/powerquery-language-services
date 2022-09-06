@@ -501,7 +501,7 @@ function createSectionMemberScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        value: keyValuePair.value,
+        maybeValue: keyValuePair.value,
     };
 }
 
@@ -514,7 +514,7 @@ function createLetVariableScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        value: keyValuePair.value,
+        maybeValue: keyValuePair.value,
     };
 }
 
@@ -527,6 +527,6 @@ function createRecordMemberScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        value: keyValuePair.value,
+        maybeValue: keyValuePair.value,
     };
 }

@@ -31,9 +31,9 @@ export interface ActiveNode extends IActiveNode {
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
-    readonly exclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
+    readonly maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
-    readonly inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
+    readonly maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
@@ -47,7 +47,7 @@ export interface IActiveLeafIdentifier<
 > {
     readonly node: T;
     readonly normalizedLiteral: string;
-    readonly normalizedRecursiveLiteral: string | undefined;
+    readonly maybeNormalizedRecursiveLiteral: string | undefined;
     readonly isRecursive: boolean;
 }
 
@@ -57,7 +57,7 @@ export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<As
 
 export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
-    readonly normalizedRecursiveLiteral: undefined;
+    readonly maybeNormalizedRecursiveLiteral: undefined;
     readonly isRecursive: false;
 }
 

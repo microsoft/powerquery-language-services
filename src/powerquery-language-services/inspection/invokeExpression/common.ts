@@ -8,8 +8,8 @@ export interface IInvokeExpression<T extends InvokeExpressionArguments> {
     readonly invokeExpressionXorNode: TXorNode;
     readonly functionType: Type.TPowerQueryType;
     readonly isNameInLocalScope: boolean;
-    readonly name: string | undefined;
-    readonly arguments: T | undefined;
+    readonly maybeName: string | undefined;
+    readonly maybeArguments: T | undefined;
 }
 
 export interface InvokeExpressionArguments {

@@ -226,7 +226,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            if (maybeInvokeInspection.name && !maybeInvokeInspection.isNameInLocalScope) {
+            if (maybeInvokeInspection.maybeName && !maybeInvokeInspection.isNameInLocalScope) {
                 trace.exit({ unknownName: true });
 
                 return undefined;

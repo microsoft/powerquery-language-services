@@ -143,8 +143,8 @@ async function inspectInvokeExpression(
             maybeName,
             trace.id,
         ),
-        name: maybeName,
-        arguments: maybeInvokeExpressionArgs,
+        maybeName,
+        maybeArguments: maybeInvokeExpressionArgs,
     };
 
     trace.exit();

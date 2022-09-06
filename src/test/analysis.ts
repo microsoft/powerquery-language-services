@@ -85,7 +85,7 @@ describe("Analysis", () => {
         it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
                 ...TestConstants.SimpleLibraryAnalysisSettings,
-                libraryProviderFactory: (library: Library.ILibrary) =>
+                maybeCreateLibraryProviderFn: (library: Library.ILibrary) =>
                     new SlowLibraryProvider(library, DefaultLocale, 100),
             };
 
@@ -102,8 +102,8 @@ describe("Analysis", () => {
 });
 
 async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void> {
-    let maybeCreateLocalDocumentProviderFn: AnalysisSettings["localDocumentProviderFactory"];
-    let maybeCreateLibraryProviderFn: AnalysisSettings["libraryProviderFactory"];
+    let maybeCreateLocalDocumentProviderFn: AnalysisSettings["maybeCreateLocalDocumentProviderFn"];
+    let maybeCreateLibraryProviderFn: AnalysisSettings["maybeCreateLibraryProviderFn"];
 
     switch (provider) {
         case "library":
@@ -111,12 +111,12 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
                 new SlowLibraryProvider(library, DefaultLocale, 10);
 
             maybeCreateLocalDocumentProviderFn =
-                TestConstants.SimpleLibraryAnalysisSettings.localDocumentProviderFactory;
+                TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLocalDocumentProviderFn;
 
             break;
 
         case "local":
-            maybeCreateLibraryProviderFn = TestConstants.SimpleLibraryAnalysisSettings.libraryProviderFactory;
+            maybeCreateLibraryProviderFn = TestConstants.SimpleLibraryAnalysisSettings.maybeCreateLibraryProviderFn;
 
             maybeCreateLocalDocumentProviderFn = (
                 uri: string,
@@ -132,8 +132,8 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
     const analysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
-        libraryProviderFactory: maybeCreateLibraryProviderFn,
-        localDocumentProviderFactory: maybeCreateLocalDocumentProviderFn,
+        maybeCreateLibraryProviderFn,
+        maybeCreateLocalDocumentProviderFn,
     };
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(

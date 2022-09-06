@@ -62,17 +62,17 @@ describe("InspectedInvokeExpression", () => {
             const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
             assertIsPostionInBounds(activeNode);
 
-            TestUtils.assertIsDefined(activeNode.exclusiveIdentifierUnderPosition);
+            TestUtils.assertIsDefined(activeNode.maybeExclusiveIdentifierUnderPosition);
 
-            expect(activeNode.exclusiveIdentifierUnderPosition.node.kind).equals(
+            expect(activeNode.maybeExclusiveIdentifierUnderPosition.node.kind).equals(
                 Ast.NodeKind.IdentifierExpression,
                 "expecting identifier",
             );
 
             const identifier: Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression =
-                activeNode.exclusiveIdentifierUnderPosition.node;
+                activeNode.maybeExclusiveIdentifierUnderPosition.node;
 
-            expect(activeNode.exclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
+            expect(activeNode.maybeExclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
             expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
         });
     });

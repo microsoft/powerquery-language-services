@@ -25,7 +25,7 @@ type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 const DefaultSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
-    eachScopeById: undefined,
+    maybeEachScopeById: undefined,
     library: Library.NoOpLibrary,
     typeStrategy: TypeStrategy.Extended,
 };
@@ -81,7 +81,7 @@ function createAbridgedNodeScopeItem(identifier: string, scopeItem: Inspection.T
                 isRecursive: scopeItem.isRecursive,
                 kind: scopeItem.kind,
                 keyNodeId: scopeItem.key.id,
-                maybeValueNodeId: scopeItem.value?.node.id,
+                maybeValueNodeId: scopeItem.maybeValue?.node.id,
             };
 
         case Inspection.ScopeItemKind.Each:

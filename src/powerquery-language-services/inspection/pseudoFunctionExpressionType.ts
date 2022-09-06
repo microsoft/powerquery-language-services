@@ -45,23 +45,23 @@ export function pseudoFunctionExpressionType(
             break;
         }
 
-        const examinable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
+        const maybeExaminable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
             nodeIdMapCollection,
             XorNodeUtils.assertAsParameter(parameter),
         );
 
-        if (examinable !== undefined) {
+        if (maybeExaminable !== undefined) {
             examinedParameters.push({
                 id: parameter.node.id,
-                isNullable: examinable.isNullable,
-                isOptional: examinable.isOptional,
-                type: examinable.type,
+                isNullable: maybeExaminable.isNullable,
+                isOptional: maybeExaminable.isOptional,
+                type: maybeExaminable.type,
                 name: maybeName,
             });
         }
     }
 
-    const returnType: Ast.AsNullablePrimitiveType | undefined =
+    const maybeReturnType: Ast.AsNullablePrimitiveType | undefined =
         NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
             nodeIdMapCollection,
             fnExpr.node.id,
@@ -70,21 +70,21 @@ export function pseudoFunctionExpressionType(
         );
 
     let isReturnNullable: boolean;
-    let returnTypeKind: Type.TypeKind;
+    let returnType: Type.TypeKind;
 
-    if (returnType !== undefined) {
-        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(returnType);
+    if (maybeReturnType !== undefined) {
+        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(maybeReturnType);
         isReturnNullable = simplified.isNullable;
-        returnTypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+        returnType = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
     } else {
         isReturnNullable = true;
-        returnTypeKind = Type.TypeKind.Any;
+        returnType = Type.TypeKind.Any;
     }
 
     return {
         parameters: examinedParameters,
         returnType: {
-            kind: returnTypeKind,
+            kind: returnType,
             extendedKind: undefined,
             isNullable: isReturnNullable,
         },
@@ -95,21 +95,24 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const parametersList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
-        nodeIdMapCollection,
-        fnExpr.node.id,
-        0,
-        Ast.NodeKind.ParameterList,
-    );
+    const maybeParameterList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            fnExpr.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
 
-    if (parametersList === undefined) {
+    if (maybeParameterList === undefined) {
         return [];
     }
 
-    const wrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
+    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
         nodeIdMapCollection,
-        parametersList.node.id,
+        maybeParameterList.node.id,
     );
 
-    return wrappedContent === undefined ? [] : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, wrappedContent);
+    return maybeWrappedContent === undefined
+        ? []
+        : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, maybeWrappedContent);
 }
