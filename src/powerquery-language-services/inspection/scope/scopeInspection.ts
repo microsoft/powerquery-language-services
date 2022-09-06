@@ -484,19 +484,12 @@ function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMap
     ancestorKeyNodeId: number,
     createFn: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
-    const result: [string, T][] = [];
-
-    // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
-    // A key of foo should only add "foo" to the scope.
-    for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        result.push([kvp.normalizedKeyLiteral, createFn(kvp, ancestorKeyNodeId === kvp.key.id)]);
-
-        if (kvp.keyLiteral !== kvp.normalizedKeyLiteral) {
-            result.push([kvp.keyLiteral, createFn(kvp, ancestorKeyNodeId === kvp.key.id)]);
-        }
-    }
-
-    return result;
+    return keyValuePairs
+        .filter((keyValuePair: KVP) => keyValuePair.value !== undefined)
+        .map((keyValuePair: KVP) => [
+            keyValuePair.keyLiteral,
+            createFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id),
+        ]);
 }
 
 function createSectionMemberScopeItem(

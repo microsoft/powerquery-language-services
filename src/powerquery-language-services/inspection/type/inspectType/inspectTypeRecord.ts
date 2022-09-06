@@ -32,13 +32,10 @@ export async function inspectTypeRecord(
 
             for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
                 if (keyValuePair.value) {
-                    fields.set(
-                        keyValuePair.normalizedKeyLiteral,
-                        // eslint-disable-next-line no-await-in-loop
-                        await inspectXor(state, keyValuePair.value, trace.id),
-                    );
+                    // eslint-disable-next-line no-await-in-loop
+                    fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.value, trace.id));
                 } else {
-                    fields.set(keyValuePair.normalizedKeyLiteral, Type.UnknownInstance);
+                    fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
                 }
             }
 
