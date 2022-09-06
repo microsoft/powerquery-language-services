@@ -1414,14 +1414,14 @@ in
                         isRecursive: false,
                         keyNodeId: 6,
                         kind: Inspection.ScopeItemKind.LetVariable,
-                        maybeValueNodeId: 10,
+                        valueNodeId: 10,
                     },
                     {
                         identifier: `#"x"`,
                         isRecursive: false,
                         keyNodeId: 6,
                         kind: Inspection.ScopeItemKind.LetVariable,
-                        maybeValueNodeId: 10,
+                        valueNodeId: 10,
                     },
                 ];
 
