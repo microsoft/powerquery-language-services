@@ -55,7 +55,7 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
     return (
         anyUnion.unionedTypePairs
             .map((type: Type.TPowerQueryType) =>
-                type.maybeExtendedKind === Type.ExtendedTypeKind.AnyUnion
+                type.extendedKind === Type.ExtendedTypeKind.AnyUnion
                     ? allForAnyUnion(type, conditionFn)
                     : conditionFn(type),
             )
@@ -74,7 +74,7 @@ export async function assertGetOrCreateNodeScope(
         maybeCorrelationId,
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const triedGetOrCreateScope: Inspection.TriedNodeScope = await getOrCreateScope(state, nodeId, trace.id);
 
@@ -102,10 +102,10 @@ export async function getOrCreateScope(
 
     const updatedState: InspectTypeState = {
         ...state,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const maybeNodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
 
@@ -134,7 +134,7 @@ export async function getOrCreateScopeItemType(
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScopeItem,
         getOrCreateScopeItemType.name,
-        state.maybeInitialCorrelationId,
+        state.initialCorrelationId,
     );
 
     const nodeId: number = scopeItem.id;
@@ -157,7 +157,7 @@ export async function inspectScopeItem(
     scopeItem: TScopeItem,
     maybeCorrelationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
@@ -194,9 +194,9 @@ export async function inspectTypeFromChildAttributeIndex(
         TraceUtils.createXorNodeDetails(parentXorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
-    const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.maybeNthChild(
+    const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.nthChild(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
@@ -222,7 +222,7 @@ export async function inspectXor(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
     const maybeCached: Type.TPowerQueryType | undefined = state.typeById.get(xorNodeId);
@@ -412,7 +412,7 @@ export async function inspectXor(
     }
 
     state.typeById.set(xorNodeId, result);
-    trace.exit({ resultKind: result.kind, maybeResultExtendedKind: result.maybeExtendedKind });
+    trace.exit({ resultKind: result.kind, extendedKind: result.extendedKind });
 
     return result;
 }
@@ -429,11 +429,11 @@ export async function maybeDereferencedIdentifierType(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
 
     const updatedSettings: PQP.CommonSettings = {
         ...state,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> = await tryDeferenceIdentifier(
@@ -453,9 +453,7 @@ export async function maybeDereferencedIdentifierType(
         return undefined;
     }
 
-    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.maybeIdentifierExpressionLiteral(
-        triedDeference.value,
-    );
+    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.identifierExpressionLiteral(triedDeference.value);
 
     if (maybeDereferencedLiteral === undefined) {
         trace.exit();
@@ -531,10 +529,8 @@ export async function maybeDereferencedIdentifierType(
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
     return {
-        kind: parameter.maybeType
-            ? TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.maybeType)
-            : Type.TypeKind.Any,
-        maybeExtendedKind: undefined,
+        kind: parameter.type ? TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.type) : Type.TypeKind.Any,
+        extendedKind: undefined,
         isNullable: parameter.isNullable || parameter.isOptional,
     };
 }

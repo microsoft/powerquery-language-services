@@ -27,7 +27,7 @@ export async function inspectTypeFieldProjection(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldProjection>(xorNode, Ast.NodeKind.FieldProjection);
 
     const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
@@ -38,7 +38,7 @@ export async function inspectTypeFieldProjection(
     const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
+        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,
@@ -55,19 +55,19 @@ export async function inspectTypeFieldProjection(
 
             result = {
                 kind: Type.TypeKind.Any,
-                maybeExtendedKind: Type.ExtendedTypeKind.AnyUnion,
+                extendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: fieldType.isNullable,
                 unionedTypePairs: [
                     {
                         kind: Type.TypeKind.Record,
-                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedRecord,
+                        extendedKind: Type.ExtendedTypeKind.DefinedRecord,
                         isNullable: fieldType.isNullable,
                         fields: projectedFields,
                         isOpen: false,
                     },
                     {
                         kind: Type.TypeKind.Table,
-                        maybeExtendedKind: Type.ExtendedTypeKind.DefinedTable,
+                        extendedKind: Type.ExtendedTypeKind.DefinedTable,
                         isNullable: fieldType.isNullable,
                         fields: new PQP.OrderedMap([...projectedFields]),
                         isOpen: false,

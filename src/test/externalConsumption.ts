@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -22,11 +23,10 @@ import { TestConstants } from ".";
 describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
-            createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
+            inspectionSettings: TestConstants.SimpleInspectionSettings,
             isWorkspaceCacheAllowed: false,
-            library: TestConstants.SimpleLibrary,
             traceManager: NoOpTraceManagerInstance,
-            maybeInitialCorrelationId: undefined,
+            initialCorrelationId: undefined,
         };
 
         const textDocument: TextDocument = createTextDocument("id", 1, "let a = 1 in a");
@@ -36,11 +36,15 @@ describe("External consumption", () => {
             line: 0,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings, position);
+        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
 
-        const hover: Hover = await analysis.getHover();
-        expect(hover.range === undefined);
-        expect(hover.contents === null);
+        const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
+            position,
+            TestConstants.NoOpCancellationTokenInstance,
+        );
+
+        Assert.isOk(hover);
+        Assert.isUndefined(hover.value);
 
         analysis.dispose();
     });

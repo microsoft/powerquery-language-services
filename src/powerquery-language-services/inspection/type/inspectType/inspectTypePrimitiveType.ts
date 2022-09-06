@@ -32,7 +32,7 @@ export function inspectTypePrimitiveType(
 
     const result: Type.TPowerQueryType = {
         kind,
-        maybeExtendedKind: undefined,
+        extendedKind: undefined,
         isNullable: false,
     };
 

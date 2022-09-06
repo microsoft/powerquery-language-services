@@ -25,7 +25,7 @@ export async function autocompleteKeywordLetExpression(
 
     // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
     // `let x = 1 |`
-    if (child.node.maybeAttributeIndex === 2 && XorNodeUtils.isContextXor(child)) {
+    if (child.node.attributeIndex === 2 && XorNodeUtils.isContextXor(child)) {
         maybeInspected = await autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(
@@ -59,8 +59,8 @@ export async function autocompleteKeywordLetExpression(
         }
     }
     // `let foo = e|` where we want to treat the identifier as a potential keyword
-    else if (child.node.maybeAttributeIndex === 1) {
-        const maybeIdentifier: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+    else if (child.node.attributeIndex === 1) {
+        const maybeIdentifier: TXorNode | undefined = AncestryUtils.nthPreviousXor(
             state.activeNode.ancestry,
             state.ancestryIndex,
             5,
@@ -87,7 +87,7 @@ function autocompleteLastKeyValuePair(
     }
 
     // Grab the last value (if one exists)
-    const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].maybeValue;
+    const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].value;
 
     if (maybeLastValue === undefined) {
         return Promise.resolve(undefined);

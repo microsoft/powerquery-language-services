@@ -5,261 +5,266 @@ import {
     AncestryUtils,
     NodeIdMap,
     NodeIdMapUtils,
-    ParseState,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
-import { DocumentUri } from "vscode-languageserver-textdocument";
-import { ResultUtils } from "@microsoft/powerquery-parser";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { DocumentUri, FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
 import {
     AutocompleteItemProviderContext,
-    IDefinitionProvider,
-    IFoldingRangeProvider,
-    ISemanticTokenProvider,
-    ISymbolProvider,
-    OnIdentifierProviderContext,
+    DefinitionProviderContext,
+    FoldingRangeProviderContext,
+    HoverProviderContext,
+    ILocalDocumentProvider,
     PartialSemanticToken,
-    ProviderContext,
+    SemanticTokenProviderContext,
     SignatureProviderContext,
 } from "../commonTypes";
-import { Inspection, Library, PositionUtils } from "../..";
+import { Inspection, PositionUtils } from "../..";
 import { createFoldingRanges } from "./foldingRanges";
 import { createPartialSemanticTokens } from "./partialSemanticToken";
-import { InspectionSettings } from "../../inspectionSettings";
+import { ILibrary } from "../../library/library";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
-export class LocalDocumentProvider
-    implements IDefinitionProvider, IFoldingRangeProvider, ISemanticTokenProvider, ISymbolProvider
-{
-    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
-    public readonly libraryDefinitions: Library.LibraryDefinitions;
-
+export class LocalDocumentProvider implements ILocalDocumentProvider {
     constructor(
-        library: Library.ILibrary,
         private readonly uri: DocumentUri,
-        private readonly promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-        private readonly createInspectionSettingsFn: () => InspectionSettings,
-    ) {
-        this.externalTypeResolver = library.externalTypeResolver;
-        this.libraryDefinitions = library.libraryDefinitions;
-    }
+        private readonly typeCache: Inspection.TypeCache,
+        private readonly library: ILibrary,
+        protected readonly locale: string,
+    ) {}
 
-    public async getAutocompleteItems(
+    public getAutocompleteItems(
         context: AutocompleteItemProviderContext,
-    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getAutocompleteItems.name,
-            context.maybeInitialCorrelationId,
-        );
+    ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getAutocompleteItems.name,
+                context.initialCorrelationId,
+            );
 
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+            context.cancellationToken?.throwIfCancelled();
 
-        if (maybeInspected === undefined) {
-            trace.exit({ maybeInspectedUndefined: true });
+            const autocompleteItems: Inspection.AutocompleteItem[] = [
+                ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
+            ].concat(InspectionUtils.getAutocompleteItemsFromScope(context));
 
-            return [];
-        }
+            trace.exit();
 
-        const result: ReadonlyArray<Inspection.AutocompleteItem> = [
-            ...this.getAutocompleteItemsFromFieldAccess(maybeInspected),
-            ...(await InspectionUtils.getAutocompleteItemsFromScope(context, maybeInspected)),
-        ];
-
-        trace.exit();
-
-        return result;
+            return autocompleteItems;
+        }, this.locale);
     }
 
-    public async getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getDefinition.name,
-            context.maybeInitialCorrelationId,
-        );
+    public getDefinition(
+        context: DefinitionProviderContext,
+    ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getDefinition.name,
+                context.initialCorrelationId,
+            );
 
-        if (
-            context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
-            context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
-        ) {
-            return null;
-        }
+            context.cancellationToken?.throwIfCancelled();
 
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+            if (
+                context.identifier.kind === Ast.NodeKind.GeneralizedIdentifier ||
+                context.identifier.identifierContextKind !== Ast.IdentifierContextKind.Value
+            ) {
+                return undefined;
+            }
 
-        if (maybeInspected === undefined) {
-            return null;
-        }
+            const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
 
-        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspected.triedNodeScope;
+            if (ResultUtils.isError(triedNodeScope)) {
+                return undefined;
+            }
 
-        if (ResultUtils.isError(triedNodeScope)) {
-            return null;
-        }
+            const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(
+                context.identifier.literal,
+            );
 
-        const maybeScopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
+            if (maybeScopeItem === undefined) {
+                return undefined;
+            }
 
-        if (maybeScopeItem === undefined) {
-            return null;
-        }
+            const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
+                ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
 
-        const creator: Ast.GeneralizedIdentifier | Ast.Identifier | undefined =
-            ScopeUtils.maybeScopeCreatorIdentifier(maybeScopeItem);
+            if (creator === undefined) {
+                return undefined;
+            }
 
-        if (creator === undefined) {
-            return null;
-        }
+            const location: Location = {
+                range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
+                uri: this.uri,
+            };
 
-        const result: Location = {
-            range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
-            uri: this.uri,
-        };
+            trace.exit();
 
-        trace.exit();
-
-        return [result];
+            return [location];
+        }, this.locale);
     }
 
-    // eslint-disable-next-line require-await
-    public async getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getHover.name,
-            context.maybeInitialCorrelationId,
-        );
+    public getFoldingRanges(
+        context: FoldingRangeProviderContext,
+    ): Promise<Result<FoldingRange[], CommonError.CommonError>> {
+        // eslint-disable-next-line require-await
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getFoldingRanges.name,
+                context.initialCorrelationId,
+            );
 
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+            context.cancellationToken?.throwIfCancelled();
 
-        if (maybeInspected === undefined) {
-            return [];
-        }
+            const foldingRanges: FoldingRange[] = createFoldingRanges(
+                context.nodeIdMapCollection,
+                context.traceManager,
+                trace.id,
+            );
 
-        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
-        const result: FoldingRange[] = createFoldingRanges(nodeIdMapCollection, context.traceManager, trace.id);
-        trace.exit();
+            trace.exit();
 
-        return result;
+            return foldingRanges;
+        }, this.locale);
     }
 
-    public async getHover(context: OnIdentifierProviderContext): Promise<Hover | null> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getHover.name,
-            context.maybeInitialCorrelationId,
-        );
+    public getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getHover.name,
+                context.initialCorrelationId,
+            );
 
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+            context.cancellationToken?.throwIfCancelled();
 
-        if (maybeInspected === undefined) {
-            trace.exit({ maybeInspectedUndefined: true });
+            let maybeHover: Hover | undefined = await this.getHoverForIdentifierPairedExpression(context, trace.id);
 
-            return null;
-        }
+            if (maybeHover !== undefined) {
+                trace.exit({ maybeHover: true });
 
-        const activeNode: Inspection.TMaybeActiveNode = maybeInspected.maybeActiveNode;
+                return maybeHover;
+            }
 
-        if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-            trace.exit({ outOfBounds: true });
+            const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+            const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
 
-            return null;
-        }
+            if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
+                trace.exit({ inspectionError: true });
 
-        let maybeHover: Hover | undefined = await LocalDocumentProvider.getHoverForIdentifierPairedExpression(
-            context,
-            this.createInspectionSettingsFn(),
-            maybeInspected,
-            activeNode,
-            trace.id,
-        );
+                return undefined;
+            }
 
-        if (maybeHover !== undefined) {
-            trace.exit({ maybeHover: true });
+            maybeHover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
 
-            return maybeHover;
-        }
+            trace.exit();
 
-        const triedNodeScope: Inspection.TriedNodeScope = await maybeInspected.triedNodeScope;
-        const triedScopeType: Inspection.TriedScopeType = await maybeInspected.triedScopeType;
-
-        if (!ResultUtils.isOk(triedNodeScope) || !ResultUtils.isOk(triedScopeType)) {
-            trace.exit({ inspectionError: true });
-
-            return null;
-        }
-
-        maybeHover = LocalDocumentProvider.getHoverForScopeItem(
-            context,
-            triedNodeScope.value,
-            triedScopeType.value,
-            trace.id,
-        );
-
-        trace.exit();
-
-        return maybeHover ?? null;
+            return maybeHover ?? undefined;
+        }, this.locale);
     }
 
     // eslint-disable-next-line require-await
-    public async getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getPartialSemanticTokens.name,
-            context.maybeInitialCorrelationId,
-        );
+    public async getPartialSemanticTokens(
+        context: SemanticTokenProviderContext,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResult(() => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getPartialSemanticTokens.name,
+                context.initialCorrelationId,
+            );
 
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
+            context.cancellationToken?.throwIfCancelled();
 
-        if (maybeInspected === undefined) {
-            return [];
-        }
+            const nodeIdMapCollection: NodeIdMap.Collection = context.parseState.contextState.nodeIdMapCollection;
 
-        const nodeIdMapCollection: NodeIdMap.Collection = maybeInspected.parseState.contextState.nodeIdMapCollection;
+            const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
+                nodeIdMapCollection,
+                this.library.libraryDefinitions,
+                context.traceManager,
+                trace.id,
+            );
 
-        const tokens: PartialSemanticToken[] = createPartialSemanticTokens(
-            nodeIdMapCollection,
-            this.libraryDefinitions,
-            context.traceManager,
-            trace.id,
-        );
+            trace.exit();
 
-        trace.exit();
-
-        return tokens;
+            return tokens;
+        }, this.locale);
     }
 
-    public async getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        const trace: Trace = context.traceManager.entry(
-            ProviderTraceConstant.LocalDocumentSymbolProvider,
-            this.getSignatureHelp.name,
-            context.maybeInitialCorrelationId,
-        );
+    // eslint-disable-next-line require-await
+    public async getSignatureHelp(
+        context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResult(() => {
+            const trace: Trace = context.traceManager.entry(
+                ProviderTraceConstant.LocalDocumentSymbolProvider,
+                this.getSignatureHelp.name,
+                context.initialCorrelationId,
+            );
 
-        const maybeInvokeInspection: Inspection.InvokeExpression | undefined =
-            await this.getMaybeInspectionInvokeExpression();
+            context.cancellationToken?.throwIfCancelled();
 
-        if (maybeInvokeInspection === undefined) {
-            trace.exit({ maybeInvokeInspectionUndefined: true });
+            const maybeInvokeInspection: Inspection.InvokeExpression | undefined = ResultUtils.isOk(
+                context.triedCurrentInvokeExpression,
+            )
+                ? context.triedCurrentInvokeExpression.value
+                : undefined;
 
-            return null;
-        }
+            if (maybeInvokeInspection === undefined) {
+                trace.exit({ maybeInvokeInspectionUndefined: true });
 
-        const inspection: Inspection.InvokeExpression = maybeInvokeInspection;
+                return undefined;
+            }
 
-        if (inspection.maybeName && !inspection.isNameInLocalScope) {
-            trace.exit({ unknownName: true });
+            if (maybeInvokeInspection.maybeName && !maybeInvokeInspection.isNameInLocalScope) {
+                trace.exit({ unknownName: true });
 
-            return null;
-        }
+                return undefined;
+            }
 
-        const result: SignatureHelp | null = InspectionUtils.getMaybeSignatureHelp(context, trace.id);
-        trace.exit();
+            const identifierLiteral: string | undefined = context.functionName;
 
-        return result;
+            if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
+                return undefined;
+            }
+
+            const nameOfParameters: string = context.functionType.parameters
+                .map((parameter: Type.FunctionParameter) =>
+                    TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, trace.id),
+                )
+                .join(", ");
+
+            const label: string = `${identifierLiteral}(${nameOfParameters})`;
+
+            const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
+
+            const result: SignatureHelp = {
+                activeParameter: context.argumentOrdinal,
+                activeSignature: 0,
+                signatures: [
+                    {
+                        label,
+                        parameters: parameters.map((parameter: Type.FunctionParameter) => ({
+                            label: parameter.nameLiteral,
+                        })),
+                    },
+                ],
+            };
+
+            trace.exit();
+
+            return result;
+        }, this.locale);
     }
 
     // When hovering over a key it should show the type for the value.
@@ -267,11 +272,8 @@ export class LocalDocumentProvider
     //  * GeneralizedIdentifierPairedAnyLiteral
     //  * GeneralizedIdentifierPairedExpression
     //  * IdentifierPairedExpression
-    protected static async getHoverForIdentifierPairedExpression(
-        context: OnIdentifierProviderContext,
-        inspectionSettings: InspectionSettings,
-        inspected: Inspection.Inspected,
-        activeNode: Inspection.ActiveNode,
+    protected async getHoverForIdentifierPairedExpression(
+        context: HoverProviderContext,
         correlationId: number,
     ): Promise<Hover | undefined> {
         const trace: Trace = context.traceManager.entry(
@@ -280,8 +282,9 @@ export class LocalDocumentProvider
             correlationId,
         );
 
-        const parseState: ParseState = inspected.parseState;
-        const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+        context.cancellationToken?.throwIfCancelled();
+
+        const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
         const maybeLeafKind: Ast.NodeKind | undefined = ancestry[0]?.node.kind;
 
         const isValidLeafNodeKind: boolean = [Ast.NodeKind.GeneralizedIdentifier, Ast.NodeKind.Identifier].includes(
@@ -294,11 +297,11 @@ export class LocalDocumentProvider
             return undefined;
         }
 
-        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.maybeNthXorChecked<
+        const maybeIdentifierPairedExpression: TXorNode | undefined = AncestryUtils.nthXorChecked<
             | Ast.GeneralizedIdentifierPairedAnyLiteral
             | Ast.GeneralizedIdentifierPairedExpression
             | Ast.IdentifierPairedExpression
-        >(activeNode.ancestry, 1, [
+        >(context.activeNode.ancestry, 1, [
             Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
             Ast.NodeKind.GeneralizedIdentifierPairedExpression,
             Ast.NodeKind.IdentifierPairedExpression,
@@ -311,8 +314,8 @@ export class LocalDocumentProvider
             return undefined;
         }
 
-        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
-            parseState.contextState.nodeIdMapCollection,
+        const maybeExpression: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            context.parseState.contextState.nodeIdMapCollection,
             maybeIdentifierPairedExpression.node.id,
             2,
         );
@@ -325,10 +328,13 @@ export class LocalDocumentProvider
         }
 
         const triedExpressionType: Inspection.TriedType = await Inspection.tryType(
-            inspectionSettings,
-            parseState.contextState.nodeIdMapCollection,
+            {
+                ...context.inspectionSettings,
+                initialCorrelationId: trace.id,
+            },
+            context.parseState.contextState.nodeIdMapCollection,
             maybeExpression.node.id,
-            inspected.typeCache,
+            this.typeCache,
         );
 
         // TODO handle error
@@ -379,8 +385,8 @@ export class LocalDocumentProvider
         return result;
     }
 
-    protected static getHoverForScopeItem(
-        context: OnIdentifierProviderContext,
+    protected getHoverForScopeItem(
+        context: HoverProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
         correlationId: number,
@@ -411,23 +417,10 @@ export class LocalDocumentProvider
         };
     }
 
-    private async getMaybeInspectionInvokeExpression(): Promise<Inspection.InvokeExpression | undefined> {
-        const maybeInspected: Inspection.Inspected | undefined = await this.promiseMaybeInspected;
-
-        if (maybeInspected === undefined) {
-            return undefined;
-        }
-
-        const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
-            await maybeInspected.triedCurrentInvokeExpression;
-
-        return ResultUtils.isOk(triedCurrentInvokeExpression) ? triedCurrentInvokeExpression.value : undefined;
-    }
-
     private getAutocompleteItemsFromFieldAccess(
-        inspection: Inspection.Inspected,
+        autocomplete: Inspection.Autocomplete,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
-        const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = inspection.autocomplete.triedFieldAccess;
+        const triedFieldAccess: Inspection.TriedAutocompleteFieldAccess = autocomplete.triedFieldAccess;
 
         return ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
             ? triedFieldAccess.value.autocompleteItems

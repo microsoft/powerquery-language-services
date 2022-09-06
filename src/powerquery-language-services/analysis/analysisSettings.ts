@@ -1,27 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DocumentUri } from "vscode-languageserver-textdocument";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { IAutocompleteItemProvider, ILocalDocumentProvider, ISymbolProvider } from "../providers/commonTypes";
-import { Inspection } from "..";
+import { IAutocompleteItemProvider, ILibraryProvider, ILocalDocumentProvider } from "../providers";
+import { ILibrary } from "../library/library";
 import { InspectionSettings } from "../inspectionSettings";
-import { Library } from "../library";
+import { TypeCache } from "../inspection";
 
 export interface AnalysisSettings {
-    readonly createInspectionSettingsFn: () => InspectionSettings;
-    readonly isWorkspaceCacheAllowed: boolean;
-    readonly library: Library.ILibrary;
-    readonly maybeCreateLanguageAutocompleteItemProviderFn?: () => IAutocompleteItemProvider;
-    readonly maybeCreateLibrarySymbolProviderFn?: (library: Library.ILibrary) => ISymbolProvider;
+    // Allows injection of custom providers.
+    readonly maybeCreateLanguageAutocompleteItemProviderFn?: (locale: string) => IAutocompleteItemProvider;
+    readonly maybeCreateLibraryProviderFn?: (library: ILibrary, locale: string) => ILibraryProvider;
     readonly maybeCreateLocalDocumentProviderFn?: (
-        library: Library.ILibrary,
-        uri: DocumentUri,
-        promiseMaybeInspected: Promise<Inspection.Inspected | undefined>,
-        createInspectionSettingsFn: () => InspectionSettings,
+        uri: string,
+        typeCache: TypeCache,
+        library: ILibrary,
+        locale: string,
     ) => ILocalDocumentProvider;
-    readonly maybeInitialCorrelationId: number | undefined;
-    readonly symbolProviderTimeoutInMS?: number;
+    readonly inspectionSettings: InspectionSettings;
+    readonly isWorkspaceCacheAllowed: boolean;
+    readonly initialCorrelationId: number | undefined;
     readonly traceManager: TraceManager;
 }

@@ -12,7 +12,6 @@ export * as TraceUtils from "./traceUtils";
 export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
-export * from "./documentSymbols";
 export * from "./formatter";
 export * from "./inspectionSettings";
 export * from "./jaroWinkler";

@@ -28,7 +28,7 @@ export async function tryScopeType(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScopeType,
         tryScopeType.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
@@ -54,7 +54,7 @@ export async function tryType(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectType,
         tryType.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
@@ -117,9 +117,9 @@ function createState(
         library: settings.library,
         locale: settings.locale,
         isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
-        maybeCancellationToken: settings.maybeCancellationToken,
+        cancellationToken: settings.cancellationToken,
         maybeEachScopeById: settings.maybeEachScopeById,
-        maybeInitialCorrelationId: correlationId,
+        initialCorrelationId: correlationId,
         traceManager: settings.traceManager,
         typeStrategy: settings.typeStrategy,
         typeById: typeCache.typeById,

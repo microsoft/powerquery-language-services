@@ -29,7 +29,7 @@ export function tryAutocompleteLanguageConstant(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompleteLanguageConstant,
         tryAutocompleteLanguageConstant.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
@@ -123,9 +123,9 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 }
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
-    const maybeChild: TXorNode | undefined = AncestryUtils.maybePreviousXor(activeNode.ancestry, ancestryIndex);
+    const maybeChild: TXorNode | undefined = AncestryUtils.previousXor(activeNode.ancestry, ancestryIndex);
 
-    if (maybeChild?.node.maybeAttributeIndex !== 1) {
+    if (maybeChild?.node.attributeIndex !== 1) {
         return false;
     }
 
@@ -139,7 +139,7 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
     }
     // Ast.NullablePrimitiveType
     else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-        const maybeGrandchild: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+        const maybeGrandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(
             activeNode.ancestry,
             ancestryIndex,
             2,
@@ -166,7 +166,7 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
 }
 
 function isOptionalAllowed(activeNode: ActiveNode): boolean {
-    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.maybeFirstIndexOfNodeKind(
+    const maybeFnExprAncestryIndex: number | undefined = AncestryUtils.findIndexOfNodeKind(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
@@ -178,19 +178,18 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     const fnExprAncestryIndex: number = maybeFnExprAncestryIndex;
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const maybeParameter: XorNode<Ast.TParameter> | undefined =
-        AncestryUtils.maybeNthPreviousXorChecked<Ast.TParameter>(
-            activeNode.ancestry,
-            fnExprAncestryIndex,
-            4,
-            Ast.NodeKind.Parameter,
-        );
+    const maybeParameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TParameter>(
+        activeNode.ancestry,
+        fnExprAncestryIndex,
+        4,
+        Ast.NodeKind.Parameter,
+    );
 
     if (maybeParameter === undefined) {
         return false;
     }
 
-    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.maybeNthPreviousXor(
+    const maybeChildOfParameter: TXorNode | undefined = AncestryUtils.nthPreviousXor(
         activeNode.ancestry,
         fnExprAncestryIndex,
         5,
@@ -202,7 +201,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
 
     const childOfParameter: TXorNode = maybeChildOfParameter;
 
-    switch (childOfParameter.node.maybeAttributeIndex) {
+    switch (childOfParameter.node.attributeIndex) {
         // IParameter.maybeOptionalConstant
         case 0:
             return true;

@@ -20,7 +20,7 @@ export async function inspectTypeIdentifierExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.IdentifierExpression>(xorNode, Ast.NodeKind.IdentifierExpression);
 
     let result: Type.TPowerQueryType;

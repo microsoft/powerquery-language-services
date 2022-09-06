@@ -2,9 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Assert } from "@microsoft/powerquery-parser";
-import { DocumentUri } from "vscode-languageserver-textdocument";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
@@ -14,11 +13,19 @@ import {
     InspectionSettings,
     Library,
     LibraryUtils,
-    LocalDocumentProvider,
     TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
-import { LibrarySymbolProvider } from "../powerquery-language-services/providers/librarySymbolProvider";
+
+export class NoOpCancellationToken implements ICancellationToken {
+    isCancelled: () => boolean = () => false;
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    throwIfCancelled: () => void = () => {};
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    cancel: () => void = () => {};
+}
+
+export const NoOpCancellationTokenInstance: NoOpCancellationToken = new NoOpCancellationToken();
 
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
@@ -48,13 +55,13 @@ export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction =
             isNullable: false,
             isOptional: false,
             nameLiteral: "firstArg",
-            maybeType: Type.TypeKind.Number,
+            type: Type.TypeKind.Number,
         },
         {
             isNullable: false,
             isOptional: true,
             nameLiteral: "secondArg",
-            maybeType: Type.TypeKind.Text,
+            type: Type.TypeKind.Text,
         },
     ],
     Type.NullInstance,
@@ -66,7 +73,7 @@ export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.cre
         {
             isNullable: false,
             isOptional: false,
-            maybeType: undefined,
+            type: undefined,
             nameLiteral: "x",
         },
     ],
@@ -79,7 +86,7 @@ export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.crea
         {
             isNullable: false,
             isOptional: false,
-            maybeType: Type.TypeKind.Text,
+            type: Type.TypeKind.Text,
             nameLiteral: "txt",
         },
     ],
@@ -222,32 +229,21 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
     }
 };
 
-export const SimpleInspectionSettings: InspectionSettings = {
-    ...DefaultInspectionSettings,
-    library: {
-        libraryDefinitions: SimpleLibraryDefinitions,
-        externalTypeResolver: SimpleExternalTypeResolver,
-    },
-};
-
 export const SimpleLibrary: Library.ILibrary = {
     externalTypeResolver: SimpleExternalTypeResolver,
     libraryDefinitions: SimpleLibraryDefinitions,
 };
 
-export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
-    createInspectionSettingsFn: () => SimpleInspectionSettings,
-    isWorkspaceCacheAllowed: false,
+export const SimpleInspectionSettings: InspectionSettings = {
+    ...DefaultInspectionSettings,
     library: SimpleLibrary,
-    maybeCreateLibrarySymbolProviderFn: (library: Library.ILibrary) => new LibrarySymbolProvider(library),
-    maybeCreateLocalDocumentProviderFn: (
-        library: Library.ILibrary,
-        uri: DocumentUri,
-        maybePromiseInspection: Promise<Inspection.Inspected | undefined>,
-        createInspectionSettingsFn: () => InspectionSettings,
-    ) => new LocalDocumentProvider(library, uri, maybePromiseInspection, createInspectionSettingsFn),
-    maybeInitialCorrelationId: undefined,
+};
+
+export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
+    isWorkspaceCacheAllowed: false,
+    initialCorrelationId: undefined,
     traceManager: NoOpTraceManagerInstance,
+    inspectionSettings: SimpleInspectionSettings,
 };
 
 export const SimpleValidateAllSettings: ValidationSettings = {

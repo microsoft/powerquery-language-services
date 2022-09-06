@@ -47,12 +47,12 @@ export class InspectionInstance implements Inspected {
         const trace: Trace = this.settings.traceManager.entry(
             InspectionTraceConstant.Inspect,
             tryNodeScope.name,
-            this.settings.maybeInitialCorrelationId,
+            this.settings.initialCorrelationId,
         );
 
         const updatedSettings: InspectionSettings = {
             ...this.settings,
-            maybeInitialCorrelationId: trace.id,
+            initialCorrelationId: trace.id,
         };
 
         const result: Promise<Inspection.TriedNodeScope> = tryNodeScope(
@@ -174,12 +174,12 @@ export async function inspect(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.Inspect,
         inspect.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
@@ -245,12 +245,12 @@ export async function tryInspect(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.Inspect,
         tryInspect.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(updatedSettings, text);

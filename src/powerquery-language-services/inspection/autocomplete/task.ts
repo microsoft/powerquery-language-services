@@ -34,12 +34,12 @@ export async function autocomplete(
     const trace: Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.Autocomplete,
         autocomplete.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
@@ -47,7 +47,7 @@ export async function autocomplete(
     let maybeTrailingToken: TrailingToken | undefined;
 
     if (maybeParseError !== undefined) {
-        const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.maybeTokenFrom(
+        const maybeParseErrorToken: PQP.Language.Token.Token | undefined = PQP.Parser.ParseError.tokenFrom(
             maybeParseError.innerError,
         );
 

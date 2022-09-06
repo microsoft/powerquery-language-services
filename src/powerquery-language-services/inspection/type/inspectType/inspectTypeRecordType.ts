@@ -23,14 +23,14 @@ export async function inspectTypeRecordType(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecordType>(xorNode, Ast.NodeKind.RecordType);
 
     let result: Type.Type | Type.RecordType | Type.Unknown;
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeFields: TXorNode | undefined = NodeIdMapUtils.maybeNthChildChecked<Ast.FieldSpecificationList>(
+            const maybeFields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 0,
@@ -42,7 +42,7 @@ export async function inspectTypeRecordType(
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
-                    maybeExtendedKind: Type.ExtendedTypeKind.RecordType,
+                    extendedKind: Type.ExtendedTypeKind.RecordType,
                     isNullable: false,
                     ...(await examineFieldSpecificationList(state, maybeFields, trace.id)),
                 };

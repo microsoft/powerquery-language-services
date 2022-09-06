@@ -17,7 +17,7 @@ import { InspectTypeState } from "../common";
 //  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
-//  the scope is the previous sibling's type, so use NodeUtils.assertGetRecursiveExpressionPreviousSibling
+//  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
 
 export async function inspectTypeFieldSelector(
     state: InspectTypeState,
@@ -31,11 +31,11 @@ export async function inspectTypeFieldSelector(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const maybeFieldName: Ast.GeneralizedIdentifier | undefined =
-        NodeIdMapUtils.maybeUnboxWrappedContentIfAstChecked<Ast.GeneralizedIdentifier>(
+        NodeIdMapUtils.unboxWrappedContentIfAstChecked<Ast.GeneralizedIdentifier>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -51,7 +51,7 @@ export async function inspectTypeFieldSelector(
     const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
+        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,
@@ -90,7 +90,7 @@ function inspectRecordOrTable(
     fieldName: string,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    if (fieldType.maybeExtendedKind === undefined) {
+    if (fieldType.extendedKind === undefined) {
         return Type.AnyInstance;
     }
 

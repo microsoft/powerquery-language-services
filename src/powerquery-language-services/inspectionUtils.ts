@@ -2,17 +2,14 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DocumentSymbol, SignatureHelp, SymbolKind } from "vscode-languageserver-types";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
 
-import { AutocompleteItemProviderContext, SignatureProviderContext } from "./providers/commonTypes";
 import { Inspection, PositionUtils } from ".";
 import { InspectionSettings, TypeStrategy } from "./inspectionSettings";
-import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { AutocompleteItemProviderContext } from "./providers/commonTypes";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
-import { InspectionTraceConstant } from "./trace";
 import { Library } from "./library";
 
 export function createInspectionSettings(
@@ -25,83 +22,6 @@ export function createInspectionSettings(
         library: overrides?.library ?? Library.NoOpLibrary,
         typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,
         maybeEachScopeById: overrides?.maybeEachScopeById ?? undefined,
-    };
-}
-
-export async function getMaybeContextForSignatureProvider(
-    inspected: Inspection.Inspected,
-    traceManager: TraceManager,
-    maybeCorrelationId: number | undefined,
-): Promise<SignatureProviderContext | undefined> {
-    const trace: Trace = traceManager.entry(
-        InspectionTraceConstant.InspectionUtils,
-        getMaybeContextForSignatureProvider.name,
-        maybeCorrelationId,
-    );
-
-    const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression =
-        await inspected.triedCurrentInvokeExpression;
-
-    if (ResultUtils.isError(triedCurrentInvokeExpression) || triedCurrentInvokeExpression.value === undefined) {
-        trace.exit();
-
-        return undefined;
-    }
-
-    const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
-
-    const functionName: string | undefined =
-        invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
-
-    const argumentOrdinal: number | undefined =
-        invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
-
-    if (functionName !== undefined || argumentOrdinal !== undefined) {
-        trace.exit();
-
-        return {
-            argumentOrdinal,
-            functionName,
-            isNameInLocalScope: invokeExpression.isNameInLocalScope,
-            functionType: invokeExpression.functionType,
-            traceManager,
-            maybeInitialCorrelationId: trace.id,
-        };
-    } else {
-        trace.exit();
-
-        return undefined;
-    }
-}
-
-export function getMaybeSignatureHelp(context: SignatureProviderContext, correlationId: number): SignatureHelp | null {
-    const identifierLiteral: string | undefined = context.functionName;
-
-    if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
-        return null;
-    }
-
-    const nameOfParameters: string = context.functionType.parameters
-        .map((parameter: Type.FunctionParameter) =>
-            TypeUtils.nameOfFunctionParameter(parameter, context.traceManager, correlationId),
-        )
-        .join(", ");
-
-    const label: string = `${identifierLiteral}(${nameOfParameters})`;
-
-    const parameters: ReadonlyArray<Type.FunctionParameter> = context.functionType.parameters;
-
-    return {
-        activeParameter: context.argumentOrdinal,
-        activeSignature: 0,
-        signatures: [
-            {
-                label,
-                parameters: parameters.map((parameter: Type.FunctionParameter) => ({
-                    label: parameter.nameLiteral,
-                })),
-            },
-        ],
     };
 }
 
@@ -239,12 +159,11 @@ export function getSymbolForIdentifierPairedExpression(
     };
 }
 
-export async function getAutocompleteItemsFromScope(
+export function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
-    inspection: Inspection.Inspected,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    const triedNodeScope: Inspection.TriedNodeScope = await inspection.triedNodeScope;
-    const triedScopeType: Inspection.TriedScopeType = await inspection.triedScopeType;
+): ReadonlyArray<Inspection.AutocompleteItem> {
+    const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+    const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
 
     if (ResultUtils.isError(triedNodeScope)) {
         return [];

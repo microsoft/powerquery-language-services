@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 import { FoldingRange, Location, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range, TextDocument } from "vscode-languageserver-textdocument";
-import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import {
     AnalysisSettings,
     AnalysisUtils,
-    EmptyHover,
     Hover,
     Inspection,
     Library,
@@ -26,22 +25,26 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 const IsolatedAnalysisSettings: AnalysisSettings = {
     ...TestConstants.SimpleLibraryAnalysisSettings,
     maybeCreateLanguageAutocompleteItemProviderFn: () => NullSymbolProvider.singleton(),
-    maybeCreateLibrarySymbolProviderFn: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
+    maybeCreateLibraryProviderFn: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
 };
 
-function createAutocompleteItems(text: string): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+function createAutocompleteItems(
+    text: string,
+): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
     return TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
 }
 
-function createHover(text: string): Promise<Hover> {
+function createHover(text: string): Promise<Result<Hover | undefined, CommonError.CommonError>> {
     return TestUtils.createHover(text, IsolatedAnalysisSettings);
 }
 
-function createPartialSemanticTokens(text: string): Promise<PartialSemanticToken[]> {
+function createPartialSemanticTokens(
+    text: string,
+): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
     return TestUtils.createPartialSemanticTokens(text, IsolatedAnalysisSettings);
 }
 
-function createSignatureHelp(text: string): Promise<SignatureHelp> {
+function createSignatureHelp(text: string): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
     return TestUtils.createSignatureHelp(text, IsolatedAnalysisSettings);
 }
 
@@ -50,89 +53,97 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         describe(`scope`, () => {
             describe(`${Inspection.ScopeItemKind.LetVariable}`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+                    const expected: string[] = ["foo", "bar", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "let foo = 1, bar = 2, foobar = 3 in |",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("let foo = 1, bar = 2, foobar = 3 in |");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "let foo = 1, bar = 2, foobar = 3 in foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("let foo = 1, bar = 2, foobar = 3 in foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
             describe(`${Inspection.ScopeItemKind.Parameter}`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+                    const expected: string[] = ["foo", "bar", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "(foo as number, bar as number, foobar as number) => |",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("(foo as number, bar as number, foobar as number) => |");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "(foo as number, bar as number, foobar as number) => foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("(foo as number, bar as number, foobar as number) => foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
             describe(`${Inspection.ScopeItemKind.RecordField}`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+                    const expected: string[] = ["foo", "bar", "foobar", "@x"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3, x = |",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3, x = |");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3, x = foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3, x = foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
             describe(`${Inspection.ScopeItemKind.SectionMember}`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar", "@x"];
+                    const expected: string[] = ["foo", "bar", "foobar", "@x"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "section; foo = 1; bar = 2; foobar = 3; x = |",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("section; foo = 1; bar = 2; foobar = 3; x = |");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "section; foo = 1; bar = 2; foobar = 3; x = foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("section; foo = 1; bar = 2; foobar = 3; x = foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
         });
@@ -140,55 +151,60 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         describe(`fieldAccess`, () => {
             describe(`fieldProjection`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+                    const expected: string[] = ["foo", "bar", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3][[|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3][[|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3][[foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3][[foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`no repeats`, async () => {
-                    const expected: ReadonlyArray<string> = ["bar", "foobar"];
+                    const expected: string[] = ["bar", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3][[foo], [|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3][[foo], [|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
             describe(`fieldSelection`, () => {
                 it(`match all`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "bar", "foobar"];
+                    const expected: string[] = ["foo", "bar", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3][|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3][|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
-                    const expected: ReadonlyArray<string> = ["foo", "foobar"];
+                    const expected: string[] = ["foo", "foobar"];
 
-                    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await createAutocompleteItems(
-                        "[foo = 1, bar = 2, foobar = 3][foo|",
-                    );
+                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                        await createAutocompleteItems("[foo = 1, bar = 2, foobar = 3][foo|");
 
-                    TestUtils.assertAutocompleteItemLabels(expected, actual);
+                    Assert.isOk(actual);
+                    Assert.isDefined(actual.value);
+                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
         });
@@ -201,28 +217,26 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             const document: TextDocument = pair[0];
             const position: Position = pair[1];
 
-            const autocompleteItems: Inspection.AutocompleteItem[] = await AnalysisUtils.createAnalysis(
-                document,
-                {
-                    createInspectionSettingsFn: () => TestConstants.SimpleInspectionSettings,
+            const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await AnalysisUtils.createAnalysis(document, {
+                    inspectionSettings: TestConstants.SimpleInspectionSettings,
                     isWorkspaceCacheAllowed: false,
-                    library: TestConstants.SimpleLibrary,
                     traceManager: NoOpTraceManagerInstance,
-                    maybeInitialCorrelationId: undefined,
-                },
-                position,
-            ).getAutocompleteItems();
+                    initialCorrelationId: undefined,
+                }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
 
-            expect(autocompleteItems.length).to.equal(2);
+            Assert.isOk(autocompleteItems);
+            Assert.isDefined(autocompleteItems.value);
+            expect(autocompleteItems.value.length).to.equal(2);
 
             const firstOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.Foo",
-                autocompleteItems,
+                autocompleteItems.value,
             );
 
             const secondOption: Inspection.AutocompleteItem = TestUtils.assertGetAutocompleteItem(
                 "Test.FooBar",
-                autocompleteItems,
+                autocompleteItems.value,
             );
 
             Assert.isDefined(firstOption.textEdit, "expected firstOption to have a textEdit");
@@ -232,10 +246,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
     describe(`getDefinition`, () => {
         it(`no definition`, async () => {
-            const expected: Range[] = [];
-            const actual: Location[] | undefined = await TestUtils.createDefinition("let foo = 1 in baz|");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "let foo = 1 in baz|",
+            );
+
+            Assert.isOk(actual);
+            Assert.isUndefined(actual.value);
         });
 
         it(`let expression`, async () => {
@@ -246,9 +262,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: Location[] | undefined = await TestUtils.createDefinition("let foobar = 1 in foobar|");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "let foobar = 1 in foobar|",
+            );
+
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertEqualLocation(expected, actual.value);
         });
 
         it(`record expression`, async () => {
@@ -259,17 +279,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: Location[] | undefined = await TestUtils.createDefinition("[foo = 1, bar = foo|]");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "[foo = 1, bar = foo|]",
+            );
+
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertEqualLocation(expected, actual.value);
         });
 
         it(`record expression, not on key`, async () => {
-            const expected: Range[] = [];
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "[foo = 1, bar = [foo| = 2]]",
+            );
 
-            const actual: Location[] | undefined = await TestUtils.createDefinition("[foo = 1, bar = [foo| = 2]]");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            Assert.isOk(actual);
+            Assert.isUndefined(actual.value);
         });
 
         it(`section expression`, async () => {
@@ -280,9 +305,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: Location[] | undefined = await TestUtils.createDefinition("section foo; bar = 1; baz = bar|");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "section foo; bar = 1; baz = bar|",
+            );
+
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertEqualLocation(expected, actual.value);
         });
 
         it(`parameter`, async () => {
@@ -293,9 +322,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: Location[] | undefined = await TestUtils.createDefinition("(foo as number) => foo|");
-            Assert.isDefined(actual);
-            TestUtils.assertEqualLocation(expected, actual);
+            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+                "(foo as number) => foo|",
+            );
+
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertEqualLocation(expected, actual.value);
         });
     });
 
@@ -310,10 +343,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("let \n foo = 1 \n in \n baz|");
+            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await TestUtils.createFoldingRanges("let \n foo = 1 \n in \n baz");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`MetaExpression`, async () => {
@@ -332,10 +367,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("1 meta [ \n foo = number \n ]|");
+            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await TestUtils.createFoldingRanges("1 meta [ \n foo = number \n ]");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`RecordExpression`, async () => {
@@ -348,10 +385,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: FoldingRange[] = await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ]|");
+            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ]");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`RecordLiteral`, async () => {
@@ -364,12 +403,12 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: FoldingRange[] = await TestUtils.createFoldingRanges(
-                "[ \n a=1, \n b=2 \n ] \n section foo; bar = 1|",
-            );
+            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await TestUtils.createFoldingRanges("[ \n a=1, \n b=2 \n ] \n section foo; bar = 1");
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`SectionMember`, async () => {
@@ -388,74 +427,113 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            const actual: FoldingRange[] = await TestUtils.createFoldingRanges(
-                "[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1|",
-            );
+            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
+                await TestUtils.createFoldingRanges(
+                    "[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1",
+                );
 
-            Assert.isDefined(actual);
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
     });
 
     describe(`getHover`, () => {
         describe(`simple`, () => {
             it(`let-variable`, async () => {
-                const hover: Hover = await createHover("let x = 1 in x|");
-                TestUtils.assertEqualHover("[let-variable] x: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("let x = 1 in x|");
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[let-variable] x: 1", hover.value);
             });
 
             it(`parameter`, async () => {
-                const hover: Hover = await createHover("(x as number) => x|");
-                TestUtils.assertEqualHover("[parameter] x: number", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                    "(x as number) => x|",
+                );
+
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[parameter] x: number", hover.value);
             });
 
             it(`record-field`, async () => {
-                const hover: Hover = await createHover("[x = 1, y = x|]");
-                TestUtils.assertEqualHover("[record-field] x: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("[x = 1, y = x|]");
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[record-field] x: 1", hover.value);
             });
 
             it(`section-member`, async () => {
-                const hover: Hover = await createHover("section; x = 1; y = x|;");
-                TestUtils.assertEqualHover("[section-member] x: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                    "section; x = 1; y = x|;",
+                );
+
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[section-member] x: 1", hover.value);
             });
 
             it(`undefined`, async () => {
-                const hover: Hover = await createHover("x|");
-                expect(hover).to.equal(EmptyHover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("x|");
+                Assert.isOk(hover);
+                Assert.isUndefined(hover.value);
             });
         });
 
-        it(`null on parameter hover`, async () => {
-            const hover: Hover = await createHover("let foo = 10, bar = (foo| as number) => foo in foo");
-            expect(hover).to.deep.equal(EmptyHover);
+        it(`undefined on parameter hover`, async () => {
+            const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                "let foo = 10, bar = (foo| as number) => foo in foo",
+            );
+
+            Assert.isOk(hover);
+            Assert.isUndefined(hover.value);
         });
 
         describe(`hover the value when over key`, () => {
             it(`let-variable`, async () => {
-                const hover: Hover = await createHover("let foo| = 1 in foo");
-                TestUtils.assertEqualHover("[let-variable] foo: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                    "let foo| = 1 in foo",
+                );
+
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[let-variable] foo: 1", hover.value);
             });
 
             it(`record-field expression`, async () => {
-                const hover: Hover = await createHover("[foo| = 1]");
-                TestUtils.assertEqualHover("[record-field] foo: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("[foo| = 1]");
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[record-field] foo: 1", hover.value);
             });
 
             it(`record-field literal`, async () => {
-                const hover: Hover = await createHover("[foo| = 1] section; bar = 1;");
-                TestUtils.assertEqualHover("[record-field] foo: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                    "[foo| = 1] section; bar = 1;",
+                );
+
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[record-field] foo: 1", hover.value);
             });
 
             it(`section-member`, async () => {
-                const hover: Hover = await createHover("section; foo| = 1;");
-                TestUtils.assertEqualHover("[section-member] foo: 1", hover);
+                const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover(
+                    "section; foo| = 1;",
+                );
+
+                Assert.isOk(hover);
+                Assert.isDefined(hover.value);
+                TestUtils.assertEqualHover("[section-member] foo: 1", hover.value);
             });
         });
     });
 
     describe(`getPartialSemanticTokens`, () => {
         it(`field projection`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`a[[b]]?|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`a[[b]]?`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -484,11 +562,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`field selector`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`a[b]?|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`a[b]?`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -517,11 +598,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`numeric literal`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`1|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`1`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -534,11 +618,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`nullable primitive type`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`1 is nullable number|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`1 is nullable number`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -575,11 +662,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`primitive type`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`text|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`text`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -592,13 +682,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`parameter`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(
-                `(optional foo as number) => foo|`,
-            );
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`(optional foo as number) => foo`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -643,11 +734,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`record literal`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`[foo = 1]section bar;|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`[foo = 1]section bar;`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -668,11 +762,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`record expression`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`[foo = 1]|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`[foo = 1]`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -693,13 +790,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`table type`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(
-                `type table [optional foo = nullable number]|`,
-            );
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`type table [optional foo = nullable number]`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -744,11 +842,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`text literal`, async () => {
-            const tokens: PartialSemanticToken[] = await createPartialSemanticTokens(`""|`);
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`""`);
 
             const expected: PartialSemanticToken[] = [
                 {
@@ -761,13 +862,15 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             ];
 
-            expect(tokens).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
     });
 
     describe(`getSignatureHelp`, () => {
         it(`no closing bracket`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp(
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|",
             );
 
@@ -789,11 +892,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             };
 
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
 
         it(`closing bracket`, async () => {
-            const actual: SignatureHelp = await createSignatureHelp(
+            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> = await createSignatureHelp(
                 "let fn = (x as number, y as number) => x + y in fn(1|)",
             );
 
@@ -815,7 +920,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             };
 
-            expect(actual).to.deep.equal(expected);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            expect(actual.value).to.deep.equal(expected);
         });
     });
 
@@ -826,12 +933,10 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 character: 25,
             };
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await TestUtils.createAutocompleteItemsForFile(
-                "DirectQueryForSQL.pq",
-                postion,
-            );
+            const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await TestUtils.createAutocompleteItemsForFile("DirectQueryForSQL.pq", postion);
 
-            const expected: ReadonlyArray<string> = [
+            const expected: string[] = [
                 "ConnectionString",
                 "Credential",
                 "CredentialConnectionString",
@@ -843,7 +948,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 "database",
             ];
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            Assert.isOk(actual);
+            Assert.isDefined(actual.value);
+            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
         });
     });
 });

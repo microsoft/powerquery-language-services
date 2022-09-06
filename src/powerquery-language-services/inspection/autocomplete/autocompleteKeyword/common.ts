@@ -15,7 +15,7 @@ export async function autocompleteKeywordRightMostLeaf(
     xorNodeId: number,
 ): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     // Grab the right-most Ast node in the last value.
-    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
+    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
         state.nodeIdMapCollection,
         xorNodeId,
         undefined,

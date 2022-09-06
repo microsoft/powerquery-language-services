@@ -23,12 +23,12 @@ export async function validateInvokeExpression(
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateInvokeExpression.name,
-        validationSettings.maybeInitialCorrelationId,
+        validationSettings.initialCorrelationId,
     );
 
     const updatedSettings: ValidationSettings = {
         ...validationSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const maybeInvokeExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
@@ -85,7 +85,7 @@ async function invokeExpressionToDiagnostics(
             "expected at least one leaf node under InvokeExpression",
         );
 
-        const maybeFunctionName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+        const maybeFunctionName: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
             nodeIdMapCollection,
             inspected.invokeExpressionXorNode.node.id,
         );
@@ -159,7 +159,7 @@ function createDiagnosticForArgumentMismatch(
 
     const parameter: Type.FunctionParameter = mismatch.expected;
     const argName: string = parameter.nameLiteral;
-    const expected: string = TypeUtils.nameOfTypeKind(parameter.maybeType ?? Type.AnyInstance.kind);
+    const expected: string = TypeUtils.nameOfTypeKind(parameter.type ?? Type.AnyInstance.kind);
 
     // An argument containing at least one leaf node was given.
     if (maybeGivenArgumentRange) {

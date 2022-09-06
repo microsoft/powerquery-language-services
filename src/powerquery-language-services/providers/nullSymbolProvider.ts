@@ -1,21 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { FoldingRange, Location } from "vscode-languageserver-types";
 
 import {
     AutocompleteItemProviderContext,
-    ILocalDocumentProvider,
-    OnIdentifierProviderContext,
+    DefinitionProviderContext,
+    HoverProviderContext,
     PartialSemanticToken,
     ProviderContext,
     SignatureProviderContext,
 } from "./commonTypes";
+import {
+    IAutocompleteItemProvider,
+    IDefinitionProvider,
+    IFoldingRangeProvider,
+    IHoverProvider,
+    ISemanticTokenProvider,
+    ISignatureHelpProvider,
+} from "../providers";
+
 import { Hover, SignatureHelp } from "../commonTypes";
 import { Inspection, Library } from "..";
+
 import { AutocompleteItem } from "../inspection/autocomplete";
 
-export class NullSymbolProvider implements ILocalDocumentProvider {
+export class NullSymbolProvider
+    implements
+        IAutocompleteItemProvider,
+        IDefinitionProvider,
+        IFoldingRangeProvider,
+        IHoverProvider,
+        ISemanticTokenProvider,
+        ISignatureHelpProvider
+{
     public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
         Inspection.ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
@@ -33,32 +52,38 @@ export class NullSymbolProvider implements ILocalDocumentProvider {
     // eslint-disable-next-line require-await
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
-    ): Promise<ReadonlyArray<AutocompleteItem>> {
-        return [];
+    ): Promise<Result<AutocompleteItem[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.boxOk(undefined);
     }
 
     // eslint-disable-next-line require-await
-    public async getDefinition(_context: OnIdentifierProviderContext): Promise<Location[] | null> {
-        return [];
+    public async getDefinition(
+        _context: DefinitionProviderContext,
+    ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.boxOk(undefined);
     }
 
     // eslint-disable-next-line require-await
-    public async getFoldingRanges(_context: ProviderContext): Promise<FoldingRange[]> {
-        return [];
+    public async getFoldingRanges(_context: ProviderContext): Promise<Result<FoldingRange[], CommonError.CommonError>> {
+        return ResultUtils.boxOk([]);
     }
 
     // eslint-disable-next-line require-await
-    public async getHover(_context: OnIdentifierProviderContext): Promise<Hover | null> {
-        return null;
+    public async getHover(_context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        return ResultUtils.boxOk(undefined);
     }
 
     // eslint-disable-next-line require-await
-    public async getPartialSemanticTokens(_context: ProviderContext): Promise<PartialSemanticToken[]> {
-        return [];
+    public async getPartialSemanticTokens(
+        _context: ProviderContext,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
+        return ResultUtils.boxOk(undefined);
     }
 
     // eslint-disable-next-line require-await
-    public async getSignatureHelp(_context: SignatureProviderContext): Promise<SignatureHelp | null> {
-        return null;
+    public async getSignatureHelp(
+        _context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
+        return ResultUtils.boxOk(undefined);
     }
 }

@@ -20,16 +20,15 @@ export async function inspectTypeParameter(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TParameter>(xorNode, Ast.NodeKind.Parameter);
 
-    const maybeOptionalConstant: Ast.TConstant | undefined =
-        NodeIdMapUtils.maybeUnboxNthChildIfAstChecked<Ast.TConstant>(
-            state.nodeIdMapCollection,
-            xorNode.node.id,
-            0,
-            Ast.NodeKind.Constant,
-        );
+    const maybeOptionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+        0,
+        Ast.NodeKind.Constant,
+    );
 
     const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
         await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id),

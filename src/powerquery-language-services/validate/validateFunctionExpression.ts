@@ -27,12 +27,12 @@ export function validateFunctionExpression(
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateFunctionExpression.name,
-        validationSettings.maybeInitialCorrelationId,
+        validationSettings.initialCorrelationId,
     );
 
     const updatedSettings: ValidationSettings = {
         ...validationSettings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const maybeFnExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
@@ -49,7 +49,7 @@ export function validateFunctionExpression(
 
     for (const nodeId of maybeFnExpressionIds) {
         diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
-        updatedSettings.maybeCancellationToken?.throwIfCancelled();
+        updatedSettings.cancellationToken?.throwIfCancelled();
     }
 
     trace.exit();

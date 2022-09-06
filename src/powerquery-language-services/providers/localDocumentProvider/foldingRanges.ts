@@ -56,11 +56,7 @@ function getFoldingRanges<T extends Ast.TNode>(
     const foldingRanges: FoldingRange[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(nodeKind) ?? []) {
-        const maybeNode: T | undefined = NodeIdMapUtils.maybeUnboxIfAstChecked<T>(
-            nodeIdMapCollection,
-            nodeId,
-            nodeKind,
-        );
+        const maybeNode: T | undefined = NodeIdMapUtils.unboxIfAstChecked<T>(nodeIdMapCollection, nodeId, nodeKind);
 
         if (maybeNode === undefined) {
             continue;

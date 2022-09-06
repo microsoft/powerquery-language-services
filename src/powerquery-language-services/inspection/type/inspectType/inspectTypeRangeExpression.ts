@@ -22,7 +22,7 @@ export async function inspectTypeRangeExpression(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
     let result: Type.List | Type.None | Type.Unknown;

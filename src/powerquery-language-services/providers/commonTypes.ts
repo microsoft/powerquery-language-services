@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import type { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
 import type {
     FoldingRange,
     Hover,
@@ -11,50 +12,74 @@ import type {
     SemanticTokenTypes,
     SignatureHelp,
 } from "vscode-languageserver-types";
+import { NodeIdMap, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import type { Autocomplete, TriedCurrentInvokeExpression } from "../inspection";
+import { Inspection, InspectionSettings } from "..";
 import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
 import type { ILibrary } from "../library/library";
 
 export interface IAutocompleteItemProvider {
-    getAutocompleteItems(context: AutocompleteItemProviderContext): Promise<ReadonlyArray<AutocompleteItem>>;
+    getAutocompleteItems(
+        context: AutocompleteItemProviderContext,
+    ): Promise<Result<AutocompleteItem[] | undefined, CommonError.CommonError>>;
 }
 
 export interface AutocompleteItemProviderContext extends ProviderContext {
+    readonly autocomplete: Autocomplete;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
+    readonly triedScopeType: Inspection.TriedScopeType;
     readonly text?: string;
     readonly tokenKind?: string;
 }
 
 export interface IDefinitionProvider {
-    getDefinition(context: OnIdentifierProviderContext): Promise<Location[] | null>;
+    getDefinition(context: DefinitionProviderContext): Promise<Result<Location[] | undefined, CommonError.CommonError>>;
+}
+
+export interface DefinitionProviderContext extends ProviderContext {
+    readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
 }
 
 export interface IFoldingRangeProvider {
-    getFoldingRanges(context: ProviderContext): Promise<FoldingRange[]>;
+    getFoldingRanges(context: FoldingRangeProviderContext): Promise<Result<FoldingRange[], CommonError.CommonError>>;
+}
+
+export interface FoldingRangeProviderContext extends ProviderContext {
+    readonly nodeIdMapCollection: NodeIdMap.Collection;
 }
 
 export interface IHoverProvider {
-    getHover(context: OnIdentifierProviderContext): Promise<Hover | null>;
+    getHover(context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>>;
 }
 
-export interface ILocalDocumentProvider
-    extends IDefinitionProvider,
-        IFoldingRangeProvider,
-        ISemanticTokenProvider,
-        ISymbolProvider {}
+export interface HoverProviderContext extends ProviderContext {
+    readonly activeNode: Inspection.ActiveNode;
+    readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
+    readonly inspectionSettings: InspectionSettings;
+    readonly parseState: ParseState;
+    readonly triedNodeScope: Inspection.TriedNodeScope;
+    readonly triedScopeType: Inspection.TriedScopeType;
+}
 
 export interface ISemanticTokenProvider {
-    getPartialSemanticTokens(context: ProviderContext): Promise<PartialSemanticToken[]>;
+    getPartialSemanticTokens(
+        context: SemanticTokenProviderContext,
+    ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>>;
+}
+
+export interface SemanticTokenProviderContext extends ProviderContext {
+    readonly parseState: ParseState;
+    readonly library: ILibrary;
 }
 
 export interface ProviderContext {
     readonly traceManager: TraceManager;
-    readonly maybeInitialCorrelationId: number | undefined;
+    readonly initialCorrelationId: number | undefined;
+    readonly cancellationToken: ICancellationToken | undefined;
     readonly range?: Range;
-}
-
-export interface OnIdentifierProviderContext extends ProviderContext {
-    readonly identifier: Ast.GeneralizedIdentifier | Ast.Identifier;
 }
 
 // Almost the same interface as the parameters to a `SemanticTokensBuilder.push` function overload,
@@ -65,8 +90,10 @@ export interface PartialSemanticToken {
     readonly tokenModifiers: ReadonlyArray<SemanticTokenModifiers>;
 }
 
-export interface SignatureHelpProvider {
-    getSignatureHelp(context: SignatureProviderContext): Promise<SignatureHelp | null>;
+export interface ISignatureHelpProvider {
+    getSignatureHelp(
+        context: SignatureProviderContext,
+    ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>>;
 }
 
 export interface SignatureProviderContext extends ProviderContext {
@@ -74,6 +101,15 @@ export interface SignatureProviderContext extends ProviderContext {
     readonly functionName: string | undefined;
     readonly isNameInLocalScope: boolean;
     readonly functionType: Type.TPowerQueryType;
+    readonly triedCurrentInvokeExpression: TriedCurrentInvokeExpression;
 }
 
-export interface ISymbolProvider extends IAutocompleteItemProvider, IHoverProvider, SignatureHelpProvider, ILibrary {}
+export interface ILibraryProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider {}
+
+export interface ILocalDocumentProvider
+    extends IAutocompleteItemProvider,
+        IDefinitionProvider,
+        IHoverProvider,
+        IFoldingRangeProvider,
+        ISemanticTokenProvider,
+        ISignatureHelpProvider {}

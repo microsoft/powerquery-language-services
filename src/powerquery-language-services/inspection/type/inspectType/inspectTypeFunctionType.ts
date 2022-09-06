@@ -29,7 +29,7 @@ export async function inspectTypeFunctionType(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FunctionType>(xorNode, Ast.NodeKind.FunctionType);
 
     let result: Type.FunctionType | Type.Type | Type.Unknown;
@@ -37,7 +37,7 @@ export async function inspectTypeFunctionType(
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
             const maybeParameters: XorNode<Ast.TParameterList> | undefined =
-                NodeIdMapUtils.maybeNthChildChecked<Ast.TParameterList>(
+                NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
                     state.nodeIdMapCollection,
                     xorNode.node.id,
                     1,
@@ -50,7 +50,7 @@ export async function inspectTypeFunctionType(
                 return Type.UnknownInstance;
             }
 
-            const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.maybeUnboxArrayWrapper(
+            const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
                 state.nodeIdMapCollection,
                 maybeParameters.node.id,
             );
@@ -79,7 +79,7 @@ export async function inspectTypeFunctionType(
 
             result = {
                 kind: Type.TypeKind.Type,
-                maybeExtendedKind: Type.ExtendedTypeKind.FunctionType,
+                extendedKind: Type.ExtendedTypeKind.FunctionType,
                 isNullable: false,
                 parameters: parameterTypes,
                 returnType,

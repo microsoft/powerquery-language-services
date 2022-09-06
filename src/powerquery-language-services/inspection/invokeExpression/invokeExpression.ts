@@ -36,12 +36,12 @@ export function tryInvokeExpression(
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectInvokeExpression,
         tryInvokeExpression.name,
-        settings.maybeInitialCorrelationId,
+        settings.initialCorrelationId,
     );
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     const result: Promise<TriedInvokeExpression> = ResultUtils.ensureResultAsync(
@@ -65,9 +65,9 @@ async function inspectInvokeExpression(
         correlationId,
     );
 
-    settings.maybeCancellationToken?.throwIfCancelled();
+    settings.cancellationToken?.throwIfCancelled();
 
-    const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.maybeXor(
+    const maybeInvokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.xor(
         nodeIdMapCollection,
         invokeExpressionId,
     );
@@ -84,7 +84,7 @@ async function inspectInvokeExpression(
 
     XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
 
-    const previousNode: TXorNode = NodeIdMapUtils.assertGetRecursiveExpressionPreviousSibling(
+    const previousNode: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,
         invokeExpressionId,
     );
@@ -93,7 +93,7 @@ async function inspectInvokeExpression(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
 
-    const maybeName: string | undefined = NodeIdMapUtils.maybeInvokeExpressionIdentifierLiteral(
+    const maybeName: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
         nodeIdMapCollection,
         invokeExpressionId,
     );
@@ -168,7 +168,7 @@ async function getIsNameInLocalScope(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        maybeInitialCorrelationId: trace.id,
+        initialCorrelationId: trace.id,
     };
 
     // Try to find out if the identifier is a local or external name.

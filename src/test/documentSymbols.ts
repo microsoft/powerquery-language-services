@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { assert, expect } from "chai";
+import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 
-import * as DocumentSymbols from "../powerquery-language-services/documentSymbols";
-import { SymbolKind, TextDocument } from "../powerquery-language-services";
+import { Analysis, AnalysisUtils, DocumentSymbol, SymbolKind, TextDocument } from "../powerquery-language-services";
 import { TestConstants, TestUtils } from ".";
 import { AbridgedDocumentSymbol } from "./testUtils";
 import { MockDocument } from "./mockDocument";
@@ -15,15 +15,23 @@ async function expectSymbolsForDocument(
     document: TextDocument,
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): Promise<void> {
-    const actualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
-        await DocumentSymbols.getDocumentSymbols(document, TestConstants.SimpleInspectionSettings, false),
+    const analysis: Analysis = AnalysisUtils.createAnalysis(document, TestConstants.SimpleLibraryAnalysisSettings);
+
+    const actualSymbols: Result<DocumentSymbol[] | undefined, CommonError.CommonError> =
+        await analysis.getDocumentSymbols(TestConstants.NoOpCancellationTokenInstance);
+
+    Assert.isOk(actualSymbols);
+    Assert.isDefined(actualSymbols.value);
+
+    const abridgedActualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.createAbridgedDocumentSymbols(
+        actualSymbols.value,
     );
 
-    assert.isDefined(actualSymbols);
-
-    expect(actualSymbols).deep.equals(
+    expect(abridgedActualSymbols).deep.equals(
         expectedSymbols,
-        `Expected document symbols to match.\n${JSON.stringify(actualSymbols)}`,
+        `Expected document symbols to match.\nExpected:${JSON.stringify(expectedSymbols)}\nActual:${JSON.stringify(
+            abridgedActualSymbols,
+        )}`,
     );
 }
 

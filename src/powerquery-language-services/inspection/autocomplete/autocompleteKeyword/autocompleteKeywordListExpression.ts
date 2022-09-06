@@ -17,19 +17,19 @@ export function autocompleteKeywordListExpression(
     const child: TXorNode = state.child;
 
     // '{' or '}'
-    if (child.node.maybeAttributeIndex === 0 || child.node.maybeAttributeIndex === 2) {
+    if (child.node.attributeIndex === 0 || child.node.attributeIndex === 2) {
         return undefined;
     }
 
-    Assert.isTrue(child.node.maybeAttributeIndex === 1, `must be in range [0, 2]`, {
+    Assert.isTrue(child.node.attributeIndex === 1, `must be in range [0, 2]`, {
         nodeId: child.node.id,
-        maybeAttributeIndex: child.node.maybeAttributeIndex,
+        attributeIndex: child.node.attributeIndex,
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
     const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3);
 
-    if (nodeOrComma.node.maybeAttributeIndex !== 0) {
+    if (nodeOrComma.node.attributeIndex !== 0) {
         return undefined;
     }
 

@@ -23,14 +23,14 @@ export async function inspectTypeTableType(
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
-    state.maybeCancellationToken?.throwIfCancelled();
+    state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TableType>(xorNode, Ast.NodeKind.TableType);
 
     let result: Type.Type | Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown;
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeRowType: TXorNode | undefined = NodeIdMapUtils.maybeNthChild(
+            const maybeRowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,
@@ -41,14 +41,14 @@ export async function inspectTypeTableType(
             } else if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
                 result = {
                     kind: Type.TypeKind.Type,
-                    maybeExtendedKind: Type.ExtendedTypeKind.TableType,
+                    extendedKind: Type.ExtendedTypeKind.TableType,
                     isNullable: false,
                     ...(await examineFieldSpecificationList(state, maybeRowType, trace.id)),
                 };
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
-                    maybeExtendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
+                    extendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
                     isNullable: false,
                     primaryExpression: await inspectXor(state, maybeRowType, trace.id),
                 };

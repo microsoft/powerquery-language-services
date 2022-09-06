@@ -26,19 +26,16 @@ export async function createRangeFromXorNode(
     xorNode: TXorNode,
 ): Promise<Range | undefined> {
     const nodeId: number = xorNode.node.id;
-    const maybeLeftMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.maybeLeftMostLeaf(nodeIdMapCollection, nodeId);
+    const leftMostLeaf: Ast.TNode | undefined = NodeIdMapUtils.leftMostLeaf(nodeIdMapCollection, nodeId);
 
-    const maybeRightMostLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        nodeId,
-    );
+    const rightMostLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, nodeId);
 
     return Promise.resolve(
-        maybeLeftMostLeaf === undefined || maybeRightMostLeaf === undefined
+        leftMostLeaf === undefined || rightMostLeaf === undefined
             ? undefined
             : createRangeFromTokenPositions(
-                  maybeLeftMostLeaf.tokenRange.positionStart,
-                  maybeRightMostLeaf.tokenRange.positionEnd,
+                  leftMostLeaf.tokenRange.positionStart,
+                  rightMostLeaf.tokenRange.positionEnd,
               ),
     );
 }
@@ -146,13 +143,11 @@ export function isBeforeContext(
     contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): boolean {
-    const maybeTokenStart: PQP.Language.Token.Token | undefined = contextNode.maybeTokenStart;
+    const tokenStart: PQP.Language.Token.Token | undefined = contextNode.tokenStart;
 
-    if (maybeTokenStart === undefined) {
+    if (tokenStart === undefined) {
         return false;
     }
-
-    const tokenStart: PQP.Language.Token.Token = maybeTokenStart;
 
     return isBeforeTokenPosition(position, tokenStart.positionStart, isBoundIncluded);
 }
@@ -171,8 +166,8 @@ export function isInContext(
 }
 
 export function isOnContextStart(position: Position, contextNode: PQP.Parser.ParseContext.TNode): boolean {
-    return contextNode.maybeTokenStart !== undefined
-        ? isOnTokenPosition(position, contextNode.maybeTokenStart.positionStart)
+    return contextNode.tokenStart !== undefined
+        ? isOnTokenPosition(position, contextNode.tokenStart.positionStart)
         : false;
 }
 
@@ -181,10 +176,7 @@ export async function isOnContextEnd(
     position: Position,
     contextNode: PQP.Parser.ParseContext.TNode,
 ): Promise<boolean> {
-    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        contextNode.id,
-    );
+    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
 
     if (maybeLeaf === undefined) {
         return Promise.resolve(false);
@@ -199,20 +191,15 @@ export async function isAfterContext(
     contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): Promise<boolean> {
-    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.maybeRightMostLeaf(
-        nodeIdMapCollection,
-        contextNode.id,
-    );
+    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
 
     if (maybeLeaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
-        if (contextNode.maybeTokenStart === undefined) {
+        if (contextNode.tokenStart === undefined) {
             return Promise.resolve(false);
         } else {
-            return Promise.resolve(
-                isAfterTokenPosition(position, contextNode.maybeTokenStart.positionEnd, isBoundIncluded),
-            );
+            return Promise.resolve(isAfterTokenPosition(position, contextNode.tokenStart.positionEnd, isBoundIncluded));
         }
     }
 
