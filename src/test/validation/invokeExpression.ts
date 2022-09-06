@@ -56,12 +56,12 @@ function expectArgumentCountMismatch(
     const matches: ArgumentMismatchExec[] = [];
 
     for (const abridgedDiagnostic of abridgedDiagnostics) {
-        const maybeMatch: RegExpExecArray | null = NumArgumentsPattern.exec(abridgedDiagnostic.message);
+        const match: RegExpExecArray | null = NumArgumentsPattern.exec(abridgedDiagnostic.message);
 
-        if (maybeMatch) {
+        if (match) {
             matches.push({
                 abridgedDiagnostic,
-                regExpExecArray: maybeMatch,
+                regExpExecArray: match,
             });
         }
     }

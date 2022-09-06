@@ -19,7 +19,7 @@ import { InspectTypeState, inspectXor } from "../common";
 // In the code below that target for the FieldSelector/FieldProjection is called the scope.
 //
 // In the case of EachExpression:
-//  use whatever scope was provided in InspectionTypeState.maybeEachScopeById, else Unknown
+//  use whatever scope was provided in InspectionTypeState.eEachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
@@ -27,12 +27,12 @@ import { InspectTypeState, inspectXor } from "../common";
 export async function inspectFieldType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectFieldType.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -42,13 +42,13 @@ export async function inspectFieldType(
     ]);
 
     // travels up the AST to see if we're in an EachExpression or RecursivePrimaryExpression.
-    const maybeEachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
+    const eachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
 
     let fieldType: Type.TPowerQueryType;
 
     // if the scope is an EachExpression
-    if (maybeEachExpression) {
-        fieldType = state.maybeEachScopeById?.get(maybeEachExpression.node.id) ?? Type.UnknownInstance;
+    if (eachExpression) {
+        fieldType = state.eachScopeById?.get(eachExpression.node.id) ?? Type.UnknownInstance;
     }
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector
@@ -68,15 +68,15 @@ export async function inspectFieldType(
 
 function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode<Ast.EachExpression> | undefined {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    let maybeParent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
+    let parent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
 
-    while (maybeParent) {
-        switch (maybeParent.node.kind) {
+    while (parent) {
+        switch (parent.node.kind) {
             case Ast.NodeKind.EachExpression:
-                return maybeParent as XorNode<Ast.EachExpression>;
+                return parent as XorNode<Ast.EachExpression>;
 
             default:
-                maybeParent = NodeIdMapUtils.parentXor(nodeIdMapCollection, maybeParent.node.id);
+                parent = NodeIdMapUtils.parentXor(nodeIdMapCollection, parent.node.id);
                 break;
         }
     }

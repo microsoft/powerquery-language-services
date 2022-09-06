@@ -74,21 +74,19 @@ export async function tryDeferenceIdentifier(
     }
 
     const nodeScope: NodeScope = triedNodeScope.value;
-    const maybeScopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
+    const scopeItem: TScopeItem | undefined = nodeScope.get(identifierLiteral);
 
     if (
         // If the identifier couldn't be found in the generated scope,
         // then either the scope generation is incorrect or it's an external identifier.
-        maybeScopeItem === undefined
+        scopeItem === undefined
     ) {
         trace.exit({ [TraceConstant.Result]: undefined });
 
         return ResultUtils.boxOk(xorNode);
     }
 
-    const scopeItem: TScopeItem = maybeScopeItem;
-
-    let maybeNextXorNode: TXorNode | undefined;
+    let nextXorNode: TXorNode | undefined;
 
     switch (scopeItem.kind) {
         case ScopeItemKind.Each:
@@ -98,11 +96,11 @@ export async function tryDeferenceIdentifier(
 
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
-            maybeNextXorNode = scopeItem.maybeValue;
+            nextXorNode = scopeItem.value;
             break;
 
         case ScopeItemKind.SectionMember:
-            maybeNextXorNode = scopeItem.maybeValue;
+            nextXorNode = scopeItem.value;
             break;
 
         default:
@@ -111,16 +109,16 @@ export async function tryDeferenceIdentifier(
 
     let result: Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>>;
 
-    if (maybeNextXorNode === undefined) {
+    if (nextXorNode === undefined) {
         result = Promise.resolve(ResultUtils.boxOk(xorNode));
     } else if (
-        XorNodeUtils.isContextXor(maybeNextXorNode) ||
-        (maybeNextXorNode.node.kind !== Ast.NodeKind.Identifier &&
-            maybeNextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
+        XorNodeUtils.isContextXor(nextXorNode) ||
+        (nextXorNode.node.kind !== Ast.NodeKind.Identifier &&
+            nextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {
         result = Promise.resolve(ResultUtils.boxOk(xorNode));
     } else {
-        result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, maybeNextXorNode, scopeById);
+        result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, nextXorNode, scopeById);
     }
 
     trace.exit();

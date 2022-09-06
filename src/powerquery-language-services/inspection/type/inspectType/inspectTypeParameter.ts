@@ -11,32 +11,32 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
 export async function inspectTypeParameter(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeParameter.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.TParameter>(xorNode, Ast.NodeKind.Parameter);
 
-    const maybeOptionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+    const optionalConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         0,
         Ast.NodeKind.Constant,
     );
 
-    const maybeParameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
+    const parameterType: Type.TPowerQueryType | undefined = TypeUtils.assertAsTPrimitiveType(
         await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id),
     );
 
     const result: Type.TPowerQueryType = {
-        ...maybeParameterType,
-        isNullable: maybeOptionalConstant !== undefined || maybeParameterType.isNullable,
+        ...parameterType,
+        isNullable: optionalConstant !== undefined || parameterType.isNullable,
     };
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });

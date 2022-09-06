@@ -31,7 +31,7 @@ export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
     library: Library.NoOpLibrary,
-    maybeEachScopeById: undefined,
+    eachScopeById: undefined,
     typeStrategy: TypeStrategy.Extended,
 };
 
@@ -125,14 +125,14 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isNullable: false,
                     isOptional: false,
                     label: "firstArg",
-                    maybeDocumentation: undefined,
+                    documentation: undefined,
                     typeKind: Type.TypeKind.Number,
                 },
                 {
                     isNullable: false,
                     isOptional: true,
                     label: "secondArg",
-                    maybeDocumentation: undefined,
+                    documentation: undefined,
                     typeKind: Type.TypeKind.Text,
                 },
             ],
@@ -159,7 +159,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
                     isNullable: false,
                     isOptional: false,
                     label: "x",
-                    maybeDocumentation:
+                    documentation:
                         "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
                     typeKind: Type.TypeKind.Any,
                 },

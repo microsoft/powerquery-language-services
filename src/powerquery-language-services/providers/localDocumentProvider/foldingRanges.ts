@@ -56,13 +56,13 @@ function getFoldingRanges<T extends Ast.TNode>(
     const foldingRanges: FoldingRange[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(nodeKind) ?? []) {
-        const maybeNode: T | undefined = NodeIdMapUtils.unboxIfAstChecked<T>(nodeIdMapCollection, nodeId, nodeKind);
+        const node: T | undefined = NodeIdMapUtils.unboxIfAstChecked<T>(nodeIdMapCollection, nodeId, nodeKind);
 
-        if (maybeNode === undefined) {
+        if (node === undefined) {
             continue;
         }
 
-        const tokenRange: TokenRange = maybeNode.tokenRange;
+        const tokenRange: TokenRange = node.tokenRange;
 
         if (tokenRange.positionStart.lineNumber !== tokenRange.positionEnd.lineNumber) {
             foldingRanges.push(asFoldingRange(tokenRange));

@@ -176,13 +176,13 @@ export async function isOnContextEnd(
     position: Position,
     contextNode: PQP.Parser.ParseContext.TNode,
 ): Promise<boolean> {
-    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
+    const leaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
 
-    if (maybeLeaf === undefined) {
+    if (leaf === undefined) {
         return Promise.resolve(false);
     }
 
-    return Promise.resolve(isOnAstEnd(position, maybeLeaf));
+    return Promise.resolve(isOnAstEnd(position, leaf));
 }
 
 export async function isAfterContext(
@@ -191,9 +191,9 @@ export async function isAfterContext(
     contextNode: PQP.Parser.ParseContext.TNode,
     isBoundIncluded: boolean,
 ): Promise<boolean> {
-    const maybeLeaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
+    const leaf: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(nodeIdMapCollection, contextNode.id);
 
-    if (maybeLeaf === undefined) {
+    if (leaf === undefined) {
         // We're assuming position is a valid range for the document.
         // Therefore if the context node didn't have a token (caused by EOF) we can make this assumption.
         if (contextNode.tokenStart === undefined) {
@@ -203,7 +203,7 @@ export async function isAfterContext(
         }
     }
 
-    return Promise.resolve(isAfterAst(position, maybeLeaf, isBoundIncluded));
+    return Promise.resolve(isAfterAst(position, leaf, isBoundIncluded));
 }
 
 export function isBeforeAst(position: Position, astNode: Ast.TNode, isBoundIncluded: boolean): boolean {

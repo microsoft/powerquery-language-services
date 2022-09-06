@@ -14,12 +14,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeTableType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.Type | Type.TableType | Type.TableTypePrimaryExpression | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeTableType.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -30,27 +30,27 @@ export async function inspectTypeTableType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeRowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            const rowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,
             );
 
-            if (maybeRowType === undefined) {
+            if (rowType === undefined) {
                 result = Type.UnknownInstance;
-            } else if (maybeRowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
+            } else if (rowType.node.kind === Ast.NodeKind.FieldSpecificationList) {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.TableType,
                     isNullable: false,
-                    ...(await examineFieldSpecificationList(state, maybeRowType, trace.id)),
+                    ...(await examineFieldSpecificationList(state, rowType, trace.id)),
                 };
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.TableTypePrimaryExpression,
                     isNullable: false,
-                    primaryExpression: await inspectXor(state, maybeRowType, trace.id),
+                    primaryExpression: await inspectXor(state, rowType, trace.id),
                 };
             }
 

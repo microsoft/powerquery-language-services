@@ -21,12 +21,12 @@ export async function autocompleteKeywordLetExpression(
     // LetExpressions can trigger another inspection which will always hit the same LetExpression.
     // Make sure that it doesn't trigger an infinite recursive call.
     const child: TXorNode = state.child;
-    let maybeInspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
+    let inspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
 
     // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
     // `let x = 1 |`
     if (child.node.attributeIndex === 2 && XorNodeUtils.isContextXor(child)) {
-        maybeInspected = await autocompleteLastKeyValuePair(
+        inspected = await autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(
                 state.nodeIdMapCollection,
@@ -34,48 +34,42 @@ export async function autocompleteKeywordLetExpression(
             ),
         );
 
-        if (state.maybeTrailingToken !== undefined) {
-            if (state.maybeTrailingToken.isInOrOnPosition === true) {
-                // We don't want maybeInspected to be zero legnth.
+        if (state.trailingToken !== undefined) {
+            if (state.trailingToken.isInOrOnPosition === true) {
+                // We don't want inspected to be zero legnth.
                 // It's either undefined or non-zero length.
-                maybeInspected = autocompleteKeywordTrailingText(maybeInspected ?? [], state.maybeTrailingToken, [
+                inspected = autocompleteKeywordTrailingText(inspected ?? [], state.trailingToken, [
                     Keyword.KeywordKind.In,
                 ]);
 
-                return maybeInspected.length ? maybeInspected : undefined;
+                return inspected.length ? inspected : undefined;
             } else if (
-                PositionUtils.isBeforeTokenPosition(
-                    state.activeNode.position,
-                    state.maybeTrailingToken.positionStart,
-                    true,
-                )
+                PositionUtils.isBeforeTokenPosition(state.activeNode.position, state.trailingToken.positionStart, true)
             ) {
-                return maybeInspected !== undefined ? [...maybeInspected, Keyword.KeywordKind.In] : maybeInspected;
+                return inspected !== undefined ? [...inspected, Keyword.KeywordKind.In] : inspected;
             }
         } else {
-            return maybeInspected !== undefined
-                ? [...maybeInspected, Keyword.KeywordKind.In]
-                : [Keyword.KeywordKind.In];
+            return inspected !== undefined ? [...inspected, Keyword.KeywordKind.In] : [Keyword.KeywordKind.In];
         }
     }
     // `let foo = e|` where we want to treat the identifier as a potential keyword
     else if (child.node.attributeIndex === 1) {
-        const maybeIdentifier: TXorNode | undefined = AncestryUtils.nthPreviousXor(
+        const identifier: TXorNode | undefined = AncestryUtils.nthPreviousXor(
             state.activeNode.ancestry,
             state.ancestryIndex,
             5,
         );
 
-        if (maybeIdentifier && XorNodeUtils.isAstXor(maybeIdentifier) && AstUtils.isIdentifier(maybeIdentifier.node)) {
-            const identifier: Ast.Identifier = maybeIdentifier.node;
+        if (identifier && XorNodeUtils.isAstXor(identifier) && AstUtils.isIdentifier(identifier.node)) {
+            const identifierAst: Ast.Identifier = identifier.node;
 
-            maybeInspected = Keyword.ExpressionKeywordKinds.filter((value: Keyword.KeywordKind) =>
-                value.startsWith(identifier.literal),
+            inspected = Keyword.ExpressionKeywordKinds.filter((value: Keyword.KeywordKind) =>
+                value.startsWith(identifierAst.literal),
             );
         }
     }
 
-    return maybeInspected ?? autocompleteKeywordDefault(state);
+    return inspected ?? autocompleteKeywordDefault(state);
 }
 
 function autocompleteLastKeyValuePair(
@@ -87,11 +81,11 @@ function autocompleteLastKeyValuePair(
     }
 
     // Grab the last value (if one exists)
-    const maybeLastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].value;
+    const lastValue: TXorNode | undefined = keyValuePairs[keyValuePairs.length - 1].value;
 
-    if (maybeLastValue === undefined) {
+    if (lastValue === undefined) {
         return Promise.resolve(undefined);
     }
 
-    return autocompleteKeywordRightMostLeaf(state, maybeLastValue.node.id);
+    return autocompleteKeywordRightMostLeaf(state, lastValue.node.id);
 }

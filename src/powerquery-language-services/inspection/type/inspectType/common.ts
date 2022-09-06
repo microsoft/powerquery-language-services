@@ -51,13 +51,13 @@ export interface InspectTypeState
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
 // then calls all(...) on the mapped values.
-export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TPowerQueryType) => boolean): boolean {
+export function allForAnyUnion(anyUnion: Type.AnyUnion, predicate: (type: Type.TPowerQueryType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
             .map((type: Type.TPowerQueryType) =>
                 type.extendedKind === Type.ExtendedTypeKind.AnyUnion
-                    ? allForAnyUnion(type, conditionFn)
-                    : conditionFn(type),
+                    ? allForAnyUnion(type, predicate)
+                    : predicate(type),
             )
             .indexOf(false) === -1
     );
@@ -66,12 +66,12 @@ export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type
 export async function assertGetOrCreateNodeScope(
     state: InspectTypeState,
     nodeId: number,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<NodeScope> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         assertGetOrCreateNodeScope.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -92,12 +92,12 @@ export async function assertGetOrCreateNodeScope(
 export async function getOrCreateScope(
     state: InspectTypeState,
     nodeId: number,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Inspection.TriedNodeScope> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         getOrCreateScope.name,
-        maybeCorrelationId,
+        correlationId,
     );
 
     const updatedState: InspectTypeState = {
@@ -107,12 +107,12 @@ export async function getOrCreateScope(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const maybeNodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
+    const nodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
 
-    if (maybeNodeScope !== undefined) {
+    if (nodeScope !== undefined) {
         trace.exit();
 
-        return ResultUtils.boxOk(maybeNodeScope);
+        return ResultUtils.boxOk(nodeScope);
     }
 
     const result: Inspection.TriedNodeScope = await tryNodeScope(
@@ -138,12 +138,12 @@ export async function getOrCreateScopeItemType(
     );
 
     const nodeId: number = scopeItem.id;
-    const maybeType: Type.TPowerQueryType | undefined = state.typeById.get(nodeId);
+    const type: Type.TPowerQueryType | undefined = state.typeById.get(nodeId);
 
-    if (maybeType !== undefined) {
+    if (type !== undefined) {
         trace.exit({ cacheHit: true });
 
-        return maybeType;
+        return type;
     }
 
     const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem, trace.id);
@@ -155,7 +155,7 @@ export async function getOrCreateScopeItemType(
 export async function inspectScopeItem(
     state: InspectTypeState,
     scopeItem: TScopeItem,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     state.cancellationToken?.throwIfCancelled();
 
@@ -163,12 +163,12 @@ export async function inspectScopeItem(
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            return scopeItem.maybeValue === undefined
+            return scopeItem.value === undefined
                 ? Type.UnknownInstance
-                : await inspectXor(state, scopeItem.maybeValue, maybeCorrelationId);
+                : await inspectXor(state, scopeItem.value, correlationId);
 
         case ScopeItemKind.Each:
-            return await inspectXor(state, scopeItem.eachExpression, maybeCorrelationId);
+            return await inspectXor(state, scopeItem.eachExpression, correlationId);
 
         case ScopeItemKind.Parameter:
             return createParameterType(scopeItem);
@@ -185,25 +185,25 @@ export async function inspectTypeFromChildAttributeIndex(
     state: InspectTypeState,
     parentXorNode: TXorNode,
     attributeIndex: number,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeFromChildAttributeIndex.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(parentXorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
 
-    const maybeXorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.nthChild(
+    const xorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.nthChild(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,
     );
 
     const result: Type.TPowerQueryType =
-        maybeXorNode !== undefined ? await inspectXor(state, maybeXorNode, trace.id) : Type.UnknownInstance;
+        xorNode !== undefined ? await inspectXor(state, xorNode, trace.id) : Type.UnknownInstance;
 
     trace.exit();
 
@@ -213,24 +213,24 @@ export async function inspectTypeFromChildAttributeIndex(
 export async function inspectXor(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectXor.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
 
     const xorNodeId: number = xorNode.node.id;
-    const maybeCached: Type.TPowerQueryType | undefined = state.typeById.get(xorNodeId);
+    const cached: Type.TPowerQueryType | undefined = state.typeById.get(xorNodeId);
 
-    if (maybeCached !== undefined) {
+    if (cached !== undefined) {
         trace.exit();
 
-        return Promise.resolve(maybeCached);
+        return Promise.resolve(cached);
     }
 
     let result: Type.TPowerQueryType;
@@ -417,15 +417,15 @@ export async function inspectXor(
     return result;
 }
 
-export async function maybeDereferencedIdentifierType(
+export async function dereferencedIdentifierType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType | undefined> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
-        maybeDereferencedIdentifierType.name,
-        maybeCorrelationId,
+        dereferencedIdentifierType.name,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -453,29 +453,29 @@ export async function maybeDereferencedIdentifierType(
         return undefined;
     }
 
-    const maybeDereferencedLiteral: string | undefined = XorNodeUtils.identifierExpressionLiteral(triedDeference.value);
+    const dereferencedLiteral: string | undefined = XorNodeUtils.identifierExpressionLiteral(triedDeference.value);
 
-    if (maybeDereferencedLiteral === undefined) {
+    if (dereferencedLiteral === undefined) {
         trace.exit();
 
         return undefined;
     }
 
-    const deferencedLiteral: string = maybeDereferencedLiteral;
+    const deferencedLiteral: string = dereferencedLiteral;
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, triedDeference.value.node.id, trace.id);
 
     // When referencing an identifier as a recursive identifier there's no requirements
     // for it to resolve to a recursive reference.
     // This if it's a recursive identifier we need to also try the identifier without the recursive `@` prefix.
-    let maybeScopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
+    let scopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
 
-    if (deferencedLiteral.startsWith("@") && maybeScopeItem === undefined) {
-        maybeScopeItem = nodeScope.get(deferencedLiteral.slice(1));
+    if (deferencedLiteral.startsWith("@") && scopeItem === undefined) {
+        scopeItem = nodeScope.get(deferencedLiteral.slice(1));
     }
 
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
-    if (maybeScopeItem === undefined) {
+    if (scopeItem === undefined) {
         const request: ExternalType.ExternalValueTypeRequest =
             ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
 
@@ -485,19 +485,17 @@ export async function maybeDereferencedIdentifierType(
         return result;
     }
 
-    const scopeItem: TScopeItem = maybeScopeItem;
-
-    let maybeNextXorNode: TXorNode | undefined;
+    let nextXorNode: TXorNode | undefined;
 
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            maybeNextXorNode = scopeItem.maybeValue;
+            nextXorNode = scopeItem.value;
             break;
 
         case ScopeItemKind.Each:
-            maybeNextXorNode = scopeItem.eachExpression;
+            nextXorNode = scopeItem.eachExpression;
             break;
 
         case ScopeItemKind.Parameter:
@@ -514,12 +512,12 @@ export async function maybeDereferencedIdentifierType(
 
     // Infinite recursion on an inclusive identifier.
     // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
-    if (deferencedLiteral.startsWith("@") && maybeNextXorNode?.node.id === xorNode.node.id) {
+    if (deferencedLiteral.startsWith("@") && nextXorNode?.node.id === xorNode.node.id) {
         return Type.AnyInstance;
     }
 
-    const result: PQP.Language.Type.TPowerQueryType | undefined = maybeNextXorNode
-        ? await inspectXor(state, maybeNextXorNode, trace.id)
+    const result: PQP.Language.Type.TPowerQueryType | undefined = nextXorNode
+        ? await inspectXor(state, nextXorNode, trace.id)
         : undefined;
 
     trace.exit();

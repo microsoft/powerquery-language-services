@@ -13,12 +13,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeRangeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRangeExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -29,32 +29,32 @@ export async function inspectTypeRangeExpression(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeLeftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+            const leftType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
                 state,
                 xorNode,
                 0,
                 trace.id,
             );
 
-            const maybeRightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
+            const rightType: Type.TPowerQueryType | undefined = await inspectTypeFromChildAttributeIndex(
                 state,
                 xorNode,
                 2,
                 trace.id,
             );
 
-            if (maybeLeftType === undefined || maybeRightType === undefined) {
+            if (leftType === undefined || rightType === undefined) {
                 result = Type.UnknownInstance;
-            } else if (maybeLeftType.kind === Type.TypeKind.Number && maybeRightType.kind === Type.TypeKind.Number) {
+            } else if (leftType.kind === Type.TypeKind.Number && rightType.kind === Type.TypeKind.Number) {
                 // TODO: handle isNullable better
-                if (maybeLeftType.isNullable === true || maybeRightType.isNullable === true) {
+                if (leftType.isNullable === true || rightType.isNullable === true) {
                     result = Type.NoneInstance;
                 } else {
                     result = Type.ListInstance;
                 }
-            } else if (maybeLeftType.kind === Type.TypeKind.None || maybeRightType.kind === Type.TypeKind.None) {
+            } else if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
                 result = Type.NoneInstance;
-            } else if (maybeLeftType.kind === Type.TypeKind.Unknown || maybeRightType.kind === Type.TypeKind.Unknown) {
+            } else if (leftType.kind === Type.TypeKind.Unknown || rightType.kind === Type.TypeKind.Unknown) {
                 result = Type.UnknownInstance;
             } else {
                 result = Type.NoneInstance;

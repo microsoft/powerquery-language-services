@@ -35,11 +35,11 @@ export function validateFunctionExpression(
         initialCorrelationId: trace.id,
     };
 
-    const maybeFnExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+    const fnExpressionIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
         Ast.NodeKind.FunctionExpression,
     );
 
-    if (maybeFnExpressionIds === undefined) {
+    if (fnExpressionIds === undefined) {
         trace.exit();
 
         return [];
@@ -47,7 +47,7 @@ export function validateFunctionExpression(
 
     const diagnostics: Diagnostic[][] = [];
 
-    for (const nodeId of maybeFnExpressionIds) {
+    for (const nodeId of fnExpressionIds) {
         diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
         updatedSettings.cancellationToken?.throwIfCancelled();
     }

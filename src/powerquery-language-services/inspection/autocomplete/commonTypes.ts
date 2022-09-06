@@ -31,7 +31,7 @@ export interface AutocompleteFieldAccess {
 
 export interface InspectedFieldAccess {
     readonly isAutocompleteAllowed: boolean;
-    readonly maybeIdentifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
+    readonly identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
 }
 

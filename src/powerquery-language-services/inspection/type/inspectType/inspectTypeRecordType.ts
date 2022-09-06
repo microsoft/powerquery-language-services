@@ -14,12 +14,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeRecordType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.Type | Type.RecordType | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRecordType.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -30,21 +30,21 @@ export async function inspectTypeRecordType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeFields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
+            const fields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 0,
                 Ast.NodeKind.FieldSpecificationList,
             );
 
-            if (maybeFields === undefined) {
+            if (fields === undefined) {
                 result = Type.UnknownInstance;
             } else {
                 result = {
                     kind: Type.TypeKind.Type,
                     extendedKind: Type.ExtendedTypeKind.RecordType,
                     isNullable: false,
-                    ...(await examineFieldSpecificationList(state, maybeFields, trace.id)),
+                    ...(await examineFieldSpecificationList(state, fields, trace.id)),
                 };
             }
 

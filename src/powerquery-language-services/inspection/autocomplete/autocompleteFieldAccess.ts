@@ -16,7 +16,7 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
@@ -27,7 +27,7 @@ import { TypeCache } from "../typeCache";
 export async function tryAutocompleteFieldAccess(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
-    maybeActiveNode: TMaybeActiveNode,
+    activeNode: TActiveNode,
     typeCache: TypeCache,
 ): Promise<TriedAutocompleteFieldAccess> {
     const trace: Trace = settings.traceManager.entry(
@@ -43,11 +43,11 @@ export async function tryAutocompleteFieldAccess(
 
     let result: TriedAutocompleteFieldAccess;
 
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         result = ResultUtils.boxOk(undefined);
     } else {
         result = await ResultUtils.ensureResultAsync(
-            () => autocompleteFieldAccess(updatedSettings, parseState, maybeActiveNode, typeCache),
+            () => autocompleteFieldAccess(updatedSettings, parseState, activeNode, typeCache),
             updatedSettings.locale,
         );
     }
@@ -69,10 +69,10 @@ async function autocompleteFieldAccess(
     activeNode: ActiveNode,
     typeCache: TypeCache,
 ): Promise<AutocompleteFieldAccess | undefined> {
-    let maybeInspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
+    let inspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
 
     // Option 1: Find a field access node in the ancestry.
-    let maybeFieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
+    let fieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
 
     for (const ancestor of activeNode.ancestry) {
         if (
@@ -81,30 +81,28 @@ async function autocompleteFieldAccess(
                 Ast.NodeKind.FieldProjection,
             ])
         ) {
-            maybeFieldAccessAncestor = ancestor;
+            fieldAccessAncestor = ancestor;
         }
     }
 
-    if (maybeFieldAccessAncestor !== undefined) {
-        maybeInspectedFieldAccess = inspectFieldAccess(
+    if (fieldAccessAncestor !== undefined) {
+        inspectedFieldAccess = inspectFieldAccess(
             parseState.lexerSnapshot,
             parseState.contextState.nodeIdMapCollection,
             activeNode.position,
-            maybeFieldAccessAncestor,
+            fieldAccessAncestor,
         );
     }
 
     // No field access was found, or the field access reports no autocomplete is possible.
     // Eg. `[x = 1][x |]`
-    if (maybeInspectedFieldAccess === undefined || maybeInspectedFieldAccess.isAutocompleteAllowed === false) {
+    if (inspectedFieldAccess === undefined || inspectedFieldAccess.isAutocompleteAllowed === false) {
         return undefined;
     }
 
-    const inspectedFieldAccess: InspectedFieldAccess = maybeInspectedFieldAccess;
-
     // Don't waste time on type analysis if the field access
     // reports it's in an invalid location for an autocomplete.
-    if (inspectedFieldAccess.isAutocompleteAllowed === false) {
+    if (!inspectedFieldAccess.isAutocompleteAllowed) {
         return undefined;
     }
 
@@ -112,13 +110,11 @@ async function autocompleteFieldAccess(
     // This is delayed until after the field access because running static type analysis on an
     // arbitrary field could be costly.
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
-    const maybeField: TXorNode | undefined = maybeTypablePrimaryExpression(nodeIdMapCollection, activeNode);
+    const field: TXorNode | undefined = typablePrimaryExpression(nodeIdMapCollection, activeNode);
 
-    if (maybeField === undefined) {
+    if (field === undefined) {
         return undefined;
     }
-
-    const field: TXorNode = maybeField;
 
     const triedFieldType: TriedType = await tryType(settings, nodeIdMapCollection, field.node.id, typeCache);
 
@@ -191,7 +187,7 @@ function inspectFieldProjection(
     fieldProjection: TXorNode,
 ): InspectedFieldAccess {
     let isAutocompleteAllowed: boolean = false;
-    let maybeIdentifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
+    let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     const fieldNames: string[] = [];
 
     for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
@@ -202,9 +198,9 @@ function inspectFieldProjection(
             fieldSelector,
         );
 
-        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.maybeIdentifierUnderPosition) {
+        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.identifierUnderPosition) {
             isAutocompleteAllowed = true;
-            maybeIdentifierUnderPosition = inspectedFieldSelector.maybeIdentifierUnderPosition;
+            identifierUnderPosition = inspectedFieldSelector.identifierUnderPosition;
         }
 
         fieldNames.push(...inspectedFieldSelector.fieldNames);
@@ -212,7 +208,7 @@ function inspectFieldProjection(
 
     return {
         isAutocompleteAllowed,
-        maybeIdentifierUnderPosition,
+        identifierUnderPosition,
         fieldNames,
     };
 }
@@ -220,7 +216,7 @@ function inspectFieldProjection(
 function createInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
     return {
         isAutocompleteAllowed,
-        maybeIdentifierUnderPosition: undefined,
+        identifierUnderPosition: undefined,
         fieldNames: [],
     };
 }
@@ -255,7 +251,7 @@ function inspectFieldSelector(
 
             return {
                 isAutocompleteAllowed: isPositionInIdentifier,
-                maybeIdentifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
+                identifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
                 fieldNames: [generalizedIdentifier.literal],
             };
         }
@@ -271,18 +267,18 @@ function inspectFieldSelector(
                 Ast.NodeKind.Constant,
             );
 
-            const maybeNextTokenPosition: PQP.Language.Token.TokenPosition =
+            const nextTokenPosition: PQP.Language.Token.TokenPosition =
                 lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;
 
             const isAutocompleteAllowed: boolean =
                 PositionUtils.isAfterAst(position, openBracketConstant, false) &&
-                (maybeNextTokenPosition === undefined ||
-                    PositionUtils.isOnTokenPosition(position, maybeNextTokenPosition) ||
-                    PositionUtils.isBeforeTokenPosition(position, maybeNextTokenPosition, true));
+                (nextTokenPosition === undefined ||
+                    PositionUtils.isOnTokenPosition(position, nextTokenPosition) ||
+                    PositionUtils.isBeforeTokenPosition(position, nextTokenPosition, true));
 
             return {
                 isAutocompleteAllowed,
-                maybeIdentifierUnderPosition: undefined,
+                identifierUnderPosition: undefined,
                 fieldNames: [],
             };
         }
@@ -298,31 +294,29 @@ function createAutocompleteItems(
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
     const autocompleteItems: AutocompleteItem[] = [];
-
-    const maybeIdentifierUnderPositionLiteral: string | undefined =
-        inspectedFieldAccess.maybeIdentifierUnderPosition?.literal;
+    const identifierUnderPositionLiteral: string | undefined = inspectedFieldAccess.identifierUnderPosition?.literal;
 
     for (const [label, powerQueryType] of fieldEntries) {
-        if (fieldAccessNames.includes(label) && label !== maybeIdentifierUnderPositionLiteral) {
+        if (fieldAccessNames.includes(label) && label !== identifierUnderPositionLiteral) {
             continue;
         }
 
         autocompleteItems.push(
-            AutocompleteItemUtils.createFromFieldAccess(label, powerQueryType, maybeIdentifierUnderPositionLiteral),
+            AutocompleteItemUtils.createFromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
         );
     }
 
     return autocompleteItems;
 }
 
-function maybeTypablePrimaryExpression(
+function typablePrimaryExpression(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
 ): TXorNode | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const numAncestors: number = ancestry.length;
 
-    let maybeContiguousPrimaryExpression: TXorNode | undefined;
+    let contiguousPrimaryExpression: TXorNode | undefined;
     let matchingContiguousPrimaryExpression: boolean = true;
 
     for (let index: number = 0; index < numAncestors; index += 1) {
@@ -353,11 +347,11 @@ function maybeTypablePrimaryExpression(
                 );
             }
         } else if (matchingContiguousPrimaryExpression && XorNodeUtils.isTPrimaryExpression(xorNode)) {
-            maybeContiguousPrimaryExpression = xorNode;
+            contiguousPrimaryExpression = xorNode;
         } else {
             matchingContiguousPrimaryExpression = false;
         }
     }
 
-    return maybeContiguousPrimaryExpression;
+    return contiguousPrimaryExpression;
 }

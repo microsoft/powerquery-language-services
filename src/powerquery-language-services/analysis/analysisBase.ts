@@ -29,7 +29,7 @@ import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument"
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ActiveNodeUtils, TActiveLeafIdentifier, TMaybeActiveNode, TypeCache } from "../inspection";
+import { ActiveNodeUtils, TActiveLeafIdentifier, TActiveNode, TypeCache } from "../inspection";
 import type {
     AutocompleteItemProviderContext,
     DefinitionProviderContext,
@@ -44,7 +44,7 @@ import { CommonTypesUtils, Inspection, InspectionSettings, InspectionUtils, Posi
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
-    maybeScopeCreatorIdentifier,
+    scopeCreatorIdentifier,
     TScopeItem,
 } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
@@ -71,12 +71,12 @@ export class AnalysisBase implements Analysis {
     };
 
     constructor(protected textDocument: TextDocument, protected analysisSettings: AnalysisSettings) {
-        this.languageAutocompleteItemProvider = analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn
-            ? analysisSettings.maybeCreateLanguageAutocompleteItemProviderFn(analysisSettings.inspectionSettings.locale)
+        this.languageAutocompleteItemProvider = analysisSettings.languageAutocompleteItemProviderFactory
+            ? analysisSettings.languageAutocompleteItemProviderFactory(analysisSettings.inspectionSettings.locale)
             : new LanguageAutocompleteItemProvider(analysisSettings.inspectionSettings.locale);
 
-        this.libraryProvider = analysisSettings.maybeCreateLibraryProviderFn
-            ? analysisSettings.maybeCreateLibraryProviderFn(
+        this.libraryProvider = analysisSettings.libraryProviderFactory
+            ? analysisSettings.libraryProviderFactory(
                   analysisSettings.inspectionSettings.library,
                   analysisSettings.inspectionSettings.locale,
               )
@@ -85,8 +85,8 @@ export class AnalysisBase implements Analysis {
                   analysisSettings.inspectionSettings.locale,
               );
 
-        this.localDocumentProvider = analysisSettings.maybeCreateLocalDocumentProviderFn
-            ? analysisSettings.maybeCreateLocalDocumentProviderFn(
+        this.localDocumentProvider = analysisSettings.localDocumentProviderFactory
+            ? analysisSettings.localDocumentProviderFactory(
                   textDocument.uri.toString(),
                   this.typeCache,
                   analysisSettings.inspectionSettings.library,
@@ -113,10 +113,13 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeContext: AutocompleteItemProviderContext | undefined =
-                await this.getAutocompleteItemProviderContext(position, trace.id, cancellationToken);
+            const context: AutocompleteItemProviderContext | undefined = await this.getAutocompleteItemProviderContext(
+                position,
+                trace.id,
+                cancellationToken,
+            );
 
-            if (maybeContext === undefined) {
+            if (context === undefined) {
                 trace.exit();
 
                 return undefined;
@@ -125,9 +128,9 @@ export class AnalysisBase implements Analysis {
             const autocompleteItemTasks: Promise<
                 Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>
             >[] = [
-                this.languageAutocompleteItemProvider.getAutocompleteItems(maybeContext),
-                this.libraryProvider.getAutocompleteItems(maybeContext),
-                this.localDocumentProvider.getAutocompleteItems(maybeContext),
+                this.languageAutocompleteItemProvider.getAutocompleteItems(context),
+                this.libraryProvider.getAutocompleteItems(context),
+                this.localDocumentProvider.getAutocompleteItems(context),
             ];
 
             const autocompleteItems: Inspection.AutocompleteItem[] = [];
@@ -160,17 +163,20 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeIdentifierContext: DefinitionProviderContext | undefined =
-                await this.getDefinitionProviderContext(position, trace.id, cancellationToken);
+            const identifierContext: DefinitionProviderContext | undefined = await this.getDefinitionProviderContext(
+                position,
+                trace.id,
+                cancellationToken,
+            );
 
-            if (!maybeIdentifierContext) {
+            if (!identifierContext) {
                 trace.exit();
 
                 return undefined;
             }
 
             const result: Result<Location[] | undefined, CommonError.CommonError> =
-                await this.localDocumentProvider.getDefinition(maybeIdentifierContext);
+                await this.localDocumentProvider.getDefinition(identifierContext);
 
             trace.exit();
 
@@ -186,13 +192,13 @@ export class AnalysisBase implements Analysis {
         cancellationToken: ICancellationToken,
     ): Promise<PQP.Result<DocumentSymbol[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
-            const maybeParseState: ParseState | undefined = await this.getParseState();
+            const parseState: ParseState | undefined = await this.getParseState();
 
-            if (maybeParseState === undefined) {
+            if (parseState === undefined) {
                 return undefined;
             }
 
-            const nodeIdMapCollection: NodeIdMap.Collection = maybeParseState.contextState.nodeIdMapCollection;
+            const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
             const currentSymbols: DocumentSymbol[] = [];
             const parentSymbolById: Map<number, DocumentSymbol> = new Map();
 
@@ -219,9 +225,9 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeParseState: ParseState | undefined = await this.getParseState();
+            const parseState: ParseState | undefined = await this.getParseState();
 
-            if (maybeParseState === undefined) {
+            if (parseState === undefined) {
                 trace.exit();
 
                 return undefined;
@@ -232,7 +238,7 @@ export class AnalysisBase implements Analysis {
                     traceManager: this.analysisSettings.traceManager,
                     initialCorrelationId: trace.id,
                     cancellationToken,
-                    nodeIdMapCollection: maybeParseState.contextState.nodeIdMapCollection,
+                    nodeIdMapCollection: parseState.contextState.nodeIdMapCollection,
                 });
 
             trace.exit();
@@ -256,25 +262,25 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeHoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
+            const hoverProviderContext: HoverProviderContext | undefined = await this.getHoverProviderContext(
                 position,
                 trace.id,
                 cancellationToken,
             );
 
-            if (!maybeHoverProviderContext) {
+            if (!hoverProviderContext) {
                 trace.exit();
 
                 return undefined;
             }
 
             const triedHovers: Result<Hover | undefined, CommonError.CommonError>[] = await Promise.all([
-                this.localDocumentProvider.getHover(maybeHoverProviderContext),
-                this.libraryProvider.getHover(maybeHoverProviderContext),
+                this.localDocumentProvider.getHover(hoverProviderContext),
+                this.libraryProvider.getHover(hoverProviderContext),
             ]);
 
             // Keep track if any error was thrown, prioritized by the order of the providers
-            let maybeFirstError: CommonError.CommonError | undefined;
+            let firstError: CommonError.CommonError | undefined;
 
             for (const triedHover of triedHovers) {
                 if (ResultUtils.isOk(triedHover)) {
@@ -283,16 +289,16 @@ export class AnalysisBase implements Analysis {
 
                         return triedHover.value;
                     }
-                } else if (maybeFirstError === undefined) {
-                    maybeFirstError = triedHover.error;
+                } else if (firstError === undefined) {
+                    firstError = triedHover.error;
                 }
             }
 
             trace.exit();
 
-            if (maybeFirstError !== undefined) {
+            if (firstError !== undefined) {
                 // This is safe as the ensureResultAsync function catch the error.
-                throw maybeFirstError;
+                throw firstError;
             } else {
                 return undefined;
             }
@@ -357,21 +363,18 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeContext: SignatureProviderContext | undefined = await this.getSignatureProviderContext(
-                position,
-                trace.id,
-                cancellationToken,
-            );
+            const signatureProviderContext: SignatureProviderContext | undefined =
+                await this.getSignatureProviderContext(position, trace.id, cancellationToken);
 
-            if (maybeContext === undefined) {
+            if (signatureProviderContext === undefined) {
                 trace.exit();
 
                 return undefined;
             }
 
             const signatureTasks: Result<SignatureHelp | undefined, CommonError.CommonError>[] = await Promise.all([
-                this.localDocumentProvider.getSignatureHelp(maybeContext),
-                this.libraryProvider.getSignatureHelp(maybeContext),
+                this.localDocumentProvider.getSignatureHelp(signatureProviderContext),
+                this.libraryProvider.getSignatureHelp(signatureProviderContext),
             ]);
 
             for (const task of signatureTasks) {
@@ -400,39 +403,39 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const maybeActiveNode: TMaybeActiveNode = Assert.asDefined(await this.getActiveNode(position));
+            const activeNode: TActiveNode = Assert.asDefined(await this.getActiveNode(position));
 
-            let maybeLeafIdentifier: TActiveLeafIdentifier | undefined;
+            let leafIdentifier: TActiveLeafIdentifier | undefined;
 
             if (
-                !ActiveNodeUtils.isPositionInBounds(maybeActiveNode) ||
-                maybeActiveNode.maybeInclusiveIdentifierUnderPosition === undefined
+                !ActiveNodeUtils.isPositionInBounds(activeNode) ||
+                activeNode.inclusiveIdentifierUnderPosition === undefined
             ) {
                 trace.exit();
 
                 return undefined;
             } else {
-                maybeLeafIdentifier = maybeActiveNode.maybeInclusiveIdentifierUnderPosition;
+                leafIdentifier = activeNode.inclusiveIdentifierUnderPosition;
             }
 
-            void (await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken));
+            void (await this.inspectNodeScope(activeNode, trace.id, cancellationToken));
             const scopeById: Inspection.ScopeById = this.typeCache.scopeById;
 
             const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
             let valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined = undefined;
 
-            if (maybeLeafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
-                valueCreator = maybeLeafIdentifier.node;
+            if (leafIdentifier.node.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                valueCreator = leafIdentifier.node;
             } else if (
-                (maybeLeafIdentifier.node.kind === Ast.NodeKind.Identifier ||
-                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
+                (leafIdentifier.node.kind === Ast.NodeKind.Identifier ||
+                    leafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression) &&
                 scopeById
             ) {
                 // need to find this key value and modify all referring it
                 const identifierExpression: Ast.Identifier =
-                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-                        ? maybeLeafIdentifier.node.identifier
-                        : maybeLeafIdentifier.node;
+                    leafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                        ? leafIdentifier.node.identifier
+                        : leafIdentifier.node;
 
                 switch (identifierExpression.identifierContextKind) {
                     case Ast.IdentifierContextKind.Key:
@@ -459,26 +462,26 @@ export class AnalysisBase implements Analysis {
 
                         const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
                             nodeScope,
-                            maybeLeafIdentifier.normalizedLiteral,
+                            leafIdentifier.normalizedLiteral,
                         );
 
                         if (scopeItem) {
-                            const maybeValueCreator: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                                maybeScopeCreatorIdentifier(scopeItem);
+                            const valueCreatorSearch: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
+                                scopeCreatorIdentifier(scopeItem);
 
-                            if (maybeValueCreator?.kind === Ast.NodeKind.Identifier) {
+                            if (valueCreatorSearch?.kind === Ast.NodeKind.Identifier) {
                                 if (
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Key ||
-                                    maybeValueCreator.identifierContextKind === Ast.IdentifierContextKind.Parameter
+                                    valueCreatorSearch.identifierContextKind === Ast.IdentifierContextKind.Key ||
+                                    valueCreatorSearch.identifierContextKind === Ast.IdentifierContextKind.Parameter
                                 ) {
-                                    valueCreator = maybeValueCreator;
+                                    valueCreator = valueCreatorSearch;
                                 } else {
-                                    identifiersToBeEdited.push(maybeValueCreator);
+                                    identifiersToBeEdited.push(valueCreatorSearch);
                                 }
-                            } else if (maybeValueCreator?.kind === Ast.NodeKind.GeneralizedIdentifier) {
-                                valueCreator = maybeValueCreator;
-                            } else if (maybeValueCreator) {
-                                identifiersToBeEdited.push(maybeValueCreator);
+                            } else if (valueCreatorSearch?.kind === Ast.NodeKind.GeneralizedIdentifier) {
+                                valueCreator = valueCreatorSearch;
+                            } else if (valueCreatorSearch) {
+                                identifiersToBeEdited.push(valueCreatorSearch);
                             }
                         }
 
@@ -503,12 +506,12 @@ export class AnalysisBase implements Analysis {
                 );
             }
 
-            // if none found, directly put maybeInclusiveIdentifierUnderPosition in if it exists
-            if (identifiersToBeEdited.length === 0 && maybeLeafIdentifier) {
+            // if none found, directly put inclusiveIdentifierUnderPosition in if it exists
+            if (identifiersToBeEdited.length === 0 && leafIdentifier) {
                 identifiersToBeEdited.push(
-                    maybeLeafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
-                        ? maybeLeafIdentifier.node.identifier
-                        : maybeLeafIdentifier.node,
+                    leafIdentifier.node.kind === Ast.NodeKind.IdentifierExpression
+                        ? leafIdentifier.node.identifier
+                        : leafIdentifier.node,
                 );
             }
 
@@ -577,35 +580,33 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const maybeActiveNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
 
-        if (maybeActiveNode === undefined) {
+        if (activeNode === undefined) {
             trace.exit();
 
             return undefined;
         }
 
         const autocomplete: Inspection.Autocomplete = Assert.asDefined(
-            await this.inspectAutocomplete(maybeActiveNode, trace.id, newCancellationToken),
+            await this.inspectAutocomplete(activeNode, trace.id, newCancellationToken),
         );
 
         const triedNodeScope: Inspection.TriedNodeScope = Assert.asDefined(
-            await this.inspectNodeScope(maybeActiveNode, trace.id, newCancellationToken),
+            await this.inspectNodeScope(activeNode, trace.id, newCancellationToken),
         );
 
         const triedScopeType: Inspection.TriedScopeType = Assert.asDefined(
-            await this.inspectScopeType(maybeActiveNode, trace.id, newCancellationToken),
+            await this.inspectScopeType(activeNode, trace.id, newCancellationToken),
         );
 
-        const maybeActiveLeafIdentifier: TActiveLeafIdentifier | undefined = ActiveNodeUtils.isPositionInBounds(
-            maybeActiveNode,
-        )
-            ? maybeActiveNode.maybeInclusiveIdentifierUnderPosition
+        const activeLeafIdentifier: TActiveLeafIdentifier | undefined = ActiveNodeUtils.isPositionInBounds(activeNode)
+            ? activeNode.inclusiveIdentifierUnderPosition
             : undefined;
 
         let result: AutocompleteItemProviderContext;
 
-        if (maybeActiveLeafIdentifier !== undefined) {
+        if (activeLeafIdentifier !== undefined) {
             result = {
                 autocomplete,
                 triedNodeScope,
@@ -613,9 +614,9 @@ export class AnalysisBase implements Analysis {
                 traceManager: this.analysisSettings.traceManager,
                 cancellationToken: newCancellationToken,
                 initialCorrelationId: trace.id,
-                range: CommonTypesUtils.rangeFromTokenRange(maybeActiveLeafIdentifier.node.tokenRange),
-                text: maybeActiveLeafIdentifier.normalizedLiteral,
-                tokenKind: maybeActiveLeafIdentifier.node.kind,
+                range: CommonTypesUtils.rangeFromTokenRange(activeLeafIdentifier.node.tokenRange),
+                text: activeLeafIdentifier.normalizedLiteral,
+                tokenKind: activeLeafIdentifier.node.kind,
             };
         } else {
             result = {
@@ -644,27 +645,26 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const maybeActiveNode: Inspection.TMaybeActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
 
-        if (maybeActiveNode === undefined || !ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             trace.exit();
 
             return undefined;
         }
 
-        const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
-            maybeActiveNode.maybeExclusiveIdentifierUnderPosition;
+        const identifierUnderPosition: TActiveLeafIdentifier | undefined = activeNode.exclusiveIdentifierUnderPosition;
 
-        if (maybeIdentifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
+        if (identifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(activeNode)) {
             trace.exit();
 
             return undefined;
         }
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
-            maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
-                ? maybeIdentifierUnderPosition.node.identifier
-                : maybeIdentifierUnderPosition.node;
+            identifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
+                ? identifierUnderPosition.node.identifier
+                : identifierUnderPosition.node;
 
         const context: DefinitionProviderContext = {
             traceManager: this.analysisSettings.traceManager,
@@ -672,7 +672,7 @@ export class AnalysisBase implements Analysis {
             identifier,
             cancellationToken,
             initialCorrelationId: trace.id,
-            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(activeNode, trace.id, cancellationToken)),
         };
 
         trace.exit();
@@ -691,27 +691,26 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const maybeActiveNode: Inspection.TMaybeActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
 
-        if (maybeActiveNode === undefined || !ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+        if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             trace.exit();
 
             return undefined;
         }
 
-        const maybeIdentifierUnderPosition: TActiveLeafIdentifier | undefined =
-            maybeActiveNode.maybeExclusiveIdentifierUnderPosition;
+        const identifierUnderPosition: TActiveLeafIdentifier | undefined = activeNode.exclusiveIdentifierUnderPosition;
 
-        if (maybeIdentifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(maybeActiveNode)) {
+        if (identifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(activeNode)) {
             trace.exit();
 
             return undefined;
         }
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
-            maybeIdentifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
-                ? maybeIdentifierUnderPosition.node.identifier
-                : maybeIdentifierUnderPosition.node;
+            identifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
+                ? identifierUnderPosition.node.identifier
+                : identifierUnderPosition.node;
 
         const context: HoverProviderContext = {
             traceManager: this.analysisSettings.traceManager,
@@ -719,15 +718,15 @@ export class AnalysisBase implements Analysis {
             identifier,
             cancellationToken,
             initialCorrelationId: trace.id,
-            activeNode: maybeActiveNode,
+            activeNode,
             inspectionSettings: {
                 ...this.analysisSettings.inspectionSettings,
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
             parseState: Assert.asDefined(await this.getParseState()),
-            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(maybeActiveNode, trace.id, cancellationToken)),
-            triedScopeType: Assert.asDefined(await this.inspectScopeType(maybeActiveNode, trace.id, cancellationToken)),
+            triedNodeScope: Assert.asDefined(await this.inspectNodeScope(activeNode, trace.id, cancellationToken)),
+            triedScopeType: Assert.asDefined(await this.inspectScopeType(activeNode, trace.id, cancellationToken)),
         };
 
         trace.exit();
@@ -762,10 +761,10 @@ export class AnalysisBase implements Analysis {
         const invokeExpression: Inspection.CurrentInvokeExpression = triedCurrentInvokeExpression.value;
 
         const functionName: string | undefined =
-            invokeExpression.maybeName !== undefined ? invokeExpression.maybeName : undefined;
+            invokeExpression.name !== undefined ? invokeExpression.name : undefined;
 
         const argumentOrdinal: number | undefined =
-            invokeExpression.maybeArguments !== undefined ? invokeExpression.maybeArguments.argumentOrdinal : undefined;
+            invokeExpression.arguments !== undefined ? invokeExpression.arguments.argumentOrdinal : undefined;
 
         if (functionName === undefined || argumentOrdinal === undefined) {
             trace.exit();
@@ -800,14 +799,6 @@ export class AnalysisBase implements Analysis {
 
     public getTypeCache(): TypeCache {
         return this.typeCache;
-    }
-
-    protected cancelPreviousTokenIfExists(id: string): void {
-        const maybePreviousToken: ICancellationToken | undefined = this.cancellableTokensByAction.get(id);
-
-        if (maybePreviousToken !== undefined) {
-            maybePreviousToken.cancel();
-        }
     }
 
     protected async collectAllIdentifiersBeneath(
@@ -890,7 +881,7 @@ export class AnalysisBase implements Analysis {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreatorIdentifier(theScopeItem);
+                            scopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (
@@ -944,24 +935,24 @@ export class AnalysisBase implements Analysis {
     }
 
     // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
-    protected async getActiveNode(position: Position): Promise<TMaybeActiveNode | undefined> {
-        const maybeParseState: ParseState | undefined = await this.getParseState();
+    protected async getActiveNode(position: Position): Promise<TActiveNode | undefined> {
+        const parseState: ParseState | undefined = await this.getParseState();
 
-        if (maybeParseState === undefined) {
+        if (parseState === undefined) {
             return undefined;
         }
 
-        return ActiveNodeUtils.maybeActiveNode(maybeParseState.contextState.nodeIdMapCollection, position);
+        return ActiveNodeUtils.activeNode(parseState.contextState.nodeIdMapCollection, position);
     }
 
     protected async inspectAutocomplete(
-        activeNode: TMaybeActiveNode,
+        activeNode: TActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.Autocomplete | undefined> {
-        const maybeParseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseState();
 
-        if (maybeParseState === undefined) {
+        if (parseState === undefined) {
             return undefined;
         }
 
@@ -971,7 +962,7 @@ export class AnalysisBase implements Analysis {
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
-            maybeParseState,
+            parseState,
             this.typeCache,
             activeNode,
             await this.getParseError(),
@@ -983,10 +974,10 @@ export class AnalysisBase implements Analysis {
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedCurrentInvokeExpression | undefined> {
-        const maybeActiveNode: TMaybeActiveNode | undefined = await this.getActiveNode(position);
-        const maybeParseState: ParseState | undefined = await this.getParseState();
+        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
+        const parseState: ParseState | undefined = await this.getParseState();
 
-        if (maybeActiveNode === undefined || maybeParseState === undefined) {
+        if (activeNode === undefined || parseState === undefined) {
             return undefined;
         }
 
@@ -996,20 +987,20 @@ export class AnalysisBase implements Analysis {
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
-            maybeParseState.contextState.nodeIdMapCollection,
-            maybeActiveNode,
+            parseState.contextState.nodeIdMapCollection,
+            activeNode,
             this.typeCache,
         );
     }
 
     protected async inspectNodeScope(
-        activeNode: TMaybeActiveNode,
+        activeNode: TActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedNodeScope | undefined> {
-        const maybeParseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseState();
 
-        if (maybeParseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        if (parseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return undefined;
         }
 
@@ -1019,20 +1010,20 @@ export class AnalysisBase implements Analysis {
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
-            maybeParseState.contextState.nodeIdMapCollection,
+            parseState.contextState.nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             this.typeCache.scopeById,
         );
     }
 
     protected async inspectScopeType(
-        activeNode: TMaybeActiveNode,
+        activeNode: TActiveNode,
         correlationId: number,
         cancellationToken: ICancellationToken,
     ): Promise<Inspection.TriedScopeType | undefined> {
-        const maybeParseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseState();
 
-        if (maybeParseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        if (parseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return undefined;
         }
 
@@ -1042,7 +1033,7 @@ export class AnalysisBase implements Analysis {
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
-            maybeParseState.contextState.nodeIdMapCollection,
+            parseState.contextState.nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             this.typeCache,
         );

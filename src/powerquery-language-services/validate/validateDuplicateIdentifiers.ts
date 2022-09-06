@@ -174,13 +174,13 @@ function validateDuplicateIdentifiersForSection(
 
 // Generalized logic for iterating over some collection and their children, essentially by doing:
 //  for node in nodeIds:
-//      for childOfNode in iterNodeFn(node):
+//      for childOfNode in iterNodeFactory(node):
 //          ...
 function validateDuplicateIdentifiersForKeyValuePair(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIdCollections: ReadonlyArray<Set<number>>,
-    iterNodeFn: (
+    iterNodeFactory: (
         nodeIdMapCollection: NodeIdMap.Collection,
         node: TXorNode,
     ) => ReadonlyArray<NodeIdMapIterator.TKeyValuePair>,
@@ -211,18 +211,18 @@ function validateDuplicateIdentifiersForKeyValuePair(
             const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
             const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
 
-            for (const field of iterNodeFn(nodeIdMapCollection, node)) {
+            for (const field of iterNodeFactory(nodeIdMapCollection, node)) {
                 const keyLiteral: string = field.normalizedKeyLiteral;
 
-                const maybeDuplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
+                const duplicateFields: NodeIdMapIterator.TKeyValuePair[] | undefined =
                     duplicateFieldsByKey.get(keyLiteral);
 
-                const maybeKnownField: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
+                const knownFeld: NodeIdMapIterator.TKeyValuePair | undefined = knownFieldByKey.get(keyLiteral);
 
-                if (maybeDuplicateFields) {
-                    maybeDuplicateFields.push(field);
-                } else if (maybeKnownField) {
-                    duplicateFieldsByKey.set(keyLiteral, [field, maybeKnownField]);
+                if (duplicateFields) {
+                    duplicateFields.push(field);
+                } else if (knownFeld) {
+                    duplicateFieldsByKey.set(keyLiteral, [field, knownFeld]);
                 } else {
                     knownFieldByKey.set(keyLiteral, field);
                 }

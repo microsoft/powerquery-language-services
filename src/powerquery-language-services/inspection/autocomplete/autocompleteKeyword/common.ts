@@ -15,20 +15,20 @@ export async function autocompleteKeywordRightMostLeaf(
     xorNodeId: number,
 ): Promise<ReadonlyArray<Keyword.KeywordKind> | undefined> {
     // Grab the right-most Ast node in the last value.
-    const maybeRightMostAstLeafForLastValue: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
+    const rightMostAstLeafForLastValue: Ast.TNode | undefined = await NodeIdMapUtils.rightMostLeaf(
         state.nodeIdMapCollection,
         xorNodeId,
         undefined,
     );
 
-    if (maybeRightMostAstLeafForLastValue === undefined) {
+    if (rightMostAstLeafForLastValue === undefined) {
         return undefined;
     }
 
     // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
     const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(
         state.nodeIdMapCollection,
-        maybeRightMostAstLeafForLastValue.id,
+        rightMostAstLeafForLastValue.id,
     );
 
     Assert.isTrue(shiftedAncestry.length >= 2, "shiftedAncestry.length >= 2");
@@ -41,7 +41,7 @@ export async function autocompleteKeywordRightMostLeaf(
     const inspected: ReadonlyArray<AutocompleteItem> = await autocompleteKeyword(
         state.nodeIdMapCollection,
         shiftedActiveNode,
-        state.maybeTrailingToken,
+        state.trailingToken,
     );
 
     return inspected.map((autocompleteItem: AutocompleteItem) => {

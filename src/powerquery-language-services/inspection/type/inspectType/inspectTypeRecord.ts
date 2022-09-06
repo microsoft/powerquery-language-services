@@ -13,12 +13,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeRecord(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.Record | Type.DefinedRecord> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRecord.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -32,8 +32,11 @@ export async function inspectTypeRecord(
 
             for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
                 if (keyValuePair.value) {
-                    // eslint-disable-next-line no-await-in-loop
-                    fields.set(keyValuePair.keyLiteral, await inspectXor(state, keyValuePair.value, trace.id));
+                    fields.set(
+                        keyValuePair.normalizedKeyLiteral,
+                        // eslint-disable-next-line no-await-in-loop
+                        await inspectXor(state, keyValuePair.value, trace.id),
+                    );
                 } else {
                     fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
                 }

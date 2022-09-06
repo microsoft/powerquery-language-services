@@ -6,18 +6,14 @@ import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { ActiveNode, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
+import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 import {
     AstNodeById,
     ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import {
-    findDirectUpperScopeExpression,
-    findScopeItemByLiteral,
-    maybeScopeCreatorIdentifier,
-} from "./scope/scopeUtils";
+import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
@@ -33,7 +29,7 @@ export class InspectionInstance implements Inspected {
     constructor(
         public readonly settings: InspectionSettings,
         public readonly nodeIdMapCollection: NodeIdMap.Collection,
-        public readonly maybeActiveNode: TMaybeActiveNode,
+        public readonly activeNode: TActiveNode,
         public readonly autocomplete: Inspection.Autocomplete,
         public readonly triedCurrentInvokeExpression: Promise<Inspection.TriedCurrentInvokeExpression>,
         public readonly triedNodeScope: Promise<Inspection.TriedNodeScope>,
@@ -141,7 +137,7 @@ export class InspectionInstance implements Inspected {
                         const theScopeItem: TScopeItem | undefined = findScopeItemByLiteral(theScope, originLiteral);
 
                         const theCreatorIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier | undefined =
-                            maybeScopeCreatorIdentifier(theScopeItem);
+                            scopeCreatorIdentifier(theScopeItem);
 
                         return theCreatorIdentifier && theCreatorIdentifier.id === valueCreator.id;
                     } else if (
@@ -165,7 +161,7 @@ export class InspectionInstance implements Inspected {
 export async function inspect(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
-    maybeParseError: PQP.Parser.ParseError.ParseError | undefined,
+    parseError: PQP.Parser.ParseError.ParseError | undefined,
     position: Position,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
@@ -185,12 +181,12 @@ export async function inspect(
     const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
 
     // We should only get an undefined for activeNode iff the document is empty
-    const maybeActiveNode: TMaybeActiveNode = ActiveNodeUtils.maybeActiveNode(nodeIdMapCollection, position);
+    const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
 
     const triedCurrentInvokeExpression: Promise<TriedCurrentInvokeExpression> = tryCurrentInvokeExpression(
         updatedSettings,
         nodeIdMapCollection,
-        maybeActiveNode,
+        activeNode,
         typeCache,
     );
 
@@ -198,9 +194,7 @@ export async function inspect(
     let triedScopeType: Promise<TriedScopeType>;
     let triedExpectedType: TriedExpectedType;
 
-    if (ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        const activeNode: ActiveNode = maybeActiveNode;
-
+    if (ActiveNodeUtils.isPositionInBounds(activeNode)) {
         triedNodeScope = tryNodeScope(
             updatedSettings,
             nodeIdMapCollection,
@@ -221,8 +215,8 @@ export async function inspect(
     const result: InspectionInstance = new InspectionInstance(
         updatedSettings,
         nodeIdMapCollection,
-        maybeActiveNode,
-        await autocomplete(updatedSettings, parseState, typeCache, maybeActiveNode, maybeParseError),
+        activeNode,
+        await autocomplete(updatedSettings, parseState, typeCache, activeNode, parseError),
         triedCurrentInvokeExpression,
         triedNodeScope,
         triedScopeType,
@@ -256,7 +250,7 @@ export async function tryInspect(
     const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(updatedSettings, text);
 
     let parseState: PQP.Parser.ParseState;
-    let maybeParseError: PQP.Parser.ParseError.ParseError | undefined;
+    let parseError: PQP.Parser.ParseError.ParseError | undefined;
 
     if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
         trace.exit({ [TraceConstant.IsError]: true });
@@ -264,13 +258,13 @@ export async function tryInspect(
         return PQP.ResultUtils.boxError(triedLexParse.error);
     } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
         parseState = triedLexParse.parseState;
-        maybeParseError = triedLexParse.error;
+        parseError = triedLexParse.error;
     } else {
         parseState = triedLexParse.parseState;
     }
 
     const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.boxOk(
-        inspect(updatedSettings, parseState, maybeParseError, position, typeCache),
+        inspect(updatedSettings, parseState, parseError, position, typeCache),
     );
 
     trace.exit({ [TraceConstant.IsError]: false });

@@ -34,34 +34,34 @@ export function pseudoFunctionExpressionType(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const maybeName: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
+        const name: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
             Ast.NodeKind.Identifier,
         );
 
-        if (maybeName === undefined) {
+        if (name === undefined) {
             break;
         }
 
-        const maybeExaminable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
+        const examinable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
             nodeIdMapCollection,
             XorNodeUtils.assertAsParameter(parameter),
         );
 
-        if (maybeExaminable !== undefined) {
+        if (examinable !== undefined) {
             examinedParameters.push({
                 id: parameter.node.id,
-                isNullable: maybeExaminable.isNullable,
-                isOptional: maybeExaminable.isOptional,
-                type: maybeExaminable.type,
-                name: maybeName,
+                isNullable: examinable.isNullable,
+                isOptional: examinable.isOptional,
+                type: examinable.type,
+                name,
             });
         }
     }
 
-    const maybeReturnType: Ast.AsNullablePrimitiveType | undefined =
+    const returnType: Ast.AsNullablePrimitiveType | undefined =
         NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
             nodeIdMapCollection,
             fnExpr.node.id,
@@ -70,21 +70,21 @@ export function pseudoFunctionExpressionType(
         );
 
     let isReturnNullable: boolean;
-    let returnType: Type.TypeKind;
+    let returnTypeKind: Type.TypeKind;
 
-    if (maybeReturnType !== undefined) {
-        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(maybeReturnType);
+    if (returnType !== undefined) {
+        const simplified: AstUtils.SimplifiedType = AstUtils.simplifyAsNullablePrimitiveType(returnType);
         isReturnNullable = simplified.isNullable;
-        returnType = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
+        returnTypeKind = TypeUtils.typeKindFromPrimitiveTypeConstantKind(simplified.primitiveTypeConstantKind);
     } else {
         isReturnNullable = true;
-        returnType = Type.TypeKind.Any;
+        returnTypeKind = Type.TypeKind.Any;
     }
 
     return {
         parameters: examinedParameters,
         returnType: {
-            kind: returnType,
+            kind: returnTypeKind,
             extendedKind: undefined,
             isNullable: isReturnNullable,
         },
@@ -95,24 +95,21 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const maybeParameterList: XorNode<Ast.TParameterList> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
-            nodeIdMapCollection,
-            fnExpr.node.id,
-            0,
-            Ast.NodeKind.ParameterList,
-        );
+    const parametersList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
+        nodeIdMapCollection,
+        fnExpr.node.id,
+        0,
+        Ast.NodeKind.ParameterList,
+    );
 
-    if (maybeParameterList === undefined) {
+    if (parametersList === undefined) {
         return [];
     }
 
-    const maybeWrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
+    const wrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
         nodeIdMapCollection,
-        maybeParameterList.node.id,
+        parametersList.node.id,
     );
 
-    return maybeWrappedContent === undefined
-        ? []
-        : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, maybeWrappedContent);
+    return wrappedContent === undefined ? [] : NodeIdMapIterator.iterArrayWrapper(nodeIdMapCollection, wrappedContent);
 }

@@ -19,12 +19,12 @@ import { InspectTypeState, inspectXor } from "./common";
 export async function inspectTypeUnaryExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeUnaryExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -33,7 +33,7 @@ export async function inspectTypeUnaryExpression(
 
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
-    const maybeUnaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
+    const unaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
         NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
             xorNode.node.id,
@@ -41,21 +41,18 @@ export async function inspectTypeUnaryExpression(
             Ast.NodeKind.ArrayWrapper,
         );
 
-    if (maybeUnaryOperatorWrapper === undefined) {
+    if (unaryOperatorWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: Type.UnknownInstance });
 
         return Type.UnknownInstance;
     }
 
-    const unaryOperatorWrapper: TXorNode | undefined = maybeUnaryOperatorWrapper;
-
     let result: Type.TPowerQueryType;
-    const maybeExpression: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, xorNode.node.id, 1);
+    const expression: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, xorNode.node.id, 1);
 
-    if (maybeExpression === undefined) {
+    if (expression === undefined) {
         result = Type.UnknownInstance;
     } else {
-        const expression: TXorNode = maybeExpression;
         const expressionType: Type.TPowerQueryType = await inspectXor(state, expression, trace.id);
 
         if (expressionType.kind === Type.TypeKind.Number) {

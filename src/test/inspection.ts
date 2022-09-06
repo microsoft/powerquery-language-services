@@ -26,11 +26,9 @@ async function expectScope(inspected: Inspection.Inspected, expected: ReadonlyAr
     expect(inclusiveScopeKeys).to.have.members(expected);
 }
 
-function assertIsPostionInBounds(
-    maybeActiveNode: Inspection.TMaybeActiveNode,
-): asserts maybeActiveNode is Inspection.ActiveNode {
-    if (!Inspection.ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
-        throw new Error(`expected maybeActiveNode to be an ActiveNode`);
+function assertIsPostionInBounds(activeNode: Inspection.TActiveNode): asserts activeNode is Inspection.ActiveNode {
+    if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        throw new Error(`expected activeNode to be in bounds`);
     }
 }
 
@@ -59,20 +57,20 @@ describe("InspectedInvokeExpression", () => {
                 "server",
             ]);
 
-            const activeNode: Inspection.TMaybeActiveNode = inspected.maybeActiveNode;
+            const activeNode: Inspection.TActiveNode = inspected.activeNode;
             assertIsPostionInBounds(activeNode);
 
-            TestUtils.assertIsDefined(activeNode.maybeExclusiveIdentifierUnderPosition);
+            TestUtils.assertIsDefined(activeNode.exclusiveIdentifierUnderPosition);
 
-            expect(activeNode.maybeExclusiveIdentifierUnderPosition.node.kind).equals(
+            expect(activeNode.exclusiveIdentifierUnderPosition.node.kind).equals(
                 Ast.NodeKind.IdentifierExpression,
                 "expecting identifier",
             );
 
             const identifier: Ast.GeneralizedIdentifier | Ast.Identifier | Ast.IdentifierExpression =
-                activeNode.maybeExclusiveIdentifierUnderPosition.node;
+                activeNode.exclusiveIdentifierUnderPosition.node;
 
-            expect(activeNode.maybeExclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
+            expect(activeNode.exclusiveIdentifierUnderPosition.normalizedLiteral).equals("OdbcDataSource");
             expect(identifier.tokenRange.positionStart.lineNumber).equals(68);
         });
     });

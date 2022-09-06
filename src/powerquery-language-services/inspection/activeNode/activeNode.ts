@@ -5,7 +5,7 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import type { Position } from "vscode-languageserver-types";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-export type TMaybeActiveNode =
+export type TActiveNode =
     // A Position located inside an Ast (either fully or partially parsed).
     | ActiveNode
     // A Position located outside of an Ast (either fully or partially parsed).
@@ -31,9 +31,9 @@ export interface ActiveNode extends IActiveNode {
     // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
-    readonly maybeExclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
+    readonly exclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
-    readonly maybeInclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
+    readonly inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
@@ -47,7 +47,7 @@ export interface IActiveLeafIdentifier<
 > {
     readonly node: T;
     readonly normalizedLiteral: string;
-    readonly maybeNormalizedRecursiveLiteral: string | undefined;
+    readonly normalizedRecursiveLiteral: string | undefined;
     readonly isRecursive: boolean;
 }
 
@@ -57,7 +57,7 @@ export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<As
 
 export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.GeneralizedIdentifier | Ast.Identifier> {
     readonly node: Ast.GeneralizedIdentifier | Ast.Identifier;
-    readonly maybeNormalizedRecursiveLiteral: undefined;
+    readonly normalizedRecursiveLiteral: undefined;
     readonly isRecursive: false;
 }
 

@@ -14,24 +14,23 @@ export function autocompleteKeywordErrorHandlingExpression(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     const position: Position = state.activeNode.position;
     const child: TXorNode = state.child;
-    const maybeTrailingText: TrailingToken | undefined = state.maybeTrailingToken;
+    const trailingText: TrailingToken | undefined = state.trailingToken;
+    const childAttributeIndex: number | undefined = child.node.attributeIndex;
 
-    const maybeChildAttributeIndex: number | undefined = child.node.attributeIndex;
-
-    if (maybeChildAttributeIndex === 0) {
+    if (childAttributeIndex === 0) {
         return [Keyword.KeywordKind.Try];
-    } else if (maybeChildAttributeIndex === 1) {
+    } else if (childAttributeIndex === 1) {
         // 'try true o|' creates a ParseError.
         // It's ambiguous if the next token should be either 'otherwise', 'or', or 'catch'.
-        if (maybeTrailingText !== undefined) {
-            const trailingToken: TrailingToken = maybeTrailingText;
+        if (trailingText !== undefined) {
+            const trailingToken: TrailingToken = trailingText;
 
             // First we test if we can autocomplete using the error token.
             if (
                 trailingToken.kind === Token.TokenKind.Identifier &&
                 PositionUtils.isInToken(position, trailingToken, false, true)
             ) {
-                const tokenData: string = maybeTrailingText.data;
+                const tokenData: string = trailingText.data;
 
                 // If we can exclude 'or' then the only thing we can autocomplete is 'otherwise'.
                 if (tokenData.length > 1 && Keyword.KeywordKind.Otherwise.startsWith(tokenData)) {

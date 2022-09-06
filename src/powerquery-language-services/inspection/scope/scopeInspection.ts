@@ -90,12 +90,12 @@ export async function assertGetOrCreateNodeScope(
         initialCorrelationId: trace.id,
     };
 
-    const maybeScope: NodeScope | undefined = scopeById.get(nodeId);
+    const nodeScope: NodeScope | undefined = scopeById.get(nodeId);
 
-    if (maybeScope !== undefined) {
+    if (nodeScope !== undefined) {
         trace.exit({ [TraceConstant.IsThrowing]: false });
 
-        return ResultUtils.boxOk(maybeScope);
+        return ResultUtils.boxOk(nodeScope);
     }
 
     const triedNodeScope: TriedNodeScope = await tryNodeScope(updatedSettings, nodeIdMapCollection, nodeId, scopeById);
@@ -135,9 +135,9 @@ async function inspectScope(
     const rootId: number = ancestry[0].node.id;
 
     // A scope for the given ancestry has already been generated.
-    const maybeCached: NodeScope | undefined = scopeById.get(rootId);
+    const cached: NodeScope | undefined = scopeById.get(rootId);
 
-    if (maybeCached !== undefined) {
+    if (cached !== undefined) {
         trace.exit();
 
         return;
@@ -391,10 +391,10 @@ function expandScope(
     state: ScopeInspectionState,
     xorNode: TXorNode,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: NodeScope | undefined,
+    defaultScope: NodeScope | undefined,
     correlationId: number,
 ): void {
-    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, maybeDefaultScope, correlationId);
+    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, defaultScope, correlationId);
 
     for (const [key, value] of newEntries) {
         nodeScope.set(value.isRecursive ? `@${key}` : key, value);
@@ -406,7 +406,7 @@ function expandChildScope(
     parent: TXorNode,
     childAttributeIds: ReadonlyArray<number>,
     newEntries: ReadonlyArray<[string, TScopeItem]>,
-    maybeDefaultScope: NodeScope | undefined,
+    defaultScope: NodeScope | undefined,
     correlationId: number,
 ): void {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
@@ -414,10 +414,10 @@ function expandChildScope(
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const maybeChild: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, parentId, attributeId);
+        const child: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, parentId, attributeId);
 
-        if (maybeChild !== undefined) {
-            expandScope(state, maybeChild, newEntries, maybeDefaultScope, correlationId);
+        if (child !== undefined) {
+            expandScope(state, child, newEntries, defaultScope, correlationId);
         }
     }
 }
@@ -426,7 +426,7 @@ function expandChildScope(
 function localGetOrCreateNodeScope(
     state: ScopeInspectionState,
     nodeId: number,
-    maybeDefaultScope: NodeScope | undefined,
+    defaultScope: NodeScope | undefined,
     correlationId: number,
 ): NodeScope {
     const trace: Trace = state.traceManager.entry(
@@ -439,16 +439,16 @@ function localGetOrCreateNodeScope(
     );
 
     // If scopeFor has already been called then there should be a nodeId in the givenScope.
-    const maybeGivenScope: NodeScope | undefined = state.givenScope.get(nodeId);
+    const givenScope: NodeScope | undefined = state.givenScope.get(nodeId);
 
-    if (maybeGivenScope !== undefined) {
+    if (givenScope !== undefined) {
         trace.exit({ [TraceConstant.Result]: "givenScope cache hit" });
 
-        return maybeGivenScope;
+        return givenScope;
     }
 
-    if (maybeDefaultScope !== undefined) {
-        const shallowCopy: NodeScope = new Map(maybeDefaultScope.entries());
+    if (defaultScope !== undefined) {
+        const shallowCopy: NodeScope = new Map(defaultScope.entries());
         state.givenScope.set(nodeId, shallowCopy);
         trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
@@ -456,18 +456,18 @@ function localGetOrCreateNodeScope(
     }
 
     // Default to a parent's scope if the node has a parent.
-    const maybeParent: TXorNode | undefined = NodeIdMapUtils.parentXor(state.nodeIdMapCollection, nodeId);
+    const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(state.nodeIdMapCollection, nodeId);
 
-    if (maybeParent !== undefined) {
-        const parentNodeId: number = maybeParent.node.id;
-        const maybeParentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
+    if (parent !== undefined) {
+        const parentNodeId: number = parent.node.id;
+        const parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
 
-        if (maybeParentGivenScope !== undefined) {
-            const shallowCopy: NodeScope = new Map(maybeParentGivenScope.entries());
+        if (parentGivenScope !== undefined) {
+            const shallowCopy: NodeScope = new Map(parentGivenScope.entries());
             state.givenScope.set(nodeId, shallowCopy);
             trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
 
-            return maybeParentGivenScope;
+            return parentGivenScope;
         }
     }
 
@@ -482,14 +482,21 @@ function localGetOrCreateNodeScope(
 function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
-    createFn: (keyValuePair: KVP, isRecursive: boolean) => T,
+    scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
-    return keyValuePairs
-        .filter((keyValuePair: KVP) => keyValuePair.value !== undefined)
-        .map((keyValuePair: KVP) => [
-            keyValuePair.keyLiteral,
-            createFn(keyValuePair, ancestorKeyNodeId === keyValuePair.key.id),
-        ]);
+    const result: [string, T][] = [];
+
+    // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
+    // A key of foo should only add "foo" to the scope.
+    for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
+        result.push([kvp.normalizedKeyLiteral, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
+
+        if (kvp.keyLiteral !== kvp.normalizedKeyLiteral) {
+            result.push([kvp.keyLiteral, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
+        }
+    }
+
+    return result;
 }
 
 function createSectionMemberScopeItem(
@@ -501,7 +508,7 @@ function createSectionMemberScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        maybeValue: keyValuePair.value,
+        value: keyValuePair.value,
     };
 }
 
@@ -514,7 +521,7 @@ function createLetVariableScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        maybeValue: keyValuePair.value,
+        value: keyValuePair.value,
     };
 }
 
@@ -527,6 +534,6 @@ function createRecordMemberScopeItem(
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
-        maybeValue: keyValuePair.value,
+        value: keyValuePair.value,
     };
 }

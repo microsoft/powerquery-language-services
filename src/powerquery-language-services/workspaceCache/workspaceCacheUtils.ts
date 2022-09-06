@@ -36,23 +36,23 @@ export function getOrCreateCacheCollection(
     }
 
     const cacheKey: string = createCollectionCacheKey(textDocument);
-    const maybeCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
+    const cacheCollection: CacheCollection | undefined = CacheCollectionByCacheKey.get(cacheKey);
 
-    if (maybeCollection !== undefined) {
-        if (textDocument.version === maybeCollection.version) {
-            return maybeCollection;
+    if (cacheCollection !== undefined) {
+        if (textDocument.version === cacheCollection.version) {
+            return cacheCollection;
         } else {
             close(textDocument);
         }
     }
 
-    const cacheCollection: CacheCollection = createEmptyCacheCollection(textDocument.version);
+    const newCacheCollection: CacheCollection = createEmptyCacheCollection(textDocument.version);
 
     if (isWorkspaceCacheAllowed) {
-        CacheCollectionByCacheKey.set(cacheKey, cacheCollection);
+        CacheCollectionByCacheKey.set(cacheKey, newCacheCollection);
     }
 
-    return cacheCollection;
+    return newCacheCollection;
 }
 
 export function getOrCreateLexPromise(
@@ -62,15 +62,15 @@ export function getOrCreateLexPromise(
 ): Promise<PQP.Task.TriedLexTask> {
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheAllowed);
 
-    if (cacheCollection.maybeLex) {
-        return cacheCollection.maybeLex;
+    if (cacheCollection.lex) {
+        return cacheCollection.lex;
     }
 
     const lexPromise: Promise<PQP.Task.TriedLexTask> = Promise.resolve(
         PQP.TaskUtils.tryLex(lexSettings, textDocument.getText()),
     );
 
-    cacheCollection.maybeLex = lexPromise;
+    cacheCollection.lex = lexPromise;
 
     return lexPromise;
 }
@@ -82,27 +82,27 @@ export async function getOrCreateParsePromise(
 ): Promise<PQP.Task.TriedParseTask | undefined> {
     const cacheCollection: CacheCollection = getOrCreateCacheCollection(textDocument, isWorkspaceCacheAllowed);
 
-    if (cacheCollection.maybeParse) {
-        return cacheCollection.maybeParse;
+    if (cacheCollection.parse) {
+        return cacheCollection.parse;
     }
 
-    const maybeTriedLexPromise: Promise<PQP.Task.TriedLexTask> = getOrCreateLexPromise(
+    const triedLexPromise: Promise<PQP.Task.TriedLexTask> = getOrCreateLexPromise(
         textDocument,
         lexAndParseSettings,
         isWorkspaceCacheAllowed,
     );
 
-    const maybeTriedLex: PQP.Task.TriedLexTask | undefined = await maybeTriedLexPromise;
+    const triedLex: PQP.Task.TriedLexTask | undefined = await triedLexPromise;
 
-    if (PQP.TaskUtils.isError(maybeTriedLex)) {
-        cacheCollection.maybeParse = Promise.resolve(undefined);
+    if (PQP.TaskUtils.isError(triedLex)) {
+        cacheCollection.parse = Promise.resolve(undefined);
 
         return undefined;
     }
 
-    cacheCollection.maybeParse = PQP.TaskUtils.tryParse(lexAndParseSettings, maybeTriedLex.lexerSnapshot);
+    cacheCollection.parse = PQP.TaskUtils.tryParse(lexAndParseSettings, triedLex.lexerSnapshot);
 
-    return cacheCollection.maybeParse;
+    return cacheCollection.parse;
 }
 
 export async function getOrCreateInspectedPromise(
@@ -121,18 +121,18 @@ export async function getOrCreateInspectedPromise(
         return cacheCollection.inspectionByPosition.get(positionMapKey);
     }
 
-    const maybeTriedParsePromise: Promise<PQP.Task.TriedParseTask | undefined> = getOrCreateParsePromise(
+    const triedParsePromise: Promise<PQP.Task.TriedParseTask | undefined> = getOrCreateParsePromise(
         textDocument,
         inspectionSettings,
         inspectionSettings.isWorkspaceCacheAllowed,
     );
 
-    const maybeTriedParse: PQP.Task.TriedParseTask | undefined = await maybeTriedParsePromise;
+    const triedParseTask: PQP.Task.TriedParseTask | undefined = await triedParsePromise;
 
     if (
-        maybeTriedParse === undefined ||
-        !PQP.TaskUtils.isParseStage(maybeTriedParse) ||
-        PQP.TaskUtils.isParseStageCommonError(maybeTriedParse)
+        triedParseTask === undefined ||
+        !PQP.TaskUtils.isParseStage(triedParseTask) ||
+        PQP.TaskUtils.isParseStageCommonError(triedParseTask)
     ) {
         if (inspectionSettings.isWorkspaceCacheAllowed) {
             cacheCollection.inspectionByPosition.set(positionMapKey, undefined);
@@ -143,18 +143,18 @@ export async function getOrCreateInspectedPromise(
 
     let parseState: PQP.Parser.ParseState;
 
-    if (PQP.TaskUtils.isParseStageOk(maybeTriedParse)) {
-        parseState = maybeTriedParse.parseState;
-    } else if (PQP.TaskUtils.isParseStageParseError(maybeTriedParse)) {
-        parseState = maybeTriedParse.parseState;
+    if (PQP.TaskUtils.isParseStageOk(triedParseTask)) {
+        parseState = triedParseTask.parseState;
+    } else if (PQP.TaskUtils.isParseStageParseError(triedParseTask)) {
+        parseState = triedParseTask.parseState;
     } else {
-        throw PQP.Assert.isNever(maybeTriedParse);
+        throw PQP.Assert.isNever(triedParseTask);
     }
 
     return Inspection.inspect(
         inspectionSettings,
         parseState,
-        PQP.TaskUtils.isParseStageParseError(maybeTriedParse) ? maybeTriedParse.error : undefined,
+        PQP.TaskUtils.isParseStageParseError(triedParseTask) ? triedParseTask.error : undefined,
         position,
         cacheCollection.typeCache,
     );
@@ -174,8 +174,8 @@ function createCollectionCacheKey(textDocument: TextDocument): string {
 
 function createEmptyCacheCollection(version: number): CacheCollection {
     return {
-        maybeLex: undefined,
-        maybeParse: undefined,
+        lex: undefined,
+        parse: undefined,
         inspectionByPosition: new Map(),
         typeCache: TypeCacheUtils.createEmptyCache(),
         version,

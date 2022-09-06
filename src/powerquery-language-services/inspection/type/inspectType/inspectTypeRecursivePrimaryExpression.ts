@@ -17,21 +17,21 @@ import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from
 export async function inspectTypeRecursivePrimaryExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeRecursivePrimaryExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecursivePrimaryExpression>(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
-    const maybeHead: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
+    const head: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
 
-    if (maybeHead === undefined) {
+    if (head === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
@@ -45,25 +45,25 @@ export async function inspectTypeRecursivePrimaryExpression(
         return headType;
     }
 
-    const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,
         Ast.NodeKind.ArrayWrapper,
     );
 
-    if (maybeArrayWrapper === undefined) {
+    if (arrayWrapper === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
 
-    const maybeExpressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
+    const expressions: ReadonlyArray<TXorNode> | undefined = NodeIdMapIterator.assertIterChildrenXor(
         state.nodeIdMapCollection,
-        maybeArrayWrapper.node.id,
+        arrayWrapper.node.id,
     );
 
-    if (maybeExpressions === undefined) {
+    if (expressions === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
@@ -71,7 +71,7 @@ export async function inspectTypeRecursivePrimaryExpression(
 
     let leftType: Type.TPowerQueryType = headType;
 
-    for (const right of maybeExpressions) {
+    for (const right of expressions) {
         // eslint-disable-next-line no-await-in-loop
         const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
         leftType = rightType;

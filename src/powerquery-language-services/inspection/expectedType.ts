@@ -7,26 +7,26 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TMaybeActiveNode } from "./activeNode";
+import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "./activeNode";
 import { InspectionTraceConstant } from "../trace";
 
 export type TriedExpectedType = PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError>;
 
-export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: TMaybeActiveNode): TriedExpectedType {
+export function tryExpectedType(settings: PQP.CommonSettings, activeNode: TActiveNode): TriedExpectedType {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectExpectedType,
         tryExpectedType.name,
         settings.initialCorrelationId,
     );
 
-    if (!ActiveNodeUtils.isPositionInBounds(maybeActiveNode)) {
+    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         trace.exit();
 
         return ResultUtils.boxOk(undefined);
     }
 
     const result: PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError> = ResultUtils.ensureResult(
-        () => maybeExpectedType(maybeActiveNode),
+        () => findExpectedType(activeNode),
         settings.locale,
     );
 
@@ -38,7 +38,7 @@ export function tryExpectedType(settings: PQP.CommonSettings, maybeActiveNode: T
 // Traverse up the ancestry and find what type is expected as the nth child of a node's kind.
 // The last type generated this way should have the widest typing,
 // which then can be used for type hinting.
-export function maybeExpectedType(activeNode: ActiveNode): Type.TPowerQueryType | undefined {
+export function findExpectedType(activeNode: ActiveNode): Type.TPowerQueryType | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const upperBound: number = ancestry.length - 1;
     let bestMatch: Type.TPowerQueryType | undefined;

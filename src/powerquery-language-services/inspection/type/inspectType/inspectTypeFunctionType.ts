@@ -20,12 +20,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeFunctionType(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.FunctionType | Type.Type | Type.Unknown> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeFunctionType.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -36,7 +36,7 @@ export async function inspectTypeFunctionType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const maybeParameters: XorNode<Ast.TParameterList> | undefined =
+            const parameters: XorNode<Ast.TParameterList> | undefined =
                 NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
                     state.nodeIdMapCollection,
                     xorNode.node.id,
@@ -44,18 +44,18 @@ export async function inspectTypeFunctionType(
                     Ast.NodeKind.ParameterList,
                 );
 
-            if (maybeParameters === undefined) {
+            if (parameters === undefined) {
                 trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
             }
 
-            const maybeArrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+            const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
                 state.nodeIdMapCollection,
-                maybeParameters.node.id,
+                parameters.node.id,
             );
 
-            if (maybeArrayWrapper === undefined) {
+            if (arrayWrapper === undefined) {
                 trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
@@ -63,7 +63,7 @@ export async function inspectTypeFunctionType(
 
             const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
                 state.nodeIdMapCollection,
-                maybeArrayWrapper,
+                arrayWrapper,
             )
                 .map((parameter: TXorNode) =>
                     TypeUtils.inspectParameter(state.nodeIdMapCollection, XorNodeUtils.assertAsParameter(parameter)),

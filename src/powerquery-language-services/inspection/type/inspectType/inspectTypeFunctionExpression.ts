@@ -18,12 +18,12 @@ import { TypeStrategy } from "../../../inspectionSettings";
 export async function inspectTypeFunctionExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
-    maybeCorrelationId: number | undefined,
+    correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectType,
         inspectTypeFunctionExpression.name,
-        maybeCorrelationId,
+        correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
 
@@ -44,9 +44,9 @@ export async function inspectTypeFunctionExpression(
                 trace.id,
             );
 
-            // FunctionExpression.maybeFunctionReturnType doesn't always match FunctionExpression.expression.
+            // FunctionExpression.functionReturnType doesn't always match FunctionExpression.expression.
             // By examining the expression we might get a more accurate return type (eg. Function vs DefinedFunction),
-            // or discover an error (eg. maybeFunctionReturnType is Number but expression is Text).
+            // or discover an error (eg. functionReturnType is Number but expression is Text).
 
             let returnType: Type.TPowerQueryType;
 
