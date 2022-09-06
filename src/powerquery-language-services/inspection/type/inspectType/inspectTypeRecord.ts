@@ -38,7 +38,7 @@ export async function inspectTypeRecord(
                         await inspectXor(state, keyValuePair.value, trace.id),
                     );
                 } else {
-                    fields.set(keyValuePair.normalizedKeyLiteral, Type.UnknownInstance);
+                    fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
                 }
             }
 
