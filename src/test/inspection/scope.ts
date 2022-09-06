@@ -1403,6 +1403,35 @@ in
                 expect(actual).to.deep.equal(expected);
             });
         });
+
+        describe(`generalized expression`, () => {
+            it(`let #"x" = 1 in x`, async () => {
+                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let #"x" = 1 in x|`);
+
+                const expected: AbridgedNodeScope = [
+                    {
+                        identifier: `x`,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        maybeValueNodeId: 10,
+                    },
+                    {
+                        identifier: `#"x"`,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        maybeValueNodeId: 10,
+                    },
+                ];
+
+                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
+                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
+                );
+
+                expect(actual).to.deep.equal(expected);
+            });
+        });
     });
 
     describe(`Parameter`, () => {
