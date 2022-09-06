@@ -51,13 +51,13 @@ export interface InspectTypeState
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
 // then calls all(...) on the mapped values.
-export function allForAnyUnion(anyUnion: Type.AnyUnion, conditionFn: (type: Type.TPowerQueryType) => boolean): boolean {
+export function allForAnyUnion(anyUnion: Type.AnyUnion, predicate: (type: Type.TPowerQueryType) => boolean): boolean {
     return (
         anyUnion.unionedTypePairs
             .map((type: Type.TPowerQueryType) =>
                 type.extendedKind === Type.ExtendedTypeKind.AnyUnion
-                    ? allForAnyUnion(type, conditionFn)
-                    : conditionFn(type),
+                    ? allForAnyUnion(type, predicate)
+                    : predicate(type),
             )
             .indexOf(false) === -1
     );

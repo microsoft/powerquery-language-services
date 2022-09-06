@@ -132,7 +132,7 @@ export function fromScopeItem(
     };
 }
 
-export function compareFn(left: AutocompleteItem, right: AutocompleteItem): number {
+export function comparer(left: AutocompleteItem, right: AutocompleteItem): number {
     const jaroWinklerScoreDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
 
     if (jaroWinklerScoreDiff !== 0) {

@@ -125,7 +125,7 @@ function reducedFieldsToKeys<T extends Type.DefinedRecord | Type.DefinedTable>(
     current: T,
     keys: ReadonlyArray<string>,
     isOptional: boolean,
-    createFieldsFn: (
+    fieldsFactory: (
         current: T,
         keys: ReadonlyArray<string>,
     ) => T extends Type.DefinedRecord ? Type.UnorderedFields : Type.OrderedFields,
@@ -138,7 +138,7 @@ function reducedFieldsToKeys<T extends Type.DefinedRecord | Type.DefinedTable>(
 
     return {
         ...current,
-        fields: createFieldsFn(current, keys),
+        fields: fieldsFactory(current, keys),
         isOpen: false,
     };
 }
