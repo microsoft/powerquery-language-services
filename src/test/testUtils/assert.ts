@@ -24,13 +24,7 @@ import {
     TypeCache,
     TypeCacheUtils,
 } from "../../powerquery-language-services/inspection";
-import {
-    Inspection,
-    InspectionSettings,
-    TextDocument,
-    validate,
-    WorkspaceCacheUtils,
-} from "../../powerquery-language-services";
+import { Inspection, InspectionSettings, TextDocument, validate } from "../../powerquery-language-services";
 import { TriedExpectedType, tryExpectedType } from "../../powerquery-language-services/inspection/expectedType";
 import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
 
@@ -154,18 +148,6 @@ export function assertGetAutocompleteItem(
             ),
         },
     );
-}
-
-export async function assertGetInspection(document: TextDocument, position: Position): Promise<Inspection.Inspected> {
-    const inspected: Inspection.Inspected | undefined = await WorkspaceCacheUtils.getOrCreateInspectedPromise(
-        document,
-        TestConstants.SimpleInspectionSettings,
-        position,
-    );
-
-    Assert.isDefined(inspected);
-
-    return inspected;
 }
 
 export async function assertGetLexParseOk(settings: PQP.Settings, text: string): Promise<PQP.Task.ParseTaskOk> {
