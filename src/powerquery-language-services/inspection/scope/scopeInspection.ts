@@ -11,7 +11,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
+import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
 import {
@@ -115,6 +115,7 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
     readonly givenScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly cancellationToken: ICancellationToken | undefined;
     ancestryIndex: number;
 }
 
@@ -147,6 +148,7 @@ async function inspectScope(
         traceManager: settings.traceManager,
         givenScope: scopeById,
         ancestry,
+        cancellationToken: settings.cancellationToken,
         nodeIdMapCollection,
         ancestryIndex: 0,
     };
@@ -173,6 +175,8 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
         correlationId,
         TraceUtils.createXorNodeDetails(xorNode),
     );
+
+    state.cancellationToken?.throwIfCancelled();
 
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
@@ -336,6 +340,8 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
     );
 
     for (const kvp of keyValuePairs) {
+        state.cancellationToken?.throwIfCancelled();
+
         if (kvp.value === undefined) {
             continue;
         }
@@ -369,6 +375,8 @@ function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterato
     );
 
     for (const kvp of keyValuePairs) {
+        state.cancellationToken?.throwIfCancelled();
+
         if (kvp.value === undefined) {
             continue;
         }

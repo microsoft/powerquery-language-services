@@ -191,6 +191,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 this.library.libraryDefinitions,
                 context.traceManager,
                 trace.id,
+                context.cancellationToken,
             );
 
             trace.exit();
