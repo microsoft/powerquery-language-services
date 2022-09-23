@@ -866,6 +866,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             Assert.isDefined(actual.value);
             expect(actual.value).to.deep.equal(expected);
         });
+
+        it(`non-parsable text returns undefined`, async () => {
+            const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
+                await createPartialSemanticTokens(`"`);
+
+            Assert.isOk(actual);
+            expect(actual.value).to.equal(undefined);
+        });
     });
 
     describe(`getSignatureHelp`, () => {
