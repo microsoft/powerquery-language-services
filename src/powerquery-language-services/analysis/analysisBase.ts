@@ -333,13 +333,19 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
+            const parseState: PQP.Parser.ParseState | undefined = await this.getParseState();
+
+            if (parseState === undefined) {
+                return undefined;
+            }
+
             const result: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
                 await this.localDocumentProvider.getPartialSemanticTokens({
                     traceManager: this.analysisSettings.traceManager,
                     initialCorrelationId: trace.id,
                     cancellationToken,
                     library: this.analysisSettings.inspectionSettings.library,
-                    parseState: Assert.asDefined(await this.getParseState()),
+                    parseState,
                 });
 
             trace.exit();
