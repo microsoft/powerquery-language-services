@@ -9,7 +9,8 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Range } from "vscode-languageserver-textdocument";
+import { ICancellationToken } from "@microsoft/powerquery-parser";
+import { Range } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Localization, LocalizationUtils } from "../localization";
@@ -23,6 +24,7 @@ import { ValidationTraceConstant } from "../trace";
 export function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    cancellationToken: ICancellationToken | undefined,
 ): Diagnostic[] {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -48,6 +50,8 @@ export function validateFunctionExpression(
     const diagnostics: Diagnostic[][] = [];
 
     for (const nodeId of fnExpressionIds) {
+        cancellationToken?.throwIfCancelled();
+
         diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
         updatedSettings.cancellationToken?.throwIfCancelled();
     }

@@ -10,6 +10,7 @@ import {
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ICancellationToken } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -23,6 +24,7 @@ export function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -44,10 +46,34 @@ export function validateDuplicateIdentifiers(
     const documentUri: string = textDocument.uri;
 
     const result: ReadonlyArray<Diagnostic> = [
-        ...validateDuplicateIdentifiersForLetExpresion(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
-        ...validateDuplicateIdentifiersForRecord(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
-        ...validateDuplicateIdentifiersForRecordType(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
-        ...validateDuplicateIdentifiersForSection(documentUri, nodeIdMapCollection, updatedSettings, trace.id),
+        ...validateDuplicateIdentifiersForLetExpresion(
+            documentUri,
+            nodeIdMapCollection,
+            updatedSettings,
+            trace.id,
+            cancellationToken,
+        ),
+        ...validateDuplicateIdentifiersForRecord(
+            documentUri,
+            nodeIdMapCollection,
+            updatedSettings,
+            trace.id,
+            cancellationToken,
+        ),
+        ...validateDuplicateIdentifiersForRecordType(
+            documentUri,
+            nodeIdMapCollection,
+            updatedSettings,
+            trace.id,
+            cancellationToken,
+        ),
+        ...validateDuplicateIdentifiersForSection(
+            documentUri,
+            nodeIdMapCollection,
+            updatedSettings,
+            trace.id,
+            cancellationToken,
+        ),
     ];
 
     trace.exit();
@@ -60,6 +86,7 @@ function validateDuplicateIdentifiersForLetExpresion(
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -76,6 +103,7 @@ function validateDuplicateIdentifiersForLetExpresion(
         NodeIdMapIterator.iterLetExpression,
         validationSettings,
         trace.id,
+        cancellationToken,
     );
 
     trace.exit();
@@ -88,6 +116,7 @@ function validateDuplicateIdentifiersForRecord(
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -107,6 +136,7 @@ function validateDuplicateIdentifiersForRecord(
         NodeIdMapIterator.iterRecord,
         validationSettings,
         trace.id,
+        cancellationToken,
     );
 
     trace.exit();
@@ -119,6 +149,7 @@ function validateDuplicateIdentifiersForRecordType(
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -137,6 +168,7 @@ function validateDuplicateIdentifiersForRecordType(
         NodeIdMapIterator.iterRecordType,
         validationSettings,
         trace.id,
+        cancellationToken,
     );
 
     trace.exit();
@@ -149,6 +181,7 @@ function validateDuplicateIdentifiersForSection(
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -165,6 +198,7 @@ function validateDuplicateIdentifiersForSection(
         NodeIdMapIterator.iterSection,
         validationSettings,
         trace.id,
+        cancellationToken,
     );
 
     trace.exit();
@@ -186,6 +220,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
     ) => ReadonlyArray<NodeIdMapIterator.TKeyValuePair>,
     validationSettings: ValidationSettings,
     correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
 ): ReadonlyArray<Diagnostic> {
     const numIds: number = nodeIdCollections.reduce<number>(
         (partial: number, set: Set<number>) => partial + set.size,
@@ -207,6 +242,8 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
     for (const collection of nodeIdCollections) {
         for (const nodeId of collection) {
+            cancellationToken?.throwIfCancelled();
+
             const node: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
             const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
             const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -18,7 +18,8 @@ import { ValidationTraceConstant } from "../trace";
 export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    typeCache?: Inspection.TypeCache,
+    typeCache: Inspection.TypeCache,
+    cancellationToken: ICancellationToken | undefined,
 ): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -44,6 +45,8 @@ export async function validateInvokeExpression(
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of invokeExpressionIds) {
+        cancellationToken?.throwIfCancelled();
+
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
