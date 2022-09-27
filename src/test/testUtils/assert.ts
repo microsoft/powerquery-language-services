@@ -200,6 +200,7 @@ export async function assertGetValidationResult(document: TextDocument): Promise
         document,
         TestConstants.SimpleLibraryAnalysisSettings,
         TestConstants.SimpleValidateAllSettings,
+        undefined,
     );
 }
 

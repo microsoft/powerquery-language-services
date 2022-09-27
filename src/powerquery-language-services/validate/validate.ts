@@ -22,7 +22,7 @@ export async function validate(
     textDocument: TextDocument,
     analysisSettings: AnalysisSettings,
     validationSettings: ValidationSettings,
-    cancellationToken: ICancellationToken,
+    cancellationToken: ICancellationToken | undefined,
 ): Promise<ValidationResult> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
