@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
+import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -21,7 +21,6 @@ export async function validateUnknownIdentifiers(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: Inspection.TypeCache,
-    cancellationToken: ICancellationToken | undefined,
 ): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -42,7 +41,7 @@ export async function validateUnknownIdentifiers(
         Ast.Identifier,
         IdentifierWithNodeScope
     >(identifierValues, async (identifier: Ast.Identifier) => {
-        cancellationToken?.throwIfCancelled();
+        validationSettings.cancellationToken?.throwIfCancelled();
 
         const identifierExpression: Ast.IdentifierExpression | undefined =
             NodeIdMapUtils.parentAstChecked<Ast.IdentifierExpression>(

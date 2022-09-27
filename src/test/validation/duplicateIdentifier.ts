@@ -31,7 +31,6 @@ async function expectNoValidationErrors(textDocument: MockDocument): Promise<voi
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         DuplicateIdentifierSettings,
-        undefined,
     );
 
     expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
@@ -57,7 +56,6 @@ async function validateDuplicateIdentifierDiagnostics(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         DuplicateIdentifierSettings,
-        undefined,
     );
 
     const errorSource: string = DuplicateIdentifierSettings.source;
@@ -102,7 +100,6 @@ describe(`Validation - duplicateIdentifier`, () => {
                 TestUtils.createTextMockDocument(`let 1`),
                 TestConstants.SimpleLibraryAnalysisSettings,
                 DuplicateIdentifierSettings,
-                undefined,
             );
 
             expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");

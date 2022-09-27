@@ -3,7 +3,6 @@
 
 import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Diagnostic } from "vscode-languageserver-types";
-import { ICancellationToken } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -22,7 +21,6 @@ export async function validate(
     textDocument: TextDocument,
     analysisSettings: AnalysisSettings,
     validationSettings: ValidationSettings,
-    cancellationToken: ICancellationToken | undefined,
 ): Promise<ValidationResult> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -56,17 +54,12 @@ export async function validate(
     const typeCache: TypeCache = analysis.getTypeCache();
 
     if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
-        functionExpressionDiagnostics = validateFunctionExpression(
-            validationSettings,
-            nodeIdMapCollection,
-            cancellationToken,
-        );
+        functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
 
         invokeExpressionDiagnostics = await validateInvokeExpression(
             validationSettings,
             nodeIdMapCollection,
             typeCache,
-            cancellationToken,
         );
     } else {
         functionExpressionDiagnostics = [];
@@ -78,7 +71,6 @@ export async function validate(
             validationSettings,
             nodeIdMapCollection,
             typeCache,
-            cancellationToken,
         );
     } else {
         unknownIdentifiersDiagnostics = [];
@@ -86,7 +78,12 @@ export async function validate(
 
     const result: ValidationResult = {
         diagnostics: [
-            ...validateDuplicateIdentifiers(textDocument, nodeIdMapCollection, updatedSettings, cancellationToken),
+            ...validateDuplicateIdentifiers(
+                textDocument,
+                nodeIdMapCollection,
+                updatedSettings,
+                validationSettings.cancellationToken,
+            ),
             ...(await validateParse(parseError, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,

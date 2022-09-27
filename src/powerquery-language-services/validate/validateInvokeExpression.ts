@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -19,7 +19,6 @@ export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     typeCache: Inspection.TypeCache,
-    cancellationToken: ICancellationToken | undefined,
 ): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -45,7 +44,7 @@ export async function validateInvokeExpression(
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of invokeExpressionIds) {
-        cancellationToken?.throwIfCancelled();
+        validationSettings.cancellationToken?.throwIfCancelled();
 
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
@@ -55,6 +54,8 @@ export async function validateInvokeExpression(
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 
     for (const triedInvokeExpression of inspections) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         if (ResultUtils.isOk(triedInvokeExpression)) {
             diagnosticTasks.push(
                 invokeExpressionToDiagnostics(updatedSettings, nodeIdMapCollection, triedInvokeExpression.value),
@@ -94,6 +95,8 @@ async function invokeExpressionToDiagnostics(
         );
 
         for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
+            validationSettings.cancellationToken?.throwIfCancelled();
+
             // eslint-disable-next-line no-await-in-loop
             const givenArgRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,

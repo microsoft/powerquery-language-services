@@ -28,7 +28,6 @@ async function expectNoValidationErrors(textDocument: MockDocument): Promise<voi
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         TestConstants.SimpleValidateAllSettings,
-        undefined,
     );
 
     expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
@@ -50,7 +49,6 @@ describe(`Validation - functionExpression`, () => {
                 TestUtils.createTextMockDocument(`(foo as number, foo as number) => foo * 2`),
                 TestConstants.SimpleLibraryAnalysisSettings,
                 TestConstants.SimpleValidateAllSettings,
-                undefined,
             );
 
             expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");

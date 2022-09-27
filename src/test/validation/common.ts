@@ -18,14 +18,12 @@ export async function expectLessWhenSurpressed(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         withCheckSettings,
-        undefined,
     );
 
     const withoutCheckResult: PQLS.ValidationResult = await PQLS.validate(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         withoutCheckSettings,
-        undefined,
     );
 
     expect(withoutCheckResult.diagnostics.length).to.be.lessThan(withCheckResult.diagnostics.length);
