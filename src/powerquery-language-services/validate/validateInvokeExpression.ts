@@ -18,7 +18,7 @@ import { ValidationTraceConstant } from "../trace";
 export async function validateInvokeExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    typeCache?: Inspection.TypeCache,
+    typeCache: Inspection.TypeCache,
 ): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
@@ -44,6 +44,8 @@ export async function validateInvokeExpression(
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of invokeExpressionIds) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
@@ -52,6 +54,8 @@ export async function validateInvokeExpression(
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 
     for (const triedInvokeExpression of inspections) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         if (ResultUtils.isOk(triedInvokeExpression)) {
             diagnosticTasks.push(
                 invokeExpressionToDiagnostics(updatedSettings, nodeIdMapCollection, triedInvokeExpression.value),
@@ -91,6 +95,8 @@ async function invokeExpressionToDiagnostics(
         );
 
         for (const [argIndex, mismatch] of invokeExpressionArguments.typeChecked.invalid.entries()) {
+            validationSettings.cancellationToken?.throwIfCancelled();
+
             // eslint-disable-next-line no-await-in-loop
             const givenArgRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
                 nodeIdMapCollection,

@@ -78,7 +78,12 @@ export async function validate(
 
     const result: ValidationResult = {
         diagnostics: [
-            ...validateDuplicateIdentifiers(textDocument, nodeIdMapCollection, updatedSettings),
+            ...validateDuplicateIdentifiers(
+                textDocument,
+                nodeIdMapCollection,
+                updatedSettings,
+                validationSettings.cancellationToken,
+            ),
             ...(await validateParse(parseError, updatedSettings)),
             ...functionExpressionDiagnostics,
             ...invokeExpressionDiagnostics,

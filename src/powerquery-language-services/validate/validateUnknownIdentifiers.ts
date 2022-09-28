@@ -41,6 +41,8 @@ export async function validateUnknownIdentifiers(
         Ast.Identifier,
         IdentifierWithNodeScope
     >(identifierValues, async (identifier: Ast.Identifier) => {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         const identifierExpression: Ast.IdentifierExpression | undefined =
             NodeIdMapUtils.parentAstChecked<Ast.IdentifierExpression>(
                 nodeIdMapCollection,
