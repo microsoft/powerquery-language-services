@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "@microsoft/powerquery-parser";
+
 import { InspectionSettings } from "../../inspectionSettings";
 import { Library } from "../../library";
 
