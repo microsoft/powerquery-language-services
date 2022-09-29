@@ -13,7 +13,7 @@ import {
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);
@@ -24,7 +24,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 }
 
 async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidationResult = await validate(
+    const validationResult: ValidationOk = await validate(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         TestConstants.SimpleValidateAllSettings,
@@ -45,7 +45,7 @@ describe(`Validation - functionExpression`, () => {
         it("(foo as number, foo as number) => foo * 2", async () => {
             const errorSource: string = TestConstants.SimpleValidateAllSettings.source;
 
-            const validationResult: ValidationResult = await validate(
+            const validationResult: ValidationOk = await validate(
                 TestUtils.createTextMockDocument(`(foo as number, foo as number) => foo * 2`),
                 TestConstants.SimpleLibraryAnalysisSettings,
                 TestConstants.SimpleValidateAllSettings,

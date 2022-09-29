@@ -26,7 +26,7 @@ import {
 } from "../../powerquery-language-services/inspection";
 import { Inspection, InspectionSettings, TextDocument, validate } from "../../powerquery-language-services";
 import { TriedExpectedType, tryExpectedType } from "../../powerquery-language-services/inspection/expectedType";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
@@ -195,7 +195,7 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     return [text.replace("|", ""), position];
 }
 
-export async function assertGetValidationResult(document: TextDocument): Promise<ValidationResult> {
+export async function assertGetValidationResult(document: TextDocument): Promise<ValidationOk> {
     return await validate(
         document,
         TestConstants.SimpleLibraryAnalysisSettings,

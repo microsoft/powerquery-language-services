@@ -15,7 +15,7 @@ import {
 import { TestConstants, TestUtils } from "..";
 import { expectLessWhenSurpressed } from "./common";
 import { SimpleValidateAllSettings } from "../testConstants";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -32,7 +32,7 @@ const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but
 async function expectGetInvokeExpressionDiagnostics(
     textDocument: TextDocument,
 ): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
-    const validationResult: ValidationResult = await TestUtils.assertGetValidationResult(textDocument);
+    const validationResult: ValidationOk = await TestUtils.assertGetValidationResult(textDocument);
     const diagnostics: Diagnostic[] = validationResult.diagnostics;
 
     return diagnostics

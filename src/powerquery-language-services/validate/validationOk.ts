@@ -3,7 +3,7 @@
 
 import type { Diagnostic } from "vscode-languageserver-types";
 
-export interface ValidationResult {
+export interface ValidationOk {
     readonly diagnostics: Diagnostic[];
     readonly hasSyntaxError: boolean;
 }

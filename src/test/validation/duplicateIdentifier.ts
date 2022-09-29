@@ -16,7 +16,7 @@ import {
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);
@@ -27,7 +27,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 }
 
 async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidationResult = await validate(
+    const validationResult: ValidationOk = await validate(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         DuplicateIdentifierSettings,
@@ -52,7 +52,7 @@ async function validateDuplicateIdentifierDiagnostics(
     textDocument: MockDocument,
     expected: ReadonlyArray<DuplicateIdentifierError>,
 ): Promise<void> {
-    const validationResult: ValidationResult = await validate(
+    const validationResult: ValidationOk = await validate(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         DuplicateIdentifierSettings,
@@ -96,7 +96,7 @@ describe(`Validation - duplicateIdentifier`, () => {
         it("let 1", async () => {
             const errorSource: string = DuplicateIdentifierSettings.source;
 
-            const validationResult: ValidationResult = await validate(
+            const validationResult: ValidationOk = await validate(
                 TestUtils.createTextMockDocument(`let 1`),
                 TestConstants.SimpleLibraryAnalysisSettings,
                 DuplicateIdentifierSettings,
