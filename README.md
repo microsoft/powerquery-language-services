@@ -8,7 +8,8 @@ This project contains base functionality for implementing a language service for
 
 - [powerquery-parser](https://github.com/microsoft/powerquery-parser): A lexer + parser for Power Query. Also contains features such as type validation.
 - [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.
-- [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query.
+- [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query language support.
+- [vscode-powerquery-sdk](https://github.com/microsoft/vscode-powerquery-sdk): The VSCode extension for Power Query connector SDK.
 
 ## Build and test
 
