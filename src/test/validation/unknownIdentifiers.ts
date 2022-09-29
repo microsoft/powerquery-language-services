@@ -15,7 +15,7 @@ import {
 import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { expectLessWhenSurpressed } from "./common";
 import { TestUtils } from "..";
-import { ValidationResult } from "../../powerquery-language-services/validate/validationResult";
+import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 interface AbridgedUnknownIdentifierDiagnostic {
     readonly message: string;
@@ -32,7 +32,7 @@ const UnknownIdentifierSettings: ValidationSettings = {
 async function expectGetInvokeExpressionDiagnostics(
     textDocument: TextDocument,
 ): Promise<ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>> {
-    const validationResult: ValidationResult = await TestUtils.assertGetValidationResult(textDocument);
+    const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(textDocument);
     const diagnostics: Diagnostic[] = validationResult.diagnostics;
 
     return diagnostics

@@ -14,13 +14,13 @@ export async function expectLessWhenSurpressed(
 ): Promise<void> {
     const textDocument: PQLS.TextDocument = TestUtils.createTextMockDocument(text);
 
-    const withCheckResult: PQLS.ValidationResult = await PQLS.validate(
+    const withCheckResult: PQLS.ValidateOk = await TestUtils.assertGetValidateOk(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         withCheckSettings,
     );
 
-    const withoutCheckResult: PQLS.ValidationResult = await PQLS.validate(
+    const withoutCheckResult: PQLS.ValidateOk = await TestUtils.assertGetValidateOk(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         withoutCheckSettings,
