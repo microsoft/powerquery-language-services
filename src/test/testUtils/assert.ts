@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, TaskUtils } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, Result, TaskUtils } from "@microsoft/powerquery-parser";
 import { Hover, Location, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { expect } from "chai";
 import { Range } from "vscode-languageserver-textdocument";
@@ -24,9 +24,16 @@ import {
     TypeCache,
     TypeCacheUtils,
 } from "../../powerquery-language-services/inspection";
-import { Inspection, InspectionSettings, TextDocument, validate } from "../../powerquery-language-services";
+import {
+    AnalysisSettings,
+    Inspection,
+    InspectionSettings,
+    TextDocument,
+    validate,
+    ValidationSettings,
+} from "../../powerquery-language-services";
 import { TriedExpectedType, tryExpectedType } from "../../powerquery-language-services/inspection/expectedType";
-import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
+import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
@@ -195,12 +202,21 @@ export function assertGetTextWithPosition(text: string): [string, Position] {
     return [text.replace("|", ""), position];
 }
 
-export async function assertGetValidationResult(document: TextDocument): Promise<ValidationOk> {
-    return await validate(
+export async function assertGetValidateOk(
+    document: TextDocument,
+    analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings,
+    ValidationSettings: ValidationSettings = TestConstants.SimpleValidateAllSettings,
+): Promise<ValidateOk> {
+    const triedValidation: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
         document,
-        TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleValidateAllSettings,
+        analysisSettings,
+        ValidationSettings,
     );
+
+    Assert.isOk(triedValidation);
+    Assert.isDefined(triedValidation.value);
+
+    return triedValidation.value;
 }
 
 export function assertEqualHover(expected: string, actual: Hover): void {

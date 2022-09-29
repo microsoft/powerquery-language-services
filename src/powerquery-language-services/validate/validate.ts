@@ -12,9 +12,9 @@ import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
 import { validateInvokeExpression } from "./validateInvokeExpression";
+import type { ValidateOk } from "./validateOk";
 import { validateParse } from "./validateParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
-import type { ValidationOk } from "./validationOk";
 import type { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
@@ -22,7 +22,7 @@ export function validate(
     textDocument: TextDocument,
     analysisSettings: AnalysisSettings,
     validationSettings: ValidationSettings,
-): Promise<Result<ValidationOk | undefined, CommonError.CommonError>> {
+): Promise<Result<ValidateOk | undefined, CommonError.CommonError>> {
     return ResultUtils.ensureResultAsync(async () => {
         const trace: Trace = validationSettings.traceManager.entry(
             ValidationTraceConstant.Validation,
@@ -75,7 +75,7 @@ export function validate(
             unknownIdentifiersDiagnostics = [];
         }
 
-        const result: ValidationOk = {
+        const result: ValidateOk = {
             diagnostics: [
                 ...validateDuplicateIdentifiers(
                     textDocument,

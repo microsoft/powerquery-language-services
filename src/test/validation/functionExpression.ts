@@ -4,16 +4,10 @@
 import "mocha";
 import { assert, expect } from "chai";
 
-import {
-    Diagnostic,
-    DiagnosticErrorCode,
-    DiagnosticSeverity,
-    Position,
-    validate,
-} from "../../powerquery-language-services";
+import { Diagnostic, DiagnosticErrorCode, DiagnosticSeverity, Position } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
-import { ValidationOk } from "../../powerquery-language-services/validate/validationOk";
+import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
     assert.isDefined(diagnostic.code);
@@ -24,7 +18,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 }
 
 async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidationOk = await validate(
+    const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(
         textDocument,
         TestConstants.SimpleLibraryAnalysisSettings,
         TestConstants.SimpleValidateAllSettings,
@@ -45,7 +39,7 @@ describe(`Validation - functionExpression`, () => {
         it("(foo as number, foo as number) => foo * 2", async () => {
             const errorSource: string = TestConstants.SimpleValidateAllSettings.source;
 
-            const validationResult: ValidationOk = await validate(
+            const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(
                 TestUtils.createTextMockDocument(`(foo as number, foo as number) => foo * 2`),
                 TestConstants.SimpleLibraryAnalysisSettings,
                 TestConstants.SimpleValidateAllSettings,
