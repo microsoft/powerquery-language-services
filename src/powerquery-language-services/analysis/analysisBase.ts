@@ -59,8 +59,6 @@ export class AnalysisBase implements Analysis {
     protected libraryProvider: ILibraryProvider;
     protected localDocumentProvider: ILocalDocumentProvider;
 
-    protected cancellableTokensByAction: Map<string, ICancellationToken> = new Map();
-
     // Shared across actions
     protected parseError: ParseError.ParseError | undefined = undefined;
     protected parseState: ParseState | undefined = undefined;
@@ -535,12 +533,6 @@ export class AnalysisBase implements Analysis {
     public dispose(): void {
         this.typeCache.scopeById.clear();
         this.typeCache.typeById.clear();
-
-        for (const token of this.cancellableTokensByAction.values()) {
-            token.cancel();
-        }
-
-        this.cancellableTokensByAction.clear();
     }
 
     // protected abstract getText(range?: Range): string;
