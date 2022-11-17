@@ -9,6 +9,8 @@ import {
     DiagnosticSeverity,
     DocumentSymbol,
     Hover,
+    MarkedString,
+    MarkupContent,
     Position,
     Range,
     SignatureHelp,
@@ -16,20 +18,24 @@ import {
 } from "vscode-languageserver-types";
 import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
-export type {
+export {
     CompletionItem,
+    CompletionItemKind,
     Diagnostic,
     DiagnosticRelatedInformation,
+    DiagnosticSeverity,
     DocumentSymbol,
     DocumentUri,
     Hover,
+    MarkedString,
+    MarkupContent,
     Position,
     Range,
     SignatureHelp,
+    SymbolKind,
     TextDocument,
     TextDocumentContentChangeEvent,
 };
-export { CompletionItemKind, DiagnosticSeverity, SymbolKind };
 
 export interface IDisposable {
     dispose(): void;
