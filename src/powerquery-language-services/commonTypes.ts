@@ -8,13 +8,17 @@ import {
     DiagnosticRelatedInformation,
     DiagnosticSeverity,
     DocumentSymbol,
+    FoldingRange,
+    FoldingRangeKind,
     Hover,
+    Location,
     MarkedString,
     MarkupContent,
     Position,
     Range,
     SignatureHelp,
     SymbolKind,
+    TextEdit,
 } from "vscode-languageserver-types";
 import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
@@ -26,7 +30,10 @@ export {
     DiagnosticSeverity,
     DocumentSymbol,
     DocumentUri,
+    FoldingRange,
+    FoldingRangeKind,
     Hover,
+    Location,
     MarkedString,
     MarkupContent,
     Position,
@@ -35,6 +42,7 @@ export {
     SymbolKind,
     TextDocument,
     TextDocumentContentChangeEvent,
+    TextEdit,
 };
 
 export interface IDisposable {
