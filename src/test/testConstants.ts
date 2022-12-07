@@ -25,6 +25,15 @@ export class NoOpCancellationToken implements ICancellationToken {
     cancel: () => void = () => {};
 }
 
+export const enum TestLibraryName {
+    CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
+    CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
+    DuplicateText = "Test.DuplicateText",
+    Number = "Test.Number",
+    NumberOne = "Test.NumberOne",
+    SquareIfNumber = "Test.SquareIfNumber",
+}
+
 export const NoOpCancellationTokenInstance: NoOpCancellationToken = new NoOpCancellationToken();
 
 export const DefaultInspectionSettings: InspectionSettings = {
@@ -263,12 +272,3 @@ export const SimpleValidateNoneSettings: ValidationSettings = {
     library: SimpleLibrary,
     source: "UNIT-TEST-SOURCE",
 };
-
-export const enum TestLibraryName {
-    CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
-    CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
-    DuplicateText = "Test.DuplicateText",
-    Number = "Test.Number",
-    NumberOne = "Test.NumberOne",
-    SquareIfNumber = "Test.SquareIfNumber",
-}
