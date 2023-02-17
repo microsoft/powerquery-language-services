@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// We perform an introspection query using Power Query which generates these symbols,
-// which then need to be translated to the PQLS library symbols.
+// We perform an introspection query using Power Query to generate these symbols,
+// which then need to be translated to the PQLS library definitions.
 
 export interface LibrarySymbol {
     readonly name: string;
@@ -37,6 +37,6 @@ export interface LibrarySymbolRecordField {
     readonly name: string;
     readonly type: string;
     readonly isRequired: boolean;
-    readonly fieldCaption?: string;
-    readonly fieldDescription?: string;
+    readonly caption?: string;
+    readonly description?: string;
 }

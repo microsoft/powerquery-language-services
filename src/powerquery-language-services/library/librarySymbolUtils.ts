@@ -4,7 +4,7 @@ import { CompletionItemKind } from "vscode-languageserver-types";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Library, LibraryUtils } from "../library";
-import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./symbol";
+import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { ExternalType } from "../externalType";
 
 export function createLibrary(
@@ -184,6 +184,11 @@ function numberToCompletionItemKind(variant: number): CompletionItemKind | undef
     }
 }
 
+// Depending on which path we took to generate the symbols parameters that are lists will have one of two forms:
+// 1. `list`
+// 2. `list {$typeKind}`
+// To make my life easier I'm going to allow both forms at this layer,
+// and then normalize both forms to `list`.
 function stringToPrimitiveType(text: string): Type.TPrimitiveType | undefined {
     const split: ReadonlyArray<string> = text.split(" ");
 
