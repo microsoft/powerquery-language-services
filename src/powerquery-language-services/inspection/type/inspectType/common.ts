@@ -7,7 +7,7 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ExternalType, ExternalTypeUtils } from "../../externalType";
+import { ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
 import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { InspectionSettings } from "../../../inspectionSettings";

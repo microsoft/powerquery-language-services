@@ -13,7 +13,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ExternalType, ExternalTypeUtils } from "../../externalType";
+import { ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
 import { tryDeferenceIdentifier } from "../../deferenceIdentifier";

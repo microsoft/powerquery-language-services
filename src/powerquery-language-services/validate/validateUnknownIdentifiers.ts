@@ -11,7 +11,7 @@ import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
-import { ExternalTypeRequestKind } from "../inspection/externalType/externalType";
+import { ExternalTypeRequestKind } from "../externalType/externalType";
 import { ILocalizationTemplates } from "../localization/templates";
 import { TriedNodeScope } from "../inspection";
 import { ValidationSettings } from "./validationSettings";

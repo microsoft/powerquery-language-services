@@ -10,8 +10,8 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import * as InspectionUtils from "./inspectionUtils";
 import { DocumentSymbol, SymbolKind } from "./commonTypes";
+import { InspectionUtils } from ".";
 
 export function getDocumentSymbols(
     nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection,

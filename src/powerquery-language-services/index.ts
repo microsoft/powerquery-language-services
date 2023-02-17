@@ -12,11 +12,13 @@ export * from "./analysis";
 export * from "./commonTypes";
 export * from "./diagnosticErrorCode";
 export * from "./documentSymbols";
+export * from "./externalType";
 export * from "./formatter";
 export * from "./inspectionSettings";
 export * from "./jaroWinkler";
 export * from "./library";
 export * from "./providers";
+export * from "./symbols";
 export * from "./trace";
 export * from "./validate";
 
