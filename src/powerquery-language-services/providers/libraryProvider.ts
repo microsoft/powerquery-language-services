@@ -12,13 +12,13 @@ import {
     ILibraryProvider,
     SignatureProviderContext,
 } from "./commonTypes";
+import { ExternalType, Inspection } from "..";
 import { Library, LibraryUtils } from "../library";
 import { AutocompleteItemUtils } from "../inspection";
-import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
 export class LibraryProvider implements ILibraryProvider {
-    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn;
+    public readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
     public readonly libraryDefinitions: Library.LibraryDefinitions;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
 

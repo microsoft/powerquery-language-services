@@ -21,8 +21,8 @@ import {
     ISignatureHelpProvider,
 } from "../providers";
 
+import { ExternalType, Library } from "..";
 import { Hover, SignatureHelp } from "../commonTypes";
-import { Inspection, Library } from "..";
 
 import { AutocompleteItem } from "../inspection/autocomplete";
 
@@ -35,8 +35,7 @@ export class NullSymbolProvider
         ISemanticTokenProvider,
         ISignatureHelpProvider
 {
-    public readonly externalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn =
-        Inspection.ExternalType.noOpExternalTypeResolver;
+    public readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn = ExternalType.noOpExternalTypeResolver;
     public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
 
     private static instance: NullSymbolProvider | undefined;
