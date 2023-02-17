@@ -52,22 +52,6 @@ export function assertIsType(definition: TLibraryDefinition | undefined): assert
     }
 }
 
-export function composeExternalTypeResolvers(
-    ...resolverFns: ReadonlyArray<ExternalType.TExternalTypeResolverFn>
-): ExternalType.TExternalTypeResolverFn {
-    return (request: ExternalType.TExternalTypeRequest): Type.TPowerQueryType | undefined => {
-        for (const resolverFn of resolverFns) {
-            const resolvedType: Type.TPowerQueryType | undefined = resolverFn(request);
-
-            if (resolvedType !== undefined) {
-                return resolvedType;
-            }
-        }
-
-        return undefined;
-    };
-}
-
 export function createConstantDefinition(
     label: string,
     description: string,

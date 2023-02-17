@@ -2,10 +2,10 @@ import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-
 import { PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { ExternalType, ExternalTypeUtils } from "../externalType";
 import { Library, LibraryUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
-import { ExternalType } from "../externalType";
 
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
@@ -35,7 +35,7 @@ export function createLibrary(
     const library: Library.ILibrary = {
         libraryDefinitions,
         externalTypeResolver: externalTypeResolverFn
-            ? LibraryUtils.composeExternalTypeResolvers(externalTypeResolverFn, definitionResolverFn)
+            ? ExternalTypeUtils.composeExternalTypeResolvers(externalTypeResolverFn, definitionResolverFn)
             : definitionResolverFn,
     };
 
