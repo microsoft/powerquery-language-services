@@ -1,10 +1,10 @@
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
-import { CompletionItemKind } from "vscode-languageserver-types";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Library, LibraryUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
+import { CompletionItemKind } from "../commonTypes";
 import { ExternalType } from "../externalType";
 
 export function createLibrary(
