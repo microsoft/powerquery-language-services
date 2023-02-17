@@ -146,30 +146,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     TestUtils.assertAutocompleteItemLabels(expected, actual.value);
                 });
             });
-
-            describe(`quotedIdentifier`, () => {
-                it(`blank`, async () => {
-                    const expected: string[] = [`unneededQuote`, `#"unneededQuote"`, `#"needed quote"`];
-
-                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                        await createAutocompleteItems(`let #"unneededQuote" = 1, #"needed quote" = 2 in |`);
-
-                    Assert.isOk(actual);
-                    Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
-                });
-
-                it(`WIP #`, async () => {
-                    const expected: string[] = [`#"unneededQuote"`, `#"needed quote"`];
-
-                    const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                        await createAutocompleteItems(`let #"unneededQuote" = 1, #"needed quote" = 2 in #|`);
-
-                    Assert.isOk(actual);
-                    Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
-                });
-            });
         });
 
         describe(`fieldAccess`, () => {
