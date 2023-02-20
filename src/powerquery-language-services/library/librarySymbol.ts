@@ -6,16 +6,16 @@
 
 export interface LibrarySymbol {
     readonly name: string;
-    readonly documentation?: LibrarySymbolDocumentation;
-    readonly functionParameters?: ReadonlyArray<LibrarySymbolFunctionParameter>;
+    readonly documentation: LibrarySymbolDocumentation | null | undefined;
+    readonly functionParameters: ReadonlyArray<LibrarySymbolFunctionParameter> | null | undefined;
     readonly completionItemKind: number;
     readonly isDataSource: boolean;
     readonly type: string;
 }
 
 export interface LibrarySymbolDocumentation {
-    readonly description?: string;
-    readonly longDescription?: string;
+    readonly description: string | null | undefined;
+    readonly longDescription: string | null | undefined;
 }
 
 export interface LibrarySymbolFunctionParameter {
@@ -23,20 +23,20 @@ export interface LibrarySymbolFunctionParameter {
     readonly type: string;
     readonly isRequired: boolean;
     readonly isNullable: boolean;
-    readonly caption?: string;
-    readonly description?: string;
-    readonly sampleValues?: ReadonlyArray<string | number>;
-    readonly allowedValues?: ReadonlyArray<string | number>;
-    readonly defaultValue?: string | number;
-    readonly fields?: ReadonlyArray<LibrarySymbolRecordField>;
-    readonly enumNames?: string[];
-    readonly enumCaptions?: string[];
+    readonly caption: string | null | undefined;
+    readonly description: string | null | undefined;
+    readonly sampleValues: ReadonlyArray<string | number> | null | undefined;
+    readonly allowedValues: ReadonlyArray<string | number> | null | undefined;
+    readonly defaultValue: string | number | null | undefined;
+    readonly fields: ReadonlyArray<LibrarySymbolRecordField> | null | undefined;
+    readonly enumNames: ReadonlyArray<string> | null | undefined;
+    readonly enumCaptions: ReadonlyArray<string | null> | null | undefined;
 }
 
 export interface LibrarySymbolRecordField {
     readonly name: string;
     readonly type: string;
     readonly isRequired: boolean;
-    readonly caption?: string;
-    readonly description?: string;
+    readonly caption: string | null | undefined;
+    readonly description: string | null | undefined;
 }

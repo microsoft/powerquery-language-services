@@ -1,5 +1,5 @@
+import { Assert, PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ExternalType, ExternalTypeUtils } from "../externalType";
@@ -11,22 +11,25 @@ export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
 ): PartialResult<Library.ILibrary, Library.ILibrary, ReadonlyArray<string>> {
-    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
-    const errors: string[] = [];
+    const libraryDefinitionsResult: PartialResult<
+        Library.LibraryDefinitions,
+        Library.LibraryDefinitions,
+        ReadonlyArray<string>
+    > = createLibraryDefinitions(librarySymbols);
 
-    for (const librarySymbol of librarySymbols) {
-        const libraryDefinition: Library.TLibraryDefinition | undefined =
-            librarySymbolToLibraryDefinition(librarySymbol);
+    let errors: ReadonlyArray<string>;
+    let libraryDefinitions: Library.LibraryDefinitions;
 
-        if (libraryDefinition === undefined) {
-            errors.push(librarySymbol.name);
-        } else {
-            libraryDefinitions.set(librarySymbol.name, libraryDefinition);
-        }
-    }
-
-    if (libraryDefinitions.size === 0) {
-        return PartialResultUtils.createError(errors);
+    if (PartialResultUtils.isOk(libraryDefinitionsResult)) {
+        libraryDefinitions = libraryDefinitionsResult.value;
+        errors = [];
+    } else if (PartialResultUtils.isMixed(libraryDefinitionsResult)) {
+        libraryDefinitions = libraryDefinitionsResult.value;
+        errors = libraryDefinitionsResult.error;
+    } else if (PartialResultUtils.isError(libraryDefinitionsResult)) {
+        return PartialResultUtils.createError(libraryDefinitionsResult.error);
+    } else {
+        Assert.isNever(libraryDefinitionsResult);
     }
 
     const definitionResolverFn: ExternalType.TExternalTypeResolverFn =
@@ -43,6 +46,32 @@ export function createLibrary(
         return PartialResultUtils.createMixed(library, errors);
     } else {
         return PartialResultUtils.createOk(library);
+    }
+}
+
+export function createLibraryDefinitions(
+    librarySymbols: ReadonlyArray<LibrarySymbol>,
+): PartialResult<Library.LibraryDefinitions, Library.LibraryDefinitions, ReadonlyArray<string>> {
+    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
+    const errors: string[] = [];
+
+    for (const librarySymbol of librarySymbols) {
+        const libraryDefinition: Library.TLibraryDefinition | undefined =
+            librarySymbolToLibraryDefinition(librarySymbol);
+
+        if (libraryDefinition === undefined) {
+            errors.push(librarySymbol.name);
+        } else {
+            libraryDefinitions.set(librarySymbol.name, libraryDefinition);
+        }
+    }
+
+    if (errors.length === 0) {
+        return PartialResultUtils.createOk(libraryDefinitions);
+    } else if (libraryDefinitions.size > 0) {
+        return PartialResultUtils.createMixed(libraryDefinitions, errors);
+    } else {
+        return PartialResultUtils.createError(errors);
     }
 }
 
