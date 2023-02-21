@@ -4,7 +4,7 @@
 import { CompletionItemKind } from "vscode-languageserver-types";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ExternalType } from "../inspection";
+import { ExternalType } from "../externalType";
 
 export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 

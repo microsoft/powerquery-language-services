@@ -10,14 +10,12 @@ import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
-import { Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
+import { ExternalType, Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
-const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
-    request: Inspection.ExternalType.TExternalTypeRequest,
-) => {
+const ExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (request: ExternalType.TExternalTypeRequest) => {
     switch (request.kind) {
-        case Inspection.ExternalType.ExternalTypeRequestKind.Invocation: {
+        case ExternalType.ExternalTypeRequestKind.Invocation: {
             if (request.identifierLiteral !== "foo") {
                 return undefined;
             }
@@ -25,7 +23,7 @@ const ExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
             return request.args.length === 0 ? Type.TextInstance : Type.NumberInstance;
         }
 
-        case Inspection.ExternalType.ExternalTypeRequestKind.Value:
+        case ExternalType.ExternalTypeRequestKind.Value:
             return request.identifierLiteral === "foo" ? Type.FunctionInstance : undefined;
 
         default:

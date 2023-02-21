@@ -9,7 +9,7 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 import {
     AnalysisSettings,
     CompletionItemKind,
-    Inspection,
+    ExternalType,
     InspectionSettings,
     Library,
     LibraryUtils,
@@ -177,11 +177,11 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
 ]);
 
-export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeResolverFn = (
-    request: Inspection.ExternalType.TExternalTypeRequest,
+export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (
+    request: ExternalType.TExternalTypeRequest,
 ) => {
     switch (request.kind) {
-        case Inspection.ExternalType.ExternalTypeRequestKind.Invocation:
+        case ExternalType.ExternalTypeRequestKind.Invocation:
             switch (request.identifierLiteral) {
                 case TestLibraryName.SquareIfNumber: {
                     if (request.args.length !== 1) {
@@ -209,7 +209,7 @@ export const SimpleExternalTypeResolver: Inspection.ExternalType.TExternalTypeRe
                     return undefined;
             }
 
-        case Inspection.ExternalType.ExternalTypeRequestKind.Value:
+        case ExternalType.ExternalTypeRequestKind.Value:
             switch (request.identifierLiteral) {
                 case TestLibraryName.CreateFooAndBarRecord:
                     return CreateFooAndBarRecordDefinedFunction;

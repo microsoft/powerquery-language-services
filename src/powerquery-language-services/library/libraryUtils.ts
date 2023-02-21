@@ -8,11 +8,13 @@ import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/languag
 import {
     LibraryConstant,
     LibraryDefinitionKind,
+    LibraryDefinitions,
     LibraryFunction,
     LibraryParameter,
     LibraryType,
     TLibraryDefinition,
 } from "./library";
+import { ExternalType } from "../externalType";
 
 export function assertAsConstant(definition: TLibraryDefinition | undefined): LibraryConstant {
     assertIsConstant(definition);
@@ -63,6 +65,13 @@ export function createConstantDefinition(
         description,
         label,
     };
+}
+
+export function createExternalTypeResolver(
+    libraryDefinitions: LibraryDefinitions,
+): ExternalType.TExternalTypeResolverFn {
+    return (request: ExternalType.TExternalTypeRequest): Type.TPowerQueryType | undefined =>
+        libraryDefinitions.get(request.identifierLiteral)?.asPowerQueryType;
 }
 
 export function createFunctionDefinition(
