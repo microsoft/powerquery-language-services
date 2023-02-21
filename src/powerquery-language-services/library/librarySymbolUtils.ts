@@ -10,22 +10,22 @@ import { CompletionItemKind } from "../commonTypes";
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
-): PartialResult<Library.ILibrary, Library.ILibrary, ReadonlyArray<string>> {
+): PartialResult<Library.ILibrary, Library.ILibrary, ReadonlyArray<LibrarySymbol>> {
     const libraryDefinitionsResult: PartialResult<
         Library.LibraryDefinitions,
         Library.LibraryDefinitions,
-        ReadonlyArray<string>
+        ReadonlyArray<LibrarySymbol>
     > = createLibraryDefinitions(librarySymbols);
 
-    let errors: ReadonlyArray<string>;
     let libraryDefinitions: Library.LibraryDefinitions;
+    let invalidSymbols: ReadonlyArray<LibrarySymbol>;
 
     if (PartialResultUtils.isOk(libraryDefinitionsResult)) {
         libraryDefinitions = libraryDefinitionsResult.value;
-        errors = [];
+        invalidSymbols = [];
     } else if (PartialResultUtils.isMixed(libraryDefinitionsResult)) {
         libraryDefinitions = libraryDefinitionsResult.value;
-        errors = libraryDefinitionsResult.error;
+        invalidSymbols = libraryDefinitionsResult.error;
     } else if (PartialResultUtils.isError(libraryDefinitionsResult)) {
         return PartialResultUtils.createError(libraryDefinitionsResult.error);
     } else {
@@ -42,8 +42,8 @@ export function createLibrary(
             : definitionResolverFn,
     };
 
-    if (errors.length > 0) {
-        return PartialResultUtils.createMixed(library, errors);
+    if (invalidSymbols.length > 0) {
+        return PartialResultUtils.createMixed(library, invalidSymbols);
     } else {
         return PartialResultUtils.createOk(library);
     }
@@ -51,27 +51,27 @@ export function createLibrary(
 
 export function createLibraryDefinitions(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
-): PartialResult<Library.LibraryDefinitions, Library.LibraryDefinitions, ReadonlyArray<string>> {
+): PartialResult<Library.LibraryDefinitions, Library.LibraryDefinitions, ReadonlyArray<LibrarySymbol>> {
     const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
-    const errors: string[] = [];
+    const invalidSymbols: LibrarySymbol[] = [];
 
     for (const librarySymbol of librarySymbols) {
         const libraryDefinition: Library.TLibraryDefinition | undefined =
             librarySymbolToLibraryDefinition(librarySymbol);
 
         if (libraryDefinition === undefined) {
-            errors.push(librarySymbol.name);
+            invalidSymbols.push(librarySymbol);
         } else {
             libraryDefinitions.set(librarySymbol.name, libraryDefinition);
         }
     }
 
-    if (errors.length === 0) {
+    if (invalidSymbols.length === 0) {
         return PartialResultUtils.createOk(libraryDefinitions);
     } else if (libraryDefinitions.size > 0) {
-        return PartialResultUtils.createMixed(libraryDefinitions, errors);
+        return PartialResultUtils.createMixed(libraryDefinitions, invalidSymbols);
     } else {
-        return PartialResultUtils.createError(errors);
+        return PartialResultUtils.createError(invalidSymbols);
     }
 }
 
