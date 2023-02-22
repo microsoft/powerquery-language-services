@@ -5,7 +5,7 @@ import "mocha";
 import { Assert, CommonError, DefaultLocale, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
+import type { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
 import type { AutocompleteItem, TypeCache } from "../powerquery-language-services/inspection";
 import { ILibraryProvider, ILocalDocumentProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";

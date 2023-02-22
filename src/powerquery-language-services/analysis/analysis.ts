@@ -56,15 +56,9 @@ export interface Analysis extends IDisposable {
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>>;
 
     // Helper functions unrelated to the language services.
-    getActiveNode(
-        position: Position,
-        cancellationToken?: ICancellationToken,
-    ): Promise<Result<TActiveNode | undefined, CommonError.CommonError>>;
-    getParseError(
-        cancellationToken?: ICancellationToken,
-    ): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>>;
-    getParseState(
-        cancellationToken?: ICancellationToken,
-    ): Promise<Result<ParseState | undefined, CommonError.CommonError>>;
+    // They operate on the initial cancellation token found in InspectionSettings.
+    getActiveNode(position: Position): Promise<Result<TActiveNode | undefined, CommonError.CommonError>>;
+    getParseError(): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>>;
+    getParseState(): Promise<Result<ParseState | undefined, CommonError.CommonError>>;
     getTypeCache(cancellationToken?: ICancellationToken): TypeCache;
 }

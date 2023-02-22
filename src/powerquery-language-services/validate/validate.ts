@@ -36,14 +36,8 @@ export function validate(
         };
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
-
-        const parseState: ParseState | undefined = Assert.unboxOk(
-            await analysis.getParseState(analysisSettings.inspectionSettings.cancellationToken),
-        );
-
-        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(
-            await analysis.getParseError(analysisSettings.inspectionSettings.cancellationToken),
-        );
+        const parseState: ParseState | undefined = Assert.unboxOk(await analysis.getParseState());
+        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(await analysis.getParseError());
 
         if (parseState === undefined) {
             trace.exit();

@@ -36,12 +36,11 @@ export class MemoizedAnalysis extends AnalysisBase {
 
     public override getActiveNode(
         position: Position,
-        cancellationToken?: ICancellationToken,
     ): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
         return this.getOrCreate<string, Result<TActiveNode | undefined, CommonError.CommonError>>(
             this.activeNodeCache,
             () => `${position.line}:${position.character}`,
-            () => super.getActiveNode(position, cancellationToken),
+            () => super.getActiveNode(position),
         );
     }
 
