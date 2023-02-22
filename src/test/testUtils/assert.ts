@@ -243,6 +243,14 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     }
 }
 
+export function assertAutocompleteItemLabels(
+    expected: ReadonlyArray<string>,
+    actual: ReadonlyArray<Inspection.AutocompleteItem>,
+): void {
+    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
+    expect(actualLabels).to.deep.equal([...expected].sort());
+}
+
 export function assertContainsAutocompleteItemLabels(
     expected: ReadonlyArray<string>,
     actual: ReadonlyArray<Inspection.AutocompleteItem>,
