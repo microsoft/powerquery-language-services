@@ -95,13 +95,13 @@ export class MemoizedAnalysis extends AnalysisBase {
 
     // Assumes the first call to getOrCreate will create the cache entry,
     // and any subsequent calls will return the cached value.
-    private async getOrCreate<K, V>(
-        cache: Map<K, Promise<V>>,
-        cacheKeyFactory: () => K,
-        valueFactory: () => Promise<V>,
-    ): Promise<V> {
-        const cacheKey: K = cacheKeyFactory();
-        let result: Promise<V> | undefined = cache.get(cacheKey);
+    private async getOrCreate<Key, Value>(
+        cache: Map<Key, Promise<Value>>,
+        cacheKeyFactory: () => Key,
+        valueFactory: () => Promise<Value>,
+    ): Promise<Value> {
+        const cacheKey: Key = cacheKeyFactory();
+        let result: Promise<Value> | undefined = cache.get(cacheKey);
 
         if (result !== undefined) {
             return await result;
