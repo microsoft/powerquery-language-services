@@ -1132,6 +1132,13 @@ export class AnalysisBase implements Analysis {
 
         return parseStateResult.value;
     }
+
+    protected applyAnalysisSettings(analysisSettings: AnalysisSettings): void {
+        this.initialCorrelationId = analysisSettings.initialCorrelationId;
+        this.inspectionSettings = analysisSettings.inspectionSettings;
+        this.locale = analysisSettings.inspectionSettings.locale;
+        this.traceManager = analysisSettings.traceManager;
+    }
 }
 
 function addIdentifierPairedExpressionSymbols(
