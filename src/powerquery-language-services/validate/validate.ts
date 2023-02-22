@@ -36,8 +36,14 @@ export function validate(
         };
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
-        const parseState: ParseState | undefined = Assert.unboxOk(await analysis.getParseState());
-        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(await analysis.getParseError());
+
+        const parseState: ParseState | undefined = Assert.unboxOk(
+            await analysis.getParseState(analysisSettings.inspectionSettings.cancellationToken),
+        );
+
+        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(
+            await analysis.getParseError(analysisSettings.inspectionSettings.cancellationToken),
+        );
 
         if (parseState === undefined) {
             trace.exit();
@@ -88,7 +94,7 @@ export function validate(
                 ...invokeExpressionDiagnostics,
                 ...unknownIdentifiersDiagnostics,
             ],
-            hasSyntaxError: Boolean(await analysis.getParseError()),
+            hasSyntaxError: parseError !== undefined,
         };
 
         trace.exit();
