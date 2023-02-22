@@ -20,9 +20,12 @@ import { TextEdit } from "vscode-languageserver-textdocument";
 // All language services related methods are of type Result<T | undefined, CommonError>.
 // The type is essentially a trinary type where:
 // - Ok(T) means no error occured and the task was completed and returned some result.
-// - Ok(undefined) means no error occured but the task couldn't be completed.
-//   E.g. if the parse state was never reached.
+// - Ok(undefined) means no error occured but the task couldn't be completed. E.g. if the parse phase wasn't reached.
 // - CommonError means some non-recoverable exception was thrown during the execution.
+//
+// On instantiation of Analysis it begins lexing and parsing the document.
+// All of of the first block of methods optionally take a cancellation token.
+// This token will be used instead of the initial cancellation token found in InspectionSettings.
 export interface Analysis extends IDisposable {
     getAutocompleteItems(
         position: Position,
@@ -60,5 +63,5 @@ export interface Analysis extends IDisposable {
     getActiveNode(position: Position): Promise<Result<TActiveNode | undefined, CommonError.CommonError>>;
     getParseError(): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>>;
     getParseState(): Promise<Result<ParseState | undefined, CommonError.CommonError>>;
-    getTypeCache(cancellationToken?: ICancellationToken): TypeCache;
+    getTypeCache(): TypeCache;
 }

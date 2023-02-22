@@ -52,8 +52,10 @@ import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { ValidationTraceConstant } from "../trace";
 
-// Implementation of Analysis, subclass it as needed.
-// Does not implement `dispose`.
+// Implementation of Analysis.
+// All public methods should:
+//  - use ensureResultAsync to ensure a Result, allowing all protected methods to safetly throw.
+//  - take an optional cancellation token.
 export class AnalysisBase implements Analysis {
     protected initialCorrelationId: number | undefined;
     protected inspectionSettings: InspectionSettings;
@@ -64,10 +66,9 @@ export class AnalysisBase implements Analysis {
     protected libraryProvider: ILibraryProvider;
     protected localDocumentProvider: ILocalDocumentProvider;
 
-    // Shared across actions
-    // protected parseError: ParseError.ParseError | undefined = undefined;
-    // protected parseState: ParseState | undefined = undefined;
+    // A promise holding the lex and parse attempt on the TextDocument which is triggered on instantiation.
     protected triedLexParse: Promise<PQP.Task.TriedLexParseTask>;
+    // Local type cache that is shared across provider actions.
     protected typeCache: TypeCache = {
         scopeById: new Map(),
         typeById: new Map(),
@@ -186,11 +187,13 @@ export class AnalysisBase implements Analysis {
             const result: Result<Location[] | undefined, CommonError.CommonError> =
                 await this.localDocumentProvider.getDefinition(identifierContext);
 
-            trace.exit();
-
             if (ResultUtils.isError(result)) {
+                trace.exit({ [TraceConstant.IsThrowing]: true });
+
                 throw result.error;
             }
+
+            trace.exit();
 
             return result.value;
         }, this.locale);
@@ -252,11 +255,13 @@ export class AnalysisBase implements Analysis {
                     nodeIdMapCollection: parseState.contextState.nodeIdMapCollection,
                 });
 
-            trace.exit();
-
             if (ResultUtils.isError(result)) {
+                trace.exit({ [TraceConstant.IsThrowing]: true });
+
                 throw result.error;
             }
+
+            trace.exit();
 
             return result.value;
         }, this.locale);
@@ -305,14 +310,15 @@ export class AnalysisBase implements Analysis {
                 }
             }
 
+            if (firstError !== undefined) {
+                trace.exit({ [TraceConstant.IsThrowing]: true });
+
+                throw firstError;
+            }
+
             trace.exit();
 
-            if (firstError !== undefined) {
-                // This is safe as the ensureResultAsync function catch the error.
-                throw firstError;
-            } else {
-                return undefined;
-            }
+            return undefined;
         }, this.locale);
     }
 
@@ -329,6 +335,7 @@ export class AnalysisBase implements Analysis {
         }, this.locale);
     }
 
+    // undefined means either the parse pass wasn't done (lexing error), or there was no error.
     public getParseError(): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const triedLexParse: PQP.Task.TriedLexParseTask = await this.triedLexParse;
@@ -343,6 +350,7 @@ export class AnalysisBase implements Analysis {
         }, this.locale);
     }
 
+    // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
     public getParseState(): Promise<Result<ParseState | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const triedLexParse: PQP.Task.TriedLexParseTask = await this.triedLexParse;
@@ -450,7 +458,6 @@ export class AnalysisBase implements Analysis {
             );
 
             const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace);
-
             const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(position, trace);
 
             if (
