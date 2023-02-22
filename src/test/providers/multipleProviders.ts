@@ -77,13 +77,51 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
 
         it(`let|`, () => runTest(`let|`, []));
         it(`let foo|`, () => runTest(`let foo|`));
-        it(`let foo |=`, () => runTest(`let foo |=`));
+        it(`WIP let foo |=`, () => runTest(`let foo |=`));
 
         it(`let foo =|`, () =>
             runTest(`let foo =|`, ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"]));
 
         it(`let foo = |`, () =>
             runTest(`let foo = |`, ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"]));
+
+        it(`let foo = |Test`, () =>
+            runTest(`let foo = |Test`, [
+                "@foo",
+                "each",
+                "error",
+                "false",
+                "if",
+                "let",
+                "not",
+                "true",
+                "try",
+                "type",
+                TestConstants.TestLibraryName.CombineNumberAndOptionalText,
+                TestConstants.TestLibraryName.CreateFooAndBarRecord,
+                TestConstants.TestLibraryName.Number,
+                TestConstants.TestLibraryName.NumberOne,
+                TestConstants.TestLibraryName.SquareIfNumber,
+            ]));
+
+        it(`let foo = | Test`, () =>
+            runTest(`let foo = | Test`, [
+                "@foo",
+                "each",
+                "error",
+                "false",
+                "if",
+                "let",
+                "not",
+                "true",
+                "try",
+                "type",
+                TestConstants.TestLibraryName.CombineNumberAndOptionalText,
+                TestConstants.TestLibraryName.CreateFooAndBarRecord,
+                TestConstants.TestLibraryName.Number,
+                TestConstants.TestLibraryName.NumberOne,
+                TestConstants.TestLibraryName.SquareIfNumber,
+            ]));
 
         it(`let foo = Test|`, () =>
             runTest(`let foo = Test|`, [
