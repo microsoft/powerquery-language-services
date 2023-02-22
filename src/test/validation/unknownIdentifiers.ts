@@ -141,7 +141,7 @@ describe("Validation - UnknownIdentifier", () => {
             expectUnknownIdentifierSuggestions(invocationDiagnostics, new Map<string, string>([["fo", "foo"]]));
         });
 
-        it(`WIP library`, async () => {
+        it(`library`, async () => {
             const textDocument: TextDocument = TestUtils.createTextMockDocument(`test.n`);
 
             const invocationDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
