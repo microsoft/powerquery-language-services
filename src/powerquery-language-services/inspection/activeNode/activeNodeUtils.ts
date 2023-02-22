@@ -404,20 +404,15 @@ function isInKey(ancestry: ReadonlyArray<TXorNode>): boolean {
         return false;
     }
 
-    const upperBound: number = ancestry.length - 1;
+    const child: TXorNode = ArrayUtils.assertGet(ancestry, 0);
+    const parent: TXorNode = ArrayUtils.assertGet(ancestry, 1);
 
-    for (let index: number = 0; index < upperBound; index += 1) {
-        const child: TXorNode = ArrayUtils.assertGet(ancestry, index);
-        const parent: TXorNode = ArrayUtils.assertGet(ancestry, index + 1);
-
-        if (
-            // You're
-            XorNodeUtils.isNodeKind(parent, Ast.NodeKind.IdentifierPairedExpression) &&
-            child.node.attributeIndex === 0
-        ) {
-            return true;
-        }
-    }
-
-    return false;
+    // Return true if we're in the key portion of a key-value pair.
+    return (
+        [
+            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
+            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
+            Ast.NodeKind.IdentifierPairedExpression,
+        ].includes(parent.node.kind) && child.node.attributeIndex === 0
+    );
 }

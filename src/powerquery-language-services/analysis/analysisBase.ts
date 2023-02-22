@@ -587,28 +587,9 @@ export class AnalysisBase implements Analysis {
 
     protected static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+        const parent: TXorNode | undefined = ancestry[1];
 
-        if (ancestry.length <= 1) {
-            return true;
-        }
-
-        const leaf: TXorNode = Assert.asDefined(ancestry[0]);
-        const followingNode: TXorNode | undefined = ancestry[1];
-
-        if (followingNode?.node?.kind === Ast.NodeKind.Parameter) {
-            return false;
-        }
-
-        // Allow hover on either the key or value of [Generalized|Identifier]PairedExpression.
-        // Validate it's not an incomplete Ast or that you're on the conjunction.
-        else if (
-            [
-                Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-                Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-                Ast.NodeKind.IdentifierPairedExpression,
-            ].includes(followingNode.node.kind) &&
-            [undefined, 1].includes(Assert.asDefined(leaf.node.attributeIndex))
-        ) {
+        if (parent?.node?.kind === Ast.NodeKind.Parameter) {
             return false;
         }
 
