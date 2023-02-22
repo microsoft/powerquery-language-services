@@ -15,11 +15,16 @@ import {
     SymbolKind,
 } from "vscode-languageserver-types";
 
-import * as AnalysisUtils from "../../powerquery-language-services/analysis/analysisUtils";
 import * as TestConstants from "../testConstants";
-import { Analysis, Inspection, PartialSemanticToken } from "../../powerquery-language-services";
-import { AnalysisSettings } from "../..";
+import {
+    Analysis,
+    AnalysisSettings,
+    AnalysisUtils,
+    Inspection,
+    PartialSemanticToken,
+} from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
+import { TActiveNode } from "../../powerquery-language-services/inspection";
 
 export interface AbridgedDocumentSymbol {
     readonly name: string;
@@ -82,6 +87,15 @@ export function createAnalysis(text: string, analysisSettings?: AnalysisSettings
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
 
     return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings)), position];
+}
+
+export function createActiveNode(
+    text: string,
+    analysisSettings?: AnalysisSettings,
+): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
+    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+
+    return analysis.getActiveNode(position);
 }
 
 export function createAutocompleteItems(

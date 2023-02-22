@@ -146,7 +146,7 @@ export function assertGetAutocompleteItem(
     autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem>,
 ): Inspection.AutocompleteItem {
     return Assert.asDefined(
-        autocompleteItems.find((completionitem: Inspection.AutocompleteItem) => completionitem.label === "Test.Foo"),
+        autocompleteItems.find((completionitem: Inspection.AutocompleteItem) => completionitem.label === label),
         `did not find the expected completion item`,
         {
             label,
@@ -243,12 +243,20 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     }
 }
 
-export function assertAutocompleteItemLabels(
+export function assertContainsAutocompleteItemLabels(
     expected: ReadonlyArray<string>,
     actual: ReadonlyArray<Inspection.AutocompleteItem>,
 ): void {
     const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
     expect(actualLabels).to.include.members(expected);
+}
+
+export function assertDoesNotContainAutocompleteItemLabels(
+    expected: ReadonlyArray<string>,
+    actual: ReadonlyArray<Inspection.AutocompleteItem>,
+): void {
+    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
+    expect(actualLabels).to.not.include.members(expected);
 }
 
 export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {

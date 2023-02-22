@@ -60,8 +60,8 @@ export class AnalysisBase implements Analysis {
     protected localDocumentProvider: ILocalDocumentProvider;
 
     // Shared across actions
-    protected parseError: ParseError.ParseError | undefined = undefined;
-    protected parseState: ParseState | undefined = undefined;
+    // protected parseError: ParseError.ParseError | undefined = undefined;
+    // protected parseState: ParseState | undefined = undefined;
     protected triedLexParse: PQP.Task.TriedLexParseTask | undefined = undefined;
     protected typeCache: TypeCache = {
         scopeById: new Map(),
@@ -97,12 +97,12 @@ export class AnalysisBase implements Analysis {
                   analysisSettings.inspectionSettings.locale,
               );
 
-        void this.initializeState();
+        void this.tryLexParse(analysisSettings.inspectionSettings.cancellationToken);
     }
 
     public getAutocompleteItems(
         position: Position,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -152,7 +152,7 @@ export class AnalysisBase implements Analysis {
 
     public getDefinition(
         position: Position,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -187,10 +187,10 @@ export class AnalysisBase implements Analysis {
     }
 
     public getDocumentSymbols(
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<PQP.Result<DocumentSymbol[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
-            const parseState: ParseState | undefined = await this.getParseState();
+            const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
 
             if (parseState === undefined) {
                 return undefined;
@@ -214,7 +214,7 @@ export class AnalysisBase implements Analysis {
     }
 
     public getFoldingRanges(
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -223,7 +223,7 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const parseState: ParseState | undefined = await this.getParseState();
+            const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace, cancellationToken);
 
             if (parseState === undefined) {
                 trace.exit();
@@ -251,7 +251,7 @@ export class AnalysisBase implements Analysis {
 
     public getHover(
         position: Position,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -303,26 +303,62 @@ export class AnalysisBase implements Analysis {
         }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    // Assumes that initializeState sets parseError to some value, which may include undefined.
-    public async getParseError(): Promise<ParseError.ParseError | undefined> {
-        if (this.triedLexParse === undefined) {
-            await this.initializeState();
-        }
+    // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
+    public getActiveNode(
+        position: Position,
+        cancellationToken?: ICancellationToken,
+    ): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
 
-        return this.parseError;
+            if (parseState === undefined) {
+                return undefined;
+            }
+
+            return ActiveNodeUtils.activeNode(parseState.contextState.nodeIdMapCollection, position);
+        }, this.analysisSettings.inspectionSettings.locale);
     }
 
-    // Assumes that initializeState sets parseState to some value, which may include undefined.
-    public async getParseState(): Promise<ParseState | undefined> {
-        if (this.triedLexParse === undefined) {
-            await this.initializeState();
-        }
+    public getParseError(
+        cancellationToken?: ICancellationToken,
+    ): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            if (this.triedLexParse === undefined) {
+                this.triedLexParse = await this.tryLexParse(cancellationToken);
+            }
 
-        return this.parseState;
+            if (PQP.TaskUtils.isParseStageCommonError(this.triedLexParse)) {
+                throw this.triedLexParse.error;
+            } else if (PQP.TaskUtils.isParseStageError(this.triedLexParse)) {
+                return this.triedLexParse.error;
+            } else {
+                return undefined;
+            }
+        }, this.analysisSettings.inspectionSettings.locale);
+    }
+
+    public getParseState(
+        cancellationToken?: ICancellationToken,
+    ): Promise<Result<ParseState | undefined, CommonError.CommonError>> {
+        return ResultUtils.ensureResultAsync(async () => {
+            if (this.triedLexParse === undefined) {
+                this.triedLexParse = await this.tryLexParse(cancellationToken);
+            }
+
+            if (PQP.TaskUtils.isParseStageCommonError(this.triedLexParse)) {
+                throw this.triedLexParse.error;
+            } else if (PQP.TaskUtils.isParseStageError(this.triedLexParse)) {
+                return this.triedLexParse.parseState;
+            } else if (PQP.TaskUtils.isParseStageOk(this.triedLexParse)) {
+                return this.triedLexParse.parseState;
+            } else {
+                return undefined;
+            }
+        }, this.analysisSettings.inspectionSettings.locale);
     }
 
     public getPartialSemanticTokens(
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -331,9 +367,14 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const parseState: PQP.Parser.ParseState | undefined = await this.getParseState();
+            const parseState: PQP.Parser.ParseState | undefined = await this.getParseStateOkOrThrow(
+                trace,
+                cancellationToken,
+            );
 
             if (parseState === undefined) {
+                trace.exit();
+
                 return undefined;
             }
 
@@ -346,11 +387,13 @@ export class AnalysisBase implements Analysis {
                     parseState,
                 });
 
-            trace.exit();
-
             if (ResultUtils.isError(result)) {
+                trace.exit({ [TraceConstant.IsThrowing]: true });
+
                 throw result.error;
             }
+
+            trace.exit();
 
             return result.value;
         }, this.analysisSettings.inspectionSettings.locale);
@@ -358,7 +401,7 @@ export class AnalysisBase implements Analysis {
 
     public getSignatureHelp(
         position: Position,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -398,7 +441,7 @@ export class AnalysisBase implements Analysis {
     public getRenameEdits(
         position: Position,
         newName: string,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = this.analysisSettings.traceManager.entry(
@@ -407,22 +450,27 @@ export class AnalysisBase implements Analysis {
                 this.analysisSettings.initialCorrelationId,
             );
 
-            const activeNode: TActiveNode = Assert.asDefined(await this.getActiveNode(position));
+            const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace, cancellationToken);
 
-            let leafIdentifier: TActiveLeafIdentifier | undefined;
+            const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+                position,
+                trace,
+                cancellationToken,
+            );
 
             if (
+                parseState === undefined ||
+                activeNode === undefined ||
                 !ActiveNodeUtils.isPositionInBounds(activeNode) ||
                 activeNode.inclusiveIdentifierUnderPosition === undefined
             ) {
                 trace.exit();
 
                 return undefined;
-            } else {
-                leafIdentifier = activeNode.inclusiveIdentifierUnderPosition;
             }
 
             void (await this.inspectNodeScope(activeNode, trace.id, cancellationToken));
+            const leafIdentifier: TActiveLeafIdentifier = activeNode.inclusiveIdentifierUnderPosition;
             const scopeById: Inspection.ScopeById = this.typeCache.scopeById;
 
             const identifiersToBeEdited: (Ast.Identifier | Ast.GeneralizedIdentifier)[] = [];
@@ -456,7 +504,7 @@ export class AnalysisBase implements Analysis {
                         if (!nodeScope) {
                             void (await Inspection.tryNodeScope(
                                 this.analysisSettings.inspectionSettings,
-                                Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                                parseState.contextState.nodeIdMapCollection,
                                 identifierExpression.id,
                                 scopeById,
                             ));
@@ -504,7 +552,7 @@ export class AnalysisBase implements Analysis {
                 // need to populate the other identifiers referring it
                 identifiersToBeEdited.push(
                     ...(await this.collectAllIdentifiersBeneath(
-                        Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
+                        parseState.contextState.nodeIdMapCollection,
                         valueCreator,
                     )),
                 );
@@ -534,8 +582,6 @@ export class AnalysisBase implements Analysis {
         this.typeCache.scopeById.clear();
         this.typeCache.typeById.clear();
     }
-
-    // protected abstract getText(range?: Range): string;
 
     protected static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
         const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
@@ -570,7 +616,7 @@ export class AnalysisBase implements Analysis {
     protected async getAutocompleteItemProviderContext(
         position: Position,
         correlationId: number,
-        newCancellationToken: ICancellationToken,
+        newCancellationToken?: ICancellationToken,
     ): Promise<AutocompleteItemProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -578,7 +624,11 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+            position,
+            trace,
+            newCancellationToken,
+        );
 
         if (activeNode === undefined) {
             trace.exit();
@@ -635,7 +685,7 @@ export class AnalysisBase implements Analysis {
     protected async getDefinitionProviderContext(
         position: Position,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<DefinitionProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -643,21 +693,24 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
+        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+            position,
+            trace,
+            cancellationToken,
+        );
 
-        if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        if (
+            activeNode === undefined ||
+            !ActiveNodeUtils.isPositionInBounds(activeNode) ||
+            activeNode.exclusiveIdentifierUnderPosition === undefined ||
+            !AnalysisBase.isValidHoverIdentifier(activeNode)
+        ) {
             trace.exit();
 
             return undefined;
         }
 
-        const identifierUnderPosition: TActiveLeafIdentifier | undefined = activeNode.exclusiveIdentifierUnderPosition;
-
-        if (identifierUnderPosition === undefined || !AnalysisBase.isValidHoverIdentifier(activeNode)) {
-            trace.exit();
-
-            return undefined;
-        }
+        const identifierUnderPosition: TActiveLeafIdentifier = activeNode.exclusiveIdentifierUnderPosition;
 
         const identifier: Ast.Identifier | Ast.GeneralizedIdentifier =
             identifierUnderPosition.node.kind === Ast.NodeKind.IdentifierExpression
@@ -681,7 +734,7 @@ export class AnalysisBase implements Analysis {
     protected async getHoverProviderContext(
         position: Position,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<HoverProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -689,9 +742,15 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
-        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNode(position);
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace, cancellationToken);
 
-        if (activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        const activeNode: Inspection.TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+            position,
+            trace,
+            cancellationToken,
+        );
+
+        if (parseState === undefined || activeNode === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             trace.exit();
 
             return undefined;
@@ -722,7 +781,7 @@ export class AnalysisBase implements Analysis {
                 cancellationToken,
                 initialCorrelationId: correlationId,
             },
-            parseState: Assert.asDefined(await this.getParseState()),
+            parseState,
             triedNodeScope: Assert.asDefined(await this.inspectNodeScope(activeNode, trace.id, cancellationToken)),
             triedScopeType: Assert.asDefined(await this.inspectScopeType(activeNode, trace.id, cancellationToken)),
         };
@@ -735,7 +794,7 @@ export class AnalysisBase implements Analysis {
     protected async getSignatureProviderContext(
         position: Position,
         correlationId: number,
-        newCancellationToken: ICancellationToken,
+        newCancellationToken?: ICancellationToken,
     ): Promise<SignatureProviderContext | undefined> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
@@ -743,10 +802,20 @@ export class AnalysisBase implements Analysis {
             correlationId,
         );
 
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace, newCancellationToken);
+
+        const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+            position,
+            trace,
+            newCancellationToken,
+        );
+
         const triedCurrentInvokeExpression: Inspection.TriedCurrentInvokeExpression | undefined =
             await this.inspectCurrentInvokeExpression(position, trace.id, newCancellationToken);
 
         if (
+            parseState === undefined ||
+            activeNode === undefined ||
             triedCurrentInvokeExpression === undefined ||
             ResultUtils.isError(triedCurrentInvokeExpression) ||
             triedCurrentInvokeExpression.value === undefined
@@ -784,8 +853,8 @@ export class AnalysisBase implements Analysis {
                     cancellationToken: newCancellationToken,
                     initialCorrelationId: trace.id,
                 },
-                Assert.asDefined(await this.getParseState()).contextState.nodeIdMapCollection,
-                Assert.asDefined(await this.getActiveNode(position)),
+                parseState.contextState.nodeIdMapCollection,
+                activeNode,
                 this.typeCache,
             ),
         };
@@ -901,16 +970,17 @@ export class AnalysisBase implements Analysis {
 
     // Performs a lex + parse of the document, then caches the results into local variables.
     // Any code which operates on the parse state should use this method to ensure that the parse state is initialized.
-    protected async initializeState(): Promise<void> {
+    protected async tryLexParse(cancellationToken?: ICancellationToken): Promise<PQP.Task.TriedLexParseTask> {
         const trace: Trace = this.analysisSettings.traceManager.entry(
             ValidationTraceConstant.AnalysisBase,
-            this.initializeState.name,
+            this.tryLexParse.name,
             this.analysisSettings.initialCorrelationId,
         );
 
         const updatedSettings: InspectionSettings = {
             ...this.analysisSettings.inspectionSettings,
             initialCorrelationId: trace.id,
+            cancellationToken: cancellationToken ?? this.analysisSettings.inspectionSettings.cancellationToken,
         };
 
         const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
@@ -918,37 +988,22 @@ export class AnalysisBase implements Analysis {
             this.textDocument.getText(),
         );
 
-        this.triedLexParse = triedLexParse;
-
-        if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
-            trace.exit({ [TraceConstant.IsError]: true });
-        } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
-            this.parseState = triedLexParse.parseState;
-            this.parseError = triedLexParse.error;
-        } else {
-            this.parseState = triedLexParse.parseState;
-        }
-
         trace.exit();
-    }
 
-    // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
-    protected async getActiveNode(position: Position): Promise<TActiveNode | undefined> {
-        const parseState: ParseState | undefined = await this.getParseState();
-
-        if (parseState === undefined) {
-            return undefined;
-        }
-
-        return ActiveNodeUtils.activeNode(parseState.contextState.nodeIdMapCollection, position);
+        return triedLexParse;
     }
 
     protected async inspectAutocomplete(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Inspection.Autocomplete | undefined> {
-        const parseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
+
+        const parseError: ParseError.ParseError | undefined = await this.getParseErrorOkOrThrow(
+            undefined,
+            cancellationToken,
+        );
 
         if (parseState === undefined) {
             return undefined;
@@ -963,19 +1018,25 @@ export class AnalysisBase implements Analysis {
             parseState,
             this.typeCache,
             activeNode,
-            await this.getParseError(),
+            parseError,
         );
     }
 
     protected async inspectCurrentInvokeExpression(
         position: Position,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Inspection.TriedCurrentInvokeExpression | undefined> {
-        const activeNode: TActiveNode | undefined = await this.getActiveNode(position);
-        const parseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
 
-        if (activeNode === undefined || parseState === undefined) {
+        // parseState needs to be ok, and must be truthy.
+        const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(
+            position,
+            undefined,
+            cancellationToken,
+        );
+
+        if (parseState === undefined || activeNode === undefined) {
             return undefined;
         }
 
@@ -994,9 +1055,9 @@ export class AnalysisBase implements Analysis {
     protected async inspectNodeScope(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Inspection.TriedNodeScope | undefined> {
-        const parseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
 
         if (parseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return undefined;
@@ -1017,9 +1078,9 @@ export class AnalysisBase implements Analysis {
     protected async inspectScopeType(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Inspection.TriedScopeType | undefined> {
-        const parseState: ParseState | undefined = await this.getParseState();
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined, cancellationToken);
 
         if (parseState === undefined || !ActiveNodeUtils.isPositionInBounds(activeNode)) {
             return undefined;
@@ -1036,19 +1097,71 @@ export class AnalysisBase implements Analysis {
             this.typeCache,
         );
     }
+
+    protected async getActiveNodeOkOrThrow(
+        position: Position,
+        trace: Trace | undefined,
+        cancellationToken?: ICancellationToken,
+    ): Promise<TActiveNode | undefined> {
+        const activeNodeResult: Result<TActiveNode | undefined, CommonError.CommonError> = await this.getActiveNode(
+            position,
+            cancellationToken,
+        );
+
+        if (ResultUtils.isError(activeNodeResult)) {
+            trace?.exit({ [TraceConstant.IsThrowing]: true });
+
+            throw activeNodeResult.error;
+        }
+
+        return activeNodeResult.value;
+    }
+
+    protected async getParseErrorOkOrThrow(
+        trace: Trace | undefined,
+        cancellationToken?: ICancellationToken,
+    ): Promise<ParseError.ParseError | undefined> {
+        const parseErrorResult: Result<ParseError.ParseError | undefined, CommonError.CommonError> =
+            await this.getParseError(cancellationToken);
+
+        if (ResultUtils.isError(parseErrorResult)) {
+            trace?.exit({ [TraceConstant.IsThrowing]: true });
+
+            throw parseErrorResult.error;
+        }
+
+        return parseErrorResult.value;
+    }
+
+    protected async getParseStateOkOrThrow(
+        trace: Trace | undefined,
+        cancellationToken: ICancellationToken | undefined,
+    ): Promise<ParseState | undefined> {
+        const parseStateResult: Result<ParseState | undefined, CommonError.CommonError> = await this.getParseState(
+            cancellationToken,
+        );
+
+        if (ResultUtils.isError(parseStateResult)) {
+            trace?.exit({ [TraceConstant.IsThrowing]: true });
+
+            throw parseStateResult.error;
+        }
+
+        return parseStateResult.value;
+    }
 }
 
 function addIdentifierPairedExpressionSymbols(
     nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
-    cancellationToken: ICancellationToken,
+    cancellationToken?: ICancellationToken,
 ): void {
     const identifierPairedExpressionIds: Set<number> =
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierPairedExpression) ?? new Set();
 
     for (const nodeId of identifierPairedExpressionIds) {
-        cancellationToken.throwIfCancelled();
+        cancellationToken?.throwIfCancelled();
 
         const xorNode: XorNode<Ast.IdentifierPairedExpression> =
             NodeIdMapUtils.assertGetXorChecked<Ast.IdentifierPairedExpression>(
@@ -1072,7 +1185,7 @@ function addRecordSymbols(
     nodeIdMapCollection: NodeIdMap.Collection,
     currentSymbols: DocumentSymbol[],
     parentSymbolById: Map<number, DocumentSymbol>,
-    cancellationToken: ICancellationToken,
+    cancellationToken?: ICancellationToken,
 ): void {
     const recordIdCollections: ReadonlyArray<Set<number>> = [
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordExpression) ?? new Set(),
@@ -1081,7 +1194,7 @@ function addRecordSymbols(
 
     for (const collection of recordIdCollections) {
         for (const nodeId of collection) {
-            cancellationToken.throwIfCancelled();
+            cancellationToken?.throwIfCancelled();
 
             const xorNode: XorNode<Ast.RecordExpression | Ast.RecordLiteral> = NodeIdMapUtils.assertGetXorChecked<
                 Ast.RecordExpression | Ast.RecordLiteral

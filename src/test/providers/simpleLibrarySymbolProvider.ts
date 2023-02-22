@@ -45,7 +45,7 @@ describe(`SimpleLibraryProvider`, () => {
 
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
         it(`match multiple`, async () => {
@@ -59,18 +59,31 @@ describe(`SimpleLibraryProvider`, () => {
 
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
-        it(`no match`, async () => {
+        it(`unknown match`, async () => {
             const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
                 await createAutocompleteItems("Unknown|Identifier");
 
             const expected: ReadonlyArray<string> = [];
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
+
+        // it(`no matches under key of key-value-pair`, async () => {
+        //     const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+        //         await createAutocompleteItems("let Test = 1, Test|");
+
+        //     Assert.isOk(actual);
+        //     Assert.isDefined(actual.value);
+
+        //     TestUtils.assertDoesNotContainAutocompleteItemLabels(
+        //         [TestConstants.TestLibraryName.SquareIfNumber],
+        //         actual.value,
+        //     );
+        // });
     });
 
     describe(`getHover`, () => {

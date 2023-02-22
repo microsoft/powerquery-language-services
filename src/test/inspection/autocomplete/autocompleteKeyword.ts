@@ -34,7 +34,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         ];
 
         const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(text, position);
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     describe("partial keyword", () => {
@@ -47,7 +47,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("x a|", async () => {
@@ -59,7 +59,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("e|", async () => {
@@ -71,7 +71,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("if x then x e|", async () => {
@@ -83,7 +83,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("i|", async () => {
@@ -95,7 +95,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("l|", async () => {
@@ -107,7 +107,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("m|", async () => {
@@ -119,7 +119,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("x m|", async () => {
@@ -131,7 +131,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("n|", async () => {
@@ -143,7 +143,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("true o|", async () => {
@@ -155,7 +155,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("try true o|", async () => {
@@ -171,7 +171,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("try true o |", async () => {
@@ -183,7 +183,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("try true ot|", async () => {
@@ -195,7 +195,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("try true oth|", async () => {
@@ -207,7 +207,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("s|", async () => {
@@ -219,7 +219,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("[] |", async () => {
@@ -231,7 +231,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("[] |s", async () => {
@@ -243,7 +243,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("[] s|", async () => {
@@ -255,7 +255,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("[] s |", async () => {
@@ -267,7 +267,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("section; s|", async () => {
@@ -279,7 +279,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("section; shared x|", async () => {
@@ -291,7 +291,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("section; [] s|", async () => {
@@ -303,7 +303,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("if true t|", async () => {
@@ -315,7 +315,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it("t|", async () => {
@@ -332,7 +332,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -346,7 +346,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true|`, async () => {
@@ -358,7 +358,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true |`, async () => {
@@ -378,7 +378,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -392,7 +392,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if error|`, async () => {
@@ -404,7 +404,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`error |`, async () => {
@@ -416,7 +416,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -430,7 +430,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let x = (_ a|) => a in`, async () => {
@@ -442,7 +442,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -456,7 +456,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(` if |`, async () => {
@@ -468,7 +468,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1|`, async () => {
@@ -480,7 +480,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if |if`, async () => {
@@ -492,7 +492,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if i|f`, async () => {
@@ -504,7 +504,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if if | `, async () => {
@@ -516,7 +516,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 |`, async () => {
@@ -528,7 +528,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 t|`, async () => {
@@ -540,7 +540,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 then |`, async () => {
@@ -552,7 +552,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 then 1|`, async () => {
@@ -564,7 +564,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 then 1 e|`, async () => {
@@ -576,7 +576,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 then 1 else|`, async () => {
@@ -588,7 +588,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 th|en 1 else`, async () => {
@@ -600,7 +600,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if 1 then 1 else |`, async () => {
@@ -612,7 +612,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -626,7 +626,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`foo(a|`, async () => {
@@ -638,7 +638,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`foo(a|,`, async () => {
@@ -650,7 +650,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`foo(a,|`, async () => {
@@ -662,7 +662,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -676,7 +676,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1|`, async () => {
@@ -688,7 +688,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1|,`, async () => {
@@ -700,7 +700,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1,|`, async () => {
@@ -712,7 +712,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1,|2`, async () => {
@@ -724,7 +724,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1,|2,`, async () => {
@@ -736,7 +736,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`{1..|`, async () => {
@@ -748,7 +748,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -764,7 +764,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true otherwise |false`, async () => {
@@ -778,7 +778,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true oth|`, async () => {
@@ -790,7 +790,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true otherwise |`, async () => {
@@ -802,7 +802,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -816,7 +816,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -830,7 +830,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=|`, async () => {
@@ -842,7 +842,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1|`, async () => {
@@ -854,7 +854,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a|=1`, async () => {
@@ -866,7 +866,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1|]`, async () => {
@@ -878,7 +878,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=|1]`, async () => {
@@ -890,7 +890,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1|,`, async () => {
@@ -902,7 +902,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1,|`, async () => {
@@ -914,7 +914,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1|,b`, async () => {
@@ -926,7 +926,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1|,b=`, async () => {
@@ -938,7 +938,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=|1,b=`, async () => {
@@ -950,7 +950,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1,b=2|`, async () => {
@@ -962,7 +962,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+[a=1,b=2 |`, async () => {
@@ -974,7 +974,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -988,7 +988,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let x = |`, async () => {
@@ -1000,7 +1000,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`() => |`, async () => {
@@ -1012,7 +1012,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if |`, async () => {
@@ -1024,7 +1024,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if true then |`, async () => {
@@ -1036,7 +1036,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`if true then true else |`, async () => {
@@ -1050,7 +1050,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`foo(|`, async () => {
@@ -1062,7 +1062,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let x = 1 in |`, async () => {
@@ -1074,7 +1074,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+{|`, async () => {
@@ -1086,7 +1086,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`try true otherwise |`, async () => {
@@ -1098,7 +1098,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`+(|`, async () => {
@@ -1110,7 +1110,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -1124,7 +1124,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`section; [] x |`, async () => {
@@ -1136,7 +1136,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`section; x = |`, async () => {
@@ -1148,7 +1148,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`section; x = 1 |`, async () => {
@@ -1167,7 +1167,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`section; x = 1 i|`, async () => {
@@ -1179,7 +1179,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, async () => {
@@ -1194,7 +1194,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -1208,7 +1208,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1|`, async () => {
@@ -1220,7 +1220,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1 |`, async () => {
@@ -1240,7 +1240,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1 | foobar`, async () => {
@@ -1260,7 +1260,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1 i|`, async () => {
@@ -1272,7 +1272,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1 o|`, async () => {
@@ -1284,7 +1284,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1 m|`, async () => {
@@ -1296,7 +1296,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = 1, |`, async () => {
@@ -1308,7 +1308,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = let b = |`, async () => {
@@ -1320,7 +1320,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = let b = 1 |`, async () => {
@@ -1340,7 +1340,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let a = let b = 1, |`, async () => {
@@ -1352,7 +1352,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let x = e|`, async () => {
@@ -1364,7 +1364,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let x = error let x = e|`, async () => {
@@ -1378,7 +1378,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 });
