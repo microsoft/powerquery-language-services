@@ -636,13 +636,16 @@ export class AnalysisBase implements Analysis {
 
         let result: AutocompleteItemProviderContext;
 
+        const cancellationToken: ICancellationToken | undefined =
+            cancellationTokenOverride ?? this.inspectionSettings.cancellationToken;
+
         if (activeLeafIdentifier !== undefined) {
             result = {
                 autocomplete,
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.traceManager,
-                cancellationToken: cancellationTokenOverride ?? this.inspectionSettings.cancellationToken,
+                cancellationToken,
                 initialCorrelationId: trace.id,
                 range: CommonTypesUtils.rangeFromTokenRange(activeLeafIdentifier.node.tokenRange),
                 text: activeLeafIdentifier.normalizedLiteral,
@@ -654,7 +657,7 @@ export class AnalysisBase implements Analysis {
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.traceManager,
-                cancellationToken: this.inspectionSettings.cancellationToken,
+                cancellationToken,
                 initialCorrelationId: trace.id,
             };
         }
@@ -695,14 +698,17 @@ export class AnalysisBase implements Analysis {
                 ? identifierUnderPosition.node.identifier
                 : identifierUnderPosition.node;
 
+        const cancellationToken: ICancellationToken | undefined =
+            cancellationTokenOverride ?? this.inspectionSettings.cancellationToken;
+
         const context: DefinitionProviderContext = {
             traceManager: this.traceManager,
             range: CommonTypesUtils.rangeFromTokenRange(identifier.tokenRange),
             initialCorrelationId: trace.id,
-            cancellationToken: this.inspectionSettings.cancellationToken,
+            cancellationToken,
             identifier,
             triedNodeScope: Assert.asDefined(
-                await this.inspectNodeScope(activeNode, trace.id, cancellationTokenOverride),
+                await this.inspectNodeScope(activeNode, trace.id, cancellationToken),
                 "we got a truthy activeNode meaning we have a truthy parseState",
             ),
         };
