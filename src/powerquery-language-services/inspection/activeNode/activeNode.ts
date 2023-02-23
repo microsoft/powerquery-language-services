@@ -49,7 +49,6 @@ export interface IActiveLeafIdentifier<
     readonly node: T;
     readonly normalizedLiteral: string;
     readonly normalizedRecursiveLiteral: string | undefined;
-    readonly isRecursive: boolean;
 }
 
 export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<Ast.IdentifierExpression> {
@@ -63,10 +62,12 @@ export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.Generali
 }
 
 export const enum ActiveNodeLeafKind {
-    AfterAstNode = "AfterAstNode",
-    Anchored = "Anchored",
+    IsBeforePosition = "IsBeforePosition",
+    IsInAst = "IsInAst",
+    IsAfterPosition = "IsAfterPosition",
     ContextNode = "Context",
-    OnAstNode = "OnAstNode",
+
+    Anchored = "Anchored",
     ShiftedRight = "ShiftedRight",
 }
 

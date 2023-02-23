@@ -214,7 +214,7 @@ function handleConjunctions(
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
     if (
-        activeNode.leafKind !== ActiveNodeLeafKind.AfterAstNode &&
+        activeNode.leafKind !== ActiveNodeLeafKind.IsAfterPosition &&
         activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
     ) {
         return inspected;
