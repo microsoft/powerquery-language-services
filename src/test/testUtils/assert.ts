@@ -259,14 +259,6 @@ export function assertContainsAutocompleteItemLabels(
     expect(actualLabels).to.include.members(expected);
 }
 
-export function assertDoesNotContainAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
-    expect(actualLabels).to.not.include.members(expected);
-}
-
 export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
     expect(TestUtils.createAbridgedSignatureHelp(actual)).deep.equals(expected);
 }
