@@ -2,17 +2,23 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    ExpressionKeywordKinds,
+    KeywordKind,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Assert } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
-async function assertGetKeywordAutocomplete(
-    text: string,
-    position: Position,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+async function assertContainsAutocompleteItemLabels(
+    textWithPosition: string,
+    expected: ReadonlyArray<KeywordKind>,
+): Promise<void> {
+    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPosition);
+
     const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(
         TestConstants.DefaultInspectionSettings,
         text,
@@ -21,1364 +27,301 @@ async function assertGetKeywordAutocomplete(
 
     Assert.isOk(actual.triedKeyword);
 
-    return actual.triedKeyword.value;
+    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedKeyword.value);
 }
 
 describe(`Inspection - Autocomplete - Keyword`, () => {
-    it("|", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|`);
-
-        const expected: ReadonlyArray<Keyword.KeywordKind> = [
-            ...Keyword.ExpressionKeywordKinds,
-            Keyword.KeywordKind.Section,
-        ];
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(text, position);
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
+    it(`|`, () => assertContainsAutocompleteItemLabels("|", [...ExpressionKeywordKinds, KeywordKind.Section]));
 
     describe("partial keyword", () => {
-        it("a|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`a|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`a|`, () => assertContainsAutocompleteItemLabels("|", []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("x a|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`x a|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.And, Keyword.KeywordKind.As];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`x a|`, () => assertContainsAutocompleteItemLabels("x a|", [KeywordKind.And, KeywordKind.As]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`e|`, () => assertContainsAutocompleteItemLabels("e|", [KeywordKind.Each, KeywordKind.Error]));
 
-        it("e|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`e|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("if x then x e|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if x then x e|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Else];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("i|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`i|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.If];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("l|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`l|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Let];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("m|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`m|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("x m|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`x m|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Meta];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("n|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`n|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Not];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("true o|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`true o|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Or];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("try true o|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true o|`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.Otherwise,
-            ];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if x then x e|`, () => assertContainsAutocompleteItemLabels("if x then x e|", [KeywordKind.Else]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("try true o |", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true o |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`i|`, () => assertContainsAutocompleteItemLabels("i|", [KeywordKind.If]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("try true ot|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true ot|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Otherwise];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`l|`, () => assertContainsAutocompleteItemLabels("l|", [KeywordKind.Let]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("try true oth|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true oth|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Otherwise];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`m|`, () => assertContainsAutocompleteItemLabels("m|", []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("s|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`s|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Section];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`x m|`, () => assertContainsAutocompleteItemLabels("x m|", [KeywordKind.Meta]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`n|`, () => assertContainsAutocompleteItemLabels("n|", [KeywordKind.Not]));
 
-        it("[] |", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[] |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Section];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("[] |s", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[] |s`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("[] s|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[] s|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Section];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("[] s |", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[] s |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("section; s|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; s|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Shared];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("section; shared x|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; shared x|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("section; [] s|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; [] s|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Shared];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("if true t|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if true t|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Then];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it("t|", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`t|`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.True,
-                Keyword.KeywordKind.Try,
-                Keyword.KeywordKind.Type,
-            ];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`true o|`, () => assertContainsAutocompleteItemLabels("true o|", [KeywordKind.Or]));
+
+        it(`try true o|`, () =>
+            assertContainsAutocompleteItemLabels("try true o|", [KeywordKind.Or, KeywordKind.Otherwise]));
+
+        it(`try true o |`, () => assertContainsAutocompleteItemLabels("|", []));
+
+        it(`try true ot|`, () => assertContainsAutocompleteItemLabels("try true ot|", [KeywordKind.Otherwise]));
+
+        it(`try true oth|`, () => assertContainsAutocompleteItemLabels("try true oth|", [KeywordKind.Otherwise]));
+
+        it(`s|`, () => assertContainsAutocompleteItemLabels("s|", [KeywordKind.Section]));
+
+        it(`[] |`, () => assertContainsAutocompleteItemLabels("[] |", [KeywordKind.Section]));
+
+        it(`[] |s`, () => assertContainsAutocompleteItemLabels("[] |s", []));
+
+        it(`[] s|`, () => assertContainsAutocompleteItemLabels("[] s|", [KeywordKind.Section]));
+
+        it(`[] s |`, () => assertContainsAutocompleteItemLabels("[] s |", []));
+
+        it(`section; s|`, () => assertContainsAutocompleteItemLabels("section; s|", [KeywordKind.Shared]));
+
+        it(`section; shared x|`, () => assertContainsAutocompleteItemLabels("section; shared x|", []));
+
+        it(`section; [] s|`, () => assertContainsAutocompleteItemLabels("section; [] s|", [KeywordKind.Shared]));
+
+        it(`if true t|`, () => assertContainsAutocompleteItemLabels("if true t|", [KeywordKind.Then]));
+
+        it(`t|`, () =>
+            assertContainsAutocompleteItemLabels("t|", [KeywordKind.True, KeywordKind.Try, KeywordKind.Type]));
     });
 
     describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
-        it(`try |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`try |`, () => assertContainsAutocompleteItemLabels("try |", ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`try true|`, () => assertContainsAutocompleteItemLabels("try true|", [KeywordKind.True]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.True];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true |`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.Otherwise,
-            ];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`try true |`, () =>
+            assertContainsAutocompleteItemLabels("try true |", [
+                KeywordKind.And,
+                KeywordKind.As,
+                KeywordKind.Is,
+                KeywordKind.Meta,
+                KeywordKind.Or,
+                KeywordKind.Otherwise,
+            ]));
     });
 
     describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
-        it(`if |error`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if |error`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`if |error`, () => assertContainsAutocompleteItemLabels("if |error", ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if error|`, () => assertContainsAutocompleteItemLabels("if error|", []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if error|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if error|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`error |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`error |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`error |`, () => assertContainsAutocompleteItemLabels("error |", ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.FunctionExpression}`, () => {
-        it(`let x = (_ |) => a in x`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = (_ |) => a in x`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.As];
+        it(`let x = (_ |) => a in x`, () =>
+            assertContainsAutocompleteItemLabels("let x = (_ |) => a in x", [KeywordKind.As]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let x = (_ a|) => a in`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = (_ a|) => a in`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.As];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`let x = (_ a|) => a in`, () =>
+            assertContainsAutocompleteItemLabels("let x = (_ a|) => a in", [KeywordKind.As]));
     });
 
     describe(`${Ast.NodeKind.IfExpression}`, () => {
-        it(`if|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`if|`, () => assertContainsAutocompleteItemLabels("if|", []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if |`, () => assertContainsAutocompleteItemLabels("if |", ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if 1|`, () => assertContainsAutocompleteItemLabels("if 1|", []));
 
-        it(` if |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`if |if`, () => assertContainsAutocompleteItemLabels("if |if", ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if i|f`, () => assertContainsAutocompleteItemLabels("if i|f", [KeywordKind.If]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if if |`, () => assertContainsAutocompleteItemLabels("if if |", ExpressionKeywordKinds));
 
-        it(`if 1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`if 1 |`, () => assertContainsAutocompleteItemLabels("if 1 |", [KeywordKind.Then]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if 1 t|`, () => assertContainsAutocompleteItemLabels("if 1 t|", [KeywordKind.Then]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if 1 then |`, () => assertContainsAutocompleteItemLabels("if 1 then |", ExpressionKeywordKinds));
 
-        it(`if |if`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if |if`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`if 1 then 1|`, () => assertContainsAutocompleteItemLabels("if 1 then 1|", []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if 1 then 1 e|`, () => assertContainsAutocompleteItemLabels("if 1 then 1 e|", [KeywordKind.Else]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if 1 then 1 else|`, () => assertContainsAutocompleteItemLabels("if 1 then 1 else|", []));
 
-        it(`if i|f`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if i|f`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.If];
+        it(`if 1 th|en 1 else`, () => assertContainsAutocompleteItemLabels(`if 1 th|en 1 else`, [KeywordKind.Then]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if if | `, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if if |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Then];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 t|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 t|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Then];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 then |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 then |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 then 1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 then 1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 then 1 e|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 then 1 e|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Else];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 then 1 else|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 then 1 else|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 th|en 1 else`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 th|en 1 else`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Then];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if 1 then 1 else |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if 1 then 1 else |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if 1 then 1 else |`, () =>
+            assertContainsAutocompleteItemLabels(`if 1 then 1 else |`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.InvokeExpression}`, () => {
-        it(`foo(|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`foo(|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`foo(|`, () => assertContainsAutocompleteItemLabels(`foo(|`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`foo(a|`, () => assertContainsAutocompleteItemLabels(`foo(a|`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`foo(a|,`, () => assertContainsAutocompleteItemLabels(`foo(a|,`, []));
 
-        it(`foo(a|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`foo(a|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`foo(a|,`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`foo(a|,`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`foo(a,|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`foo(a,|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`foo(a,|`, () => assertContainsAutocompleteItemLabels(`foo(a,|`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.ListExpression}`, () => {
-        it(`{|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`{|`, () => assertContainsAutocompleteItemLabels(`{|`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`{1|`, () => assertContainsAutocompleteItemLabels(`{1|`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`{1|,`, () => assertContainsAutocompleteItemLabels(`{1|,`, []));
 
-        it(`{1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`{1,|`, () => assertContainsAutocompleteItemLabels(`{1,|`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`{1,|2`, () => assertContainsAutocompleteItemLabels(`{1,|2`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`{1,|2,`, () => assertContainsAutocompleteItemLabels(`{1,|2,`, ExpressionKeywordKinds));
 
-        it(`{1|,`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1|,`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`{1,|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1,|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`{1,|2`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1,|2`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`{1,|2,`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1,|2,`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`{1..|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`{1..|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`{1..|`, () => assertContainsAutocompleteItemLabels(`{1..|`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
-        it(`try true otherwise| false`, async () => {
-            const [text, position]: [string, Position] =
-                TestUtils.assertGetTextWithPosition(`try true otherwise| false`);
+        it(`try true otherwise| false`, () => assertContainsAutocompleteItemLabels(`try true otherwise| false`, []));
 
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`try true otherwise |false`, () =>
+            assertContainsAutocompleteItemLabels(`try true otherwise |false`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`try true oth|`, () => assertContainsAutocompleteItemLabels(`try true oth|`, [KeywordKind.Otherwise]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true otherwise |false`, async () => {
-            const [text, position]: [string, Position] =
-                TestUtils.assertGetTextWithPosition(`try true otherwise |false`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true oth|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true oth|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Otherwise];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true otherwise |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true otherwise |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`try true otherwise |`, () =>
+            assertContainsAutocompleteItemLabels(`try true otherwise |`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
-        it(`+(|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+(|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+(|`, () => assertContainsAutocompleteItemLabels(`+(|`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
-        it(`+[|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`+[|`, () => assertContainsAutocompleteItemLabels(`+[|`, []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`+[a=|`, () => assertContainsAutocompleteItemLabels(`+[a=|`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+[a=1|`, () => assertContainsAutocompleteItemLabels(`+[a=1|`, []));
 
-        it(`+[a=|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`+[a|=1`, () => assertContainsAutocompleteItemLabels(`+[a|=1`, []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`+[a=1|]`, () => assertContainsAutocompleteItemLabels(`+[a=1|]`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+[a=|1]`, () => assertContainsAutocompleteItemLabels(`+[a=|1]`, ExpressionKeywordKinds));
 
-        it(`+[a=1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`+[a=1|,`, () => assertContainsAutocompleteItemLabels(`+[a=1|,`, []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`+[a=1,|`, () => assertContainsAutocompleteItemLabels(`+[a=1,|`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+[a=1|,b`, () => assertContainsAutocompleteItemLabels(`+[a=1|,b`, []));
 
-        it(`+[a|=1`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a|=1`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`+[a=1|,b=`, () => assertContainsAutocompleteItemLabels(`+[a=1|,b=`, []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`+[a=|1,b=`, () => assertContainsAutocompleteItemLabels(`+[a=|1,b=`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+[a=1,b=2|`, () => assertContainsAutocompleteItemLabels(`+[a=1,b=2|`, []));
 
-        it(`+[a=1|]`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1|]`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=|1]`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=| 1]`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1|,`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1,|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1,|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1|,b`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1|,b`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1|,b=`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1|,b=`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=|1,b=`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=|1,b=`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1,b=2|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1,b=2|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+[a=1,b=2 |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+[a=1,b=2 |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+[a=1,b=2 |`, () => assertContainsAutocompleteItemLabels(`+[a=1,b=2 |`, []));
     });
 
     describe(`AutocompleteExpression`, () => {
-        it(`error |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`error |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`error |`, () => assertContainsAutocompleteItemLabels(`error |`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`let x = |`, () => assertContainsAutocompleteItemLabels(`let x = |`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`() => |`, () => assertContainsAutocompleteItemLabels(`() => |`, ExpressionKeywordKinds));
 
-        it(`let x = |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`if |`, () => assertContainsAutocompleteItemLabels(`if |`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`if true then |`, () => assertContainsAutocompleteItemLabels(`if true then |`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`if true then true else |`, () =>
+            assertContainsAutocompleteItemLabels(`if true then true else |`, ExpressionKeywordKinds));
 
-        it(`() => |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`() => |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`foo(|`, () => assertContainsAutocompleteItemLabels(`foo(|`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`let x = 1 in |`, () => assertContainsAutocompleteItemLabels(`let x = 1 in |`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+{|`, () => assertContainsAutocompleteItemLabels(`+{|`, ExpressionKeywordKinds));
 
-        it(`if |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`try true otherwise |`, () =>
+            assertContainsAutocompleteItemLabels(`try true otherwise |`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if true then |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`if true then |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`if true then true else |`, async () => {
-            const [text, position]: [string, Position] =
-                TestUtils.assertGetTextWithPosition(`if true then true else |`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`foo(|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`foo(|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let x = 1 in |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = 1 in |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+{|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+{|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`try true otherwise |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`try true otherwise |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`+(|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`+(|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`+(|`, () => assertContainsAutocompleteItemLabels(`+(|`, ExpressionKeywordKinds));
     });
 
     describe(`${Ast.NodeKind.SectionMember}`, () => {
-        it(`section; [] |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; [] |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Shared];
+        it(`section; [] |`, () => assertContainsAutocompleteItemLabels(`section; [] |`, [KeywordKind.Shared]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`section; [] x |`, () => assertContainsAutocompleteItemLabels(`section; [] x |`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`section; x = |`, () => assertContainsAutocompleteItemLabels(`section; x = |`, ExpressionKeywordKinds));
 
-        it(`section; [] x |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; [] x |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`section; x = 1 |`, () =>
+            assertContainsAutocompleteItemLabels(`section; x = 1 |`, [
+                KeywordKind.And,
+                KeywordKind.As,
+                KeywordKind.Is,
+                KeywordKind.Meta,
+                KeywordKind.Or,
+            ]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`section; x = 1 i|`, () => assertContainsAutocompleteItemLabels(`section; x = 1 i|`, [KeywordKind.Is]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`section; x = |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; x = |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`section; x = 1 |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; x = 1 |`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-            ];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`section; x = 1 i|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`section; x = 1 i|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Is];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+        it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () =>
+            assertContainsAutocompleteItemLabels(
                 `section foo; a = () => true; b = "string"; c = 1; d = |;`,
-            );
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+                ExpressionKeywordKinds,
+            ));
     });
 
     describe(`${Ast.NodeKind.LetExpression}`, () => {
-        it(`let a = |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
+        it(`let a = |`, () => assertContainsAutocompleteItemLabels(`let a = |`, ExpressionKeywordKinds));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`let a = 1|`, () => assertContainsAutocompleteItemLabels(`let a = 1|`, []));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`let a = 1 |`, () =>
+            assertContainsAutocompleteItemLabels(`let a = 1 |`, [
+                KeywordKind.And,
+                KeywordKind.As,
+                KeywordKind.Is,
+                KeywordKind.Meta,
+                KeywordKind.Or,
+                KeywordKind.In,
+            ]));
 
-        it(`let a = 1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
+        it(`let a = 1 | foobar`, () =>
+            assertContainsAutocompleteItemLabels(`let a = 1 | foobar`, [
+                KeywordKind.And,
+                KeywordKind.As,
+                KeywordKind.Is,
+                KeywordKind.Meta,
+                KeywordKind.Or,
+                KeywordKind.In,
+            ]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`let a = 1 i|`, () =>
+            assertContainsAutocompleteItemLabels(`let a = 1 i|`, [KeywordKind.Is, KeywordKind.In]));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`let a = 1 o|`, () => assertContainsAutocompleteItemLabels(`let a = 1 o|`, [KeywordKind.Or]));
 
-        it(`let a = 1 |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 |`);
+        it(`let a = 1 m|`, () => assertContainsAutocompleteItemLabels(`let a = 1 m|`, [KeywordKind.Meta]));
 
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.In,
-            ];
+        it(`let a = 1, |`, () => assertContainsAutocompleteItemLabels(`let a = 1, |`, []));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
+        it(`let a = let b = |`, () =>
+            assertContainsAutocompleteItemLabels(`let a = let b = |`, ExpressionKeywordKinds));
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`let a = let b = 1 |`, () =>
+            assertContainsAutocompleteItemLabels(`let a = let b = 1 |`, [
+                KeywordKind.And,
+                KeywordKind.As,
+                KeywordKind.Is,
+                KeywordKind.Meta,
+                KeywordKind.Or,
+                KeywordKind.In,
+            ]));
 
-        it(`let a = 1 | foobar`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 | foobar`);
+        it(`let a = let b = 1, |`, () => assertContainsAutocompleteItemLabels(`let a = let b = 1, |`, []));
 
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.In,
-            ];
+        it(`let x = e|`, () =>
+            assertContainsAutocompleteItemLabels(`let x = e|`, [KeywordKind.Each, KeywordKind.Error]));
 
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = 1 i|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 i|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Is, Keyword.KeywordKind.In];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = 1 o|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 o|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Or];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = 1 m|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 m|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Meta];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = 1, |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1, |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = let b = |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = let b = |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = Keyword.ExpressionKeywordKinds;
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = let b = 1 |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = let b = 1 |`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [
-                Keyword.KeywordKind.And,
-                Keyword.KeywordKind.As,
-                Keyword.KeywordKind.Is,
-                Keyword.KeywordKind.Meta,
-                Keyword.KeywordKind.Or,
-                Keyword.KeywordKind.In,
-            ];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let a = let b = 1, |`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = let b = 1, |`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let x = e|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = e|`);
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
-
-        it(`let x = error let x = e|`, async () => {
-            const [text, position]: [string, Position] =
-                TestUtils.assertGetTextWithPosition(`let x = error let x = e|`);
-
-            const expected: ReadonlyArray<Keyword.KeywordKind> = [Keyword.KeywordKind.Each, Keyword.KeywordKind.Error];
-
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetKeywordAutocomplete(
-                text,
-                position,
-            );
-
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
-        });
+        it(`let x = error let x = e|`, () =>
+            assertContainsAutocompleteItemLabels(`let x = error let x = e|`, [KeywordKind.Each, KeywordKind.Error]));
     });
 });

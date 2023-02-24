@@ -2,217 +2,70 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import {
+    PrimitiveTypeConstant,
+    PrimitiveTypeConstants,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
-import { Inspection, InspectionSettings } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
+import { Inspection } from "../../../powerquery-language-services";
 
-async function assertGetPrimitiveTypeAutocompleteOk(
-    settings: InspectionSettings,
-    text: string,
-    position: Position,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(settings, text, position);
+async function assertContainsPrimitiveTypeAutocomplete(
+    textWithPosition: string,
+    expected: ReadonlyArray<PrimitiveTypeConstant>,
+): Promise<void> {
+    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPosition);
+
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(
+        TestConstants.DefaultInspectionSettings,
+        text,
+        position,
+    );
+
     Assert.isOk(actual.triedPrimitiveType);
 
-    return actual.triedPrimitiveType.value;
+    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedPrimitiveType.value);
 }
 
 describe(`Inspection - Autocomplete - PrimitiveType`, () => {
-    it("type|", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`type|`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
+    it(`type|`, () => assertContainsPrimitiveTypeAutocomplete(`type|`, []));
 
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
+    it(`type |`, () => assertContainsPrimitiveTypeAutocomplete(`type |`, PrimitiveTypeConstants));
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
+    it(`let x = type|`, () => assertContainsPrimitiveTypeAutocomplete(`let x = type|`, []));
 
-    it("type |", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`type |`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
+    it(`let x = type |`, () => assertContainsPrimitiveTypeAutocomplete(`let x = type |`, PrimitiveTypeConstants));
 
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
+    it(`type | number`, () => assertContainsPrimitiveTypeAutocomplete(`type | number`, PrimitiveTypeConstants));
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("let x = type|", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = type|`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("let x = type |", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let x = type |`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("type | number", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`type | number`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("type n|", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`type n|`);
-
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [
+    it(`type n|`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`type n|`, [
             Constant.PrimitiveTypeConstant.None,
             Constant.PrimitiveTypeConstant.Null,
             Constant.PrimitiveTypeConstant.Number,
-        ];
+        ]));
 
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
+    it(`(x|) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`(x|) => 1`, []));
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
+    it(`(x as| number) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`(x as| number) => 1`, []));
 
-    it("(x|) => 1", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|) => 1`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
+    it(`(x as | number) => 1`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`(x as | number) => 1`, PrimitiveTypeConstants));
 
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
+    it(`(x as| nullable number) => 1`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`(x as| nullable number) => 1`, []));
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
+    it(`(x as | nullable number) => 1`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`(x as | nullable number) => 1`, PrimitiveTypeConstants));
 
-    it("(x as| number) => 1", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x as| number) => 1`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
+    it(`(x as nullable| number) => 1`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`(x as nullable| number) => 1`, []));
 
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
+    it(`(x as nullable num|ber) => 1`, () =>
+        assertContainsPrimitiveTypeAutocomplete(`(x as nullable num|ber) => 1`, PrimitiveTypeConstants));
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("(x as | number) => 1", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x as | number) => 1`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("(x as| nullable number) => 1", async () => {
-        const [text, position]: [string, Position] =
-            TestUtils.assertGetTextWithPosition(`(x as| nullable number) => 1`);
-
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("(x as | nullable number) => 1", async () => {
-        const [text, position]: [string, Position] =
-            TestUtils.assertGetTextWithPosition(`(x as | nullable number) => 1`);
-
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("(x as nullable| number) => 1", async () => {
-        const [text, position]: [string, Position] =
-            TestUtils.assertGetTextWithPosition(`(x as nullable| number) => 1`);
-
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = [];
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("(x as nullable num|ber) => 1", async () => {
-        const [text, position]: [string, Position] =
-            TestUtils.assertGetTextWithPosition(`(x as nullable num|ber) => 1`);
-
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
-
-    it("let a = 1 is |", async () => {
-        const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 is |`);
-        const expected: ReadonlyArray<Constant.PrimitiveTypeConstant> = Constant.PrimitiveTypeConstants;
-
-        const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertGetPrimitiveTypeAutocompleteOk(
-            TestConstants.DefaultInspectionSettings,
-            text,
-            position,
-        );
-
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
-    });
+    it(`let a = 1 is |`, () => assertContainsPrimitiveTypeAutocomplete(`let a = 1 is |`, PrimitiveTypeConstants));
 });

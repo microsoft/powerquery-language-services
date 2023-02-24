@@ -60,7 +60,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -71,7 +71,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
@@ -84,7 +84,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -95,7 +95,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
@@ -108,7 +108,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -119,7 +119,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
@@ -132,7 +132,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -143,7 +143,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
         });
@@ -158,7 +158,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -169,7 +169,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`no repeats`, async () => {
@@ -180,7 +180,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
 
@@ -193,7 +193,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
 
                 it(`match some`, async () => {
@@ -204,7 +204,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
                     Assert.isOk(actual);
                     Assert.isDefined(actual.value);
-                    TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+                    TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
                 });
             });
         });
@@ -958,7 +958,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
     });
 });

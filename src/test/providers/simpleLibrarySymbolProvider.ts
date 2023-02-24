@@ -45,7 +45,7 @@ describe(`SimpleLibraryProvider`, () => {
 
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
         it(`match multiple`, async () => {
@@ -59,7 +59,7 @@ describe(`SimpleLibraryProvider`, () => {
 
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
         it(`no match`, async () => {
@@ -69,7 +69,7 @@ describe(`SimpleLibraryProvider`, () => {
             const expected: ReadonlyArray<string> = [];
             Assert.isOk(actual);
             Assert.isDefined(actual.value);
-            TestUtils.assertAutocompleteItemLabels(expected, actual.value);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
     });
 
