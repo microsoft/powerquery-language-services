@@ -40,8 +40,11 @@ const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
     Constant.MiscConstant.Equal,
     Constant.MiscConstant.FatArrow,
     Constant.MiscConstant.NullCoalescingOperator,
-    Constant.MiscConstant.Semicolon,
     Constant.MiscConstant.QuestionMark,
+    Constant.MiscConstant.Semicolon,
+    Constant.WrapperConstant.LeftBrace,
+    Constant.WrapperConstant.LeftBracket,
+    Constant.WrapperConstant.LeftParenthesis,
 ];
 
 // function discoverLeafKind(leaf: TLeaf, position: Position): ActiveNodeLeafKind {
@@ -86,7 +89,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     // Case 2a: truthy left
     // `not |`
     // `foo |`
-    if (
+    else if (
         nodeClosestBeforePosition !== undefined &&
         nodeOnPosition === undefined &&
         nodeClosestAfterPosition === undefined
@@ -135,7 +138,11 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     // `if |true`
     // `if true|`
     // `{1, foo|`
-    if (nodeClosestBeforePosition !== undefined && nodeOnPosition !== undefined) {
+    else if (
+        nodeClosestBeforePosition !== undefined &&
+        nodeOnPosition !== undefined &&
+        nodeClosestAfterPosition == undefined
+    ) {
         // With or without context
         // `1+|1`
         // `if |true`
@@ -144,7 +151,11 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     }
 
     // Case 4: There's 2 leafs, left and right (ie. between two nodes)
-    if (nodeClosestBeforePosition !== undefined && nodeClosestAfterPosition !== undefined) {
+    else if (
+        nodeClosestBeforePosition !== undefined &&
+        nodeOnPosition === undefined &&
+        nodeClosestAfterPosition !== undefined
+    ) {
         // `f|oo`
         leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
         leafKind = ActiveNodeLeafKind.IsAfterPosition;
@@ -152,14 +163,8 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
 
     // Case 5: There's 2 leafs, center and right
     // `|not true
-    if (nodeOnPosition !== undefined && nodeClosestAfterPosition !== undefined) {
-        leaf = XorNodeUtils.boxAst(nodeOnPosition);
-        leafKind = ActiveNodeLeafKind.IsInAst;
-    }
-
-    // Case 6: There's 3 leafs
-    if (
-        nodeClosestBeforePosition !== undefined &&
+    else if (
+        nodeClosestBeforePosition === undefined &&
         nodeOnPosition !== undefined &&
         nodeClosestAfterPosition !== undefined
     ) {
@@ -167,8 +172,16 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         leafKind = ActiveNodeLeafKind.IsInAst;
     }
 
-    if (leaf === undefined || leafKind === undefined) {
-        throw new Error();
+    // Case 6: There's 3 leafs
+    else if (
+        nodeClosestBeforePosition !== undefined &&
+        nodeOnPosition !== undefined &&
+        nodeClosestAfterPosition !== undefined
+    ) {
+        leaf = XorNodeUtils.boxAst(nodeOnPosition);
+        leafKind = ActiveNodeLeafKind.IsInAst;
+    } else {
+        throw new CommonError.InvariantError(`this should never be reached`);
     }
 
     const inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
@@ -239,8 +252,8 @@ interface SearchedLeafs {
 function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Position): SearchedLeafs {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
-    let nodeOnPosition: TLeaf | undefined;
     let nodeClosestBeforePosition: TLeaf | undefined;
+    let nodeOnPosition: TLeaf | undefined;
     let nodeClosestAfterPosition: TLeaf | undefined;
 
     // Find the closest leaf on or to the left of the position.
@@ -269,7 +282,7 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
             nodeOnPosition = candidate;
         }
         // Else if the candidate is before the cursor position
-        else if (PositionUtils.isAfterAst(position, candidate, !includeUpperBound)) {
+        else if (PositionUtils.isAfterAst(position, candidate, includeUpperBound)) {
             // And we either haven't found a closestNodeOnOrBeforePosition yet, or if the candidate is better (more right) than the current closestNodeOnOrBeforePosition.
             if (
                 nodeClosestBeforePosition === undefined ||
