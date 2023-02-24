@@ -107,6 +107,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
             leafKind = ActiveNodeLeafKind.IsBeforePosition;
         }
     }
+
     // Case 2b: truthy center
     // `|not`
     // `not|`
@@ -121,6 +122,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         leaf = XorNodeUtils.boxAst(nodeOnPosition);
         leafKind = ActiveNodeLeafKind.IsInAst;
     }
+
     // Case 2c: truthy right
     // `| not`
     // `| 1`
@@ -133,7 +135,9 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         return createOutOfBoundPosition(position);
     }
 
-    // Case 3: There's 2 leafs, left and center
+    // Case 3: There's 2 leafs.
+
+    // Case 3a: truthy left and center
     // `1+|1`
     // `if |true`
     // `if true|`
@@ -144,24 +148,38 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         nodeClosestAfterPosition == undefined
     ) {
         // With or without context
-        // `1+|1`
-        // `if |true`
         leaf = XorNodeUtils.boxAst(nodeOnPosition);
         leafKind = ActiveNodeLeafKind.IsInAst;
     }
 
-    // Case 4: There's 2 leafs, left and right (ie. between two nodes)
+    // Case 3b: truthy left and right
     else if (
         nodeClosestBeforePosition !== undefined &&
         nodeOnPosition === undefined &&
         nodeClosestAfterPosition !== undefined
     ) {
-        // `f|oo`
-        leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
-        leafKind = ActiveNodeLeafKind.IsAfterPosition;
+        // `1 + | 2`
+        if (
+            AstUtils.isTConstant(nodeClosestBeforePosition) &&
+            ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
+        ) {
+            leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
+            leafKind = ActiveNodeLeafKind.IsAfterPosition;
+        }
+        // `1 + | {0..9}{0}`
+        else if (
+            AstUtils.isTConstant(nodeClosestAfterPosition) &&
+            ShiftLeftConstantKinds.includes(nodeClosestAfterPosition.constantKind)
+        ) {
+            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
+            leafKind = ActiveNodeLeafKind.IsBeforePosition;
+        } else {
+            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
+            leafKind = ActiveNodeLeafKind.IsBeforePosition;
+        }
     }
 
-    // Case 5: There's 2 leafs, center and right
+    // Case 3c: truthy center and right
     // `|not true
     else if (
         nodeClosestBeforePosition === undefined &&
@@ -172,7 +190,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         leafKind = ActiveNodeLeafKind.IsInAst;
     }
 
-    // Case 6: There's 3 leafs
+    // Case 4: There's 3 leafs
     else if (
         nodeClosestBeforePosition !== undefined &&
         nodeOnPosition !== undefined &&
@@ -180,7 +198,10 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     ) {
         leaf = XorNodeUtils.boxAst(nodeOnPosition);
         leafKind = ActiveNodeLeafKind.IsInAst;
-    } else {
+    }
+
+    // Case 5: TypeScript can't tell this is exhaustive.
+    else {
         throw new CommonError.InvariantError(`this should never be reached`);
     }
 

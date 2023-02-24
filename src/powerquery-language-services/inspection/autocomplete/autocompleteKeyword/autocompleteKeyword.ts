@@ -70,6 +70,12 @@ export async function autocompleteKeyword(
         );
     }
 
+    const edgeCase: ReadonlyArray<AutocompleteItem> | undefined = findEdgeCase(activeNode, trailingToken);
+
+    if (edgeCase !== undefined) {
+        return Promise.resolve(edgeCase);
+    }
+
     const state: InspectAutocompleteKeywordState = {
         nodeIdMapCollection,
         activeNode,
@@ -78,12 +84,6 @@ export async function autocompleteKeyword(
         child: ActiveNodeUtils.assertGetLeaf(activeNode),
         ancestryIndex: 0,
     };
-
-    const edgeCase: ReadonlyArray<AutocompleteItem> | undefined = findEdgeCase(state, trailingToken);
-
-    if (edgeCase !== undefined) {
-        return Promise.resolve(edgeCase);
-    }
 
     const keywordKinds: ReadonlyArray<Keyword.KeywordKind> = await traverseAncestors(state);
 
@@ -155,10 +155,9 @@ async function traverseAncestors(state: InspectAutocompleteKeywordState): Promis
 }
 
 function findEdgeCase(
-    state: InspectAutocompleteKeywordState,
+    activeNode: ActiveNode,
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> | undefined {
-    const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     let inspected: ReadonlyArray<AutocompleteItem> | undefined;
 
@@ -181,7 +180,7 @@ function findEdgeCase(
     else if (
         XorNodeUtils.isAstXorChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
         XorNodeUtils.isNodeKind<Ast.TParameter>(ancestry[1], Ast.NodeKind.Parameter) &&
-        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
+        activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition
     ) {
         inspected = [AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.As)];
     }

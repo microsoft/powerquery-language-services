@@ -70,7 +70,7 @@ function autocompleteDefaultExpression(
     const child: TXorNode = state.child;
 
     // '[x=|1]
-    if (activeNode.leafKind === ActiveNodeLeafKind.ShiftedRight) {
+    if (activeNode.leafKind === ActiveNodeLeafKind.IsInAst) {
         return Keyword.ExpressionKeywordKinds;
     }
     // `if 1|`

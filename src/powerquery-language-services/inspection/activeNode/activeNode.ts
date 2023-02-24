@@ -66,9 +66,6 @@ export const enum ActiveNodeLeafKind {
     IsInAst = "IsInAst",
     IsAfterPosition = "IsAfterPosition",
     ContextNode = "Context",
-
-    Anchored = "Anchored",
-    ShiftedRight = "ShiftedRight",
 }
 
 export const enum ActiveNodeKind {

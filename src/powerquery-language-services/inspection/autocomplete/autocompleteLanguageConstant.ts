@@ -79,7 +79,7 @@ function isCatchAllowed(
             // Which was fully parsed
             XorNodeUtils.isAstXor(xorNode) &&
             // Yet the cursor is after the end of the Ast
-            activeNode.leafKind === ActiveNodeLeafKind.IsAfterPosition &&
+            activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition &&
             // And it only has two children, meaning it hasn't parsed an error handler
             NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
         ) {

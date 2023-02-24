@@ -110,11 +110,11 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
     });
 
     describe(`${Ast.NodeKind.FunctionExpression}`, () => {
-        it(`let x = (_ |) => a in x`, () =>
-            assertContainsAutocompleteItemLabels("let x = (_ |) => a in x", [KeywordKind.As]));
+        it(`let x = (_ |) => 1 in x`, () =>
+            assertContainsAutocompleteItemLabels("let x = (_ |) => 1 in x", [KeywordKind.As]));
 
-        it(`let x = (_ a|) => a in`, () =>
-            assertContainsAutocompleteItemLabels("let x = (_ a|) => a in", [KeywordKind.As]));
+        it(`let x = (_ a|) => 1 in`, () =>
+            assertContainsAutocompleteItemLabels("let x = (_ a|) => 1 in", [KeywordKind.As]));
     });
 
     describe(`${Ast.NodeKind.IfExpression}`, () => {
