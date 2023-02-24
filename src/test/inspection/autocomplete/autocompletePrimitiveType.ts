@@ -31,41 +31,41 @@ async function assertContainsPrimitiveTypeAutocomplete(
 }
 
 describe(`Inspection - Autocomplete - PrimitiveType`, () => {
-    it(`type|`, () => assertContainsPrimitiveTypeAutocomplete(`"type|`, []));
+    it(`type|`, () => assertContainsPrimitiveTypeAutocomplete(`type|`, []));
 
-    it(`type |`, () => assertContainsPrimitiveTypeAutocomplete(`"type |`, PrimitiveTypeConstants));
+    it(`type |`, () => assertContainsPrimitiveTypeAutocomplete(`type |`, PrimitiveTypeConstants));
 
-    it(`let x = type|`, () => assertContainsPrimitiveTypeAutocomplete(`"let x = type|`, []));
+    it(`let x = type|`, () => assertContainsPrimitiveTypeAutocomplete(`let x = type|`, []));
 
-    it(`let x = type |`, () => assertContainsPrimitiveTypeAutocomplete(`"let x = type |`, PrimitiveTypeConstants));
+    it(`let x = type |`, () => assertContainsPrimitiveTypeAutocomplete(`let x = type |`, PrimitiveTypeConstants));
 
-    it(`type | number`, () => assertContainsPrimitiveTypeAutocomplete(`"type | number`, PrimitiveTypeConstants));
+    it(`type | number`, () => assertContainsPrimitiveTypeAutocomplete(`type | number`, PrimitiveTypeConstants));
 
     it(`type n|`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"type n|`, [
+        assertContainsPrimitiveTypeAutocomplete(`type n|`, [
             Constant.PrimitiveTypeConstant.None,
             Constant.PrimitiveTypeConstant.Null,
             Constant.PrimitiveTypeConstant.Number,
         ]));
 
-    it(`(x|) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`"(x|) => 1`, []));
+    it(`(x|) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`(x|) => 1`, []));
 
-    it(`(x as| number) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`"(x as| number) => 1`, []));
+    it(`(x as| number) => 1`, () => assertContainsPrimitiveTypeAutocomplete(`(x as| number) => 1`, []));
 
     it(`(x as | number) => 1`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"(x as | number) => 1`, PrimitiveTypeConstants));
+        assertContainsPrimitiveTypeAutocomplete(`(x as | number) => 1`, PrimitiveTypeConstants));
 
     it(`(x as| nullable number) => 1`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"(x as| nullable number) => 1`, []));
+        assertContainsPrimitiveTypeAutocomplete(`(x as| nullable number) => 1`, []));
 
     it(`(x as | nullable number) => 1`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"(x as | nullable number) => 1`, PrimitiveTypeConstants));
+        assertContainsPrimitiveTypeAutocomplete(`(x as | nullable number) => 1`, PrimitiveTypeConstants));
 
     it(`(x as nullable| number) => 1`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"(x as nullable| number) => 1`, []));
+        assertContainsPrimitiveTypeAutocomplete(`(x as nullable| number) => 1`, []));
 
     it(`(x as nullable num|ber) => 1`, () =>
-        assertContainsPrimitiveTypeAutocomplete(`"(x as nullable num|ber) => 1`, PrimitiveTypeConstants));
+        assertContainsPrimitiveTypeAutocomplete(`(x as nullable num|ber) => 1`, PrimitiveTypeConstants));
 
-    it(`let a = 1 is |`, () => assertContainsPrimitiveTypeAutocomplete(`"let a = 1 is |`, PrimitiveTypeConstants));
+    it(`let a = 1 is |`, () => assertContainsPrimitiveTypeAutocomplete(`let a = 1 is |`, PrimitiveTypeConstants));
 });
