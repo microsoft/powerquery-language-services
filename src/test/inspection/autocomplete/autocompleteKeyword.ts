@@ -767,7 +767,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
-        it(`WIP try true otherwise |false`, async () => {
+        it(`try true otherwise |false`, async () => {
             const [text, position]: [string, Position] =
                 TestUtils.assertGetTextWithPosition(`try true otherwise |false`);
 
