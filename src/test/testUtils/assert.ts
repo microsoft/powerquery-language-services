@@ -247,6 +247,16 @@ export function assertAutocompleteItemLabels(
     expected: ReadonlyArray<string>,
     actual: ReadonlyArray<Inspection.AutocompleteItem>,
 ): void {
+    expected = [...expected].sort();
+    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
+
+    expect(actualLabels).to.deep.equal(expected);
+}
+
+export function assertContainsAutocompleteItemLabels(
+    expected: ReadonlyArray<string>,
+    actual: ReadonlyArray<Inspection.AutocompleteItem>,
+): void {
     const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
     expect(actualLabels).to.include.members(expected);
 }

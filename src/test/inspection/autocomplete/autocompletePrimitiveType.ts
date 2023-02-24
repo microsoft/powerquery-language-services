@@ -31,7 +31,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("type |", async () => {
@@ -44,7 +44,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("let x = type|", async () => {
@@ -57,7 +57,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("let x = type |", async () => {
@@ -70,7 +70,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("type | number", async () => {
@@ -83,7 +83,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("type n|", async () => {
@@ -101,7 +101,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x|) => 1", async () => {
@@ -114,7 +114,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as| number) => 1", async () => {
@@ -127,7 +127,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as | number) => 1", async () => {
@@ -140,7 +140,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as| nullable number) => 1", async () => {
@@ -155,7 +155,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as | nullable number) => 1", async () => {
@@ -170,7 +170,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as nullable| number) => 1", async () => {
@@ -185,7 +185,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("(x as nullable num|ber) => 1", async () => {
@@ -200,7 +200,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 
     it("let a = 1 is |", async () => {
@@ -213,6 +213,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             position,
         );
 
-        TestUtils.assertAutocompleteItemLabels(expected, actual);
+        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
     });
 });

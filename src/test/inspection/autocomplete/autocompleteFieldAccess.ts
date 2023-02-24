@@ -34,7 +34,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][c|]`, async () => {
@@ -49,7 +49,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][| c]`, async () => {
@@ -64,7 +64,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][c |]`, async () => {
@@ -79,7 +79,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, async () => {
@@ -95,7 +95,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
         });
 
@@ -112,7 +112,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2]|[`, async () => {
@@ -127,7 +127,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][|`, async () => {
@@ -142,7 +142,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][x|`, async () => {
@@ -157,7 +157,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][c|`, async () => {
@@ -172,7 +172,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][c |`, async () => {
@@ -187,7 +187,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, async () => {
@@ -203,7 +203,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
         });
     });
@@ -222,7 +222,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [c|] ]`, async () => {
@@ -237,8 +237,8 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [c |] ]`, async () => {
@@ -253,7 +253,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [x], [c|] ]`, async () => {
@@ -269,7 +269,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [cat], [c|] ]`, async () => {
@@ -285,7 +285,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, async () => {
@@ -301,7 +301,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
         });
 
@@ -318,7 +318,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ |`, async () => {
@@ -333,7 +333,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ c|`, async () => {
@@ -348,7 +348,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat|`, async () => {
@@ -363,7 +363,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat |`, async () => {
@@ -378,7 +378,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
@@ -393,7 +393,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ] |`, async () => {
@@ -408,7 +408,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
@@ -423,7 +423,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ]|`, async () => {
@@ -438,7 +438,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ], |`, async () => {
@@ -453,7 +453,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ], [|`, async () => {
@@ -469,7 +469,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ], [|<>`, async () => {
@@ -485,7 +485,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ], [| <>`, async () => {
@@ -501,7 +501,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
 
             it(`[cat = 1, car = 2][ [ cat ], [<>|`, async () => {
@@ -517,7 +517,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                     position,
                 );
 
-                TestUtils.assertAutocompleteItemLabels(expected, actual);
+                TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
             });
         });
     });
@@ -536,7 +536,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, async () => {
@@ -552,7 +552,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, async () => {
@@ -568,7 +568,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
 
         it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, async () => {
@@ -584,7 +584,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 
@@ -602,7 +602,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 position,
             );
 
-            TestUtils.assertAutocompleteItemLabels(expected, actual);
+            TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
         });
     });
 });
