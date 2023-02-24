@@ -43,6 +43,12 @@ import { PositionUtils } from "../..";
 //     ...DrilldownConstantKind,
 // ];
 
+const ShiftLeftConstantKinds: ReadonlyArray<Constant.TConstant> = [
+    Constant.WrapperConstant.RightBrace,
+    Constant.WrapperConstant.RightBracket,
+    Constant.WrapperConstant.RightParenthesis,
+];
+
 const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
     ...Constant.BinOpExpressionOperators,
     Constant.MiscConstant.Ampersand,
@@ -51,12 +57,8 @@ const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
     Constant.MiscConstant.Equal,
     Constant.MiscConstant.FatArrow,
     Constant.MiscConstant.NullCoalescingOperator,
-];
-
-const CloseWrapperConstants: ReadonlyArray<Constant.TConstant> = [
-    Constant.WrapperConstant.RightBrace,
-    Constant.WrapperConstant.RightBracket,
-    Constant.WrapperConstant.RightParenthesis,
+    Constant.MiscConstant.Semicolon,
+    Constant.MiscConstant.QuestionMark,
 ];
 
 // const foobar: ReadonlyArray<TLeaf["kind"]> = [Ast.NodeKind.Identifier, Ast.NodeKind.GeneralizedIdentifier];
@@ -132,8 +134,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     if (
         nodeClosestBeforePosition === undefined &&
         nodeOnPosition === undefined &&
-        nodeClosestAfterPosition === undefined &&
-        contextClosestOnOrAfterPosition === undefined
+        nodeClosestAfterPosition === undefined
     ) {
         return createOutOfBoundPosition(position);
     }
@@ -142,7 +143,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
 
     // Case 2a: truthy left
     // `not |`
-    // `x |`
+    // `foo |`
     if (
         nodeClosestBeforePosition !== undefined &&
         nodeOnPosition === undefined &&
@@ -155,14 +156,16 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
             leafKind = ActiveNodeLeafKind.ContextNode;
         }
         // Without context
-        // `x |`
+        // `foo |`
         else {
             return createOutOfBoundPosition(position);
         }
     }
     // Case 2b: truthy center
     // `|not`
-    // `|x`
+    // `not|`
+    // `|foo`
+    // `foo|`
     else if (
         nodeClosestBeforePosition === undefined &&
         nodeOnPosition !== undefined &&
@@ -187,7 +190,8 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     // Case 3: There's 2 leafs, left and center
     // `1+|1`
     // `if |true`
-    // `{1, |} (will require drilldown)
+    // `if true|`
+    // `{1, foo|`
     if (nodeClosestBeforePosition !== undefined && nodeOnPosition !== undefined) {
         // With or without context
         // `1+|1`
@@ -216,171 +220,13 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         nodeOnPosition !== undefined &&
         nodeClosestAfterPosition !== undefined
     ) {
-        // `1|+1`
-        if (
-            nodeOnPosition.tokenRange.positionEnd.lineNumber === position.line &&
-            nodeOnPosition.tokenRange.positionEnd.lineCodeUnit === position.character
-        ) {
-            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
-            leafKind = ActiveNodeLeafKind.IsInAst;
-        }
-        // `1+|1`
-        else if (
-            AstUtils.isTConstant(nodeClosestBeforePosition) &&
-            ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
-        ) {
-            leaf = XorNodeUtils.boxAst(nodeOnPosition);
-            leafKind = ActiveNodeLeafKind.IsInAst;
-        }
-        // `not |true`
-        else {
-            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
-            leafKind = ActiveNodeLeafKind.IsBeforePosition;
-        }
+        leaf = XorNodeUtils.boxAst(nodeOnPosition);
+        leafKind = ActiveNodeLeafKind.IsInAst;
     }
-
-    // // Case (3): There's nothing to the left of the position
-    // if (nodeClosestBeforePosition === undefined) {
-    //     // `|1+1`
-    //     if (nodeOnPosition !== undefined) {
-    //         leaf = XorNodeUtils.boxAst(nodeOnPosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     }
-    //     // `| 1+1`
-    //     else if (nodeClosestAfterPosition !== undefined) {
-    //         leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
-    //         leafKind = ActiveNodeLeafKind.IsAfterPosition;
-    //     }
-    // }
-
-    // // Case (4): Between 2 leafs
-    // // `1 + | 1`
-    // if (nodeClosestAfterPosition !== undefined && nodeClosestAfterPosition !== undefined) {
-    //     leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
-    //     leafKind = ActiveNodeLeafKind.IsAfterPosition;
-    // }
-
-    // // If the left leaf is a conjunction, meaning we shift to the right.
-    // if (
-    //     nodeClosestBeforePosition !== undefined &&
-    //     AstUtils.isTConstant(nodeClosestBeforePosition) &&
-    //     ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
-    // ) {
-    //     // `1+|1
-    //     if (nodeOnPosition !== undefined) {
-    //         leaf = XorNodeUtils.boxAst(nodeOnPosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     }
-    //     // `1 +| 1`
-    //     else if (nodeClosestAfterPosition !== undefined) {
-    //         leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
-    //         leafKind = ActiveNodeLeafKind.IsAfterPosition;
-    //     }
-    //     // `1 + |`
-    //     else if (contextClosestOnOrAfterPosition !== undefined) {
-    //         leaf = XorNodeUtils.boxContext(contextClosestOnOrAfterPosition);
-    //         leafKind = ActiveNodeLeafKind.ContextNode;
-    //     }
-    // }
-
-    // // If the center leaf is a conjunction, meaning we might shift to the left.
-    // // `1|+`
-    // // `1 |+`
-    // if (
-    //     nodeClosestBeforePosition !== undefined &&
-    //     nodeOnPosition !== undefined &&
-    //     AstUtils.isTConstant(nodeOnPosition) &&
-    //     ShiftRightConstantKinds.includes(nodeOnPosition.constantKind)
-    // ) {
-    //     // `1|+`
-    //     if (
-    //         nodeOnPosition.tokenRange.positionEnd.lineNumber === position.line &&
-    //         nodeOnPosition.tokenRange.positionEnd.lineCodeUnit === position.character
-    //     ) {
-    //         leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     } else {
-    //         leaf = XorNodeUtils.boxAst(nodeOnPosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     }
-    // }
-
-    // if (
-    //     nodeOnPosition !== undefined &&
-    //     AstUtils.isTConstant(nodeOnPosition) &&
-    //     CloseWrapperConstants.includes(nodeOnPosition.constantKind) &&
-    //     nodeClosestBeforePosition
-    // ) {
-    //     // `(1+1|)`
-    //     if (
-    //         nodeClosestBeforePosition.tokenRange.positionEnd.lineNumber === position.line &&
-    //         nodeClosestBeforePosition.tokenRange.positionEnd.lineCodeUnit === position.character
-    //     ) {
-    //         leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     }
-    //     // `(1+1 |)`
-    //     else {
-    //         leaf = XorNodeUtils.boxAst(nodeOnPosition);
-    //         leafKind = ActiveNodeLeafKind.IsInAst;
-    //     }
-    // }
 
     if (leaf === undefined || leafKind === undefined) {
         throw new Error();
     }
-
-    //     // `foo(1|`
-    //     if (
-    //         nodeOnPosition === undefined &&
-    //         nodeClosestAfterPosition === undefined &&
-    //         contextClosestOnOrAfterPosition !== undefined
-    //     ) {
-    //         leaf = XorNodeUtils.boxContext(contextClosestOnOrAfterPosition);
-    //         leafKind = ActiveNodeLeafKind.ContextNode;
-    //     } else if (
-    //         AstUtils.isTConstant(nodeClosestBeforePosition) &&
-    //         ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
-    //     ) {
-    //         // `1 +|2`
-    //         if (nodeOnPosition !== undefined) {
-    //             leaf = XorNodeUtils.boxAst(nodeOnPosition);
-    //             leafKind = ActiveNodeLeafKind.ContextNode;
-    //         }
-    //         // `1 +| 2`
-    //         else if (nodeClosestAfterPosition !== undefined) {
-    //             leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
-    //             leafKind = ActiveNodeLeafKind.ContextNode;
-    //         }
-    //         // `1 + |`
-    //         else if (contextClosestOnOrAfterPosition !== undefined) {
-    //             leaf = XorNodeUtils.boxContext(contextClosestOnOrAfterPosition);
-    //             leafKind = ActiveNodeLeafKind.ContextNode;
-    //         } else {
-    //             return createOutOfBoundPosition(position);
-    //         }
-    //     }
-    // }
-
-    // // eg. `let x|=1 in x`
-    // if (
-    //     // If a node ends directly at the Position's start
-    //     // and there's a node which start exactly at the Position's end
-    //     // ie. overlapping stard/end
-    //     // eg. `let x|=1 in x`
-    //     nodeClosestBeforePosition !== undefined &&
-    //     nodeOnPosition !== undefined &&
-    //     nodeClosestBeforePosition.tokenRange.positionEnd.codeUnit === nodeOnPosition.tokenRange.positionStart.codeUnit
-    // ) {
-    //     const picked: LeafAndKind = pickOverlappingLeftOrCenterLeaf(
-    //         nodeClosestBeforePosition,
-    //         nodeOnPosition,
-    //         nodeClosestAfterPosition,
-    //     );
-
-    //     leaf = picked.leaf;
-    //     leafKind = picked.leafKind;
-    // }
 
     const inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined = findLeafIdentifier(
         nodeIdMapCollection,
@@ -499,13 +345,21 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
             continue;
         }
 
+        let includeLowerBound: boolean = true;
+        let includeUpperBound: boolean = true;
+
+        if (AstUtils.isTConstant(candidate)) {
+            includeLowerBound = !ShiftLeftConstantKinds.includes(candidate.constantKind);
+            includeUpperBound = !ShiftRightConstantKinds.includes(candidate.constantKind);
+        }
+
         // If the candidate starts under the cursor position then it's safe to assume it's the best candidate,
         // as each leaf node is guaranteed to be non-overlapping.
-        if (PositionUtils.isOnAstStart(position, candidate)) {
+        if (PositionUtils.isInAst(position, candidate, includeLowerBound, includeUpperBound)) {
             nodeOnPosition = candidate;
         }
         // Else if the candidate is before the cursor position
-        else if (PositionUtils.isAfterAst(position, candidate, false)) {
+        else if (PositionUtils.isAfterAst(position, candidate, !includeUpperBound)) {
             // And we either haven't found a closestNodeOnOrBeforePosition yet, or if the candidate is better (more right) than the current closestNodeOnOrBeforePosition.
             if (
                 nodeClosestBeforePosition === undefined ||
