@@ -26,23 +26,6 @@ import {
 } from "./activeNode";
 import { PositionUtils } from "../..";
 
-// const DrilldownConstantKind: ReadonlyArray<string> = [
-//     Constant.WrapperConstant.LeftBrace,
-//     Constant.WrapperConstant.LeftBracket,
-//     Constant.WrapperConstant.LeftParenthesis,
-// ];
-
-// const ShiftRightConstantKinds: ReadonlyArray<string> = [
-//     Constant.MiscConstant.Comma,
-//     Constant.MiscConstant.Equal,
-//     Constant.MiscConstant.FatArrow,
-//     Constant.WrapperConstant.RightBrace,
-//     Constant.WrapperConstant.RightBracket,
-//     Constant.WrapperConstant.RightParenthesis,
-//     Constant.MiscConstant.Semicolon,
-//     ...DrilldownConstantKind,
-// ];
-
 const ShiftLeftConstantKinds: ReadonlyArray<Constant.TConstant> = [
     Constant.WrapperConstant.RightBrace,
     Constant.WrapperConstant.RightBracket,
@@ -61,58 +44,17 @@ const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
     Constant.MiscConstant.QuestionMark,
 ];
 
-// const foobar: ReadonlyArray<TLeaf["kind"]> = [Ast.NodeKind.Identifier, Ast.NodeKind.GeneralizedIdentifier];
-
-// // `let x|=1` -> left
-// // `let x=|1` -> center
-// // `[|x=1` -> center
-// // `[x|=1` -> left
-// // `[x=|1` -> center
-// // `[|[x=` -> center
-// // `[[|x=` -> center
-// // `1|&2` -> left
-// // `1&|2` -> center
-// // `{|1,2} -> center
-// // `{1|,2} -> left
-// // `{1,|2} -> center
-// // `{1,2|} -> left
-// function pickOverlappingLeftOrCenterLeaf(left: TLeaf, center: TLeaf, right: TLeaf): LeafAndKind {
-//     if (AstUtils.isTConstant(left) && ConjunctionConstants.includes(left.constantKind)) {
-//         return {
-//             leaf: XorNodeUtils.boxAst(center),
-//             leafKind: ActiveNodeLeafKind.ContextNode,
-//         };
+// function discoverLeafKind(leaf: TLeaf, position: Position): ActiveNodeLeafKind {
+//     if (PositionUtils.isInAst(position, leaf, true, true)) {
+//         return ActiveNodeLeafKind.IsInAst;
+//     } else if (PositionUtils.isBeforeAst(position, leaf, false)) {
+//         return ActiveNodeLeafKind.IsBeforePosition;
+//     } else if (PositionUtils.isAfterAst(position, leaf, false)) {
+//         return ActiveNodeLeafKind.IsAfterPosition;
+//     } else {
+//         throw new CommonError.InvariantError(`somehow Position is not in, before, or after the AstNode.`);
 //     }
-
-//     if (
-//         AstUtils.isTConstant(center) &&
-//         (ConjunctionConstants.includes(center.constantKind) || CloseWrapperConstants.includes(center.constantKind))
-//     ) {
-//         return {
-//             leaf: XorNodeUtils.boxAst(left),
-//             leafKind: ActiveNodeLeafKind.ContextNode,
-//         };
-//     }
-
-//     throw new Error(JSON.stringify({ leftLeafKind: left.kind, centerLeafKind: center.kind }));
 // }
-
-interface LeafAndKind {
-    readonly leaf: TXorNode;
-    readonly leafKind: ActiveNodeLeafKind;
-}
-
-function discoverLeafKind(leaf: TLeaf, position: Position): ActiveNodeLeafKind {
-    if (PositionUtils.isInAst(position, leaf, true, true)) {
-        return ActiveNodeLeafKind.IsInAst;
-    } else if (PositionUtils.isBeforeAst(position, leaf, false)) {
-        return ActiveNodeLeafKind.IsBeforePosition;
-    } else if (PositionUtils.isAfterAst(position, leaf, false)) {
-        return ActiveNodeLeafKind.IsAfterPosition;
-    } else {
-        throw new CommonError.InvariantError(`somehow Position is not in, before, or after the AstNode.`);
-    }
-}
 
 export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TActiveNode {
     const astSearched: SearchedLeafs = leafSearch(nodeIdMapCollection, position);
@@ -158,7 +100,8 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         // Without context
         // `foo |`
         else {
-            return createOutOfBoundPosition(position);
+            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
+            leafKind = ActiveNodeLeafKind.IsBeforePosition;
         }
     }
     // Case 2b: truthy center
@@ -291,39 +234,6 @@ interface SearchedLeafs {
     readonly nodeClosestBeforePosition: TLeaf | undefined;
     readonly nodeOnPosition: TLeaf | undefined;
     readonly nodeClosestAfterPosition: TLeaf | undefined;
-}
-
-function isAnchorNode(position: Position, astNode: TLeaf): boolean {
-    if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        return true;
-    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
-        return true;
-    } else if (astNode.kind === Ast.NodeKind.Constant) {
-        switch (astNode.constantKind) {
-            case Constant.KeywordConstant.As:
-            case Constant.KeywordConstant.Each:
-            case Constant.KeywordConstant.Else:
-            case Constant.KeywordConstant.Error:
-            case Constant.KeywordConstant.If:
-            case Constant.KeywordConstant.In:
-            case Constant.KeywordConstant.Is:
-            case Constant.KeywordConstant.Section:
-            case Constant.KeywordConstant.Shared:
-            case Constant.KeywordConstant.Let:
-            case Constant.KeywordConstant.Meta:
-            case Constant.KeywordConstant.Otherwise:
-            case Constant.KeywordConstant.Then:
-            case Constant.KeywordConstant.Try:
-            case Constant.KeywordConstant.Type:
-            case Constant.PrimitiveTypeConstant.Null:
-                return true;
-
-            default:
-                return false;
-        }
-    } else {
-        return false;
-    }
 }
 
 function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Position): SearchedLeafs {
