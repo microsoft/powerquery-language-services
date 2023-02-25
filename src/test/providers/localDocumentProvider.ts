@@ -30,12 +30,7 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     async function assertAutocompleteItems(text: string, expected: ReadonlyArray<string>): Promise<void> {
-        const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-            await TestUtils.createAutocompleteItems(text, IsolatedAnalysisSettings);
-
-        Assert.isOk(actual);
-        Assert.isDefined(actual.value);
-        TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
+        await TestUtils.assertContainsAutocompleteItemsFromAnalysis(text, expected, IsolatedAnalysisSettings);
     }
 
     describe(`getAutocompleteItems`, () => {

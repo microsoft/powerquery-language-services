@@ -16,7 +16,7 @@ async function assertContainsPrimitiveTypeAutocomplete(
     textWithPipe: string,
     expected: ReadonlyArray<PrimitiveTypeConstant>,
 ): Promise<void> {
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
+    const actual: Inspection.Autocomplete = await TestUtils.assertAutocomplete(
         TestConstants.DefaultInspectionSettings,
         textWithPipe,
     );

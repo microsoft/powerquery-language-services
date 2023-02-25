@@ -16,7 +16,7 @@ async function assertContainsAutocompleteItemLabels(
     textWithPipe: string,
     expected: ReadonlyArray<KeywordKind>,
 ): Promise<void> {
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
+    const actual: Inspection.Autocomplete = await TestUtils.assertAutocomplete(
         TestConstants.DefaultInspectionSettings,
         textWithPipe,
     );

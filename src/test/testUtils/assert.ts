@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, CommonError, Result, TaskUtils } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, ICancellationToken, Result, TaskUtils } from "@microsoft/powerquery-parser";
 import { Hover, Location, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { expect } from "chai";
 import { Range } from "vscode-languageserver-textdocument";
@@ -109,7 +109,7 @@ export async function assertGetInspectionInstance(
     );
 }
 
-export async function assertGetAutocompleteFromInternal(
+export async function assertAutocomplete(
     settings: InspectionSettings,
     textWithPipe: string,
 ): Promise<Inspection.Autocomplete> {
@@ -140,6 +140,20 @@ export async function assertGetAutocompleteFromInternal(
     } else {
         throw new Error("should never be reached");
     }
+}
+
+export async function assertContainsAutocompleteItemsFromAnalysis(
+    textWithPipe: string,
+    expected: ReadonlyArray<string>,
+    analysisSettings?: AnalysisSettings,
+    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
+): Promise<void> {
+    const result: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+        await TestUtils.createAutocompleteItemsFromAnalysis(textWithPipe, analysisSettings, cancellationToken);
+
+    Assert.isOk(result);
+    Assert.isDefined(result.value);
+    expect(result.value).to.deep.equal(expected);
 }
 
 export function assertContainsAutocompleteItem(

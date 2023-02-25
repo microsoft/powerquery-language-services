@@ -17,7 +17,7 @@ describe("Analysis", () => {
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                await TestUtils.createAutocompleteItems(`
+                await TestUtils.createAutocompleteItemsFromAnalysis(`
         let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
 
             Assert.isOk(autocompleteItems);

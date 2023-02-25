@@ -12,7 +12,7 @@ async function assertContainsLanguageConstantAutocomplete(
     textWithPipe: string,
     expected: LanguageConstant | undefined,
 ): Promise<void> {
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
+    const actual: Inspection.Autocomplete = await TestUtils.assertAutocomplete(
         TestConstants.DefaultInspectionSettings,
         textWithPipe,
     );

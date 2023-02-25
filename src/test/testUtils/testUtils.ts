@@ -87,7 +87,7 @@ export function createAnalysisAndExtractPosition(
     return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings)), position];
 }
 
-export function createAutocompleteItems(
+export function createAutocompleteItemsFromAnalysis(
     textWithPipe: string,
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,

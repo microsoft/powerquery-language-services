@@ -8,7 +8,7 @@ import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
 async function assertFieldAccessAutocomplete(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
+    const actual: Inspection.Autocomplete = await TestUtils.assertAutocomplete(
         TestConstants.DefaultInspectionSettings,
         textWithPipe,
     );
