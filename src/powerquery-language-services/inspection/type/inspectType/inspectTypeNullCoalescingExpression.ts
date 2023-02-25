@@ -42,6 +42,8 @@ export async function inspectTypeNullCoalescingExpression(
 
         if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
+        } else if (!leftType.isNullable) {
+            result = leftType;
         } else {
             result = TypeUtils.createAnyUnion([leftType, rightType], state.traceManager, trace.id);
         }

@@ -14,6 +14,7 @@ import {
     autocomplete,
     Inspected,
     InspectionInstance,
+    NodeScope,
     TActiveNode,
     TriedCurrentInvokeExpression,
     TriedNodeScope,
@@ -174,6 +175,34 @@ export async function assertGetLexParseError(
     return triedLexParseTask;
 }
 
+export async function assertGetNodeScope(settings: PQP.Settings, text: string, position: Position): Promise<NodeScope> {
+    const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
+    let nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection;
+
+    if (TaskUtils.isParseStageOk(triedLexParseTask)) {
+        nodeIdMapCollection = triedLexParseTask.nodeIdMapCollection;
+    } else if (TaskUtils.isParseStageParseError(triedLexParseTask)) {
+        nodeIdMapCollection = triedLexParseTask.nodeIdMapCollection;
+    } else {
+        throw new Error(`unexpected task stage: ${triedLexParseTask.stage}`);
+    }
+
+    const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
+
+    if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
+        return new Map();
+    }
+
+    return Assert.unboxOk(
+        await tryNodeScope(
+            settings,
+            nodeIdMapCollection,
+            ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
+            TypeCacheUtils.createEmptyCache().scopeById,
+        ),
+    );
+}
+
 // Only works with single line expressions
 export function assertGetTextWithPosition(text: string): [string, Position] {
     const lines: ReadonlyArray<string> = text.split("\n");
@@ -241,16 +270,6 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
     if (!MarkupContent.is(value)) {
         throw new Error(`expected value to be MarkupContent`);
     }
-}
-
-export function assertAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    expected = [...expected].sort();
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
-
-    expect(actualLabels).to.deep.equal(expected);
 }
 
 export function assertContainsAutocompleteItemLabels(

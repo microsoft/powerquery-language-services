@@ -6,10 +6,10 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { Position } from "vscode-languageserver-types";
 
 import { Inspection, InspectionSettings, Library, TypeStrategy } from "../../powerquery-language-services";
+import { assertGetNodeScope } from "../testUtils";
 import { TestUtils } from "..";
 
 export type TAbridgedNodeScopeItem =
@@ -19,8 +19,6 @@ export type TAbridgedNodeScopeItem =
     | AbridgedRecordScopeItem
     | AbridgedSectionMemberScopeItem
     | AbridgedUndefinedScopeItem;
-
-type AbridgedNodeScope = ReadonlyArray<TAbridgedNodeScopeItem>;
 
 const DefaultSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
@@ -125,216 +123,77 @@ function createAbridgedNodeScopeItems(nodeScope: Inspection.NodeScope): Readonly
     return result;
 }
 
-function createAbridgedParameterScopeItems(nodeScope: Inspection.NodeScope): ReadonlyArray<AbridgedParameterScopeItem> {
-    const result: AbridgedParameterScopeItem[] = [];
+async function assertNodeScope(textWithPipe: string, expected: ReadonlyArray<TAbridgedNodeScopeItem>): Promise<void> {
+    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
 
-    for (const [identifier, scopeItem] of nodeScope.entries()) {
-        const abridged: TAbridgedNodeScopeItem = createAbridgedNodeScopeItem(identifier, scopeItem);
-
-        if (abridged.kind === Inspection.ScopeItemKind.Parameter) {
-            result.push(abridged);
-        }
-    }
-
-    return result;
-}
-
-async function assertNodeScopeOk(
-    settings: PQP.CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    position: Position,
-): Promise<Inspection.NodeScope> {
-    const activeNode: Inspection.TActiveNode = Inspection.ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
-
-    if (!Inspection.ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        return new Map();
-    }
-
-    const triedNodeScope: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
-        settings,
-        nodeIdMapCollection,
-        activeNode.ancestry[0].node.id,
-        new Map(),
+    const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
+        await assertGetNodeScope(DefaultSettings, text, position),
     );
 
-    Assert.isOk(triedNodeScope);
-
-    return triedNodeScope.value;
-}
-
-export async function assertGetParseOkScopeOk(
-    settings: PQP.LexSettings & PQP.ParseSettings,
-    text: string,
-    position: Position,
-): Promise<Inspection.NodeScope> {
-    const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(settings, text);
-
-    return assertNodeScopeOk(settings, parseOk.nodeIdMapCollection, position);
-}
-
-export async function assertGetParseErrScopeOk(
-    settings: PQP.LexSettings & PQP.ParseSettings,
-    text: string,
-    position: Position,
-): Promise<Inspection.NodeScope> {
-    const parseError: PQP.Task.ParseTaskParseError = await TestUtils.assertGetLexParseError(settings, text);
-
-    return assertNodeScopeOk(settings, parseError.nodeIdMapCollection, position);
+    expect(actual).to.deep.equal(expected);
 }
 
 describe(`subset Inspection - Scope - Identifier`, () => {
     describe(`Scope`, () => {
         describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
-            it(`|each 1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|each 1`);
-                const expected: ReadonlyArray<TAbridgedNodeScopeItem> = [];
+            it(`|each 1`, async () => await assertNodeScope(`|each 1`, []));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
+            it(`each| 1`, async () => await assertNodeScope(`each| 1`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`each| 1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each| 1`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`each |1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |1`);
-
-                const expected: AbridgedNodeScope = [
+            it(`each |1`, async () =>
+                await assertNodeScope(`each |1`, [
                     {
                         identifier: "_",
                         isRecursive: false,
                         kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`each 1|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each 1|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`each 1|`, async () =>
+                await assertNodeScope(`each 1|`, [
                     {
                         identifier: "_",
                         isRecursive: false,
                         kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`each each 1|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each each 1|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`each each 1|`, async () =>
+                await assertNodeScope(`each each 1|`, [
                     {
                         identifier: "_",
                         isRecursive: false,
                         kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 3,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
-            it(`each|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each|`);
-                const expected: AbridgedNodeScope = [];
+            it(`each|`, async () => await assertNodeScope(`each|`, []));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`each |`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`each |`);
-
-                const expected: AbridgedNodeScope = [
+            it(`each |`, async () =>
+                await assertNodeScope(`each |`, [
                     {
                         identifier: "_",
                         isRecursive: false,
                         kind: Inspection.ScopeItemKind.Each,
                         eachExpressionNodeId: 1,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
-            it(`|(x) => z`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) => z`);
-                const expected: AbridgedNodeScope = [];
+            it(`|(x) => z`, async () => await assertNodeScope(`|(x) => z`, []));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
+            it(`(x|, y) => z`, async () => await assertNodeScope(`(x|, y) => z`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
+            it(`(x, y)| => z`, async () => await assertNodeScope(`(x, y)| => z`, []));
 
-            it(`(x|, y) => z`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) => z`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`(x, y)| => z`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| => z`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`(x, y) => z|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) => z|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`(x, y) => z|`, async () =>
+                await assertNodeScope(`(x, y) => z|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -351,54 +210,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         isOptional: false,
                         type: undefined,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
-            it(`|(x) =>`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|(x) =>`);
-                const expected: AbridgedNodeScope = [];
+            it(`|(x) =>`, async () => await assertNodeScope(`|(x) =>`, []));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
+            it(`(x|, y) =>`, async () => await assertNodeScope(`(x|, y) =>`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
+            it(`(x, y)| =>`, async () => await assertNodeScope(`(x, y)| =>`, []));
 
-            it(`(x|, y) =>`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x|, y) =>`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`(x, y)| =>`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y)| =>`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`(x, y) =>|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`(x, y) =>|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`(x, y) =>|`, async () =>
+                await assertNodeScope(`(x, y) =>|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -415,22 +238,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         isOptional: false,
                         type: undefined,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
-            it(`let x = 1, y = x in 1|`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let x = 1, y = x in 1|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let x = 1, y = x in 1|`, async () =>
+                await assertNodeScope(`let x = 1, y = x in 1|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -445,43 +258,16 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 14,
                         valueNodeId: 18,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
-            it(`|[a=1]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1]`);
-                const expected: AbridgedNodeScope = [];
+            it(`|[a=1]`, async () => await assertNodeScope(`|[a=1]`, []));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
+            it(`[|a=1]`, async () => await assertNodeScope(`[|a=1]`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[|a=1]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1]`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=1|]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|]`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=1|]`, async () =>
+                await assertNodeScope(`[a=1|]`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -489,19 +275,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                         valueNodeId: 12,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=1, b=2|]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|]`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=1, b=2|]`, async () =>
+                await assertNodeScope(`[a=1, b=2|]`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -516,19 +293,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=1, b=2|, c=3]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3]`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=1, b=2|, c=3]`, async () =>
+                await assertNodeScope(`[a=1, b=2|, c=3]`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -550,30 +318,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 24,
                         valueNodeId: 28,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
+            it(`[a=1]|`, async () => await assertNodeScope(`[a=1]|`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=1]|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1]|`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=[|b=1]]`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1]]`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=[|b=1]]`, async () =>
+                await assertNodeScope(`[a=[|b=1]]`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -581,43 +331,16 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                         valueNodeId: 12,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
-            it(`|[a=1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`|[a=1`);
-                const expected: AbridgedNodeScope = [];
+            it(`|[a=1`, async () => await assertNodeScope(`|[a=1`, []));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
+            it(`[|a=1`, async () => await assertNodeScope(`[|a=1`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[|a=1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[|a=1`);
-                const expected: AbridgedNodeScope = [];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=|1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=|1`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=|1`, async () =>
+                await assertNodeScope(`[a=|1`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -625,19 +348,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                         valueNodeId: 12,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
 
             it(`[a=1|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1|`);
-
-                const expected: AbridgedNodeScope = [
+                await assertNodeScope(`[a=1|`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -645,19 +359,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                         valueNodeId: 12,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
+                ]);
             });
 
-            it(`[a=1, b=|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=1, b=|`, async () =>
+                await assertNodeScope(`[a=1, b=|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -672,19 +378,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 18,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=1, b=2|, c=3`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=1, b=2|, c=3`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=1, b=2|, c=3`, async () =>
+                await assertNodeScope(`[a=1, b=2|, c=3`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -706,19 +403,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 24,
                         valueNodeId: 28,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=[|b=1`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[|b=1`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=[|b=1`, async () =>
+                await assertNodeScope(`[a=[|b=1`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -726,19 +414,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 8,
                         valueNodeId: 10,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`[a=[b=|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`[a=[b=|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`[a=[b=|`, async () =>
+                await assertNodeScope(`[a=[b=|`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -753,35 +432,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 17,
                         valueNodeId: 19,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.Section} (Ast)`, () => {
-            it(`s|ection foo; x = 1; y = 2;`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`s|ection foo; x = 1; y = 2;`);
+            it(`s|ection foo; x = 1; y = 2;`, async () => await assertNodeScope(`s|ection foo; x = 1; y = 2;`, []));
 
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1|; y = 2;`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2;`);
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1|; y = 2;`, async () =>
+                await assertNodeScope(`section foo; x = 1|; y = 2;`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -796,20 +454,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1; y = 2|;`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2|;`);
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1; y = 2|;`, async () =>
+                await assertNodeScope(`section foo; x = 1; y = 2|;`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -824,34 +472,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
+            it(`section foo; x = 1; y = 2;|`, async () => await assertNodeScope(`section foo; x = 1; y = 2;|`, []));
 
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1; y = 2;|`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2;|`);
-
-                const expected: AbridgedNodeScope = [];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                    `section foo; x = 1; y = 2; z = let a = 1 in |b;`,
-                );
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, async () =>
+                await assertNodeScope(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -880,35 +506,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 31,
                         valueNodeId: 35,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
-            it(`s|ection foo; x = 1; y = 2`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`s|ection foo; x = 1; y = 2`);
+            it(`s|ection foo; x = 1; y = 2`, async () => await assertNodeScope(`s|ection foo; x = 1; y = 2`, []));
 
-                const expected: AbridgedNodeScope = [];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1|; y = 2`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`section foo; x = 1|; y = 2`);
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1|; y = 2`, async () =>
+                await assertNodeScope(`section foo; x = 1|; y = 2`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -923,20 +528,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1; y = 2|`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`section foo; x = 1; y = 2|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1; y = 2|`, async () =>
+                await assertNodeScope(`section foo; x = 1; y = 2|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -951,21 +546,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`section foo; x = 1; y = () => 10|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                    `section foo; x = 1; y = () => 10|`,
-                );
-
-                const expected: AbridgedNodeScope = [
+            it(`section foo; x = 1; y = () => 10|`, async () =>
+                await assertNodeScope(`section foo; x = 1; y = () => 10|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -980,21 +564,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 18,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
-            it(`let a = 1 in |x`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |x`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1 in |x`, async () =>
+                await assertNodeScope(`let a = 1 in |x`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1002,19 +577,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 10,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = 1 in x|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in x|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1 in x|`, async () =>
+                await assertNodeScope(`let a = 1 in x|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1022,19 +588,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 10,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = |1 in x`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = |1 in x`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = |1 in x`, async () =>
+                await assertNodeScope(`let a = |1 in x`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1042,20 +599,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 10,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = 1, b = 2 in x|`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let a = 1, b = 2 in x|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1, b = 2 in x|`, async () =>
+                await assertNodeScope(`let a = 1, b = 2 in x|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1070,20 +617,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 14,
                         valueNodeId: 18,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = 1|, b = 2 in x`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in x`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1|, b = 2 in x`, async () =>
+                await assertNodeScope(`let a = 1|, b = 2 in x`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1098,21 +635,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 14,
                         valueNodeId: 18,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                    `(p1, p2) => let a = 1, b = 2, c = 3| in c`,
-                );
-
-                const expected: AbridgedNodeScope = [
+            it(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, async () =>
+                await assertNodeScope(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, [
                     {
                         identifier: "p1",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -1150,21 +676,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 35,
                         valueNodeId: 39,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                    `let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`,
-                );
-
-                const expected: AbridgedNodeScope = [
+            it(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, async () =>
+                await assertNodeScope(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, [
                     {
                         identifier: "eggs",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1186,21 +701,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 33,
                         valueNodeId: 37,
                     },
-                ];
+                ]));
 
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                    `let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`,
-                );
-
-                const expected: AbridgedNodeScope = [
+            it(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, async () =>
+                await assertNodeScope(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, [
                     {
                         identifier: "@eggs",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1229,21 +733,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 13,
                         valueNodeId: 17,
                     },
-                ];
-
-                const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
 
         describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
-            it(`let a = 1 in |`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let a = 1 in |`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1 in |`, async () =>
+                await assertNodeScope(`let a = 1 in |`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1251,20 +746,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 10,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = 1, b = 2 in |`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let a = 1, b = 2 in |`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1, b = 2 in |`, async () =>
+                await assertNodeScope(`let a = 1, b = 2 in |`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1279,20 +764,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 14,
                         valueNodeId: 18,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let a = 1|, b = 2 in`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let a = 1|, b = 2 in `);
-
-                const expected: AbridgedNodeScope = [
+            it(`let a = 1|, b = 2 in`, async () =>
+                await assertNodeScope(`let a = 1|, b = 2 in `, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1307,20 +782,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 14,
                         valueNodeId: 18,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let x = (let y = 1 in z|) in`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let x = (let y = 1 in z|) in`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let x = (let y = 1 in z|) in`, async () =>
+                await assertNodeScope(`let x = (let y = 1 in z|) in`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1335,20 +800,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 16,
                         valueNodeId: 20,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`let x = (let y = 1 in z) in |`, async () => {
-                const [text, position]: [string, Position] =
-                    TestUtils.assertGetTextWithPosition(`let x = (let y = 1 in z) in |`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let x = (let y = 1 in z) in |`, async () =>
+                await assertNodeScope(`let x = (let y = 1 in z) in |`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -1356,59 +811,43 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 9,
                     },
-                ];
+                ]));
 
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
-
-            it(`an EachExpression contains the parent's scope;`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`
-let
-    tbl = 1 as table,
-    bar = "bar"
-in
-    each |`);
-
-                const expected: AbridgedNodeScope = [
-                    {
-                        identifier: "tbl",
-                        kind: Inspection.ScopeItemKind.LetVariable,
-                        isRecursive: false,
-                        keyNodeId: 6,
-                        valueNodeId: 13,
-                    },
-                    {
-                        identifier: "bar",
-                        kind: Inspection.ScopeItemKind.LetVariable,
-                        isRecursive: false,
-                        keyNodeId: 17,
-                        valueNodeId: 21,
-                    },
-                    {
-                        eachExpressionNodeId: 23,
-                        identifier: "_",
-                        isRecursive: false,
-                        kind: Inspection.ScopeItemKind.Each,
-                    },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseErrScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+            it(`an EachExpression contains the parent's scope;`, async () =>
+                await assertNodeScope(
+                    `let
+                        tbl = 1 as table,
+                        bar = "bar"
+                    in
+                        each |`,
+                    [
+                        {
+                            identifier: "tbl",
+                            kind: Inspection.ScopeItemKind.LetVariable,
+                            isRecursive: false,
+                            keyNodeId: 6,
+                            valueNodeId: 13,
+                        },
+                        {
+                            identifier: "bar",
+                            kind: Inspection.ScopeItemKind.LetVariable,
+                            isRecursive: false,
+                            keyNodeId: 17,
+                            valueNodeId: 21,
+                        },
+                        {
+                            eachExpressionNodeId: 23,
+                            identifier: "_",
+                            isRecursive: false,
+                            kind: Inspection.ScopeItemKind.Each,
+                        },
+                    ],
+                ));
         });
 
         describe(`generalized expression`, () => {
-            it(`let #"x" = 1 in x`, async () => {
-                const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(`let #"x" = 1 in x|`);
-
-                const expected: AbridgedNodeScope = [
+            it(`let #"x" = 1 in x`, async () =>
+                await assertNodeScope(`let #"x" = 1 in x|`, [
                     {
                         identifier: `x`,
                         isRecursive: false,
@@ -1423,24 +862,13 @@ in
                         kind: Inspection.ScopeItemKind.LetVariable,
                         valueNodeId: 10,
                     },
-                ];
-
-                const actual: AbridgedNodeScope = createAbridgedNodeScopeItems(
-                    await assertGetParseOkScopeOk(DefaultSettings, text, position),
-                );
-
-                expect(actual).to.deep.equal(expected);
-            });
+                ]));
         });
     });
 
     describe(`Parameter`, () => {
-        it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
-                `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
-            );
-
-            const expected: ReadonlyArray<AbridgedParameterScopeItem> = [
+        it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, async () =>
+            await assertNodeScope(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, [
                 {
                     identifier: "a",
                     kind: Inspection.ScopeItemKind.Parameter,
@@ -1481,13 +909,6 @@ in
                     isOptional: true,
                     type: Constant.PrimitiveTypeConstant.Table,
                 },
-            ];
-
-            const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedParameterScopeItems(
-                await assertGetParseOkScopeOk(DefaultSettings, text, position),
-            );
-
-            expect(actual).to.deep.equal(expected);
-        });
+            ]));
     });
 });
