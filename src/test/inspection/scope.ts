@@ -8,9 +8,8 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import type { Position } from "vscode-languageserver-types";
 
+import { assertGetNodeScope, assertGetTextAndExtractPosition } from "../testUtils";
 import { Inspection, InspectionSettings, Library, TypeStrategy } from "../../powerquery-language-services";
-import { assertGetNodeScope } from "../testUtils";
-import { TestUtils } from "..";
 
 export type TAbridgedNodeScopeItem =
     | AbridgedEachScopeItem
@@ -124,7 +123,7 @@ function createAbridgedNodeScopeItems(nodeScope: Inspection.NodeScope): Readonly
 }
 
 async function assertNodeScope(textWithPipe: string, expected: ReadonlyArray<TAbridgedNodeScopeItem>): Promise<void> {
-    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
+    const [text, position]: [string, Position] = assertGetTextAndExtractPosition(textWithPipe);
 
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = createAbridgedNodeScopeItems(
         await assertGetNodeScope(DefaultSettings, text, position),

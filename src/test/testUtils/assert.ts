@@ -109,11 +109,11 @@ export async function assertGetInspectionInstance(
     );
 }
 
-export async function assertGetAutocomplete(
+export async function assertGetAutocompleteFromInternal(
     settings: InspectionSettings,
-    text: string,
-    position: Position,
+    textWithPipe: string,
 ): Promise<Inspection.Autocomplete> {
+    const [text, position]: [string, Position] = assertGetTextAndExtractPosition(textWithPipe);
     const triedLexParseTask: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
 
@@ -142,7 +142,7 @@ export async function assertGetAutocomplete(
     }
 }
 
-export function assertGetAutocompleteItem(
+export function assertContainsAutocompleteItem(
     label: string,
     autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem>,
 ): Inspection.AutocompleteItem {
@@ -204,7 +204,7 @@ export async function assertGetNodeScope(settings: PQP.Settings, text: string, p
 }
 
 // Only works with single line expressions
-export function assertGetTextWithPosition(text: string): [string, Position] {
+export function assertGetTextAndExtractPosition(text: string): [string, Position] {
     const lines: ReadonlyArray<string> = text.split("\n");
     const numLines: number = lines.length;
 

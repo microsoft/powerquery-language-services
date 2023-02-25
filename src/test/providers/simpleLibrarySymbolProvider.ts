@@ -36,6 +36,13 @@ function createSignatureHelp(text: string): Promise<Result<SignatureHelp | undef
 }
 
 describe(`SimpleLibraryProvider`, () => {
+    // function assertAutocompleteItems(
+    //     textWithPipe: string,
+    //     expected: ReadonlyArray<string>,
+    // ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
+    //     return TestUtils.assertAutocompleteItems(text, expected, IsolatedAnalysisSettings);
+    // }
+
     describe(`getAutocompleteItems`, () => {
         it(`match`, async () => {
             const expected: ReadonlyArray<string> = [TestConstants.TestLibraryName.NumberOne];

@@ -93,7 +93,7 @@ async function assertParseOkScopeTypeEqual(
 ): Promise<void> {
     settings = settings ?? ExtendedTestSettings;
 
-    const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPipe);
+    const [textWithoutPipe, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(textWithPipe);
     const parseOk: PQP.Task.ParseTaskOk = await TestUtils.assertGetLexParseOk(settings, textWithoutPipe);
 
     const actual: Inspection.ScopeTypeByKey = await assertGetParseOkScopeTypeOk(

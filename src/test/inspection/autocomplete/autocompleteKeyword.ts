@@ -8,21 +8,17 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
 async function assertContainsAutocompleteItemLabels(
-    textWithPosition: string,
+    textWithPipe: string,
     expected: ReadonlyArray<KeywordKind>,
 ): Promise<void> {
-    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPosition);
-
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
         TestConstants.DefaultInspectionSettings,
-        text,
-        position,
+        textWithPipe,
     );
 
     Assert.isOk(actual.triedKeyword);

@@ -3,18 +3,14 @@
 
 import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
-import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
-async function assertFieldAccessAutocomplete(textWithPosition: string, expected: ReadonlyArray<string>): Promise<void> {
-    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPosition);
-
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(
+async function assertFieldAccessAutocomplete(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
         TestConstants.DefaultInspectionSettings,
-        text,
-        position,
+        textWithPipe,
     );
 
     Assert.isOk(actual.triedFieldAccess);

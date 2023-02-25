@@ -78,18 +78,21 @@ export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSigna
     };
 }
 
-export function createAnalysis(text: string, analysisSettings?: AnalysisSettings): [Analysis, Position] {
-    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
+export function createAnalysisAndExtractPosition(
+    textWithPipe: string,
+    analysisSettings?: AnalysisSettings,
+): [Analysis, Position] {
+    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(textWithPipe);
 
     return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings)), position];
 }
 
 export function createAutocompleteItems(
-    text: string,
+    textWithPipe: string,
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysisAndExtractPosition(textWithPipe, analysisSettings);
 
     return analysis.getAutocompleteItems(position, cancellationToken);
 }
@@ -104,11 +107,11 @@ export function createAutocompleteItemsForFile(
 }
 
 export function createDefinition(
-    text: string,
+    textWithPipe: string,
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysisAndExtractPosition(textWithPipe, analysisSettings);
 
     return analysis.getDefinition(position, cancellationToken);
 }
@@ -131,18 +134,18 @@ export function createHover(
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysisAndExtractPosition(text, analysisSettings);
 
     return analysis.getHover(position, cancellationToken);
 }
 
 export function createPartialSemanticTokens(
-    text: string,
+    textWithPosition: string,
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
     const analysis: Analysis = AnalysisUtils.createAnalysis(
-        createTextMockDocument(text),
+        createTextMockDocument(textWithPosition),
         createAnalysisSettings(analysisSettings),
     );
 
@@ -150,11 +153,11 @@ export function createPartialSemanticTokens(
 }
 
 export function createSignatureHelp(
-    text: string,
+    textWithPipe: string,
     analysisSettings?: AnalysisSettings,
     cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
 ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+    const [analysis, position]: [Analysis, Position] = createAnalysisAndExtractPosition(textWithPipe, analysisSettings);
 
     return analysis.getSignatureHelp(position, cancellationToken);
 }

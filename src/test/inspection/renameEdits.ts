@@ -44,7 +44,7 @@ function getRenameEdits(
     rawText: string,
     nextStr: string,
 ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
-    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+    const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(rawText);
     const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
     const partialAnalysis: RenameEditsAnalysis = new RenameEditsAnalysis(textDocument);
 
@@ -390,7 +390,7 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 it(`Find ${nodeKindString}`, async () => {
                     const rawText: string = rawTextString.replace(/(\r\n|\n)/g, " ");
 
-                    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(rawText);
+                    const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(rawText);
 
                     const currentInspectDeferred: Promise<Inspected> = assertGetInspectionInstance(
                         TestConstants.DefaultInspectionSettings,

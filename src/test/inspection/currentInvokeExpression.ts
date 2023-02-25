@@ -262,7 +262,7 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression | 
 describe(`subset Inspection - InvokeExpression`, () => {
     describe(`parse Ok`, () => {
         it("expects no parameters, given no parameters", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|)`,
             );
 
@@ -276,7 +276,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects no parameters, given extraneous parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|)`,
             );
 
@@ -290,7 +290,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expect number parameter, missing parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|)`,
             );
 
@@ -304,7 +304,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|)`,
             );
 
@@ -318,7 +318,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required and optional", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|)`,
             );
 
@@ -332,7 +332,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given text", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|)`,
             );
 
@@ -346,7 +346,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given nothing", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|)`,
             );
 
@@ -360,7 +360,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given number", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|)`,
             );
 
@@ -374,7 +374,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("nested invocations, expects no parameters, missing parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz)`,
             );
 
@@ -390,7 +390,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
 
     describe(`parse error`, () => {
         it("expects no parameters, given no parameters", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|`,
             );
 
@@ -404,7 +404,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects no parameters, given extraneous parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CreateFooAndBarRecord}(1|`,
             );
 
@@ -418,7 +418,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expect number parameter, missing parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             );
 
@@ -432,7 +432,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1|`,
             );
 
@@ -446,7 +446,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects required and optional, given required and optional", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1, "secondArg"|`,
             );
 
@@ -460,7 +460,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given text", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}("foo"|`,
             );
 
@@ -474,7 +474,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given nothing", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(|`,
             );
 
@@ -488,7 +488,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("expects text, given number", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `${TestConstants.TestLibraryName.DuplicateText}(1|`,
             );
 
@@ -502,7 +502,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
         });
 
         it("nested invocations, expects no parameters, missing parameter", async () => {
-            const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(
+            const [text, position]: [string, Position] = TestUtils.assertGetTextAndExtractPosition(
                 `Foobar(${TestConstants.TestLibraryName.CreateFooAndBarRecord}(|), Baz`,
             );
 

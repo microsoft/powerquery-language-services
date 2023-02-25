@@ -8,21 +8,17 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
 async function assertContainsPrimitiveTypeAutocomplete(
-    textWithPosition: string,
+    textWithPipe: string,
     expected: ReadonlyArray<PrimitiveTypeConstant>,
 ): Promise<void> {
-    const [text, position]: [string, Position] = TestUtils.assertGetTextWithPosition(textWithPosition);
-
-    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocomplete(
+    const actual: Inspection.Autocomplete = await TestUtils.assertGetAutocompleteFromInternal(
         TestConstants.DefaultInspectionSettings,
-        text,
-        position,
+        textWithPipe,
     );
 
     Assert.isOk(actual.triedPrimitiveType);
