@@ -31,8 +31,8 @@ export async function assertContainsAutocompleteAnalysis(
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: Inspection.AutocompleteItem[] | undefined = await TestUtils.assertAutocompleteAnalysis(
-        settings,
         textWithPipe,
+        settings,
         cancellationToken,
     );
 
@@ -51,8 +51,8 @@ export async function assertEqualAutocompleteAnalysis(
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: ReadonlyArray<Inspection.AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis(
-        settings,
         textWithPipe,
+        settings,
         cancellationToken,
     );
 
@@ -67,8 +67,8 @@ export async function assertEqualDefinitionAnalysis(
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: Location[] | undefined = await TestUtils.assertDefinitionAnalysis(
-        settings,
         textWithPipe,
+        settings,
         cancellationToken,
     );
 
@@ -87,8 +87,8 @@ export async function assertEqualDocumentSymbolsAnalysis(
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: ReadonlyArray<DocumentSymbol> | undefined = await TestUtils.assertDocumentSymbolsAnalysis(
-        settings,
         textWithPipe,
+        settings,
         cancellationToken,
     );
 
@@ -101,7 +101,7 @@ export async function assertEqualFoldingRangesAnalysis(
     expected: ReadonlyArray<FoldingRange>,
     settings: AnalysisSettings,
 ): Promise<void> {
-    const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(settings, text);
+    const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(text, settings);
 
     Assert.isDefined(foldingRanges);
     expect(foldingRanges).to.deep.equal(expected);
@@ -113,7 +113,7 @@ export async function assertEqualHoverAnalysis(
     settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
-    const actual: Hover | undefined = await TestUtils.assertHoverAnalysis(settings, textWithPipe, cancellationToken);
+    const actual: Hover | undefined = await TestUtils.assertHoverAnalysis(textWithPipe, settings, cancellationToken);
 
     if (expected) {
         Assert.isDefined(actual);
@@ -139,8 +139,8 @@ export async function assertEqualPartialSemanticTokensAnalysis(
     text: string,
 ): Promise<void> {
     const semanticTokens: PartialSemanticToken[] | undefined = await TestUtils.assertPartialSemanticTokens(
-        settings,
         text,
+        settings,
     );
 
     if (expected) {
@@ -159,9 +159,9 @@ export async function assertEqualRenameEdits(
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const textEdits: TextEdit[] | undefined = await TestUtils.assertRenameEdits(
-        settings,
         textWithPipe,
         newName,
+        settings,
         cancellationToken,
     );
 
@@ -188,8 +188,8 @@ export async function assertEqualSignatureHelpAnalysis(
     settings: AnalysisSettings,
 ): Promise<void> {
     const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(
-        settings,
         textWithPipe,
+        settings,
     );
 
     if (expected) {

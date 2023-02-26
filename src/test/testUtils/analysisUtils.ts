@@ -17,8 +17,8 @@ export function assertAnalysisFromText(analysisSettings: AnalysisSettings, text:
 }
 
 export function assertAnalysisAndPositionFromText(
-    analysisSettings: AnalysisSettings,
     textWithPipe: string,
+    analysisSettings: AnalysisSettings,
 ): [Analysis, Position] {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(textWithPipe);
 
@@ -28,28 +28,28 @@ export function assertAnalysisAndPositionFromText(
 }
 
 export async function assertAutocompleteAnalysis(
-    settings: AnalysisSettings,
     textWithPipe: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<AutocompleteItem[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
     return Assert.unboxOk(await analysis.getAutocompleteItems(position, cancellationToken));
 }
 
 export async function assertDefinitionAnalysis(
-    settings: AnalysisSettings,
     textWithPipe: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<Location[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
     return Assert.unboxOk(await analysis.getDefinition(position, cancellationToken));
 }
 
 export async function assertDocumentSymbolsAnalysis(
-    settings: AnalysisSettings,
     textWithPipe: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<DocumentSymbol[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, textWithPipe);
@@ -58,8 +58,8 @@ export async function assertDocumentSymbolsAnalysis(
 }
 
 export async function assertFoldingRangesAnalysis(
-    settings: AnalysisSettings,
     text: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<FoldingRange[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, text);
@@ -68,18 +68,18 @@ export async function assertFoldingRangesAnalysis(
 }
 
 export async function assertHoverAnalysis(
-    settings: AnalysisSettings,
     textWithPipe: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<Hover | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
     return Assert.unboxOk(await analysis.getHover(position, cancellationToken));
 }
 
 export async function assertPartialSemanticTokens(
-    settings: AnalysisSettings,
     text: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<PartialSemanticToken[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, text);
@@ -88,22 +88,22 @@ export async function assertPartialSemanticTokens(
 }
 
 export async function assertRenameEdits(
-    settings: AnalysisSettings,
     textWithPipe: string,
     newName: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<TextEdit[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
     return Assert.unboxOk(await analysis.getRenameEdits(position, newName, cancellationToken));
 }
 
 export async function assertSignatureHelpAnalysis(
-    settings: AnalysisSettings,
     textWithPipe: string,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<SignatureHelp | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
     return Assert.unboxOk(await analysis.getSignatureHelp(position, cancellationToken));
 }

@@ -26,8 +26,8 @@ describe(`Analysis`, () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: Inspection.AutocompleteItem[] | undefined =
                 await TestUtils.assertAutocompleteAnalysis(
-                    TestConstants.SimpleLibraryAnalysisSettings,
                     `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+                    TestConstants.SimpleLibraryAnalysisSettings,
                 );
 
             Assert.isDefined(autocompleteItems);
@@ -90,8 +90,8 @@ describe(`Analysis`, () => {
             };
 
             const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
-                analysisSettings,
                 `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                analysisSettings,
             );
 
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
@@ -137,8 +137,8 @@ async function runHoverTimeoutTest(provider: `local` | `library`): Promise<void>
     };
 
     const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
-        analysisSettings,
         `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+        analysisSettings,
     );
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
