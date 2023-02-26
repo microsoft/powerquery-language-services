@@ -146,7 +146,7 @@ export function assertGetAutocompleteItem(
     autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem>,
 ): Inspection.AutocompleteItem {
     return Assert.asDefined(
-        autocompleteItems.find((completionitem: Inspection.AutocompleteItem) => completionitem.label === "Test.Foo"),
+        autocompleteItems.find((completionitem: Inspection.AutocompleteItem) => completionitem.label === label),
         `did not find the expected completion item`,
         {
             label,

@@ -62,7 +62,7 @@ describe(`SimpleLibraryProvider`, () => {
             TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
-        it(`no match`, async () => {
+        it(`unknown match`, async () => {
             const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
                 await createAutocompleteItems("Unknown|Identifier");
 

@@ -7,7 +7,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
@@ -36,8 +36,8 @@ export function validate(
         };
 
         const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
-        const parseState: ParseState | undefined = await analysis.getParseState();
-        const parseError: ParseError.ParseError | undefined = await analysis.getParseError();
+        const parseState: ParseState | undefined = Assert.unboxOk(await analysis.getParseState());
+        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(await analysis.getParseError());
 
         if (parseState === undefined) {
             trace.exit();
@@ -88,7 +88,7 @@ export function validate(
                 ...invokeExpressionDiagnostics,
                 ...unknownIdentifiersDiagnostics,
             ],
-            hasSyntaxError: Boolean(await analysis.getParseError()),
+            hasSyntaxError: parseError !== undefined,
         };
 
         trace.exit();

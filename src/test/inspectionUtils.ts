@@ -9,7 +9,6 @@ import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parse
 import * as TestUtils from "./testUtils";
 import { Analysis, AnalysisUtils, InspectionUtils, SymbolKind, TextDocument } from "../powerquery-language-services";
 import { AbridgedDocumentSymbol } from "./testUtils";
-import { isDefined } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/assert";
 import { TestConstants } from ".";
 
 // Used to test symbols at a specific level of inspection
@@ -40,8 +39,10 @@ describe("Document symbol base functions", () => {
             TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
-        isDefined(parseContext);
+        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
+            PQP.Assert.unboxOk(await analysis.getParseState()),
+        );
+
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
         const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
         const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
@@ -62,8 +63,10 @@ describe("Document symbol base functions", () => {
             TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
-        isDefined(parseContext);
+        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
+            PQP.Assert.unboxOk(await analysis.getParseState()),
+        );
+
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
         const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
         const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
@@ -80,8 +83,10 @@ describe("Document symbol base functions", () => {
             TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
-        isDefined(parseContext);
+        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
+            PQP.Assert.unboxOk(await analysis.getParseState()),
+        );
+
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
         const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
         const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
@@ -102,8 +107,10 @@ describe("Document symbol base functions", () => {
             TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
-        isDefined(parseContext);
+        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
+            PQP.Assert.unboxOk(await analysis.getParseState()),
+        );
+
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
         const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
         const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
@@ -126,8 +133,10 @@ describe("Document symbol base functions", () => {
             TestConstants.SimpleLibraryAnalysisSettings,
         );
 
-        const parseContext: PQP.Parser.ParseState | undefined = await analysis.getParseState();
-        isDefined(parseContext);
+        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
+            PQP.Assert.unboxOk(await analysis.getParseState()),
+        );
+
         const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
         const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
         const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
