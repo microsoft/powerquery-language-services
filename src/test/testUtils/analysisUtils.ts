@@ -21,6 +21,7 @@ export function assertAnalysisAndPositionFromText(
     textWithPipe: string,
 ): [Analysis, Position] {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(textWithPipe);
+
     const analysis: Analysis = AnalysisUtils.createAnalysis(document, analysisSettings);
 
     return [analysis, position];

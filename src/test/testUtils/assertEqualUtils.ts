@@ -2,7 +2,14 @@
 // Licensed under the MIT license.
 
 import { Assert, ICancellationToken, Settings } from "@microsoft/powerquery-parser";
-import { DocumentSymbol, FoldingRange, Hover, Location, SignatureHelp } from "vscode-languageserver-types";
+import {
+    DocumentSymbol,
+    FoldingRange,
+    Hover,
+    Location,
+    MarkupContent,
+    SignatureHelp,
+} from "vscode-languageserver-types";
 import { Range, TextEdit } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
@@ -110,7 +117,7 @@ export async function assertEqualHoverAnalysis(
 
     if (expected) {
         Assert.isDefined(actual);
-        expect(actual.contents).to.equal(expected);
+        expect(assertAsMarkupContent(actual.contents).value).to.equal(expected);
     } else {
         Assert.isUndefined(actual);
     }
@@ -136,8 +143,12 @@ export async function assertEqualPartialSemanticTokensAnalysis(
         text,
     );
 
-    Assert.isDefined(semanticTokens);
-    expect(semanticTokens).to.deep.equal(expected);
+    if (expected) {
+        Assert.isDefined(semanticTokens);
+        expect(semanticTokens).to.deep.equal(expected);
+    } else {
+        Assert.isUndefined(semanticTokens);
+    }
 }
 
 export async function assertEqualRenameEdits(
@@ -198,14 +209,14 @@ export async function assertEqualScopeType(
     expect(actual).to.deep.equal(expected);
 }
 
-// export async function assertNodeIdMap(settings: Settings, text: string): Promise<NodeIdMap.Collection> {
-//     const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
+function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
+    assertIsMarkupContent(value);
 
-//     if (TaskUtils.isParseStageOk(triedLexParseTask)) {
-//         return triedLexParseTask.nodeIdMapCollection;
-//     } else if (TaskUtils.isParseStageParseError(triedLexParseTask)) {
-//         return triedLexParseTask.nodeIdMapCollection;
-//     } else {
-//         throw new Error(`unexpected task stage: ${triedLexParseTask.stage}`);
-//     }
-// }
+    return value;
+}
+
+function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
+    if (!MarkupContent.is(value)) {
+        throw new Error(`expected value to be MarkupContent`);
+    }
+}

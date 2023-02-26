@@ -138,7 +138,7 @@ async function runHoverTimeoutTest(provider: `local` | `library`): Promise<void>
 
     const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
         analysisSettings,
-        `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+        `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
     );
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(

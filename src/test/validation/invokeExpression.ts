@@ -139,22 +139,24 @@ describe("Validation - InvokeExpression", () => {
     describe(`multiple invocation`, () => {
         it(`position for multiple errors`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(`let 
-                    x = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(),
-                    y = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()
-                in
-                    _`);
+                await assertInvokeExpressionDiagnostics(
+                    `let 
+                        x = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(),
+                        y = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()
+                    in
+                        _`,
+                );
 
             expect(invocationDiagnostics.length).to.equal(2);
 
             const expected: ReadonlyArray<Position> = [
                 {
-                    character: 41,
-                    line: 2,
+                    character: 61,
+                    line: 1,
                 },
                 {
-                    character: 41,
-                    line: 3,
+                    character: 61,
+                    line: 2,
                 },
             ];
 

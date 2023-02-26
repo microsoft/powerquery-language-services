@@ -40,11 +40,60 @@ describe(`Document symbol base functions`, () => {
         await TestUtils.assertEqualDocumentSymbolsAnalysis(
             TestUtils.readFile(`HelloWorldWithDocs.pq`),
             [
-                { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
-                { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
-                { name: "HelloWorldImpl", kind: SymbolKind.Function },
-                { name: "HelloWorldWithDocs", kind: SymbolKind.Struct },
-                { name: "HelloWorldWithDocs.Publish", kind: SymbolKind.Struct },
+                {
+                    kind: 13,
+                    name: "HelloWorldWithDocs.Contents",
+                },
+                {
+                    kind: 26,
+                    name: "HelloWorldType",
+                },
+                {
+                    children: [
+                        {
+                            kind: 13,
+                            name: "_count",
+                        },
+                        {
+                            kind: 13,
+                            name: "listOfMessages",
+                        },
+                        {
+                            kind: 13,
+                            name: "table",
+                        },
+                    ],
+                    kind: 12,
+                    name: "HelloWorldImpl",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Authentication",
+                        },
+                    ],
+                    kind: 23,
+                    name: "HelloWorldWithDocs",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Beta",
+                        },
+                        {
+                            kind: 8,
+                            name: "Category",
+                        },
+                        {
+                            kind: 8,
+                            name: "ButtonText",
+                        },
+                    ],
+                    kind: 23,
+                    name: "HelloWorldWithDocs.Publish",
+                },
             ],
             TestConstants.SimpleLibraryAnalysisSettings,
         ));
@@ -53,10 +102,120 @@ describe(`Document symbol base functions`, () => {
         await TestUtils.assertEqualDocumentSymbolsAnalysis(
             TestUtils.readFile(`DirectQueryForSQL.pq`),
             [
-                { name: "DirectSQL.Database", kind: SymbolKind.Function },
-                { name: "DirectSQL", kind: SymbolKind.Struct },
-                { name: "DirectSQL.UI", kind: SymbolKind.Struct },
-                { name: "DirectSQL.Icons", kind: SymbolKind.Struct },
+                {
+                    children: [
+                        {
+                            children: [
+                                {
+                                    kind: 8,
+                                    name: "Driver",
+                                },
+                                {
+                                    kind: 8,
+                                    name: "Server",
+                                },
+                                {
+                                    kind: 8,
+                                    name: "Database",
+                                },
+                            ],
+                            kind: 23,
+                            name: "ConnectionString",
+                        },
+                        {
+                            kind: 13,
+                            name: "Credential",
+                        },
+                        {
+                            kind: 13,
+                            name: "CredentialConnectionString",
+                        },
+                        {
+                            kind: 13,
+                            name: "OdbcDataSource",
+                        },
+                        {
+                            kind: 13,
+                            name: "Database",
+                        },
+                    ],
+                    kind: 12,
+                    name: "DirectSQL.Database",
+                },
+                {
+                    children: [
+                        {
+                            kind: 13,
+                            name: "json",
+                        },
+                        {
+                            kind: 13,
+                            name: "server",
+                        },
+                        {
+                            kind: 13,
+                            name: "database",
+                        },
+                        {
+                            kind: 8,
+                            name: "TestConnection",
+                        },
+                        {
+                            kind: 8,
+                            name: "Authentication",
+                        },
+                        {
+                            kind: 8,
+                            name: "Label",
+                        },
+                        {
+                            kind: 8,
+                            name: "SupportsEncryption",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "SupportsDirectQuery",
+                        },
+                        {
+                            kind: 8,
+                            name: "Category",
+                        },
+                        {
+                            kind: 8,
+                            name: "ButtonText",
+                        },
+                        {
+                            kind: 8,
+                            name: "SourceImage",
+                        },
+                        {
+                            kind: 8,
+                            name: "SourceTypeImage",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL.UI",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Icon16",
+                        },
+                        {
+                            kind: 8,
+                            name: "Icon32",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL.Icons",
+                },
             ],
             TestConstants.SimpleLibraryAnalysisSettings,
         ));
