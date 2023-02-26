@@ -43,7 +43,10 @@ describe("Analysis", () => {
 
             Assert.isOk(hover);
             Assert.isDefined(hover.value);
-            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover.value);
+            TestUtils.assertEqualHover(
+                
+                `[let-variable] Test.SquareIfNumber: logical`,
+                );
         });
 
         it(`timeout library provider`, async () => {
