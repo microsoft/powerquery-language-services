@@ -10,7 +10,6 @@ import { expect } from "chai";
 import {
     AnalysisSettings,
     AnalysisUtils,
-    Hover,
     Inspection,
     Library,
     NullSymbolProvider,
@@ -30,7 +29,7 @@ const IsolatedAnalysisSettings: AnalysisSettings = {
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     async function assertAutocompleteItems(text: string, expected: ReadonlyArray<string>): Promise<void> {
-        await TestUtils.assertContainsAutocompleteItemsFromAnalysis(text, expected, IsolatedAnalysisSettings);
+        await TestUtils.assertEqualAutocomplete(expected, IsolatedAnalysisSettings, text);
     }
 
     describe(`getAutocompleteItems`, () => {
@@ -190,12 +189,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
     describe(`getFoldingRanges`, () => {
         async function assertFoldingRanges(text: string, expected: FoldingRange[]): Promise<void> {
-            const actual: Result<FoldingRange[] | undefined, CommonError.CommonError> =
-                await TestUtils.createFoldingRanges(text);
-
-            Assert.isOk(actual);
-            Assert.isDefined(actual.value);
-            expect(actual.value).to.deep.equal(expected);
+            await TestUtils.assertEqualFoldingRangesAnalysis(
+                expected,
+                TestConstants.SimpleLibraryAnalysisSettings,
+                text,
+            );
         }
 
         it(`LetExpression`, async () =>
@@ -263,18 +261,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
     describe(`getHover`, () => {
         async function assertHover(textWithPipe: string, expected: string | undefined): Promise<void> {
-            const actual: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
+            await TestUtils.assertEqualHoverAnalysis(
+                expected,
+                TestConstants.SimpleLibraryAnalysisSettings,
                 textWithPipe,
             );
-
-            Assert.isOk(actual);
-
-            if (expected) {
-                Assert.isDefined(actual.value);
-                TestUtils.assertEqualHover(expected, actual.value);
-            } else {
-                Assert.isUndefined(actual.value);
-            }
         }
 
         describe(`simple`, () => {
@@ -308,17 +299,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 text: string,
                 expected: ReadonlyArray<PartialSemanticToken> | undefined,
             ): Promise<void> {
-                const actual: Result<PartialSemanticToken[] | undefined, CommonError.CommonError> =
-                    await TestUtils.createPartialSemanticTokens(text, IsolatedAnalysisSettings);
-
-                Assert.isOk(actual);
-
-                if (expected) {
-                    Assert.isDefined(actual.value);
-                    expect(actual.value).to.deep.equal(expected);
-                } else {
-                    Assert.isUndefined(actual.value);
-                }
+                await TestUtils.assertEqualPartialSemanticTokensAnalysis(expected, IsolatedAnalysisSettings, text);
             }
 
             it(`field projection`, async () =>
@@ -585,17 +566,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 textWithPipe: string,
                 expected: SignatureHelp | undefined,
             ): Promise<void> {
-                const actual: Result<SignatureHelp | undefined, CommonError.CommonError> =
-                    await TestUtils.createSignatureHelp(textWithPipe, IsolatedAnalysisSettings);
-
-                Assert.isOk(actual);
-
-                if (expected === undefined) {
-                    Assert.isUndefined(actual.value);
-                } else {
-                    Assert.isDefined(actual.value);
-                    expect(actual.value).to.deep.equal(expected);
-                }
+                await TestUtils.assertSignatureHelpAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
             }
 
             it(`no closing bracket`, async () =>

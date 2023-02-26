@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken } from "@microsoft/powerquery-parser";
+import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
 import { Position } from "vscode-languageserver-types";
 
 import {
@@ -16,7 +16,8 @@ import { AnalysisBase } from "./analysisBase";
 
 // Adds caching to AnalysisBase.
 export class MemoizedAnalysis extends AnalysisBase {
-    private readonly activeNodeCache: Map<string, Promise<TActiveNode | undefined>> = new Map();
+    private readonly activeNodeCache: Map<string, Promise<Result<TActiveNode | undefined, CommonError.CommonError>>> =
+        new Map();
     private readonly autocompleteCache: Map<number | undefined, Promise<Autocomplete | undefined>> = new Map();
     private readonly currentInvokeExpressionCache: Map<string, Promise<TriedCurrentInvokeExpression | undefined>> =
         new Map();
@@ -33,8 +34,10 @@ export class MemoizedAnalysis extends AnalysisBase {
         super.dispose();
     }
 
-    protected override getActiveNode(position: Position): Promise<TActiveNode | undefined> {
-        return this.getOrCreate<string, TActiveNode | undefined>(
+    public override getActiveNode(
+        position: Position,
+    ): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
+        return this.getOrCreate<string, Result<TActiveNode | undefined, CommonError.CommonError>>(
             this.activeNodeCache,
             () => `${position.line}:${position.character}`,
             () => super.getActiveNode(position),
@@ -44,7 +47,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     protected override inspectAutocomplete(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<Autocomplete | undefined> {
         return this.getOrCreate(
             this.autocompleteCache,
@@ -56,7 +59,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     protected override inspectCurrentInvokeExpression(
         position: Position,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<TriedCurrentInvokeExpression | undefined> {
         return this.getOrCreate<string, TriedCurrentInvokeExpression | undefined>(
             this.currentInvokeExpressionCache,
@@ -68,7 +71,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     protected override inspectNodeScope(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<TriedNodeScope | undefined> {
         return this.getOrCreate<number | undefined, TriedNodeScope | undefined>(
             this.nodeScopeCache,
@@ -80,7 +83,7 @@ export class MemoizedAnalysis extends AnalysisBase {
     protected override inspectScopeType(
         activeNode: TActiveNode,
         correlationId: number,
-        cancellationToken: ICancellationToken,
+        cancellationToken?: ICancellationToken,
     ): Promise<TriedScopeType | undefined> {
         return this.getOrCreate(
             this.scopeTypeCache,
@@ -91,13 +94,13 @@ export class MemoizedAnalysis extends AnalysisBase {
 
     // Assumes the first call to getOrCreate will create the cache entry,
     // and any subsequent calls will return the cached value.
-    private async getOrCreate<K, V>(
-        cache: Map<K, Promise<V>>,
-        cacheKeyFactory: () => K,
-        valueFactory: () => Promise<V>,
-    ): Promise<V> {
-        const cacheKey: K = cacheKeyFactory();
-        let result: Promise<V> | undefined = cache.get(cacheKey);
+    private async getOrCreate<Key, Value>(
+        cache: Map<Key, Promise<Value>>,
+        cacheKeyFactory: () => Key,
+        valueFactory: () => Promise<Value>,
+    ): Promise<Value> {
+        const cacheKey: Key = cacheKeyFactory();
+        let result: Promise<Value> | undefined = cache.get(cacheKey);
 
         if (result !== undefined) {
             return await result;

@@ -4,7 +4,7 @@
 import { Assert } from "@microsoft/powerquery-parser";
 import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { DocumentSymbol, Inspection, SymbolKind } from "../../powerquery-language-services";
+import { DocumentSymbol, Inspection, SignatureHelp, SymbolKind } from "../../powerquery-language-services";
 import { NodeScope } from "../../powerquery-language-services/inspection";
 
 export interface AbridgedDocumentSymbol {
@@ -20,6 +20,8 @@ export type TAbridgedNodeScopeItem =
     | AbridgedRecordScopeItem
     | AbridgedSectionMemberScopeItem
     | AbridgedUndefinedScopeItem;
+
+export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
 
 export interface IAbridgedNodeScopeItem {
     readonly identifier: string;
@@ -137,4 +139,11 @@ export function abridgedNodeScopeItems(nodeScope: NodeScope): ReadonlyArray<TAbr
     }
 
     return result;
+}
+
+export function abridgedSignatureHelp(value: SignatureHelp): AbridgedSignatureHelp {
+    return {
+        activeParameter: value.activeParameter,
+        activeSignature: value.activeSignature,
+    };
 }

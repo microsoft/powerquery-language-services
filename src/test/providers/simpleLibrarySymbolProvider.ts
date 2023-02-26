@@ -62,7 +62,7 @@ describe(`SimpleLibraryProvider`, () => {
             TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
         });
 
-        it(`no match`, async () => {
+        it(`unknown match`, async () => {
             const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
                 await createAutocompleteItems("Unknown|Identifier");
 
@@ -78,14 +78,14 @@ describe(`SimpleLibraryProvider`, () => {
             const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("Test.Num|ber");
             Assert.isOk(hover);
             Assert.isDefined(hover.value);
-            TestUtils.assertEqualHover("[library constant] Test.Number: number", hover.value);
+            TestUtils.assertEqualHoverAnalysis("[library constant] Test.Number: number", hover.value);
         });
 
         it(`function`, async () => {
             const hover: Result<Hover | undefined, CommonError.CommonError> = await createHover("Test.Square|IfNumber");
             Assert.isOk(hover);
             Assert.isDefined(hover.value);
-            TestUtils.assertEqualHover("[library function] Test.SquareIfNumber: (x: any) => any", hover.value);
+            TestUtils.assertEqualHoverAnalysis("[library function] Test.SquareIfNumber: (x: any) => any", hover.value);
         });
 
         it(`no match`, async () => {

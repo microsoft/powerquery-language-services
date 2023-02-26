@@ -2,16 +2,16 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
-
-import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 import {
     AstNodeById,
     ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
+import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import type { Position } from "vscode-languageserver-types";
+
+import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";

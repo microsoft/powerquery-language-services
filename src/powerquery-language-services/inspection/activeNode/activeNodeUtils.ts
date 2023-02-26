@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
     NodeIdMap,
     NodeIdMapUtils,
+    ParseContext,
     TXorNode,
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, Constant, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
+import { Ast, Constant, ConstantUtils, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
 import {
@@ -45,7 +46,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     const astSearch: AstNodeSearch = astNodeSearch(nodeIdMapCollection, position);
 
     // Search for the closest Context node on or to the right of the closest Ast node.
-    const contextNode: PQP.Parser.ParseContext.TNode | undefined = findContext(nodeIdMapCollection, astSearch);
+    const contextNode: ParseContext.TNode | undefined = findContext(nodeIdMapCollection, astSearch);
 
     let leaf: TXorNode | undefined;
     let leafKind: ActiveNodeLeafKind;
@@ -88,12 +89,12 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
     const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id);
 
     return {
-        ancestry,
         kind: ActiveNodeKind.ActiveNode,
         leafKind,
+        position,
+        ancestry,
         exclusiveIdentifierUnderPosition,
         inclusiveIdentifierUnderPosition,
-        position,
     };
 }
 
@@ -117,7 +118,7 @@ export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
 
 export function assertPositionInBounds(value: TActiveNode): asserts value is ActiveNode {
     if (!isPositionInBounds(value)) {
-        throw new PQP.CommonError.InvariantError(`value was not in bounds`);
+        throw new CommonError.InvariantError(`value was not in bounds`);
     }
 }
 
@@ -154,45 +155,8 @@ const ShiftRightConstantKinds: ReadonlyArray<string> = [
     ...DrilldownConstantKind,
 ];
 
-function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
-    if (!PositionUtils.isInAst(position, astNode, true, true)) {
-        return false;
-    }
-
-    if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
-        return true;
-    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
-        return true;
-    } else if (astNode.kind === Ast.NodeKind.Constant) {
-        switch (astNode.constantKind) {
-            case Constant.KeywordConstant.As:
-            case Constant.KeywordConstant.Each:
-            case Constant.KeywordConstant.Else:
-            case Constant.KeywordConstant.Error:
-            case Constant.KeywordConstant.If:
-            case Constant.KeywordConstant.In:
-            case Constant.KeywordConstant.Is:
-            case Constant.KeywordConstant.Section:
-            case Constant.KeywordConstant.Shared:
-            case Constant.KeywordConstant.Let:
-            case Constant.KeywordConstant.Meta:
-            case Constant.KeywordConstant.Otherwise:
-            case Constant.KeywordConstant.Then:
-            case Constant.KeywordConstant.Try:
-            case Constant.KeywordConstant.Type:
-            case Constant.PrimitiveTypeConstant.Null:
-                return true;
-
-            default:
-                return false;
-        }
-    } else {
-        return false;
-    }
-}
-
 function astNodeSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Position): AstNodeSearch {
-    const astNodeById: PQP.Parser.NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
+    const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
     let bestOnOrBeforeNode: Ast.TNode | undefined;
     let bestAfter: Ast.TNode | undefined;
     let shiftedRightNode: Ast.TNode | undefined;
@@ -247,10 +211,7 @@ function astNodeSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Posi
         if (
             DrilldownConstantKind.indexOf(bestOnOrBeforeNode.constantKind) !== -1 &&
             bestAfter?.kind === Ast.NodeKind.Constant &&
-            PQP.Language.ConstantUtils.isPairedWrapperConstantKinds(
-                bestOnOrBeforeNode.constantKind,
-                bestAfter.constantKind,
-            )
+            ConstantUtils.isPairedWrapperConstantKinds(bestOnOrBeforeNode.constantKind, bestAfter.constantKind)
         ) {
             const parent:
                 | Ast.RecordExpression
@@ -295,13 +256,13 @@ function astNodeSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Posi
 function findContext(
     nodeIdMapCollection: NodeIdMap.Collection,
     astNodeSearch: AstNodeSearch,
-): PQP.Parser.ParseContext.TNode | undefined {
+): ParseContext.TNode | undefined {
     if (astNodeSearch.bestOnOrBeforeNode === undefined) {
         return undefined;
     }
 
     const tokenIndexLowBound: number = astNodeSearch.bestOnOrBeforeNode.tokenRange.tokenIndexStart;
-    let current: PQP.Parser.ParseContext.TNode | undefined = undefined;
+    let current: ParseContext.TNode | undefined = undefined;
 
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
         if (candidate.tokenStart) {
@@ -394,8 +355,45 @@ function findLeafIdentifier(
         }
 
         default:
-            throw PQP.Assert.isNever(identifier);
+            throw Assert.isNever(identifier);
     }
 
     return result;
+}
+
+function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
+    if (!PositionUtils.isInAst(position, astNode, true, true)) {
+        return false;
+    }
+
+    if (astNode.kind === Ast.NodeKind.Identifier || astNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
+        return true;
+    } else if (astNode.kind === Ast.NodeKind.LiteralExpression && astNode.literalKind === Ast.LiteralKind.Numeric) {
+        return true;
+    } else if (astNode.kind === Ast.NodeKind.Constant) {
+        switch (astNode.constantKind) {
+            case Constant.KeywordConstant.As:
+            case Constant.KeywordConstant.Each:
+            case Constant.KeywordConstant.Else:
+            case Constant.KeywordConstant.Error:
+            case Constant.KeywordConstant.If:
+            case Constant.KeywordConstant.In:
+            case Constant.KeywordConstant.Is:
+            case Constant.KeywordConstant.Section:
+            case Constant.KeywordConstant.Shared:
+            case Constant.KeywordConstant.Let:
+            case Constant.KeywordConstant.Meta:
+            case Constant.KeywordConstant.Otherwise:
+            case Constant.KeywordConstant.Then:
+            case Constant.KeywordConstant.Try:
+            case Constant.KeywordConstant.Type:
+            case Constant.PrimitiveTypeConstant.Null:
+                return true;
+
+            default:
+                return false;
+        }
+    } else {
+        return false;
+    }
 }

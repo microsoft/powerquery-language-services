@@ -38,11 +38,11 @@ describe(`Inspection - Type`, () => {
         expected: Type.TPowerQueryType,
         settings: InspectionSettings = ExtendedInspectionSettings,
     ): Promise<void> {
-        await TestUtils.assertEqualRootType(settings, text, expected);
+        await TestUtils.assertEqualRootType(expected, settings, text);
     }
 
     async function assertEqualScopeType(textWithPipe: string, expected: Inspection.ScopeTypeByKey): Promise<void> {
-        await TestUtils.assertEqualScopeType(ExtendedInspectionSettings, textWithPipe, expected);
+        await TestUtils.assertEqualScopeType(expected, ExtendedInspectionSettings, textWithPipe);
     }
 
     const ExtendedInspectionSettings: InspectionSettings = {
