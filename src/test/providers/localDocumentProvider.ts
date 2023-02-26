@@ -97,40 +97,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][foo|`, [`foo`, `foobar`]));
             });
         });
-
-        // xit(`includes textEdit`, async () => {
-        //     const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-        //         `let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|`,
-        //     );
-
-        //     const document: TextDocument = pair[0];
-        //     const position: Position = pair[1];
-
-        //     const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-        //         await AnalysisUtils.createAnalysis(document, {
-        //             inspectionSettings: TestConstants.SimpleInspectionSettings,
-        //             isWorkspaceCacheAllowed: false,
-        //             traceManager: NoOpTraceManagerInstance,
-        //             initialCorrelationId: undefined,
-        //         }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
-
-        //     Assert.isOk(autocompleteItems);
-        //     Assert.isDefined(autocompleteItems.value);
-        //     expect(autocompleteItems.value.length).to.equal(2);
-
-        //     const firstOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
-        //         `Test.Foo`,
-        //         autocompleteItems.value,
-        //     );
-
-        //     const secondOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
-        //         `Test.FooBar`,
-        //         autocompleteItems.value,
-        //     );
-
-        //     Assert.isDefined(firstOption.textEdit, `expected firstOption to have a textEdit`);
-        //     Assert.isDefined(secondOption.textEdit, `expected secondOption to have a textEdit`);
-        // });
     });
 
     describe(`getDefinition`, () => {

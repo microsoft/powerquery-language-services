@@ -78,8 +78,6 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`HelloWorldWithDocs.pq`, async () => {
-        // const document: MockDocument = TestUtils.createFileMockDocument("HelloWorldWithDocs.pq");
-
         await assertSymbolsForDocument(TestUtils.readFile(`HelloWorldWithDocs.pq`), [
             // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType
             { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
