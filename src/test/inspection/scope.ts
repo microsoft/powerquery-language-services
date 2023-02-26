@@ -19,7 +19,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
     };
 
     async function runTest(textWithPipe: string, expected: ReadonlyArray<TAbridgedNodeScopeItem>): Promise<void> {
-        await TestUtils.assertEqualNodeScope(expected, DefaultSettings, textWithPipe);
+        await TestUtils.assertEqualNodeScope(textWithPipe, expected, DefaultSettings);
     }
 
     describe(`Scope`, () => {

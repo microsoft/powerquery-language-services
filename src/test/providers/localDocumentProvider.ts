@@ -26,7 +26,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     };
 
     async function assertAutocompleteItems(text: string, expected: ReadonlyArray<string>): Promise<void> {
-        await TestUtils.assertEqualAutocompleteAnalysis(expected, IsolatedAnalysisSettings, text);
+        await TestUtils.assertEqualAutocompleteAnalysis(text, expected, IsolatedAnalysisSettings);
     }
 
     describe(`getAutocompleteItems`, () => {
@@ -140,9 +140,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             cancellationToken?: ICancellationToken,
         ): Promise<void> {
             await TestUtils.assertEqualDefinitionAnalysis(
+                textWithPipe,
                 expected,
                 IsolatedAnalysisSettings,
-                textWithPipe,
                 cancellationToken,
             );
         }
@@ -188,9 +188,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     describe(`getFoldingRanges`, () => {
         async function assertFoldingRanges(text: string, expected: FoldingRange[]): Promise<void> {
             await TestUtils.assertEqualFoldingRangesAnalysis(
+                text,
                 expected,
                 TestConstants.SimpleLibraryAnalysisSettings,
-                text,
             );
         }
 
@@ -260,9 +260,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     describe(`getHover`, () => {
         async function assertHover(textWithPipe: string, expected: string | undefined): Promise<void> {
             await TestUtils.assertEqualHoverAnalysis(
+                textWithPipe,
                 expected,
                 TestConstants.SimpleLibraryAnalysisSettings,
-                textWithPipe,
             );
         }
 
@@ -564,7 +564,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 textWithPipe: string,
                 expected: SignatureHelp | undefined,
             ): Promise<void> {
-                await TestUtils.assertEqualSignatureHelpAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
+                await TestUtils.assertEqualSignatureHelpAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
             }
 
             it(`no closing bracket`, async () =>

@@ -9,9 +9,9 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
     describe(`getHover for key-value-pair`, () => {
         async function runTest(textWithPipe: string, expected: string | undefined): Promise<void> {
             await TestUtils.assertEqualHoverAnalysis(
+                textWithPipe,
                 expected,
                 TestConstants.SimpleLibraryAnalysisSettings,
-                textWithPipe,
             );
         }
 
@@ -49,9 +49,9 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
     describe(`getAutocomplete for key-value-pair`, () => {
         async function runTest(textWithPipe: string, expected: ReadonlyArray<string> | undefined): Promise<void> {
             await TestUtils.assertContainsAutocompleteAnalysis(
+                textWithPipe,
                 expected,
                 TestConstants.SimpleLibraryAnalysisSettings,
-                textWithPipe,
             );
         }
 

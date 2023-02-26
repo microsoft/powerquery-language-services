@@ -10,10 +10,10 @@ import { TestConstants, TestUtils } from "..";
 describe(`Inspection - RenameEdits - Identifiers`, () => {
     async function runTest(textWithPipe: string, newName: string, expected: TextEdit[] | undefined): Promise<void> {
         await TestUtils.assertEqualRenameEdits(
-            expected,
-            TestConstants.SimpleLibraryAnalysisSettings,
             textWithPipe,
             newName,
+            expected,
+            TestConstants.SimpleLibraryAnalysisSettings,
         );
     }
 

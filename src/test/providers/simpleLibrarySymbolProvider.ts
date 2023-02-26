@@ -21,7 +21,7 @@ describe(`SimpleLibraryProvider`, () => {
             textWithPipe: string,
             expected: ReadonlyArray<string>,
         ): Promise<void> {
-            await TestUtils.assertContainsAutocompleteAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
+            await TestUtils.assertContainsAutocompleteAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
         }
 
         it(`match`, async () => {
@@ -39,7 +39,7 @@ describe(`SimpleLibraryProvider`, () => {
 
     describe(`getHover`, () => {
         async function assertHoverAnalysis(textWithPipe: string, expected: string | undefined): Promise<void> {
-            await TestUtils.assertEqualHoverAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
+            await TestUtils.assertEqualHoverAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
         }
 
         it(`constant`, async () => await assertHoverAnalysis(`Test.Num|ber`, `[library constant] Test.Number: number`));
@@ -67,6 +67,7 @@ describe(`SimpleLibraryProvider`, () => {
 
         async function assertSignatureHelp(textWithPipe: string, activeParameter?: number): Promise<void> {
             await TestUtils.assertEqualSignatureHelpAnalysis(
+                textWithPipe,
                 activeParameter !== undefined
                     ? {
                           activeParameter,
@@ -75,7 +76,6 @@ describe(`SimpleLibraryProvider`, () => {
                       }
                     : undefined,
                 IsolatedAnalysisSettings,
-                textWithPipe,
             );
         }
 

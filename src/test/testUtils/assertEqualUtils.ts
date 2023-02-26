@@ -25,9 +25,9 @@ import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 
 export async function assertContainsAutocompleteAnalysis(
+    textWithPipe: string,
     expected: ReadonlyArray<string> | undefined,
     settings: AnalysisSettings,
-    textWithPipe: string,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: Inspection.AutocompleteItem[] | undefined = await TestUtils.assertAutocompleteAnalysis(
@@ -45,9 +45,9 @@ export async function assertContainsAutocompleteAnalysis(
 }
 
 export async function assertEqualAutocompleteAnalysis(
+    textWithPipe: string,
     expected: ReadonlyArray<string>,
     settings: AnalysisSettings,
-    textWithPipe: string,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: ReadonlyArray<Inspection.AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis(
@@ -61,9 +61,9 @@ export async function assertEqualAutocompleteAnalysis(
 }
 
 export async function assertEqualDefinitionAnalysis(
+    textWithPipe: string,
     expected: Range[] | undefined,
     settings: AnalysisSettings,
-    textWithPipe: string,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: Location[] | undefined = await TestUtils.assertDefinitionAnalysis(
@@ -97,9 +97,9 @@ export async function assertEqualDocumentSymbolsAnalysis(
 }
 
 export async function assertEqualFoldingRangesAnalysis(
+    text: string,
     expected: ReadonlyArray<FoldingRange>,
     settings: AnalysisSettings,
-    text: string,
 ): Promise<void> {
     const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(settings, text);
 
@@ -108,9 +108,9 @@ export async function assertEqualFoldingRangesAnalysis(
 }
 
 export async function assertEqualHoverAnalysis(
+    textWithPipe: string,
     expected: string | undefined,
     settings: AnalysisSettings,
-    textWithPipe: string,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const actual: Hover | undefined = await TestUtils.assertHoverAnalysis(settings, textWithPipe, cancellationToken);
@@ -124,9 +124,9 @@ export async function assertEqualHoverAnalysis(
 }
 
 export async function assertEqualNodeScope(
+    textWithPipe: string,
     expected: ReadonlyArray<TAbridgedNodeScopeItem>,
     settings: Settings,
-    textWithPipe: string,
 ): Promise<void> {
     const nodeScope: NodeScope = await TestUtils.assertNodeScope(settings, textWithPipe);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
@@ -152,10 +152,10 @@ export async function assertEqualPartialSemanticTokensAnalysis(
 }
 
 export async function assertEqualRenameEdits(
-    expected: TextEdit[] | undefined,
-    settings: AnalysisSettings,
     textWithPipe: string,
     newName: string,
+    expected: TextEdit[] | undefined,
+    settings: AnalysisSettings,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
     const textEdits: TextEdit[] | undefined = await TestUtils.assertRenameEdits(
@@ -174,18 +174,18 @@ export async function assertEqualRenameEdits(
 }
 
 export async function assertEqualRootType(
+    text: string,
     expected: TPowerQueryType,
     settings: InspectionSettings,
-    text: string,
 ): Promise<void> {
     const actual: TPowerQueryType = await TestUtils.assertRootType(settings, text);
     expect(actual).to.deep.equal(expected);
 }
 
 export async function assertEqualSignatureHelpAnalysis(
+    textWithPipe: string,
     expected: SignatureHelp | undefined,
     settings: AnalysisSettings,
-    textWithPipe: string,
 ): Promise<void> {
     const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(
         settings,
@@ -201,9 +201,9 @@ export async function assertEqualSignatureHelpAnalysis(
 }
 
 export async function assertEqualScopeType(
+    textWithPipe: string,
     expected: Inspection.ScopeTypeByKey,
     settings: InspectionSettings,
-    textWithPipe: string,
 ): Promise<void> {
     const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType(settings, textWithPipe);
     expect(actual).to.deep.equal(expected);

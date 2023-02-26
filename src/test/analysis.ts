@@ -47,9 +47,9 @@ describe(`Analysis`, () => {
     describe(`getHoverItem`, () => {
         it(`prefer local over library`, async () =>
             await TestUtils.assertEqualHoverAnalysis(
+                `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
                 `[let-variable] Test.SquareIfNumber: logical`,
                 TestConstants.SimpleLibraryAnalysisSettings,
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
             ));
 
         it(`timeout library provider`, async () => {
@@ -64,6 +64,7 @@ describe(`Analysis`, () => {
     describe(`getSignatureHelp`, () => {
         it(`prefer local over library`, async () =>
             await TestUtils.assertEqualSignatureHelpAnalysis(
+                `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
                 {
                     activeParameter: 0,
                     activeSignature: 0,
@@ -79,7 +80,6 @@ describe(`Analysis`, () => {
                     ],
                 },
                 TestConstants.SimpleLibraryAnalysisSettings,
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
             ));
 
         it(`timeout`, async () => {
