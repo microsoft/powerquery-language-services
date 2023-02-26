@@ -2,11 +2,12 @@
 // Licensed under the MIT license.
 
 import { Assert, ICancellationToken, Settings } from "@microsoft/powerquery-parser";
-import { FoldingRange, Hover, SignatureHelp } from "vscode-languageserver-types";
+import { DocumentSymbol, FoldingRange, Hover, Location, SignatureHelp } from "vscode-languageserver-types";
+import { Range, TextEdit } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { abridgedNodeScopeItems, TAbridgedNodeScopeItem } from "./abridgedUtils";
+import { AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedUtils";
 import {
     AnalysisSettings,
     Inspection,
@@ -16,13 +17,13 @@ import {
 import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 
-export async function assertEqualAutocomplete(
-    expected: ReadonlyArray<string>,
+export async function assertContainsAutocompleteAnalysis(
+    expected: ReadonlyArray<string> | undefined,
     settings: AnalysisSettings,
     textWithPipe: string,
     cancellationToken?: ICancellationToken,
 ): Promise<void> {
-    const actual: ReadonlyArray<Inspection.AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis(
+    const actual: Inspection.AutocompleteItem[] | undefined = await TestUtils.assertAutocompleteAnalysis(
         settings,
         textWithPipe,
         cancellationToken,
@@ -36,6 +37,58 @@ export async function assertEqualAutocomplete(
     }
 }
 
+export async function assertEqualAutocompleteAnalysis(
+    expected: ReadonlyArray<string>,
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    cancellationToken?: ICancellationToken,
+): Promise<void> {
+    const actual: ReadonlyArray<Inspection.AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis(
+        settings,
+        textWithPipe,
+        cancellationToken,
+    );
+
+    Assert.isDefined(actual);
+    TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
+}
+
+export async function assertEqualDefinitionAnalysis(
+    expected: Range[] | undefined,
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    cancellationToken?: ICancellationToken,
+): Promise<void> {
+    const actual: Location[] | undefined = await TestUtils.assertDefinitionAnalysis(
+        settings,
+        textWithPipe,
+        cancellationToken,
+    );
+
+    if (actual) {
+        Assert.isDefined(actual);
+        expect(expected).to.deep.equal(actual.map((location: Location) => location.range));
+    } else {
+        Assert.isUndefined(actual);
+    }
+}
+
+export async function assertEqualDocumentSymbolsAnalysis(
+    textWithPipe: string,
+    expected: ReadonlyArray<AbridgedDocumentSymbol>,
+    settings: AnalysisSettings,
+    cancellationToken?: ICancellationToken,
+): Promise<void> {
+    const actual: ReadonlyArray<DocumentSymbol> | undefined = await TestUtils.assertDocumentSymbolsAnalysis(
+        settings,
+        textWithPipe,
+        cancellationToken,
+    );
+
+    Assert.isDefined(actual);
+    expect(expected).to.deep.equal(TestUtils.abridgedDocumentSymbols(actual));
+}
+
 export async function assertEqualFoldingRangesAnalysis(
     expected: ReadonlyArray<FoldingRange>,
     settings: AnalysisSettings,
@@ -43,12 +96,8 @@ export async function assertEqualFoldingRangesAnalysis(
 ): Promise<void> {
     const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(settings, text);
 
-    if (expected) {
-        Assert.isDefined(foldingRanges);
-        expect(foldingRanges).to.deep.equal(expected);
-    } else {
-        Assert.isUndefined(foldingRanges);
-    }
+    Assert.isDefined(foldingRanges);
+    expect(foldingRanges).to.deep.equal(expected);
 }
 
 export async function assertEqualHoverAnalysis(
@@ -73,7 +122,7 @@ export async function assertEqualNodeScope(
     textWithPipe: string,
 ): Promise<void> {
     const nodeScope: NodeScope = await TestUtils.assertNodeScope(settings, textWithPipe);
-    const actual: ReadonlyArray<TAbridgedNodeScopeItem> = abridgedNodeScopeItems(nodeScope);
+    const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
     expect(actual).deep.equal(expected);
 }
 
@@ -87,11 +136,29 @@ export async function assertEqualPartialSemanticTokensAnalysis(
         text,
     );
 
+    Assert.isDefined(semanticTokens);
+    expect(semanticTokens).to.deep.equal(expected);
+}
+
+export async function assertEqualRenameEdits(
+    expected: TextEdit[] | undefined,
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    newName: string,
+    cancellationToken?: ICancellationToken,
+): Promise<void> {
+    const textEdits: TextEdit[] | undefined = await TestUtils.assertRenameEdits(
+        settings,
+        textWithPipe,
+        newName,
+        cancellationToken,
+    );
+
     if (expected) {
-        Assert.isDefined(semanticTokens);
-        expect(semanticTokens).to.deep.equal(expected);
+        Assert.isDefined(textEdits);
+        expect(textEdits).to.deep.equal(expected);
     } else {
-        Assert.isUndefined(semanticTokens);
+        Assert.isUndefined(textEdits);
     }
 }
 
@@ -105,11 +172,14 @@ export async function assertEqualRootType(
 }
 
 export async function assertEqualSignatureHelpAnalysis(
-    expected: ReadonlyArray<SignatureHelp | undefined>,
+    expected: SignatureHelp | undefined,
     settings: AnalysisSettings,
-    text: string,
+    textWithPipe: string,
 ): Promise<void> {
-    const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(settings, text);
+    const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(
+        settings,
+        textWithPipe,
+    );
 
     if (expected) {
         Assert.isDefined(signatureHelp);

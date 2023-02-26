@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
-import { Diagnostic, Position } from "vscode-languageserver-types";
+import { Diagnostic, DocumentSymbol, Position } from "vscode-languageserver-types";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
@@ -17,13 +17,14 @@ import {
 } from "../../powerquery-language-services/inspection";
 import {
     AnalysisSettings,
+    getDocumentSymbols,
     Inspection,
     InspectionSettings,
     validate,
     ValidationSettings,
 } from "../../powerquery-language-services";
+import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
-import { TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 export async function assertAutocompleteInspection(
@@ -31,6 +32,15 @@ export async function assertAutocompleteInspection(
     textWithPipe: string,
 ): Promise<Inspection.Autocomplete> {
     return (await assertInspected(settings, textWithPipe)).autocomplete;
+}
+
+export async function assertDocumentSymbolsInspection(
+    settings: Settings,
+    text: string,
+): Promise<ReadonlyArray<DocumentSymbol>> {
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+
+    return getDocumentSymbols(triedParse.nodeIdMapCollection, TestConstants.NoOpCancellationTokenInstance);
 }
 
 export async function assertInspected(

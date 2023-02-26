@@ -2,14 +2,13 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
-import { FoldingRange, Location, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
-import type { Range, TextDocument } from "vscode-languageserver-textdocument";
-import { expect } from "chai";
+import { Assert, CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
+import { FoldingRange, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
+import type { Range } from "vscode-languageserver-textdocument";
 
 import {
+    Analysis,
     AnalysisSettings,
-    AnalysisUtils,
     Inspection,
     Library,
     NullSymbolProvider,
@@ -18,18 +17,16 @@ import {
     SignatureHelp,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { MockDocument } from "../mockDocument";
-import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-
-const IsolatedAnalysisSettings: AnalysisSettings = {
-    ...TestConstants.SimpleLibraryAnalysisSettings,
-    languageAutocompleteItemProviderFactory: () => NullSymbolProvider.singleton(),
-    libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
-};
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
+    const IsolatedAnalysisSettings: AnalysisSettings = {
+        ...TestConstants.SimpleLibraryAnalysisSettings,
+        languageAutocompleteItemProviderFactory: () => NullSymbolProvider.singleton(),
+        libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
+    };
+
     async function assertAutocompleteItems(text: string, expected: ReadonlyArray<string>): Promise<void> {
-        await TestUtils.assertEqualAutocomplete(expected, IsolatedAnalysisSettings, text);
+        await TestUtils.assertEqualAutocompleteAnalysis(expected, IsolatedAnalysisSettings, text);
     }
 
     describe(`getAutocompleteItems`, () => {
@@ -101,55 +98,56 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
         });
 
-        xit(`includes textEdit`, async () => {
-            const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
-                `let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|`,
-            );
+        // xit(`includes textEdit`, async () => {
+        //     const pair: [MockDocument, Position] = TestUtils.createMockDocumentAndPosition(
+        //         `let Test.Foo = 1, Test.FooBar = 2 in Test.Fo|`,
+        //     );
 
-            const document: TextDocument = pair[0];
-            const position: Position = pair[1];
+        //     const document: TextDocument = pair[0];
+        //     const position: Position = pair[1];
 
-            const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                await AnalysisUtils.createAnalysis(document, {
-                    inspectionSettings: TestConstants.SimpleInspectionSettings,
-                    isWorkspaceCacheAllowed: false,
-                    traceManager: NoOpTraceManagerInstance,
-                    initialCorrelationId: undefined,
-                }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
+        //     const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+        //         await AnalysisUtils.createAnalysis(document, {
+        //             inspectionSettings: TestConstants.SimpleInspectionSettings,
+        //             isWorkspaceCacheAllowed: false,
+        //             traceManager: NoOpTraceManagerInstance,
+        //             initialCorrelationId: undefined,
+        //         }).getAutocompleteItems(position, TestConstants.NoOpCancellationTokenInstance);
 
-            Assert.isOk(autocompleteItems);
-            Assert.isDefined(autocompleteItems.value);
-            expect(autocompleteItems.value.length).to.equal(2);
+        //     Assert.isOk(autocompleteItems);
+        //     Assert.isDefined(autocompleteItems.value);
+        //     expect(autocompleteItems.value.length).to.equal(2);
 
-            const firstOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
-                `Test.Foo`,
-                autocompleteItems.value,
-            );
+        //     const firstOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
+        //         `Test.Foo`,
+        //         autocompleteItems.value,
+        //     );
 
-            const secondOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
-                `Test.FooBar`,
-                autocompleteItems.value,
-            );
+        //     const secondOption: Inspection.AutocompleteItem = TestUtils.assertContainsAutocompleteItem(
+        //         `Test.FooBar`,
+        //         autocompleteItems.value,
+        //     );
 
-            Assert.isDefined(firstOption.textEdit, `expected firstOption to have a textEdit`);
-            Assert.isDefined(secondOption.textEdit, `expected secondOption to have a textEdit`);
-        });
+        //     Assert.isDefined(firstOption.textEdit, `expected firstOption to have a textEdit`);
+        //     Assert.isDefined(secondOption.textEdit, `expected secondOption to have a textEdit`);
+        // });
     });
 
     describe(`getDefinition`, () => {
-        async function assertDefinition(textWithPipe: string, expected?: ReadonlyArray<Range>): Promise<void> {
-            const actual: Result<Location[] | undefined, CommonError.CommonError> = await TestUtils.createDefinition(
+        async function assertDefinition(
+            textWithPipe: string,
+            expected: Range[] | undefined,
+            cancellationToken?: ICancellationToken,
+        ): Promise<void> {
+            await TestUtils.assertEqualDefinitionAnalysis(
+                expected,
+                IsolatedAnalysisSettings,
                 textWithPipe,
+                cancellationToken,
             );
-
-            Assert.isOk(actual);
-
-            if (expected !== undefined) {
-                TestUtils.assertEqualLocation(expected, Assert.asDefined(actual.value));
-            }
         }
 
-        it(`no definition`, async () => await assertDefinition(`let foo = 1 in baz|`));
+        it(`no definition`, async () => await assertDefinition(`let foo = 1 in baz|`, undefined));
 
         it(`let expression`, async () =>
             await assertDefinition(`let foobar = 1 in foobar|`, [
@@ -566,7 +564,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 textWithPipe: string,
                 expected: SignatureHelp | undefined,
             ): Promise<void> {
-                await TestUtils.assertSignatureHelpAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
+                await TestUtils.assertEqualSignatureHelpAnalysis(expected, IsolatedAnalysisSettings, textWithPipe);
             }
 
             it(`no closing bracket`, async () =>
@@ -610,13 +608,18 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         describe(`.pq tests`, () => {
             it(`DirectQueryForSQL file`, async () => {
-                const postion: Position = {
+                const position: Position = {
                     line: 40,
                     character: 25,
                 };
 
+                const analysis: Analysis = TestUtils.assertAnalysisFromText(
+                    IsolatedAnalysisSettings,
+                    TestUtils.readFile(`DirectQueryForSQL.pq`),
+                );
+
                 const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                    await TestUtils.createAutocompleteItemsForFile(`DirectQueryForSQL.pq`, postion);
+                    await analysis.getAutocompleteItems(position);
 
                 const expected: string[] = [
                     `ConnectionString`,

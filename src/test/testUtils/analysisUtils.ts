@@ -2,12 +2,13 @@
 // Licensed under the MIT license.
 
 import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
-import { FoldingRange, Hover, Position, SignatureHelp } from "vscode-languageserver-types";
+import { DocumentSymbol, FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
 
 import * as TestUtils from "./testUtils";
 import { Analysis, AnalysisSettings, AnalysisUtils, PartialSemanticToken } from "../../powerquery-language-services";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 import { MockDocument } from "../mockDocument";
+import { TextEdit } from "vscode-languageserver-textdocument";
 
 export function assertAnalysisFromText(analysisSettings: AnalysisSettings, text: string): Analysis {
     const document: MockDocument = TestUtils.mockDocument(text);
@@ -33,6 +34,26 @@ export async function assertAutocompleteAnalysis(
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
 
     return Assert.unboxOk(await analysis.getAutocompleteItems(position, cancellationToken));
+}
+
+export async function assertDefinitionAnalysis(
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    cancellationToken?: ICancellationToken,
+): Promise<Location[] | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+
+    return Assert.unboxOk(await analysis.getDefinition(position, cancellationToken));
+}
+
+export async function assertDocumentSymbolsAnalysis(
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    cancellationToken?: ICancellationToken,
+): Promise<DocumentSymbol[] | undefined> {
+    const analysis: Analysis = assertAnalysisFromText(settings, textWithPipe);
+
+    return Assert.unboxOk(await analysis.getDocumentSymbols(cancellationToken));
 }
 
 export async function assertFoldingRangesAnalysis(
@@ -63,6 +84,17 @@ export async function assertPartialSemanticTokens(
     const analysis: Analysis = assertAnalysisFromText(settings, text);
 
     return Assert.unboxOk(await analysis.getPartialSemanticTokens(cancellationToken));
+}
+
+export async function assertRenameEdits(
+    settings: AnalysisSettings,
+    textWithPipe: string,
+    newName: string,
+    cancellationToken?: ICancellationToken,
+): Promise<TextEdit[] | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(settings, textWithPipe);
+
+    return Assert.unboxOk(await analysis.getRenameEdits(position, newName, cancellationToken));
 }
 
 export async function assertSignatureHelpAnalysis(

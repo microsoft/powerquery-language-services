@@ -18,21 +18,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         typeStrategy: TypeStrategy.Extended,
     };
 
-    async function assertEqualScope(
-        textWithPipe: string,
-        expected: ReadonlyArray<TAbridgedNodeScopeItem>,
-    ): Promise<void> {
+    async function runTest(textWithPipe: string, expected: ReadonlyArray<TAbridgedNodeScopeItem>): Promise<void> {
         await TestUtils.assertEqualNodeScope(expected, DefaultSettings, textWithPipe);
     }
 
     describe(`Scope`, () => {
         describe(`${Ast.NodeKind.EachExpression} (Ast)`, () => {
-            it(`|each 1`, async () => await assertEqualScope(`|each 1`, []));
+            it(`|each 1`, async () => await runTest(`|each 1`, []));
 
-            it(`each| 1`, async () => await assertEqualScope(`each| 1`, []));
+            it(`each| 1`, async () => await runTest(`each| 1`, []));
 
             it(`each |1`, async () =>
-                await assertEqualScope(`each |1`, [
+                await runTest(`each |1`, [
                     {
                         identifier: "_",
                         isRecursive: false,
@@ -42,7 +39,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`each 1|`, async () =>
-                await assertEqualScope(`each 1|`, [
+                await runTest(`each 1|`, [
                     {
                         identifier: "_",
                         isRecursive: false,
@@ -52,7 +49,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`each each 1|`, async () =>
-                await assertEqualScope(`each each 1|`, [
+                await runTest(`each each 1|`, [
                     {
                         identifier: "_",
                         isRecursive: false,
@@ -63,10 +60,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.EachExpression} (ParserContext)`, () => {
-            it(`each|`, async () => await assertEqualScope(`each|`, []));
+            it(`each|`, async () => await runTest(`each|`, []));
 
             it(`each |`, async () =>
-                await assertEqualScope(`each |`, [
+                await runTest(`each |`, [
                     {
                         identifier: "_",
                         isRecursive: false,
@@ -77,14 +74,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
-            it(`|(x) => z`, async () => await assertEqualScope(`|(x) => z`, []));
+            it(`|(x) => z`, async () => await runTest(`|(x) => z`, []));
 
-            it(`(x|, y) => z`, async () => await assertEqualScope(`(x|, y) => z`, []));
+            it(`(x|, y) => z`, async () => await runTest(`(x|, y) => z`, []));
 
-            it(`(x, y)| => z`, async () => await assertEqualScope(`(x, y)| => z`, []));
+            it(`(x, y)| => z`, async () => await runTest(`(x, y)| => z`, []));
 
             it(`(x, y) => z|`, async () =>
-                await assertEqualScope(`(x, y) => z|`, [
+                await runTest(`(x, y) => z|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -105,14 +102,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionExpression} (ParserContext)`, () => {
-            it(`|(x) =>`, async () => await assertEqualScope(`|(x) =>`, []));
+            it(`|(x) =>`, async () => await runTest(`|(x) =>`, []));
 
-            it(`(x|, y) =>`, async () => await assertEqualScope(`(x|, y) =>`, []));
+            it(`(x|, y) =>`, async () => await runTest(`(x|, y) =>`, []));
 
-            it(`(x, y)| =>`, async () => await assertEqualScope(`(x, y)| =>`, []));
+            it(`(x, y)| =>`, async () => await runTest(`(x, y)| =>`, []));
 
             it(`(x, y) =>|`, async () =>
-                await assertEqualScope(`(x, y) =>|`, [
+                await runTest(`(x, y) =>|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -134,7 +131,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${Ast.NodeKind.IdentifierExpression} (Ast)`, () => {
             it(`let x = 1, y = x in 1|`, async () =>
-                await assertEqualScope(`let x = 1, y = x in 1|`, [
+                await runTest(`let x = 1, y = x in 1|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -153,12 +150,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.RecordExpression} (Ast)`, () => {
-            it(`|[a=1]`, async () => await assertEqualScope(`|[a=1]`, []));
+            it(`|[a=1]`, async () => await runTest(`|[a=1]`, []));
 
-            it(`[|a=1]`, async () => await assertEqualScope(`[|a=1]`, []));
+            it(`[|a=1]`, async () => await runTest(`[|a=1]`, []));
 
             it(`[a=1|]`, async () =>
-                await assertEqualScope(`[a=1|]`, [
+                await runTest(`[a=1|]`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -169,7 +166,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=1, b=2|]`, async () =>
-                await assertEqualScope(`[a=1, b=2|]`, [
+                await runTest(`[a=1, b=2|]`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -187,7 +184,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=1, b=2|, c=3]`, async () =>
-                await assertEqualScope(`[a=1, b=2|, c=3]`, [
+                await runTest(`[a=1, b=2|, c=3]`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -211,10 +208,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                 ]));
 
-            it(`[a=1]|`, async () => await assertEqualScope(`[a=1]|`, []));
+            it(`[a=1]|`, async () => await runTest(`[a=1]|`, []));
 
             it(`[a=[|b=1]]`, async () =>
-                await assertEqualScope(`[a=[|b=1]]`, [
+                await runTest(`[a=[|b=1]]`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -226,12 +223,12 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.RecordExpression} (ParserContext)`, () => {
-            it(`|[a=1`, async () => await assertEqualScope(`|[a=1`, []));
+            it(`|[a=1`, async () => await runTest(`|[a=1`, []));
 
-            it(`[|a=1`, async () => await assertEqualScope(`[|a=1`, []));
+            it(`[|a=1`, async () => await runTest(`[|a=1`, []));
 
             it(`[a=|1`, async () =>
-                await assertEqualScope(`[a=|1`, [
+                await runTest(`[a=|1`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -242,7 +239,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=1|`, async () => {
-                await assertEqualScope(`[a=1|`, [
+                await runTest(`[a=1|`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -254,7 +251,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
             });
 
             it(`[a=1, b=|`, async () =>
-                await assertEqualScope(`[a=1, b=|`, [
+                await runTest(`[a=1, b=|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -272,7 +269,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=1, b=2|, c=3`, async () =>
-                await assertEqualScope(`[a=1, b=2|, c=3`, [
+                await runTest(`[a=1, b=2|, c=3`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -297,7 +294,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=[|b=1`, async () =>
-                await assertEqualScope(`[a=[|b=1`, [
+                await runTest(`[a=[|b=1`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -308,7 +305,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`[a=[b=|`, async () =>
-                await assertEqualScope(`[a=[b=|`, [
+                await runTest(`[a=[b=|`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
@@ -327,10 +324,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.Section} (Ast)`, () => {
-            it(`s|ection foo; x = 1; y = 2;`, async () => await assertEqualScope(`s|ection foo; x = 1; y = 2;`, []));
+            it(`s|ection foo; x = 1; y = 2;`, async () => await runTest(`s|ection foo; x = 1; y = 2;`, []));
 
             it(`section foo; x = 1|; y = 2;`, async () =>
-                await assertEqualScope(`section foo; x = 1|; y = 2;`, [
+                await runTest(`section foo; x = 1|; y = 2;`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -348,7 +345,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`section foo; x = 1; y = 2|;`, async () =>
-                await assertEqualScope(`section foo; x = 1; y = 2|;`, [
+                await runTest(`section foo; x = 1; y = 2|;`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -365,10 +362,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                 ]));
 
-            it(`section foo; x = 1; y = 2;|`, async () => await assertEqualScope(`section foo; x = 1; y = 2;|`, []));
+            it(`section foo; x = 1; y = 2;|`, async () => await runTest(`section foo; x = 1; y = 2;|`, []));
 
             it(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, async () =>
-                await assertEqualScope(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, [
+                await runTest(`section foo; x = 1; y = 2; z = let a = 1 in |b;`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -401,10 +398,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         });
 
         describe(`${Ast.NodeKind.SectionMember} (ParserContext)`, () => {
-            it(`s|ection foo; x = 1; y = 2`, async () => await assertEqualScope(`s|ection foo; x = 1; y = 2`, []));
+            it(`s|ection foo; x = 1; y = 2`, async () => await runTest(`s|ection foo; x = 1; y = 2`, []));
 
             it(`section foo; x = 1|; y = 2`, async () =>
-                await assertEqualScope(`section foo; x = 1|; y = 2`, [
+                await runTest(`section foo; x = 1|; y = 2`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -422,7 +419,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`section foo; x = 1; y = 2|`, async () =>
-                await assertEqualScope(`section foo; x = 1; y = 2|`, [
+                await runTest(`section foo; x = 1; y = 2|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -440,7 +437,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`section foo; x = 1; y = () => 10|`, async () =>
-                await assertEqualScope(`section foo; x = 1; y = () => 10|`, [
+                await runTest(`section foo; x = 1; y = () => 10|`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.SectionMember,
@@ -460,7 +457,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${Ast.NodeKind.LetExpression} (Ast)`, () => {
             it(`let a = 1 in |x`, async () =>
-                await assertEqualScope(`let a = 1 in |x`, [
+                await runTest(`let a = 1 in |x`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -471,7 +468,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = 1 in x|`, async () =>
-                await assertEqualScope(`let a = 1 in x|`, [
+                await runTest(`let a = 1 in x|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -482,7 +479,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = |1 in x`, async () =>
-                await assertEqualScope(`let a = |1 in x`, [
+                await runTest(`let a = |1 in x`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -493,7 +490,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = 1, b = 2 in x|`, async () =>
-                await assertEqualScope(`let a = 1, b = 2 in x|`, [
+                await runTest(`let a = 1, b = 2 in x|`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -511,7 +508,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = 1|, b = 2 in x`, async () =>
-                await assertEqualScope(`let a = 1|, b = 2 in x`, [
+                await runTest(`let a = 1|, b = 2 in x`, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -529,7 +526,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, async () =>
-                await assertEqualScope(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, [
+                await runTest(`(p1, p2) => let a = 1, b = 2, c = 3| in c`, [
                     {
                         identifier: "p1",
                         kind: Inspection.ScopeItemKind.Parameter,
@@ -570,7 +567,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, async () =>
-                await assertEqualScope(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, [
+                await runTest(`let eggs = let ham = 0 in 1, foo = 2, bar = 3 in 4|`, [
                     {
                         identifier: "eggs",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -595,7 +592,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, async () =>
-                await assertEqualScope(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, [
+                await runTest(`let eggs = let ham = 0 in |1, foo = 2, bar = 3 in 4`, [
                     {
                         identifier: "@eggs",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -629,7 +626,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${Ast.NodeKind.LetExpression} (ParserContext)`, () => {
             it(`let a = 1 in |`, async () =>
-                await assertEqualScope(`let a = 1 in |`, [
+                await runTest(`let a = 1 in |`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -640,7 +637,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = 1, b = 2 in |`, async () =>
-                await assertEqualScope(`let a = 1, b = 2 in |`, [
+                await runTest(`let a = 1, b = 2 in |`, [
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -658,7 +655,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let a = 1|, b = 2 in`, async () =>
-                await assertEqualScope(`let a = 1|, b = 2 in `, [
+                await runTest(`let a = 1|, b = 2 in `, [
                     {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -676,7 +673,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let x = (let y = 1 in z|) in`, async () =>
-                await assertEqualScope(`let x = (let y = 1 in z|) in`, [
+                await runTest(`let x = (let y = 1 in z|) in`, [
                     {
                         identifier: "@x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -694,7 +691,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`let x = (let y = 1 in z) in |`, async () =>
-                await assertEqualScope(`let x = (let y = 1 in z) in |`, [
+                await runTest(`let x = (let y = 1 in z) in |`, [
                     {
                         identifier: "x",
                         kind: Inspection.ScopeItemKind.LetVariable,
@@ -705,7 +702,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
 
             it(`an EachExpression contains the parent's scope;`, async () =>
-                await assertEqualScope(
+                await runTest(
                     `let
                         tbl = 1 as table,
                         bar = "bar"
@@ -738,7 +735,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`generalized expression`, () => {
             it(`let #"x" = 1 in x`, async () =>
-                await assertEqualScope(`let #"x" = 1 in x|`, [
+                await runTest(`let #"x" = 1 in x|`, [
                     {
                         identifier: `x`,
                         isRecursive: false,
@@ -759,7 +756,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
     describe(`Parameter`, () => {
         it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, async () =>
-            await assertEqualScope(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, [
+            await runTest(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, [
                 {
                     identifier: "a",
                     kind: Inspection.ScopeItemKind.Parameter,
