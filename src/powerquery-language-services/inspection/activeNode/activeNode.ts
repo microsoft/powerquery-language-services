@@ -34,7 +34,6 @@ export interface ActiveNode extends IActiveNode {
     readonly exclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
     readonly inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
-    readonly isInKey: boolean;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {

@@ -609,7 +609,7 @@ export class AnalysisBase implements Analysis {
 
         const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(position, trace);
 
-        if (activeNode === undefined || (ActiveNodeUtils.isPositionInBounds(activeNode) && activeNode.isInKey)) {
+        if (activeNode === undefined) {
             trace.exit();
 
             return undefined;

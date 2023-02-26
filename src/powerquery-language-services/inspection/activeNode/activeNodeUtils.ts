@@ -10,7 +10,7 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { ArrayUtils, Assert, CommonError } from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, Constant, ConstantUtils, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
@@ -93,7 +93,6 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         leafKind,
         position,
         ancestry,
-        isInKey: isInKey(ancestry),
         exclusiveIdentifierUnderPosition,
         inclusiveIdentifierUnderPosition,
     };
@@ -397,22 +396,4 @@ function isAnchorNode(position: Position, astNode: Ast.TNode): boolean {
     } else {
         return false;
     }
-}
-
-function isInKey(ancestry: ReadonlyArray<TXorNode>): boolean {
-    if (ancestry.length < 2) {
-        return false;
-    }
-
-    const child: TXorNode = ArrayUtils.assertGet(ancestry, 0);
-    const parent: TXorNode = ArrayUtils.assertGet(ancestry, 1);
-
-    // Return true if we're in the key portion of a key-value pair.
-    return (
-        [
-            Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
-            Ast.NodeKind.GeneralizedIdentifierPairedExpression,
-            Ast.NodeKind.IdentifierPairedExpression,
-        ].includes(parent.node.kind) && child.node.attributeIndex === 0
-    );
 }

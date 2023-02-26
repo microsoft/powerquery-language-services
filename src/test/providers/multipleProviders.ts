@@ -79,7 +79,7 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
 
         it(`let foo|`, () => runTest(`let foo|`));
 
-        it(`WIP let foo |=`, () => runTest(`let foo |=`));
+        it(`let foo |=`, () => runTest(`let foo |=`));
 
         it(`let foo =|`, () =>
             runTest(`let foo =|`, ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"]));
