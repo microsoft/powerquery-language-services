@@ -85,7 +85,7 @@ async function invokeExpressionToDiagnostics(
         const givenArguments: ReadonlyArray<TXorNode> = inspected.arguments.givenArguments;
 
         const invokeExpressionRange: Range = Assert.asDefined(
-            await PositionUtils.createRangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
+            await PositionUtils.rangeFromXorNode(nodeIdMapCollection, inspected.invokeExpressionXorNode),
             "expected at least one leaf node under InvokeExpression",
         );
 
@@ -98,7 +98,7 @@ async function invokeExpressionToDiagnostics(
             validationSettings.cancellationToken?.throwIfCancelled();
 
             // eslint-disable-next-line no-await-in-loop
-            const givenArgRange: Range | undefined = await PositionUtils.createRangeFromXorNode(
+            const givenArgRange: Range | undefined = await PositionUtils.rangeFromXorNode(
                 nodeIdMapCollection,
                 givenArguments[argIndex],
             );

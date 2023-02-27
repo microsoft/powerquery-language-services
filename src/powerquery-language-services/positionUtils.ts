@@ -21,7 +21,7 @@ export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Toke
 
 // Attempts to turn a TXorNode into a Range.
 // Returns undefined if there are no leafs nodes.
-export async function createRangeFromXorNode(
+export async function rangeFromXorNode(
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
 ): Promise<Range | undefined> {
@@ -54,7 +54,7 @@ export function createRangeFromTokenPositions(
     return undefined;
 }
 
-export function createRangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
+export function rangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
     return createRangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
 

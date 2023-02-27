@@ -22,7 +22,7 @@ export function tryExpectedType(settings: PQP.CommonSettings, activeNode: TActiv
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         trace.exit();
 
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     const result: PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError> = ResultUtils.ensureResult(

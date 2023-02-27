@@ -6,7 +6,6 @@ import { assert, expect } from "chai";
 
 import { Diagnostic, DiagnosticErrorCode, DiagnosticSeverity, Position } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { MockDocument } from "../mockDocument";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
@@ -17,35 +16,33 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
     expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
 }
 
-async function expectNoValidationErrors(textDocument: MockDocument): Promise<void> {
-    const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(
-        textDocument,
+async function assertNoValidationErrors(text: string): Promise<void> {
+    const validationResult: ValidateOk = await TestUtils.assertValidate(
         TestConstants.SimpleLibraryAnalysisSettings,
         TestConstants.SimpleValidateAllSettings,
+        text,
     );
 
-    expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
-    expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
+    expect(validationResult.hasSyntaxError).to.equal(false, `hasSyntaxError flag should be false`);
+    expect(validationResult.diagnostics.length).to.equal(0, `no diagnostics expected`);
 }
 
 describe(`Validation - functionExpression`, () => {
-    describe("Syntax validation", () => {
-        it("no errors", async () => {
-            await expectNoValidationErrors(
-                TestUtils.createTextMockDocument("(foo as number, bar as number) => foo + bar"),
-            );
+    describe(`Syntax validation`, () => {
+        it(`no errors`, async () => {
+            await assertNoValidationErrors(`(foo as number, bar as number) => foo + bar`);
         });
 
-        it("(foo as number, foo as number) => foo * 2", async () => {
+        it(`(foo as number, foo as number) => foo * 2`, async () => {
             const errorSource: string = TestConstants.SimpleValidateAllSettings.source;
 
-            const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(
-                TestUtils.createTextMockDocument(`(foo as number, foo as number) => foo * 2`),
+            const validationResult: ValidateOk = await TestUtils.assertValidate(
                 TestConstants.SimpleLibraryAnalysisSettings,
                 TestConstants.SimpleValidateAllSettings,
+                `(foo as number, foo as number) => foo * 2`,
             );
 
-            expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
+            expect(validationResult.hasSyntaxError).to.equal(false, `hasSyntaxError flag should be false`);
 
             assertValidationError(validationResult.diagnostics[0], { line: 0, character: 1 });
             assertValidationError(validationResult.diagnostics[1], { line: 0, character: 16 });

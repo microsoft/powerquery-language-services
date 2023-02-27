@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, DefaultSettings } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { ActiveNodeUtils, TActiveNode } from "../../powerquery-language-services/inspection";
@@ -10,52 +10,35 @@ import { TestUtils } from "..";
 
 describe(`ActiveNodeUtils`, () => {
     describe(`isInKey`, () => {
-        it(`let |`, async () => {
-            const text: string = `let |`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        async function runTest(textWithPipe: string, expected: boolean | undefined): Promise<void> {
+            const activeNode: TActiveNode = await TestUtils.assertActiveNode(DefaultSettings, textWithPipe);
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(true);
-        });
+            if (expected !== undefined) {
+                ActiveNodeUtils.assertPositionInBounds(activeNode);
+                expect(activeNode.isInKey).to.equal(expected);
+            }
+        }
 
-        it(`let foo = |`, async () => {
-            const text: string = `let foo = |`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        it(`let |`, async () => await runTest(`let |`, true));
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(false);
-        });
+        it(`let k|`, async () => await runTest(`let k|`, true));
 
-        it(`let foo = 1|`, async () => {
-            const text: string = `let foo = 1|`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        it(`let |k`, async () => await runTest(`let |k`, true));
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(false);
-        });
+        it(`let k|=`, async () => await runTest(`let k|=`, true));
 
-        it(`let foo = 1,|`, async () => {
-            const text: string = `let foo = 1,|`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        it(`let k=|`, async () => await runTest(`let k=|`, false));
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(true);
-        });
+        it(`let k=1|`, async () => await runTest(`let k=1|`, false));
 
-        it(`let foo = 1, |`, async () => {
-            const text: string = `let foo = 1, |`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        it(`let k=1,|`, async () => await runTest(`let k=1,|`, true));
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(true);
-        });
+        it(`let k=1,|k`, async () => await runTest(`let k=1,|k`, true));
 
-        it(`let foo = 1, bar|`, async () => {
-            const text: string = `let foo = 1, bar|`;
-            const activeNode: TActiveNode = Assert.asDefined(Assert.unboxOk(await TestUtils.createActiveNode(text)));
+        it(`let k=1,k|`, async () => await runTest(`let k=1,k|`, true));
 
-            ActiveNodeUtils.assertPositionInBounds(activeNode);
-            expect(activeNode.isInKey).to.equal(true);
-        });
+        it(`let k=1, k|`, async () => await runTest(`let k=1, k|`, true));
+
+        it(`let k=1, k|=`, async () => await runTest(`let k=1, k|=`, true));
     });
 });

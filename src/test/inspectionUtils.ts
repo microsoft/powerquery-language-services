@@ -2,150 +2,221 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import * as PQP from "@microsoft/powerquery-parser";
-import { assert, expect } from "chai";
-import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import * as TestUtils from "./testUtils";
-import { Analysis, AnalysisUtils, InspectionUtils, SymbolKind, TextDocument } from "../powerquery-language-services";
-import { AbridgedDocumentSymbol } from "./testUtils";
-import { TestConstants } from ".";
+import { TestConstants, TestUtils } from ".";
+import { SymbolKind } from "../powerquery-language-services";
 
-// Used to test symbols at a specific level of inspection
-function expectSymbolsForNode(node: Ast.TNode, expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>): void {
-    let actualSymbols: ReadonlyArray<AbridgedDocumentSymbol>;
-
-    if (AstUtils.isSection(node)) {
-        actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForSection(node));
-    } else if (AstUtils.isLetExpression(node)) {
-        actualSymbols = TestUtils.createAbridgedDocumentSymbols(InspectionUtils.getSymbolsForLetExpression(node));
-    } else {
-        throw new Error("unsupported code path");
-    }
-
-    assert.isDefined(actualSymbols);
-
-    expect(actualSymbols).deep.equals(expectedSymbols, "Expected document symbols to match.\n");
-}
-
-describe("Document symbol base functions", () => {
-    it(`section foo; shared a = 1; b = "abc"; c = true;`, async () => {
-        const textDocument: TextDocument = TestUtils.createTextMockDocument(
+describe(`Document symbol base functions`, () => {
+    it(`section foo; shared a = 1; b = "abc"; c = true;`, async () =>
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
             `section foo; shared a = 1; b = "abc"; c = true;`,
-        );
-
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            textDocument,
+            [
+                { name: `a`, kind: SymbolKind.Number },
+                { name: `b`, kind: SymbolKind.String },
+                { name: `c`, kind: SymbolKind.Boolean },
+            ],
             TestConstants.SimpleLibraryAnalysisSettings,
-        );
+        ));
 
-        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
-            PQP.Assert.unboxOk(await analysis.getParseState()),
-        );
-
-        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
-        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
-        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
-
-        expectSymbolsForNode(root, [
-            { name: "a", kind: SymbolKind.Number },
-            { name: "b", kind: SymbolKind.String },
-            { name: "c", kind: SymbolKind.Boolean },
-        ]);
-    });
-
-    it(`section foo; a = {1,2};`, async () => {
-        const text: string = `section foo; a = {1,2};`;
-        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
-
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            textDocument,
+    it(`section foo; a = {1,2};`, async () =>
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+            `section foo; a = {1,2};`,
+            [{ name: `a`, kind: SymbolKind.Array }],
             TestConstants.SimpleLibraryAnalysisSettings,
-        );
+        ));
 
-        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
-            PQP.Assert.unboxOk(await analysis.getParseState()),
-        );
-
-        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
-        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
-        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
-
-        expectSymbolsForNode(root, [{ name: "a", kind: SymbolKind.Array }]);
-    });
-
-    it(`let a = 1, b = 2, c = 3 in c`, async () => {
-        const text: string = `let a = 1, b = 2, c = 3 in c`;
-        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
-
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            textDocument,
+    it(`let a = 1, b = 2, c = 3 in c`, async () =>
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+            `let a = 1, b = 2, c = 3 in c`,
+            [
+                { name: `a`, kind: SymbolKind.Number },
+                { name: `b`, kind: SymbolKind.Number },
+                { name: `c`, kind: SymbolKind.Number },
+            ],
             TestConstants.SimpleLibraryAnalysisSettings,
-        );
+        ));
 
-        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
-            PQP.Assert.unboxOk(await analysis.getParseState()),
-        );
-
-        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
-        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
-        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
-
-        expectSymbolsForNode(root, [
-            { name: "a", kind: SymbolKind.Number },
-            { name: "b", kind: SymbolKind.Number },
-            { name: "c", kind: SymbolKind.Number },
-        ]);
-    });
-
-    it("HelloWorldWithDocs file section", async () => {
-        const text: string = TestUtils.readFile("HelloWorldWithDocs.pq");
-        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
-
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            textDocument,
+    it("HelloWorldWithDocs file section", async () =>
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+            TestUtils.readFile(`HelloWorldWithDocs.pq`),
+            [
+                {
+                    kind: 13,
+                    name: "HelloWorldWithDocs.Contents",
+                },
+                {
+                    kind: 26,
+                    name: "HelloWorldType",
+                },
+                {
+                    children: [
+                        {
+                            kind: 13,
+                            name: "_count",
+                        },
+                        {
+                            kind: 13,
+                            name: "listOfMessages",
+                        },
+                        {
+                            kind: 13,
+                            name: "table",
+                        },
+                    ],
+                    kind: 12,
+                    name: "HelloWorldImpl",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Authentication",
+                        },
+                    ],
+                    kind: 23,
+                    name: "HelloWorldWithDocs",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Beta",
+                        },
+                        {
+                            kind: 8,
+                            name: "Category",
+                        },
+                        {
+                            kind: 8,
+                            name: "ButtonText",
+                        },
+                    ],
+                    kind: 23,
+                    name: "HelloWorldWithDocs.Publish",
+                },
+            ],
             TestConstants.SimpleLibraryAnalysisSettings,
-        );
+        ));
 
-        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
-            PQP.Assert.unboxOk(await analysis.getParseState()),
-        );
-
-        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
-        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
-        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
-
-        expectSymbolsForNode(root, [
-            { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
-            { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
-            { name: "HelloWorldImpl", kind: SymbolKind.Function },
-            { name: "HelloWorldWithDocs", kind: SymbolKind.Struct },
-            { name: "HelloWorldWithDocs.Publish", kind: SymbolKind.Struct },
-        ]);
-    });
-
-    it("DirectQueryForSQL file section", async () => {
-        const text: string = TestUtils.readFile("DirectQueryForSQL.pq");
-        const textDocument: TextDocument = TestUtils.createTextMockDocument(text);
-
-        const analysis: Analysis = AnalysisUtils.createAnalysis(
-            textDocument,
+    it("DirectQueryForSQL file section", async () =>
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+            TestUtils.readFile(`DirectQueryForSQL.pq`),
+            [
+                {
+                    children: [
+                        {
+                            children: [
+                                {
+                                    kind: 8,
+                                    name: "Driver",
+                                },
+                                {
+                                    kind: 8,
+                                    name: "Server",
+                                },
+                                {
+                                    kind: 8,
+                                    name: "Database",
+                                },
+                            ],
+                            kind: 23,
+                            name: "ConnectionString",
+                        },
+                        {
+                            kind: 13,
+                            name: "Credential",
+                        },
+                        {
+                            kind: 13,
+                            name: "CredentialConnectionString",
+                        },
+                        {
+                            kind: 13,
+                            name: "OdbcDataSource",
+                        },
+                        {
+                            kind: 13,
+                            name: "Database",
+                        },
+                    ],
+                    kind: 12,
+                    name: "DirectSQL.Database",
+                },
+                {
+                    children: [
+                        {
+                            kind: 13,
+                            name: "json",
+                        },
+                        {
+                            kind: 13,
+                            name: "server",
+                        },
+                        {
+                            kind: 13,
+                            name: "database",
+                        },
+                        {
+                            kind: 8,
+                            name: "TestConnection",
+                        },
+                        {
+                            kind: 8,
+                            name: "Authentication",
+                        },
+                        {
+                            kind: 8,
+                            name: "Label",
+                        },
+                        {
+                            kind: 8,
+                            name: "SupportsEncryption",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "SupportsDirectQuery",
+                        },
+                        {
+                            kind: 8,
+                            name: "Category",
+                        },
+                        {
+                            kind: 8,
+                            name: "ButtonText",
+                        },
+                        {
+                            kind: 8,
+                            name: "SourceImage",
+                        },
+                        {
+                            kind: 8,
+                            name: "SourceTypeImage",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL.UI",
+                },
+                {
+                    children: [
+                        {
+                            kind: 8,
+                            name: "Icon16",
+                        },
+                        {
+                            kind: 8,
+                            name: "Icon32",
+                        },
+                    ],
+                    kind: 23,
+                    name: "DirectSQL.Icons",
+                },
+            ],
             TestConstants.SimpleLibraryAnalysisSettings,
-        );
-
-        const parseContext: PQP.Parser.ParseState = PQP.Assert.asDefined(
-            PQP.Assert.unboxOk(await analysis.getParseState()),
-        );
-
-        const nodeIdMapCollection: PQP.Parser.NodeIdMap.Collection = parseContext.contextState.nodeIdMapCollection;
-        const rootId: number = PQP.Assert.asDefined(parseContext.contextState.root?.id);
-        const root: Ast.TNode = PQP.MapUtils.assertGet(nodeIdMapCollection.astNodeById, rootId);
-
-        expectSymbolsForNode(root, [
-            { name: "DirectSQL.Database", kind: SymbolKind.Function },
-            { name: "DirectSQL", kind: SymbolKind.Struct },
-            { name: "DirectSQL.UI", kind: SymbolKind.Struct },
-            { name: "DirectSQL.Icons", kind: SymbolKind.Struct },
-        ]);
-    });
+        ));
 });

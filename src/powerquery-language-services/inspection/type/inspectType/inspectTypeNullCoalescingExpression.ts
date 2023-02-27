@@ -17,7 +17,7 @@ export async function inspectTypeNullCoalescingExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeNullCoalescingExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -42,12 +42,14 @@ export async function inspectTypeNullCoalescingExpression(
 
         if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
+        } else if (!leftType.isNullable) {
+            result = leftType;
         } else {
-            result = TypeUtils.createAnyUnion([leftType, rightType], state.traceManager, trace.id);
+            result = TypeUtils.anyUnion([leftType, rightType], state.traceManager, trace.id);
         }
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

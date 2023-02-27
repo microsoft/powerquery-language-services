@@ -17,13 +17,13 @@ export function inspectTypePrimitiveType(
         InspectionTraceConstant.InspectType,
         inspectTypePrimitiveType.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     XorNodeUtils.assertIsNodeKind<Ast.PrimitiveType>(xorNode, Ast.NodeKind.PrimitiveType);
 
     if (XorNodeUtils.isContextXor(xorNode)) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
@@ -36,7 +36,7 @@ export function inspectTypePrimitiveType(
         isNullable: false,
     };
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

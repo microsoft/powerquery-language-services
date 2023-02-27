@@ -12,7 +12,7 @@ import { AutocompleteItemProviderContext } from "./providers/commonTypes";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { Library } from "./library";
 
-export function createInspectionSettings(
+export function newInspectionSettings(
     settings: PQP.Settings,
     overrides?: Partial<InspectionSettings>,
 ): InspectionSettings {
@@ -25,7 +25,7 @@ export function createInspectionSettings(
     };
 }
 
-export async function getMaybeType(
+export async function getIdentifierType(
     inspected: Inspection.Inspected,
     identifier: string,
 ): Promise<Type.TPowerQueryType | undefined> {
@@ -133,8 +133,8 @@ export function getSymbolsForRecord(
             kind: SymbolKind.Field,
             deprecated: false,
             name: element.node.key.literal,
-            range: PositionUtils.createRangeFromTokenRange(element.node.tokenRange),
-            selectionRange: PositionUtils.createRangeFromTokenRange(element.node.key.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(element.node.tokenRange),
+            selectionRange: PositionUtils.rangeFromTokenRange(element.node.key.tokenRange),
         });
     }
 
@@ -154,8 +154,8 @@ export function getSymbolForIdentifierPairedExpression(
         kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
         deprecated: false,
         name: identifierPairedExpressionNode.key.literal,
-        range: PositionUtils.createRangeFromTokenRange(identifierPairedExpressionNode.tokenRange),
-        selectionRange: PositionUtils.createRangeFromTokenRange(identifierPairedExpressionNode.key.tokenRange),
+        range: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.tokenRange),
+        selectionRange: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.key.tokenRange),
     };
 }
 

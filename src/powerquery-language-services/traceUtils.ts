@@ -4,7 +4,7 @@
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-export function createTypeDetails(powerQueryType: Type.TPowerQueryType): TypeDetails {
+export function typeDetails(powerQueryType: Type.TPowerQueryType): TypeDetails {
     return {
         kind: powerQueryType.kind,
         extendedType: powerQueryType.extendedKind,
@@ -12,7 +12,7 @@ export function createTypeDetails(powerQueryType: Type.TPowerQueryType): TypeDet
     };
 }
 
-export function createXorNodeDetails(xorNode: TXorNode): XorNodeDetails {
+export function xorNodeDetails(xorNode: TXorNode): XorNodeDetails {
     return {
         nodeKind: xorNode.node.kind,
         nodeId: xorNode.node.id,

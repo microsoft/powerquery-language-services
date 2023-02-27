@@ -265,24 +265,24 @@ export function findXorOfNodeKind<T extends Ast.TNode>(
 }
 
 interface SearchedLeafs {
-    readonly nodeClosestBeforePosition: TLeaf | undefined;
-    readonly nodeOnPosition: TLeaf | undefined;
-    readonly nodeClosestAfterPosition: TLeaf | undefined;
+    readonly nodeClosestBeforePosition: Ast.TLeaf | undefined;
+    readonly nodeOnPosition: Ast.TLeaf | undefined;
+    readonly nodeClosestAfterPosition: Ast.TLeaf | undefined;
 }
 
 function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Position): SearchedLeafs {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
-    let nodeClosestBeforePosition: TLeaf | undefined;
-    let nodeOnPosition: TLeaf | undefined;
-    let nodeClosestAfterPosition: TLeaf | undefined;
+    let nodeClosestBeforePosition: Ast.TLeaf | undefined;
+    let nodeOnPosition: Ast.TLeaf | undefined;
+    let nodeClosestAfterPosition: Ast.TLeaf | undefined;
 
     // Find the closest leaf on or to the left of the position.
     for (const nodeId of nodeIdMapCollection.leafIds) {
         const candidate: Ast.TNode | undefined = astNodeById.get(nodeId);
 
         Assert.isDefined(candidate, `leafIds contained a value that wasn't found in astNodeById`, { nodeId });
-        assertIsLeaf(candidate);
+        AstUtils.assertIsLeaf(candidate);
 
         // This shouldn't occur, but safety first.
         if (candidate === undefined) {
@@ -457,10 +457,4 @@ function isInKey(ancestry: ReadonlyArray<TXorNode>): boolean {
             Ast.NodeKind.IdentifierPairedExpression,
         ].includes(parent.node.kind) && child.node.attributeIndex === 0
     );
-}
-
-type TLeaf = Ast.GeneralizedIdentifier | Ast.Identifier | Ast.LiteralExpression | Ast.PrimitiveType | Ast.TConstant;
-
-function assertIsLeaf(node: Ast.TNode): asserts node is TLeaf {
-    Assert.isTrue(node.isLeaf, "Assert(node.isLeaf)", { nodeId: node.id, nodeKind: node.kind });
 }

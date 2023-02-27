@@ -86,7 +86,7 @@ function validateNoDuplicateParameter(
         if (nodes.length > 1) {
             diagnostics.push(
                 ...nodes.map((identifier: Ast.Identifier) => {
-                    const parameterRange: Range = PositionUtils.createRangeFromTokenRange(identifier.tokenRange);
+                    const parameterRange: Range = PositionUtils.rangeFromTokenRange(identifier.tokenRange);
 
                     return createDiagnosticForDuplicateParameterName(
                         validationSettings,

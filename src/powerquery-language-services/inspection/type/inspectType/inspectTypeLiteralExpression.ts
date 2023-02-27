@@ -18,7 +18,7 @@ export function inspectTypeLiteralExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeLiteralExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     XorNodeUtils.assertIsNodeKind<Ast.LiteralExpression>(xorNode, Ast.NodeKind.LiteralExpression);
@@ -35,18 +35,15 @@ export function inspectTypeLiteralExpression(
 
             switch (typeKind) {
                 case Type.TypeKind.Number:
-                    result = TypeUtils.createNumberLiteral(false, literalExpression.literal);
+                    result = TypeUtils.numberLiteral(false, literalExpression.literal);
                     break;
 
                 case Type.TypeKind.Text:
-                    result = TypeUtils.createTextLiteral(false, literalExpression.literal);
+                    result = TypeUtils.textLiteral(false, literalExpression.literal);
                     break;
 
                 default:
-                    result = TypeUtils.createPrimitiveType(
-                        literalExpression.literalKind === Ast.LiteralKind.Null,
-                        typeKind,
-                    );
+                    result = TypeUtils.primitiveType(literalExpression.literalKind === Ast.LiteralKind.Null, typeKind);
 
                     break;
             }
@@ -62,7 +59,7 @@ export function inspectTypeLiteralExpression(
             throw Assert.isNever(xorNode);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

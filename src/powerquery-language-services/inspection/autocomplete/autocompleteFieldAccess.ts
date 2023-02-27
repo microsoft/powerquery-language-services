@@ -44,7 +44,7 @@ export async function tryAutocompleteFieldAccess(
     let result: TriedAutocompleteFieldAccess;
 
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        result = ResultUtils.boxOk(undefined);
+        result = ResultUtils.ok(undefined);
     } else {
         result = await ResultUtils.ensureResultAsync(
             () => autocompleteFieldAccess(updatedSettings, parseState, activeNode, typeCache),
@@ -302,7 +302,7 @@ function createAutocompleteItems(
         }
 
         autocompleteItems.push(
-            AutocompleteItemUtils.createFromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
+            AutocompleteItemUtils.fromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
         );
     }
 

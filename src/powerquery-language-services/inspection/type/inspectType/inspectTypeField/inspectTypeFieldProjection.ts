@@ -24,7 +24,7 @@ export async function inspectTypeFieldProjection(
         InspectionTraceConstant.InspectType,
         inspectTypeFieldProjection.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -92,7 +92,7 @@ export async function inspectTypeFieldProjection(
             break;
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
@@ -114,8 +114,8 @@ function inspectRecordOrTableProjection(
         );
 
         return fieldType.kind === Type.TypeKind.Record
-            ? TypeUtils.createDefinedRecord(false, newFields, false)
-            : TypeUtils.createDefinedTable(false, new PQP.OrderedMap([...newFields]), false);
+            ? TypeUtils.definedRecord(false, newFields, false)
+            : TypeUtils.definedTable(false, new PQP.OrderedMap([...newFields]), false);
     }
 }
 

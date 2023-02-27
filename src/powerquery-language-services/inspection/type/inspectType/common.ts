@@ -42,7 +42,7 @@ import { TypeById } from "../../typeCache";
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
 export interface InspectTypeState
     extends PQP.CommonSettings,
-        Omit<InspectionSettings, keyof PQP.LexSettings | keyof PQP.ParseSettings> {
+        Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
@@ -112,7 +112,7 @@ export async function getOrCreateScope(
     if (nodeScope !== undefined) {
         trace.exit();
 
-        return ResultUtils.boxOk(nodeScope);
+        return ResultUtils.ok(nodeScope);
     }
 
     const result: Inspection.TriedNodeScope = await tryNodeScope(
@@ -191,7 +191,7 @@ export async function inspectTypeFromChildAttributeIndex(
         InspectionTraceConstant.InspectType,
         inspectTypeFromChildAttributeIndex.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(parentXorNode),
+        TraceUtils.xorNodeDetails(parentXorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -219,7 +219,7 @@ export async function inspectXor(
         InspectionTraceConstant.InspectType,
         inspectXor.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -344,7 +344,7 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
+            result = Type.LogicalInstance;
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -352,7 +352,7 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
+            result = Type.LogicalInstance;
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
@@ -426,7 +426,7 @@ export async function dereferencedIdentifierType(
         InspectionTraceConstant.InspectType,
         dereferencedIdentifierType.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -476,8 +476,7 @@ export async function dereferencedIdentifierType(
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (scopeItem === undefined) {
-        const request: ExternalType.ExternalValueTypeRequest =
-            ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
+        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequest(deferencedLiteral);
 
         const result: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
         trace.exit();

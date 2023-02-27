@@ -41,7 +41,7 @@ export async function tryCurrentInvokeExpression(
     activeNode: TActiveNode,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<TriedCurrentInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectCurrentInvokeExpression,
@@ -57,7 +57,7 @@ export async function tryCurrentInvokeExpression(
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk(undefined));
+        return Promise.resolve(ResultUtils.ok(undefined));
     }
 
     const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(
