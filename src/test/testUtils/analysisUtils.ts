@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 import { DocumentSymbol, FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
+import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as TestUtils from "./testUtils";
 import { Analysis, AnalysisSettings, AnalysisUtils, PartialSemanticToken } from "../../powerquery-language-services";

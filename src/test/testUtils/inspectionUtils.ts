@@ -32,8 +32,8 @@ import {
     validate,
     ValidationSettings,
 } from "../../powerquery-language-services";
-import { TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
+import { TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 export async function assertAutocompleteInspection(
