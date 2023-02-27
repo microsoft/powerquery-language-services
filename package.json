@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.6.13",
+    "version": "0.7.0",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -49,8 +49,8 @@
         "typescript": "4.6.4"
     },
     "dependencies": {
-        "@microsoft/powerquery-formatter": "0.3.6",
-        "@microsoft/powerquery-parser": "0.11.2",
+        "@microsoft/powerquery-formatter": "0.3.7",
+        "@microsoft/powerquery-parser": "0.12.0",
         "vscode-languageserver-textdocument": "1.0.4",
         "vscode-languageserver-types": "3.17.1"
     },

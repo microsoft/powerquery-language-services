@@ -35,7 +35,7 @@ export async function assertGetInspectionInstance(
     settings: InspectionSettings,
     text: string,
     position: Position,
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<Inspected> {
     const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
     TaskUtils.assertIsParseStage(triedLexParseTask);
@@ -79,9 +79,9 @@ export async function assertGetInspectionInstance(
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = Promise.resolve(ResultUtils.boxOk(new Map()));
-        triedScopeType = Promise.resolve(ResultUtils.boxOk(new Map()));
-        triedExpectedType = ResultUtils.boxOk(undefined);
+        triedNodeScope = Promise.resolve(ResultUtils.ok(new Map()));
+        triedScopeType = Promise.resolve(ResultUtils.ok(new Map()));
+        triedExpectedType = ResultUtils.ok(undefined);
     }
 
     return new InspectionInstance(

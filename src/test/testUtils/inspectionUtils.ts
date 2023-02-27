@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    NoOpCancellationToken,
+    Result,
+    ResultUtils,
+    Settings,
+    Task,
+    TaskUtils,
+} from "@microsoft/powerquery-parser";
 import { Diagnostic, DocumentSymbol, Position } from "vscode-languageserver-types";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
@@ -23,8 +32,8 @@ import {
     validate,
     ValidationSettings,
 } from "../../powerquery-language-services";
-import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
+import { TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 export async function assertAutocompleteInspection(
@@ -40,17 +49,17 @@ export async function assertDocumentSymbolsInspection(
 ): Promise<ReadonlyArray<DocumentSymbol>> {
     const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
 
-    return getDocumentSymbols(triedParse.nodeIdMapCollection, TestConstants.NoOpCancellationTokenInstance);
+    return getDocumentSymbols(triedParse.nodeIdMapCollection, NoOpCancellationToken);
 }
 
 export async function assertInspected(
     settings: InspectionSettings,
     textWithPipe: string,
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<Inspected> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
 
-    return await Assert.unboxOk(await Inspection.tryInspect(settings, text, position, typeCache));
+    return await ResultUtils.assertUnboxOk(await Inspection.tryInspect(settings, text, position, typeCache));
 }
 
 export async function assertRootType(settings: InspectionSettings, text: string): Promise<TPowerQueryType> {
@@ -66,7 +75,7 @@ export async function assertRootType(settings: InspectionSettings, text: string)
         root.node.id,
     );
 
-    Assert.isOk(actual);
+    ResultUtils.assertIsOk(actual);
 
     return actual.value;
 }
@@ -81,12 +90,12 @@ export async function assertNodeScope(settings: Settings, textWithPipe: string):
         return new Map();
     }
 
-    return Assert.unboxOk(
+    return ResultUtils.assertUnboxOk(
         await tryNodeScope(
             settings,
             nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
-            TypeCacheUtils.createEmptyCache().scopeById,
+            TypeCacheUtils.emptyCache().scopeById,
         ),
     );
 }
@@ -109,7 +118,7 @@ export async function assertScopeType(
         activeNodeLeaf.node.id,
     );
 
-    Assert.isOk(triedScopeType);
+    ResultUtils.assertIsOk(triedScopeType);
 
     return triedScopeType.value;
 }
@@ -127,7 +136,7 @@ export async function assertValidate(
         validationSettings,
     );
 
-    Assert.isOk(triedValidation);
+    ResultUtils.assertIsOk(triedValidation);
     Assert.isDefined(triedValidation.value);
 
     return triedValidation.value;

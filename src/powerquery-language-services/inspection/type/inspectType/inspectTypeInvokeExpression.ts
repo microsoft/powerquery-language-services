@@ -27,7 +27,7 @@ export async function inspectTypeInvokeExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeInvokeExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -43,7 +43,7 @@ export async function inspectTypeInvokeExpression(
         const type: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
 
         if (type !== undefined) {
-            trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(type) });
+            trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(type) });
 
             return type;
         }
@@ -68,7 +68,7 @@ export async function inspectTypeInvokeExpression(
         result = Type.AnyInstance;
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
@@ -82,7 +82,7 @@ async function externalInvokeRequest(
         InspectionTraceConstant.InspectType,
         externalInvokeRequest.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     const identifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
@@ -118,7 +118,7 @@ async function externalInvokeRequest(
         types.push(await inspectXor(state, argument, trace.id));
     }
 
-    const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.createInvocationTypeRequest(
+    const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.invocationTypeRequest(
         Assert.asDefined(XorNodeUtils.identifierExpressionLiteral(triedDeferencedIdentifier.value)),
         types,
     );

@@ -23,7 +23,7 @@ export async function inspectTypeErrorHandlingExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeErrorHandlingExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -65,13 +65,13 @@ export async function inspectTypeErrorHandlingExpression(
         throw new PQP.CommonError.InvariantError(`should never be reached`);
     }
 
-    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+    const result: Type.TPowerQueryType = TypeUtils.anyUnion(
         [await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id), errorHandlerResult],
         state.traceManager,
         trace.id,
     );
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

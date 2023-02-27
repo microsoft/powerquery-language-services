@@ -3,8 +3,8 @@
 
 import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { TestConstants, TestUtils } from "..";
@@ -18,7 +18,7 @@ function expectNoParameters_givenExtraneousParameter(inspected: Inspection.Curre
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, `1`)]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.numberLiteral(false, `1`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(0);
     expect(invokeArgs.numMinExpectedArguments).to.equal(0);
@@ -56,7 +56,7 @@ function expectText_givenText(inspected: Inspection.CurrentInvokeExpression): vo
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createTextLiteral(false, `"foo"`)]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.textLiteral(false, `"foo"`)]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(1);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
@@ -111,7 +111,7 @@ function expectRequiredAndOptional_givenRequired(inspected: Inspection.CurrentIn
     const invokeArgs: CurrentInvokeExpressionArguments = inspected.arguments;
 
     expect(invokeArgs.argumentOrdinal).to.equal(0);
-    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.createNumberLiteral(false, "1")]);
+    expect(invokeArgs.givenArgumentTypes).to.deep.equal([TypeUtils.numberLiteral(false, "1")]);
     expect(invokeArgs.givenArguments.length).to.equal(1);
     expect(invokeArgs.numMaxExpectedArguments).to.equal(2);
     expect(invokeArgs.numMinExpectedArguments).to.equal(1);
@@ -133,8 +133,8 @@ function expectRequiredAndOptional_givenRequiredAndOptional(inspected: Inspectio
     expect(invokeArgs.argumentOrdinal).to.equal(1);
 
     expect(invokeArgs.givenArgumentTypes).to.deep.equal([
-        TypeUtils.createNumberLiteral(false, "1"),
-        TypeUtils.createTextLiteral(false, `"secondArg"`),
+        TypeUtils.numberLiteral(false, "1"),
+        TypeUtils.textLiteral(false, `"secondArg"`),
     ]);
 
     expect(invokeArgs.givenArguments.length).to.equal(2);
@@ -153,7 +153,7 @@ function expectText_givenNumber(inspected: Inspection.CurrentInvokeExpression): 
         TestConstants.DuplicateTextDefinedFunction.parameters[0],
     );
 
-    const actualArgument: Type.NumberLiteral = TypeUtils.createNumberLiteral(false, "1");
+    const actualArgument: Type.NumberLiteral = TypeUtils.numberLiteral(false, "1");
 
     expect(inspected.name).to.equal(TestConstants.TestLibraryName.DuplicateText);
 
@@ -203,7 +203,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             textWithPipe,
         );
 
-        return Assert.asDefined(Assert.unboxOk(await inspected.triedCurrentInvokeExpression));
+        return Assert.asDefined(ResultUtils.assertUnboxOk(await inspected.triedCurrentInvokeExpression));
     }
 
     describe(`parse Ok`, () => {

@@ -17,7 +17,7 @@ export async function inspectTypeParameter(
         InspectionTraceConstant.InspectType,
         inspectTypeParameter.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -39,7 +39,7 @@ export async function inspectTypeParameter(
         isNullable: optionalConstant !== undefined || parameterType.isNullable,
     };
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

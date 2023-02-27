@@ -31,7 +31,7 @@ export function tryInvokeExpression(
     invokeExpressionId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<TriedInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectInvokeExpression,
@@ -84,7 +84,7 @@ async function inspectInvokeExpression(
         invokeExpressionId,
     );
 
-    const functionType: Type.TPowerQueryType = Assert.unboxOk(
+    const functionType: Type.TPowerQueryType = ResultUtils.assertUnboxOk(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
 
@@ -169,7 +169,7 @@ async function getIsNameInLocalScope(
     // Try to find out if the identifier is a local or external name.
     if (name !== undefined) {
         // Seed local scope
-        const scope: NodeScope = Assert.unboxOk(
+        const scope: NodeScope = ResultUtils.assertUnboxOk(
             await assertGetOrCreateNodeScope(
                 updatedSettings,
                 nodeIdMapCollection,

@@ -32,7 +32,7 @@ export async function examineFieldSpecificationList(
         InspectionTraceConstant.InspectType,
         examineFieldSpecificationList.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();

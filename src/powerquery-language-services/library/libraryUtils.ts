@@ -52,7 +52,7 @@ export function assertIsType(definition: TLibraryDefinition | undefined): assert
     }
 }
 
-export function createConstantDefinition(
+export function constantDefinition(
     label: string,
     description: string,
     asType: Type.TPowerQueryType,
@@ -67,14 +67,12 @@ export function createConstantDefinition(
     };
 }
 
-export function createExternalTypeResolver(
-    libraryDefinitions: LibraryDefinitions,
-): ExternalType.TExternalTypeResolverFn {
+export function externalTypeResolver(libraryDefinitions: LibraryDefinitions): ExternalType.TExternalTypeResolverFn {
     return (request: ExternalType.TExternalTypeRequest): Type.TPowerQueryType | undefined =>
         libraryDefinitions.get(request.identifierLiteral)?.asPowerQueryType;
 }
 
-export function createFunctionDefinition(
+export function functionDefinition(
     label: string,
     description: string,
     asType: Type.TPowerQueryType,
@@ -103,15 +101,15 @@ export function isType(definition: TLibraryDefinition | undefined): definition i
     return definition?.kind === LibraryDefinitionKind.Type;
 }
 
-export function createSignatureInformation(libraryFunctionSignature: LibraryFunction): SignatureInformation {
+export function signatureInformation(libraryFunctionSignature: LibraryFunction): SignatureInformation {
     return {
         label: libraryFunctionSignature.label,
         documentation: libraryFunctionSignature.description,
-        parameters: libraryFunctionSignature.parameters.map(createParameterInformation),
+        parameters: libraryFunctionSignature.parameters.map(parameterInformation),
     };
 }
 
-export function createParameterInformation(libraryParameter: LibraryParameter): ParameterInformation {
+export function parameterInformation(libraryParameter: LibraryParameter): ParameterInformation {
     return {
         label: libraryParameter.label,
         documentation: undefined,

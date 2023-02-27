@@ -21,14 +21,14 @@ export function composeExternalTypeResolvers(
     };
 }
 
-export function createValueTypeRequest(identifierLiteral: string): ExternalType.ExternalValueTypeRequest {
+export function valueTypeRequest(identifierLiteral: string): ExternalType.ExternalValueTypeRequest {
     return {
         kind: ExternalType.ExternalTypeRequestKind.Value,
         identifierLiteral,
     };
 }
 
-export function createInvocationTypeRequest(
+export function invocationTypeRequest(
     identifierLiteral: string,
     args: ReadonlyArray<Type.TPowerQueryType>,
 ): ExternalType.ExternalInvocationTypeRequest {

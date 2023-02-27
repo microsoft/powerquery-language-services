@@ -31,7 +31,7 @@ describe(`Inspection - Type`, () => {
 
     const anyUnion: (unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>) => Type.TPowerQueryType = (
         unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
-    ) => TypeUtils.createAnyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
+    ) => TypeUtils.anyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
 
     async function assertEqualRootType(
         text: string,
@@ -95,7 +95,7 @@ describe(`Inspection - Type`, () => {
             it(`each 1`, async () =>
                 await assertEqualRootType(
                     `each 1`,
-                    TypeUtils.createDefinedFunction(
+                    TypeUtils.definedFunction(
                         false,
                         [
                             {
@@ -105,7 +105,7 @@ describe(`Inspection - Type`, () => {
                                 nameLiteral: `_`,
                             },
                         ],
-                        TypeUtils.createNumberLiteral(false, `1`),
+                        TypeUtils.numberLiteral(false, `1`),
                     ),
                 ));
         });
@@ -114,26 +114,26 @@ describe(`Inspection - Type`, () => {
             it(`try 1`, async () =>
                 await assertEqualRootType(
                     `try 1`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), Type.RecordInstance]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.RecordInstance]),
                 ));
 
             it(`try 1 otherwise false`, async () => {
                 await assertEqualRootType(
                     `try 1 otherwise false`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), Type.LogicalInstance]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.LogicalInstance]),
                 );
             });
 
             it(`try 1 otherwise`, async () =>
                 await assertEqualRootType(
                     `try 1 otherwise`,
-                    anyUnion([Type.UnknownInstance, TypeUtils.createNumberLiteral(false, `1`)]),
+                    anyUnion([Type.UnknownInstance, TypeUtils.numberLiteral(false, `1`)]),
                 ));
 
             it(`try true catch () => 1)`, async () =>
                 await assertEqualRootType(
                     `try true catch () => 1`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), Type.LogicalInstance]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.LogicalInstance]),
                 ));
 
             it(`try true catch`, async () =>
@@ -148,11 +148,7 @@ describe(`Inspection - Type`, () => {
             it(`[a = 1][[a]]`, async () =>
                 await assertEqualRootType(
                     `[a = 1][[a]]`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`a`, TypeUtils.createNumberLiteral(false, `1`)]]),
-                        false,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`a`, TypeUtils.numberLiteral(false, `1`)]]), false),
                 ));
 
             it(`[a = 1][[b]]`, async () => await assertEqualRootType(`[a = 1][[b]]`, Type.NoneInstance));
@@ -162,13 +158,13 @@ describe(`Inspection - Type`, () => {
             it(`(1 as record)[[a]]`, async () =>
                 await assertEqualRootType(
                     `let x = (1 as record) in x[[a]]`,
-                    TypeUtils.createDefinedRecord(false, new Map([[`a`, Type.AnyInstance]]), false),
+                    TypeUtils.definedRecord(false, new Map([[`a`, Type.AnyInstance]]), false),
                 ));
 
             it(`(1 as record)[[a]]?`, async () =>
                 await assertEqualRootType(
                     `let x = (1 as record) in x[[a]]?`,
-                    TypeUtils.createDefinedRecord(false, new Map([[`a`, Type.AnyInstance]]), false),
+                    TypeUtils.definedRecord(false, new Map([[`a`, Type.AnyInstance]]), false),
                 ));
 
             it(`(each [[foo]])([foo = "bar"])`, async () =>
@@ -178,12 +174,12 @@ describe(`Inspection - Type`, () => {
                 const expression: string = `(each [[foo]])([foo = "bar", spam = "eggs"])`;
 
                 const expectedFields: Map<string, Type.TPowerQueryType> = new Map([
-                    [`foo`, TypeUtils.createTextLiteral(false, `"bar"`)],
+                    [`foo`, TypeUtils.textLiteral(false, `"bar"`)],
                 ]);
 
-                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
+                const eachScope: Type.TPowerQueryType = TypeUtils.definedRecord(
                     false,
-                    new Map([...expectedFields.entries(), [`spam`, TypeUtils.createTextLiteral(false, `"eggs"`)]]),
+                    new Map([...expectedFields.entries(), [`spam`, TypeUtils.textLiteral(false, `"eggs"`)]]),
                     false,
                 );
 
@@ -194,15 +190,14 @@ describe(`Inspection - Type`, () => {
 
                 await assertEqualRootType(
                     expression,
-                    TypeUtils.createDefinedRecord(false, expectedFields, false),
+                    TypeUtils.definedRecord(false, expectedFields, false),
                     testSettingsWithEachScope,
                 );
             });
         });
 
         describe(`${Ast.NodeKind.FieldSelector}`, () => {
-            it(`[a = 1][a]`, async () =>
-                await assertEqualRootType(`[a = 1][a]`, TypeUtils.createNumberLiteral(false, `1`)));
+            it(`[a = 1][a]`, async () => await assertEqualRootType(`[a = 1][a]`, TypeUtils.numberLiteral(false, `1`)));
 
             it(`[a = 1][b]`, async () => await assertEqualRootType(`[a = 1][b]`, Type.NoneInstance));
 
@@ -221,9 +216,9 @@ describe(`Inspection - Type`, () => {
             // Test for when FieldSelector is used and was given an eachScope
             it(`(each [foo])([foo = "bar"])`, async () => {
                 const expression: string = `(each [foo])([foo = "bar"])`;
-                const expected: Type.TPowerQueryType = TypeUtils.createTextLiteral(false, `"bar"`);
+                const expected: Type.TPowerQueryType = TypeUtils.textLiteral(false, `"bar"`);
 
-                const eachScope: Type.TPowerQueryType = TypeUtils.createDefinedRecord(
+                const eachScope: Type.TPowerQueryType = TypeUtils.definedRecord(
                     false,
                     new Map([[`foo`, expected]]),
                     false,
@@ -242,7 +237,7 @@ describe(`Inspection - Type`, () => {
             it(`(optional x as text) => if x <> null then 1 else 2`, async () =>
                 await assertEqualRootType(
                     `(optional x as text) => if x <> null then 1 else 2`,
-                    TypeUtils.createDefinedFunction(
+                    TypeUtils.definedFunction(
                         false,
                         [
                             {
@@ -274,24 +269,24 @@ describe(`Inspection - Type`, () => {
             it(`() => 1`, async () =>
                 await assertEqualRootType(
                     `() => 1`,
-                    TypeUtils.createDefinedFunction(false, [], TypeUtils.createNumberLiteral(false, `1`)),
+                    TypeUtils.definedFunction(false, [], TypeUtils.numberLiteral(false, `1`)),
                 ));
 
             // Test AnyUnion return
             it(`() => if true then 1 else ""`, async () =>
                 await assertEqualRootType(
                     `() => if true then 1 else ""`,
-                    TypeUtils.createDefinedFunction(
+                    TypeUtils.definedFunction(
                         false,
                         [],
-                        anyUnion([TypeUtils.createNumberLiteral(false, `1`), TypeUtils.createTextLiteral(false, `""`)]),
+                        anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.textLiteral(false, `""`)]),
                     ),
                 ));
 
             it(`(a, b as number, c as nullable number, optional d) => 1`, async () =>
                 await assertEqualRootType(
                     `(a, b as number, c as nullable number, optional d) => 1`,
-                    TypeUtils.createDefinedFunction(
+                    TypeUtils.definedFunction(
                         false,
                         [
                             {
@@ -319,7 +314,7 @@ describe(`Inspection - Type`, () => {
                                 type: undefined,
                             },
                         ],
-                        TypeUtils.createNumberLiteral(false, `1`),
+                        TypeUtils.numberLiteral(false, `1`),
                     ),
                 ));
         });
@@ -331,13 +326,13 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType(
                     `type function () as text`,
 
-                    TypeUtils.createFunctionType(false, [], Type.TextInstance),
+                    TypeUtils.functionType(false, [], Type.TextInstance),
                 ));
 
             it(`type function (foo as number, bar as nullable text, optional baz as date) as text`, async () =>
                 await assertEqualRootType(
                     `type function (foo as number, bar as nullable text, optional baz as date) as text`,
-                    TypeUtils.createFunctionType(
+                    TypeUtils.functionType(
                         false,
                         [
                             {
@@ -368,7 +363,7 @@ describe(`Inspection - Type`, () => {
             it(`let x = true in x`, async () => await assertEqualRootType(`let x = true in x`, Type.LogicalInstance));
 
             it(`let x = 1 in x`, async () =>
-                await assertEqualRootType(`let x = 1 in x`, TypeUtils.createNumberLiteral(false, `1`)));
+                await assertEqualRootType(`let x = 1 in x`, TypeUtils.numberLiteral(false, `1`)));
         });
 
         describe(`${Ast.NodeKind.IfExpression}`, () => {
@@ -378,13 +373,13 @@ describe(`Inspection - Type`, () => {
             it(`if true then 1 else false`, async () =>
                 await assertEqualRootType(
                     `if true then 1 else false`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), Type.LogicalInstance]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.LogicalInstance]),
                 ));
 
             it(`if if true then true else false then 1 else 0`, async () =>
                 await assertEqualRootType(
                     `if if true then true else false then 1 else ""`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), TypeUtils.createTextLiteral(false, `""`)]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.textLiteral(false, `""`)]),
                 ));
 
             it(`if`, async () => await assertEqualRootType(`if`, Type.UnknownInstance));
@@ -399,13 +394,13 @@ describe(`Inspection - Type`, () => {
             it(`if 1 as any then "a" else "b"`, async () =>
                 await assertEqualRootType(
                     `if 1 as any then "a" else "b"`,
-                    anyUnion([TypeUtils.createTextLiteral(false, `"a"`), TypeUtils.createTextLiteral(false, `"b"`)]),
+                    anyUnion([TypeUtils.textLiteral(false, `"a"`), TypeUtils.textLiteral(false, `"b"`)]),
                 ));
 
             it(`if true then 1`, async () =>
                 await assertEqualRootType(
                     `if true then 1`,
-                    anyUnion([TypeUtils.createNumberLiteral(false, `1`), Type.UnknownInstance]),
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.UnknownInstance]),
                 ));
         });
 
@@ -421,24 +416,21 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.ListExpression}`, () => {
             it(`{1}`, async () =>
-                await assertEqualRootType(
-                    `{1}`,
-                    TypeUtils.createDefinedList(false, [TypeUtils.createNumberLiteral(false, `1`)]),
-                ));
+                await assertEqualRootType(`{1}`, TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, `1`)])));
 
             it(`{1, ""}`, async () =>
                 await assertEqualRootType(
                     `{1, ""}`,
-                    TypeUtils.createDefinedList(false, [
-                        TypeUtils.createNumberLiteral(false, `1`),
-                        TypeUtils.createTextLiteral(false, `""`),
+                    TypeUtils.definedList(false, [
+                        TypeUtils.numberLiteral(false, `1`),
+                        TypeUtils.textLiteral(false, `""`),
                     ]),
                 ));
         });
 
         describe(`${Ast.NodeKind.ListType}`, () => {
             it(`type { number }`, async () =>
-                await assertEqualRootType(`type { number }`, TypeUtils.createListType(false, Type.NumberInstance)));
+                await assertEqualRootType(`type { number }`, TypeUtils.listType(false, Type.NumberInstance)));
         });
 
         describe(`${Ast.NodeKind.LiteralExpression}`, () => {
@@ -446,14 +438,13 @@ describe(`Inspection - Type`, () => {
 
             it(`false`, async () => await assertEqualRootType(`false`, Type.LogicalInstance));
 
-            it(`1`, async () => await assertEqualRootType(`1`, TypeUtils.createNumberLiteral(false, `1`)));
+            it(`1`, async () => await assertEqualRootType(`1`, TypeUtils.numberLiteral(false, `1`)));
 
             it(`null`, async () => await assertEqualRootType(`null`, Type.NullInstance));
 
-            it(`{}`, async () => await assertEqualRootType(`{}`, TypeUtils.createDefinedList(false, [])));
+            it(`{}`, async () => await assertEqualRootType(`{}`, TypeUtils.definedList(false, [])));
 
-            it(`[]`, async () =>
-                await assertEqualRootType(`[]`, TypeUtils.createDefinedRecord(false, new Map(), false)));
+            it(`[]`, async () => await assertEqualRootType(`[]`, TypeUtils.definedRecord(false, new Map(), false)));
         });
 
         describe(`${Ast.NodeKind.NullableType}`, () => {
@@ -462,9 +453,9 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
-            it(`1 ?? 1`, async () => await assertEqualRootType(`1 ?? 1`, TypeUtils.createNumberLiteral(false, `1`)));
+            it(`1 ?? 1`, async () => await assertEqualRootType(`1 ?? 1`, TypeUtils.numberLiteral(false, `1`)));
 
-            it(`1 ?? ""`, async () => await assertEqualRootType(`1 ?? ""`, TypeUtils.createNumberLiteral(false, `1`)));
+            it(`1 ?? ""`, async () => await assertEqualRootType(`1 ?? ""`, TypeUtils.numberLiteral(false, `1`)));
 
             it(`1 ?? (1 + "")`, async () => await assertEqualRootType(`1 ?? (1 + "")`, Type.NoneInstance));
         });
@@ -487,11 +478,11 @@ describe(`Inspection - Type`, () => {
             it(`[foo = 1] & [bar = 2]`, async () =>
                 await assertEqualRootType(
                     `[foo = 1] & [bar = 2]`,
-                    TypeUtils.createDefinedRecord(
+                    TypeUtils.definedRecord(
                         false,
                         new Map([
-                            [`foo`, TypeUtils.createNumberLiteral(false, `1`)],
-                            [`bar`, TypeUtils.createNumberLiteral(false, `2`)],
+                            [`foo`, TypeUtils.numberLiteral(false, `1`)],
+                            [`bar`, TypeUtils.numberLiteral(false, `2`)],
                         ]),
                         false,
                     ),
@@ -500,53 +491,33 @@ describe(`Inspection - Type`, () => {
             it(`[] & [bar = 2]`, async () =>
                 await assertEqualRootType(
                     `[] & [bar = 2]`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([["bar", TypeUtils.createNumberLiteral(false, "2")]]),
-                        false,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([["bar", TypeUtils.numberLiteral(false, "2")]]), false),
                     ExtendedInspectionSettings,
                 ));
 
             it(`[foo = 1] & []`, async () => {
                 await assertEqualRootType(
                     `[foo = 1] & []`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`foo`, TypeUtils.createNumberLiteral(false, `1`)]]),
-                        false,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), false),
                 );
             });
 
             it(`[foo = 1] & [foo = ""]`, async () =>
                 await assertEqualRootType(
                     `[foo = 1] & [foo = ""]`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`foo`, TypeUtils.createTextLiteral(false, `""`)]]),
-                        false,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.textLiteral(false, `""`)]]), false),
                 ));
 
             it(`[] as record & [foo = 1]`, async () =>
                 await assertEqualRootType(
                     `[] as record & [foo = 1]`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`foo`, TypeUtils.createNumberLiteral(false, `1`)]]),
-                        true,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), true),
                 ));
 
             it(`[foo = 1] & [] as record`, async () =>
                 await assertEqualRootType(
                     `[foo = 1] & [] as record`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`foo`, TypeUtils.createNumberLiteral(false, `1`)]]),
-                        true,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), true),
                 ));
 
             it(`[] as record & [] as record`, async () =>
@@ -557,19 +528,19 @@ describe(`Inspection - Type`, () => {
             it(`type [foo]`, async () =>
                 await assertEqualRootType(
                     `type [foo]`,
-                    TypeUtils.createRecordType(false, new Map([[`foo`, Type.AnyInstance]]), false),
+                    TypeUtils.recordType(false, new Map([[`foo`, Type.AnyInstance]]), false),
                 ));
 
             it(`type [foo, ...]`, async () =>
                 await assertEqualRootType(
                     `type [foo, ...]`,
-                    TypeUtils.createRecordType(false, new Map([[`foo`, Type.AnyInstance]]), true),
+                    TypeUtils.recordType(false, new Map([[`foo`, Type.AnyInstance]]), true),
                 ));
 
             it(`type [foo = number, bar = nullable text]`, async () => {
                 await assertEqualRootType(
                     `type [foo = number, bar = nullable text]`,
-                    TypeUtils.createRecordType(
+                    TypeUtils.recordType(
                         false,
                         new Map<string, Type.TPrimitiveType>([
                             [`foo`, Type.NumberInstance],
@@ -591,7 +562,7 @@ describe(`Inspection - Type`, () => {
 
                 describe(`${Ast.NodeKind.FieldSelector}`, () => {
                     it(`[a = 1][a]`, async () =>
-                        await assertEqualRootType(`[a = 1][a]`, TypeUtils.createNumberLiteral(false, `1`)));
+                        await assertEqualRootType(`[a = 1][a]`, TypeUtils.numberLiteral(false, `1`)));
 
                     it(`[a = 1][b]`, async () => await assertEqualRootType(`[a = 1][b]`, Type.NoneInstance));
 
@@ -602,19 +573,19 @@ describe(`Inspection - Type`, () => {
                     await assertEqualRootType(
                         `let x = (_ as any) in x[[foo]]`,
                         anyUnion([
-                            TypeUtils.createDefinedRecord(false, new Map([[`foo`, Type.AnyInstance]]), false),
-                            TypeUtils.createDefinedTable(false, new PQP.OrderedMap([[`foo`, Type.AnyInstance]]), false),
+                            TypeUtils.definedRecord(false, new Map([[`foo`, Type.AnyInstance]]), false),
+                            TypeUtils.definedTable(false, new PQP.OrderedMap([[`foo`, Type.AnyInstance]]), false),
                         ]),
                     ));
 
                 it(`${Ast.NodeKind.FieldSelector}`, async () =>
-                    await assertEqualRootType(`[a = 1][a]`, TypeUtils.createNumberLiteral(false, `1`)));
+                    await assertEqualRootType(`[a = 1][a]`, TypeUtils.numberLiteral(false, `1`)));
             });
 
             it(`let x = () as function => () as number => 1 in x()()`, async () =>
                 await assertEqualRootType(
                     `let x = () as function => () as number => 1 in x()()`,
-                    TypeUtils.createNumberLiteral(false, `1`),
+                    TypeUtils.numberLiteral(false, `1`),
                 ));
         });
 
@@ -622,21 +593,17 @@ describe(`Inspection - Type`, () => {
             it(`let foo = 1 in [foo = foo]`, async () =>
                 await assertEqualRootType(
                     `let foo = 1 in [foo = foo]`,
-                    TypeUtils.createDefinedRecord(
-                        false,
-                        new Map([[`foo`, TypeUtils.createNumberLiteral(false, `1`)]]),
-                        false,
-                    ),
+                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), false),
                 ));
 
             it(`let foo = 1 in [foo = foo, bar = foo]`, async () =>
                 await assertEqualRootType(
                     `let foo = 1 in [foo = foo, bar = foo]`,
-                    TypeUtils.createDefinedRecord(
+                    TypeUtils.definedRecord(
                         false,
                         new Map([
-                            [`foo`, TypeUtils.createNumberLiteral(false, 1)],
-                            [`bar`, TypeUtils.createNumberLiteral(false, 1)],
+                            [`foo`, TypeUtils.numberLiteral(false, 1)],
+                            [`bar`, TypeUtils.numberLiteral(false, 1)],
                         ]),
                         false,
                     ),
@@ -657,11 +624,11 @@ describe(`Inspection - Type`, () => {
         in
             result`;
 
-                const expected: Type.DefinedRecord = TypeUtils.createDefinedRecord(
+                const expected: Type.DefinedRecord = TypeUtils.definedRecord(
                     false,
                     new Map([
-                        [`outer`, TypeUtils.createNumberLiteral(false, 2)],
-                        [`inner`, TypeUtils.createNumberLiteral(false, 2)],
+                        [`outer`, TypeUtils.numberLiteral(false, 2)],
+                        [`inner`, TypeUtils.numberLiteral(false, 2)],
                     ]),
                     false,
                 );
@@ -674,19 +641,19 @@ describe(`Inspection - Type`, () => {
             it(`type table [foo]`, async () =>
                 await assertEqualRootType(
                     `type table [foo]`,
-                    TypeUtils.createTableType(false, new Map([[`foo`, Type.AnyInstance]]), false),
+                    TypeUtils.tableType(false, new Map([[`foo`, Type.AnyInstance]]), false),
                 ));
 
             it(`type table [foo]`, async () =>
                 await assertEqualRootType(
                     `type table [foo]`,
-                    TypeUtils.createTableType(false, new Map([[`foo`, Type.AnyInstance]]), false),
+                    TypeUtils.tableType(false, new Map([[`foo`, Type.AnyInstance]]), false),
                 ));
 
             it(`type table [foo = number, bar = nullable text]`, async () =>
                 await assertEqualRootType(
                     `type table [foo = number, bar = nullable text]`,
-                    TypeUtils.createTableType(
+                    TypeUtils.tableType(
                         false,
                         new Map<string, Type.TPrimitiveType>([
                             [`foo`, Type.NumberInstance],
@@ -698,11 +665,11 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.UnaryExpression}`, () => {
-            it(`+1`, async () => await assertEqualRootType(`+1`, TypeUtils.createNumberLiteral(false, `+1`)));
+            it(`+1`, async () => await assertEqualRootType(`+1`, TypeUtils.numberLiteral(false, `+1`)));
 
-            it(`-1`, async () => await assertEqualRootType(`-1`, TypeUtils.createNumberLiteral(false, `-1`)));
+            it(`-1`, async () => await assertEqualRootType(`-1`, TypeUtils.numberLiteral(false, `-1`)));
 
-            it(`--1`, async () => await assertEqualRootType(`--1`, TypeUtils.createNumberLiteral(false, `--1`)));
+            it(`--1`, async () => await assertEqualRootType(`--1`, TypeUtils.numberLiteral(false, `--1`)));
 
             it(`not true`, async () => await assertEqualRootType(`not true`, Type.LogicalInstance));
 

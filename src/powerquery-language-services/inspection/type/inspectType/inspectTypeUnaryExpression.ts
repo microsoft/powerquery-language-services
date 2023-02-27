@@ -25,7 +25,7 @@ export async function inspectTypeUnaryExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeUnaryExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -64,7 +64,7 @@ export async function inspectTypeUnaryExpression(
         }
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
@@ -103,7 +103,7 @@ function inspectTypeUnaryNumber(
 
     switch (unaryExpressionType.extendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
-            return TypeUtils.createNumberLiteral(
+            return TypeUtils.numberLiteral(
                 unaryExpressionType.isNullable,
                 [...unaryOperators, unaryExpressionType.literal].join(""),
             );

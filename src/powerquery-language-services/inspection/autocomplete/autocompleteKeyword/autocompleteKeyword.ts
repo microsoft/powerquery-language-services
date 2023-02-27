@@ -27,11 +27,11 @@ export function tryAutocompleteKeyword(
 ): Promise<TriedAutocompleteKeyword> {
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         return Promise.resolve(
-            ResultUtils.boxOk([
+            ResultUtils.ok([
                 ...Keyword.ExpressionKeywordKinds.map((keywordKind: Keyword.KeywordKind) =>
-                    AutocompleteItemUtils.createFromKeywordKind(keywordKind),
+                    AutocompleteItemUtils.fromKeywordKind(keywordKind),
                 ),
-                AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.Section),
+                AutocompleteItemUtils.fromKeywordKind(Keyword.KeywordKind.Section),
             ]),
         );
     }
@@ -173,7 +173,7 @@ function findEdgeCase(
         const identifier: string = ancestry[0].node.literal;
 
         inspected = Keyword.StartOfDocumentKeywords.map((keywordKind: Keyword.KeywordKind) =>
-            AutocompleteItemUtils.createFromKeywordKind(keywordKind, identifier),
+            AutocompleteItemUtils.fromKeywordKind(keywordKind, identifier),
         );
     }
 
@@ -183,7 +183,7 @@ function findEdgeCase(
         XorNodeUtils.isNodeKind<Ast.TParameter>(ancestry[1], Ast.NodeKind.Parameter) &&
         PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
     ) {
-        inspected = [AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.As)];
+        inspected = [AutocompleteItemUtils.fromKeywordKind(Keyword.KeywordKind.As)];
     }
 
     // `(foo a|) => foo` -> `(foo as) => foo
@@ -193,7 +193,7 @@ function findEdgeCase(
         XorNodeUtils.isNodeKind<Ast.TParameterList>(ancestry[1], Ast.NodeKind.ParameterList) &&
         XorNodeUtils.isNodeKind<Ast.FunctionExpression>(ancestry[2], Ast.NodeKind.FunctionExpression)
     ) {
-        inspected = [AutocompleteItemUtils.createFromKeywordKind(Keyword.KeywordKind.As)];
+        inspected = [AutocompleteItemUtils.fromKeywordKind(Keyword.KeywordKind.As)];
     }
 
     return inspected;
@@ -203,9 +203,7 @@ function createAutocompleteItems(
     keywordKinds: ReadonlyArray<Keyword.KeywordKind>,
     positionName: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    return keywordKinds.map((kind: Keyword.KeywordKind) =>
-        AutocompleteItemUtils.createFromKeywordKind(kind, positionName),
-    );
+    return keywordKinds.map((kind: Keyword.KeywordKind) => AutocompleteItemUtils.fromKeywordKind(kind, positionName));
 }
 
 function handleConjunctions(

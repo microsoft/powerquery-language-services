@@ -24,7 +24,7 @@ export async function inspectTypeFunctionExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeFunctionExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -69,7 +69,7 @@ export async function inspectTypeFunctionExpression(
             }
             // If the stated return type doesn't match the expression's type then it's None.
             else if (pseudoReturnType.kind !== expressionType.kind) {
-                trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.NoneInstance) });
+                trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.NoneInstance) });
 
                 return Type.NoneInstance;
             }
@@ -106,7 +106,7 @@ export async function inspectTypeFunctionExpression(
             Assert.isNever(state.typeStrategy);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, NoOpCancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { Analysis, AnalysisUtils, DocumentSymbol, SymbolKind } from "../powerquery-language-services";
@@ -14,15 +14,15 @@ async function assertSymbolsForDocument(
     text: string,
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): Promise<void> {
-    const analysis: Analysis = AnalysisUtils.createAnalysis(
+    const analysis: Analysis = AnalysisUtils.analysis(
         TestUtils.mockDocument(text),
         TestConstants.SimpleLibraryAnalysisSettings,
     );
 
     const actualSymbols: Result<DocumentSymbol[] | undefined, CommonError.CommonError> =
-        await analysis.getDocumentSymbols(TestConstants.NoOpCancellationTokenInstance);
+        await analysis.getDocumentSymbols(NoOpCancellationToken);
 
-    Assert.isOk(actualSymbols);
+    ResultUtils.assertIsOk(actualSymbols);
     Assert.isDefined(actualSymbols.value);
 
     const abridgedActualSymbols: ReadonlyArray<AbridgedDocumentSymbol> = TestUtils.abridgedDocumentSymbols(

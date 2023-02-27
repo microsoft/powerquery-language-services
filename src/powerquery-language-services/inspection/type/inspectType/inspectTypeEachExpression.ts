@@ -17,7 +17,7 @@ export async function inspectTypeEachExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeEachExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -25,7 +25,7 @@ export async function inspectTypeEachExpression(
 
     const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
 
-    const result: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
+    const result: Type.TPowerQueryType = TypeUtils.definedFunction(
         false,
         [
             {
@@ -38,7 +38,7 @@ export async function inspectTypeEachExpression(
         expressionType,
     );
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

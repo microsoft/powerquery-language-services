@@ -7,13 +7,23 @@ import { Library, LibraryUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
 
+export type IncompleteLibrary = {
+    readonly library: Library.ILibrary;
+    readonly invalidSymbols: ReadonlyArray<LibrarySymbol>;
+};
+
+export type IncompleteLibraryDefinitions = {
+    readonly libraryDefinitions: Library.LibraryDefinitions;
+    readonly invalidSymbols: ReadonlyArray<LibrarySymbol>;
+};
+
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
-): PartialResult<Library.ILibrary, Library.ILibrary, ReadonlyArray<LibrarySymbol>> {
+): PartialResult<Library.ILibrary, IncompleteLibrary, ReadonlyArray<LibrarySymbol>> {
     const libraryDefinitionsResult: PartialResult<
         Library.LibraryDefinitions,
-        Library.LibraryDefinitions,
+        IncompleteLibraryDefinitions,
         ReadonlyArray<LibrarySymbol>
     > = createLibraryDefinitions(librarySymbols);
 
@@ -23,17 +33,17 @@ export function createLibrary(
     if (PartialResultUtils.isOk(libraryDefinitionsResult)) {
         libraryDefinitions = libraryDefinitionsResult.value;
         invalidSymbols = [];
-    } else if (PartialResultUtils.isMixed(libraryDefinitionsResult)) {
-        libraryDefinitions = libraryDefinitionsResult.value;
-        invalidSymbols = libraryDefinitionsResult.error;
+    } else if (PartialResultUtils.isIncomplete(libraryDefinitionsResult)) {
+        libraryDefinitions = libraryDefinitionsResult.partial.libraryDefinitions;
+        invalidSymbols = libraryDefinitionsResult.partial.invalidSymbols;
     } else if (PartialResultUtils.isError(libraryDefinitionsResult)) {
-        return PartialResultUtils.createError(libraryDefinitionsResult.error);
+        return PartialResultUtils.error(libraryDefinitionsResult.error);
     } else {
         Assert.isNever(libraryDefinitionsResult);
     }
 
     const definitionResolverFn: ExternalType.TExternalTypeResolverFn =
-        LibraryUtils.createExternalTypeResolver(libraryDefinitions);
+        LibraryUtils.externalTypeResolver(libraryDefinitions);
 
     const library: Library.ILibrary = {
         libraryDefinitions,
@@ -43,15 +53,18 @@ export function createLibrary(
     };
 
     if (invalidSymbols.length > 0) {
-        return PartialResultUtils.createMixed(library, invalidSymbols);
+        return PartialResultUtils.incomplete({
+            library,
+            invalidSymbols,
+        });
     } else {
-        return PartialResultUtils.createOk(library);
+        return PartialResultUtils.ok(library);
     }
 }
 
 export function createLibraryDefinitions(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
-): PartialResult<Library.LibraryDefinitions, Library.LibraryDefinitions, ReadonlyArray<LibrarySymbol>> {
+): PartialResult<Library.LibraryDefinitions, IncompleteLibraryDefinitions, ReadonlyArray<LibrarySymbol>> {
     const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
     const invalidSymbols: LibrarySymbol[] = [];
 
@@ -67,11 +80,14 @@ export function createLibraryDefinitions(
     }
 
     if (invalidSymbols.length === 0) {
-        return PartialResultUtils.createOk(libraryDefinitions);
+        return PartialResultUtils.ok(libraryDefinitions);
     } else if (libraryDefinitions.size > 0) {
-        return PartialResultUtils.createMixed(libraryDefinitions, invalidSymbols);
+        return PartialResultUtils.incomplete({
+            libraryDefinitions,
+            invalidSymbols,
+        });
     } else {
-        return PartialResultUtils.createError(invalidSymbols);
+        return PartialResultUtils.error(invalidSymbols);
     }
 }
 
@@ -160,7 +176,7 @@ function librarySymbolFunctionSignatureToType(
         });
     }
 
-    return TypeUtils.createDefinedFunction(false, parameters, returnType);
+    return TypeUtils.definedFunction(false, parameters, returnType);
 }
 
 function librarySymbolFunctionParameterToLibraryParameter(
@@ -269,7 +285,7 @@ function stringToPrimitiveType(text: string): Type.TPrimitiveType | undefined {
             return undefined;
     }
 
-    return typeKind ? TypeUtils.createPrimitiveType(isNullable, typeKind) : undefined;
+    return typeKind ? TypeUtils.primitiveType(isNullable, typeKind) : undefined;
 }
 
 function stringToTypeKind(text: string): Type.TypeKind | undefined {

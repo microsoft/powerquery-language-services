@@ -25,7 +25,7 @@ export async function tryDeferenceIdentifier(
         InspectionTraceConstant.InspectScope,
         tryDeferenceIdentifier.name,
         settings.initialCorrelationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     const updatedSettings: PQP.CommonSettings = {
@@ -38,7 +38,7 @@ export async function tryDeferenceIdentifier(
     if (XorNodeUtils.isContextXor(xorNode)) {
         trace.exit({ [TraceConstant.Result]: undefined });
 
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
@@ -83,7 +83,7 @@ export async function tryDeferenceIdentifier(
     ) {
         trace.exit({ [TraceConstant.Result]: undefined });
 
-        return ResultUtils.boxOk(xorNode);
+        return ResultUtils.ok(xorNode);
     }
 
     let nextXorNode: TXorNode | undefined;
@@ -110,13 +110,13 @@ export async function tryDeferenceIdentifier(
     let result: Promise<PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError>>;
 
     if (nextXorNode === undefined) {
-        result = Promise.resolve(ResultUtils.boxOk(xorNode));
+        result = Promise.resolve(ResultUtils.ok(xorNode));
     } else if (
         XorNodeUtils.isContextXor(nextXorNode) ||
         (nextXorNode.node.kind !== Ast.NodeKind.Identifier &&
             nextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {
-        result = Promise.resolve(ResultUtils.boxOk(xorNode));
+        result = Promise.resolve(ResultUtils.ok(xorNode));
     } else {
         result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, nextXorNode, scopeById);
     }

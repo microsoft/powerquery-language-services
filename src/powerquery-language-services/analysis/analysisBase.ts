@@ -570,7 +570,7 @@ export class AnalysisBase implements Analysis {
             }
 
             const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
-                range: PositionUtils.createRangeFromTokenRange(one.tokenRange),
+                range: PositionUtils.rangeFromTokenRange(one.tokenRange),
                 newText: newName,
             }));
 

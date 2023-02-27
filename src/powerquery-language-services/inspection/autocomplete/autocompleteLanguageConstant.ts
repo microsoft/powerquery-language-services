@@ -52,11 +52,11 @@ function autocompleteLanguageConstant(
     }
 
     if (isCatchAllowed(nodeIdMapCollection, activeNode, trailingToken)) {
-        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Catch);
+        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Catch);
     } else if (isNullableAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Nullable);
+        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Nullable);
     } else if (isOptionalAllowed(activeNode)) {
-        return AutocompleteItemUtils.createFromLanguageConstant(Constant.LanguageConstant.Optional);
+        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Optional);
     } else {
         return undefined;
     }

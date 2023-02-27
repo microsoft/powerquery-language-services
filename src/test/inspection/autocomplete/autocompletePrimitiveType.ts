@@ -6,8 +6,8 @@ import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
-import { Assert } from "@microsoft/powerquery-parser";
 import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
@@ -19,7 +19,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             textWithPipe,
         );
 
-        Assert.isOk(actual.triedPrimitiveType);
+        ResultUtils.assertIsOk(actual.triedPrimitiveType);
 
         TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedPrimitiveType.value);
     }

@@ -7,7 +7,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
@@ -35,9 +35,9 @@ export function validate(
             initialCorrelationId: trace.id,
         };
 
-        const analysis: Analysis = AnalysisUtils.createAnalysis(textDocument, analysisSettings);
-        const parseState: ParseState | undefined = Assert.unboxOk(await analysis.getParseState());
-        const parseError: ParseError.ParseError | undefined = Assert.unboxOk(await analysis.getParseError());
+        const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
+        const parseState: ParseState | undefined = ResultUtils.assertUnboxOk(await analysis.getParseState());
+        const parseError: ParseError.ParseError | undefined = ResultUtils.assertUnboxOk(await analysis.getParseError());
 
         if (parseState === undefined) {
             trace.exit();

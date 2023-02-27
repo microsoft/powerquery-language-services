@@ -26,7 +26,7 @@ export function tryAutocompletePrimitiveType(
     let result: TriedAutocompletePrimitiveType;
 
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        result = ResultUtils.boxOk([]);
+        result = ResultUtils.ok([]);
     } else {
         result = ResultUtils.ensureResult(
             () => autocompletePrimitiveType(activeNode, trailingToken?.data),
@@ -51,7 +51,7 @@ function createAutocompleteItems(
     trailingText: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
     return PrimitiveTypeConstants.map((PrimitiveTypeConstant: Constant.PrimitiveTypeConstant) =>
-        AutocompleteItemUtils.createFromPrimitiveTypeConstant(PrimitiveTypeConstant, trailingText),
+        AutocompleteItemUtils.fromPrimitiveTypeConstant(PrimitiveTypeConstant, trailingText),
     );
 }
 

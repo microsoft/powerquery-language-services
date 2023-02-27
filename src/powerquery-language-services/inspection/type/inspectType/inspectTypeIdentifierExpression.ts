@@ -17,7 +17,7 @@ export async function inspectTypeIdentifierExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeIdentifierExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -37,7 +37,7 @@ export async function inspectTypeIdentifierExpression(
         result = dereferencedType ?? Type.UnknownInstance;
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
