@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { FoldingRange, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range } from "vscode-languageserver-textdocument";
 
@@ -599,7 +599,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     `database`,
                 ];
 
-                Assert.isOk(actual);
+                ResultUtils.assertIsOk(actual);
                 Assert.isDefined(actual.value);
                 TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
             });

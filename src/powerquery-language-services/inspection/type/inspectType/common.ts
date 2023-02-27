@@ -42,7 +42,7 @@ import { TypeById } from "../../typeCache";
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
 export interface InspectTypeState
     extends PQP.CommonSettings,
-        Omit<InspectionSettings, keyof PQP.LexSettings | keyof PQP.ParseSettings> {
+        Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
@@ -112,7 +112,7 @@ export async function getOrCreateScope(
     if (nodeScope !== undefined) {
         trace.exit();
 
-        return ResultUtils.boxOk(nodeScope);
+        return ResultUtils.ok(nodeScope);
     }
 
     const result: Inspection.TriedNodeScope = await tryNodeScope(

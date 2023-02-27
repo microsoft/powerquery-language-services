@@ -79,9 +79,9 @@ export async function assertGetInspectionInstance(
 
         triedExpectedType = tryExpectedType(settings, activeNode);
     } else {
-        triedNodeScope = Promise.resolve(ResultUtils.boxOk(new Map()));
-        triedScopeType = Promise.resolve(ResultUtils.boxOk(new Map()));
-        triedExpectedType = ResultUtils.boxOk(undefined);
+        triedNodeScope = Promise.resolve(ResultUtils.ok(new Map()));
+        triedScopeType = Promise.resolve(ResultUtils.ok(new Map()));
+        triedExpectedType = ResultUtils.ok(undefined);
     }
 
     return new InspectionInstance(

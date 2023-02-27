@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, inspectXor } from "./common";
@@ -67,7 +67,7 @@ export async function inspectTypeTBinOpExpression(
         if (allowedTypeKinds === undefined) {
             result = Type.NoneInstance;
         } else if (allowedTypeKinds.size === 1) {
-            result = TypeUtils.createPrimitiveType(leftType.isNullable, allowedTypeKinds.values().next().value);
+            result = TypeUtils.primitiveType(leftType.isNullable, allowedTypeKinds.values().next().value);
         } else {
             const unionedTypePairs: Type.TPowerQueryType[] = [];
 
@@ -79,7 +79,7 @@ export async function inspectTypeTBinOpExpression(
                 });
             }
 
-            result = TypeUtils.createAnyUnion(unionedTypePairs, state.traceManager, trace.id);
+            result = TypeUtils.anyUnion(unionedTypePairs, state.traceManager, trace.id);
         }
     }
     // '1 + 1'
@@ -98,7 +98,7 @@ export async function inspectTypeTBinOpExpression(
         ) {
             result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
         } else {
-            result = TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+            result = TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
         }
     }
 
@@ -118,7 +118,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
     }
     // '[] & []' or '#table() & #table()'
     else if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
-        return TypeUtils.createPrimitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
+        return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
     // '[key=value] & []' or '#table(...) & #table()`
     // '[] & [key=value]' or `#table() & #table(...)`
@@ -146,7 +146,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
             return unionTableFields([leftType, rightType] as [Type.DefinedTable, Type.DefinedTable]);
         }
     } else {
-        throw Assert.shouldNeverBeReachedTypescript();
+        throw new CommonError.InvariantError(`this should never be reached`);
     }
 }
 

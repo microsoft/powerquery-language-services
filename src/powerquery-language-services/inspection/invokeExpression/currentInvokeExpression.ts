@@ -57,7 +57,7 @@ export async function tryCurrentInvokeExpression(
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         trace.exit();
 
-        return Promise.resolve(ResultUtils.boxOk(undefined));
+        return Promise.resolve(ResultUtils.ok(undefined));
     }
 
     const result: TriedCurrentInvokeExpression = await ResultUtils.ensureResultAsync(

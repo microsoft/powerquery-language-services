@@ -68,7 +68,7 @@ async function createAnyUnion(
     const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
     const falseExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
 
-    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+    const result: Type.TPowerQueryType = TypeUtils.anyUnion(
         [trueExprType, falseExprType],
         state.traceManager,
         trace.id,

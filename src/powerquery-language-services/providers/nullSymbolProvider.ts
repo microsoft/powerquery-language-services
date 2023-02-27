@@ -52,37 +52,37 @@ export class NullSymbolProvider
     public async getAutocompleteItems(
         _context: AutocompleteItemProviderContext,
     ): Promise<Result<AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     // eslint-disable-next-line require-await
     public async getDefinition(
         _context: DefinitionProviderContext,
     ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     // eslint-disable-next-line require-await
     public async getFoldingRanges(_context: ProviderContext): Promise<Result<FoldingRange[], CommonError.CommonError>> {
-        return ResultUtils.boxOk([]);
+        return ResultUtils.ok([]);
     }
 
     // eslint-disable-next-line require-await
     public async getHover(_context: HoverProviderContext): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     // eslint-disable-next-line require-await
     public async getPartialSemanticTokens(
         _context: ProviderContext,
     ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 
     // eslint-disable-next-line require-await
     public async getSignatureHelp(
         _context: SignatureProviderContext,
     ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-        return ResultUtils.boxOk(undefined);
+        return ResultUtils.ok(undefined);
     }
 }

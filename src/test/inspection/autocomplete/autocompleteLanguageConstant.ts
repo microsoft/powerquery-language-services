@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
@@ -15,7 +15,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
             textWithPipe,
         );
 
-        Assert.isOk(actual.triedLanguageConstant);
+        ResultUtils.assertIsOk(actual.triedLanguageConstant);
 
         TestUtils.assertContainsAutocompleteItemLabels(
             expected ? [expected] : [],

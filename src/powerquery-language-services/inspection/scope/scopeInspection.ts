@@ -95,7 +95,7 @@ export async function assertGetOrCreateNodeScope(
     if (nodeScope !== undefined) {
         trace.exit({ [TraceConstant.IsThrowing]: false });
 
-        return ResultUtils.boxOk(nodeScope);
+        return ResultUtils.ok(nodeScope);
     }
 
     const triedNodeScope: TriedNodeScope = await tryNodeScope(updatedSettings, nodeIdMapCollection, nodeId, scopeById);

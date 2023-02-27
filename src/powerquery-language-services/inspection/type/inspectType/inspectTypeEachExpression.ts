@@ -25,7 +25,7 @@ export async function inspectTypeEachExpression(
 
     const expressionType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id);
 
-    const result: Type.TPowerQueryType = TypeUtils.createDefinedFunction(
+    const result: Type.TPowerQueryType = TypeUtils.definedFunction(
         false,
         [
             {

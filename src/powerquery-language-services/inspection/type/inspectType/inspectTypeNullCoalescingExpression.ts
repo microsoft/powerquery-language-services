@@ -45,7 +45,7 @@ export async function inspectTypeNullCoalescingExpression(
         } else if (!leftType.isNullable) {
             result = leftType;
         } else {
-            result = TypeUtils.createAnyUnion([leftType, rightType], state.traceManager, trace.id);
+            result = TypeUtils.anyUnion([leftType, rightType], state.traceManager, trace.id);
         }
     }
 

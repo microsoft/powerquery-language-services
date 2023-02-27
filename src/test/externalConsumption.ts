@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, NoOpCancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -40,10 +40,10 @@ describe("External consumption", () => {
 
         const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
             position,
-            TestConstants.NoOpCancellationTokenInstance,
+            NoOpCancellationToken,
         );
 
-        Assert.isOk(hover);
+        ResultUtils.assertIsOk(hover);
         Assert.isUndefined(hover.value);
 
         analysis.dispose();

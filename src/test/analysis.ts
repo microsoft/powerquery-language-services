@@ -2,7 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, DefaultLocale, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    DefaultLocale,
+    ExpiredCancellationToken,
+    Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import type {
@@ -95,9 +102,9 @@ describe(`Analysis`, () => {
             );
 
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
-                await analysis.getSignatureHelp(position, new TimedCancellationToken(0));
+                await analysis.getSignatureHelp(position, ExpiredCancellationToken);
 
-            Assert.isError(signatureHelp);
+            ResultUtils.assertIsError(signatureHelp);
         });
     });
 });
@@ -143,9 +150,9 @@ async function runHoverTimeoutTest(provider: `local` | `library`): Promise<void>
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
         position,
-        new TimedCancellationToken(0),
+        ExpiredCancellationToken,
     );
 
-    Assert.isError(hover);
+    ResultUtils.assertIsError(hover);
     Assert.isTrue(hover.error.innerError instanceof CommonError.CancellationError);
 }

@@ -103,7 +103,7 @@ function inspectTypeUnaryNumber(
 
     switch (unaryExpressionType.extendedKind) {
         case Type.ExtendedTypeKind.NumberLiteral:
-            return TypeUtils.createNumberLiteral(
+            return TypeUtils.numberLiteral(
                 unaryExpressionType.isNullable,
                 [...unaryOperators, unaryExpressionType.literal].join(""),
             );

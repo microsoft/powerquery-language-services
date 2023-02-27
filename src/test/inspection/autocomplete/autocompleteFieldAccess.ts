@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
@@ -14,7 +14,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
             textWithPipe,
         );
 
-        Assert.isOk(actual.triedFieldAccess);
+        ResultUtils.assertIsOk(actual.triedFieldAccess);
 
         TestUtils.assertContainsAutocompleteItemLabels(
             expected,

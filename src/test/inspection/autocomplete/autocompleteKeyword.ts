@@ -6,8 +6,8 @@ import {
     ExpressionKeywordKinds,
     KeywordKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
-import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
@@ -19,7 +19,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             textWithPipe,
         );
 
-        Assert.isOk(actual.triedKeyword);
+        ResultUtils.assertIsOk(actual.triedKeyword);
 
         TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedKeyword.value);
     }

@@ -35,18 +35,15 @@ export function inspectTypeLiteralExpression(
 
             switch (typeKind) {
                 case Type.TypeKind.Number:
-                    result = TypeUtils.createNumberLiteral(false, literalExpression.literal);
+                    result = TypeUtils.numberLiteral(false, literalExpression.literal);
                     break;
 
                 case Type.TypeKind.Text:
-                    result = TypeUtils.createTextLiteral(false, literalExpression.literal);
+                    result = TypeUtils.textLiteral(false, literalExpression.literal);
                     break;
 
                 default:
-                    result = TypeUtils.createPrimitiveType(
-                        literalExpression.literalKind === Ast.LiteralKind.Null,
-                        typeKind,
-                    );
+                    result = TypeUtils.primitiveType(literalExpression.literalKind === Ast.LiteralKind.Null, typeKind);
 
                     break;
             }

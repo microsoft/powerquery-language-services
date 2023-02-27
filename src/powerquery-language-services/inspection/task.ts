@@ -207,9 +207,9 @@ export async function inspect(
 
         triedExpectedType = tryExpectedType(updatedSettings, activeNode);
     } else {
-        triedNodeScope = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
-        triedScopeType = Promise.resolve(PQP.ResultUtils.boxOk(new Map()));
-        triedExpectedType = PQP.ResultUtils.boxOk(undefined);
+        triedNodeScope = Promise.resolve(PQP.ResultUtils.ok(new Map()));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(new Map()));
+        triedExpectedType = PQP.ResultUtils.ok(undefined);
     }
 
     const result: InspectionInstance = new InspectionInstance(
@@ -255,7 +255,7 @@ export async function tryInspect(
     if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
         trace.exit({ [TraceConstant.IsError]: true });
 
-        return PQP.ResultUtils.boxError(triedLexParse.error);
+        return PQP.ResultUtils.error(triedLexParse.error);
     } else if (PQP.TaskUtils.isParseStageError(triedLexParse)) {
         parseState = triedLexParse.parseState;
         parseError = triedLexParse.error;
@@ -263,7 +263,7 @@ export async function tryInspect(
         parseState = triedLexParse.parseState;
     }
 
-    const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.boxOk(
+    const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.ok(
         inspect(updatedSettings, parseState, parseError, position, typeCache),
     );
 

@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
@@ -17,14 +17,6 @@ import {
     ValidationSettings,
 } from "../powerquery-language-services";
 
-export class NoOpCancellationToken implements ICancellationToken {
-    isCancelled: () => boolean = () => false;
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    throwIfCancelled: () => void = () => {};
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    cancel: () => void = () => {};
-}
-
 export const enum TestLibraryName {
     CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
     CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
@@ -34,8 +26,6 @@ export const enum TestLibraryName {
     SquareIfNumber = "Test.SquareIfNumber",
 }
 
-export const NoOpCancellationTokenInstance: NoOpCancellationToken = new NoOpCancellationToken();
-
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
     isWorkspaceCacheAllowed: false,
@@ -44,20 +34,20 @@ export const DefaultInspectionSettings: InspectionSettings = {
     typeStrategy: TypeStrategy.Extended,
 };
 
-export const CreateFooAndBarRecordDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+export const CreateFooAndBarRecordDefinedFunction: Type.DefinedFunction = TypeUtils.definedFunction(
     false,
     [],
-    TypeUtils.createDefinedRecord(
+    TypeUtils.definedRecord(
         false,
         new Map<string, Type.TPowerQueryType>([
-            ["foo", TypeUtils.createTextLiteral(false, `"fooString"`)],
-            ["bar", TypeUtils.createTextLiteral(false, `"barString"`)],
+            ["foo", TypeUtils.textLiteral(false, `"fooString"`)],
+            ["bar", TypeUtils.textLiteral(false, `"barString"`)],
         ]),
         false,
     ),
 );
 
-export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction = TypeUtils.definedFunction(
     false,
     [
         {
@@ -76,7 +66,7 @@ export const CombineNumberAndOptionalTextDefinedFunction: Type.DefinedFunction =
     Type.NullInstance,
 );
 
-export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.definedFunction(
     false,
     [
         {
@@ -89,7 +79,7 @@ export const SquareIfNumberDefinedFunction: Type.DefinedFunction = TypeUtils.cre
     Type.AnyInstance,
 );
 
-export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.createDefinedFunction(
+export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.definedFunction(
     false,
     [
         {
@@ -152,7 +142,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
         LibraryUtils.createConstantDefinition(
             TestLibraryName.NumberOne,
             `The name is ${TestLibraryName.NumberOne}`,
-            TypeUtils.createNumberLiteral(false, "1"),
+            TypeUtils.numberLiteral(false, "1"),
             CompletionItemKind.Constant,
         ),
     ],
@@ -224,7 +214,7 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
                     return Type.NumberInstance;
 
                 case TestLibraryName.NumberOne:
-                    return TypeUtils.createNumberLiteral(false, "1");
+                    return TypeUtils.numberLiteral(false, "1");
 
                 case TestLibraryName.SquareIfNumber:
                     return SquareIfNumberDefinedFunction;

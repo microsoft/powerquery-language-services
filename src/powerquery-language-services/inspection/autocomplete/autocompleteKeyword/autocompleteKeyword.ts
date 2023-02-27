@@ -27,7 +27,7 @@ export function tryAutocompleteKeyword(
 ): Promise<TriedAutocompleteKeyword> {
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
         return Promise.resolve(
-            ResultUtils.boxOk([
+            ResultUtils.ok([
                 ...Keyword.ExpressionKeywordKinds.map((keywordKind: Keyword.KeywordKind) =>
                     AutocompleteItemUtils.createFromKeywordKind(keywordKind),
                 ),

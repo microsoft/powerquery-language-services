@@ -80,7 +80,7 @@ export function createFromPrimitiveTypeConstant(
         jaroWinklerScore,
         kind: CompletionItemKind.Keyword,
         label,
-        powerQueryType: TypeUtils.createPrimitiveType(
+        powerQueryType: TypeUtils.primitiveType(
             label === Constant.PrimitiveTypeConstant.Null,
             TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
         ),

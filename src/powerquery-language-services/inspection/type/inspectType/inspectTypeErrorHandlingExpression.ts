@@ -65,7 +65,7 @@ export async function inspectTypeErrorHandlingExpression(
         throw new PQP.CommonError.InvariantError(`should never be reached`);
     }
 
-    const result: Type.TPowerQueryType = TypeUtils.createAnyUnion(
+    const result: Type.TPowerQueryType = TypeUtils.anyUnion(
         [await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id), errorHandlerResult],
         state.traceManager,
         trace.id,
