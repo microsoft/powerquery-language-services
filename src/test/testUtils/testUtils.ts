@@ -4,50 +4,45 @@
 import * as File from "fs";
 import * as Path from "path";
 import { assert, expect } from "chai";
-import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
-import {
-    DocumentSymbol,
-    FoldingRange,
-    Hover,
-    Location,
-    Position,
-    SignatureHelp,
-    SymbolKind,
-} from "vscode-languageserver-types";
+import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { Position } from "vscode-languageserver-types";
 
-import * as TestConstants from "../testConstants";
-import {
-    Analysis,
-    AnalysisSettings,
-    AnalysisUtils,
-    Inspection,
-    PartialSemanticToken,
-} from "../../powerquery-language-services";
+import { Inspection } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
-import { TActiveNode } from "../../powerquery-language-services/inspection";
 
-export interface AbridgedDocumentSymbol {
-    readonly name: string;
-    readonly kind: SymbolKind;
-    readonly children?: ReadonlyArray<AbridgedDocumentSymbol>;
+export function assertContainsAutocompleteItemLabels(
+    expected: ReadonlyArray<string>,
+    actual: ReadonlyArray<Inspection.AutocompleteItem>,
+): void {
+    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
+    expect(actualLabels).to.include.members(expected);
 }
 
-export type AbridgedSignatureHelp = Pick<SignatureHelp, "activeSignature" | "activeParameter">;
+export function extractPosition(textWithPipe: string): [string, Position] {
+    const lines: ReadonlyArray<string> = textWithPipe.split("\n");
+    const numLines: number = lines.length;
 
-export function createFileMockDocument(fileName: string): MockDocument {
-    return new MockDocument(readFile(fileName), "powerquery");
-}
+    let position: Position | undefined;
 
-export function createTextMockDocument(text: string): MockDocument {
-    return new MockDocument(text, "powerquery");
-}
+    for (let lineIndex: number = 0; lineIndex < numLines; lineIndex += 1) {
+        const line: string = lines[lineIndex];
+        const indexOfPipe: number = line.indexOf("|");
 
-export function createMockDocumentAndPosition(text: string): [MockDocument, Position] {
-    validateTextWithMarker(text);
-    const document: MockDocument = createTextMockDocument(text.replace("|", ""));
-    const position: Position = document.positionAt(text.indexOf("|"));
+        if (indexOfPipe !== -1) {
+            position = {
+                line: lineIndex,
+                character: indexOfPipe,
+            };
 
-    return [document, position];
+            break;
+        }
+    }
+
+    if (position === undefined) {
+        throw new Error(`couldn't find a pipe character in the input text`);
+    }
+
+    return [textWithPipe.replace("|", ""), position];
 }
 
 export function readFile(fileName: string): string {
@@ -57,136 +52,19 @@ export function readFile(fileName: string): string {
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }
 
-export function createAbridgedDocumentSymbols(
-    documentSymbols: ReadonlyArray<DocumentSymbol>,
-): ReadonlyArray<AbridgedDocumentSymbol> {
-    return documentSymbols.map((documentSymbol: DocumentSymbol) => {
-        if (documentSymbol.children !== undefined && documentSymbol.children.length > 0) {
-            return {
-                name: documentSymbol.name,
-                kind: documentSymbol.kind,
-                children: createAbridgedDocumentSymbols(documentSymbol.children),
-            };
-        } else {
-            return {
-                name: documentSymbol.name,
-                kind: documentSymbol.kind,
-            };
-        }
-    });
+export function mockDocument(text: string): MockDocument {
+    return new MockDocument(text, "powerquery");
 }
 
-export function createAbridgedSignatureHelp(value: SignatureHelp): AbridgedSignatureHelp {
-    return {
-        activeParameter: value.activeParameter,
-        activeSignature: value.activeSignature,
-    };
-}
-
-export function createAnalysis(text: string, analysisSettings?: AnalysisSettings): [Analysis, Position] {
-    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(text);
-
-    return [AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings)), position];
-}
-
-export function createActiveNode(
+export async function assertParse(
+    settings: Settings,
     text: string,
-    analysisSettings?: AnalysisSettings,
-): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
+): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
 
-    return analysis.getActiveNode(position);
-}
-
-export function createAutocompleteItems(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
-
-    return analysis.getAutocompleteItems(position, cancellationToken);
-}
-
-export function createAutocompleteItemsForFile(
-    fileName: string,
-    position: Position,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-    return createFileAnalysis(fileName, analysisSettings).getAutocompleteItems(position, cancellationToken);
-}
-
-export function createDefinition(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
-
-    return analysis.getDefinition(position, cancellationToken);
-}
-
-export function createFoldingRanges(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
-    const analysis: Analysis = AnalysisUtils.createAnalysis(
-        createTextMockDocument(text),
-        createAnalysisSettings(analysisSettings),
-    );
-
-    return analysis.getFoldingRanges(cancellationToken);
-}
-
-export function createHover(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
-
-    return analysis.getHover(position, cancellationToken);
-}
-
-export function createPartialSemanticTokens(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
-    const analysis: Analysis = AnalysisUtils.createAnalysis(
-        createTextMockDocument(text),
-        createAnalysisSettings(analysisSettings),
-    );
-
-    return analysis.getPartialSemanticTokens(cancellationToken);
-}
-
-export function createSignatureHelp(
-    text: string,
-    analysisSettings?: AnalysisSettings,
-    cancellationToken: ICancellationToken = TestConstants.NoOpCancellationTokenInstance,
-): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-    const [analysis, position]: [Analysis, Position] = createAnalysis(text, analysisSettings);
-
-    return analysis.getSignatureHelp(position, cancellationToken);
-}
-
-function createFileAnalysis(fileName: string, analysisSettings?: AnalysisSettings): Analysis {
-    const document: MockDocument = createTextMockDocument(readFile(fileName));
-
-    return AnalysisUtils.createAnalysis(document, createAnalysisSettings(analysisSettings));
-}
-
-function createAnalysisSettings(analysisSettings?: AnalysisSettings): AnalysisSettings {
-    return {
-        ...TestConstants.SimpleLibraryAnalysisSettings,
-        ...(analysisSettings ?? {}),
-    };
-}
-
-function validateTextWithMarker(text: string): void {
-    expect(text).to.contain("|", "input string must contain a | to indicate cursor position");
-    expect(text.indexOf("|")).to.equal(text.lastIndexOf("|"), "input string should only have one |");
+    if (TaskUtils.isParseStageOk(triedLexParseTask) || TaskUtils.isParseStageParseError(triedLexParseTask)) {
+        return triedLexParseTask;
+    } else {
+        throw new Error(`unexpected task stage: ${triedLexParseTask.stage}`);
+    }
 }

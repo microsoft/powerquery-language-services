@@ -2,27 +2,17 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, Result } from "@microsoft/powerquery-parser";
 
-import { Hover, Inspection } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
 describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     describe(`getHover for key-value-pair`, () => {
-        async function runTest(text: string, expectedHover: string | undefined): Promise<void> {
-            const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
-                text,
+        async function runTest(textWithPipe: string, expected: string | undefined): Promise<void> {
+            await TestUtils.assertEqualHoverAnalysis(
+                textWithPipe,
+                expected,
                 TestConstants.SimpleLibraryAnalysisSettings,
             );
-
-            Assert.isOk(hover);
-
-            if (expectedHover === undefined) {
-                Assert.isUndefined(hover.value);
-            } else {
-                Assert.isDefined(hover.value);
-                TestUtils.assertEqualHover(expectedHover, hover.value);
-            }
         }
 
         it(`let foobar =| ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
@@ -57,29 +47,19 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
     });
 
     describe(`getAutocomplete for key-value-pair`, () => {
-        async function runTest(
-            text: string,
-            autocompleteItemLabels?: ReadonlyArray<string> | undefined,
-        ): Promise<void> {
-            const items: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                await TestUtils.createAutocompleteItems(text, TestConstants.SimpleLibraryAnalysisSettings);
-
-            Assert.isOk(items);
-
-            if (autocompleteItemLabels) {
-                Assert.isDefined(items.value);
-                Assert.isDefined(autocompleteItemLabels);
-                TestUtils.assertAutocompleteItemLabels(autocompleteItemLabels, items.value);
-            } else {
-                Assert.isUndefined(items.value);
-            }
+        async function runTest(textWithPipe: string, expected: ReadonlyArray<string> | undefined): Promise<void> {
+            await TestUtils.assertContainsAutocompleteAnalysis(
+                textWithPipe,
+                expected,
+                TestConstants.SimpleLibraryAnalysisSettings,
+            );
         }
 
         it(`let|`, () => runTest(`let|`, []));
 
-        xit(`let foo|`, () => runTest(`let foo|`));
+        xit(`let foo|`, () => runTest(`let foo|`, undefined));
 
-        xit(`let foo |=`, () => runTest(`let foo |=`));
+        xit(`let foo |=`, () => runTest(`let foo |=`, undefined));
 
         it(`let foo =|`, () =>
             runTest(`let foo =|`, ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"]));

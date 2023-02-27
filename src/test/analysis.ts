@@ -5,7 +5,15 @@ import "mocha";
 import { Assert, CommonError, DefaultLocale, Result, TimedCancellationToken } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import type { AnalysisSettings, Hover, Inspection, Library, SignatureHelp } from "../powerquery-language-services";
+import type {
+    Analysis,
+    AnalysisSettings,
+    Hover,
+    Inspection,
+    Library,
+    Position,
+    SignatureHelp,
+} from "../powerquery-language-services";
 import type { AutocompleteItem, TypeCache } from "../powerquery-language-services/inspection";
 import { ILibraryProvider, ILocalDocumentProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
@@ -13,74 +21,66 @@ import { ILibrary } from "../powerquery-language-services/library/library";
 import { SlowLibraryProvider } from "./providers/slowLibraryProvider";
 import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider";
 
-describe("Analysis", () => {
+describe(`Analysis`, () => {
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
-            const autocompleteItems: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                await TestUtils.createAutocompleteItems(`
-        let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`);
+            const autocompleteItems: Inspection.AutocompleteItem[] | undefined =
+                await TestUtils.assertAutocompleteAnalysis(
+                    `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+                    TestConstants.SimpleLibraryAnalysisSettings,
+                );
 
-            Assert.isOk(autocompleteItems);
-            Assert.isDefined(autocompleteItems.value);
+            Assert.isDefined(autocompleteItems);
 
             const autocompleteItem: AutocompleteItem = Assert.asDefined(
-                autocompleteItems.value.find(
+                autocompleteItems.find(
                     (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
                 ),
             );
 
             expect(autocompleteItem.jaroWinklerScore).to.equal(1);
             expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
-            expect(autocompleteItem.documentation).to.equal(undefined, "local definition should have no documentation");
+            expect(autocompleteItem.documentation).to.equal(undefined, `local definition should have no documentation`);
         });
     });
 
-    describe(`getHoverItems`, () => {
-        it(`prefer local over library`, async () => {
-            const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
+    describe(`getHoverItem`, () => {
+        it(`prefer local over library`, async () =>
+            await TestUtils.assertEqualHoverAnalysis(
                 `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
-            );
-
-            Assert.isOk(hover);
-            Assert.isDefined(hover.value);
-            TestUtils.assertEqualHover(`[let-variable] Test.SquareIfNumber: logical`, hover.value);
-        });
+                `[let-variable] Test.SquareIfNumber: logical`,
+                TestConstants.SimpleLibraryAnalysisSettings,
+            ));
 
         it(`timeout library provider`, async () => {
-            await runHoverTimeoutTest("library");
+            await runHoverTimeoutTest(`library`);
         });
 
         it(`timeout local document provider`, async () => {
-            await runHoverTimeoutTest("local");
+            await runHoverTimeoutTest(`local`);
         });
     });
 
     describe(`getSignatureHelp`, () => {
-        it(`prefer local over library`, async () => {
-            const actual: Result<SignatureHelp | undefined, CommonError.CommonError> =
-                await TestUtils.createSignatureHelp(
-                    `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
-                );
-
-            const expected: SignatureHelp = {
-                activeParameter: 0,
-                activeSignature: 0,
-                signatures: [
-                    {
-                        label: `${TestConstants.TestLibraryName.SquareIfNumber}(str: text)`,
-                        parameters: [
-                            {
-                                label: "str",
-                            },
-                        ],
-                    },
-                ],
-            };
-
-            Assert.isOk(actual);
-            Assert.isDefined(actual.value);
-            expect(actual.value).to.deep.equal(expected);
-        });
+        it(`prefer local over library`, async () =>
+            await TestUtils.assertEqualSignatureHelpAnalysis(
+                `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                {
+                    activeParameter: 0,
+                    activeSignature: 0,
+                    signatures: [
+                        {
+                            label: `${TestConstants.TestLibraryName.SquareIfNumber}(str: text)`,
+                            parameters: [
+                                {
+                                    label: `str`,
+                                },
+                            ],
+                        },
+                    ],
+                },
+                TestConstants.SimpleLibraryAnalysisSettings,
+            ));
 
         it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
@@ -89,24 +89,25 @@ describe("Analysis", () => {
                     new SlowLibraryProvider(library, DefaultLocale, 100),
             };
 
+            const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
+                `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                analysisSettings,
+            );
+
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
-                await TestUtils.createSignatureHelp(
-                    `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
-                    analysisSettings,
-                    new TimedCancellationToken(0),
-                );
+                await analysis.getSignatureHelp(position, new TimedCancellationToken(0));
 
             Assert.isError(signatureHelp);
         });
     });
 });
 
-async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void> {
-    let libraryProviderFactory: AnalysisSettings["libraryProviderFactory"];
-    let localDocumentProviderFactory: AnalysisSettings["localDocumentProviderFactory"];
+async function runHoverTimeoutTest(provider: `local` | `library`): Promise<void> {
+    let libraryProviderFactory: AnalysisSettings[`libraryProviderFactory`];
+    let localDocumentProviderFactory: AnalysisSettings[`localDocumentProviderFactory`];
 
     switch (provider) {
-        case "library":
+        case `library`:
             libraryProviderFactory = (library: Library.ILibrary): ILibraryProvider =>
                 new SlowLibraryProvider(library, DefaultLocale, 10);
 
@@ -114,7 +115,7 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
 
             break;
 
-        case "local":
+        case `local`:
             libraryProviderFactory = TestConstants.SimpleLibraryAnalysisSettings.libraryProviderFactory;
 
             localDocumentProviderFactory = (
@@ -135,9 +136,13 @@ async function runHoverTimeoutTest(provider: "local" | "library"): Promise<void>
         localDocumentProviderFactory,
     };
 
-    const hover: Result<Hover | undefined, CommonError.CommonError> = await TestUtils.createHover(
+    const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
         `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
         analysisSettings,
+    );
+
+    const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
+        position,
         new TimedCancellationToken(0),
     );
 

@@ -5,17 +5,10 @@ import "mocha";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import {
-    Diagnostic,
-    DiagnosticErrorCode,
-    Position,
-    TextDocument,
-    ValidationSettings,
-} from "../../powerquery-language-services";
+import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { expectLessWhenSurpressed } from "./common";
 import { SimpleValidateAllSettings } from "../testConstants";
-import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -29,11 +22,12 @@ interface ArgumentMismatchExec {
 
 const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but (\d+) were given./;
 
-async function expectGetInvokeExpressionDiagnostics(
-    textDocument: TextDocument,
-): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
-    const validationResult: ValidateOk = await TestUtils.assertGetValidateOk(textDocument);
-    const diagnostics: Diagnostic[] = validationResult.diagnostics;
+async function assertInvokeExpressionDiagnostics(text: string): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
+    const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
+        TestConstants.SimpleLibraryAnalysisSettings,
+        TestConstants.SimpleValidateAllSettings,
+        text,
+    );
 
     return diagnostics
         .filter(
@@ -117,34 +111,26 @@ describe("Validation - InvokeExpression", () => {
 
     describe(`single invocation`, () => {
         it(`expects [1, 1] arguments, 0 given`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `${TestConstants.TestLibraryName.SquareIfNumber}()`,
-            );
-
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await expectGetInvokeExpressionDiagnostics(textDocument);
+                await assertInvokeExpressionDiagnostics(`${TestConstants.TestLibraryName.SquareIfNumber}()`);
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 1, 0);
         });
 
         it(`expects [1, 2] arguments, 0 given`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
-            );
-
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await expectGetInvokeExpressionDiagnostics(textDocument);
+                await assertInvokeExpressionDiagnostics(
+                    `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
+                );
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
         });
 
         it(`expects [1, 2] arguments, 2 given`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
-            );
-
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await expectGetInvokeExpressionDiagnostics(textDocument);
+                await assertInvokeExpressionDiagnostics(
+                    `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
+                );
 
             expect(invocationDiagnostics.length).to.equal(0);
         });
@@ -152,28 +138,25 @@ describe("Validation - InvokeExpression", () => {
 
     describe(`multiple invocation`, () => {
         it(`position for multiple errors`, async () => {
-            const textDocument: TextDocument = TestUtils.createTextMockDocument(
-                `
-let 
-    x = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(),
-    y = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()
-in
-    _`,
-            );
-
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await expectGetInvokeExpressionDiagnostics(textDocument);
+                await assertInvokeExpressionDiagnostics(
+                    `let 
+                        x = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(),
+                        y = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()
+                    in
+                        _`,
+                );
 
             expect(invocationDiagnostics.length).to.equal(2);
 
             const expected: ReadonlyArray<Position> = [
                 {
-                    character: 41,
-                    line: 2,
+                    character: 61,
+                    line: 1,
                 },
                 {
-                    character: 41,
-                    line: 3,
+                    character: 61,
+                    line: 2,
                 },
             ];
 

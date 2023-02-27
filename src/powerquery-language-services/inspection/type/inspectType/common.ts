@@ -344,7 +344,7 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.IsExpression:
-            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
+            result = Type.LogicalInstance;
             break;
 
         case Ast.NodeKind.InvokeExpression:
@@ -352,7 +352,7 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.IsNullablePrimitiveType:
-            result = TypeUtils.createPrimitiveType(false, Type.TypeKind.Logical);
+            result = Type.LogicalInstance;
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
