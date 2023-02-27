@@ -43,7 +43,7 @@ export function createLibrary(
     }
 
     const definitionResolverFn: ExternalType.TExternalTypeResolverFn =
-        LibraryUtils.createExternalTypeResolver(libraryDefinitions);
+        LibraryUtils.externalTypeResolver(libraryDefinitions);
 
     const library: Library.ILibrary = {
         libraryDefinitions,

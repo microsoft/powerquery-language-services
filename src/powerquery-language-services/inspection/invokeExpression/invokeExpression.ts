@@ -31,7 +31,7 @@ export function tryInvokeExpression(
     invokeExpressionId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<TriedInvokeExpression> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectInvokeExpression,

@@ -270,7 +270,7 @@ function getIdentifierExpressionTokens(
         }
 
         tokens.push({
-            range: PositionUtils.createRangeFromTokenRange(identifierExpr.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(identifierExpr.tokenRange),
             tokenModifiers,
             tokenType,
         });
@@ -324,7 +324,7 @@ function getInvokeExpressionTokens(
         }
 
         tokens.push({
-            range: PositionUtils.createRangeFromTokenRange(identifierXor.node.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(identifierXor.node.tokenRange),
             tokenModifiers: [],
             tokenType: SemanticTokenTypes.function,
         });
@@ -372,7 +372,7 @@ function getLiteralTokens(
         }
 
         tokens.push({
-            range: PositionUtils.createRangeFromTokenRange(literal.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(literal.tokenRange),
             tokenModifiers: [],
             tokenType,
         });
@@ -490,7 +490,7 @@ function getPrimitiveTypeTokens(
         }
 
         tokens.push({
-            range: PositionUtils.createRangeFromTokenRange(node.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(node.tokenRange),
             tokenModifiers: [],
             tokenType: SemanticTokenTypes.type,
         });
@@ -556,7 +556,7 @@ function getTBinOpExpressionTokens(
                 : SemanticTokenTypes.operator;
 
             tokens.push({
-                range: PositionUtils.createRangeFromTokenRange(operatorNode.tokenRange),
+                range: PositionUtils.rangeFromTokenRange(operatorNode.tokenRange),
                 tokenModifiers: [],
                 tokenType,
             });
@@ -654,7 +654,7 @@ function getPairedExpressionTokens<
         }
 
         tokens.push({
-            range: PositionUtils.createRangeFromTokenRange(keyNode.tokenRange),
+            range: PositionUtils.rangeFromTokenRange(keyNode.tokenRange),
             tokenModifiers: [SemanticTokenModifiers.declaration],
             tokenType: SemanticTokenTypes.variable,
         });
@@ -686,7 +686,7 @@ function pushNthChild<T extends Ast.TNode>(
     }
 
     tokens.push({
-        range: PositionUtils.createRangeFromTokenRange(typeConstant.tokenRange),
+        range: PositionUtils.rangeFromTokenRange(typeConstant.tokenRange),
         tokenModifiers,
         tokenType,
     });

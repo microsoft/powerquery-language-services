@@ -14,7 +14,7 @@ async function assertSymbolsForDocument(
     text: string,
     expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
 ): Promise<void> {
-    const analysis: Analysis = AnalysisUtils.createAnalysis(
+    const analysis: Analysis = AnalysisUtils.analysis(
         TestUtils.mockDocument(text),
         TestConstants.SimpleLibraryAnalysisSettings,
     );

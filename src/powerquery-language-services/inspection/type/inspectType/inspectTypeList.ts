@@ -19,7 +19,7 @@ export async function inspectTypeList(
         InspectionTraceConstant.InspectType,
         inspectTypeList.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     let result: Type.List | Type.DefinedList;
@@ -51,7 +51,7 @@ export async function inspectTypeList(
             Assert.isNever(state.typeStrategy);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

@@ -101,7 +101,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             }
 
             const location: Location = {
-                range: PositionUtils.createRangeFromTokenRange(creator.tokenRange),
+                range: PositionUtils.rangeFromTokenRange(creator.tokenRange),
                 uri: this.uri,
             };
 

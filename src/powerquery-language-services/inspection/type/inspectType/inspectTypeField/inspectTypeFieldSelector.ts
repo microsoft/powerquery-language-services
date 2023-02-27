@@ -28,7 +28,7 @@ export async function inspectTypeFieldSelector(
         InspectionTraceConstant.InspectType,
         inspectTypeFieldSelector.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -42,7 +42,7 @@ export async function inspectTypeFieldSelector(
         );
 
     if (fieldName === undefined) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
@@ -58,7 +58,7 @@ export async function inspectTypeFieldSelector(
         ) !== undefined;
 
     const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName.literal, isOptional);
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

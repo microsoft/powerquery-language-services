@@ -180,7 +180,7 @@ function unknownIdentifiersToDiagnostics(
             unknownIdentifier.literal,
             unknownIdentifier.suggestion,
         ),
-        range: PositionUtils.createRangeFromTokenRange(unknownIdentifier.identifier.tokenRange),
+        range: PositionUtils.rangeFromTokenRange(unknownIdentifier.identifier.tokenRange),
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,
     }));

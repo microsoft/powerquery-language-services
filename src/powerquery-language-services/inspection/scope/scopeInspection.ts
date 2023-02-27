@@ -173,7 +173,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
         InspectionTraceConstant.InspectScope,
         inspectNode.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();

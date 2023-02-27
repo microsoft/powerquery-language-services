@@ -272,7 +272,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
                     (keyValuePair: NodeIdMapIterator.TKeyValuePair) => ({
                         location: {
                             uri: documentUri,
-                            range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
+                            range: PositionUtils.rangeFromTokenRange(keyValuePair.key.tokenRange),
                         },
                         message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
                     }),
@@ -305,7 +305,7 @@ function createDuplicateIdentifierDiagnostic(
     return {
         code: DiagnosticErrorCode.DuplicateIdentifier,
         message: createDuplicateIdentifierDiagnosticMessage(keyValuePair, validationSettings),
-        range: PositionUtils.createRangeFromTokenRange(keyValuePair.key.tokenRange),
+        range: PositionUtils.rangeFromTokenRange(keyValuePair.key.tokenRange),
         relatedInformation,
         severity: DiagnosticSeverity.Error,
         source: validationSettings.source,

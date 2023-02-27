@@ -51,7 +51,7 @@ function createAutocompleteItems(
     trailingText: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
     return PrimitiveTypeConstants.map((PrimitiveTypeConstant: Constant.PrimitiveTypeConstant) =>
-        AutocompleteItemUtils.createFromPrimitiveTypeConstant(PrimitiveTypeConstant, trailingText),
+        AutocompleteItemUtils.fromPrimitiveTypeConstant(PrimitiveTypeConstant, trailingText),
     );
 }
 

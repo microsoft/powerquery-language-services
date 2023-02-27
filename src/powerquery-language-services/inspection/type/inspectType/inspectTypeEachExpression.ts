@@ -17,7 +17,7 @@ export async function inspectTypeEachExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeEachExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -38,7 +38,7 @@ export async function inspectTypeEachExpression(
         expressionType,
     );
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

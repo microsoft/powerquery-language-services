@@ -191,7 +191,7 @@ export async function inspectTypeFromChildAttributeIndex(
         InspectionTraceConstant.InspectType,
         inspectTypeFromChildAttributeIndex.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(parentXorNode),
+        TraceUtils.xorNodeDetails(parentXorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -219,7 +219,7 @@ export async function inspectXor(
         InspectionTraceConstant.InspectType,
         inspectXor.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -426,7 +426,7 @@ export async function dereferencedIdentifierType(
         InspectionTraceConstant.InspectType,
         dereferencedIdentifierType.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -476,8 +476,7 @@ export async function dereferencedIdentifierType(
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (scopeItem === undefined) {
-        const request: ExternalType.ExternalValueTypeRequest =
-            ExternalTypeUtils.createValueTypeRequest(deferencedLiteral);
+        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequest(deferencedLiteral);
 
         const result: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
         trace.exit();

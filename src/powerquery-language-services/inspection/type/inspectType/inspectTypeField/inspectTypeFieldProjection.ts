@@ -24,7 +24,7 @@ export async function inspectTypeFieldProjection(
         InspectionTraceConstant.InspectType,
         inspectTypeFieldProjection.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -92,7 +92,7 @@ export async function inspectTypeFieldProjection(
             break;
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

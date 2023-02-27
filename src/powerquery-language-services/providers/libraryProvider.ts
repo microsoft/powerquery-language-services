@@ -51,9 +51,7 @@ export class LibraryProvider implements ILibraryProvider {
             const contextText: string | undefined = context.text;
 
             for (const [label, definition] of this.libraryDefinitions.entries()) {
-                autocompleteItems.push(
-                    AutocompleteItemUtils.createFromLibraryDefinition(label, definition, contextText),
-                );
+                autocompleteItems.push(AutocompleteItemUtils.fromLibraryDefinition(label, definition, contextText));
             }
 
             trace.exit();
@@ -172,7 +170,7 @@ export class LibraryProvider implements ILibraryProvider {
     private getOrCreateSignatureInformation(key: string): SignatureInformation {
         if (!this.signatureInformationByLabel.has(key)) {
             const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
-            this.signatureInformationByLabel.set(key, LibraryUtils.createSignatureInformation(definition));
+            this.signatureInformationByLabel.set(key, LibraryUtils.signatureInformation(definition));
         }
 
         return Assert.asDefined(this.signatureInformationByLabel.get(key));

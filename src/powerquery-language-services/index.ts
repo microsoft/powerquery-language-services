@@ -21,6 +21,6 @@ export * from "./providers";
 export * from "./trace";
 export * from "./validate";
 
-export function createTextDocument(id: string, version: number, content: string): TextDocument {
+export function textDocument(id: string, version: number, content: string): TextDocument {
     return TextDocument.create(id, "powerquery", version, content);
 }

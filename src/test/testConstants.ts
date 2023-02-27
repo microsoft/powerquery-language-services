@@ -95,7 +95,7 @@ export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.defi
 export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<string, Library.TLibraryDefinition>([
     [
         TestLibraryName.CreateFooAndBarRecord,
-        LibraryUtils.createFunctionDefinition(
+        LibraryUtils.functionDefinition(
             TestLibraryName.CreateFooAndBarRecord,
             `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
             CreateFooAndBarRecordDefinedFunction,
@@ -105,7 +105,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
     [
         TestLibraryName.Number,
-        LibraryUtils.createConstantDefinition(
+        LibraryUtils.constantDefinition(
             TestLibraryName.Number,
             `The name is ${TestLibraryName.Number}`,
             Type.NumberInstance,
@@ -114,7 +114,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
     [
         TestLibraryName.CombineNumberAndOptionalText,
-        LibraryUtils.createFunctionDefinition(
+        LibraryUtils.functionDefinition(
             TestLibraryName.CombineNumberAndOptionalText,
             `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
             CombineNumberAndOptionalTextDefinedFunction,
@@ -139,7 +139,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
     [
         TestLibraryName.NumberOne,
-        LibraryUtils.createConstantDefinition(
+        LibraryUtils.constantDefinition(
             TestLibraryName.NumberOne,
             `The name is ${TestLibraryName.NumberOne}`,
             TypeUtils.numberLiteral(false, "1"),
@@ -148,7 +148,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<stri
     ],
     [
         TestLibraryName.SquareIfNumber,
-        LibraryUtils.createFunctionDefinition(
+        LibraryUtils.functionDefinition(
             TestLibraryName.SquareIfNumber,
             `The name is ${TestLibraryName.SquareIfNumber}`,
             SquareIfNumberDefinedFunction,

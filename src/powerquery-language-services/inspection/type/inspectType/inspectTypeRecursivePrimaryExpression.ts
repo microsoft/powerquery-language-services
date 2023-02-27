@@ -23,7 +23,7 @@ export async function inspectTypeRecursivePrimaryExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeRecursivePrimaryExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -32,7 +32,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     const head: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
 
     if (head === undefined) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
@@ -40,7 +40,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     const headType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
     if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(headType) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(headType) });
 
         return headType;
     }
@@ -53,7 +53,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     );
 
     if (arrayWrapper === undefined) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
@@ -64,7 +64,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     );
 
     if (expressions === undefined) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
     }
@@ -77,7 +77,7 @@ export async function inspectTypeRecursivePrimaryExpression(
         leftType = rightType;
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(leftType) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(leftType) });
 
     return leftType;
 }

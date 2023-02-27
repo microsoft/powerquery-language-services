@@ -19,7 +19,7 @@ export async function inspectTypeRecord(
         InspectionTraceConstant.InspectType,
         inspectTypeRecord.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -61,7 +61,7 @@ export async function inspectTypeRecord(
             throw Assert.isNever(state.typeStrategy);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

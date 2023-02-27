@@ -55,7 +55,7 @@ export async function assertDocumentSymbolsInspection(
 export async function assertInspected(
     settings: InspectionSettings,
     textWithPipe: string,
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<Inspected> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
 
@@ -95,7 +95,7 @@ export async function assertNodeScope(settings: Settings, textWithPipe: string):
             settings,
             nodeIdMapCollection,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
-            TypeCacheUtils.createEmptyCache().scopeById,
+            TypeCacheUtils.emptyCache().scopeById,
         ),
     );
 }

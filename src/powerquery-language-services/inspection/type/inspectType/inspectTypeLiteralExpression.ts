@@ -18,7 +18,7 @@ export function inspectTypeLiteralExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeLiteralExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     XorNodeUtils.assertIsNodeKind<Ast.LiteralExpression>(xorNode, Ast.NodeKind.LiteralExpression);
@@ -59,7 +59,7 @@ export function inspectTypeLiteralExpression(
             throw Assert.isNever(xorNode);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

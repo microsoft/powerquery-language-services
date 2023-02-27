@@ -33,7 +33,7 @@ export async function inspectFieldType(
         InspectionTraceConstant.InspectType,
         inspectFieldType.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     XorNodeUtils.assertIsNodeKind<Ast.FieldProjection | Ast.FieldSelector>(xorNode, [
@@ -61,7 +61,7 @@ export async function inspectFieldType(
         fieldType = await inspectXor(state, previousSibling, trace.id);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(fieldType) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(fieldType) });
 
     return fieldType;
 }

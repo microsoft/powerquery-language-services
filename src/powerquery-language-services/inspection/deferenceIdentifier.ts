@@ -25,7 +25,7 @@ export async function tryDeferenceIdentifier(
         InspectionTraceConstant.InspectScope,
         tryDeferenceIdentifier.name,
         settings.initialCorrelationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     const updatedSettings: PQP.CommonSettings = {

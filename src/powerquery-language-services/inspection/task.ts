@@ -165,7 +165,7 @@ export async function inspect(
     position: Position,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<Inspected> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.Inspect,
@@ -234,7 +234,7 @@ export async function tryInspect(
     settings: InspectionSettings,
     text: string,
     position: Position,
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<PQP.Result<Promise<Inspected>, PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError>> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.Inspect,

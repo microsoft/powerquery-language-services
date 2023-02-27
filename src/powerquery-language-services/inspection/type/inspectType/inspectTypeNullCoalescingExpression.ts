@@ -17,7 +17,7 @@ export async function inspectTypeNullCoalescingExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeNullCoalescingExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -49,7 +49,7 @@ export async function inspectTypeNullCoalescingExpression(
         }
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

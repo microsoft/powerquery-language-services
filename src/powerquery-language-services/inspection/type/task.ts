@@ -23,7 +23,7 @@ export async function tryScopeType(
     nodeId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<TriedScopeType> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScopeType,
@@ -49,7 +49,7 @@ export async function tryType(
     nodeId: number,
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
-    typeCache: TypeCache = TypeCacheUtils.createEmptyCache(),
+    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
 ): Promise<TriedType> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectType,

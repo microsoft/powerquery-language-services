@@ -13,7 +13,7 @@ import { TextEdit } from "vscode-languageserver-textdocument";
 export function assertAnalysisFromText(analysisSettings: AnalysisSettings, text: string): Analysis {
     const document: MockDocument = TestUtils.mockDocument(text);
 
-    return AnalysisUtils.createAnalysis(document, analysisSettings);
+    return AnalysisUtils.analysis(document, analysisSettings);
 }
 
 export function assertAnalysisAndPositionFromText(
@@ -22,7 +22,7 @@ export function assertAnalysisAndPositionFromText(
 ): [Analysis, Position] {
     const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(textWithPipe);
 
-    const analysis: Analysis = AnalysisUtils.createAnalysis(document, analysisSettings);
+    const analysis: Analysis = AnalysisUtils.analysis(document, analysisSettings);
 
     return [analysis, position];
 }

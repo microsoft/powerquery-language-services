@@ -26,7 +26,7 @@ export async function inspectTypeFunctionType(
         InspectionTraceConstant.InspectType,
         inspectTypeFunctionType.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -45,7 +45,7 @@ export async function inspectTypeFunctionType(
                 );
 
             if (parameters === undefined) {
-                trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+                trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
             }
@@ -56,7 +56,7 @@ export async function inspectTypeFunctionType(
             );
 
             if (arrayWrapper === undefined) {
-                trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(Type.UnknownInstance) });
+                trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
                 return Type.UnknownInstance;
             }
@@ -96,7 +96,7 @@ export async function inspectTypeFunctionType(
             Assert.isNever(state.typeStrategy);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

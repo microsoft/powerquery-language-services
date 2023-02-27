@@ -302,7 +302,7 @@ function createAutocompleteItems(
         }
 
         autocompleteItems.push(
-            AutocompleteItemUtils.createFromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
+            AutocompleteItemUtils.fromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
         );
     }
 

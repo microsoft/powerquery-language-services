@@ -17,7 +17,7 @@ export async function inspectTypeIfExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeIfExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -48,7 +48,7 @@ export async function inspectTypeIfExpression(
         result = await createAnyUnion(state, xorNode, trace.id);
     }
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
@@ -62,7 +62,7 @@ async function createAnyUnion(
         InspectionTraceConstant.InspectType,
         createAnyUnion.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);

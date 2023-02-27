@@ -23,7 +23,7 @@ export async function inspectTypeErrorHandlingExpression(
         InspectionTraceConstant.InspectType,
         inspectTypeErrorHandlingExpression.name,
         correlationId,
-        TraceUtils.createXorNodeDetails(xorNode),
+        TraceUtils.xorNodeDetails(xorNode),
     );
 
     state.cancellationToken?.throwIfCancelled();
@@ -71,7 +71,7 @@ export async function inspectTypeErrorHandlingExpression(
         trace.id,
     );
 
-    trace.exit({ [TraceConstant.Result]: TraceUtils.createTypeDetails(result) });
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }
