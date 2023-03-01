@@ -23,7 +23,6 @@ export function assertAutocompleteItemLabels(
 ): void {
     expected = [...expected].sort();
     const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
-
     expect(actualLabels).to.deep.equal(expected);
 }
 

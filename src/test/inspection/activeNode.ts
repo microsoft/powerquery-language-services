@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, DefaultSettings } from "@microsoft/powerquery-parser";
+import { DefaultSettings } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { ActiveNodeUtils, TActiveNode } from "../../powerquery-language-services/inspection";

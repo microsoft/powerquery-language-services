@@ -158,21 +158,12 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         nodeOnPosition === undefined &&
         nodeClosestAfterPosition !== undefined
     ) {
-        // `1 + | 2`
         if (
             AstUtils.isTConstant(nodeClosestBeforePosition) &&
             ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
         ) {
             leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
             leafKind = ActiveNodeLeafKind.IsAfterPosition;
-        }
-        // `1 + | {0..9}{0}`
-        else if (
-            AstUtils.isTConstant(nodeClosestAfterPosition) &&
-            ShiftLeftConstantKinds.includes(nodeClosestAfterPosition.constantKind)
-        ) {
-            leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
-            leafKind = ActiveNodeLeafKind.IsBeforePosition;
         } else {
             leaf = XorNodeUtils.boxAst(nodeClosestBeforePosition);
             leafKind = ActiveNodeLeafKind.IsBeforePosition;
@@ -293,8 +284,12 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
         let includeUpperBound: boolean = true;
 
         if (AstUtils.isTConstant(candidate)) {
-            includeLowerBound = !ShiftLeftConstantKinds.includes(candidate.constantKind);
-            includeUpperBound = !ShiftRightConstantKinds.includes(candidate.constantKind);
+            if (ShiftRightConstantKinds.includes(candidate.constantKind)) {
+                includeLowerBound = false;
+                includeUpperBound = false;
+            } else if (ShiftLeftConstantKinds.includes(candidate.constantKind)) {
+                includeLowerBound = false;
+            }
         }
 
         // If the candidate starts under the cursor position then it's safe to assume it's the best candidate,

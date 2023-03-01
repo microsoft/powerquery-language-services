@@ -79,6 +79,7 @@ export async function autocomplete(
 
     const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
         updatedSettings,
+        nodeIdMapCollection,
         activeNode,
         trailingToken,
     );
