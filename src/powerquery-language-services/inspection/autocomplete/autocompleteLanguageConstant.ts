@@ -77,11 +77,11 @@ function isCatchAllowed(
             // We are under an ErrorHandlingExpression
             xorNode.node.kind === Ast.NodeKind.ErrorHandlingExpression &&
             // Which was fully parsed
-            XorNodeUtils.isAstXor(xorNode) &&
+            XorNodeUtils.isAst(xorNode) &&
             // Yet the cursor is after the end of the Ast
             activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
             // And it only has two children, meaning it hasn't parsed an error handler
-            NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
+            NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
         ) {
             return trailingToken ? Constant.LanguageConstant.Catch.startsWith(trailingToken.data) : true;
         }
@@ -106,7 +106,7 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
                 break;
 
             case Ast.NodeKind.PrimitiveType:
-                if (XorNodeUtils.isContextXor(xorNode)) {
+                if (XorNodeUtils.isContext(xorNode)) {
                     return true;
                 }
 
@@ -150,7 +150,7 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
             PositionUtils.isBeforeXor(position, grandchild, false)
         );
     } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
-        return XorNodeUtils.isContextXor(paired);
+        return XorNodeUtils.isContext(paired);
     } else {
         return false;
     }
@@ -197,7 +197,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: Ast.Identifier = XorNodeUtils.assertUnboxAstChecked<Ast.Identifier>(
+                    const nameAst: Ast.Identifier = XorNodeUtils.assertAstChecked<Ast.Identifier>(
                         childOfParameter,
                         Ast.NodeKind.Identifier,
                     );

@@ -176,7 +176,7 @@ function getArgumentOrdinal(
 
     switch (previousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
-            arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked<Ast.TArrayWrapper>(
+            arrayWrapperXorNode = NodeIdMapUtils.assertNthChildXorChecked<Ast.TArrayWrapper>(
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 1,

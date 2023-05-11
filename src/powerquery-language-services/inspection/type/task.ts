@@ -60,7 +60,7 @@ export async function tryType(
     const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
 
     const result: TriedType = await ResultUtils.ensureResultAsync(
-        () => inspectXor(state, NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId), trace.id),
+        () => inspectXor(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId), trace.id),
         settings.locale,
     );
 

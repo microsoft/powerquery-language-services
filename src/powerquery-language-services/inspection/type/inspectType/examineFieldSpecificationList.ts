@@ -49,7 +49,7 @@ export async function examineFieldSpecificationList(
     );
 
     const isOpen: boolean =
-        NodeIdMapUtils.nthChildChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !== undefined;
+        NodeIdMapUtils.nthChildXorChecked(nodeIdMapCollection, xorNode.node.id, 3, Ast.NodeKind.Constant) !== undefined;
 
     const result: ExaminedFieldSpecificationList = {
         fields: new Map(fields),

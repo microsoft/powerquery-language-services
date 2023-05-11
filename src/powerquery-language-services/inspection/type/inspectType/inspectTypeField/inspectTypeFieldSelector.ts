@@ -35,7 +35,7 @@ export async function inspectTypeFieldSelector(
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const fieldName: Ast.GeneralizedIdentifier | undefined =
-        NodeIdMapUtils.unboxWrappedContentIfAstChecked<Ast.GeneralizedIdentifier>(
+        NodeIdMapUtils.unboxWrappedContentAstChecked<Ast.GeneralizedIdentifier>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -50,7 +50,7 @@ export async function inspectTypeFieldSelector(
     const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
-        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+        NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

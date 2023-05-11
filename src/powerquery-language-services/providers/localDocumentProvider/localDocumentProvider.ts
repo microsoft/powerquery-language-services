@@ -313,7 +313,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const expression: TXorNode | undefined = NodeIdMapUtils.nthChild(
+        const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
             context.parseState.contextState.nodeIdMapCollection,
             identifierPairedExpression.node.id,
             2,

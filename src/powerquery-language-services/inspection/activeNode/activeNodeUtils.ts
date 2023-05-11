@@ -218,7 +218,7 @@ function astNodeSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Posi
                 | Ast.RecordLiteral
                 | Ast.ListExpression
                 | Ast.ListLiteral
-                | Ast.InvokeExpression = NodeIdMapUtils.assertUnboxParentAstChecked<
+                | Ast.InvokeExpression = NodeIdMapUtils.assertParentAstChecked<
                 Ast.RecordExpression | Ast.RecordLiteral | Ast.ListExpression | Ast.ListLiteral | Ast.InvokeExpression
             >(nodeIdMapCollection, currentOnOrBefore.id, [
                 Ast.NodeKind.RecordExpression,
@@ -283,7 +283,7 @@ function findLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafXorNode: TXorNode,
 ): TActiveLeafIdentifier | undefined {
-    if (XorNodeUtils.isContextXor(leafXorNode)) {
+    if (XorNodeUtils.isContext(leafXorNode)) {
         return undefined;
     }
 
@@ -298,7 +298,7 @@ function findLeafIdentifier(
             return undefined;
         }
 
-        const parent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
+        const parent: Ast.TNode | undefined = NodeIdMapUtils.ast(nodeIdMapCollection, parentId);
 
         if (parent?.kind === Ast.NodeKind.IdentifierPairedExpression) {
             identifier = leaf;
@@ -314,7 +314,7 @@ function findLeafIdentifier(
             return undefined;
         }
 
-        const parent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
+        const parent: Ast.TNode | undefined = NodeIdMapUtils.ast(nodeIdMapCollection, parentId);
 
         if (parent?.kind === Ast.NodeKind.IdentifierExpression) {
             identifier = parent;

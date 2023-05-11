@@ -39,7 +39,7 @@ export function autocompleteKeywordListExpression(
         ? AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4)
         : nodeOrComma;
 
-    if (XorNodeUtils.isContextXor(itemNode) || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {
+    if (XorNodeUtils.isContext(itemNode) || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {
         return Keyword.ExpressionKeywordKinds;
     } else {
         return undefined;

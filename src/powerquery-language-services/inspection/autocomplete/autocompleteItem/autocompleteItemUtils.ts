@@ -104,7 +104,7 @@ export function fromScopeItem(
         }
 
         case Inspection.ScopeItemKind.Undefined: {
-            if (XorNodeUtils.isContextXor(scopeItem.xorNode)) {
+            if (XorNodeUtils.isContext(scopeItem.xorNode)) {
                 return undefined;
             }
 

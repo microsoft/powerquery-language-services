@@ -422,7 +422,7 @@ function expandChildScope(
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const child: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, parentId, attributeId);
+        const child: TXorNode | undefined = NodeIdMapUtils.nthChildXor(nodeIdMapCollection, parentId, attributeId);
 
         if (child !== undefined) {
             expandScope(state, child, newEntries, defaultScope, correlationId);

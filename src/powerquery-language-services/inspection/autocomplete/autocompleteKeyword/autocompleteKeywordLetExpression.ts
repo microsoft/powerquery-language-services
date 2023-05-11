@@ -7,7 +7,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, AstUtils, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordRightMostLeaf } from "./common";
@@ -25,12 +25,12 @@ export async function autocompleteKeywordLetExpression(
 
     // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
     // `let x = 1 |`
-    if (child.node.attributeIndex === 2 && XorNodeUtils.isContextXor(child)) {
+    if (child.node.attributeIndex === 2 && XorNodeUtils.isContext(child)) {
         inspected = await autocompleteLastKeyValuePair(
             state,
             NodeIdMapIterator.iterLetExpression(
                 state.nodeIdMapCollection,
-                XorNodeUtils.assertAsLetExpression(state.parent),
+                XorNodeUtils.assertAsNodeKind<Ast.LetExpression>(state.parent, Ast.NodeKind.LetExpression),
             ),
         );
 
@@ -60,7 +60,7 @@ export async function autocompleteKeywordLetExpression(
             5,
         );
 
-        if (identifier && XorNodeUtils.isAstXor(identifier) && AstUtils.isIdentifier(identifier.node)) {
+        if (identifier && XorNodeUtils.isAstChecked<Ast.Identifier>(identifier, Ast.NodeKind.Identifier)) {
             const identifierAst: Ast.Identifier = identifier.node;
 
             inspected = Keyword.ExpressionKeywordKinds.filter((value: Keyword.KeywordKind) =>

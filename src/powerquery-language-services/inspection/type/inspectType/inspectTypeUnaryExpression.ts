@@ -34,7 +34,7 @@ export async function inspectTypeUnaryExpression(
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
 
     const unaryOperatorWrapper: XorNode<Ast.TArrayWrapper> | undefined =
-        NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+        NodeIdMapUtils.nthChildXorChecked<Ast.TArrayWrapper>(
             nodeIdMapCollection,
             xorNode.node.id,
             0,
@@ -48,7 +48,7 @@ export async function inspectTypeUnaryExpression(
     }
 
     let result: Type.TPowerQueryType;
-    const expression: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, xorNode.node.id, 1);
+    const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(nodeIdMapCollection, xorNode.node.id, 1);
 
     if (expression === undefined) {
         result = Type.UnknownInstance;

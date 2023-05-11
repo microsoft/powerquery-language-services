@@ -64,7 +64,7 @@ function validateNoDuplicateParameter(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpressionId: number,
 ): Diagnostic[] {
-    const fnExpression: TXorNode = NodeIdMapUtils.assertGetXorChecked<Ast.FunctionExpression>(
+    const fnExpression: TXorNode = NodeIdMapUtils.assertXorChecked<Ast.FunctionExpression>(
         nodeIdMapCollection,
         fnExpressionId,
         Ast.NodeKind.FunctionExpression,
