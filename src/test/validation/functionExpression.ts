@@ -27,7 +27,7 @@ async function assertNoValidationErrors(text: string): Promise<void> {
     expect(validationResult.diagnostics.length).to.equal(0, `no diagnostics expected`);
 }
 
-describe(`Validation - functionExpression`, () => {
+describe(`WIP Validation - functionExpression`, () => {
     describe(`Syntax validation`, () => {
         it(`no errors`, async () => {
             await assertNoValidationErrors(`(foo as number, bar as number) => foo + bar`);

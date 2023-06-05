@@ -9,7 +9,7 @@ import { TestConstants, TestUtils } from "..";
 import { ILibrary } from "../../powerquery-language-services/library/library";
 import { TypeCache } from "../../powerquery-language-services/inspection";
 
-describe(`SimpleLibraryProvider`, () => {
+describe(`WIP SimpleLibraryProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
         localDocumentProviderFactory: (_uri: string, _typeCache: TypeCache, _library: ILibrary) =>

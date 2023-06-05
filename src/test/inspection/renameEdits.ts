@@ -7,7 +7,7 @@ import type { TextEdit } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "..";
 
-describe(`Inspection - RenameEdits - Identifiers`, () => {
+describe(`WIP Inspection - RenameEdits - Identifiers`, () => {
     async function runTest(textWithPipe: string, newName: string, expected: TextEdit[] | undefined): Promise<void> {
         await TestUtils.assertEqualRenameEdits(
             textWithPipe,

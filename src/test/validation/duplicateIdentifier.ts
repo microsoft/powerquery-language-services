@@ -85,7 +85,7 @@ async function validateDuplicateIdentifierDiagnostics(
     expect(abridgedActual).deep.equals(expected);
 }
 
-describe(`Validation - duplicateIdentifier`, () => {
+describe(`WIP Validation - duplicateIdentifier`, () => {
     describe("Syntax validation", () => {
         it("no errors", async () => await expectNoValidationErrors(`let b = 1 in b`));
 

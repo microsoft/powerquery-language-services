@@ -18,7 +18,7 @@ import {
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
-describe(`SimpleLocalDocumentSymbolProvider`, () => {
+describe(`WIP SimpleLocalDocumentSymbolProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
         ...TestConstants.SimpleLibraryAnalysisSettings,
         languageAutocompleteItemProviderFactory: () => NullSymbolProvider.singleton(),

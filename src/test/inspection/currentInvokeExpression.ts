@@ -196,7 +196,7 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression): 
     expect(invokeArgs.typeChecked.valid.length).to.equal(0);
 }
 
-describe(`subset Inspection - InvokeExpression`, () => {
+describe(`WIP subset Inspection - InvokeExpression`, () => {
     async function assertCurrentInvokeExpression(textWithPipe: string): Promise<Inspection.CurrentInvokeExpression> {
         const inspected: Inspection.Inspected = await TestUtils.assertInspected(
             TestConstants.SimpleInspectionSettings,
