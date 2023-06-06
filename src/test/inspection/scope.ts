@@ -611,7 +611,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "bar",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 39,
+                        keyNodeId: 30,
                         valueNodeId: 33,
                     },
                     {

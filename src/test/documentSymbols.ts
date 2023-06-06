@@ -37,7 +37,7 @@ async function assertSymbolsForDocument(
     );
 }
 
-describe("WIP getDocumentSymbols", () => {
+describe("getDocumentSymbols", () => {
     it(`section foo; shared a = 1;`, async () => {
         await assertSymbolsForDocument(`section foo; shared a = 1;`, [{ name: "a", kind: SymbolKind.Number }]);
     });

@@ -6,7 +6,7 @@ import "mocha";
 import { TestConstants, TestUtils } from ".";
 import { SymbolKind } from "../powerquery-language-services";
 
-describe(`WIP Document symbol base functions`, () => {
+describe(`Document symbol base functions`, () => {
     it(`section foo; shared a = 1; b = "abc"; c = true;`, async () =>
         await TestUtils.assertEqualDocumentSymbolsAnalysis(
             `section foo; shared a = 1; b = "abc"; c = true;`,

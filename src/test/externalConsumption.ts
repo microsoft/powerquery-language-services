@@ -19,7 +19,7 @@ import {
 } from "../powerquery-language-services";
 import { TestConstants } from ".";
 
-describe("WIP External consumption", () => {
+describe("External consumption", () => {
     it("Analysis", async () => {
         const analysisSettings: AnalysisSettings = {
             inspectionSettings: TestConstants.SimpleInspectionSettings,

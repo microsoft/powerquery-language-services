@@ -90,7 +90,7 @@ function expectInvocationDiagnosticPositions(
     expect(abridgedPositions).to.deep.equal(expectedStartPositions);
 }
 
-describe("WIP Validation - InvokeExpression", () => {
+describe("Validation - InvokeExpression", () => {
     describe(`checkInvokeExpressions = false`, () => {
         it(`argument count suppressed`, async () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;

@@ -10,7 +10,7 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 import { ExternalType, Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
-describe(`WIP Inspection - Type`, () => {
+describe(`Inspection - Type`, () => {
     const ExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (request: ExternalType.TExternalTypeRequest) => {
         switch (request.kind) {
             case ExternalType.ExternalTypeRequestKind.Invocation: {

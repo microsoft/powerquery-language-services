@@ -6,7 +6,7 @@ import { expect } from "chai";
 
 import { calculateJaroWinkler } from "../../powerquery-language-services/jaroWinkler";
 
-describe(`WIP Jaro-Winkler`, () => {
+describe(`Jaro-Winkler`, () => {
     it(`case insensitive`, () => {
         const key: string = "Table.AddColumn";
         expect(calculateJaroWinkler(key, key.toUpperCase())).to.equal(calculateJaroWinkler(key, key.toLowerCase()));

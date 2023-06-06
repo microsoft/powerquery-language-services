@@ -28,7 +28,7 @@ import { ILibrary } from "../powerquery-language-services/library/library";
 import { SlowLibraryProvider } from "./providers/slowLibraryProvider";
 import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider";
 
-describe(`WIP Analysis`, () => {
+describe(`Analysis`, () => {
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: Inspection.AutocompleteItem[] | undefined =

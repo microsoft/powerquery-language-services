@@ -5,7 +5,7 @@ import "mocha";
 
 import { TestConstants, TestUtils } from "..";
 
-describe(`WIP Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
+describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     describe(`getHover for key-value-pair`, () => {
         async function runTest(textWithPipe: string, expected: string | undefined): Promise<void> {
             await TestUtils.assertEqualHoverAnalysis(
