@@ -185,7 +185,7 @@ describe(`WIP Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedInspectionSettings,
-                    eachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[4, eachScope]]),
                 };
 
                 await assertEqualRootType(
@@ -226,7 +226,7 @@ describe(`WIP Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedInspectionSettings,
-                    eachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[4, eachScope]]),
                 };
 
                 await assertEqualRootType(expression, expected, testSettingsWithEachScope);
