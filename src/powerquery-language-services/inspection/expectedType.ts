@@ -54,7 +54,7 @@ export function findExpectedType(activeNode: ActiveNode): Type.TPowerQueryType |
         );
 
         const attributeIndex: number =
-            XorNodeUtils.isAstXor(parent) && activeNode.leafKind === ActiveNodeLeafKind.IsAfterPosition
+            XorNodeUtils.isAst(parent) && activeNode.leafKind === ActiveNodeLeafKind.IsAfterPosition
                 ? childAttributeIndex + 1
                 : childAttributeIndex;
 

@@ -25,7 +25,7 @@ export async function inspectTypeNullCoalescingExpression(
 
     const leftType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
 
-    const nullCoalescingOperator: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+    const nullCoalescingOperator: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

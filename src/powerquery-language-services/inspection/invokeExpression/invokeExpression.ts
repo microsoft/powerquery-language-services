@@ -3,6 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -11,7 +12,6 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
@@ -77,7 +77,7 @@ async function inspectInvokeExpression(
         });
     }
 
-    XorNodeUtils.assertIsInvokeExpression(invokeExpressionXorNode);
+    XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(invokeExpressionXorNode, Ast.NodeKind.InvokeExpression);
 
     const previousNode: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,

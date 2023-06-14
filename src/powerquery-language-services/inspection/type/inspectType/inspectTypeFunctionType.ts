@@ -37,7 +37,7 @@ export async function inspectTypeFunctionType(
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
             const parameters: XorNode<Ast.TParameterList> | undefined =
-                NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
+                NodeIdMapUtils.nthChildXorChecked<Ast.TParameterList>(
                     state.nodeIdMapCollection,
                     xorNode.node.id,
                     1,
@@ -66,7 +66,10 @@ export async function inspectTypeFunctionType(
                 arrayWrapper,
             )
                 .map((parameter: TXorNode) =>
-                    TypeUtils.inspectParameter(state.nodeIdMapCollection, XorNodeUtils.assertAsParameter(parameter)),
+                    TypeUtils.inspectParameter(
+                        state.nodeIdMapCollection,
+                        XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
+                    ),
                 )
                 .filter(PQP.TypeScriptUtils.isDefined);
 

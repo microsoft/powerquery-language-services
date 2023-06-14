@@ -56,7 +56,7 @@ export async function autocompleteKeyword(
         }
         // Matches 'null', 'true', and 'false'.
         else if (
-            XorNodeUtils.isAstXorChecked<Ast.LiteralExpression>(ancestryLeaf, Ast.NodeKind.LiteralExpression) &&
+            XorNodeUtils.isAstChecked<Ast.LiteralExpression>(ancestryLeaf, Ast.NodeKind.LiteralExpression) &&
             (ancestryLeaf.node.literalKind === Ast.LiteralKind.Logical ||
                 ancestryLeaf.node.literalKind === Ast.LiteralKind.Null)
         ) {
@@ -166,7 +166,7 @@ function findEdgeCase(
     if (
         trailingToken === undefined &&
         ancestry.length === 2 &&
-        XorNodeUtils.isAstXorChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
+        XorNodeUtils.isAstChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
         XorNodeUtils.isNodeKind(ancestry[1], Ast.NodeKind.IdentifierExpression)
     ) {
         const identifier: string = ancestry[0].node.literal;
@@ -178,7 +178,7 @@ function findEdgeCase(
 
     // `(x |) => x+1` -> `(x as|) => x+1`
     else if (
-        XorNodeUtils.isAstXorChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
+        XorNodeUtils.isAstChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
         XorNodeUtils.isNodeKind<Ast.TParameter>(ancestry[1], Ast.NodeKind.Parameter) &&
         activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition
     ) {
@@ -188,7 +188,7 @@ function findEdgeCase(
     // `(foo a|) => foo` -> `(foo as) => foo
     else if (
         trailingToken?.data === "a" &&
-        XorNodeUtils.isContextXorChecked<Ast.TConstant>(ancestry[0], Ast.NodeKind.Constant) &&
+        XorNodeUtils.isContextChecked<Ast.TConstant>(ancestry[0], Ast.NodeKind.Constant) &&
         XorNodeUtils.isNodeKind<Ast.TParameterList>(ancestry[1], Ast.NodeKind.ParameterList) &&
         XorNodeUtils.isNodeKind<Ast.FunctionExpression>(ancestry[2], Ast.NodeKind.FunctionExpression)
     ) {
@@ -222,7 +222,7 @@ function handleConjunctions(
     // `[x=1] |`
     if (
         activeNode.ancestry.length === 2 &&
-        XorNodeUtils.isAstXorChecked<Ast.RecordExpression>(activeNode.ancestry[1], Ast.NodeKind.RecordExpression)
+        XorNodeUtils.isAstChecked<Ast.RecordExpression>(activeNode.ancestry[1], Ast.NodeKind.RecordExpression)
     ) {
         if (trailingToken === undefined) {
             return PQP.ArrayUtils.concatUnique(inspected, [Keyword.KeywordKind.Section]);
@@ -243,7 +243,7 @@ function handleConjunctions(
     // `let x = |`
     // `let x = 1|`
     // `let x = 1 | a`
-    else if (XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
+    else if (XorNodeUtils.isTUnaryExpression(activeNodeLeaf)) {
         // `let x = 1 | a`
         if (
             trailingToken !== undefined &&
@@ -252,7 +252,7 @@ function handleConjunctions(
             return inspected;
         }
         // `let x = 1|`
-        else if (XorNodeUtils.isAstXor(activeNodeLeaf)) {
+        else if (XorNodeUtils.isAst(activeNodeLeaf)) {
             return PQP.ArrayUtils.concatUnique(inspected, ConjunctionKeywords);
         }
         // `let x = |`

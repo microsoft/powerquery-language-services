@@ -30,7 +30,7 @@ export async function inspectTypeTableType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const rowType: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            const rowType: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,

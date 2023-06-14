@@ -7,14 +7,12 @@ import {
     AncestryUtils,
     NodeIdMap,
     NodeIdMapUtils,
-    ParseContext,
-    ParseContextUtils,
     TXorNode,
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ArrayUtils, CommonError, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, AstUtils, Constant, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
@@ -23,7 +21,7 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, Position, PositionUtils } from "../..";
+import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
@@ -134,7 +132,7 @@ function inspectAsNullablePrimitiveType(
 ): ReadonlyArray<AutocompleteItem> {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
 
-    const asConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+    const asConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
         nodeIdMapCollection,
         asNullablePrimitiveType.node.id,
         0,
@@ -158,7 +156,7 @@ function inspectAsNullablePrimitiveType(
             Ast.NodeKind.NullablePrimitiveType,
         )
     ) {
-        const nullableConstant: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+        const nullableConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
             nodeIdMapCollection,
             nullablePrimitiveTypeOrPrimitiveType.node.id,
             0,
@@ -169,12 +167,13 @@ function inspectAsNullablePrimitiveType(
             return [];
         }
 
-        const primitiveType: XorNode<Ast.PrimitiveType> | undefined = NodeIdMapUtils.nthChildChecked<Ast.PrimitiveType>(
-            nodeIdMapCollection,
-            nullablePrimitiveTypeOrPrimitiveType.node.id,
-            1,
-            Ast.NodeKind.PrimitiveType,
-        );
+        const primitiveType: XorNode<Ast.PrimitiveType> | undefined =
+            NodeIdMapUtils.nthChildXorChecked<Ast.PrimitiveType>(
+                nodeIdMapCollection,
+                nullablePrimitiveTypeOrPrimitiveType.node.id,
+                1,
+                Ast.NodeKind.PrimitiveType,
+            );
 
         // If a context hasn't even been created yet.
         if (primitiveType === undefined) {
@@ -201,7 +200,7 @@ function inspectPrimitiveType(
     activeNode: ActiveNode,
     trailingText: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    if (XorNodeUtils.isAstXor(primitiveType)) {
+    if (XorNodeUtils.isAst(primitiveType)) {
         const primitiveTypeConstant: PrimitiveTypeConstant = primitiveType.node.primitiveTypeKind;
 
         if (PositionUtils.isOnAstEnd(activeNode.position, primitiveType.node)) {

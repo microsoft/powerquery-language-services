@@ -38,7 +38,7 @@ export async function inspectTypeFieldProjection(
     const fieldType: Type.TPowerQueryType = await inspectFieldType(state, xorNode, trace.id);
 
     const isOptional: boolean =
-        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+        NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             3,

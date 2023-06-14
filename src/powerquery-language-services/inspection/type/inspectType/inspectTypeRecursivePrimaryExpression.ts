@@ -29,7 +29,7 @@ export async function inspectTypeRecursivePrimaryExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RecursivePrimaryExpression>(xorNode, Ast.NodeKind.RecursivePrimaryExpression);
 
-    const head: TXorNode | undefined = NodeIdMapUtils.nthChild(state.nodeIdMapCollection, xorNode.node.id, 0);
+    const head: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, xorNode.node.id, 0);
 
     if (head === undefined) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
@@ -45,7 +45,7 @@ export async function inspectTypeRecursivePrimaryExpression(
         return headType;
     }
 
-    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TArrayWrapper>(
+    const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TArrayWrapper>(
         state.nodeIdMapCollection,
         xorNode.node.id,
         1,

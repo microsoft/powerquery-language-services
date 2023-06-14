@@ -159,7 +159,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
         nodeClosestAfterPosition !== undefined
     ) {
         if (
-            AstUtils.isTConstant(nodeClosestBeforePosition) &&
+            AstUtils.isNodeKind<Ast.TConstant>(nodeClosestBeforePosition, Ast.NodeKind.Constant) &&
             ShiftRightConstantKinds.includes(nodeClosestBeforePosition.constantKind)
         ) {
             leaf = XorNodeUtils.boxAst(nodeClosestAfterPosition);
@@ -283,7 +283,7 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
         let includeLowerBound: boolean = true;
         let includeUpperBound: boolean = true;
 
-        if (AstUtils.isTConstant(candidate)) {
+        if (AstUtils.isNodeKind<Ast.TConstant>(candidate, Ast.NodeKind.Constant)) {
             if (ShiftRightConstantKinds.includes(candidate.constantKind)) {
                 includeLowerBound = false;
                 includeUpperBound = false;
@@ -359,7 +359,7 @@ function findLeafIdentifier(
     nodeIdMapCollection: NodeIdMap.Collection,
     leafXorNode: TXorNode,
 ): TActiveLeafIdentifier | undefined {
-    if (XorNodeUtils.isContextXor(leafXorNode)) {
+    if (XorNodeUtils.isContext(leafXorNode)) {
         return undefined;
     }
 
@@ -373,7 +373,7 @@ function findLeafIdentifier(
         if (parentId === undefined) {
             identifier = leaf;
         } else {
-            const parent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
+            const parent: Ast.TNode | undefined = NodeIdMapUtils.ast(nodeIdMapCollection, parentId);
 
             if (parent?.kind === Ast.NodeKind.IdentifierPairedExpression) {
                 identifier = leaf;
@@ -390,7 +390,7 @@ function findLeafIdentifier(
             return undefined;
         }
 
-        const parent: Ast.TNode | undefined = NodeIdMapUtils.unboxIfAst(nodeIdMapCollection, parentId);
+        const parent: Ast.TNode | undefined = NodeIdMapUtils.ast(nodeIdMapCollection, parentId);
 
         if (parent?.kind === Ast.NodeKind.IdentifierExpression) {
             identifier = parent;

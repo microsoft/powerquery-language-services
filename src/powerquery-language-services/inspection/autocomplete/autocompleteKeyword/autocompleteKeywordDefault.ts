@@ -75,7 +75,7 @@ function autocompleteDefaultExpression(
     }
     // `if 1|`
     else if (
-        XorNodeUtils.isAstXorChecked<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression) &&
+        XorNodeUtils.isAstChecked<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression) &&
         child.node.literalKind === Ast.LiteralKind.Numeric
     ) {
         return [];
@@ -91,7 +91,7 @@ function autocompleteKeywordConstant(
 ): ReadonlyArray<Keyword.KeywordKind> | undefined {
     if (PositionUtils.isBeforeXor(activeNode.position, child, false)) {
         return undefined;
-    } else if (XorNodeUtils.isAstXor(child)) {
+    } else if (XorNodeUtils.isAst(child)) {
         // So long as you're inside of an Ast Constant there's nothing that can be recommended other than the constant.
         // Note that we previously checked isBeforeXorNode so we can use the quicker isOnAstNodeEnd to check
         // if we're inside of the Ast node.

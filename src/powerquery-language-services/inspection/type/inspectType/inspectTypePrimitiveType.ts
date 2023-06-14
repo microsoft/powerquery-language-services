@@ -22,7 +22,7 @@ export function inspectTypePrimitiveType(
 
     XorNodeUtils.assertIsNodeKind<Ast.PrimitiveType>(xorNode, Ast.NodeKind.PrimitiveType);
 
-    if (XorNodeUtils.isContextXor(xorNode)) {
+    if (XorNodeUtils.isContext(xorNode)) {
         trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;

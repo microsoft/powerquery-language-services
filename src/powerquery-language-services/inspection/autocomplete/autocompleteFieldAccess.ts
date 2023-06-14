@@ -238,7 +238,7 @@ function inspectFieldSelector(
     const generalizedIdentifierId: number = childIds[1];
 
     const generalizedIdentifierXor: XorNode<Ast.GeneralizedIdentifier> =
-        NodeIdMapUtils.assertGetXorChecked<Ast.GeneralizedIdentifier>(
+        NodeIdMapUtils.assertXorChecked<Ast.GeneralizedIdentifier>(
             nodeIdMapCollection,
             generalizedIdentifierId,
             Ast.NodeKind.GeneralizedIdentifier,
@@ -260,7 +260,7 @@ function inspectFieldSelector(
             // TODO [Autocomplete]:
             // This doesn't take into account of generalized identifiers consisting of multiple tokens.
             // Eg. `foo[bar baz]` or `foo[#"bar baz"].
-            const openBracketConstant: Ast.TConstant = NodeIdMapUtils.assertUnboxNthChildAsAstChecked<Ast.TConstant>(
+            const openBracketConstant: Ast.TConstant = NodeIdMapUtils.assertNthChildAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 fieldSelector.node.id,
                 0,
