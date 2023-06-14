@@ -117,6 +117,8 @@ function traverseAncestors(
             XorNodeUtils.isNodeKind<Ast.AsNullablePrimitiveType>(xorNode, Ast.NodeKind.AsNullablePrimitiveType)
         ) {
             return inspectAsNullablePrimitiveType(xorNode, nodeIdMapCollection, activeNode, index, trailingText);
+        } else if (XorNodeUtils.isNodeKind<Ast.PrimitiveType>(xorNode, Ast.NodeKind.PrimitiveType)) {
+            return inspectPrimitiveType(xorNode, activeNode, trailingText);
         }
     }
 

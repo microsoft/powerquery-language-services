@@ -101,7 +101,12 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`(x as nullable date |) => 1`, () => runLabelTest(`(x as nullable date |) => 1`, []));
 
-        it(`WIP 1 as dat|`, () => runLabelTest(`1 as dat|`, AllowedPrimitiveTypeConstants));
+        it(`1 as dat|`, () =>
+            runLabelTest(`1 as dat|`, [
+                PrimitiveTypeConstant.Date,
+                PrimitiveTypeConstant.DateTime,
+                PrimitiveTypeConstant.DateTimeZone,
+            ]));
 
         xit(`1 is n|`, () => runLabelTest(`1 is n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
