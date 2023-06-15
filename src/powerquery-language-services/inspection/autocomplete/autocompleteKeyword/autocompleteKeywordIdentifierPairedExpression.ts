@@ -16,9 +16,9 @@ export function autocompleteKeywordIdentifierPairedExpression(
     // `section; [] |`
     if (
         childAttributeIndex === 0 &&
-        AncestryUtils.nextXorChecked<Ast.SectionMember>(
+        AncestryUtils.nthChecked<Ast.SectionMember>(
             state.activeNode.ancestry,
-            state.ancestryIndex,
+            state.ancestryIndex + 1,
             Ast.NodeKind.SectionMember,
         )
     ) {

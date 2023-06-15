@@ -52,7 +52,7 @@ export async function tryNodeScope(
     };
 
     const result: TriedNodeScope = await ResultUtils.ensureResultAsync(async () => {
-        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
             return new Map();

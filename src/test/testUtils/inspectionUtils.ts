@@ -74,7 +74,7 @@ export async function assertInspected(
 ): Promise<Inspected> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
 
-    return await ResultUtils.assertUnboxOk(await Inspection.tryInspect(settings, text, position, typeCache));
+    return await ResultUtils.assertOk(await Inspection.tryInspect(settings, text, position, typeCache));
 }
 
 export async function assertRootType(settings: InspectionSettings, text: string): Promise<TPowerQueryType> {
@@ -105,7 +105,7 @@ export async function assertNodeScope(settings: Settings, textWithPipe: string):
         return new Map();
     }
 
-    return ResultUtils.assertUnboxOk(
+    return ResultUtils.assertOk(
         await tryNodeScope(
             settings,
             nodeIdMapCollection,

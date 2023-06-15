@@ -26,7 +26,7 @@ export async function autocompleteKeywordRightMostLeaf(
     }
 
     // Start a new autocomplete inspection where the ActiveNode's ancestry is the right-most Ast node in the last value.
-    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(
+    const shiftedAncestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(
         state.nodeIdMapCollection,
         rightMostAstLeafForLastValue.id,
     );

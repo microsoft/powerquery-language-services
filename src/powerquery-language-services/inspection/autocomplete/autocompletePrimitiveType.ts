@@ -73,10 +73,10 @@ function autocompletePrimitiveType(
     }
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const child: TXorNode = AncestryUtils.assertGetLeaf(ancestry);
+    const child: TXorNode = AncestryUtils.assertFirst(ancestry);
 
     if (XorNodeUtils.isNodeKind<Ast.PrimitiveType>(child, Ast.NodeKind.PrimitiveType)) {
-        const parent: TXorNode | undefined = AncestryUtils.nthXor(activeNode.ancestry, 1);
+        const parent: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, 1);
 
         if (parent === undefined) {
             return [];

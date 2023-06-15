@@ -34,11 +34,7 @@ export function autocompleteKeywordSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const name: TXorNode | undefined = AncestryUtils.nthPreviousXor(
-            state.activeNode.ancestry,
-            state.ancestryIndex,
-            2,
-        );
+        const name: TXorNode | undefined = AncestryUtils.nth(state.activeNode.ancestry, state.ancestryIndex - 2);
 
         // Name hasn't been parsed yet so we can exit.
         if (
