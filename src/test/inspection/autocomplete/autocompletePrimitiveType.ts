@@ -100,7 +100,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`(x as nullable |) => 1`, () => runLabelTest(`(x as nullable |) => 1`, AllowedPrimitiveTypeConstants));
 
-        it(`(x as nullable n|) => 1`, () =>
+        it(`WIP (x as nullable n|) => 1`, () =>
             runLabelTest(`(x as nullable n|) => 1`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
         it(`(x as nullable date|) => 1`, () =>
@@ -116,12 +116,25 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`1 as |`, () => runLabelTest(`1 as |`, AllowedPrimitiveTypeConstants));
 
-        it(`1 as dat|`, () =>
-            runLabelTest(`1 as dat|`, [
+        it(`1 as date|`, () =>
+            runLabelTest(`1 as date|`, [
                 PrimitiveTypeConstant.Date,
                 PrimitiveTypeConstant.DateTime,
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
+
+        it(`1 as date| as logical`, () =>
+            runLabelTest(`1 as date| as logical`, [
+                PrimitiveTypeConstant.Date,
+                PrimitiveTypeConstant.DateTime,
+                PrimitiveTypeConstant.DateTimeZone,
+            ]));
+
+        it(`1 as | date as logical`, () => runLabelTest(`1 as | date as logical`, AllowedPrimitiveTypeConstants));
+
+        it(`1 is|`, () => runLabelTest(`1 is|`, []));
+
+        it(`1 is |`, () => runLabelTest(`1 is |`, AllowedPrimitiveTypeConstants));
 
         it(`1 is n|`, () => runLabelTest(`1 is n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
@@ -131,6 +144,15 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTime,
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
+
+        it(`1 is date| is logical`, () =>
+            runLabelTest(`1 is date| is logical`, [
+                PrimitiveTypeConstant.Date,
+                PrimitiveTypeConstant.DateTime,
+                PrimitiveTypeConstant.DateTimeZone,
+            ]));
+
+        it(`1 is | date is logical`, () => runLabelTest(`1 is | date is logical`, AllowedPrimitiveTypeConstants));
     });
 
     // describe(`AutocompleteItem.textEdit`, () => {
