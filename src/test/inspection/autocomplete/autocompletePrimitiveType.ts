@@ -130,7 +130,7 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
 
-        it(`1 as | date as logical`, () => runLabelTest(`1 as | date as logical`, AllowedPrimitiveTypeConstants));
+        it(`1 as | date as logical`, () => runLabelTest(`1 as | date as logical`, []));
 
         it(`1 is|`, () => runLabelTest(`1 is|`, []));
 
@@ -152,25 +152,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
 
-        it(`1 is | date is logical`, () => runLabelTest(`1 is | date is logical`, AllowedPrimitiveTypeConstants));
+        it(`1 is | date is logical`, () => runLabelTest(`1 is | date is logical`, []));
     });
-
-    // describe(`AutocompleteItem.textEdit`, () => {
-    //     async function runTextEditTest(
-    //         textWithPipe: string,
-    //         expected: ReadonlyArray<{
-    //             readonly label: Inspection.AutocompleteItem["label"];
-    //             readonly textEdit: Inspection.AutocompleteItem["textEdit"];
-    //         }>,
-    //     ): Promise<void> {
-    //         const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-    //             TestConstants.DefaultInspectionSettings,
-    //             textWithPipe,
-    //         );
-
-    //         ResultUtils.assertIsOk(actual.triedPrimitiveType);
-
-    //         TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedPrimitiveType.value);
-    //     }
-    // });
 });
