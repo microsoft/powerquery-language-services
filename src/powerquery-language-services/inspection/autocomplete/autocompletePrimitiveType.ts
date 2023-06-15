@@ -71,7 +71,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If the node is a context PrimitiveType node,
         // which is created only when a primitive type was expected but there was nothing to parse.
         // `x as |`
-        if (XorNodeUtils.isContextXorChecked<Ast.PrimitiveType>(parent, Ast.NodeKind.PrimitiveType)) {
+        if (XorNodeUtils.isContextChecked<Ast.PrimitiveType>(parent, Ast.NodeKind.PrimitiveType)) {
             return Constant.PrimitiveTypeConstants;
         }
         // If on the second attribute for TypePrimaryType.
@@ -81,7 +81,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
                 return Constant.PrimitiveTypeConstants;
             } else if (
                 child.node.attributeIndex === 0 &&
-                XorNodeUtils.isAstXor(child) &&
+                XorNodeUtils.isAst(child) &&
                 PositionUtils.isAfterAst(activeNode.position, child.node, true)
             ) {
                 return Constant.PrimitiveTypeConstants;
@@ -90,15 +90,11 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === Ast.NodeKind.Parameter &&
-            AncestryUtils.nthNextXorChecked<Ast.FunctionExpression>(
-                ancestry,
-                index,
-                4,
-                Ast.NodeKind.FunctionExpression,
-            ) !== undefined
+            AncestryUtils.nthChecked<Ast.FunctionExpression>(ancestry, index + 4, Ast.NodeKind.FunctionExpression) !==
+                undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
-            const grandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(ancestry, index, 2);
+            const grandchild: TXorNode | undefined = AncestryUtils.nth(ancestry, index - 2);
 
             if (grandchild === undefined) {
                 continue;
@@ -106,7 +102,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             // On primitive type.
             // `(x as |) => 0`
             else if (
-                XorNodeUtils.isAstXorChecked<Ast.TConstant>(grandchild, Ast.NodeKind.Constant) &&
+                XorNodeUtils.isAstChecked<Ast.TConstant>(grandchild, Ast.NodeKind.Constant) &&
                 grandchild.node.constantKind === Constant.KeywordConstant.As &&
                 PositionUtils.isAfterAst(activeNode.position, grandchild.node, true)
             ) {
@@ -117,7 +113,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             else if (
                 grandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
                 // Check the great grandchild
-                AncestryUtils.nthPreviousXorChecked<Ast.PrimitiveType>(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
+                AncestryUtils.nthChecked<Ast.PrimitiveType>(ancestry, index - 3, Ast.NodeKind.PrimitiveType)
             ) {
                 return Constant.PrimitiveTypeConstants;
             }

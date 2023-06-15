@@ -89,19 +89,15 @@ async function inspectInvokeExpression(
     };
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const ancestryIndex: number | undefined = AncestryUtils.indexOfNodeKind(ancestry, Ast.NodeKind.InvokeExpression);
 
-    const findResult: [TXorNode, number] | undefined = AncestryUtils.findXorAndIndexOfNodeKind(
-        ancestry,
-        Ast.NodeKind.InvokeExpression,
-    );
-
-    if (!findResult) {
+    if (ancestryIndex === undefined) {
         trace.exit();
 
         return undefined;
     }
 
-    const [invokeExpressionXorNode, ancestryIndex]: [TXorNode, number] = findResult;
+    const invokeExpressionXorNode: TXorNode = AncestryUtils.assertNth(ancestry, ancestryIndex);
 
     const triedInvokeExpression: TriedInvokeExpression = await tryInvokeExpression(
         updatedSettings,
@@ -150,10 +146,9 @@ function getArgumentOrdinal(
     invokeExpressionXorNode: TXorNode,
 ): number {
     // `foo(1|)
-    const ancestryCsv: TXorNode | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TCsv>(
+    const ancestryCsv: TXorNode | undefined = AncestryUtils.nthChecked<Ast.TCsv>(
         activeNode.ancestry,
-        ancestryIndex,
-        2,
+        ancestryIndex - 2,
         Ast.NodeKind.Csv,
     );
 
@@ -161,9 +156,9 @@ function getArgumentOrdinal(
         return ancestryCsv.node.attributeIndex ?? 0;
     }
 
-    const previousXor: TXorNode | undefined = AncestryUtils.previousXorChecked<Ast.TArrayWrapper | Ast.TConstant>(
+    const previousXor: TXorNode | undefined = AncestryUtils.nthChecked<Ast.TArrayWrapper | Ast.TConstant>(
         activeNode.ancestry,
-        ancestryIndex,
+        ancestryIndex - 1,
         [
             // `foo(|)`
             Ast.NodeKind.ArrayWrapper,
@@ -176,7 +171,7 @@ function getArgumentOrdinal(
 
     switch (previousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
-            arrayWrapperXorNode = NodeIdMapUtils.assertGetNthChildChecked<Ast.TArrayWrapper>(
+            arrayWrapperXorNode = NodeIdMapUtils.assertNthChildXorChecked<Ast.TArrayWrapper>(
                 nodeIdMapCollection,
                 invokeExpressionXorNode.node.id,
                 1,

@@ -49,7 +49,7 @@ export function autocompleteKeywordErrorHandlingExpression(
             else {
                 return undefined;
             }
-        } else if (XorNodeUtils.isAstXor(child) && PositionUtils.isAfterAst(position, child.node, true)) {
+        } else if (XorNodeUtils.isAst(child) && PositionUtils.isAfterAst(position, child.node, true)) {
             return [Keyword.KeywordKind.Otherwise];
         } else {
             return Keyword.ExpressionKeywordKinds;

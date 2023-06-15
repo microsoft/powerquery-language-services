@@ -137,14 +137,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 14,
-                        valueNodeId: 18,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
                     },
                 ]));
         });
@@ -160,8 +160,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                 ]));
 
@@ -171,15 +171,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                     {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
                     },
                 ]));
 
@@ -189,22 +189,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                     {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
                     },
                     {
                         identifier: "c",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 24,
-                        valueNodeId: 28,
+                        keyNodeId: 21,
+                        valueNodeId: 24,
                     },
                 ]));
 
@@ -216,8 +216,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                 ]));
         });
@@ -233,8 +233,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                 ]));
 
@@ -244,8 +244,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                 ]);
             });
@@ -256,15 +256,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                     {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 18,
+                        keyNodeId: 14,
+                        valueNodeId: 16,
                     },
                 ]));
 
@@ -274,22 +274,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 8,
-                        valueNodeId: 12,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
                     },
                     {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
                     },
                     {
                         identifier: "c",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
-                        keyNodeId: 24,
-                        valueNodeId: 28,
+                        keyNodeId: 21,
+                        valueNodeId: 24,
                     },
                 ]));
 
@@ -299,8 +299,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 10,
+                        keyNodeId: 7,
+                        valueNodeId: 9,
                     },
                 ]));
 
@@ -310,15 +310,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "@a",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 8,
-                        valueNodeId: 10,
+                        keyNodeId: 7,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
-                        keyNodeId: 17,
-                        valueNodeId: 19,
+                        keyNodeId: 15,
+                        valueNodeId: 17,
                     },
                 ]));
         });
@@ -333,14 +333,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
                     },
                 ]));
 
@@ -351,14 +351,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
                     },
                 ]));
 
@@ -371,28 +371,28 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
                     },
                     {
                         identifier: "@z",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 24,
-                        valueNodeId: 26,
+                        keyNodeId: 22,
+                        valueNodeId: 24,
                     },
                     {
                         identifier: "a",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 31,
-                        valueNodeId: 35,
+                        keyNodeId: 29,
+                        valueNodeId: 32,
                     },
                 ]));
         });
@@ -407,14 +407,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
                     },
                 ]));
 
@@ -425,14 +425,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 20,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
                     },
                 ]));
 
@@ -443,14 +443,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 8,
-                        valueNodeId: 12,
+                        valueNodeId: 11,
                     },
                     {
                         identifier: "@y",
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
-                        keyNodeId: 16,
-                        valueNodeId: 18,
+                        keyNodeId: 15,
+                        valueNodeId: 17,
                     },
                 ]));
         });
@@ -463,7 +463,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                 ]));
 
@@ -474,7 +474,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                 ]));
 
@@ -485,7 +485,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                 ]));
 
@@ -496,14 +496,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 14,
-                        valueNodeId: 18,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
                     },
                 ]));
 
@@ -514,14 +514,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 14,
-                        valueNodeId: 18,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
                     },
                 ]));
 
@@ -548,21 +548,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 19,
-                        valueNodeId: 23,
+                        valueNodeId: 22,
                     },
                     {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 27,
-                        valueNodeId: 31,
+                        keyNodeId: 26,
+                        valueNodeId: 29,
                     },
                     {
                         identifier: "@c",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
-                        keyNodeId: 35,
-                        valueNodeId: 39,
+                        keyNodeId: 33,
+                        valueNodeId: 36,
                     },
                 ]));
 
@@ -579,15 +579,15 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "foo",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 25,
-                        valueNodeId: 29,
+                        keyNodeId: 23,
+                        valueNodeId: 26,
                     },
                     {
                         identifier: "bar",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 33,
-                        valueNodeId: 37,
+                        keyNodeId: 30,
+                        valueNodeId: 33,
                     },
                 ]));
 
@@ -604,22 +604,22 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         identifier: "foo",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 25,
-                        valueNodeId: 29,
+                        keyNodeId: 23,
+                        valueNodeId: 26,
                     },
                     {
                         identifier: "bar",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 33,
-                        valueNodeId: 37,
+                        keyNodeId: 30,
+                        valueNodeId: 33,
                     },
                     {
                         identifier: "ham",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
-                        valueNodeId: 17,
+                        valueNodeId: 16,
                     },
                 ]));
         });
@@ -632,7 +632,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                 ]));
 
@@ -643,14 +643,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 14,
-                        valueNodeId: 18,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
                     },
                 ]));
 
@@ -661,14 +661,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
-                        keyNodeId: 14,
-                        valueNodeId: 18,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
                     },
                 ]));
 
@@ -686,7 +686,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 16,
-                        valueNodeId: 20,
+                        valueNodeId: 19,
                     },
                 ]));
 
@@ -701,7 +701,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                 ]));
 
-            it(`an EachExpression contains the parent's scope;`, async () =>
+            it(`an EachExpression contains the parent's scope`, async () =>
                 await runTest(
                     `let
                         tbl = 1 as table,
@@ -721,10 +721,10 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                             kind: Inspection.ScopeItemKind.LetVariable,
                             isRecursive: false,
                             keyNodeId: 17,
-                            valueNodeId: 21,
+                            valueNodeId: 20,
                         },
                         {
-                            eachExpressionNodeId: 23,
+                            eachExpressionNodeId: 22,
                             identifier: "_",
                             isRecursive: false,
                             kind: Inspection.ScopeItemKind.Each,
@@ -741,14 +741,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         isRecursive: false,
                         keyNodeId: 6,
                         kind: Inspection.ScopeItemKind.LetVariable,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                     {
                         identifier: `#"x"`,
                         isRecursive: false,
                         keyNodeId: 6,
                         kind: Inspection.ScopeItemKind.LetVariable,
-                        valueNodeId: 10,
+                        valueNodeId: 9,
                     },
                 ]));
         });

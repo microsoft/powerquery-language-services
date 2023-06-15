@@ -244,7 +244,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
         for (const nodeId of collection) {
             cancellationToken?.throwIfCancelled();
 
-            const node: TXorNode = NodeIdMapUtils.assertGetXor(nodeIdMapCollection, nodeId);
+            const node: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId);
             const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
             const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
 

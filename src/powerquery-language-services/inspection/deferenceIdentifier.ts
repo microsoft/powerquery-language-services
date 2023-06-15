@@ -35,7 +35,7 @@ export async function tryDeferenceIdentifier(
 
     XorNodeUtils.assertIsIdentifier(xorNode);
 
-    if (XorNodeUtils.isContextXor(xorNode)) {
+    if (XorNodeUtils.isContext(xorNode)) {
         trace.exit({ [TraceConstant.Result]: undefined });
 
         return ResultUtils.ok(undefined);
@@ -112,7 +112,7 @@ export async function tryDeferenceIdentifier(
     if (nextXorNode === undefined) {
         result = Promise.resolve(ResultUtils.ok(xorNode));
     } else if (
-        XorNodeUtils.isContextXor(nextXorNode) ||
+        XorNodeUtils.isContext(nextXorNode) ||
         (nextXorNode.node.kind !== Ast.NodeKind.Identifier &&
             nextXorNode.node.kind !== Ast.NodeKind.IdentifierExpression)
     ) {

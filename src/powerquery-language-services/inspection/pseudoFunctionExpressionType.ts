@@ -34,7 +34,7 @@ export function pseudoFunctionExpressionType(
     // Iterates all parameters as TXorNodes if they exist, otherwise early exists from an empty list.
     for (const parameter of functionParameterXorNodes(nodeIdMapCollection, fnExpr)) {
         // A parameter isn't examinable if it doesn't have an Ast.Identifier for its name.
-        const name: Ast.Identifier | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.Identifier>(
+        const name: Ast.Identifier | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.Identifier>(
             nodeIdMapCollection,
             parameter.node.id,
             1,
@@ -47,7 +47,7 @@ export function pseudoFunctionExpressionType(
 
         const examinable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
             nodeIdMapCollection,
-            XorNodeUtils.assertAsParameter(parameter),
+            XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
         );
 
         if (examinable !== undefined) {
@@ -62,7 +62,7 @@ export function pseudoFunctionExpressionType(
     }
 
     const returnType: Ast.AsNullablePrimitiveType | undefined =
-        NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.AsNullablePrimitiveType>(
+        NodeIdMapUtils.nthChildAstChecked<Ast.AsNullablePrimitiveType>(
             nodeIdMapCollection,
             fnExpr.node.id,
             1,
@@ -95,12 +95,13 @@ function functionParameterXorNodes(
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpr: TXorNode,
 ): ReadonlyArray<TXorNode> {
-    const parametersList: XorNode<Ast.TParameterList> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TParameterList>(
-        nodeIdMapCollection,
-        fnExpr.node.id,
-        0,
-        Ast.NodeKind.ParameterList,
-    );
+    const parametersList: XorNode<Ast.TParameterList> | undefined =
+        NodeIdMapUtils.nthChildXorChecked<Ast.TParameterList>(
+            nodeIdMapCollection,
+            fnExpr.node.id,
+            0,
+            Ast.NodeKind.ParameterList,
+        );
 
     if (parametersList === undefined) {
         return [];

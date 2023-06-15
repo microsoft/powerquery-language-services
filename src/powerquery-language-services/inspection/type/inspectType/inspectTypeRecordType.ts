@@ -30,7 +30,7 @@ export async function inspectTypeRecordType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const fields: TXorNode | undefined = NodeIdMapUtils.nthChildChecked<Ast.FieldSpecificationList>(
+            const fields: TXorNode | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.FieldSpecificationList>(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 0,

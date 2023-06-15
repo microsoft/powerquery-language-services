@@ -52,7 +52,7 @@ export async function tryNodeScope(
     };
 
     const result: TriedNodeScope = await ResultUtils.ensureResultAsync(async () => {
-        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, nodeId);
+        const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
             return new Map();
@@ -422,7 +422,7 @@ function expandChildScope(
 
     // TODO: optimize this
     for (const attributeId of childAttributeIds) {
-        const child: TXorNode | undefined = NodeIdMapUtils.nthChild(nodeIdMapCollection, parentId, attributeId);
+        const child: TXorNode | undefined = NodeIdMapUtils.nthChildXor(nodeIdMapCollection, parentId, attributeId);
 
         if (child !== undefined) {
             expandScope(state, child, newEntries, defaultScope, correlationId);

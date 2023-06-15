@@ -25,7 +25,7 @@ export async function inspectTypeIdentifier(
 
     let result: Type.TPowerQueryType;
 
-    if (XorNodeUtils.isContextXor(xorNode)) {
+    if (XorNodeUtils.isContext(xorNode)) {
         result = Type.UnknownInstance;
     } else {
         const dereferencedType: Type.TPowerQueryType | undefined = await dereferencedIdentifierType(

@@ -196,7 +196,7 @@ export async function inspectTypeFromChildAttributeIndex(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const xorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.nthChild(
+    const xorNode: TXorNode | undefined = PQP.Parser.NodeIdMapUtils.nthChildXor(
         state.nodeIdMapCollection,
         parentXorNode.node.id,
         attributeIndex,

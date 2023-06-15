@@ -77,11 +77,11 @@ function isCatchAllowed(
             // We are under an ErrorHandlingExpression
             xorNode.node.kind === Ast.NodeKind.ErrorHandlingExpression &&
             // Which was fully parsed
-            XorNodeUtils.isAstXor(xorNode) &&
+            XorNodeUtils.isAst(xorNode) &&
             // Yet the cursor is after the end of the Ast
             activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
             // And it only has two children, meaning it hasn't parsed an error handler
-            NodeIdMapUtils.assertGetChildren(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
+            NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
         ) {
             return trailingToken ? Constant.LanguageConstant.Catch.startsWith(trailingToken.data) : true;
         }
@@ -106,7 +106,7 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
                 break;
 
             case Ast.NodeKind.PrimitiveType:
-                if (XorNodeUtils.isContextXor(xorNode)) {
+                if (XorNodeUtils.isContext(xorNode)) {
                     return true;
                 }
 
@@ -121,7 +121,7 @@ function isNullableAllowed(activeNode: ActiveNode): boolean {
 }
 
 function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
-    const child: TXorNode | undefined = AncestryUtils.previousXor(activeNode.ancestry, ancestryIndex);
+    const child: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 1);
 
     if (child?.node.attributeIndex !== 1) {
         return false;
@@ -137,7 +137,7 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
     }
     // Ast.NullablePrimitiveType
     else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-        const grandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(activeNode.ancestry, ancestryIndex, 2);
+        const grandchild: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 2);
 
         if (grandchild === undefined) {
             return false;
@@ -150,14 +150,14 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
             PositionUtils.isBeforeXor(position, grandchild, false)
         );
     } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
-        return XorNodeUtils.isContextXor(paired);
+        return XorNodeUtils.isContext(paired);
     } else {
         return false;
     }
 }
 
 function isOptionalAllowed(activeNode: ActiveNode): boolean {
-    const fnExprAncestryIndex: number | undefined = AncestryUtils.findIndexOfNodeKind(
+    const fnExprAncestryIndex: number | undefined = AncestryUtils.indexOfNodeKind(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
@@ -167,10 +167,9 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
     }
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
-    const parameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthPreviousXorChecked<Ast.TParameter>(
+    const parameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthChecked<Ast.TParameter>(
         activeNode.ancestry,
-        fnExprAncestryIndex,
-        4,
+        fnExprAncestryIndex - 4,
         Ast.NodeKind.Parameter,
     );
 
@@ -178,11 +177,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         return false;
     }
 
-    const childOfParameter: TXorNode | undefined = AncestryUtils.nthPreviousXor(
-        activeNode.ancestry,
-        fnExprAncestryIndex,
-        5,
-    );
+    const childOfParameter: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, fnExprAncestryIndex - 5);
 
     if (childOfParameter === undefined) {
         return true;
@@ -197,7 +192,7 @@ function isOptionalAllowed(activeNode: ActiveNode): boolean {
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: Ast.Identifier = XorNodeUtils.assertUnboxAstChecked<Ast.Identifier>(
+                    const nameAst: Ast.Identifier = XorNodeUtils.assertAstChecked<Ast.Identifier>(
                         childOfParameter,
                         Ast.NodeKind.Identifier,
                     );

@@ -7,7 +7,7 @@ import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerqu
 export function inspectTypeConstant(xorNode: TXorNode): Type.TPowerQueryType {
     XorNodeUtils.assertIsNodeKind<Ast.TConstant>(xorNode, Ast.NodeKind.Constant);
 
-    if (XorNodeUtils.isContextXor(xorNode)) {
+    if (XorNodeUtils.isContext(xorNode)) {
         return Type.UnknownInstance;
     }
 

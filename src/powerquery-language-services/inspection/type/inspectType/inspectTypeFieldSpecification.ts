@@ -23,7 +23,7 @@ export async function inspectTypeFieldSpecification(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldSpecification>(xorNode, Ast.NodeKind.FieldSpecification);
 
-    const fieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.nthChild(
+    const fieldTypeSpecification: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
         state.nodeIdMapCollection,
         xorNode.node.id,
         2,

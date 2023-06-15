@@ -112,7 +112,7 @@ async function externalInvokeRequest(
 
     for (const argument of NodeIdMapIterator.iterInvokeExpression(
         state.nodeIdMapCollection,
-        XorNodeUtils.assertAsInvokeExpression(xorNode),
+        XorNodeUtils.assertAsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression),
     )) {
         // eslint-disable-next-line no-await-in-loop
         types.push(await inspectXor(state, argument, trace.id));

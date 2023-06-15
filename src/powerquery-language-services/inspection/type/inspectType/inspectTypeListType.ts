@@ -29,7 +29,7 @@ export async function inspectTypeListType(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const listItem: TXorNode | undefined = NodeIdMapUtils.nthChild(
+            const listItem: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
                 state.nodeIdMapCollection,
                 xorNode.node.id,
                 1,

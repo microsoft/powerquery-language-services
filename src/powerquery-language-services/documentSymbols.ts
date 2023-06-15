@@ -39,13 +39,13 @@ function addIdentifierPairedExpressionSymbols(
         cancellationToken.throwIfCancelled();
 
         const xorNode: XorNode<Ast.IdentifierPairedExpression> =
-            NodeIdMapUtils.assertGetXorChecked<Ast.IdentifierPairedExpression>(
+            NodeIdMapUtils.assertXorChecked<Ast.IdentifierPairedExpression>(
                 nodeIdMapCollection,
                 nodeId,
                 Ast.NodeKind.IdentifierPairedExpression,
             );
 
-        if (!XorNodeUtils.isAstXor(xorNode)) {
+        if (!XorNodeUtils.isAst(xorNode)) {
             continue;
         }
 
@@ -71,11 +71,11 @@ function addRecordSymbols(
         for (const nodeId of collection) {
             cancellationToken.throwIfCancelled();
 
-            const xorNode: XorNode<Ast.RecordExpression | Ast.RecordLiteral> = NodeIdMapUtils.assertGetXorChecked<
+            const xorNode: XorNode<Ast.RecordExpression | Ast.RecordLiteral> = NodeIdMapUtils.assertXorChecked<
                 Ast.RecordExpression | Ast.RecordLiteral
             >(nodeIdMapCollection, nodeId, [Ast.NodeKind.RecordExpression, Ast.NodeKind.RecordLiteral]);
 
-            if (!XorNodeUtils.isAstXor(xorNode)) {
+            if (!XorNodeUtils.isAst(xorNode)) {
                 continue;
             }
 

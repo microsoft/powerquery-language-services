@@ -21,7 +21,7 @@ export function autocompleteKeywordSectionMember(
     // SectionMember.namePairedExpression
     if (childAttributeIndex === 2) {
         // A test for 'shared', which as we're on namePairedExpression we either parsed it or skipped it.
-        const sharedConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildChecked<Ast.TConstant>(
+        const sharedConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TConstant>(
             state.nodeIdMapCollection,
             state.parent.node.id,
             1,
@@ -34,18 +34,12 @@ export function autocompleteKeywordSectionMember(
         }
 
         // SectionMember -> IdentifierPairedExpression -> Identifier
-        const name: TXorNode | undefined = AncestryUtils.nthPreviousXor(
-            state.activeNode.ancestry,
-            state.ancestryIndex,
-            2,
-        );
+        const name: TXorNode | undefined = AncestryUtils.nth(state.activeNode.ancestry, state.ancestryIndex - 2);
 
         // Name hasn't been parsed yet so we can exit.
         if (
             !name ||
-            !XorNodeUtils.isAstXorChecked<Ast.IdentifierPairedExpression>(name, [
-                Ast.NodeKind.IdentifierPairedExpression,
-            ])
+            !XorNodeUtils.isAstChecked<Ast.IdentifierPairedExpression>(name, [Ast.NodeKind.IdentifierPairedExpression])
         ) {
             return Promise.resolve(undefined);
         }
@@ -58,9 +52,9 @@ export function autocompleteKeywordSectionMember(
     }
     // `section foo; bar = 1 |` would be expecting a semicolon.
     // The autocomplete should be for the IdentifierPairedExpression found on the previous child index.
-    else if (childAttributeIndex === 3 && XorNodeUtils.isContextXor(state.child)) {
+    else if (childAttributeIndex === 3 && XorNodeUtils.isContext(state.child)) {
         const identifierPairedExpression: Ast.IdentifierPairedExpression =
-            NodeIdMapUtils.assertUnboxNthChildAsAstChecked<Ast.IdentifierPairedExpression>(
+            NodeIdMapUtils.assertNthChildAstChecked<Ast.IdentifierPairedExpression>(
                 state.nodeIdMapCollection,
                 state.parent.node.id,
                 2,

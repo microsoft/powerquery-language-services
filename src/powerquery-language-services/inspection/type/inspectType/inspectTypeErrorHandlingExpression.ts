@@ -30,9 +30,13 @@ export async function inspectTypeErrorHandlingExpression(
     XorNodeUtils.assertIsNodeKind<Ast.TErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression);
 
     // Grabs Ast.ErrorHandlingExpression.handler
-    const handler: XorNode<Ast.CatchExpression | Ast.OtherwiseExpression> | undefined = NodeIdMapUtils.nthChildChecked<
-        Ast.CatchExpression | Ast.OtherwiseExpression
-    >(state.nodeIdMapCollection, xorNode.node.id, 2, [Ast.NodeKind.CatchExpression, Ast.NodeKind.OtherwiseExpression]);
+    const handler: XorNode<Ast.CatchExpression | Ast.OtherwiseExpression> | undefined =
+        NodeIdMapUtils.nthChildXorChecked<Ast.CatchExpression | Ast.OtherwiseExpression>(
+            state.nodeIdMapCollection,
+            xorNode.node.id,
+            2,
+            [Ast.NodeKind.CatchExpression, Ast.NodeKind.OtherwiseExpression],
+        );
 
     let errorHandlerResult: Type.TPowerQueryType;
 
@@ -45,7 +49,7 @@ export async function inspectTypeErrorHandlingExpression(
         // We care about the evaluation of the function,
         // and as typing isn't allowed on a catch expression it requires an inspection on the function's body
         const fnExpression: XorNode<Ast.FunctionExpression> | undefined =
-            NodeIdMapUtils.nthChildChecked<Ast.FunctionExpression>(state.nodeIdMapCollection, handler.node.id, 1, [
+            NodeIdMapUtils.nthChildXorChecked<Ast.FunctionExpression>(state.nodeIdMapCollection, handler.node.id, 1, [
                 Ast.NodeKind.FunctionExpression,
             ]);
 

@@ -185,7 +185,7 @@ describe(`Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedInspectionSettings,
-                    eachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[4, eachScope]]),
                 };
 
                 await assertEqualRootType(
@@ -226,7 +226,7 @@ describe(`Inspection - Type`, () => {
 
                 const testSettingsWithEachScope: InspectionSettings = {
                     ...ExtendedInspectionSettings,
-                    eachScopeById: new Map([[5, eachScope]]),
+                    eachScopeById: new Map([[4, eachScope]]),
                 };
 
                 await assertEqualRootType(expression, expected, testSettingsWithEachScope);
@@ -508,20 +508,17 @@ describe(`Inspection - Type`, () => {
                     TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.textLiteral(false, `""`)]]), false),
                 ));
 
-            it(`[] as record & [foo = 1]`, async () =>
+            it(`([] as record) & [foo = 1]`, async () =>
                 await assertEqualRootType(
-                    `[] as record & [foo = 1]`,
+                    `([] as record) & [foo = 1]`,
                     TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), true),
                 ));
 
-            it(`[foo = 1] & [] as record`, async () =>
-                await assertEqualRootType(
-                    `[foo = 1] & [] as record`,
-                    TypeUtils.definedRecord(false, new Map([[`foo`, TypeUtils.numberLiteral(false, `1`)]]), true),
-                ));
+            it(`([foo = 1]) & [] as record`, async () =>
+                await assertEqualRootType(`([foo = 1]) & [] as record`, Type.RecordInstance));
 
-            it(`[] as record & [] as record`, async () =>
-                await assertEqualRootType(`[] as record & [] as record`, Type.RecordInstance));
+            it(`([] as record) & [] as record`, async () =>
+                await assertEqualRootType(`([] as record) & [] as record`, Type.RecordInstance));
         });
 
         describe(`${Ast.NodeKind.RecordType}`, () => {

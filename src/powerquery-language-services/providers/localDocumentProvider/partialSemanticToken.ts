@@ -319,7 +319,7 @@ function getInvokeExpressionTokens(
             nodeId,
         );
 
-        if (identifierXor === undefined || !XorNodeUtils.isAstXor(identifierXor)) {
+        if (identifierXor === undefined || !XorNodeUtils.isAst(identifierXor)) {
             continue;
         }
 
@@ -479,7 +479,7 @@ function getPrimitiveTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.PrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
-        const node: Ast.PrimitiveType | undefined = NodeIdMapUtils.unboxIfAstChecked<Ast.PrimitiveType>(
+        const node: Ast.PrimitiveType | undefined = NodeIdMapUtils.astChecked<Ast.PrimitiveType>(
             nodeIdMapCollection,
             nodeId,
             Ast.NodeKind.PrimitiveType,
@@ -536,7 +536,7 @@ function getTBinOpExpressionTokens(
                 continue;
             }
 
-            const operatorNode: Ast.TConstant | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<Ast.TConstant>(
+            const operatorNode: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 exprXorNode.node.id,
                 1,
@@ -642,7 +642,7 @@ function getPairedExpressionTokens<
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(pairedKind) ?? []) {
         cancellationToken?.throwIfCancelled();
 
-        const keyNode: T["key"] | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked(
+        const keyNode: T["key"] | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             nodeId,
             0,
@@ -674,7 +674,7 @@ function pushNthChild<T extends Ast.TNode>(
     tokenType: SemanticTokenTypes,
     tokenModifiers: SemanticTokenModifiers[] = [],
 ): void {
-    const typeConstant: T | undefined = NodeIdMapUtils.unboxNthChildIfAstChecked<T>(
+    const typeConstant: T | undefined = NodeIdMapUtils.nthChildAstChecked<T>(
         nodeIdMapCollection,
         parentId,
         attributeIndex,

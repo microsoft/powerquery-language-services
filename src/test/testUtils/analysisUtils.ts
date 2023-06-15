@@ -34,7 +34,7 @@ export async function assertAutocompleteAnalysis(
 ): Promise<AutocompleteItem[] | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
-    return ResultUtils.assertUnboxOk(await analysis.getAutocompleteItems(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getAutocompleteItems(position, cancellationToken));
 }
 
 export async function assertDefinitionAnalysis(
@@ -44,7 +44,7 @@ export async function assertDefinitionAnalysis(
 ): Promise<Location[] | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
-    return ResultUtils.assertUnboxOk(await analysis.getDefinition(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getDefinition(position, cancellationToken));
 }
 
 export async function assertDocumentSymbolsAnalysis(
@@ -54,7 +54,7 @@ export async function assertDocumentSymbolsAnalysis(
 ): Promise<DocumentSymbol[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, textWithPipe);
 
-    return ResultUtils.assertUnboxOk(await analysis.getDocumentSymbols(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getDocumentSymbols(cancellationToken));
 }
 
 export async function assertFoldingRangesAnalysis(
@@ -64,7 +64,7 @@ export async function assertFoldingRangesAnalysis(
 ): Promise<FoldingRange[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, text);
 
-    return ResultUtils.assertUnboxOk(await analysis.getFoldingRanges(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getFoldingRanges(cancellationToken));
 }
 
 export async function assertHoverAnalysis(
@@ -74,7 +74,7 @@ export async function assertHoverAnalysis(
 ): Promise<Hover | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
-    return ResultUtils.assertUnboxOk(await analysis.getHover(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getHover(position, cancellationToken));
 }
 
 export async function assertPartialSemanticTokens(
@@ -84,7 +84,7 @@ export async function assertPartialSemanticTokens(
 ): Promise<PartialSemanticToken[] | undefined> {
     const analysis: Analysis = assertAnalysisFromText(settings, text);
 
-    return ResultUtils.assertUnboxOk(await analysis.getPartialSemanticTokens(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getPartialSemanticTokens(cancellationToken));
 }
 
 export async function assertRenameEdits(
@@ -95,7 +95,7 @@ export async function assertRenameEdits(
 ): Promise<TextEdit[] | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
-    return ResultUtils.assertUnboxOk(await analysis.getRenameEdits(position, newName, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getRenameEdits(position, newName, cancellationToken));
 }
 
 export async function assertSignatureHelpAnalysis(
@@ -105,7 +105,7 @@ export async function assertSignatureHelpAnalysis(
 ): Promise<SignatureHelp | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
 
-    return ResultUtils.assertUnboxOk(await analysis.getSignatureHelp(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getSignatureHelp(position, cancellationToken));
 }
 
 function createMockDocumentAndPosition(textWithPipe: string): [MockDocument, Position] {

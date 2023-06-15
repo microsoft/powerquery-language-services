@@ -41,7 +41,7 @@ export async function inspectTypeTBinOpExpression(
     const left: TXorNode | undefined = children[0];
 
     const operatorKind: Constant.TBinOpExpressionOperator | undefined =
-        children[1] === undefined || XorNodeUtils.isContextXor(children[1])
+        children[1] === undefined || XorNodeUtils.isContext(children[1])
             ? undefined
             : (children[1].node as Ast.IConstant<Constant.TBinOpExpressionOperator>).constantKind;
 
@@ -58,7 +58,7 @@ export async function inspectTypeTBinOpExpression(
         result = await inspectXor(state, left, trace.id);
     }
     // '1 +'
-    else if (right === undefined || XorNodeUtils.isContextXor(right)) {
+    else if (right === undefined || XorNodeUtils.isContext(right)) {
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
 
         const key: string = partialLookupKey(leftType.kind, operatorKind);
