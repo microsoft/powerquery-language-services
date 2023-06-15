@@ -44,17 +44,28 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             PrimitiveTypeConstant.Type,
         ];
 
-        xit(`type|`, () => runLabelTest(`type|`, []));
+        it(`type|`, () => runLabelTest(`type|`, []));
 
-        xit(`type |`, () => runLabelTest(`type |`, AllowedPrimitiveTypeConstants));
+        it(`type |`, () => runLabelTest(`type |`, AllowedPrimitiveTypeConstants));
 
-        xit(`let x = type|`, () => runLabelTest(`let x = type|`, []));
+        it(`type date|`, () =>
+            runLabelTest(`type date|`, [
+                PrimitiveTypeConstant.Date,
+                PrimitiveTypeConstant.DateTime,
+                PrimitiveTypeConstant.DateTimeZone,
+            ]));
 
-        xit(`let x = type |`, () => runLabelTest(`let x = type |`, AllowedPrimitiveTypeConstants));
+        it(`type |date`, () => runLabelTest(`type |date`, []));
 
-        xit(`type | number`, () => runLabelTest(`type | number`, []));
+        it(`type date |`, () => runLabelTest(`type date |`, []));
 
-        xit(`type n|`, () => runLabelTest(`type n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
+        it(`let x = type|`, () => runLabelTest(`let x = type|`, []));
+
+        it(`let x = type |`, () => runLabelTest(`let x = type |`, AllowedPrimitiveTypeConstants));
+
+        it(`type | number`, () => runLabelTest(`type | number`, []));
+
+        it(`type n|`, () => runLabelTest(`type n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
         it(`(x|) => 1`, () => runLabelTest(`(x|) => 1`, []));
 
@@ -101,6 +112,10 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`(x as nullable date |) => 1`, () => runLabelTest(`(x as nullable date |) => 1`, []));
 
+        it(`1 as|`, () => runLabelTest(`1 as|`, []));
+
+        it(`1 as |`, () => runLabelTest(`1 as |`, AllowedPrimitiveTypeConstants));
+
         it(`1 as dat|`, () =>
             runLabelTest(`1 as dat|`, [
                 PrimitiveTypeConstant.Date,
@@ -108,9 +123,9 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
 
-        xit(`1 is n|`, () => runLabelTest(`1 is n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
+        it(`1 is n|`, () => runLabelTest(`1 is n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
-        xit(`1 is date|`, () =>
+        it(`1 is date|`, () =>
             runLabelTest(`1 is date|`, [
                 PrimitiveTypeConstant.Date,
                 PrimitiveTypeConstant.DateTime,
