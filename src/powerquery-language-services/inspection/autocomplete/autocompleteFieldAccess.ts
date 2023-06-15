@@ -324,7 +324,7 @@ function typablePrimaryExpression(
 
         if (xorNode.node.kind === Ast.NodeKind.RecursivePrimaryExpression) {
             // The previous ancestor must be an attribute of Rpe, which is either its head or ArrrayWrapper.
-            const xorNodeBeforeRpe: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index);
+            const xorNodeBeforeRpe: TXorNode = AncestryUtils.assertNth(ancestry, index - 1);
 
             // If we're coming from the head node,
             // then return undefined as there can be no nodes before the head ode.
@@ -334,7 +334,7 @@ function typablePrimaryExpression(
             // Else if we're coming from the ArrayWrapper,
             // then grab the previous sibling.
             else if (xorNodeBeforeRpe.node.attributeIndex === 1) {
-                const rpeChild: TXorNode = AncestryUtils.assertGetNthPreviousXor(ancestry, index, 2);
+                const rpeChild: TXorNode = AncestryUtils.assertNth(ancestry, index- 2);
 
                 return NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(nodeIdMapCollection, rpeChild.node.id);
             } else {

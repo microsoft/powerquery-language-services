@@ -90,15 +90,11 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
         // If on a FunctionExpression parameter.
         else if (
             parent.node.kind === Ast.NodeKind.Parameter &&
-            AncestryUtils.nthNextXorChecked<Ast.FunctionExpression>(
-                ancestry,
-                index,
-                4,
-                Ast.NodeKind.FunctionExpression,
-            ) !== undefined
+            AncestryUtils.nthChecked<Ast.FunctionExpression>(ancestry, index + 4, Ast.NodeKind.FunctionExpression) !==
+                undefined
         ) {
             // Things get messy when testing if it's on a nullable primitive type OR a primitive type.
-            const grandchild: TXorNode | undefined = AncestryUtils.nthPreviousXor(ancestry, index, 2);
+            const grandchild: TXorNode | undefined = AncestryUtils.nth(ancestry, index - 2);
 
             if (grandchild === undefined) {
                 continue;
@@ -117,7 +113,7 @@ function traverseAncestors(activeNode: ActiveNode): ReadonlyArray<Constant.Primi
             else if (
                 grandchild.node.kind === Ast.NodeKind.NullablePrimitiveType &&
                 // Check the great grandchild
-                AncestryUtils.nthPreviousXorChecked<Ast.PrimitiveType>(ancestry, index, 3, Ast.NodeKind.PrimitiveType)
+                AncestryUtils.nthChecked<Ast.PrimitiveType>(ancestry, index - 3, Ast.NodeKind.PrimitiveType)
             ) {
                 return Constant.PrimitiveTypeConstants;
             }

@@ -86,7 +86,7 @@ export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: 
             ? inclusiveIdentifierUnderPosition
             : undefined;
 
-    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertGetAncestry(nodeIdMapCollection, leaf.node.id);
+    const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, leaf.node.id);
 
     return {
         kind: ActiveNodeKind.ActiveNode,
@@ -113,7 +113,7 @@ export function assertActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posi
 }
 
 export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
-    return AncestryUtils.assertGetLeaf(activeNode.ancestry);
+    return AncestryUtils.assertFirst(activeNode.ancestry);
 }
 
 export function assertPositionInBounds(value: TActiveNode): asserts value is ActiveNode {
@@ -126,11 +126,8 @@ export function isPositionInBounds(value: TActiveNode): value is ActiveNode {
     return value.kind === ActiveNodeKind.ActiveNode;
 }
 
-export function findXorOfNodeKind<T extends Ast.TNode>(
-    activeNode: ActiveNode,
-    nodeKind: T["kind"],
-): XorNode<T> | undefined {
-    return AncestryUtils.findXorOfNodeKind(activeNode.ancestry, nodeKind);
+export function findNodeKind<T extends Ast.TNode>(activeNode: ActiveNode, nodeKind: T["kind"]): XorNode<T> | undefined {
+    return AncestryUtils.findNodeKind(activeNode.ancestry, nodeKind);
 }
 
 interface AstNodeSearch {

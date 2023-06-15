@@ -244,7 +244,7 @@ function handleConjunctions(
     // `let x = |`
     // `let x = 1|`
     // `let x = 1 | a`
-    else if (XorNodeUtils.isTUnaryType(activeNodeLeaf)) {
+    else if (XorNodeUtils.isTUnaryExpression(activeNodeLeaf)) {
         // `let x = 1 | a`
         if (
             trailingToken !== undefined &&

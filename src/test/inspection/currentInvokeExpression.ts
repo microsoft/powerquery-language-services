@@ -203,7 +203,7 @@ describe(`subset Inspection - InvokeExpression`, () => {
             textWithPipe,
         );
 
-        return Assert.asDefined(ResultUtils.assertUnboxOk(await inspected.triedCurrentInvokeExpression));
+        return Assert.asDefined(ResultUtils.assertOk(await inspected.triedCurrentInvokeExpression));
     }
 
     describe(`parse Ok`, () => {

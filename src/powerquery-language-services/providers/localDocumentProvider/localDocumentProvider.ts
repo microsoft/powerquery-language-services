@@ -296,7 +296,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const identifierPairedExpression: TXorNode | undefined = AncestryUtils.nthXorChecked<
+        const identifierPairedExpression: TXorNode | undefined = AncestryUtils.nthChecked<
             | Ast.GeneralizedIdentifierPairedAnyLiteral
             | Ast.GeneralizedIdentifierPairedExpression
             | Ast.IdentifierPairedExpression
