@@ -54,11 +54,7 @@ export async function autocompleteKeywordLetExpression(
     }
     // `let foo = e|` where we want to treat the identifier as a potential keyword
     else if (child.node.attributeIndex === 1) {
-        const identifier: TXorNode | undefined = AncestryUtils.nthPreviousXor(
-            state.activeNode.ancestry,
-            state.ancestryIndex,
-            5,
-        );
+        const identifier: TXorNode | undefined = AncestryUtils.nth(state.activeNode.ancestry, state.ancestryIndex - 5);
 
         if (identifier && XorNodeUtils.isAstChecked<Ast.Identifier>(identifier, Ast.NodeKind.Identifier)) {
             const identifierAst: Ast.Identifier = identifier.node;

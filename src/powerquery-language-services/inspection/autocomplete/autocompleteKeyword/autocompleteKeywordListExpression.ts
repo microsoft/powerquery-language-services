@@ -27,7 +27,7 @@ export function autocompleteKeywordListExpression(
     });
 
     // ListExpression -> ArrayWrapper -> Csv -> X
-    const nodeOrComma: TXorNode = AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 3);
+    const nodeOrComma: TXorNode = AncestryUtils.assertNth(activeNode.ancestry, ancestryIndex - 3);
 
     if (nodeOrComma.node.attributeIndex !== 0) {
         return undefined;
@@ -36,7 +36,7 @@ export function autocompleteKeywordListExpression(
     // We know it's the node component of the Csv,
     // but we have to drill down one more level if it's a RangeExpression.
     const itemNode: TXorNode = XorNodeUtils.isNodeKind(nodeOrComma, Ast.NodeKind.RangeExpression)
-        ? AncestryUtils.assertGetNthPreviousXor(activeNode.ancestry, ancestryIndex, 4)
+        ? AncestryUtils.assertNth(activeNode.ancestry, ancestryIndex - 4)
         : nodeOrComma;
 
     if (XorNodeUtils.isContext(itemNode) || PositionUtils.isBeforeXor(activeNode.position, itemNode, false)) {
