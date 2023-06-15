@@ -26,39 +26,6 @@ import {
 } from "./activeNode";
 import { PositionUtils } from "../..";
 
-const ShiftLeftConstantKinds: ReadonlyArray<Constant.TConstant> = [
-    Constant.WrapperConstant.RightBrace,
-    Constant.WrapperConstant.RightBracket,
-    Constant.WrapperConstant.RightParenthesis,
-];
-
-const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
-    ...Constant.BinOpExpressionOperators,
-    Constant.MiscConstant.Ampersand,
-    Constant.MiscConstant.Comma,
-    Constant.MiscConstant.DotDot,
-    Constant.MiscConstant.Equal,
-    Constant.MiscConstant.FatArrow,
-    Constant.MiscConstant.NullCoalescingOperator,
-    Constant.MiscConstant.QuestionMark,
-    Constant.MiscConstant.Semicolon,
-    Constant.WrapperConstant.LeftBrace,
-    Constant.WrapperConstant.LeftBracket,
-    Constant.WrapperConstant.LeftParenthesis,
-];
-
-// function discoverLeafKind(leaf: TLeaf, position: Position): ActiveNodeLeafKind {
-//     if (PositionUtils.isInAst(position, leaf, true, true)) {
-//         return ActiveNodeLeafKind.IsInAst;
-//     } else if (PositionUtils.isBeforeAst(position, leaf, false)) {
-//         return ActiveNodeLeafKind.IsBeforePosition;
-//     } else if (PositionUtils.isAfterAst(position, leaf, false)) {
-//         return ActiveNodeLeafKind.IsAfterPosition;
-//     } else {
-//         throw new CommonError.InvariantError(`somehow Position is not in, before, or after the AstNode.`);
-//     }
-// }
-
 export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TActiveNode {
     const astSearched: SearchedLeafs = leafSearch(nodeIdMapCollection, position);
 
@@ -258,6 +225,28 @@ interface SearchedLeafs {
     readonly nodeClosestAfterPosition: Ast.TLeaf | undefined;
 }
 
+const ShiftLeftConstantKinds: ReadonlyArray<Constant.TConstant> = [
+    Constant.WrapperConstant.RightBrace,
+    Constant.WrapperConstant.RightBracket,
+    Constant.WrapperConstant.RightParenthesis,
+];
+
+const ShiftRightConstantKinds: ReadonlyArray<Constant.TConstant> = [
+    ...Constant.BinOpExpressionOperators,
+    Constant.MiscConstant.Ampersand,
+    Constant.MiscConstant.Comma,
+    Constant.MiscConstant.DotDot,
+    Constant.MiscConstant.Equal,
+    Constant.MiscConstant.FatArrow,
+    Constant.MiscConstant.NullCoalescingOperator,
+    Constant.MiscConstant.QuestionMark,
+    Constant.MiscConstant.Semicolon,
+    Constant.WrapperConstant.LeftBrace,
+    Constant.WrapperConstant.LeftBracket,
+    Constant.WrapperConstant.LeftParenthesis,
+];
+
+// Searches for the closest leaf to the left, right, and on the given position if such an option exists.
 function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Position): SearchedLeafs {
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
@@ -334,6 +323,11 @@ function findContext(
         return undefined;
     }
 
+    // Look for the deepest ParseContext that starts on or before the cursor.
+    // We can use searchedLeafs to generate a bound on tokenIndex.
+    // It's possible/likely that multiple ParseContexts exist with the same tokenIndex,
+    // so we pick the "deepest" one.
+    const depthCache: Map<number, number> = new Map();
     let closestContextOnOrAfterPosition: ParseContext.TNode | undefined = undefined;
 
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
@@ -342,14 +336,37 @@ function findContext(
                 continue;
             }
 
-            // A higher id means it's deeper in the AST.
-            if (closestContextOnOrAfterPosition === undefined || closestContextOnOrAfterPosition.id < candidate.id) {
+            if (
+                closestContextOnOrAfterPosition === undefined ||
+                candidate.tokenIndexStart > closestContextOnOrAfterPosition.tokenIndexStart ||
+                findDepth(nodeIdMapCollection.parentIdById, candidate.id, depthCache) >
+                    findDepth(nodeIdMapCollection.parentIdById, closestContextOnOrAfterPosition.id, depthCache)
+            ) {
                 closestContextOnOrAfterPosition = candidate;
             }
         }
     }
 
     return closestContextOnOrAfterPosition;
+}
+
+function findDepth(parentIdById: NodeIdMap.ParentIdById, nodeId: number, depthCache: Map<number, number>): number {
+    const cachedDepth: number | undefined = depthCache.get(nodeId);
+
+    if (cachedDepth !== undefined) {
+        return cachedDepth;
+    }
+
+    const parentId: number | undefined = parentIdById.get(nodeId);
+
+    if (parentId === undefined) {
+        return 0;
+    }
+
+    const summedDepth = 1 + findDepth(parentIdById, parentId, depthCache);
+    depthCache.set(nodeId, summedDepth);
+
+    return summedDepth;
 }
 
 function findLeafIdentifier(
