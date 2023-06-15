@@ -281,7 +281,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
 
         it(`let a = 1 m|`, () => runTest(`let a = 1 m|`, [KeywordKind.Meta]));
 
-        it(`let a = 1, |`, () => runTest(`let a = 1, |`, []));
+        it(`WIP let a = 1, |`, () => runTest(`let a = 1, |`, []));
 
         it(`let a = let b = |`, () => runTest(`let a = let b = |`, ExpressionKeywordKinds));
 
