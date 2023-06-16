@@ -11,8 +11,27 @@ import {
 import type { Position, Range } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { TokenPositionComparison } from "./tokenPositionComparison";
 
-export function createPositionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
+export function compareTokenPosition(
+    position: Position,
+    tokenPosition: PQP.Language.Token.TokenPosition,
+): TokenPositionComparison {
+    if (isOnTokenPosition(position, tokenPosition)) {
+        return TokenPositionComparison.OnToken;
+    } else if (isAfterTokenPosition(position, tokenPosition, false)) {
+        return TokenPositionComparison.RightOfToken;
+    } else if (isBeforeTokenPosition(position, tokenPosition, false)) {
+        return TokenPositionComparison.LeftOfToken;
+    } else {
+        throw new PQP.CommonError.InvariantError("position is not on, after, or before tokenPosition", {
+            position,
+            tokenPosition,
+        });
+    }
+}
+
+export function positionFromTokenPosition(tokenPosition: PQP.Language.Token.TokenPosition): Position {
     return {
         line: tokenPosition.lineNumber,
         character: tokenPosition.lineCodeUnit,
@@ -33,21 +52,18 @@ export async function rangeFromXorNode(
     return Promise.resolve(
         leftMostLeaf === undefined || rightMostLeaf === undefined
             ? undefined
-            : createRangeFromTokenPositions(
-                  leftMostLeaf.tokenRange.positionStart,
-                  rightMostLeaf.tokenRange.positionEnd,
-              ),
+            : rangeFromTokenPositions(leftMostLeaf.tokenRange.positionStart, rightMostLeaf.tokenRange.positionEnd),
     );
 }
 
-export function createRangeFromTokenPositions(
+export function rangeFromTokenPositions(
     startTokenPosition: PQP.Language.Token.TokenPosition | undefined,
     endTokenPosition: PQP.Language.Token.TokenPosition | undefined,
 ): Range | undefined {
     if (startTokenPosition && endTokenPosition) {
         return {
-            start: createPositionFromTokenPosition(startTokenPosition),
-            end: createPositionFromTokenPosition(endTokenPosition),
+            start: positionFromTokenPosition(startTokenPosition),
+            end: positionFromTokenPosition(endTokenPosition),
         };
     }
 
@@ -55,7 +71,7 @@ export function createRangeFromTokenPositions(
 }
 
 export function rangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
-    return createRangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
+    return rangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
 }
 
 export function isBeforeXor(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
@@ -233,6 +249,14 @@ export function isAfterAst(position: Position, astNode: Ast.TNode, isBoundInclud
     return isAfterTokenPosition(position, astNode.tokenRange.positionEnd, isBoundIncluded);
 }
 
+export function isOnTokenStart(position: Position, token: PQP.Language.Token.Token): boolean {
+    return position.line === token.positionStart.lineNumber && position.character === token.positionStart.lineCodeUnit;
+}
+
+export function isOnTokenEnd(position: Position, token: PQP.Language.Token.Token): boolean {
+    return position.line === token.positionEnd.lineNumber && position.character === token.positionEnd.lineCodeUnit;
+}
+
 export function isInToken(
     position: Position,
     token: PQP.Language.Token.Token,
@@ -265,14 +289,6 @@ export function isBeforeTokenPosition(
 
 export function isOnTokenPosition(position: Position, tokenPosition: PQP.Language.Token.TokenPosition): boolean {
     return position.line === tokenPosition.lineNumber && position.character === tokenPosition.lineCodeUnit;
-}
-
-export function isOnTokenEnd(position: Position, token: PQP.Language.Token.Token): boolean {
-    return position.line === token.positionEnd.lineNumber && position.character === token.positionEnd.lineCodeUnit;
-}
-
-export function isOnTokenStart(position: Position, token: PQP.Language.Token.Token): boolean {
-    return position.line === token.positionStart.lineNumber && position.character === token.positionStart.lineCodeUnit;
 }
 
 export function isAfterTokenPosition(

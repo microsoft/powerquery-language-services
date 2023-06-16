@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
@@ -12,7 +11,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, AstUtils, Constant, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, AstUtils, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
@@ -21,9 +20,9 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, PositionUtils } from "../..";
+import { AutocompleteTraceConstant, PositionUtils, TokenPositionComparison } from "../..";
 import { TriedAutocompletePrimitiveType } from "./commonTypes";
-import { TrailingToken, TokenPositionComparison } from "./trailingToken";
+import { TrailingToken } from "./trailingToken";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
@@ -123,12 +122,11 @@ function createAutocompleteItemsForPrimitiveTypeConstant(
     );
 }
 
-// Returns AllowedPrimitiveTypeConstants if one of the following:
+// Returns AllowedPrimitiveTypeConstants if either:
 //  - there is no trailing token
-//  - the Position is either on or to the left of the trailing token
-// Else we either:
-//  - return an empty array if we're not on the trailing token
-//  - else we return the autocomplete items for the trailing text
+//  - the Position is either on or to the left of the trailing token's start
+// elif Position is not on the trailing token's end, then return an empty array
+// else return the autocomplete items for the trailing text.
 function createAutocompleteItemsForTrailingToken(
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
@@ -173,7 +171,9 @@ function inspectAsNullablePrimitiveType(
         else {
             return inspectPrimitiveType(XorNodeUtils.boxAst(nullablePrimitiveType), activeNode, trailingToken);
         }
-    } else {
+    }
+    // ParseContext
+    else {
         const asConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
             nodeIdMapCollection,
             asNullablePrimitiveType.node.id,
@@ -196,15 +196,16 @@ function inspectEitherAsExpressionOrIsExpression(
     activeNode: ActiveNode,
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    // No autocomplete is available for an Ast unless the cursor is at the end of the primitive type.
-    // Eg `1 is date|`
+    // Ast
     if (XorNodeUtils.isAst(primitiveType)) {
         if (!PositionUtils.isOnAstEnd(activeNode.position, primitiveType.node)) {
             return [];
         }
 
         return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
-    } else {
+    }
+    // ParseContext
+    else {
         const eitherAsConstantOrIsConstant: Ast.TConstant = NodeIdMapUtils.assertNthChildAstChecked<Ast.TConstant>(
             nodeIdMapCollection,
             eitherAsExpressionOrIsExpression.node.id,
@@ -300,13 +301,14 @@ function inspectTypePrimaryType(
     }
     // Ast
     else if (XorNodeUtils.isAst(primaryType)) {
-        if (!PositionUtils.isOnAstEnd(activeNode.position, primaryType.node)) {
-            return [];
-        } else if (AstUtils.isNodeKind<Ast.PrimitiveType>(primaryType.node, Ast.NodeKind.PrimitiveType)) {
-            return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node.primitiveTypeKind);
-        } else {
+        if (
+            !PositionUtils.isOnAstEnd(activeNode.position, primaryType.node) ||
+            !AstUtils.isNodeKind<Ast.PrimitiveType>(primaryType.node, Ast.NodeKind.PrimitiveType)
+        ) {
             return [];
         }
+
+        return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node.primitiveTypeKind);
     }
 
     throw new PQP.CommonError.InvariantError("this should never be reached");
