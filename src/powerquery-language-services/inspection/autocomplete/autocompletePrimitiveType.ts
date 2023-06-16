@@ -23,7 +23,7 @@ import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
 import { TriedAutocompletePrimitiveType } from "./commonTypes";
-import { TrailingToken, TrailingTokenPositionComparison } from "./trailingToken";
+import { TrailingToken, TokenPositionComparison } from "./trailingToken";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
@@ -132,9 +132,9 @@ function createAutocompleteItemsForPrimitiveTypeConstant(
 function createAutocompleteItemsForTrailingToken(
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
+    if (!trailingToken || trailingToken.tokenStartComparison !== TokenPositionComparison.RightOfToken) {
         return createDefaultAutocompleteItems();
-    } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
+    } else if (trailingToken.tokenEndComparison !== TokenPositionComparison.OnToken) {
         return [];
     }
 
