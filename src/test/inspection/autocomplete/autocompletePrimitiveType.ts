@@ -8,7 +8,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
-describe(`FIXING Inspection - Autocomplete - PrimitiveType`, () => {
+describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     describe(`AutocompleteItem.label`, () => {
         async function runLabelTest(
             textWithPipe: string,
