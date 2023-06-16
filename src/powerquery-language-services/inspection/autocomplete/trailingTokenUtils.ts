@@ -12,7 +12,7 @@ export function createTrailingToken(position: Position, parseErrorToken: PQP.Lan
     const isInOrOnPosition: boolean = PositionUtils.isInToken(position, parseErrorToken, false, true);
 
     const regularIdentifierUnderPosition: string | undefined =
-        parseErrorToken.data && TextUtils.isRegularIdentifier(parseErrorToken.data, true)
+        isInOrOnPosition && parseErrorToken.data && TextUtils.isRegularIdentifier(parseErrorToken.data, true)
             ? parseErrorToken.data
             : undefined;
 
