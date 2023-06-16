@@ -22,7 +22,8 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
-import { TrailingToken, TriedAutocompletePrimitiveType } from "./commonTypes";
+import { TriedAutocompletePrimitiveType } from "./commonTypes";
+import { TrailingToken } from "./trailingToken";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
@@ -186,10 +187,8 @@ function inspectEitherAsExpressionOrIsExpression(
         Ast.NodeKind.Constant,
     );
 
-    if (PositionUtils.isOnAstEnd(activeNode.position, eitherAsConstantOrIsConstant)) {
-        return [];
-    }
-
+    // No autocomplete is available for an Ast unless the cursor is at the end of the primitive type.
+    // Eg `1 is date|`
     if (XorNodeUtils.isAst(primitiveType)) {
         const primitiveTypeConstant: Ast.PrimitiveType = primitiveType.node;
 
@@ -198,12 +197,17 @@ function inspectEitherAsExpressionOrIsExpression(
                 primitiveTypeConstant.primitiveTypeKind,
                 trailingText,
             );
-        } else if (PositionUtils.isBeforeAst(activeNode.position, primitiveTypeConstant, false)) {
-            return createAutocompleteItems(AllowedPrimitiveTypeConstants, undefined);
         }
-    }
 
-    return createAutocompleteItemsFromTrailingText(trailingText);
+        return [];
+    } else {
+        // `1 is|`
+        if (PositionUtils.isOnAstEnd(activeNode.position, eitherAsConstantOrIsConstant)) {
+            return [];
+        }
+
+        return createAutocompleteItemsFromTrailingText(trailingText);
+    }
 }
 
 function inspectPrimitiveType(

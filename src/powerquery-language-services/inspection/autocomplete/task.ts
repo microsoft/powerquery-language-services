@@ -7,14 +7,13 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 
 import {
     Autocomplete,
-    TrailingToken,
     TriedAutocompleteFieldAccess,
     TriedAutocompleteKeyword,
     TriedAutocompleteLanguageConstant,
     TriedAutocompletePrimitiveType,
 } from "./commonTypes";
 import { AutocompleteTraceConstant } from "../..";
-import { createTrailingToken } from "./common";
+import { createTrailingToken } from "./trailingTokenUtils";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TActiveNode } from "../activeNode";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
@@ -22,6 +21,7 @@ import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeywor
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { TypeCache } from "../typeCache";
+import { TrailingToken } from "./trailingToken";
 
 // Given some Position and ParseState, return autocomplete suggestions.
 export async function autocomplete(

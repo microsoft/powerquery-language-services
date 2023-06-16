@@ -8,7 +8,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
-import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
+import { TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -18,6 +18,7 @@ import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMe
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
+import { TrailingToken } from "../trailingToken";
 
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,

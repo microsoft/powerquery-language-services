@@ -5,7 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert } from "@microsoft/powerquery-parser";
 import { Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { TrailingToken } from "../commonTypes";
+import { TrailingToken } from "../trailingToken";
 
 export function autocompleteKeywordTrailingText(
     inspected: ReadonlyArray<Keyword.KeywordKind>,
