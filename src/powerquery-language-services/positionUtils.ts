@@ -267,6 +267,14 @@ export function isOnTokenPosition(position: Position, tokenPosition: PQP.Languag
     return position.line === tokenPosition.lineNumber && position.character === tokenPosition.lineCodeUnit;
 }
 
+export function isOnTokenEnd(position: Position, token: PQP.Language.Token.Token): boolean {
+    return position.line === token.positionEnd.lineNumber && position.character === token.positionEnd.lineCodeUnit;
+}
+
+export function isOnTokenStart(position: Position, token: PQP.Language.Token.Token): boolean {
+    return position.line === token.positionStart.lineNumber && position.character === token.positionStart.lineCodeUnit;
+}
+
 export function isAfterTokenPosition(
     position: Position,
     tokenPosition: PQP.Language.Token.TokenPosition,

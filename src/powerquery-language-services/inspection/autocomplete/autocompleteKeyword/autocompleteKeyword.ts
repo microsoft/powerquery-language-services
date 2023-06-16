@@ -238,7 +238,7 @@ function handleConjunctions(
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
 
     // `let x = 1 a|`
-    if (trailingToken !== undefined && trailingToken.isInOrOnPosition) {
+    if (trailingToken !== undefined && trailingToken.isPositionInToken) {
         return autocompleteKeywordTrailingText(inspected, trailingToken, undefined);
     }
     // `let x = |`

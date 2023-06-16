@@ -35,7 +35,7 @@ export async function autocompleteKeywordLetExpression(
         );
 
         if (state.trailingToken !== undefined) {
-            if (state.trailingToken.isInOrOnPosition === true) {
+            if (state.trailingToken.isPositionInToken === true) {
                 // We don't want inspected to be zero legnth.
                 // It's either undefined or non-zero length.
                 inspected = autocompleteKeywordTrailingText(inspected ?? [], state.trailingToken, [

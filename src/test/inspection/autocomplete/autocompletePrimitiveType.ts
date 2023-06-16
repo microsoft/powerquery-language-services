@@ -8,7 +8,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
-describe(`Inspection - Autocomplete - PrimitiveType`, () => {
+describe(`FIXING Inspection - Autocomplete - PrimitiveType`, () => {
     describe(`AutocompleteItem.label`, () => {
         async function runLabelTest(
             textWithPipe: string,
@@ -46,6 +46,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`type|`, () => runLabelTest(`type|`, []));
 
+        it(`| type`, () => runLabelTest(`| type`, []));
+
         it(`type |`, () => runLabelTest(`type |`, AllowedPrimitiveTypeConstants));
 
         it(`type date|`, () =>
@@ -58,6 +60,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         it(`type |date`, () => runLabelTest(`type |date`, []));
 
         it(`type date |`, () => runLabelTest(`type date |`, []));
+
+        it(`| let x = type`, () => runLabelTest(`| let x = type`, []));
 
         it(`let x = type|`, () => runLabelTest(`let x = type|`, []));
 
@@ -116,6 +120,10 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`1 as |`, () => runLabelTest(`1 as |`, AllowedPrimitiveTypeConstants));
 
+        it(`| 1 as`, () => runLabelTest(`| 1 as `, []));
+
+        it(`1 as n|`, () => runLabelTest(`1 as n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
+
         it(`1 as date|`, () =>
             runLabelTest(`1 as date|`, [
                 PrimitiveTypeConstant.Date,
@@ -130,11 +138,15 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
 
-        it(`1 as | date as logical`, () => runLabelTest(`1 as | date as logical`, []));
+        it(`1 as date | as logical`, () => runLabelTest(`1 as date | as logical`, []));
+
+        it(`1 as da |`, () => runLabelTest(`1 as da |`, []));
 
         it(`1 is|`, () => runLabelTest(`1 is|`, []));
 
         it(`1 is |`, () => runLabelTest(`1 is |`, AllowedPrimitiveTypeConstants));
+
+        it(`| 1 is`, () => runLabelTest(`| 1 is `, []));
 
         it(`1 is n|`, () => runLabelTest(`1 is n|`, [PrimitiveTypeConstant.Null, PrimitiveTypeConstant.Number]));
 
@@ -152,6 +164,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
                 PrimitiveTypeConstant.DateTimeZone,
             ]));
 
-        it(`1 is | date is logical`, () => runLabelTest(`1 is | date is logical`, []));
+        it(`1 is date | is logical`, () => runLabelTest(`1 is date | is logical`, []));
+
+        it(`1 is da |`, () => runLabelTest(`1 is da |`, []));
     });
 });
