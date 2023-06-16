@@ -20,7 +20,6 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         );
 
         ResultUtils.assertIsOk(actual.triedKeyword);
-
         TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedKeyword.value);
     }
 

@@ -7,7 +7,7 @@ import type { Position } from "vscode-languageserver-types";
 
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
-import { TrailingToken } from "../commonTypes";
+import { TrailingToken } from "../trailingToken";
 
 export function autocompleteKeywordErrorHandlingExpression(
     state: InspectAutocompleteKeywordState,

@@ -16,6 +16,7 @@ import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import {
+    ActiveNode,
     ActiveNodeUtils,
     Inspected,
     NodeScope,
@@ -36,6 +37,13 @@ import { MockDocument } from "../mockDocument";
 import { TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
+export async function assertActiveNode(settings: Settings, textWithPipe: string): Promise<TActiveNode> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+
+    return ActiveNodeUtils.activeNode(triedParse.nodeIdMapCollection, position);
+}
+
 export async function assertAutocompleteInspection(
     settings: InspectionSettings,
     textWithPipe: string,
@@ -50,6 +58,13 @@ export async function assertDocumentSymbolsInspection(
     const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
 
     return getDocumentSymbols(triedParse.nodeIdMapCollection, NoOpCancellationToken);
+}
+
+export async function assertInBoundsActiveNode(settings: Settings, textWithPipe: string): Promise<ActiveNode> {
+    const activeNode: TActiveNode = await assertActiveNode(settings, textWithPipe);
+    ActiveNodeUtils.assertPositionInBounds(activeNode);
+
+    return activeNode;
 }
 
 export async function assertInspected(

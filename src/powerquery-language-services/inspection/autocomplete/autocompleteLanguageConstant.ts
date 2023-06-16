@@ -18,7 +18,8 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
-import { TrailingToken, TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { TrailingToken } from "./trailingToken";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,
@@ -79,7 +80,7 @@ function isCatchAllowed(
             // Which was fully parsed
             XorNodeUtils.isAst(xorNode) &&
             // Yet the cursor is after the end of the Ast
-            activeNode.leafKind === ActiveNodeLeafKind.AfterAstNode &&
+            activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition &&
             // And it only has two children, meaning it hasn't parsed an error handler
             NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
         ) {

@@ -8,7 +8,7 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
-import { TrailingToken, TriedAutocompleteKeyword } from "../commonTypes";
+import { TriedAutocompleteKeyword } from "../commonTypes";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -18,6 +18,7 @@ import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMe
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
 import { InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
+import { TrailingToken } from "../trailingToken";
 
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,
@@ -70,6 +71,12 @@ export async function autocompleteKeyword(
         );
     }
 
+    const edgeCase: ReadonlyArray<AutocompleteItem> | undefined = findEdgeCase(activeNode, trailingToken);
+
+    if (edgeCase !== undefined) {
+        return Promise.resolve(edgeCase);
+    }
+
     const state: InspectAutocompleteKeywordState = {
         nodeIdMapCollection,
         activeNode,
@@ -78,12 +85,6 @@ export async function autocompleteKeyword(
         child: ActiveNodeUtils.assertGetLeaf(activeNode),
         ancestryIndex: 0,
     };
-
-    const edgeCase: ReadonlyArray<AutocompleteItem> | undefined = findEdgeCase(state, trailingToken);
-
-    if (edgeCase !== undefined) {
-        return Promise.resolve(edgeCase);
-    }
 
     const keywordKinds: ReadonlyArray<Keyword.KeywordKind> = await traverseAncestors(state);
 
@@ -155,10 +156,9 @@ async function traverseAncestors(state: InspectAutocompleteKeywordState): Promis
 }
 
 function findEdgeCase(
-    state: InspectAutocompleteKeywordState,
+    activeNode: ActiveNode,
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> | undefined {
-    const activeNode: ActiveNode = state.activeNode;
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     let inspected: ReadonlyArray<AutocompleteItem> | undefined;
 
@@ -181,7 +181,7 @@ function findEdgeCase(
     else if (
         XorNodeUtils.isAstChecked<Ast.Identifier>(ancestry[0], Ast.NodeKind.Identifier) &&
         XorNodeUtils.isNodeKind<Ast.TParameter>(ancestry[1], Ast.NodeKind.Parameter) &&
-        PositionUtils.isAfterAst(activeNode.position, ancestry[0].node, true)
+        activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition
     ) {
         inspected = [AutocompleteItemUtils.fromKeywordKind(Keyword.KeywordKind.As)];
     }
@@ -212,7 +212,7 @@ function handleConjunctions(
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
     if (
-        activeNode.leafKind !== ActiveNodeLeafKind.AfterAstNode &&
+        activeNode.leafKind !== ActiveNodeLeafKind.IsBeforePosition &&
         activeNode.leafKind !== ActiveNodeLeafKind.ContextNode
     ) {
         return inspected;
@@ -238,7 +238,7 @@ function handleConjunctions(
     const activeNodeLeaf: TXorNode = ActiveNodeUtils.assertGetLeaf(activeNode);
 
     // `let x = 1 a|`
-    if (trailingToken !== undefined && trailingToken.isInOrOnPosition) {
+    if (trailingToken !== undefined && trailingToken.isPositionInToken) {
         return autocompleteKeywordTrailingText(inspected, trailingToken, undefined);
     }
     // `let x = |`

@@ -4,7 +4,7 @@
 import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { ActiveNode } from "../../activeNode";
-import { TrailingToken } from "../commonTypes";
+import { TrailingToken } from "../trailingToken";
 
 export interface InspectAutocompleteKeywordState {
     readonly nodeIdMapCollection: NodeIdMap.Collection;

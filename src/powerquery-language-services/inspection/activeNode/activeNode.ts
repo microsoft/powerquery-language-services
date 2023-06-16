@@ -26,14 +26,17 @@ export interface IActiveNode {
 export interface ActiveNode extends IActiveNode {
     readonly kind: ActiveNodeKind.ActiveNode;
     readonly leafKind: ActiveNodeLeafKind;
-    // A full parental ancestry of the starting node.
-    // [starting node, parent of starting node, parent of parent of starting node, ...].
-    // Must contain at least one element, otherwise it should be an OutOfBoundPosition.
+    // A full parental ancestry, starting from the given node all the way up the root node.
+    //  - Eg. [starting node, parent of starting node, parent of parent of starting node, ...].
+    // Should be of non-zero length. Zero-legnth should be an instance of OutOfBoundPosition.
     readonly ancestry: ReadonlyArray<TXorNode>;
     // A conditional indirection to the leaf if it's an Ast identifier exclusively in (identifierStart, identifierEnd].
     readonly exclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
     // A conditional indirection to the leaf if it's an Ast identifier inclusively in [identifierStart, identifierEnd].
     readonly inclusiveIdentifierUnderPosition: TActiveLeafIdentifier | undefined;
+    // Is the context in the key portion of a key-value-pair.
+    //  - Eg. `let foo| = 1 in foo` -> true
+    readonly isInKey: boolean;
 }
 
 export interface OutOfBoundPosition extends IActiveNode {
@@ -48,7 +51,6 @@ export interface IActiveLeafIdentifier<
     readonly node: T;
     readonly normalizedLiteral: string;
     readonly normalizedRecursiveLiteral: string | undefined;
-    readonly isRecursive: boolean;
 }
 
 export interface ActiveLeafIdentifierExpression extends IActiveLeafIdentifier<Ast.IdentifierExpression> {
@@ -62,11 +64,10 @@ export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.Generali
 }
 
 export const enum ActiveNodeLeafKind {
-    AfterAstNode = "AfterAstNode",
-    Anchored = "Anchored",
+    IsBeforePosition = "IsBeforePosition",
+    IsInAst = "IsInAst",
+    IsAfterPosition = "IsAfterPosition",
     ContextNode = "Context",
-    OnAstNode = "OnAstNode",
-    ShiftedRight = "ShiftedRight",
 }
 
 export const enum ActiveNodeKind {

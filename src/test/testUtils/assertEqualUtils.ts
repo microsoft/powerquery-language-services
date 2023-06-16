@@ -151,6 +151,11 @@ export async function assertEqualPartialSemanticTokensAnalysis(
     }
 }
 
+export function assertEqualLocation(expected: ReadonlyArray<Range>, actual: ReadonlyArray<Location>): void {
+    const actualRange: ReadonlyArray<Range> = actual.map((location: Location) => location.range);
+    expect(actualRange).deep.equals(expected);
+}
+
 export async function assertEqualRenameEdits(
     textWithPipe: string,
     newName: string,
