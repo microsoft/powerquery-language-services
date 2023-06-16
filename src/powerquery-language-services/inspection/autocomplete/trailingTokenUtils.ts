@@ -11,17 +11,11 @@ import { TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 export function createTrailingToken(position: Position, parseErrorToken: PQP.Language.Token.Token): TrailingToken {
     const isPositionInToken: boolean = PositionUtils.isInToken(position, parseErrorToken, false, true);
 
-    const regularIdentifierUnderPosition: string | undefined =
-        isPositionInToken && parseErrorToken.data && TextUtils.isRegularIdentifier(parseErrorToken.data, true)
-            ? parseErrorToken.data
-            : undefined;
-
     return {
         ...parseErrorToken,
         isPositionInToken,
         tokenStartComparison: comparePosition(position, parseErrorToken.positionStart),
         tokenEndComparison: comparePosition(position, parseErrorToken.positionEnd),
-        regularIdentifierUnderPosition,
     };
 }
 

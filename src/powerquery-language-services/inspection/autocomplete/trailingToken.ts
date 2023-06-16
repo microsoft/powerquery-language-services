@@ -9,7 +9,6 @@ export interface TrailingToken extends PQP.Language.Token.Token {
     readonly isPositionInToken: boolean;
     readonly tokenStartComparison: TrailingTokenPositionComparison;
     readonly tokenEndComparison: TrailingTokenPositionComparison;
-    readonly regularIdentifierUnderPosition: string | undefined;
 }
 
 export const enum TrailingTokenPositionComparison {

@@ -123,6 +123,29 @@ function createAutocompleteItemsForPrimitiveTypeConstant(
     );
 }
 
+// Returns AllowedPrimitiveTypeConstants if one of the following:
+//  - there is no trailing token
+//  - the Position is either on or to the left of the trailing token
+// Else we either:
+//  - return an empty array if we're not on the trailing token
+//  - else we return the autocomplete items for the trailing text
+function createAutocompleteItemsForTrailingToken(
+    trailingToken: TrailingToken | undefined,
+): ReadonlyArray<AutocompleteItem> {
+    if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
+        return createDefaultAutocompleteItems();
+    } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
+        return [];
+    }
+
+    const trailingText: string = trailingToken.data;
+
+    return createAutocompleteItems(
+        AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
+        trailingText,
+    );
+}
+
 function createDefaultAutocompleteItems(): ReadonlyArray<AutocompleteItem> {
     return createAutocompleteItems(AllowedPrimitiveTypeConstants, undefined);
 }
@@ -176,11 +199,11 @@ function inspectEitherAsExpressionOrIsExpression(
     // No autocomplete is available for an Ast unless the cursor is at the end of the primitive type.
     // Eg `1 is date|`
     if (XorNodeUtils.isAst(primitiveType)) {
-        const primitiveTypeConstant: Ast.PrimitiveType = primitiveType.node;
+        if (!PositionUtils.isOnAstEnd(activeNode.position, primitiveType.node)) {
+            return [];
+        }
 
-        return PositionUtils.isOnAstEnd(activeNode.position, primitiveTypeConstant)
-            ? createAutocompleteItemsForPrimitiveTypeConstant(primitiveTypeConstant.primitiveTypeKind)
-            : [];
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
     } else {
         const eitherAsConstantOrIsConstant: Ast.TConstant = NodeIdMapUtils.assertNthChildAstChecked<Ast.TConstant>(
             nodeIdMapCollection,
@@ -194,18 +217,7 @@ function inspectEitherAsExpressionOrIsExpression(
             return [];
         }
 
-        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
-            return createDefaultAutocompleteItems();
-        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
-            return [];
-        }
-
-        const trailingText: string = trailingToken.data;
-
-        return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
-            trailingText,
-        );
+        return createAutocompleteItemsForTrailingToken(trailingToken);
     }
 }
 
@@ -220,27 +232,11 @@ function inspectNullablePrimitiveType(
             return [];
         }
 
-        return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                value.startsWith(primitiveType.node.primitiveTypeKind),
-            ),
-            trailingToken?.regularIdentifierUnderPosition,
-        );
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
     }
     // ParseContext
     else {
-        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
-            return createDefaultAutocompleteItems();
-        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
-            return [];
-        }
-
-        const trailingText: string = trailingToken.data;
-
-        return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
-            trailingText,
-        );
+        return createAutocompleteItemsForTrailingToken(trailingToken);
     }
 }
 
@@ -255,27 +251,11 @@ function inspectPrimitiveType(
             return [];
         }
 
-        const primitiveTypeKind: Constant.PrimitiveTypeConstant = primitiveType.node.primitiveTypeKind;
-
-        return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(primitiveTypeKind)),
-            primitiveTypeKind,
-        );
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
     }
     // ParseContext
     else {
-        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
-            return createDefaultAutocompleteItems();
-        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
-            return [];
-        }
-
-        const trailingText: string = trailingToken.data;
-
-        return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
-            trailingText,
-        );
+        return createAutocompleteItemsForTrailingToken(trailingToken);
     }
 }
 
@@ -316,37 +296,18 @@ function inspectTypePrimaryType(
     );
 
     if (primaryType === undefined) {
-        if (trailingToken) {
-            if (trailingToken.tokenStartComparison === TrailingTokenPositionComparison.OnToken) {
-                return createDefaultAutocompleteItems();
-            } else if (trailingToken.tokenEndComparison === TrailingTokenPositionComparison.OnToken) {
-                const trailingText: string = trailingToken.data;
-
-                return createAutocompleteItems(
-                    AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                        value.startsWith(trailingText),
-                    ),
-                    trailingText,
-                );
-            } else {
-                return [];
-            }
-        } else {
-            return createDefaultAutocompleteItems();
-        }
+        return createAutocompleteItemsForTrailingToken(trailingToken);
     }
     // Ast
     else if (XorNodeUtils.isAst(primaryType)) {
         if (!PositionUtils.isOnAstEnd(activeNode.position, primaryType.node)) {
             return [];
         } else if (AstUtils.isNodeKind<Ast.PrimitiveType>(primaryType.node, Ast.NodeKind.PrimitiveType)) {
-            const primaryTypeKind: Constant.PrimitiveTypeConstant = primaryType.node.primitiveTypeKind;
-
-            return createAutocompleteItemsForPrimitiveTypeConstant(primaryTypeKind);
+            return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node.primitiveTypeKind);
         } else {
             return [];
         }
-    } else {
-        throw new Error();
     }
+
+    throw new PQP.CommonError.InvariantError("this should never be reached");
 }
