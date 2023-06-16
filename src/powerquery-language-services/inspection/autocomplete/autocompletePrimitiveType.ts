@@ -194,27 +194,18 @@ function inspectEitherAsExpressionOrIsExpression(
             return [];
         }
 
-        if (trailingToken) {
-            const trailingText: string = trailingToken.data;
-
-            // `1 is date|`
-            if (trailingToken.isPositionOnTokenEnd) {
-                return createAutocompleteItems(
-                    AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                        value.startsWith(trailingText),
-                    ),
-                    trailingText,
-                );
-            }
-            // `1 is foo | `
-            else {
-                return [];
-            }
-        }
-        // `1 is|`
-        else {
+        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
             return createDefaultAutocompleteItems();
+        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
+            return [];
         }
+
+        const trailingText: string = trailingToken.data;
+
+        return createAutocompleteItems(
+            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
+            trailingText,
+        );
     }
 }
 
@@ -238,17 +229,17 @@ function inspectNullablePrimitiveType(
     }
     // ParseContext
     else {
-        if (!trailingToken || trailingToken.isPositionOnTokenStart) {
+        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
             return createDefaultAutocompleteItems();
-        } else if (!trailingToken.isPositionOnTokenEnd) {
+        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
             return [];
         }
 
+        const trailingText: string = trailingToken.data;
+
         return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                value.startsWith(trailingToken.data),
-            ),
-            trailingToken.data,
+            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
+            trailingText,
         );
     }
 }
@@ -264,32 +255,27 @@ function inspectPrimitiveType(
             return [];
         }
 
+        const primitiveTypeKind: Constant.PrimitiveTypeConstant = primitiveType.node.primitiveTypeKind;
+
         return createAutocompleteItems(
-            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                value.startsWith(primitiveType.node.primitiveTypeKind),
-            ),
-            trailingToken?.regularIdentifierUnderPosition,
+            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(primitiveTypeKind)),
+            primitiveTypeKind,
         );
     }
     // ParseContext
     else {
-        if (!trailingToken) {
+        if (!trailingToken || trailingToken.tokenStartComparison !== TrailingTokenPositionComparison.RightOfToken) {
             return createDefaultAutocompleteItems();
-        } else if (trailingToken.tokenEndComparison === TrailingTokenPositionComparison.OnToken) {
-            return createAutocompleteItems(
-                AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) =>
-                    value.startsWith(trailingToken.data),
-                ),
-                trailingToken.data,
-            );
-        } else if (
-            trailingToken.tokenStartComparison === TrailingTokenPositionComparison.LeftOfToken ||
-            trailingToken.tokenStartComparison === TrailingTokenPositionComparison.OnToken
-        ) {
-            return createDefaultAutocompleteItems();
-        } else {
+        } else if (trailingToken.tokenEndComparison !== TrailingTokenPositionComparison.OnToken) {
             return [];
         }
+
+        const trailingText: string = trailingToken.data;
+
+        return createAutocompleteItems(
+            AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
+            trailingText,
+        );
     }
 }
 

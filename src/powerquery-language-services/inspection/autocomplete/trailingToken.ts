@@ -7,8 +7,6 @@ import * as PQP from "@microsoft/powerquery-parser";
 // This is that token plus a flag for where it is in relation to a Position.
 export interface TrailingToken extends PQP.Language.Token.Token {
     readonly isPositionInToken: boolean;
-    readonly isPositionOnTokenStart: boolean;
-    readonly isPositionOnTokenEnd: boolean;
     readonly tokenStartComparison: TrailingTokenPositionComparison;
     readonly tokenEndComparison: TrailingTokenPositionComparison;
     readonly regularIdentifierUnderPosition: string | undefined;
