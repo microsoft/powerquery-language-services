@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
     NodeIdMap,
@@ -10,27 +9,26 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { CommonError, CommonSettings, ResultUtils, Trace } from "@microsoft/powerquery-parser";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils, TokenPositionComparison } from "../..";
-import { TriedAutocompletePrimitiveType } from "./commonTypes";
 import { TrailingToken } from "./trailingToken";
+import { TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
-    settings: PQP.CommonSettings,
+    settings: CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): TriedAutocompletePrimitiveType {
-    const trace: Trace = settings.traceManager.entry(
+    const trace: Trace.Trace = settings.traceManager.entry(
         AutocompleteTraceConstant.AutocompletePrimitiveType,
         tryAutocompletePrimitiveType.name,
         settings.initialCorrelationId,
@@ -88,8 +86,7 @@ function autocompletePrimitiveType(
             );
         } else if (XorNodeUtils.isNodeKind<Ast.AsNullablePrimitiveType>(parent, Ast.NodeKind.AsNullablePrimitiveType)) {
             return inspectAsNullablePrimitiveType(nodeIdMapCollection, parent, child, activeNode, trailingToken);
-        }
-        if (XorNodeUtils.isNodeKind<Ast.NullablePrimitiveType>(parent, Ast.NodeKind.NullablePrimitiveType)) {
+        } else if (XorNodeUtils.isNodeKind<Ast.NullablePrimitiveType>(parent, Ast.NodeKind.NullablePrimitiveType)) {
             return inspectNullablePrimitiveType(child, activeNode, trailingToken);
         } else {
             return inspectPrimitiveType(child, activeNode, trailingToken);
@@ -311,5 +308,5 @@ function inspectTypePrimaryType(
         return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node.primitiveTypeKind);
     }
 
-    throw new PQP.CommonError.InvariantError("this should never be reached");
+    throw new CommonError.InvariantError("this should never be reached");
 }
