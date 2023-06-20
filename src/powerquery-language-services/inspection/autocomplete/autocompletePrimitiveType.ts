@@ -153,7 +153,7 @@ function createAutocompleteItemsFromIdentifierExpression(
     const literal: string = identifierExpression.identifier.literal;
 
     if (
-        !isPrimitiveTypeConstantSubstring(literal) ||
+        !isSubstringOfPrimitiveTypeConstant(literal) ||
         !PositionUtils.isInAst(activeNode.position, identifierExpression, true, true)
     ) {
         return [];
@@ -518,7 +518,7 @@ function inspectPrimitiveType(
     else if (trailingToken) {
         const trailingText: string = trailingToken.data;
 
-        if (isPrimitiveTypeConstantSubstring(trailingText)) {
+        if (isSubstringOfPrimitiveTypeConstant(trailingText)) {
             return createAutocompleteItems(
                 trailingText,
                 Range.create(
@@ -614,6 +614,6 @@ function inspectTypePrimaryType(
     }
 }
 
-function isPrimitiveTypeConstantSubstring(text: string): boolean {
+function isSubstringOfPrimitiveTypeConstant(text: string): boolean {
     return AllowedPrimitiveTypeConstants.some((value: PrimitiveTypeConstant) => value.includes(text));
 }
