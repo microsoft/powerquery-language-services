@@ -9,7 +9,7 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, AstUtils, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, AstUtils, Constant, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CommonError, CommonSettings, ResultUtils, Trace } from "@microsoft/powerquery-parser";
 import {
     PrimitiveTypeConstant,
@@ -17,8 +17,15 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
-import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, PositionUtils, TokenPositionComparison } from "../..";
+import {
+    AutocompleteTraceConstant,
+    calculateJaroWinkler,
+    CompletionItemKind,
+    PositionUtils,
+    Range,
+    TextEdit,
+} from "../..";
+import { AutocompleteItem } from "./autocompleteItem";
 import { TrailingToken } from "./trailingToken";
 import { TriedAutocompletePrimitiveType } from "./commonTypes";
 
@@ -98,12 +105,38 @@ function autocompletePrimitiveType(
     return [];
 }
 
+function createAutocompleteItemReplacements(existingText: string, range: Range): ReadonlyArray<AutocompleteItem> {
+    return AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.includes(existingText)).map(
+        (value: PrimitiveTypeConstant) =>
+            autocompleteItemFromPrimitiveTypeConstant(value, existingText, TextEdit.replace(range, value)),
+    );
+}
+
+export function autocompleteItemFromPrimitiveTypeConstant(
+    label: Constant.PrimitiveTypeConstant,
+    other?: string,
+    textEdit?: TextEdit,
+): AutocompleteItem {
+    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+
+    return {
+        jaroWinklerScore,
+        kind: CompletionItemKind.Keyword,
+        label,
+        powerQueryType: TypeUtils.primitiveType(
+            label === Constant.PrimitiveTypeConstant.Null,
+            TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
+        ),
+        textEdit,
+    };
+}
+
 function createAutocompleteItems(
     primitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant>,
     other: string | undefined,
 ): ReadonlyArray<AutocompleteItem> {
     return primitiveTypeConstants.map((primitiveTypeConstant: PrimitiveTypeConstant) =>
-        AutocompleteItemUtils.fromPrimitiveTypeConstant(primitiveTypeConstant, other),
+        autocompleteItemFromPrimitiveTypeConstant(primitiveTypeConstant, other),
     );
 }
 
@@ -111,11 +144,14 @@ function createAutocompleteItems(
 // `date` returns ["date", "datetime", "datetimezone"]
 // etc.
 function createAutocompleteItemsForPrimitiveTypeConstant(
-    primitiveTypeConstant: Constant.PrimitiveTypeConstant,
+    primitiveType: Ast.PrimitiveType,
 ): ReadonlyArray<AutocompleteItem> {
-    return createAutocompleteItems(
-        AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(primitiveTypeConstant)),
-        undefined,
+    return createAutocompleteItemReplacements(
+        primitiveType.primitiveTypeKind,
+        Range.create(
+            PositionUtils.positionFromTokenPosition(primitiveType.tokenRange.positionStart),
+            PositionUtils.positionFromTokenPosition(primitiveType.tokenRange.positionEnd),
+        ),
     );
 }
 
@@ -127,18 +163,19 @@ function createAutocompleteItemsForPrimitiveTypeConstant(
 function createAutocompleteItemsForTrailingToken(
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    if (!trailingToken || trailingToken.tokenStartComparison !== TokenPositionComparison.RightOfToken) {
+    if (!trailingToken) {
         return createDefaultAutocompleteItems();
-    } else if (trailingToken.tokenEndComparison !== TokenPositionComparison.OnToken) {
+    } else if (!trailingToken.isPositionEitherInOrOnToken) {
         return [];
+    } else {
+        return createAutocompleteItemReplacements(
+            trailingToken.data,
+            Range.create(
+                PositionUtils.positionFromTokenPosition(trailingToken.positionStart),
+                PositionUtils.positionFromTokenPosition(trailingToken.positionEnd),
+            ),
+        );
     }
-
-    const trailingText: string = trailingToken.data;
-
-    return createAutocompleteItems(
-        AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.startsWith(trailingText)),
-        trailingText,
-    );
 }
 
 function createDefaultAutocompleteItems(): ReadonlyArray<AutocompleteItem> {
@@ -199,7 +236,7 @@ function inspectEitherAsExpressionOrIsExpression(
             return [];
         }
 
-        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node);
     }
     // ParseContext
     else {
@@ -230,11 +267,39 @@ function inspectNullablePrimitiveType(
             return [];
         }
 
-        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node);
     }
     // ParseContext
-    else {
-        return createAutocompleteItemsForTrailingToken(trailingToken);
+    // This should only show up in CombinatorialParserV2 if `nullable` was parsed but there was no PrimitiveType.
+    // If a TrailingToken exists then it's either a partially typed primitive type:
+    //  - Eg. `(val as nullable num|) => val` would have a TrailingToken for `num`
+    // Or it's some random unrelated token which should be ignored.
+    //  - Eg. `(val as nullable |) => val` would have a TrailingToken for `)`
+    else if (!trailingToken) {
+        return createDefaultAutocompleteItems();
+    } else if (!trailingToken.isPositionEitherInOrOnToken) {
+        return [];
+    } else {
+        const trailingText: string = trailingToken.data;
+
+        const primitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = AllowedPrimitiveTypeConstants.filter(
+            (value: PrimitiveTypeConstant) => value.includes(trailingText),
+        );
+
+        if (primitiveTypeConstants.length) {
+            const range: Range = Range.create(
+                PositionUtils.positionFromTokenPosition(trailingToken.positionStart),
+                PositionUtils.positionFromTokenPosition(trailingToken.positionEnd),
+            );
+
+            return primitiveTypeConstants.map((value: PrimitiveTypeConstant) =>
+                autocompleteItemFromPrimitiveTypeConstant(value, trailingText, TextEdit.replace(range, value)),
+            );
+        } else {
+            return AllowedPrimitiveTypeConstants.map((value: PrimitiveTypeConstant) =>
+                autocompleteItemFromPrimitiveTypeConstant(value),
+            );
+        }
     }
 }
 
@@ -249,7 +314,7 @@ function inspectPrimitiveType(
             return [];
         }
 
-        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node.primitiveTypeKind);
+        return createAutocompleteItemsForPrimitiveTypeConstant(primitiveType.node);
     }
     // ParseContext
     else {
@@ -305,7 +370,7 @@ function inspectTypePrimaryType(
             return [];
         }
 
-        return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node.primitiveTypeKind);
+        return createAutocompleteItemsForPrimitiveTypeConstant(primaryType.node);
     }
 
     throw new CommonError.InvariantError("this should never be reached");
