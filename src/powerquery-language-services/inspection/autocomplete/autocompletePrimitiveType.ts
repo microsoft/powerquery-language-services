@@ -61,48 +61,6 @@ const AllowedPrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = Prim
     (constant: PrimitiveTypeConstant) => constant !== PrimitiveTypeConstant.None,
 );
 
-function inspectIdentifier(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    identifier: XorNode<Ast.Identifier>,
-    activeNode: ActiveNode,
-): ReadonlyArray<AutocompleteItem> {
-    const identifierExpression: XorNode<Ast.IdentifierExpression> | undefined =
-        NodeIdMapUtils.parentXorChecked<Ast.IdentifierExpression>(
-            nodeIdMapCollection,
-            identifier.node.id,
-            Ast.NodeKind.IdentifierExpression,
-        );
-
-    if (!identifierExpression) {
-        return [];
-    }
-
-    return inspectIdentifierExpression(nodeIdMapCollection, identifierExpression, activeNode);
-}
-
-function inspectIdentifierExpression(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    identifierExpression: XorNode<Ast.IdentifierExpression>,
-    activeNode: ActiveNode,
-): ReadonlyArray<AutocompleteItem> {
-    if (XorNodeUtils.isAst(identifierExpression)) {
-        return createAutocompleteItemsFromIdentifierExpression(identifierExpression.node, activeNode);
-    } else {
-        const inclusiveConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TConstant>(
-            nodeIdMapCollection,
-            identifierExpression.node.id,
-            0,
-            [Ast.NodeKind.Constant],
-        );
-
-        if (inclusiveConstant) {
-            return [];
-        }
-
-        return [];
-    }
-}
-
 function autocompletePrimitiveType(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
@@ -153,6 +111,35 @@ function autocompletePrimitiveType(
     } else {
         return [];
     }
+}
+
+// Defaults to all AllowedPrimitiveTypeConstants if text is undefined,
+// otherwise filters AllowedPrimitiveTypeConstants by text.
+//
+// Defaults to insertion if range is undefined,
+// otherwise replaces the range with the label.
+function createAutocompleteItems(
+    text?: string | undefined,
+    range?: Range | undefined,
+): ReadonlyArray<AutocompleteItem> {
+    const labels: ReadonlyArray<PrimitiveTypeConstant> = text
+        ? AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.includes(text))
+        : AllowedPrimitiveTypeConstants;
+
+    return labels.map((label: PrimitiveTypeConstant) => {
+        const jaroWinklerScore: number = text !== undefined ? calculateJaroWinkler(label, text) : 1;
+
+        return {
+            jaroWinklerScore,
+            kind: CompletionItemKind.Keyword,
+            label,
+            powerQueryType: TypeUtils.primitiveType(
+                label === Constant.PrimitiveTypeConstant.Null,
+                TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
+            ),
+            textEdit: range ? TextEdit.replace(range, label) : undefined,
+        };
+    });
 }
 
 function createAutocompleteItemsFromIdentifierExpression(
@@ -222,35 +209,6 @@ function createAutocompleteItemsFromTrailingToken(
             ),
         );
     }
-}
-
-// Defaults to all AllowedPrimitiveTypeConstants if text is undefined,
-// otherwise filters AllowedPrimitiveTypeConstants by text.
-//
-// Defaults to insertion if range is undefined,
-// otherwise replaces the range with the label.
-function createAutocompleteItems(
-    text?: string | undefined,
-    range?: Range | undefined,
-): ReadonlyArray<AutocompleteItem> {
-    const labels: ReadonlyArray<PrimitiveTypeConstant> = text
-        ? AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.includes(text))
-        : AllowedPrimitiveTypeConstants;
-
-    return labels.map((label: PrimitiveTypeConstant) => {
-        const jaroWinklerScore: number = text !== undefined ? calculateJaroWinkler(label, text) : 1;
-
-        return {
-            jaroWinklerScore,
-            kind: CompletionItemKind.Keyword,
-            label,
-            powerQueryType: TypeUtils.primitiveType(
-                label === Constant.PrimitiveTypeConstant.Null,
-                TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
-            ),
-            textEdit: range ? TextEdit.replace(range, label) : undefined,
-        };
-    });
 }
 
 function inspectAsNullablePrimitiveType(
@@ -403,6 +361,48 @@ function inspectFieldTypeSpecification(
     return [];
 }
 
+function inspectIdentifier(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    identifier: XorNode<Ast.Identifier>,
+    activeNode: ActiveNode,
+): ReadonlyArray<AutocompleteItem> {
+    const identifierExpression: XorNode<Ast.IdentifierExpression> | undefined =
+        NodeIdMapUtils.parentXorChecked<Ast.IdentifierExpression>(
+            nodeIdMapCollection,
+            identifier.node.id,
+            Ast.NodeKind.IdentifierExpression,
+        );
+
+    if (!identifierExpression) {
+        return [];
+    }
+
+    return inspectIdentifierExpression(nodeIdMapCollection, identifierExpression, activeNode);
+}
+
+function inspectIdentifierExpression(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    identifierExpression: XorNode<Ast.IdentifierExpression>,
+    activeNode: ActiveNode,
+): ReadonlyArray<AutocompleteItem> {
+    if (XorNodeUtils.isAst(identifierExpression)) {
+        return createAutocompleteItemsFromIdentifierExpression(identifierExpression.node, activeNode);
+    } else {
+        const inclusiveConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TConstant>(
+            nodeIdMapCollection,
+            identifierExpression.node.id,
+            0,
+            [Ast.NodeKind.Constant],
+        );
+
+        if (inclusiveConstant) {
+            return [];
+        }
+
+        return [];
+    }
+}
+
 function inspectNullablePrimitiveType(
     nodeIdMapCollection: NodeIdMap.Collection,
     nullablePrimitiveType: XorNode<Ast.NullablePrimitiveType>,
@@ -532,10 +532,6 @@ function inspectPrimitiveType(
     return createAutocompleteItems();
 }
 
-function isPrimitiveTypeConstantSubstring(text: string): boolean {
-    return AllowedPrimitiveTypeConstants.some((value: PrimitiveTypeConstant) => value.includes(text));
-}
-
 function inspectTType(
     ttype: XorNode<Ast.TType>,
     activeNode: ActiveNode,
@@ -616,4 +612,8 @@ function inspectTypePrimaryType(
     } else {
         return [];
     }
+}
+
+function isPrimitiveTypeConstantSubstring(text: string): boolean {
+    return AllowedPrimitiveTypeConstants.some((value: PrimitiveTypeConstant) => value.includes(text));
 }
