@@ -16,12 +16,12 @@ import { AutocompleteTraceConstant } from "../..";
 import { createTrailingToken } from "./trailingTokenUtils";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TActiveNode } from "../activeNode";
+import { TrailingToken } from "./trailingToken";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
 import { TypeCache } from "../typeCache";
-import { TrailingToken } from "./trailingToken";
 
 // Given some Position and ParseState, return autocomplete suggestions.
 export async function autocomplete(

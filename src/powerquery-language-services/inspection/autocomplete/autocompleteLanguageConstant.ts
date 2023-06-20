@@ -18,8 +18,8 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils } from "../..";
-import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 import { TrailingToken } from "./trailingToken";
+import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: PQP.CommonSettings,

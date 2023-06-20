@@ -334,7 +334,7 @@ function typablePrimaryExpression(
             // Else if we're coming from the ArrayWrapper,
             // then grab the previous sibling.
             else if (xorNodeBeforeRpe.node.attributeIndex === 1) {
-                const rpeChild: TXorNode = AncestryUtils.assertNth(ancestry, index- 2);
+                const rpeChild: TXorNode = AncestryUtils.assertNth(ancestry, index - 2);
 
                 return NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(nodeIdMapCollection, rpeChild.node.id);
             } else {
