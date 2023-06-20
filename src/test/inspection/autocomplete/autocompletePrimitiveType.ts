@@ -82,11 +82,9 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             PrimitiveTypeConstant.Type,
         ];
 
-        const DatePrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = [
-            PrimitiveTypeConstant.Date,
-            PrimitiveTypeConstant.DateTime,
-            PrimitiveTypeConstant.DateTimeZone,
-        ];
+        const DatePrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = AllowedPrimitiveTypeConstants.filter(
+            (value: PrimitiveTypeConstant) => value.includes("date"),
+        );
 
         const NPrimitiveTypes: ReadonlyArray<PrimitiveTypeConstant> = AllowedPrimitiveTypeConstants.filter(
             (value: PrimitiveTypeConstant) => value.includes("n"),
@@ -128,7 +126,23 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`type nullable |n`, () => expectLabelTextEdits(`type nullable |n`, NPrimitiveTypes));
 
-        it(`type list {}`);
+        it(`type {|`, () => expectLabelInserts(`type {|`, AllowedPrimitiveTypeConstants));
+
+        it(`type { date|`, () => expectLabelTextEdits(`type { date|`, DatePrimitiveTypeConstants));
+
+        it(`type { |date`, () => expectLabelTextEdits(`type { |date`, DatePrimitiveTypeConstants));
+
+        it(`type { | date`, () => expectNoSuggestions(`type { | date`));
+
+        it(`type { date | `, () => expectNoSuggestions(`type { date | `));
+
+        it(`type {date|}`, () => expectLabelTextEdits(`type {date|}`, DatePrimitiveTypeConstants));
+
+        it(`type {|date}`, () => expectLabelTextEdits(`type {|date}`, DatePrimitiveTypeConstants));
+
+        it(`type {date |}`, () => expectNoSuggestions(`type {date |}`));
+
+        it(`type {| date}`, () => expectNoSuggestions(`type {| date}`));
 
         it(`type [x =|`, () => expectLabelInserts(`type [x =|`, AllowedPrimitiveTypeConstants));
 
