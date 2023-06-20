@@ -82,38 +82,31 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             PrimitiveTypeConstant.Type,
         ];
 
+        const DatePrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = [
+            PrimitiveTypeConstant.Date,
+            PrimitiveTypeConstant.DateTime,
+            PrimitiveTypeConstant.DateTimeZone,
+        ];
+
+        const NPrimitiveTypes: ReadonlyArray<PrimitiveTypeConstant> = AllowedPrimitiveTypeConstants.filter(
+            (value: PrimitiveTypeConstant) => value.includes("n"),
+        );
+
         it(`type|`, () => expectNoSuggestions(`type|`));
 
         it(`| type`, () => expectNoSuggestions(`| type`));
 
         it(`type |`, () => expectLabelInserts(`type |`, AllowedPrimitiveTypeConstants));
 
-        it(`type |e`, () =>
-            expectLabelTextEdits(`type |e`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Number,
-                PrimitiveTypeConstant.Record,
-                PrimitiveTypeConstant.Table,
-                PrimitiveTypeConstant.Text,
-                PrimitiveTypeConstant.Time,
-                PrimitiveTypeConstant.Type,
-            ]));
+        it(`type |n`, () => expectLabelTextEdits(`type |n`, NPrimitiveTypes));
 
-        it(`WIP type |date`, () =>
-            expectLabelTextEdits(`type |date`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`type n|`, () => expectLabelTextEdits(`type n|`, NPrimitiveTypes));
 
-        it(`type date|`, () =>
-            expectLabelTextEdits(`type date|`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`type n |`, () => expectNoSuggestions(`type n |`));
+
+        it(`type |date`, () => expectLabelTextEdits(`type |date`, DatePrimitiveTypeConstants));
+
+        it(`type date|`, () => expectLabelTextEdits(`type date|`, DatePrimitiveTypeConstants));
 
         it(`type date |`, () => expectNoSuggestions(`type date |`));
 
@@ -125,22 +118,82 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`type | number`, () => expectNoSuggestions(`type | number`));
 
-        it(`type n|`, () =>
-            expectLabelTextEdits(`type n|`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`type n|`, () => expectLabelTextEdits(`type n|`, NPrimitiveTypes));
 
         it(`type nullable|`, () => expectNoSuggestions(`type nullable|`));
 
         it(`type nullable |`, () => expectLabelInserts(`type nullable |`, AllowedPrimitiveTypeConstants));
+
+        it(`type nullable n|`, () => expectLabelTextEdits(`type nullable n|`, NPrimitiveTypes));
+
+        it(`type nullable |n`, () => expectLabelTextEdits(`type nullable |n`, NPrimitiveTypes));
+
+        it(`type list {}`);
+
+        it(`type [x =|`, () => expectLabelInserts(`type [x =|`, AllowedPrimitiveTypeConstants));
+
+        it(`type [x = |`, () => expectLabelInserts(`type [x = |`, AllowedPrimitiveTypeConstants));
+
+        it(`type [x =|]`, () => expectLabelInserts(`type [x =|]`, AllowedPrimitiveTypeConstants));
+
+        it(`type [x = |]`, () => expectLabelInserts(`type [x = |]`, AllowedPrimitiveTypeConstants));
+
+        it(`type [x = | ]`, () => expectLabelInserts(`type [x = | ]`, AllowedPrimitiveTypeConstants));
+
+        it(`type [x = date|`, () => expectLabelTextEdits(`type [x = date|`, DatePrimitiveTypeConstants));
+
+        it(`type [x = |date`, () => expectLabelTextEdits(`type [x = |date`, DatePrimitiveTypeConstants));
+
+        it(`type [x = |n`, () => expectLabelTextEdits(`type [x = |n`, NPrimitiveTypes));
+
+        it(`type [x = n|`, () => expectLabelTextEdits(`type [x = n|`, NPrimitiveTypes));
+
+        it(`type function (val as |date) as date`, () =>
+            expectLabelTextEdits(`type function (val as |date) as date`, DatePrimitiveTypeConstants));
+
+        it(`type function (val as date|) as date`, () =>
+            expectLabelTextEdits(`type function (val as date|) as date`, DatePrimitiveTypeConstants));
+
+        it(`type function (val as date) as |date`, () =>
+            expectLabelTextEdits(`type function (val as date) as |date`, DatePrimitiveTypeConstants));
+
+        it(`type function (val as date) as date|`, () =>
+            expectLabelTextEdits(`type function (val as date) as date|`, DatePrimitiveTypeConstants));
+
+        it(`type function (val as n|) as date`, () =>
+            expectLabelTextEdits(`type function (val as n|) as date`, NPrimitiveTypes));
+
+        it(`type function (val as n| ) as date`, () =>
+            expectLabelTextEdits(`type function (val as n| ) as date`, NPrimitiveTypes));
+
+        it(`type function (val as |n) as date`, () =>
+            expectLabelTextEdits(`type function (val as |n) as date`, NPrimitiveTypes));
+
+        it(`type function (val as n |) as date`, () => expectNoSuggestions(`type function (val as n |) as date`));
+
+        it(`type function (val as | n) as date`, () => expectNoSuggestions(`type function (val as | n) as date`));
+
+        it(`type function (val as date) as date |`, () => expectNoSuggestions(`type function (val as date) as date |`));
+
+        it(`type function (val as date) as | date`, () => expectNoSuggestions(`type function (val as date) as | date`));
+
+        it(`type table [x =|`, () => expectLabelInserts(`type table [x =|`, AllowedPrimitiveTypeConstants));
+
+        it(`type table [x = |`, () => expectLabelInserts(`type table [x = |`, AllowedPrimitiveTypeConstants));
+
+        it(`type table [x =|]`, () => expectLabelInserts(`type table [x =|]`, AllowedPrimitiveTypeConstants));
+
+        it(`type table [x = |]`, () => expectLabelInserts(`type table [x = |]`, AllowedPrimitiveTypeConstants));
+
+        it(`type table [x = | ]`, () => expectLabelInserts(`type table [x = | ]`, AllowedPrimitiveTypeConstants));
+
+        it(`type table [x = date|`, () => expectLabelTextEdits(`type table [x = date|`, DatePrimitiveTypeConstants));
+
+        it(`type table [x = |date`, () => expectLabelTextEdits(`type table [x = |date`, DatePrimitiveTypeConstants));
+
+        it(`type table [x = |n`, () => expectLabelTextEdits(`type table [x = |n`, NPrimitiveTypes));
+
+        it(`type table [x = n|`, () => expectLabelTextEdits(`type table [x = n|`, NPrimitiveTypes));
 
         it(`(x|) => 1`, () => expectNoSuggestions(`(x|) => 1`));
 
@@ -152,40 +205,13 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`(x as | ) => 1`, () => expectLabelInserts(`(x as | ) => 1`, AllowedPrimitiveTypeConstants));
 
-        it(`(x as date|) => 1`, () =>
-            expectLabelTextEdits(`(x as date|) => 1`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`(x as date|) => 1`, () => expectLabelTextEdits(`(x as date|) => 1`, DatePrimitiveTypeConstants));
 
         it(`(x as date |) => 1`, () => expectNoSuggestions(`(x as date |) => 1`));
 
-        it(`(x as n|) => 1`, () =>
-            expectLabelTextEdits(`(x as n|) => 1`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`(x as n|) => 1`, () => expectLabelTextEdits(`(x as n|) => 1`, NPrimitiveTypes));
 
-        it(`(x as n| ) => 1`, () =>
-            expectLabelTextEdits(`(x as n| ) => 1`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`(x as n| ) => 1`, () => expectLabelTextEdits(`(x as n| ) => 1`, NPrimitiveTypes));
 
         it(`(x as num|) => 1`, () => expectLabelTextEdits(`(x as num|) => 1`, [PrimitiveTypeConstant.Number]));
 
@@ -195,38 +221,12 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`(x as nullable |) => 1`, () => expectLabelInserts(`(x as nullable |) => 1`, AllowedPrimitiveTypeConstants));
 
-        it(`(x as nullable n|) => 1`, () =>
-            expectLabelTextEdits(`(x as nullable n|) => 1`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`(x as nullable n|) => 1`, () => expectLabelTextEdits(`(x as nullable n|) => 1`, NPrimitiveTypes));
 
-        it(`(x as nullable |n) => 1`, () =>
-            expectLabelTextEdits(`(x as nullable |n) => 1`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`(x as nullable |n) => 1`, () => expectLabelTextEdits(`(x as nullable |n) => 1`, NPrimitiveTypes));
 
         it(`(x as nullable date|) => 1`, () =>
-            expectLabelTextEdits(`(x as nullable date|) => 1`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+            expectLabelTextEdits(`(x as nullable date|) => 1`, DatePrimitiveTypeConstants));
 
         it(`(x as nullable date |) => 1`, () => expectNoSuggestions(`(x as nullable date |) => 1`));
 
@@ -236,45 +236,13 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`| 1 as`, () => expectNoSuggestions(`| 1 as`));
 
-        it(`1 as n|`, () =>
-            expectLabelTextEdits(`1 as n|`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`1 as n|`, () => expectLabelTextEdits(`1 as n|`, NPrimitiveTypes));
 
-        it(`1 as |n`, () =>
-            expectLabelTextEdits(`1 as |n`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`1 as |n`, () => expectLabelTextEdits(`1 as |n`, NPrimitiveTypes));
 
-        it(`1 as date|`, () =>
-            expectLabelTextEdits(`1 as date|`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`1 as date|`, () => expectLabelTextEdits(`1 as date|`, DatePrimitiveTypeConstants));
 
-        it(`1 as date| as logical`, () =>
-            expectLabelTextEdits(`1 as date| as logical`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`1 as date| as logical`, () => expectLabelTextEdits(`1 as date| as logical`, DatePrimitiveTypeConstants));
 
         it(`1 as date | as logical`, () => expectNoSuggestions(`1 as date | as logical`));
 
@@ -286,45 +254,13 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`| 1 is`, () => expectNoSuggestions(`| 1 is`));
 
-        it(`1 is n|`, () =>
-            expectLabelTextEdits(`1 is n|`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`1 is n|`, () => expectLabelTextEdits(`1 is n|`, NPrimitiveTypes));
 
-        it(`1 is |n`, () =>
-            expectLabelTextEdits(`1 is |n`, [
-                PrimitiveTypeConstant.Action,
-                PrimitiveTypeConstant.Any,
-                PrimitiveTypeConstant.AnyNonNull,
-                PrimitiveTypeConstant.Binary,
-                PrimitiveTypeConstant.DateTimeZone,
-                PrimitiveTypeConstant.Duration,
-                PrimitiveTypeConstant.Function,
-                PrimitiveTypeConstant.Null,
-                PrimitiveTypeConstant.Number,
-            ]));
+        it(`1 is |n`, () => expectLabelTextEdits(`1 is |n`, NPrimitiveTypes));
 
-        it(`1 is date|`, () =>
-            expectLabelTextEdits(`1 is date|`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`1 is date|`, () => expectLabelTextEdits(`1 is date|`, DatePrimitiveTypeConstants));
 
-        it(`1 is date| is logical`, () =>
-            expectLabelTextEdits(`1 is date| is logical`, [
-                PrimitiveTypeConstant.Date,
-                PrimitiveTypeConstant.DateTime,
-                PrimitiveTypeConstant.DateTimeZone,
-            ]));
+        it(`1 is date| is logical`, () => expectLabelTextEdits(`1 is date| is logical`, DatePrimitiveTypeConstants));
 
         it(`1 is date | is logical`, () => expectNoSuggestions(`1 is date | is logical`));
 
