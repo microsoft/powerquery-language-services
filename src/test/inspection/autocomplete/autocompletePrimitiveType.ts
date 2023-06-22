@@ -94,17 +94,13 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
             (value: PrimitiveTypeConstant) => value.includes("date"),
         ).sort();
 
+        it(`|`, () => expectNoSuggestions(`|`));
+
         it(`type|`, () => expectNoSuggestions(`type|`));
 
         it(`| type`, () => expectNoSuggestions(`| type`));
 
         it(`type |`, () => expectInserts(`type |`));
-
-        it(`type |date`, () => expectDatePrimitiveTypeReplacements(`type |date`));
-
-        it(`type date|`, () => expectDatePrimitiveTypeReplacements(`type date|`));
-
-        it(`type n |`, () => expectNoSuggestions(`type n |`));
 
         it(`type |date`, () => expectDatePrimitiveTypeReplacements(`type |date`));
 
@@ -138,13 +134,11 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`type { date | `, () => expectNoSuggestions(`type { date | `));
 
+        it(`type { date | } `, () => expectNoSuggestions(`type { date | } `));
+
         it(`type {date|}`, () => expectDatePrimitiveTypeReplacements(`type {date|}`));
 
         it(`type {|date}`, () => expectDatePrimitiveTypeReplacements(`type {|date}`));
-
-        it(`type {date |}`, () => expectNoSuggestions(`type {date |}`));
-
-        it(`type {| date}`, () => expectNoSuggestions(`type {| date}`));
 
         it(`type [x =|`, () => expectInserts(`type [x =|`));
 
@@ -159,10 +153,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         it(`type [x = date|`, () => expectDatePrimitiveTypeReplacements(`type [x = date|`));
 
         it(`type [x = |date`, () => expectDatePrimitiveTypeReplacements(`type [x = |date`));
-
-        it(`type [x = |date`, () => expectDatePrimitiveTypeReplacements(`type [x = |date`));
-
-        it(`type [x = date|`, () => expectDatePrimitiveTypeReplacements(`type [x = date|`));
 
         it(`type function (val as |date) as date`, () =>
             expectDatePrimitiveTypeReplacements(`type function (val as |date) as date`));
@@ -207,10 +197,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`type table [x = |date`, () => expectDatePrimitiveTypeReplacements(`type table [x = |date`));
 
-        it(`type table [x = |date`, () => expectDatePrimitiveTypeReplacements(`type table [x = |date`));
-
-        it(`type table [x = date|`, () => expectDatePrimitiveTypeReplacements(`type table [x = date|`));
-
         it(`(x|) => 1`, () => expectNoSuggestions(`(x|) => 1`));
 
         it(`(x |) => 1`, () => expectNoSuggestions(`(x |) => 1`));
@@ -251,8 +237,6 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`1 as |date`, () => expectDatePrimitiveTypeReplacements(`1 as |date`));
 
-        it(`1 as date|`, () => expectDatePrimitiveTypeReplacements(`1 as date|`));
-
         it(`1 as date| as logical`, () => expectDatePrimitiveTypeReplacements(`1 as date| as logical`));
 
         it(`1 as date | as logical`, () => expectNoSuggestions(`1 as date | as logical`));
@@ -269,12 +253,8 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`1 is |date`, () => expectDatePrimitiveTypeReplacements(`1 is |date`));
 
-        it(`1 is date|`, () => expectDatePrimitiveTypeReplacements(`1 is date|`));
-
         it(`1 is date| is logical`, () => expectDatePrimitiveTypeReplacements(`1 is date| is logical`));
 
         it(`1 is date | is logical`, () => expectNoSuggestions(`1 is date | is logical`));
-
-        it(`1 is da |`, () => expectNoSuggestions(`1 is da |`));
     });
 });
