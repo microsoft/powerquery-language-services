@@ -113,9 +113,6 @@ function autocompletePrimitiveType(
     }
 }
 
-// Defaults to all AllowedPrimitiveTypeConstants if text is undefined,
-// otherwise filters AllowedPrimitiveTypeConstants by text.
-//
 // Defaults to insertion if range is undefined,
 // otherwise replaces the range with the label.
 function createAutocompleteItems(
