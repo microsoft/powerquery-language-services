@@ -122,11 +122,7 @@ function createAutocompleteItems(
     text?: string | undefined,
     range?: Range | undefined,
 ): ReadonlyArray<AutocompleteItem> {
-    const labels: ReadonlyArray<PrimitiveTypeConstant> = text
-        ? AllowedPrimitiveTypeConstants.filter((value: PrimitiveTypeConstant) => value.includes(text))
-        : AllowedPrimitiveTypeConstants;
-
-    return labels.map((label: PrimitiveTypeConstant) => {
+    return AllowedPrimitiveTypeConstants.map((label: PrimitiveTypeConstant) => {
         const jaroWinklerScore: number = text !== undefined ? calculateJaroWinkler(label, text) : 1;
 
         return {
