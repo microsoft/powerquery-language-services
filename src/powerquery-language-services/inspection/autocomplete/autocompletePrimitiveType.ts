@@ -10,19 +10,19 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
 import { AutocompleteTraceConstant, PositionUtils, TokenPositionComparison } from "../..";
-import { TriedAutocompletePrimitiveType } from "./commonTypes";
 import { TrailingToken } from "./trailingToken";
+import { TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: PQP.CommonSettings,
@@ -88,8 +88,7 @@ function autocompletePrimitiveType(
             );
         } else if (XorNodeUtils.isNodeKind<Ast.AsNullablePrimitiveType>(parent, Ast.NodeKind.AsNullablePrimitiveType)) {
             return inspectAsNullablePrimitiveType(nodeIdMapCollection, parent, child, activeNode, trailingToken);
-        }
-        if (XorNodeUtils.isNodeKind<Ast.NullablePrimitiveType>(parent, Ast.NodeKind.NullablePrimitiveType)) {
+        } else if (XorNodeUtils.isNodeKind<Ast.NullablePrimitiveType>(parent, Ast.NodeKind.NullablePrimitiveType)) {
             return inspectNullablePrimitiveType(child, activeNode, trailingToken);
         } else {
             return inspectPrimitiveType(child, activeNode, trailingToken);
