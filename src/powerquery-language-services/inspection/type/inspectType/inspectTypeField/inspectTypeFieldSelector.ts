@@ -35,7 +35,7 @@ export async function inspectTypeFieldSelector(
     XorNodeUtils.assertIsNodeKind<Ast.FieldSelector>(xorNode, Ast.NodeKind.FieldSelector);
 
     const fieldName: Ast.GeneralizedIdentifier | undefined =
-        NodeIdMapUtils.unboxWrappedContentAstChecked<Ast.GeneralizedIdentifier>(
+        NodeIdMapUtils.wrappedContentAstChecked<Ast.GeneralizedIdentifier>(
             state.nodeIdMapCollection,
             xorNode.node.id,
             Ast.NodeKind.GeneralizedIdentifier,

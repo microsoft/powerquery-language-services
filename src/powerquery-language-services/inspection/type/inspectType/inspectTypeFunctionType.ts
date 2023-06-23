@@ -50,7 +50,7 @@ export async function inspectTypeFunctionType(
                 return Type.UnknownInstance;
             }
 
-            const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.unboxArrayWrapper(
+            const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.arrayWrapperContentXor(
                 state.nodeIdMapCollection,
                 parameters.node.id,
             );

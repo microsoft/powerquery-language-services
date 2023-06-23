@@ -107,7 +107,7 @@ function functionParameterXorNodes(
         return [];
     }
 
-    const wrappedContent: TXorNode | undefined = NodeIdMapUtils.unboxWrappedContent(
+    const wrappedContent: TXorNode | undefined = NodeIdMapUtils.wrappedContentXor(
         nodeIdMapCollection,
         parametersList.node.id,
     );
