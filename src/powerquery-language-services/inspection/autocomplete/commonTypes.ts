@@ -34,5 +34,3 @@ export interface InspectedFieldAccess {
     readonly identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
 }
-
-

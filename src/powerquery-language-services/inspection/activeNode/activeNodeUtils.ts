@@ -363,7 +363,7 @@ function findDepth(parentIdById: NodeIdMap.ParentIdById, nodeId: number, depthCa
         return 0;
     }
 
-    const summedDepth = 1 + findDepth(parentIdById, parentId, depthCache);
+    const summedDepth: number = 1 + findDepth(parentIdById, parentId, depthCache);
     depthCache.set(nodeId, summedDepth);
 
     return summedDepth;
