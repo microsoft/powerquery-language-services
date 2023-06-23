@@ -331,19 +331,17 @@ function findContext(
     let closestContextOnOrAfterPosition: ParseContext.TNode | undefined = undefined;
 
     for (const candidate of nodeIdMapCollection.contextNodeById.values()) {
-        if (candidate.tokenStart) {
-            if (candidate.tokenIndexStart < tokenIndexLowBound) {
-                continue;
-            }
+        if (candidate.tokenIndexStart < tokenIndexLowBound) {
+            continue;
+        }
 
-            if (
-                closestContextOnOrAfterPosition === undefined ||
-                candidate.tokenIndexStart > closestContextOnOrAfterPosition.tokenIndexStart ||
-                findDepth(nodeIdMapCollection.parentIdById, candidate.id, depthCache) >
-                    findDepth(nodeIdMapCollection.parentIdById, closestContextOnOrAfterPosition.id, depthCache)
-            ) {
-                closestContextOnOrAfterPosition = candidate;
-            }
+        if (
+            closestContextOnOrAfterPosition === undefined ||
+            candidate.tokenIndexStart > closestContextOnOrAfterPosition.tokenIndexStart ||
+            findDepth(nodeIdMapCollection.parentIdById, candidate.id, depthCache) >
+                findDepth(nodeIdMapCollection.parentIdById, closestContextOnOrAfterPosition.id, depthCache)
+        ) {
+            closestContextOnOrAfterPosition = candidate;
         }
     }
 

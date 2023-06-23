@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Constant, Keyword, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Constant, Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
 import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -63,20 +63,6 @@ export function fromLibraryDefinition(
         kind: libraryDefinition.completionItemKind,
         label,
         powerQueryType: libraryDefinition.asPowerQueryType,
-    };
-}
-
-export function fromPrimitiveTypeConstant(label: Constant.PrimitiveTypeConstant, other?: string): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
-
-    return {
-        jaroWinklerScore,
-        kind: CompletionItemKind.Keyword,
-        label,
-        powerQueryType: TypeUtils.primitiveType(
-            label === Constant.PrimitiveTypeConstant.Null,
-            TypeUtils.typeKindFromPrimitiveTypeConstantKind(label),
-        ),
     };
 }
 
