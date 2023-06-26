@@ -73,11 +73,7 @@ function autocompletePrimitiveType(
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const child: TXorNode = AncestryUtils.assertFirst(ancestry);
 
-    if (XorNodeUtils.isNodeKind<Ast.Identifier>(child, Ast.NodeKind.Identifier)) {
-        return inspectIdentifier(nodeIdMapCollection, child, activeNode);
-    } else if (XorNodeUtils.isNodeKind<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression)) {
-        return createAutocompleteItems();
-    } else if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(child, Ast.NodeKind.FieldTypeSpecification)) {
+    if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(child, Ast.NodeKind.FieldTypeSpecification)) {
         return inspectFieldTypeSpecification(nodeIdMapCollection, child, activeNode, trailingToken);
     } else if (XorNodeUtils.isNodeKind<Ast.NullableType>(child, Ast.NodeKind.NullableType)) {
         return inspectNullableType(nodeIdMapCollection, child, activeNode, trailingToken);
@@ -352,48 +348,6 @@ function inspectFieldTypeSpecification(
     }
 
     return [];
-}
-
-function inspectIdentifier(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    identifier: XorNode<Ast.Identifier>,
-    activeNode: ActiveNode,
-): ReadonlyArray<AutocompleteItem> {
-    const identifierExpression: XorNode<Ast.IdentifierExpression> | undefined =
-        NodeIdMapUtils.parentXorChecked<Ast.IdentifierExpression>(
-            nodeIdMapCollection,
-            identifier.node.id,
-            Ast.NodeKind.IdentifierExpression,
-        );
-
-    if (!identifierExpression) {
-        return [];
-    }
-
-    return inspectIdentifierExpression(nodeIdMapCollection, identifierExpression, activeNode);
-}
-
-function inspectIdentifierExpression(
-    nodeIdMapCollection: NodeIdMap.Collection,
-    identifierExpression: XorNode<Ast.IdentifierExpression>,
-    activeNode: ActiveNode,
-): ReadonlyArray<AutocompleteItem> {
-    if (XorNodeUtils.isAst(identifierExpression)) {
-        return createAutocompleteItemsFromIdentifierExpression(identifierExpression.node, activeNode);
-    } else {
-        const inclusiveConstant: XorNode<Ast.TConstant> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TConstant>(
-            nodeIdMapCollection,
-            identifierExpression.node.id,
-            0,
-            [Ast.NodeKind.Constant],
-        );
-
-        if (inclusiveConstant) {
-            return [];
-        }
-
-        return [];
-    }
 }
 
 function inspectNullablePrimitiveType(

@@ -96,6 +96,10 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
         it(`|`, () => expectNoSuggestions(`|`));
 
+        it(`l|`, () => expectNoSuggestions(`l|`));
+
+        it(`if |`, () => expectNoSuggestions(`if |`));
+
         it(`type|`, () => expectNoSuggestions(`type|`));
 
         it(`| type`, () => expectNoSuggestions(`| type`));
