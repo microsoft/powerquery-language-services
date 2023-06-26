@@ -75,8 +75,6 @@ function autocompletePrimitiveType(
 
     if (XorNodeUtils.isNodeKind<Ast.Identifier>(child, Ast.NodeKind.Identifier)) {
         return inspectIdentifier(nodeIdMapCollection, child, activeNode);
-    } else if (XorNodeUtils.isNodeKind<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression)) {
-        return createAutocompleteItems();
     } else if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(child, Ast.NodeKind.FieldTypeSpecification)) {
         return inspectFieldTypeSpecification(nodeIdMapCollection, child, activeNode, trailingToken);
     } else if (XorNodeUtils.isNodeKind<Ast.NullableType>(child, Ast.NodeKind.NullableType)) {
