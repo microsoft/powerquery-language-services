@@ -12,7 +12,7 @@ import { AutocompleteItemProviderContext } from "./providers/commonTypes";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { Library } from "./library";
 
-export function newInspectionSettings(
+export function inspectionSettings(
     settings: PQP.Settings,
     overrides?: Partial<InspectionSettings>,
 ): InspectionSettings {
@@ -23,6 +23,38 @@ export function newInspectionSettings(
         typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,
         eachScopeById: overrides?.eachScopeById ?? undefined,
     };
+}
+
+export function getAutocompleteItemsFromScope(
+    context: AutocompleteItemProviderContext,
+): ReadonlyArray<Inspection.AutocompleteItem> {
+    const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+    const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
+
+    if (ResultUtils.isError(triedNodeScope)) {
+        return [];
+    }
+
+    const nodeScope: Inspection.NodeScope = triedNodeScope.value;
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(triedScopeType, new Map());
+
+    const contextText: string | undefined = context.text;
+    const partial: Inspection.AutocompleteItem[] = [];
+
+    for (const [label, scopeItem] of nodeScope.entries()) {
+        const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
+            label,
+            scopeItem,
+            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
+            contextText,
+        );
+
+        if (autocompleteItem) {
+            partial.push(autocompleteItem);
+        }
+    }
+
+    return partial;
 }
 
 export async function getIdentifierType(
@@ -157,39 +189,4 @@ export function getSymbolForIdentifierPairedExpression(
         range: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.tokenRange),
         selectionRange: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.key.tokenRange),
     };
-}
-
-export function getAutocompleteItemsFromScope(
-    context: AutocompleteItemProviderContext,
-): ReadonlyArray<Inspection.AutocompleteItem> {
-    const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
-    const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
-
-    if (ResultUtils.isError(triedNodeScope)) {
-        return [];
-    }
-
-    const nodeScope: Inspection.NodeScope = triedNodeScope.value;
-
-    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(triedScopeType)
-        ? triedScopeType.value
-        : new Map();
-
-    const contextText: string | undefined = context.text;
-    const partial: Inspection.AutocompleteItem[] = [];
-
-    for (const [label, scopeItem] of nodeScope.entries()) {
-        const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
-            label,
-            scopeItem,
-            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
-            contextText,
-        );
-
-        if (autocompleteItem) {
-            partial.push(autocompleteItem);
-        }
-    }
-
-    return partial;
 }
