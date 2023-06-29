@@ -7,7 +7,6 @@ import { TokenPositionComparison } from "../../tokenPositionComparison";
 // A ParseError includes the token it failed to parse.
 // This is that token plus a flag for where it is in relation to a Position.
 export interface TrailingToken extends PQP.Language.Token.Token {
-    readonly isPositionInToken: boolean;
     readonly isPositionEitherInOrOnToken: boolean;
     readonly tokenStartComparison: TokenPositionComparison;
     readonly tokenEndComparison: TokenPositionComparison;

@@ -20,7 +20,6 @@ export function createTrailingToken(position: Position, parseErrorToken: PQP.Lan
 
     return {
         ...parseErrorToken,
-        isPositionInToken: PositionUtils.isInToken(position, parseErrorToken, false, true),
         tokenStartComparison,
         tokenEndComparison,
         // This is another way of saying:
