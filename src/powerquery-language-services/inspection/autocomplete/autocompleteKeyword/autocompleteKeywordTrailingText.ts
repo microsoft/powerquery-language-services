@@ -12,7 +12,7 @@ export function autocompleteKeywordTrailingText(
     trailingToken: TrailingToken,
     allowedKeywords: ReadonlyArray<Keyword.KeywordKind> | undefined,
 ): ReadonlyArray<Keyword.KeywordKind> {
-    if (trailingToken.isPositionInToken === false) {
+    if (trailingToken.isPositionEitherInOrOnToken === false) {
         return inspected;
     }
 
