@@ -20,7 +20,7 @@ import type { Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/l
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
 import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, PositionUtils } from "../..";
+import { AutocompleteTraceConstant, CompletionItemKind, PositionUtils, TextEdit, calculateJaroWinkler } from "../..";
 import { TriedType, tryType } from "../type";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TypeCache } from "../typeCache";
@@ -228,28 +228,27 @@ function inspectFieldSelector(
         );
 
     switch (generalizedIdentifierXor.kind) {
+        // There isn't a perfect way to determine if an autocomplete should be allowed.
+        // Take the following scenario, staring with start with: `let foo = [has a space = 1] in foo`
+        // Now the user wants to add a field selector: `let [has a space = 1][| in foo`
+        // The parser rules generate a GeneralizedIdentifier `in foo` even though the user wouldn't expect it.
+        //
+        // The best solution I can think of is the following:
+        //  - if it' a fully parsed Ast (ie. there exists a closing bracket) then the entire field is fair game.
+        //  - if it's a partial Ast (ie. there is no closing bracket) then only operate on the first identifier token
         case PQP.Parser.XorNodeKind.Ast: {
             const generalizedIdentifier: Ast.GeneralizedIdentifier = generalizedIdentifierXor.node;
             const generalizedIdentifierLiteral: string = generalizedIdentifier.literal;
+
+            const closingBracketNodeId: number = childIds[2];
+            const hasClosingBracketAst: boolean = nodeIdMapCollection.astNodeById.has(closingBracketNodeId);
 
             let isPositionInOrOnIdentifier: boolean;
             let literalUnderPosition: string | undefined;
             let textEditRange: Range | undefined;
             let fieldNames: ReadonlyArray<string>;
 
-            // Autocomplete should be allowed in the following two scenarios:
-            //  - the cursor is on/in a quoted identiifer
-            //      - `[has a space = 1][|#"has"` should autocomplete and replace the whole quoted identifier
-            //      - `[has a space = 1][#"has"|` should autocomplete and replace the whole quoted identifier
-            //      - `[has a space = 1][| #"has"` should not autocomplete
-            //  - the cursor is on the first token of a GeneralizedIdentifier
-            //      - `[has a space = 1][|has a space` should autocomplete and replace only `has`
-            //      - `[has a space = 1][has| a space` should autocomplete and replace only `has`
-            //      - `[has a space = 1][| has a space` should not autocomplete
-            if (
-                generalizedIdentifierLiteral.includes(" ") &&
-                !TextUtils.isQuotedIdentifier(generalizedIdentifierLiteral)
-            ) {
+            if (!hasClosingBracketAst && generalizedIdentifierLiteral.includes(" ")) {
                 const firstToken: Token = PQP.ArrayUtils.assertGet(
                     lexerSnapshot.tokens,
                     generalizedIdentifier.tokenRange.tokenIndexStart,
@@ -275,28 +274,9 @@ function inspectFieldSelector(
         }
 
         case PQP.Parser.XorNodeKind.Context: {
-            // TODO [Autocomplete]:
-            // This doesn't take into account of generalized identifiers consisting of multiple tokens.
-            // Eg. `foo[bar baz]` or `foo[#"bar baz"].
-            const openBracketConstant: Ast.TConstant = NodeIdMapUtils.assertNthChildAstChecked<Ast.TConstant>(
-                nodeIdMapCollection,
-                fieldSelector.node.id,
-                0,
-                Ast.NodeKind.Constant,
-            );
-
-            const nextTokenPosition: PQP.Language.Token.TokenPosition =
-                lexerSnapshot.tokens[openBracketConstant.tokenRange.tokenIndexEnd + 1]?.positionStart;
-
-            const isAutocompleteAllowed: boolean =
-                PositionUtils.isAfterAst(position, openBracketConstant, false) &&
-                (nextTokenPosition === undefined ||
-                    PositionUtils.isOnTokenPosition(position, nextTokenPosition) ||
-                    PositionUtils.isBeforeTokenPosition(position, nextTokenPosition, true));
-
             return {
                 fieldNames: [],
-                isAutocompleteAllowed,
+                isAutocompleteAllowed: true,
                 literalUnderPosition: undefined,
                 textEditRange: undefined,
             };
@@ -311,21 +291,39 @@ function createAutocompleteItems(
     fieldEntries: ReadonlyArray<[string, Type.TPowerQueryType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
-    const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
+    const { literalUnderPosition, textEditRange }: InspectedFieldAccess = inspectedFieldAccess;
     const autocompleteItems: AutocompleteItem[] = [];
-    const identifierUnderPositionLiteral: string | undefined = inspectedFieldAccess.literalUnderPosition;
 
     for (const [label, powerQueryType] of fieldEntries) {
-        if (fieldAccessNames.includes(label) && label !== identifierUnderPositionLiteral) {
-            continue;
-        }
-
-        autocompleteItems.push(
-            AutocompleteItemUtils.fromFieldAccess(label, powerQueryType, identifierUnderPositionLiteral),
-        );
+        // Don't suggest labels that are already in the field access.
+        autocompleteItems.push(createAutocompleteItem(label, powerQueryType, literalUnderPosition, textEditRange));
     }
 
     return autocompleteItems;
+}
+
+function createAutocompleteItem(
+    label: string,
+    powerQueryType: Type.TPowerQueryType,
+    identifierUnderPositionLiteral: string | undefined,
+    textEditRange: Range | undefined,
+): AutocompleteItem {
+    const jaroWinklerScore: number =
+        identifierUnderPositionLiteral !== undefined ? calculateJaroWinkler(label, identifierUnderPositionLiteral) : 1;
+
+    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
+    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
+
+    const normalizedLabel: string =
+        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
+
+    return {
+        jaroWinklerScore,
+        kind: CompletionItemKind.Field,
+        label: normalizedLabel,
+        powerQueryType,
+        textEdit: textEditRange ? TextEdit.replace(textEditRange, label) : undefined,
+    };
 }
 
 function typablePrimaryExpression(

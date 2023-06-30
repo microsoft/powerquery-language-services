@@ -16,7 +16,7 @@ import { Inspection } from "../../../powerquery-language-services";
 import { expect } from "chai";
 import { Range } from "vscode-languageserver-textdocument";
 
-describe(`Inspection - Autocomplete - FieldSelection`, () => {
+describe(`Inspection - Autocomplete - FieldAccess`, () => {
     // async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
     //     const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
     //         TestConstants.DefaultInspectionSettings,
@@ -31,14 +31,12 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     //     );
     // }
 
-    async function assertInspectedFieldAccess(textWithPipe: string): Promise<Inspection.InspectedFieldAccess> {
+    async function assertInspectedFieldAccess(
+        textWithPipe: string,
+    ): Promise<Inspection.InspectedFieldAccess | undefined> {
         const autocomplete: Inspection.Autocomplete = await assertAutocomplete(textWithPipe);
 
-        const inspectedFieldAccess: Inspection.InspectedFieldAccess = Assert.asDefined(
-            ResultUtils.assertOk(autocomplete.triedFieldAccess),
-        ).inspectedFieldAccess;
-
-        return inspectedFieldAccess;
+        return ResultUtils.assertOk(autocomplete.triedFieldAccess)?.inspectedFieldAccess;
     }
 
     function fieldAccessAutocompleteItemSelector(
@@ -97,17 +95,17 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
     }
 
-    async function expectInspectedFieldAccess(
-        textWithPipe: string,
-        expected: Inspection.InspectedFieldAccess,
-    ): Promise<void> {
-        const actual: Inspection.InspectedFieldAccess = await assertInspectedFieldAccess(textWithPipe);
+    describe(`InspectedFieldAccess`, () => {
+        async function expectInspectedFieldAccess(
+            textWithPipe: string,
+            expected: Inspection.InspectedFieldAccess | undefined,
+        ): Promise<void> {
+            const actual: Inspection.InspectedFieldAccess | undefined = await assertInspectedFieldAccess(textWithPipe);
 
-        expect(actual).to.deep.equal(expected);
-    }
+            expect(actual).to.deep.equal(expected);
+        }
 
-    describe(`Selection`, () => {
-        describe(`InspectedFieldAccess`, () => {
+        describe(`FieldSelection`, () => {
             it(`[key with a space = 1][|`, async () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][|`, {
                     fieldNames: [],
@@ -135,13 +133,8 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 });
             });
 
-            it(`WIP [key with a space = 1][| key with a space`, async () => {
-                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, {
-                    fieldNames: [],
-                    isAutocompleteAllowed: true,
-                    literalUnderPosition: undefined,
-                    textEditRange: undefined,
-                });
+            it(`[key with a space = 1][| key with a space`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, undefined);
             });
 
             it(`[key with a space = 1][|#"key with a space"`, async () => {
@@ -198,60 +191,68 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 });
             });
         });
+    });
 
-        it(`[][|]`, () => expectNoFieldAccessSuggestions(`[][|]`));
+    describe(`top suggestions`, () => {
+        describe(`FieldSelection`, () => {
+            it(`[][|]`, () => expectNoFieldAccessSuggestions(`[][|]`));
 
-        it(`[][| ]`, () => expectNoFieldAccessSuggestions(`[][| ]`));
+            it(`[][| ]`, () => expectNoFieldAccessSuggestions(`[][| ]`));
 
-        it(`[][ |]`, () => expectNoFieldAccessSuggestions(`[][ |]`));
+            it(`[][ |]`, () => expectNoFieldAccessSuggestions(`[][ |]`));
 
-        it(`[][ | ]`, () => expectNoFieldAccessSuggestions(`[][ | ]`));
+            it(`[][ | ]`, () => expectNoFieldAccessSuggestions(`[][ | ]`));
 
-        it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
+            it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
 
-        it(`[][ |`, () => expectNoFieldAccessSuggestions(`[][ |`));
+            it(`[][ |`, () => expectNoFieldAccessSuggestions(`[][ |`));
 
-        it(`[car = 1, cat = 2][| `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][| `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][|`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][ | `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][ |`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ | `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ |`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][ | ] `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][ | ]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ | ] `, () =>
+                expectTopFieldAccessInserts(`[car = 1, cat = 2][ | ]`, [`car`, `cat`]));
 
-        it(`let foo = [car = 1, cat = 2][#"test"|`, () =>
-            expectTopFieldAccessReplacements(`let foo = [cat = 1, car = 2][#"test"|`, [`car`, `cat`]));
+            it(`let foo = [car = 1, cat = 2][#"test"|`, () =>
+                expectTopFieldAccessReplacements(`let foo = [car = 1, cat = 2][#"test"|`, [`cat`, `car`]));
 
-        it(`[car = 1, cat = 2][c|`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][c|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][c|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][ca|`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][ca|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ca|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][car|`, () =>
-            expectTopFieldAccessReplacements(`[cat = 1, car = 2][car|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][car|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][cart|`, () =>
-            expectTopFieldAccessReplacements(`[cat = 1, car = 2][cart|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][cart|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][c|]`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][c|]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][c|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|]`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][ca|]`, () =>
-            expectTopFieldAccessReplacements(`[cat = 1, car = 2][ca|]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ca|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|]`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][car|]`, () =>
-            expectTopFieldAccessReplacements(`[cat = 1, car = 2][car|]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][car|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|]`, [`car`, `cat`]));
 
-        it(`[car = 1, cat = 2][cart|]`, () =>
-            expectTopFieldAccessReplacements(`[cat = 1, car = 2][cart|]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][cart|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|]`, [`car`, `cat`]));
+        });
     });
 
     /*
     describe(`Selection`, () => {
         describe(`ParseOk`, () => {
-            it(`[cat = 1, car = 2][x|]`, () => runTest(`[cat = 1, car = 2][x|]`, []));
+            it(`[car = 1, cat = 2][x|]`, () => runTest(`[car = 1, cat = 2][x|]`, []));
 
-            it(`[cat = 1, car = 2][c|]`, () => runTest(`[cat = 1, car = 2][c|]`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][c|]`, () => runTest(`[car = 1, cat = 2][c|]`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][| c]`, () => runTest(`[cat = 1, car = 2][| c]`, []));
+            it(`[car = 1, cat = 2][| c]`, () => runTest(`[car = 1, cat = 2][| c]`, []));
 
-            it(`[cat = 1, car = 2][c |]`, () => runTest(`[cat = 1, car = 2][c |]`, []));
+            it(`[car = 1, cat = 2][c |]`, () => runTest(`[car = 1, cat = 2][c |]`, []));
 
             it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, () =>
                 runTest(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, [
@@ -261,17 +262,17 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         });
 
         describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][|]`, () => runTest(`[cat = 1, car = 2][|]`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][|]`, () => runTest(`[car = 1, cat = 2][|]`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2]|[`, () => runTest(`[cat = 1, car = 2]|[`, []));
+            it(`[car = 1, cat = 2]|[`, () => runTest(`[car = 1, cat = 2]|[`, []));
 
-            it(`[cat = 1, car = 2][|`, () => runTest(`[cat = 1, car = 2][|`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][|`, () => runTest(`[car = 1, cat = 2][|`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][x|`, () => runTest(`[cat = 1, car = 2][x|`, []));
+            it(`[car = 1, cat = 2][x|`, () => runTest(`[car = 1, cat = 2][x|`, []));
 
-            it(`[cat = 1, car = 2][c|`, () => runTest(`[cat = 1, car = 2][c|`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][c|`, () => runTest(`[car = 1, cat = 2][c|`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][c |`, () => runTest(`[cat = 1, car = 2][c |`, []));
+            it(`[car = 1, cat = 2][c |`, () => runTest(`[car = 1, cat = 2][c |`, []));
 
             it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, () =>
                 runTest(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, [
@@ -284,60 +285,60 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
 
     describe("Projection", () => {
         describe("ParseOk", () => {
-            it(`[cat = 1, car = 2][ [x|] ]`, () => runTest(`[cat = 1, car = 2][ [x|] ]`, []));
+            it(`[car = 1, cat = 2][ [x|] ]`, () => runTest(`[car = 1, cat = 2][ [x|] ]`, []));
 
-            it(`[cat = 1, car = 2][ [c|] ]`, () => runTest(`[cat = 1, car = 2][ [c|] ]`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [c|] ]`, () => runTest(`[car = 1, cat = 2][ [c|] ]`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][ [c |] ]`, () => runTest(`[cat = 1, car = 2][ [c |] ]`, []));
+            it(`[car = 1, cat = 2][ [c |] ]`, () => runTest(`[car = 1, cat = 2][ [c |] ]`, []));
 
-            it(`[cat = 1, car = 2][ [x], [c|] ]`, () => runTest(`[cat = 1, car = 2][ [x], [c|] ]`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [x], [c|] ]`, () => runTest(`[car = 1, cat = 2][ [x], [c|] ]`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][ [cat], [c|] ]`, () => runTest(`[cat = 1, car = 2][ [cat], [c|] ]`, ["car"]));
+            it(`[car = 1, cat = 2][ [cat], [c|] ]`, () => runTest(`[car = 1, cat = 2][ [cat], [c|] ]`, ["car"]));
 
-            it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, () =>
-                runTest(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, []));
+            it(`[car = 1, cat = 2][ [cat], [car], [c|] ]`, () =>
+                runTest(`[car = 1, cat = 2][ [cat], [car], [c|] ]`, []));
         });
 
         describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][ [|`, () => runTest(`[cat = 1, car = 2][ [|`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [|`, () => runTest(`[car = 1, cat = 2][ [|`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][ [ |`, () => runTest(`[cat = 1, car = 2][ [ |`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [ |`, () => runTest(`[car = 1, cat = 2][ [ |`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][ [ c|`, () => runTest(`[cat = 1, car = 2][ [ c|`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [ c|`, () => runTest(`[car = 1, cat = 2][ [ c|`, ["cat", "car"]));
 
-            it(`[cat = 1, car = 2][ [ cat|`, () => runTest(`[cat = 1, car = 2][ [ cat|`, ["cat"]));
+            it(`[car = 1, cat = 2][ [ cat|`, () => runTest(`[car = 1, cat = 2][ [ cat|`, ["cat"]));
 
-            it(`[cat = 1, car = 2][ [ cat |`, () => runTest(`[cat = 1, car = 2][ [ cat |`, []));
+            it(`[car = 1, cat = 2][ [ cat |`, () => runTest(`[car = 1, cat = 2][ [ cat |`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
+            it(`[car = 1, cat = 2][ [ cat ]|`, () => runTest(`[car = 1, cat = 2][ [ cat ]|`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ] |`, () => runTest(`[cat = 1, car = 2][ [ cat ] |`, []));
+            it(`[car = 1, cat = 2][ [ cat ] |`, () => runTest(`[car = 1, cat = 2][ [ cat ] |`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
+            it(`[car = 1, cat = 2][ [ cat ]|`, () => runTest(`[car = 1, cat = 2][ [ cat ]|`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
+            it(`[car = 1, cat = 2][ [ cat ]|`, () => runTest(`[car = 1, cat = 2][ [ cat ]|`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ], |`, () => runTest(`[cat = 1, car = 2][ [ cat ], |`, []));
+            it(`[car = 1, cat = 2][ [ cat ], |`, () => runTest(`[car = 1, cat = 2][ [ cat ], |`, []));
 
-            it(`[cat = 1, car = 2][ [ cat ], [|`, () => runTest(`[cat = 1, car = 2][ [ cat ], [|`, ["car"]));
+            it(`[car = 1, cat = 2][ [ cat ], [|`, () => runTest(`[car = 1, cat = 2][ [ cat ], [|`, ["car"]));
 
-            it(`[cat = 1, car = 2][ [ cat ], [|<>`, () => runTest(`[cat = 1, car = 2][ [ cat ], [|<>`, ["car"]));
+            it(`[car = 1, cat = 2][ [ cat ], [|<>`, () => runTest(`[car = 1, cat = 2][ [ cat ], [|<>`, ["car"]));
 
-            it(`[cat = 1, car = 2][ [ cat ], [| <>`, () => runTest(`[cat = 1, car = 2][ [ cat ], [| <>`, ["car"]));
+            it(`[car = 1, cat = 2][ [ cat ], [| <>`, () => runTest(`[car = 1, cat = 2][ [ cat ], [| <>`, ["car"]));
 
-            it(`[cat = 1, car = 2][ [ cat ], [<>|`, () => runTest(`[cat = 1, car = 2][ [ cat ], [<>|`, []));
+            it(`[car = 1, cat = 2][ [ cat ], [<>|`, () => runTest(`[car = 1, cat = 2][ [ cat ], [<>|`, []));
         });
     });
 
     describe(`Indirection`, () => {
-        it(`let fn = () => [cat = 1, car = 2] in fn()[|`, () =>
-            runTest(`let fn = () => [cat = 1, car = 2] in fn()[|`, ["cat", "car"]));
+        it(`let fn = () => [car = 1, cat = 2] in fn()[|`, () =>
+            runTest(`let fn = () => [car = 1, cat = 2] in fn()[|`, ["cat", "car"]));
 
-        it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, () =>
-            runTest(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, ["cat", "car"]));
+        it(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, () =>
+            runTest(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, ["cat", "car"]));
 
-        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, () =>
-            runTest(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, ["cat", "car"]));
+        it(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, () =>
+            runTest(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, ["cat", "car"]));
 
         it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () =>
             runTest(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, ["cat", "car"]));
