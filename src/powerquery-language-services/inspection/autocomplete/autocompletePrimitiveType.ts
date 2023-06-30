@@ -71,7 +71,7 @@ function autocompletePrimitiveType(
     }
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const child: TXorNode = AncestryUtils.assertFirst(ancestry);
+    const child: TXorNode = AncestryUtils.assertNth(ancestry, 0);
 
     if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(child, Ast.NodeKind.FieldTypeSpecification)) {
         return inspectFieldTypeSpecification(nodeIdMapCollection, child, activeNode, trailingToken);

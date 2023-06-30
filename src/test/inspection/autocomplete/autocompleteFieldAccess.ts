@@ -6,22 +6,129 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
+import {
+    AbridgedAutocompleteItem,
+    expectAbridgedAutocompleteItems,
+    expectNoSuggestions,
+    expectTopSuggestions,
+} from "./autocompleteTestUtils";
 
 describe(`Inspection - Autocomplete - FieldSelection`, () => {
-    async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
-        const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-            TestConstants.DefaultInspectionSettings,
+    // async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
+    //     const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
+    //         TestConstants.DefaultInspectionSettings,
+    //         textWithPipe,
+    //     );
+
+    //     ResultUtils.assertIsOk(actual.triedFieldAccess);
+
+    //     TestUtils.assertContainsAutocompleteItemLabels(
+    //         expected,
+    //         actual.triedFieldAccess.value?.autocompleteItems ?? [],
+    //     );
+    // }
+
+    function assertAutocompleteFieldAccess(
+        autocomplete: Inspection.Autocomplete,
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        return ResultUtils.assertOk(autocomplete.triedFieldAccess)?.autocompleteItems ?? [];
+    }
+
+    function expectNoFieldAccessSuggestions(textWithPipe: string): Promise<void> {
+        return expectNoSuggestions(textWithPipe, assertAutocompleteFieldAccess);
+    }
+
+    async function expectFieldAccessAutocompleteItems(
+        textWithPipe: string,
+        labels: ReadonlyArray<string>,
+        isTextEdit: boolean,
+    ): Promise<void> {
+        await expectAbridgedAutocompleteItems(
             textWithPipe,
-        );
-
-        ResultUtils.assertIsOk(actual.triedFieldAccess);
-
-        TestUtils.assertContainsAutocompleteItemLabels(
-            expected,
-            actual.triedFieldAccess.value?.autocompleteItems ?? [],
+            assertAutocompleteFieldAccess,
+            labels.map((label: string) => ({
+                label,
+                isTextEdit,
+            })),
         );
     }
 
+    function expectFieldAccessInserts(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectFieldAccessAutocompleteItems(textWithPipe, labels, false);
+    }
+
+    function expectFieldAccessReplacements(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectFieldAccessAutocompleteItems(textWithPipe, labels, true);
+    }
+
+    function expectTopFieldAccessAutocompleteItems(
+        textWithPipe: string,
+        labels: ReadonlyArray<string>,
+        isTextEdit: boolean,
+    ): Promise<void> {
+        return expectTopSuggestions(
+            textWithPipe,
+            assertAutocompleteFieldAccess,
+            labels.map((label: string) => ({
+                label,
+                isTextEdit,
+            })),
+        );
+    }
+
+    function expectTopFieldAccessInserts(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, false);
+    }
+
+    function expectTopFieldAccessReplacements(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
+    }
+
+    describe(`Selection`, () => {
+        it("[][|]", () => expectNoFieldAccessSuggestions("[][|]"));
+
+        it("[][| ]", () => expectNoFieldAccessSuggestions("[][| ]"));
+
+        it("[][ |]", () => expectNoFieldAccessSuggestions("[][ |]"));
+
+        it("[][ | ]", () => expectNoFieldAccessSuggestions("[][ | ]"));
+
+        it("[][|", () => expectNoFieldAccessSuggestions("[][|"));
+
+        it("[][ |", () => expectNoFieldAccessSuggestions("[][ |"));
+
+        it("[car = 1, cat = 2][| ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][|", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][ | ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][ |", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][ | ] ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][ | ]", ["car", "cat"]));
+
+        it("WIP [car = 1, cat = 2][|c", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][|c", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][c|", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][c|", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][ca|", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][ca|", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][car|", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][car|", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][cart|", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][cart|", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][c|]", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][c|]", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][ca|]", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][ca|]", ["car", "cat"]));
+
+        it("[car = 1, cat = 2][car|]", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][car|]", ["car", "cat"]));
+
+        it("WIP [car = 1, cat = 2][cart|]", () =>
+            expectTopFieldAccessReplacements("[cat = 1, car = 2][cart|]", ["car", "cat"]));
+    });
+
+    /*
     describe(`Selection`, () => {
         describe(`ParseOk`, () => {
             it(`[cat = 1, car = 2][x|]`, () => runTest(`[cat = 1, car = 2][x|]`, []));
@@ -129,4 +236,5 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
                 `#"generalized identifier"`,
             ]));
     });
+    */
 });

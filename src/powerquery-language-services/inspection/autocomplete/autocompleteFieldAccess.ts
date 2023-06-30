@@ -69,40 +69,15 @@ async function autocompleteFieldAccess(
     activeNode: ActiveNode,
     typeCache: TypeCache,
 ): Promise<AutocompleteFieldAccess | undefined> {
-    let inspectedFieldAccess: InspectedFieldAccess | undefined = undefined;
-
-    // Option 1: Find a field access node in the ancestry.
-    let fieldAccessAncestor: XorNode<Ast.FieldSelector | Ast.FieldProjection> | undefined;
-
-    for (const ancestor of activeNode.ancestry) {
-        if (
-            XorNodeUtils.isNodeKind<Ast.FieldSelector | Ast.FieldProjection>(ancestor, [
-                Ast.NodeKind.FieldSelector,
-                Ast.NodeKind.FieldProjection,
-            ])
-        ) {
-            fieldAccessAncestor = ancestor;
-        }
-    }
-
-    if (fieldAccessAncestor !== undefined) {
-        inspectedFieldAccess = inspectFieldAccess(
-            parseState.lexerSnapshot,
-            parseState.contextState.nodeIdMapCollection,
-            activeNode.position,
-            fieldAccessAncestor,
-        );
-    }
+    const inspectedFieldAccess: InspectedFieldAccess | undefined = inspectFieldAccess(
+        parseState.lexerSnapshot,
+        parseState.contextState.nodeIdMapCollection,
+        activeNode,
+    );
 
     // No field access was found, or the field access reports no autocomplete is possible.
     // Eg. `[x = 1][x |]`
-    if (inspectedFieldAccess === undefined || inspectedFieldAccess.isAutocompleteAllowed === false) {
-        return undefined;
-    }
-
-    // Don't waste time on type analysis if the field access
-    // reports it's in an invalid location for an autocomplete.
-    if (!inspectedFieldAccess.isAutocompleteAllowed) {
+    if (!inspectedFieldAccess?.isAutocompleteAllowed) {
         return undefined;
     }
 
@@ -165,15 +140,22 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
 function inspectFieldAccess(
     lexerSnapshot: PQP.Lexer.LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
-    position: Position,
-    fieldAccess: XorNode<Ast.FieldSelector | Ast.FieldProjection>,
-): InspectedFieldAccess {
+    activeNode: ActiveNode,
+): InspectedFieldAccess | undefined {
+    const fieldAccess: XorNode<Ast.FieldProjection | Ast.FieldSelector> | undefined = AncestryUtils.findNodeKind<
+        Ast.FieldProjection | Ast.FieldSelector
+    >(activeNode.ancestry, [Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector]);
+
+    if (fieldAccess === undefined) {
+        return undefined;
+    }
+
     switch (fieldAccess.node.kind) {
         case Ast.NodeKind.FieldProjection:
-            return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
+            return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldAccess);
 
         case Ast.NodeKind.FieldSelector:
-            return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldAccess);
+            return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldAccess);
 
         default:
             throw Assert.isNever(fieldAccess.node);

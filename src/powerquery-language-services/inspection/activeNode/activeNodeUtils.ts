@@ -202,7 +202,7 @@ export function assertActiveNode(nodeIdMapCollection: NodeIdMap.Collection, posi
 }
 
 export function assertGetLeaf(activeNode: ActiveNode): TXorNode {
-    return AncestryUtils.assertFirst(activeNode.ancestry);
+    return AncestryUtils.assertNth(activeNode.ancestry, 0);
 }
 
 export function assertPositionInBounds(value: TActiveNode): asserts value is ActiveNode {
