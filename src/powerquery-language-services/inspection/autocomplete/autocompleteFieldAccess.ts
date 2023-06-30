@@ -12,9 +12,10 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, TextUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import type { Position, Range } from "vscode-languageserver-types";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Position } from "vscode-languageserver-types";
+import type { Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
@@ -168,38 +169,40 @@ function inspectFieldProjection(
     position: Position,
     fieldProjection: TXorNode,
 ): InspectedFieldAccess {
-    let isAutocompleteAllowed: boolean = false;
-    let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
-    const fieldNames: string[] = [];
+    throw new Error();
+    // let isAutocompleteAllowed: boolean = false;
+    // let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
+    // const fieldNames: string[] = [];
 
-    for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-        const inspectedFieldSelector: InspectedFieldAccess = inspectFieldSelector(
-            lexerSnapshot,
-            nodeIdMapCollection,
-            position,
-            fieldSelector,
-        );
+    // for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
+    //     const inspectedFieldSelector: InspectedFieldAccess = inspectFieldSelector(
+    //         lexerSnapshot,
+    //         nodeIdMapCollection,
+    //         position,
+    //         fieldSelector,
+    //     );
 
-        if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.identifierUnderPosition) {
-            isAutocompleteAllowed = true;
-            identifierUnderPosition = inspectedFieldSelector.identifierUnderPosition;
-        }
+    //     if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.identifierUnderPosition) {
+    //         isAutocompleteAllowed = true;
+    //         identifierUnderPosition = inspectedFieldSelector.identifierUnderPosition;
+    //     }
 
-        fieldNames.push(...inspectedFieldSelector.fieldNames);
-    }
+    //     fieldNames.push(...inspectedFieldSelector.fieldNames);
+    // }
 
-    return {
-        isAutocompleteAllowed,
-        identifierUnderPosition,
-        fieldNames,
-    };
+    // return {
+    //     isAutocompleteAllowed,
+    //     identifierUnderPosition,
+    //     fieldNames,
+    // };
 }
 
-function createInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
+function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
     return {
-        isAutocompleteAllowed,
-        identifierUnderPosition: undefined,
         fieldNames: [],
+        isAutocompleteAllowed,
+        literalUnderPosition: undefined,
+        textEditRange: undefined,
     };
 }
 
@@ -212,29 +215,62 @@ function inspectFieldSelector(
     const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
 
     if (childIds === undefined) {
-        return createInspectedFieldAccess(false);
+        return emptyInspectedFieldAccess(false);
     } else if (childIds.length === 1) {
-        return createInspectedFieldAccess(nodeIdMapCollection.astNodeById.has(childIds[0]));
+        return emptyInspectedFieldAccess(nodeIdMapCollection.astNodeById.has(childIds[0]));
     }
-
-    const generalizedIdentifierId: number = childIds[1];
 
     const generalizedIdentifierXor: XorNode<Ast.GeneralizedIdentifier> =
         NodeIdMapUtils.assertXorChecked<Ast.GeneralizedIdentifier>(
             nodeIdMapCollection,
-            generalizedIdentifierId,
+            PQP.ArrayUtils.assertGet(childIds, 1),
             Ast.NodeKind.GeneralizedIdentifier,
         );
 
     switch (generalizedIdentifierXor.kind) {
         case PQP.Parser.XorNodeKind.Ast: {
             const generalizedIdentifier: Ast.GeneralizedIdentifier = generalizedIdentifierXor.node;
-            const isPositionInIdentifier: boolean = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
+            const generalizedIdentifierLiteral: string = generalizedIdentifier.literal;
+
+            let isPositionInOrOnIdentifier: boolean;
+            let literalUnderPosition: string | undefined;
+            let textEditRange: Range | undefined;
+            let fieldNames: ReadonlyArray<string>;
+
+            // Autocomplete should be allowed in the following two scenarios:
+            //  - the cursor is on/in a quoted identiifer
+            //      - `[has a space = 1][|#"has"` should autocomplete and replace the whole quoted identifier
+            //      - `[has a space = 1][#"has"|` should autocomplete and replace the whole quoted identifier
+            //      - `[has a space = 1][| #"has"` should not autocomplete
+            //  - the cursor is on the first token of a GeneralizedIdentifier
+            //      - `[has a space = 1][|has a space` should autocomplete and replace only `has`
+            //      - `[has a space = 1][has| a space` should autocomplete and replace only `has`
+            //      - `[has a space = 1][| has a space` should not autocomplete
+            if (
+                generalizedIdentifierLiteral.includes(" ") &&
+                !TextUtils.isQuotedIdentifier(generalizedIdentifierLiteral)
+            ) {
+                const firstToken: Token = PQP.ArrayUtils.assertGet(
+                    lexerSnapshot.tokens,
+                    generalizedIdentifier.tokenRange.tokenIndexStart,
+                );
+
+                isPositionInOrOnIdentifier = PositionUtils.isInToken(position, firstToken, true, true);
+                literalUnderPosition = isPositionInOrOnIdentifier ? firstToken.data : undefined;
+                textEditRange = PositionUtils.rangeFromToken(firstToken);
+                fieldNames = [firstToken.data];
+            } else {
+                isPositionInOrOnIdentifier = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
+                literalUnderPosition = isPositionInOrOnIdentifier ? generalizedIdentifier.literal : undefined;
+                textEditRange = PositionUtils.rangeFromTokenRange(generalizedIdentifier.tokenRange);
+                fieldNames = [generalizedIdentifier.literal];
+            }
 
             return {
-                isAutocompleteAllowed: isPositionInIdentifier,
-                identifierUnderPosition: isPositionInIdentifier === true ? generalizedIdentifier : undefined,
-                fieldNames: [generalizedIdentifier.literal],
+                fieldNames,
+                isAutocompleteAllowed: isPositionInOrOnIdentifier,
+                literalUnderPosition,
+                textEditRange,
             };
         }
 
@@ -259,9 +295,10 @@ function inspectFieldSelector(
                     PositionUtils.isBeforeTokenPosition(position, nextTokenPosition, true));
 
             return {
-                isAutocompleteAllowed,
-                identifierUnderPosition: undefined,
                 fieldNames: [],
+                isAutocompleteAllowed,
+                literalUnderPosition: undefined,
+                textEditRange: undefined,
             };
         }
 
@@ -276,7 +313,7 @@ function createAutocompleteItems(
 ): ReadonlyArray<AutocompleteItem> {
     const fieldAccessNames: ReadonlyArray<string> = inspectedFieldAccess.fieldNames;
     const autocompleteItems: AutocompleteItem[] = [];
-    const identifierUnderPositionLiteral: string | undefined = inspectedFieldAccess.identifierUnderPosition?.literal;
+    const identifierUnderPositionLiteral: string | undefined = inspectedFieldAccess.literalUnderPosition;
 
     for (const [label, powerQueryType] of fieldEntries) {
         if (fieldAccessNames.includes(label) && label !== identifierUnderPositionLiteral) {

@@ -56,6 +56,10 @@ export async function rangeFromXorNode(
     );
 }
 
+export function rangeFromToken(token: PQP.Language.Token.Token): Range {
+    return rangeFromTokenPositions(token.positionStart, token.positionEnd) as Range;
+}
+
 export function rangeFromTokenPositions(
     startTokenPosition: PQP.Language.Token.TokenPosition | undefined,
     endTokenPosition: PQP.Language.Token.TokenPosition | undefined,

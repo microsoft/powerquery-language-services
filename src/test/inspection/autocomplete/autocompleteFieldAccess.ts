@@ -2,16 +2,19 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
 import {
     AbridgedAutocompleteItem,
+    assertAutocomplete,
     expectAbridgedAutocompleteItems,
     expectNoSuggestions,
     expectTopSuggestions,
 } from "./autocompleteTestUtils";
+import { Inspection } from "../../../powerquery-language-services";
+import { expect } from "chai";
+import { Range } from "vscode-languageserver-textdocument";
 
 describe(`Inspection - Autocomplete - FieldSelection`, () => {
     // async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
@@ -28,14 +31,24 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     //     );
     // }
 
-    function assertAutocompleteFieldAccess(
+    async function assertInspectedFieldAccess(textWithPipe: string): Promise<Inspection.InspectedFieldAccess> {
+        const autocomplete: Inspection.Autocomplete = await assertAutocomplete(textWithPipe);
+
+        const inspectedFieldAccess: Inspection.InspectedFieldAccess = Assert.asDefined(
+            ResultUtils.assertOk(autocomplete.triedFieldAccess),
+        ).inspectedFieldAccess;
+
+        return inspectedFieldAccess;
+    }
+
+    function fieldAccessAutocompleteItemSelector(
         autocomplete: Inspection.Autocomplete,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
         return ResultUtils.assertOk(autocomplete.triedFieldAccess)?.autocompleteItems ?? [];
     }
 
     function expectNoFieldAccessSuggestions(textWithPipe: string): Promise<void> {
-        return expectNoSuggestions(textWithPipe, assertAutocompleteFieldAccess);
+        return expectNoSuggestions(textWithPipe, fieldAccessAutocompleteItemSelector);
     }
 
     async function expectFieldAccessAutocompleteItems(
@@ -45,7 +58,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     ): Promise<void> {
         await expectAbridgedAutocompleteItems(
             textWithPipe,
-            assertAutocompleteFieldAccess,
+            fieldAccessAutocompleteItemSelector,
             labels.map((label: string) => ({
                 label,
                 isTextEdit,
@@ -68,7 +81,7 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
     ): Promise<void> {
         return expectTopSuggestions(
             textWithPipe,
-            assertAutocompleteFieldAccess,
+            fieldAccessAutocompleteItemSelector,
             labels.map((label: string) => ({
                 label,
                 isTextEdit,
@@ -84,48 +97,149 @@ describe(`Inspection - Autocomplete - FieldSelection`, () => {
         return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
     }
 
+    async function expectInspectedFieldAccess(
+        textWithPipe: string,
+        expected: Inspection.InspectedFieldAccess,
+    ): Promise<void> {
+        const actual: Inspection.InspectedFieldAccess = await assertInspectedFieldAccess(textWithPipe);
+
+        expect(actual).to.deep.equal(expected);
+    }
+
     describe(`Selection`, () => {
-        it("[][|]", () => expectNoFieldAccessSuggestions("[][|]"));
+        describe(`InspectedFieldAccess`, () => {
+            it(`[key with a space = 1][|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|`, {
+                    fieldNames: [],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: undefined,
+                    textEditRange: undefined,
+                });
+            });
 
-        it("[][| ]", () => expectNoFieldAccessSuggestions("[][| ]"));
+            it(`[key with a space = 1][key| with a space`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][key| with a space`, {
+                    fieldNames: ["key"],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: "key",
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 26,
+                        },
+                    },
+                });
+            });
 
-        it("[][ |]", () => expectNoFieldAccessSuggestions("[][ |]"));
+            it(`WIP [key with a space = 1][| key with a space`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, {
+                    fieldNames: [],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: undefined,
+                    textEditRange: undefined,
+                });
+            });
 
-        it("[][ | ]", () => expectNoFieldAccessSuggestions("[][ | ]"));
+            it(`[key with a space = 1][|#"key with a space"`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space"`, {
+                    fieldNames: [`#"key with a space"`],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: `#"key with a space"`,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                });
+            });
 
-        it("[][|", () => expectNoFieldAccessSuggestions("[][|"));
+            it(`[key with a space = 1][#"key| with a space"`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#"key| with a space"`, {
+                    fieldNames: [`#"key with a space"`],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: `#"key with a space"`,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                });
+            });
 
-        it("[][ |", () => expectNoFieldAccessSuggestions("[][ |"));
+            it(`[key with a space = 1][#|"key with a space"`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#|"key with a space"`, {
+                    fieldNames: [`#"key with a space"`],
+                    isAutocompleteAllowed: true,
+                    literalUnderPosition: `#"key with a space"`,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                });
+            });
+        });
 
-        it("[car = 1, cat = 2][| ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][|", ["car", "cat"]));
+        it(`[][|]`, () => expectNoFieldAccessSuggestions(`[][|]`));
 
-        it("[car = 1, cat = 2][ | ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][ |", ["car", "cat"]));
+        it(`[][| ]`, () => expectNoFieldAccessSuggestions(`[][| ]`));
 
-        it("[car = 1, cat = 2][ | ] ", () => expectTopFieldAccessInserts("[cat = 1, car = 2][ | ]", ["car", "cat"]));
+        it(`[][ |]`, () => expectNoFieldAccessSuggestions(`[][ |]`));
 
-        it("WIP [car = 1, cat = 2][|c", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][|c", ["car", "cat"]));
+        it(`[][ | ]`, () => expectNoFieldAccessSuggestions(`[][ | ]`));
 
-        it("[car = 1, cat = 2][c|", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][c|", ["car", "cat"]));
+        it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
 
-        it("[car = 1, cat = 2][ca|", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][ca|", ["car", "cat"]));
+        it(`[][ |`, () => expectNoFieldAccessSuggestions(`[][ |`));
 
-        it("[car = 1, cat = 2][car|", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][car|", ["car", "cat"]));
+        it(`[car = 1, cat = 2][| `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][|`, [`car`, `cat`]));
 
-        it("[car = 1, cat = 2][cart|", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][cart|", ["car", "cat"]));
+        it(`[car = 1, cat = 2][ | `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][ |`, [`car`, `cat`]));
 
-        it("[car = 1, cat = 2][c|]", () => expectTopFieldAccessReplacements("[cat = 1, car = 2][c|]", ["car", "cat"]));
+        it(`[car = 1, cat = 2][ | ] `, () => expectTopFieldAccessInserts(`[cat = 1, car = 2][ | ]`, [`car`, `cat`]));
 
-        it("[car = 1, cat = 2][ca|]", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][ca|]", ["car", "cat"]));
+        it(`let foo = [car = 1, cat = 2][#"test"|`, () =>
+            expectTopFieldAccessReplacements(`let foo = [cat = 1, car = 2][#"test"|`, [`car`, `cat`]));
 
-        it("[car = 1, cat = 2][car|]", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][car|]", ["car", "cat"]));
+        it(`[car = 1, cat = 2][c|`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][c|`, [`car`, `cat`]));
 
-        it("WIP [car = 1, cat = 2][cart|]", () =>
-            expectTopFieldAccessReplacements("[cat = 1, car = 2][cart|]", ["car", "cat"]));
+        it(`[car = 1, cat = 2][ca|`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][ca|`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][car|`, () =>
+            expectTopFieldAccessReplacements(`[cat = 1, car = 2][car|`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][cart|`, () =>
+            expectTopFieldAccessReplacements(`[cat = 1, car = 2][cart|`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][c|]`, () => expectTopFieldAccessReplacements(`[cat = 1, car = 2][c|]`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][ca|]`, () =>
+            expectTopFieldAccessReplacements(`[cat = 1, car = 2][ca|]`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][car|]`, () =>
+            expectTopFieldAccessReplacements(`[cat = 1, car = 2][car|]`, [`car`, `cat`]));
+
+        it(`[car = 1, cat = 2][cart|]`, () =>
+            expectTopFieldAccessReplacements(`[cat = 1, car = 2][cart|]`, [`car`, `cat`]));
     });
 
     /*

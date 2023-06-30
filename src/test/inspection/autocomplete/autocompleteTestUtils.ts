@@ -12,16 +12,27 @@ export interface AbridgedAutocompleteItem {
     readonly isTextEdit: boolean;
 }
 
+export async function assertAutocomplete(textWithPipe: string): Promise<Inspection.Autocomplete> {
+    return (await TestUtils.assertInspected(TestConstants.DefaultInspectionSettings, textWithPipe)).autocomplete;
+}
+
+export async function assertAutocompleteItems(
+    textWithPipe: string,
+    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    return autocompleteItemSelector(await assertAutocomplete(textWithPipe));
+}
+
 export async function expectAbridgedAutocompleteItems(
     textWithPipe: string,
-    fetchAutocompleteItems: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
+    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
     expected?: ReadonlyArray<AbridgedAutocompleteItem>,
 ): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
     const actual: ReadonlyArray<AbridgedAutocompleteItem> = (
-        await expectAbridgedAutocompleteInternal(textWithPipe, fetchAutocompleteItems)
-    ).map((value: InternalAbridgedAutocompleteItem) => ({
+        await assertAutocompleteItems(textWithPipe, autocompleteItemSelector)
+    ).map((value: Inspection.AutocompleteItem) => ({
         label: value.label,
-        isTextEdit: value.isTextEdit,
+        isTextEdit: value.textEdit !== undefined,
     }));
 
     if (expected !== undefined) {
@@ -33,56 +44,32 @@ export async function expectAbridgedAutocompleteItems(
 
 export async function expectNoSuggestions(
     textWithPipe: string,
-    fetchAutocompleteItems: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
+    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
 ): Promise<void> {
-    await expectAbridgedAutocompleteItems(textWithPipe, fetchAutocompleteItems, undefined);
+    await expectAbridgedAutocompleteItems(textWithPipe, autocompleteItemSelector, undefined);
 }
 
 export async function expectTopSuggestions(
     textWithPipe: string,
-    fetchAutocompleteItems: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
+    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
     expected: ReadonlyArray<AbridgedAutocompleteItem>,
 ): Promise<void> {
-    const actual: ReadonlyArray<InternalAbridgedAutocompleteItem> = await expectAbridgedAutocompleteInternal(
+    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertAutocompleteItems(
         textWithPipe,
-        fetchAutocompleteItems,
+        autocompleteItemSelector,
     );
 
     const sortedaActual: ReadonlyArray<AbridgedAutocompleteItem> = Array.from(actual)
-        .sort((left: InternalAbridgedAutocompleteItem, right: InternalAbridgedAutocompleteItem) => {
+        .sort((left: Inspection.AutocompleteItem, right: Inspection.AutocompleteItem) => {
             const jaroWinklerDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
 
             return jaroWinklerDiff !== 0 ? jaroWinklerDiff : left.label.localeCompare(right.label);
         })
         .slice(0, expected.length)
-        .map((value: InternalAbridgedAutocompleteItem) => ({
+        .map((value: Inspection.AutocompleteItem) => ({
             label: value.label,
-            isTextEdit: value.isTextEdit,
+            isTextEdit: value.textEdit !== undefined,
         }));
 
     expect(sortedaActual).to.deep.equal(expected);
-}
-
-interface InternalAbridgedAutocompleteItem {
-    readonly label: string;
-    readonly isTextEdit: boolean;
-    readonly jaroWinklerScore: number;
-}
-
-async function expectAbridgedAutocompleteInternal(
-    textWithPipe: string,
-    fetchAutocompleteItems: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
-): Promise<ReadonlyArray<InternalAbridgedAutocompleteItem>> {
-    const autocomplete: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-        TestConstants.DefaultInspectionSettings,
-        textWithPipe,
-    );
-
-    const actual: ReadonlyArray<Inspection.AutocompleteItem> = fetchAutocompleteItems(autocomplete);
-
-    return actual.map((value: Inspection.AutocompleteItem) => ({
-        label: value.label,
-        isTextEdit: value.textEdit !== undefined,
-        jaroWinklerScore: value.jaroWinklerScore,
-    }));
 }
