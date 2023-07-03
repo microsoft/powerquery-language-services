@@ -183,19 +183,19 @@ function inspectFieldProjection(
     let textToAutocompleteUnderPositionResult: string | undefined;
 
     for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-        const {
-            fieldNames,
-            isAutocompleteAllowed,
-            textEditRange,
-            textToAutocompleteUnderPosition,
-        }: InspectedFieldAccess = inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldSelector);
+        const inspectedFieldAccess: InspectedFieldAccess = inspectFieldSelector(
+            lexerSnapshot,
+            nodeIdMapCollection,
+            position,
+            fieldSelector,
+        );
 
-        fieldNamesResult.push(...fieldNames);
+        fieldNamesResult.push(...inspectedFieldAccess.fieldNames);
 
-        if (isAutocompleteAllowed) {
-            isAutocompleteAllowedResult = isAutocompleteAllowed;
-            textEditRangeResult = textEditRange;
-            textToAutocompleteUnderPositionResult = textToAutocompleteUnderPosition;
+        if (inspectedFieldAccess.isAutocompleteAllowed) {
+            isAutocompleteAllowedResult = true;
+            textEditRangeResult = inspectedFieldAccess.textEditRange;
+            textToAutocompleteUnderPositionResult = inspectedFieldAccess.textToAutocompleteUnderPosition;
         }
     }
 
