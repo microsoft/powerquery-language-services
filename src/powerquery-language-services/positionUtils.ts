@@ -57,7 +57,7 @@ export async function rangeFromXorNode(
 }
 
 export function rangeFromToken(token: PQP.Language.Token.Token): Range {
-    return rangeFromTokenPositions(token.positionStart, token.positionEnd) as Range;
+    return Assert.asDefined(rangeFromTokenPositions(token.positionStart, token.positionEnd));
 }
 
 export function rangeFromTokenPositions(
@@ -75,7 +75,7 @@ export function rangeFromTokenPositions(
 }
 
 export function rangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
-    return rangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd) as Range;
+    return Assert.asDefined(rangeFromTokenPositions(tokenRange.positionStart, tokenRange.positionEnd));
 }
 
 export function isBeforeXor(position: Position, xorNode: TXorNode, isBoundIncluded: boolean): boolean {
