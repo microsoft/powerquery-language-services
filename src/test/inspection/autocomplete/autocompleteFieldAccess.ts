@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils, Task } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import {
@@ -12,9 +12,11 @@ import {
     expectNoSuggestions,
     expectTopSuggestions,
 } from "./autocompleteTestUtils";
-import { Inspection } from "../../../powerquery-language-services";
+import { Inspection, Position } from "../../../powerquery-language-services";
 import { expect } from "chai";
 import { Range } from "vscode-languageserver-textdocument";
+import { inspectFieldAccess } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteFieldAccess";
+import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
 
 describe(`Inspection - Autocomplete - FieldAccess`, () => {
     // async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
@@ -30,14 +32,6 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
     //         actual.triedFieldAccess.value?.autocompleteItems ?? [],
     //     );
     // }
-
-    async function assertInspectedFieldAccess(
-        textWithPipe: string,
-    ): Promise<Inspection.InspectedFieldAccess | undefined> {
-        const autocomplete: Inspection.Autocomplete = await assertAutocomplete(textWithPipe);
-
-        return ResultUtils.assertOk(autocomplete.triedFieldAccess)?.inspectedFieldAccess;
-    }
 
     function fieldAccessAutocompleteItemSelector(
         autocomplete: Inspection.Autocomplete,
@@ -95,12 +89,25 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
         return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
     }
 
-    describe(`InspectedFieldAccess`, () => {
+    describe(`FIXME InspectedFieldAccess`, () => {
         async function expectInspectedFieldAccess(
             textWithPipe: string,
             expected: Inspection.InspectedFieldAccess | undefined,
         ): Promise<void> {
-            const actual: Inspection.InspectedFieldAccess | undefined = await assertInspectedFieldAccess(textWithPipe);
+            const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
+
+            const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(
+                TestConstants.DefaultInspectionSettings,
+                text,
+            );
+
+            const activeNode: ActiveNode = ActiveNodeUtils.assertActiveNode(parsed.nodeIdMapCollection, position);
+
+            const actual: Inspection.InspectedFieldAccess | undefined = inspectFieldAccess(
+                parsed.lexerSnapshot,
+                parsed.nodeIdMapCollection,
+                activeNode,
+            );
 
             expect(actual).to.deep.equal(expected);
         }
@@ -110,16 +117,15 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][|`, {
                     fieldNames: [],
                     isAutocompleteAllowed: true,
-                    literalUnderPosition: undefined,
                     textEditRange: undefined,
+                    textToAutocompleteUnderPosition: undefined,
                 });
             });
 
             it(`[key with a space = 1][key| with a space`, async () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][key| with a space`, {
-                    fieldNames: ["key"],
+                    fieldNames: ["key with a space"],
                     isAutocompleteAllowed: true,
-                    literalUnderPosition: "key",
                     textEditRange: {
                         start: {
                             line: 0,
@@ -130,36 +136,23 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                             character: 26,
                         },
                     },
+                    textToAutocompleteUnderPosition: "key",
                 });
             });
 
             it(`[key with a space = 1][| key with a space`, async () => {
-                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, undefined);
-            });
-
-            it(`[key with a space = 1][|#"key with a space"`, async () => {
-                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space"`, {
-                    fieldNames: [`#"key with a space"`],
-                    isAutocompleteAllowed: true,
-                    literalUnderPosition: `#"key with a space"`,
-                    textEditRange: {
-                        start: {
-                            line: 0,
-                            character: 23,
-                        },
-                        end: {
-                            line: 0,
-                            character: 42,
-                        },
-                    },
+                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, {
+                    fieldNames: [`key with a space`],
+                    isAutocompleteAllowed: false,
+                    textEditRange: undefined,
+                    textToAutocompleteUnderPosition: undefined,
                 });
             });
 
-            it(`[key with a space = 1][#"key| with a space"`, async () => {
-                await expectInspectedFieldAccess(`[key with a space = 1][#"key| with a space"`, {
-                    fieldNames: [`#"key with a space"`],
+            it(`[key with a space = 1][|#"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
                     isAutocompleteAllowed: true,
-                    literalUnderPosition: `#"key with a space"`,
                     textEditRange: {
                         start: {
                             line: 0,
@@ -170,14 +163,14 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
+                    textToAutocompleteUnderPosition: `#"key with a space"`,
                 });
             });
 
-            it(`[key with a space = 1][#|"key with a space"`, async () => {
-                await expectInspectedFieldAccess(`[key with a space = 1][#|"key with a space"`, {
-                    fieldNames: [`#"key with a space"`],
+            it(`[key with a space = 1][|#"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
                     isAutocompleteAllowed: true,
-                    literalUnderPosition: `#"key with a space"`,
                     textEditRange: {
                         start: {
                             line: 0,
@@ -188,6 +181,43 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
+                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[key with a space = 1][#"key| with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#"key| with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[key with a space = 1][#|"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#|"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textToAutocompleteUnderPosition: `#"key with a space"`,
                 });
             });
         });

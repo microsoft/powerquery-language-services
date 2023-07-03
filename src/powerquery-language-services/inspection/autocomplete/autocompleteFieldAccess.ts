@@ -15,7 +15,7 @@ import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, TextUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position, Range } from "vscode-languageserver-types";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
+import { TokenKind, type Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
@@ -24,6 +24,30 @@ import { AutocompleteTraceConstant, CompletionItemKind, PositionUtils, TextEdit,
 import { TriedType, tryType } from "../type";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TypeCache } from "../typeCache";
+
+export function inspectFieldAccess(
+    lexerSnapshot: PQP.Lexer.LexerSnapshot,
+    nodeIdMapCollection: NodeIdMap.Collection,
+    activeNode: ActiveNode,
+): InspectedFieldAccess | undefined {
+    const fieldProjection: XorNode<Ast.FieldProjection> | undefined = AncestryUtils.findNodeKind<Ast.FieldProjection>(
+        activeNode.ancestry,
+        Ast.NodeKind.FieldProjection,
+    );
+
+    const fieldSelector: XorNode<Ast.FieldSelector> | undefined = AncestryUtils.findNodeKind<Ast.FieldSelector>(
+        activeNode.ancestry,
+        Ast.NodeKind.FieldSelector,
+    );
+
+    if (fieldProjection) {
+        return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldProjection);
+    } else if (fieldSelector) {
+        return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldSelector);
+    } else {
+        return undefined;
+    }
+}
 
 export async function tryAutocompleteFieldAccess(
     settings: InspectionSettings,
@@ -115,6 +139,15 @@ async function autocompleteFieldAccess(
     };
 }
 
+function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
+    return {
+        fieldNames: [],
+        isAutocompleteAllowed,
+        textEditRange: undefined,
+        textToAutocompleteUnderPosition: undefined,
+    };
+}
+
 function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
     switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
@@ -138,38 +171,44 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
     }
 }
 
-function inspectFieldAccess(
-    lexerSnapshot: PQP.Lexer.LexerSnapshot,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    activeNode: ActiveNode,
-): InspectedFieldAccess | undefined {
-    const fieldAccess: XorNode<Ast.FieldProjection | Ast.FieldSelector> | undefined = AncestryUtils.findNodeKind<
-        Ast.FieldProjection | Ast.FieldSelector
-    >(activeNode.ancestry, [Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector]);
-
-    if (fieldAccess === undefined) {
-        return undefined;
-    }
-
-    switch (fieldAccess.node.kind) {
-        case Ast.NodeKind.FieldProjection:
-            return inspectFieldProjection(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldAccess);
-
-        case Ast.NodeKind.FieldSelector:
-            return inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, activeNode.position, fieldAccess);
-
-        default:
-            throw Assert.isNever(fieldAccess.node);
-    }
-}
-
 function inspectFieldProjection(
     lexerSnapshot: PQP.Lexer.LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    fieldProjection: TXorNode,
+    fieldProjection: XorNode<Ast.FieldProjection>,
 ): InspectedFieldAccess {
-    throw new Error();
+    const fieldNamesResult: string[] = [];
+    let isAutocompleteAllowedResult: boolean = false;
+    let textEditRangeResult: Range | undefined;
+    let textToAutocompleteUnderPositionResult: string | undefined;
+
+    for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
+        const {
+            fieldNames,
+            isAutocompleteAllowed,
+            textEditRange,
+            textToAutocompleteUnderPosition,
+        }: InspectedFieldAccess = inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldSelector);
+
+        if (isAutocompleteAllowed) {
+            return {
+                fieldNames,
+                isAutocompleteAllowed,
+                textEditRange,
+                textToAutocompleteUnderPosition,
+            };
+        }
+    }
+
+    return {
+        fieldNames: fieldNamesResult,
+        isAutocompleteAllowed: isAutocompleteAllowedResult,
+        textEditRange: textEditRangeResult,
+        textToAutocompleteUnderPosition: textToAutocompleteUnderPositionResult,
+    };
+
+    throw new Error(`Not implemented`);
+
     // let isAutocompleteAllowed: boolean = false;
     // let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     // const fieldNames: string[] = [];
@@ -197,20 +236,11 @@ function inspectFieldProjection(
     // };
 }
 
-function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
-    return {
-        fieldNames: [],
-        isAutocompleteAllowed,
-        literalUnderPosition: undefined,
-        textEditRange: undefined,
-    };
-}
-
 function inspectFieldSelector(
     lexerSnapshot: PQP.Lexer.LexerSnapshot,
     nodeIdMapCollection: NodeIdMap.Collection,
     position: Position,
-    fieldSelector: TXorNode,
+    fieldSelector: XorNode<Ast.FieldSelector>,
 ): InspectedFieldAccess {
     const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(fieldSelector.node.id);
 
@@ -244,32 +274,37 @@ function inspectFieldSelector(
             const hasClosingBracketAst: boolean = nodeIdMapCollection.astNodeById.has(closingBracketNodeId);
 
             let isPositionInOrOnIdentifier: boolean;
-            let literalUnderPosition: string | undefined;
             let textEditRange: Range | undefined;
-            let fieldNames: ReadonlyArray<string>;
+            let textToAutocompleteUnderPosition: string | undefined;
 
-            if (!hasClosingBracketAst && generalizedIdentifierLiteral.includes(" ")) {
-                const firstToken: Token = PQP.ArrayUtils.assertGet(
-                    lexerSnapshot.tokens,
-                    generalizedIdentifier.tokenRange.tokenIndexStart,
-                );
+            const firstToken: Token | undefined =
+                lexerSnapshot.tokens[generalizedIdentifier.tokenRange.tokenIndexStart];
 
-                isPositionInOrOnIdentifier = PositionUtils.isInToken(position, firstToken, true, true);
-                literalUnderPosition = isPositionInOrOnIdentifier ? firstToken.data : undefined;
-                textEditRange = PositionUtils.rangeFromToken(firstToken);
-                fieldNames = [firstToken.data];
-            } else {
+            if (hasClosingBracketAst) {
                 isPositionInOrOnIdentifier = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
-                literalUnderPosition = isPositionInOrOnIdentifier ? generalizedIdentifier.literal : undefined;
+                textToAutocompleteUnderPosition = isPositionInOrOnIdentifier ? generalizedIdentifierLiteral : undefined;
                 textEditRange = PositionUtils.rangeFromTokenRange(generalizedIdentifier.tokenRange);
-                fieldNames = [generalizedIdentifier.literal];
+            }
+            // Given `let _ = [key with space = 1][#"key with space"| in _`
+            // assume the user wants to autocomplete the identifier `#"key with space"`
+            //
+            // Given: `let _ = [key with space = 1][key| in _`
+            // assume the user wants to autocomplete the identifier `key`
+            else if (generalizedIdentifierLiteral.includes(" ") && firstToken?.kind === TokenKind.Identifier) {
+                isPositionInOrOnIdentifier = PositionUtils.isInToken(position, firstToken, true, true);
+                textToAutocompleteUnderPosition = isPositionInOrOnIdentifier ? firstToken.data : undefined;
+                textEditRange = isPositionInOrOnIdentifier ? PositionUtils.rangeFromToken(firstToken) : undefined;
+            } else {
+                isPositionInOrOnIdentifier = false;
+                textEditRange = undefined;
+                textToAutocompleteUnderPosition = undefined;
             }
 
             return {
-                fieldNames,
+                fieldNames: [generalizedIdentifierLiteral],
                 isAutocompleteAllowed: isPositionInOrOnIdentifier,
-                literalUnderPosition,
                 textEditRange,
+                textToAutocompleteUnderPosition,
             };
         }
 
@@ -277,8 +312,8 @@ function inspectFieldSelector(
             return {
                 fieldNames: [],
                 isAutocompleteAllowed: true,
-                literalUnderPosition: undefined,
                 textEditRange: undefined,
+                textToAutocompleteUnderPosition: undefined,
             };
         }
 
@@ -291,12 +326,14 @@ function createAutocompleteItems(
     fieldEntries: ReadonlyArray<[string, Type.TPowerQueryType]>,
     inspectedFieldAccess: InspectedFieldAccess,
 ): ReadonlyArray<AutocompleteItem> {
-    const { literalUnderPosition, textEditRange }: InspectedFieldAccess = inspectedFieldAccess;
+    const { textToAutocompleteUnderPosition, textEditRange }: InspectedFieldAccess = inspectedFieldAccess;
+
     const autocompleteItems: AutocompleteItem[] = [];
 
     for (const [label, powerQueryType] of fieldEntries) {
-        // Don't suggest labels that are already in the field access.
-        autocompleteItems.push(createAutocompleteItem(label, powerQueryType, literalUnderPosition, textEditRange));
+        autocompleteItems.push(
+            createAutocompleteItem(label, powerQueryType, textToAutocompleteUnderPosition, textEditRange),
+        );
     }
 
     return autocompleteItems;
