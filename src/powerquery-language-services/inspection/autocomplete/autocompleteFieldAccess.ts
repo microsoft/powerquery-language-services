@@ -12,16 +12,16 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, TextUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position, Range } from "vscode-languageserver-types";
+import { Token, TokenKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TokenKind, type Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 
 import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
-import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, CompletionItemKind, PositionUtils, TextEdit, calculateJaroWinkler } from "../..";
+import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils, TextEdit } from "../..";
 import { TriedType, tryType } from "../type";
+import { AutocompleteItem } from "./autocompleteItem";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TypeCache } from "../typeCache";
 
@@ -190,13 +190,12 @@ function inspectFieldProjection(
             textToAutocompleteUnderPosition,
         }: InspectedFieldAccess = inspectFieldSelector(lexerSnapshot, nodeIdMapCollection, position, fieldSelector);
 
+        fieldNamesResult.push(...fieldNames);
+
         if (isAutocompleteAllowed) {
-            return {
-                fieldNames,
-                isAutocompleteAllowed,
-                textEditRange,
-                textToAutocompleteUnderPosition,
-            };
+            isAutocompleteAllowedResult = isAutocompleteAllowed;
+            textEditRangeResult = textEditRange;
+            textToAutocompleteUnderPositionResult = textToAutocompleteUnderPosition;
         }
     }
 
@@ -206,34 +205,6 @@ function inspectFieldProjection(
         textEditRange: textEditRangeResult,
         textToAutocompleteUnderPosition: textToAutocompleteUnderPositionResult,
     };
-
-    throw new Error(`Not implemented`);
-
-    // let isAutocompleteAllowed: boolean = false;
-    // let identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
-    // const fieldNames: string[] = [];
-
-    // for (const fieldSelector of NodeIdMapIterator.iterFieldProjection(nodeIdMapCollection, fieldProjection)) {
-    //     const inspectedFieldSelector: InspectedFieldAccess = inspectFieldSelector(
-    //         lexerSnapshot,
-    //         nodeIdMapCollection,
-    //         position,
-    //         fieldSelector,
-    //     );
-
-    //     if (inspectedFieldSelector.isAutocompleteAllowed || inspectedFieldSelector.identifierUnderPosition) {
-    //         isAutocompleteAllowed = true;
-    //         identifierUnderPosition = inspectedFieldSelector.identifierUnderPosition;
-    //     }
-
-    //     fieldNames.push(...inspectedFieldSelector.fieldNames);
-    // }
-
-    // return {
-    //     isAutocompleteAllowed,
-    //     identifierUnderPosition,
-    //     fieldNames,
-    // };
 }
 
 function inspectFieldSelector(
@@ -280,7 +251,7 @@ function inspectFieldSelector(
             const firstToken: Token | undefined =
                 lexerSnapshot.tokens[generalizedIdentifier.tokenRange.tokenIndexStart];
 
-            if (hasClosingBracketAst) {
+            if (hasClosingBracketAst || !generalizedIdentifierLiteral.includes(" ")) {
                 isPositionInOrOnIdentifier = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
                 textToAutocompleteUnderPosition = isPositionInOrOnIdentifier ? generalizedIdentifierLiteral : undefined;
                 textEditRange = PositionUtils.rangeFromTokenRange(generalizedIdentifier.tokenRange);
@@ -290,7 +261,7 @@ function inspectFieldSelector(
             //
             // Given: `let _ = [key with space = 1][key| in _`
             // assume the user wants to autocomplete the identifier `key`
-            else if (generalizedIdentifierLiteral.includes(" ") && firstToken?.kind === TokenKind.Identifier) {
+            else if (firstToken?.kind === TokenKind.Identifier) {
                 isPositionInOrOnIdentifier = PositionUtils.isInToken(position, firstToken, true, true);
                 textToAutocompleteUnderPosition = isPositionInOrOnIdentifier ? firstToken.data : undefined;
                 textEditRange = isPositionInOrOnIdentifier ? PositionUtils.rangeFromToken(firstToken) : undefined;
