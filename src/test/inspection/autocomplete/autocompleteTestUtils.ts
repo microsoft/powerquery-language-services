@@ -69,13 +69,12 @@ export async function expectTopSuggestions(
         .slice(0, expected.length)
         .map(createAbridgedAutocompleteItem);
 
-    const remainderBelowThreshold: ReadonlyArray<Inspection.AutocompleteItem> = byJaroWinklerScore
+    const remainderAboveThreshold: ReadonlyArray<Inspection.AutocompleteItem> = byJaroWinklerScore
         .slice(expected.length)
-        .filter((value: Inspection.AutocompleteItem) => value.jaroWinklerScore <= remainderScoreThreshold);
-
-    expect(remainderBelowThreshold).to.be.empty;
+        .filter((value: Inspection.AutocompleteItem) => value.jaroWinklerScore >= remainderScoreThreshold);
 
     expect(topN).to.deep.equal(expected);
+    expect(remainderAboveThreshold).to.be.empty;
 }
 
 function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
