@@ -139,6 +139,47 @@ async function autocompleteFieldAccess(
     };
 }
 
+function createAutocompleteItems(
+    fieldEntries: ReadonlyArray<[string, Type.TPowerQueryType]>,
+    inspectedFieldAccess: InspectedFieldAccess,
+): ReadonlyArray<AutocompleteItem> {
+    const { textToAutocompleteUnderPosition, textEditRange }: InspectedFieldAccess = inspectedFieldAccess;
+
+    const autocompleteItems: AutocompleteItem[] = [];
+
+    for (const [label, powerQueryType] of fieldEntries) {
+        autocompleteItems.push(
+            createAutocompleteItem(label, powerQueryType, textToAutocompleteUnderPosition, textEditRange),
+        );
+    }
+
+    return autocompleteItems;
+}
+
+function createAutocompleteItem(
+    label: string,
+    powerQueryType: Type.TPowerQueryType,
+    identifierUnderPositionLiteral: string | undefined,
+    textEditRange: Range | undefined,
+): AutocompleteItem {
+    const jaroWinklerScore: number =
+        identifierUnderPositionLiteral !== undefined ? calculateJaroWinkler(label, identifierUnderPositionLiteral) : 1;
+
+    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
+    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
+
+    const normalizedLabel: string =
+        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
+
+    return {
+        jaroWinklerScore,
+        kind: CompletionItemKind.Field,
+        label: normalizedLabel,
+        powerQueryType,
+        textEdit: textEditRange ? TextEdit.replace(textEditRange, label) : undefined,
+    };
+}
+
 function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFieldAccess {
     return {
         fieldNames: [],
@@ -291,47 +332,6 @@ function inspectFieldSelector(
         default:
             throw Assert.isNever(generalizedIdentifierXor);
     }
-}
-
-function createAutocompleteItems(
-    fieldEntries: ReadonlyArray<[string, Type.TPowerQueryType]>,
-    inspectedFieldAccess: InspectedFieldAccess,
-): ReadonlyArray<AutocompleteItem> {
-    const { textToAutocompleteUnderPosition, textEditRange }: InspectedFieldAccess = inspectedFieldAccess;
-
-    const autocompleteItems: AutocompleteItem[] = [];
-
-    for (const [label, powerQueryType] of fieldEntries) {
-        autocompleteItems.push(
-            createAutocompleteItem(label, powerQueryType, textToAutocompleteUnderPosition, textEditRange),
-        );
-    }
-
-    return autocompleteItems;
-}
-
-function createAutocompleteItem(
-    label: string,
-    powerQueryType: Type.TPowerQueryType,
-    identifierUnderPositionLiteral: string | undefined,
-    textEditRange: Range | undefined,
-): AutocompleteItem {
-    const jaroWinklerScore: number =
-        identifierUnderPositionLiteral !== undefined ? calculateJaroWinkler(label, identifierUnderPositionLiteral) : 1;
-
-    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
-
-    const normalizedLabel: string =
-        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
-
-    return {
-        jaroWinklerScore,
-        kind: CompletionItemKind.Field,
-        label: normalizedLabel,
-        powerQueryType,
-        textEdit: textEditRange ? TextEdit.replace(textEditRange, label) : undefined,
-    };
 }
 
 function typablePrimaryExpression(
