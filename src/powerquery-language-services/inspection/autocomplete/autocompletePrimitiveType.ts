@@ -72,15 +72,22 @@ function autocompletePrimitiveType(
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
     const child: TXorNode = AncestryUtils.assertFirst(ancestry);
+    const parent: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, 1);
 
-    if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(child, Ast.NodeKind.FieldTypeSpecification)) {
-        return inspectFieldTypeSpecification(nodeIdMapCollection, child, activeNode, trailingToken);
-    } else if (XorNodeUtils.isNodeKind<Ast.NullableType>(child, Ast.NodeKind.NullableType)) {
-        return inspectNullableType(nodeIdMapCollection, child, activeNode, trailingToken);
+    if (XorNodeUtils.isNodeKind<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression)) {
+        if (!parent) {
+            return [];
+        } else if (XorNodeUtils.isNodeKind<Ast.FieldTypeSpecification>(parent, Ast.NodeKind.FieldTypeSpecification)) {
+            return inspectFieldTypeSpecification(nodeIdMapCollection, parent, activeNode, trailingToken);
+        } else if (XorNodeUtils.isNodeKind<Ast.ListType>(parent, Ast.NodeKind.ListType)) {
+            return inspectTType(child, activeNode, trailingToken);
+        } else if (XorNodeUtils.isNodeKind<Ast.NullableType>(parent, Ast.NodeKind.NullableType)) {
+            return inspectNullableType(nodeIdMapCollection, parent, activeNode, trailingToken);
+        } else {
+            return [];
+        }
     } else if (XorNodeUtils.isNodeKind<Ast.PrimitiveType>(child, Ast.NodeKind.PrimitiveType)) {
-        const parent: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, 1);
-
-        if (parent === undefined) {
+        if (!parent) {
             return [];
         } else if (
             XorNodeUtils.isNodeKind<Ast.AsExpression | Ast.IsExpression>(parent, [
@@ -311,15 +318,7 @@ function inspectFieldTypeSpecification(
 ): ReadonlyArray<AutocompleteItem> {
     // Ast
     if (XorNodeUtils.isAst(fieldTypeSpecification)) {
-        const fieldType: Ast.TType = fieldTypeSpecification.node.fieldType;
-
-        if (!PositionUtils.isInAst(activeNode.position, fieldType, true, true)) {
-            return [];
-        } else if (AstUtils.isNodeKind<Ast.PrimitiveType>(fieldType, Ast.NodeKind.PrimitiveType)) {
-            return inspectPrimitiveType(XorNodeUtils.boxAst(fieldType), activeNode, trailingToken);
-        } else if (AstUtils.isNodeKind<Ast.IdentifierExpression>(fieldType, Ast.NodeKind.IdentifierExpression)) {
-            return createAutocompleteItemsFromIdentifierExpression(fieldType, activeNode);
-        }
+        return inspectTType(XorNodeUtils.boxAst(fieldTypeSpecification.node.fieldType), activeNode, trailingToken);
     }
     // ParseContext
     else {
