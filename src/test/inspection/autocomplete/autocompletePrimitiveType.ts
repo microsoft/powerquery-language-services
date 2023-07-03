@@ -2,263 +2,244 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { ArrayUtils, Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
-import { expect } from "chai";
 
-import { TestConstants, TestUtils } from "../..";
+import {
+    AbridgedAutocompleteItem,
+    expectAbridgedAutocompleteItems,
+    expectNoSuggestions,
+    expectTopSuggestions,
+} from "./autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 
 describe(`Inspection - Autocomplete - PrimitiveType`, () => {
-    describe(`AutocompleteItem.label`, () => {
-        async function expectAutocompleteItems(
-            textWithPipe: string,
-            isTextEditExpected: boolean | undefined,
-        ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-            const autocomplete: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-                TestConstants.DefaultInspectionSettings,
-                textWithPipe,
-            );
+    function assertAutocompletePrimitiveType(
+        autocomplete: Inspection.Autocomplete,
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        return ResultUtils.assertOk(autocomplete.triedPrimitiveType);
+    }
 
-            ResultUtils.assertIsOk(autocomplete.triedPrimitiveType);
-            const actual: ReadonlyArray<Inspection.AutocompleteItem> = autocomplete.triedPrimitiveType.value;
+    function expectNoPrimitiveTypeSuggestions(textWithPipe: string): Promise<void> {
+        return expectNoSuggestions(textWithPipe, assertAutocompletePrimitiveType);
+    }
 
-            if (isTextEditExpected !== undefined) {
-                const hasTextEdit: ReadonlyArray<boolean> = actual.map(
-                    (autocompleteItem: Inspection.AutocompleteItem) => autocompleteItem.textEdit !== undefined,
-                );
-
-                Assert.isTrue(
-                    ArrayUtils.all(hasTextEdit, (value: boolean) =>
-                        isTextEditExpected ? value === true : value === false,
-                    ),
-                    isTextEditExpected ? "expected textEdit to be defined" : "expected textEdit to be undefined",
-                    {
-                        isTextEditExpected,
-                        hasTextEdit,
-                    },
-                );
-            }
-
-            return actual;
-        }
-
-        async function expectNoSuggestions(textWithPipe: string): Promise<void> {
-            const autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem> = await expectAutocompleteItems(
-                textWithPipe,
-                undefined,
-            );
-
-            expect(autocompleteItems.length).to.equal(0);
-        }
-
-        async function expectInserts(textWithPipe: string): Promise<void> {
-            const autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem> = await expectAutocompleteItems(
-                textWithPipe,
-                false,
-            );
-
-            const partialMatches: ReadonlyArray<Inspection.AutocompleteItem> = autocompleteItems.filter(
-                (autocompleteItem: Inspection.AutocompleteItem) => autocompleteItem.jaroWinklerScore !== 1,
-            );
-
-            expect(partialMatches.length).to.equal(0);
-        }
-
-        async function expectDatePrimitiveTypeReplacements(textWithPipe: string): Promise<void> {
-            const autocompleteItems: ReadonlyArray<Inspection.AutocompleteItem> = await expectAutocompleteItems(
-                textWithPipe,
-                true,
-            );
-
-            const top3Labels: ReadonlyArray<string> = Array.from(autocompleteItems)
-                .sort(
-                    (left: Inspection.AutocompleteItem, right: Inspection.AutocompleteItem) =>
-                        right.jaroWinklerScore - left.jaroWinklerScore,
-                )
-                .slice(0, 3)
-                .map((autocompleteItem: Inspection.AutocompleteItem) => autocompleteItem.label)
-                .sort();
-
-            expect(top3Labels).to.deep.equal(DatePrimitiveTypeConstants);
-        }
-
-        const AllowedPrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = PrimitiveTypeConstants.filter(
-            (constant: PrimitiveTypeConstant) => constant !== PrimitiveTypeConstant.None,
+    async function expectPrimitiveTypeInserts(textWithPipe: string): Promise<void> {
+        await expectAbridgedAutocompleteItems(
+            textWithPipe,
+            assertAutocompletePrimitiveType,
+            AbridgedAllowedPrimitiveTypeConstantInserts,
         );
+    }
 
-        const DatePrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = AllowedPrimitiveTypeConstants.filter(
-            (value: PrimitiveTypeConstant) => value.includes("date"),
-        ).sort();
+    function expectDatePrimitiveTypeReplacements(textWithPipe: string): Promise<void> {
+        return expectTopSuggestions(textWithPipe, assertAutocompletePrimitiveType, AbridgedDateEdits);
+    }
 
-        it(`|`, () => expectNoSuggestions(`|`));
+    const AllowedPrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = PrimitiveTypeConstants.filter(
+        (constant: PrimitiveTypeConstant) => constant !== PrimitiveTypeConstant.None,
+    );
 
-        it(`l|`, () => expectNoSuggestions(`l|`));
+    const DateConstants: ReadonlyArray<PrimitiveTypeConstant> = PrimitiveTypeConstants.filter(
+        (constant: PrimitiveTypeConstant) => constant.includes(PrimitiveTypeConstant.Date),
+    );
 
-        it(`if |`, () => expectNoSuggestions(`if |`));
+    const AbridgedAllowedPrimitiveTypeConstantInserts: ReadonlyArray<AbridgedAutocompleteItem> =
+        AllowedPrimitiveTypeConstants.map((value: PrimitiveTypeConstant) => ({
+            label: value,
+            isTextEdit: false,
+        }));
 
-        it(`type|`, () => expectNoSuggestions(`type|`));
+    const AbridgedDateEdits: ReadonlyArray<AbridgedAutocompleteItem> = DateConstants.map(
+        (value: PrimitiveTypeConstant) => ({
+            label: value,
+            isTextEdit: true,
+        }),
+    );
 
-        it(`| type`, () => expectNoSuggestions(`| type`));
+    it(`|`, () => expectNoPrimitiveTypeSuggestions(`|`));
 
-        it(`type |`, () => expectInserts(`type |`));
+    it(`l|`, () => expectNoPrimitiveTypeSuggestions(`l|`));
 
-        it(`type |date`, () => expectDatePrimitiveTypeReplacements(`type |date`));
+    it(`if |`, () => expectNoPrimitiveTypeSuggestions(`if |`));
 
-        it(`type date|`, () => expectDatePrimitiveTypeReplacements(`type date|`));
+    it(`type|`, () => expectNoPrimitiveTypeSuggestions(`type|`));
 
-        it(`type date |`, () => expectNoSuggestions(`type date |`));
+    it(`| type`, () => expectNoPrimitiveTypeSuggestions(`| type`));
 
-        it(`| let x = type`, () => expectNoSuggestions(`| let x = type`));
+    it(`type |`, () => expectPrimitiveTypeInserts(`type |`));
 
-        it(`let x = type|`, () => expectNoSuggestions(`let x = type|`));
+    it(`type |date`, () => expectDatePrimitiveTypeReplacements(`type |date`));
 
-        it(`let x = type |`, () => expectInserts(`let x = type |`));
+    it(`type date|`, () => expectDatePrimitiveTypeReplacements(`type date|`));
 
-        it(`type | number`, () => expectNoSuggestions(`type | number`));
+    it(`type date |`, () => expectNoPrimitiveTypeSuggestions(`type date |`));
 
-        it(`type nullable|`, () => expectNoSuggestions(`type nullable|`));
+    it(`| let x = type`, () => expectNoPrimitiveTypeSuggestions(`| let x = type`));
 
-        it(`type nullable |`, () => expectInserts(`type nullable |`));
+    it(`let x = type|`, () => expectNoPrimitiveTypeSuggestions(`let x = type|`));
 
-        it(`type nullable date|`, () => expectDatePrimitiveTypeReplacements(`type nullable date|`));
+    it(`let x = type |`, () => expectPrimitiveTypeInserts(`let x = type |`));
 
-        it(`type nullable |date`, () => expectDatePrimitiveTypeReplacements(`type nullable |date`));
+    it(`type | number`, () => expectNoPrimitiveTypeSuggestions(`type | number`));
 
-        it(`type {|`, () => expectInserts(`type {|`));
+    it(`type nullable|`, () => expectNoPrimitiveTypeSuggestions(`type nullable|`));
 
-        it(`type { date|`, () => expectDatePrimitiveTypeReplacements(`type { date|`));
+    it(`type nullable |`, () => expectPrimitiveTypeInserts(`type nullable |`));
 
-        it(`type { |date`, () => expectDatePrimitiveTypeReplacements(`type { |date`));
+    it(`type nullable date|`, () => expectDatePrimitiveTypeReplacements(`type nullable date|`));
 
-        it(`type { | date`, () => expectNoSuggestions(`type { | date`));
+    it(`type nullable |date`, () => expectDatePrimitiveTypeReplacements(`type nullable |date`));
 
-        it(`type { date | `, () => expectNoSuggestions(`type { date | `));
+    it(`type {|`, () => expectPrimitiveTypeInserts(`type {|`));
 
-        it(`type { date | } `, () => expectNoSuggestions(`type { date | } `));
+    it(`type { |`, () => expectPrimitiveTypeInserts(`type { |`));
 
-        it(`type {date|}`, () => expectDatePrimitiveTypeReplacements(`type {date|}`));
+    it(`type { number |`, () => expectNoPrimitiveTypeSuggestions(`type { number |`));
 
-        it(`type {|date}`, () => expectDatePrimitiveTypeReplacements(`type {|date}`));
+    it(`type { number |}`, () => expectNoPrimitiveTypeSuggestions(`type { number |}`));
 
-        it(`type [x =|`, () => expectInserts(`type [x =|`));
+    it(`type { number }|`, () => expectNoPrimitiveTypeSuggestions(`type { number }|`));
 
-        it(`type [x = |`, () => expectInserts(`type [x = |`));
+    it(`type { date|`, () => expectDatePrimitiveTypeReplacements(`type { date|`));
 
-        it(`type [x =|]`, () => expectInserts(`type [x =|]`));
+    it(`type { |date`, () => expectDatePrimitiveTypeReplacements(`type { |date`));
 
-        it(`type [x = |]`, () => expectInserts(`type [x = |]`));
+    it(`type { | date`, () => expectNoPrimitiveTypeSuggestions(`type { | date`));
 
-        it(`type [x = | ]`, () => expectInserts(`type [x = | ]`));
+    it(`type { date | `, () => expectNoPrimitiveTypeSuggestions(`type { date | `));
 
-        it(`type [x = date|`, () => expectDatePrimitiveTypeReplacements(`type [x = date|`));
+    it(`type { date | } `, () => expectNoPrimitiveTypeSuggestions(`type { date | } `));
 
-        it(`type [x = |date`, () => expectDatePrimitiveTypeReplacements(`type [x = |date`));
+    it(`type {date|}`, () => expectDatePrimitiveTypeReplacements(`type {date|}`));
 
-        it(`type function (val as |date) as date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as |date) as date`));
+    it(`type {|date}`, () => expectDatePrimitiveTypeReplacements(`type {|date}`));
 
-        it(`type function (val as date|) as date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as date|) as date`));
+    it(`type [x =|`, () => expectPrimitiveTypeInserts(`type [x =|`));
 
-        it(`type function (val as date) as |date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as date) as |date`));
+    it(`type [x = |`, () => expectPrimitiveTypeInserts(`type [x = |`));
 
-        it(`type function (val as date) as date|`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as date) as date|`));
+    it(`type [x =|]`, () => expectPrimitiveTypeInserts(`type [x =|]`));
 
-        it(`type function (val as date|) as date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as date|) as date`));
+    it(`type [x = |]`, () => expectPrimitiveTypeInserts(`type [x = |]`));
 
-        it(`type function (val as date| ) as date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as date| ) as date`));
+    it(`type [x = | ]`, () => expectPrimitiveTypeInserts(`type [x = | ]`));
 
-        it(`type function (val as |date) as date`, () =>
-            expectDatePrimitiveTypeReplacements(`type function (val as |date) as date`));
+    it(`type [x = date|`, () => expectDatePrimitiveTypeReplacements(`type [x = date|`));
 
-        it(`type function (val as n |) as date`, () => expectNoSuggestions(`type function (val as n |) as date`));
+    it(`type [x = |date`, () => expectDatePrimitiveTypeReplacements(`type [x = |date`));
 
-        it(`type function (val as | n) as date`, () => expectNoSuggestions(`type function (val as | n) as date`));
+    it(`type [x = date |]`, () => expectNoPrimitiveTypeSuggestions(`type [x = date |]`));
 
-        it(`type function (val as date) as date |`, () => expectNoSuggestions(`type function (val as date) as date |`));
+    it(`type [x = date ]|`, () => expectNoPrimitiveTypeSuggestions(`type [x = date ]|`));
 
-        it(`type function (val as date) as | date`, () => expectNoSuggestions(`type function (val as date) as | date`));
+    it(`type function (val as |date) as date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as |date) as date`));
 
-        it(`type table [x =|`, () => expectInserts(`type table [x =|`));
+    it(`type function (val as date|) as date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as date|) as date`));
 
-        it(`type table [x = |`, () => expectInserts(`type table [x = |`));
+    it(`type function (val as date) as |date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as date) as |date`));
 
-        it(`type table [x =|]`, () => expectInserts(`type table [x =|]`));
+    it(`type function (val as date) as date|`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as date) as date|`));
 
-        it(`type table [x = |]`, () => expectInserts(`type table [x = |]`));
+    it(`type function (val as date|) as date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as date|) as date`));
 
-        it(`type table [x = | ]`, () => expectInserts(`type table [x = | ]`));
+    it(`type function (val as date| ) as date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as date| ) as date`));
 
-        it(`type table [x = date|`, () => expectDatePrimitiveTypeReplacements(`type table [x = date|`));
+    it(`type function (val as |date) as date`, () =>
+        expectDatePrimitiveTypeReplacements(`type function (val as |date) as date`));
 
-        it(`type table [x = |date`, () => expectDatePrimitiveTypeReplacements(`type table [x = |date`));
+    it(`type function (val as n |) as date`, () =>
+        expectNoPrimitiveTypeSuggestions(`type function (val as n |) as date`));
 
-        it(`(x|) => 1`, () => expectNoSuggestions(`(x|) => 1`));
+    it(`type function (val as | n) as date`, () =>
+        expectNoPrimitiveTypeSuggestions(`type function (val as | n) as date`));
 
-        it(`(x |) => 1`, () => expectNoSuggestions(`(x |) => 1`));
+    it(`type function (val as date) as date |`, () =>
+        expectNoPrimitiveTypeSuggestions(`type function (val as date) as date |`));
 
-        it(`(x as|) => 1`, () => expectNoSuggestions(`(x as|) => 1`));
+    it(`type function (val as date) as | date`, () =>
+        expectNoPrimitiveTypeSuggestions(`type function (val as date) as | date`));
 
-        it(`(x as |) => 1`, () => expectInserts(`(x as |) => 1`));
+    it(`type table [x =|`, () => expectPrimitiveTypeInserts(`type table [x =|`));
 
-        it(`(x as | ) => 1`, () => expectInserts(`(x as | ) => 1`));
+    it(`type table [x = |`, () => expectPrimitiveTypeInserts(`type table [x = |`));
 
-        it(`(x as date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date|) => 1`));
+    it(`type table [x =|]`, () => expectPrimitiveTypeInserts(`type table [x =|]`));
 
-        it(`(x as date |) => 1`, () => expectNoSuggestions(`(x as date |) => 1`));
+    it(`type table [x = |]`, () => expectPrimitiveTypeInserts(`type table [x = |]`));
 
-        it(`(x as date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date|) => 1`));
+    it(`type table [x = | ]`, () => expectPrimitiveTypeInserts(`type table [x = | ]`));
 
-        it(`(x as date| ) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date| ) => 1`));
+    it(`type table [x = date|`, () => expectDatePrimitiveTypeReplacements(`type table [x = date|`));
 
-        it(`(x as nullable|) => 1`, () => expectNoSuggestions(`(x as nullable|) => 1`));
+    it(`type table [x = |date`, () => expectDatePrimitiveTypeReplacements(`type table [x = |date`));
 
-        it(`(x as nullable |) => 1`, () => expectInserts(`(x as nullable |) => 1`));
+    it(`(x|) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x|) => 1`));
 
-        it(`(x as nullable date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable date|) => 1`));
+    it(`(x |) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x |) => 1`));
 
-        it(`(x as nullable |date) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable |date) => 1`));
+    it(`(x as|) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x as|) => 1`));
 
-        it(`(x as nullable date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable date|) => 1`));
+    it(`(x as |) => 1`, () => expectPrimitiveTypeInserts(`(x as |) => 1`));
 
-        it(`(x as nullable date |) => 1`, () => expectNoSuggestions(`(x as nullable date |) => 1`));
+    it(`(x as | ) => 1`, () => expectPrimitiveTypeInserts(`(x as | ) => 1`));
 
-        it(`1 as|`, () => expectNoSuggestions(`1 as|`));
+    it(`(x as date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date|) => 1`));
 
-        it(`1 as |`, () => expectInserts(`1 as |`));
+    it(`(x as date |) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x as date |) => 1`));
 
-        it(`| 1 as`, () => expectNoSuggestions(`| 1 as`));
+    it(`(x as date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date|) => 1`));
 
-        it(`1 as date|`, () => expectDatePrimitiveTypeReplacements(`1 as date|`));
+    it(`(x as date| ) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as date| ) => 1`));
 
-        it(`1 as |date`, () => expectDatePrimitiveTypeReplacements(`1 as |date`));
+    it(`(x as nullable|) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x as nullable|) => 1`));
 
-        it(`1 as date| as logical`, () => expectDatePrimitiveTypeReplacements(`1 as date| as logical`));
+    it(`(x as nullable |) => 1`, () => expectPrimitiveTypeInserts(`(x as nullable |) => 1`));
 
-        it(`1 as date | as logical`, () => expectNoSuggestions(`1 as date | as logical`));
+    it(`(x as nullable date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable date|) => 1`));
 
-        it(`1 as da |`, () => expectNoSuggestions(`1 as da |`));
+    it(`(x as nullable |date) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable |date) => 1`));
 
-        it(`1 is|`, () => expectNoSuggestions(`1 is|`));
+    it(`(x as nullable date|) => 1`, () => expectDatePrimitiveTypeReplacements(`(x as nullable date|) => 1`));
 
-        it(`1 is |`, () => expectInserts(`1 is |`));
+    it(`(x as nullable date |) => 1`, () => expectNoPrimitiveTypeSuggestions(`(x as nullable date |) => 1`));
 
-        it(`| 1 is`, () => expectNoSuggestions(`| 1 is`));
+    it(`1 as|`, () => expectNoPrimitiveTypeSuggestions(`1 as|`));
 
-        it(`1 is date|`, () => expectDatePrimitiveTypeReplacements(`1 is date|`));
+    it(`1 as |`, () => expectPrimitiveTypeInserts(`1 as |`));
 
-        it(`1 is |date`, () => expectDatePrimitiveTypeReplacements(`1 is |date`));
+    it(`| 1 as`, () => expectNoPrimitiveTypeSuggestions(`| 1 as`));
 
-        it(`1 is date| is logical`, () => expectDatePrimitiveTypeReplacements(`1 is date| is logical`));
+    it(`1 as date|`, () => expectDatePrimitiveTypeReplacements(`1 as date|`));
 
-        it(`1 is date | is logical`, () => expectNoSuggestions(`1 is date | is logical`));
-    });
+    it(`1 as |date`, () => expectDatePrimitiveTypeReplacements(`1 as |date`));
+
+    it(`1 as date| as logical`, () => expectDatePrimitiveTypeReplacements(`1 as date| as logical`));
+
+    it(`1 as date | as logical`, () => expectNoPrimitiveTypeSuggestions(`1 as date | as logical`));
+
+    it(`1 as da |`, () => expectNoPrimitiveTypeSuggestions(`1 as da |`));
+
+    it(`1 is|`, () => expectNoPrimitiveTypeSuggestions(`1 is|`));
+
+    it(`1 is |`, () => expectPrimitiveTypeInserts(`1 is |`));
+
+    it(`| 1 is`, () => expectNoPrimitiveTypeSuggestions(`| 1 is`));
+
+    it(`1 is date|`, () => expectDatePrimitiveTypeReplacements(`1 is date|`));
+
+    it(`1 is |date`, () => expectDatePrimitiveTypeReplacements(`1 is |date`));
+
+    it(`1 is date| is logical`, () => expectDatePrimitiveTypeReplacements(`1 is date| is logical`));
+
+    it(`1 is date | is logical`, () => expectNoPrimitiveTypeSuggestions(`1 is date | is logical`));
 });
