@@ -30,10 +30,7 @@ export async function expectAbridgedAutocompleteItems(
 ): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
     const actual: ReadonlyArray<AbridgedAutocompleteItem> = (
         await assertAutocompleteItems(textWithPipe, autocompleteItemSelector)
-    ).map((value: Inspection.AutocompleteItem) => ({
-        label: value.label,
-        isTextEdit: value.textEdit !== undefined,
-    }));
+    ).map(createAbridgedAutocompleteItem);
 
     if (expected !== undefined) {
         expect(actual).to.deep.equal(expected);
@@ -53,23 +50,37 @@ export async function expectTopSuggestions(
     textWithPipe: string,
     autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
     expected: ReadonlyArray<AbridgedAutocompleteItem>,
+    remainderScoreThreshold: number = 0.8,
 ): Promise<void> {
     const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertAutocompleteItems(
         textWithPipe,
         autocompleteItemSelector,
     );
 
-    const sortedaActual: ReadonlyArray<AbridgedAutocompleteItem> = Array.from(actual)
-        .sort((left: Inspection.AutocompleteItem, right: Inspection.AutocompleteItem) => {
+    const byJaroWinklerScore: ReadonlyArray<Inspection.AutocompleteItem> = Array.from(actual).sort(
+        (left: Inspection.AutocompleteItem, right: Inspection.AutocompleteItem) => {
             const jaroWinklerDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
 
             return jaroWinklerDiff !== 0 ? jaroWinklerDiff : left.label.localeCompare(right.label);
-        })
-        .slice(0, expected.length)
-        .map((value: Inspection.AutocompleteItem) => ({
-            label: value.label,
-            isTextEdit: value.textEdit !== undefined,
-        }));
+        },
+    );
 
-    expect(sortedaActual).to.deep.equal(expected);
+    const topN: ReadonlyArray<AbridgedAutocompleteItem> = byJaroWinklerScore
+        .slice(0, expected.length)
+        .map(createAbridgedAutocompleteItem);
+
+    const remainderBelowThreshold: ReadonlyArray<Inspection.AutocompleteItem> = byJaroWinklerScore
+        .slice(expected.length)
+        .filter((value: Inspection.AutocompleteItem) => value.jaroWinklerScore <= remainderScoreThreshold);
+
+    expect(remainderBelowThreshold).to.be.empty;
+
+    expect(topN).to.deep.equal(expected);
+}
+
+function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
+    return {
+        label: value.label,
+        isTextEdit: value.textEdit !== undefined,
+    };
 }
