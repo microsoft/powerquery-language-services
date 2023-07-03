@@ -202,7 +202,7 @@ export async function inspect(
             typeCache.scopeById,
         );
 
-        const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertFirst(activeNode.ancestry);
+        const ancestryLeaf: TXorNode = PQP.Parser.AncestryUtils.assertNth(activeNode.ancestry, 0);
         triedScopeType = tryScopeType(updatedSettings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(updatedSettings, activeNode);

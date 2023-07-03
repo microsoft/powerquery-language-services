@@ -74,7 +74,7 @@ export async function assertGetInspectionInstance(
             typeCache.scopeById,
         );
 
-        const ancestryLeaf: Parser.TXorNode = Parser.AncestryUtils.assertFirst(activeNode.ancestry);
+        const ancestryLeaf: Parser.TXorNode = Parser.AncestryUtils.assertNth(activeNode.ancestry, 0);
         triedScopeType = tryScopeType(settings, nodeIdMapCollection, ancestryLeaf.node.id, typeCache);
 
         triedExpectedType = tryExpectedType(settings, activeNode);

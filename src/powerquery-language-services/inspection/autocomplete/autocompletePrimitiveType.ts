@@ -71,7 +71,7 @@ function autocompletePrimitiveType(
     }
 
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const child: TXorNode = AncestryUtils.assertFirst(ancestry);
+    const child: TXorNode = AncestryUtils.assertNth(ancestry, 0);
     const parent: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, 1);
 
     if (XorNodeUtils.isNodeKind<Ast.LiteralExpression>(child, Ast.NodeKind.LiteralExpression)) {
