@@ -31,7 +31,7 @@ export interface AutocompleteFieldAccess {
 }
 
 // Given `[this has a space = 1][this| has a space`
-//  - autocompleteTextUnderPosition will be `this`
+//  - textUnderPosition will be `this`
 //  - textEditRange will be the range of `this`.
 //
 // This is because GeneralizedIdentifiers consume tokens until it reaches a token for either: ",", "]", "="
@@ -45,5 +45,5 @@ export interface InspectedFieldAccess {
     readonly fieldNames: ReadonlyArray<string>;
     readonly isAutocompleteAllowed: boolean;
     readonly textEditRange: Range | undefined;
-    readonly textToAutocompleteUnderPosition: string | undefined;
+    readonly textUnderPosition: string | undefined;
 }

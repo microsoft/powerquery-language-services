@@ -11,7 +11,7 @@ import { TestConstants, TestUtils } from "../..";
 import { expect } from "chai";
 import { inspectFieldAccess } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteFieldAccess";
 
-describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
+describe(`Inspection - Autocomplete - FieldAccess`, () => {
     function fieldAccessAutocompleteItemSelector(
         autocomplete: Inspection.Autocomplete,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
@@ -74,7 +74,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: [],
                     isAutocompleteAllowed: true,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -92,7 +92,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 26,
                         },
                     },
-                    textToAutocompleteUnderPosition: "key",
+                    textUnderPosition: "key",
                 });
             });
 
@@ -101,7 +101,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: [`key with a space`],
                     isAutocompleteAllowed: false,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -119,7 +119,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
@@ -137,7 +137,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
@@ -155,7 +155,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
@@ -173,8 +173,29 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 42,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"key with a space"`,
+                    textUnderPosition: `#"key with a space"`,
                 });
+            });
+
+            it(`[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`, async () => {
+                await expectInspectedFieldAccess(
+                    `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
+                    {
+                        fieldNames: [`#"=requiredQuotedIdentifier"`],
+                        isAutocompleteAllowed: true,
+                        textEditRange: {
+                            start: {
+                                line: 0,
+                                character: 44,
+                            },
+                            end: {
+                                line: 0,
+                                character: 72,
+                            },
+                        },
+                        textUnderPosition: `#"=requiredQuotedIdentifier"`,
+                    },
+                );
             });
         });
 
@@ -184,7 +205,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: [],
                     isAutocompleteAllowed: true,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -193,7 +214,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: ["A"],
                     isAutocompleteAllowed: false,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -202,7 +223,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: ["A"],
                     isAutocompleteAllowed: false,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -211,7 +232,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: ["A"],
                     isAutocompleteAllowed: true,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
 
@@ -229,7 +250,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 26,
                         },
                     },
-                    textToAutocompleteUnderPosition: "A",
+                    textUnderPosition: "A",
                 });
             });
 
@@ -247,7 +268,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 31,
                         },
                     },
-                    textToAutocompleteUnderPosition: "B",
+                    textUnderPosition: "B",
                 });
             });
 
@@ -265,7 +286,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 40,
                         },
                     },
-                    textToAutocompleteUnderPosition: "B",
+                    textUnderPosition: "B",
                 });
             });
 
@@ -283,7 +304,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 34,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"B"`,
+                    textUnderPosition: `#"B"`,
                 });
             });
 
@@ -301,7 +322,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                             character: 34,
                         },
                     },
-                    textToAutocompleteUnderPosition: `#"B"`,
+                    textUnderPosition: `#"B"`,
                 });
             });
 
@@ -310,7 +331,7 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
                     fieldNames: ["A", `#"B"`],
                     isAutocompleteAllowed: false,
                     textEditRange: undefined,
-                    textToAutocompleteUnderPosition: undefined,
+                    textUnderPosition: undefined,
                 });
             });
         });
@@ -355,6 +376,13 @@ describe(`FIXME Inspection - Autocomplete - FieldAccess`, () => {
 
             it(`[car = 1, cat = 2][cart|]`, () =>
                 expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|]`, [`car`, `cat`]));
+
+            it(`[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`, async () => {
+                await expectTopFieldAccessReplacements(
+                    `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
+                    [`#"=requiredQuotedIdentifier"`, "cat"],
+                );
+            });
         });
 
         describe(`FieldSelection`, () => {
