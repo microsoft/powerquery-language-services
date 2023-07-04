@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import { Constant, Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
@@ -11,23 +10,6 @@ import type { AutocompleteItem } from "./autocompleteItem";
 import { calculateJaroWinkler } from "../../../jaroWinkler";
 import { Inspection } from "../../..";
 import { Library } from "../../../library";
-
-export function fromFieldAccess(label: string, powerQueryType: Type.TPowerQueryType, other?: string): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
-
-    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
-
-    const normalizedLabel: string =
-        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
-
-    return {
-        jaroWinklerScore,
-        kind: CompletionItemKind.Field,
-        label: normalizedLabel,
-        powerQueryType,
-    };
-}
 
 export function fromKeywordKind(label: Keyword.KeywordKind, other?: string): AutocompleteItem {
     const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
