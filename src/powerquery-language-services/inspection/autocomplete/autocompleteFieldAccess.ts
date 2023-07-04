@@ -267,9 +267,9 @@ function inspectFieldSelector(
 
     switch (generalizedIdentifierXor.kind) {
         // There isn't a perfect way to determine if an autocomplete should be allowed.
-        // Take the following scenario, staring with start with: `let foo = [has a space = 1] in foo`
-        // Now the user wants to add a field selector: `let [has a space = 1][| in foo`
-        // The parser rules generate a GeneralizedIdentifier `in foo` even though the user wouldn't expect it.
+        // Take the following scenario, staring with start with: `let foo = [key = 1] in foo`
+        // Now the user wants to add a field selector: `let [key = 1][|in foo`
+        // The parser rules generate the GeneralizedIdentifier `in foo`, even though the user wouldn't expect it.
         //
         // The best solution I can think of is the following:
         //  - if it' a fully parsed Ast (ie. there exists a closing bracket) then the entire field is fair game.
