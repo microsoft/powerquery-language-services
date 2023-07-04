@@ -278,9 +278,6 @@ function inspectFieldSelector(
             const generalizedIdentifier: Ast.GeneralizedIdentifier = generalizedIdentifierXor.node;
             const generalizedIdentifierLiteral: string = generalizedIdentifier.literal;
 
-            const closingBracketNodeId: number = childIds[2];
-            const hasClosingBracketAst: boolean = nodeIdMapCollection.astNodeById.has(closingBracketNodeId);
-
             let isPositionInOrOnIdentifier: boolean;
             let textEditRange: Range | undefined;
             let textUnderPosition: string | undefined;
@@ -288,7 +285,7 @@ function inspectFieldSelector(
             const firstToken: Token | undefined =
                 lexerSnapshot.tokens[generalizedIdentifier.tokenRange.tokenIndexStart];
 
-            if (hasClosingBracketAst || !generalizedIdentifierLiteral.includes(" ")) {
+            if (!generalizedIdentifierLiteral.includes(" ")) {
                 isPositionInOrOnIdentifier = PositionUtils.isInAst(position, generalizedIdentifier, true, true);
                 textUnderPosition = isPositionInOrOnIdentifier ? generalizedIdentifierLiteral : undefined;
                 textEditRange = PositionUtils.rangeFromTokenRange(generalizedIdentifier.tokenRange);
