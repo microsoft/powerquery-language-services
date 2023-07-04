@@ -30,7 +30,7 @@ export async function inspectTypeFieldProjection(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.FieldProjection>(xorNode, Ast.NodeKind.FieldProjection);
 
-    const projectedFieldNames: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionNames(
+    const projectedFieldLiterals: ReadonlyArray<string> = NodeIdMapIterator.iterFieldProjectionFieldLiterals(
         state.nodeIdMapCollection,
         xorNode,
     );
@@ -50,7 +50,7 @@ export async function inspectTypeFieldProjection(
     switch (fieldType.kind) {
         case Type.TypeKind.Any: {
             const projectedFields: Type.UnorderedFields = new Map(
-                projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
+                projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
             );
 
             result = {
@@ -80,7 +80,7 @@ export async function inspectTypeFieldProjection(
 
         case Type.TypeKind.Record:
         case Type.TypeKind.Table:
-            result = inspectRecordOrTableProjection(fieldType, projectedFieldNames, isOptional);
+            result = inspectRecordOrTableProjection(fieldType, projectedFieldLiterals, isOptional);
             break;
 
         case Type.TypeKind.Unknown:
@@ -99,18 +99,18 @@ export async function inspectTypeFieldProjection(
 
 function inspectRecordOrTableProjection(
     fieldType: Type.TRecord | Type.TTable,
-    projectedFieldNames: ReadonlyArray<string>,
+    projectedFieldLiterals: ReadonlyArray<string>,
     isOptional: boolean,
 ): Type.TPowerQueryType {
     // All we know is fieldType was a Record/Table.
     // Create a DefinedRecord/DefinedTable with the projected fields.
     if (TypeUtils.isDefinedRecord(fieldType)) {
-        return reducedFieldsToKeys(fieldType, projectedFieldNames, isOptional, reducedRecordFields);
+        return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedRecordFields);
     } else if (TypeUtils.isDefinedTable(fieldType)) {
-        return reducedFieldsToKeys(fieldType, projectedFieldNames, isOptional, reducedTableFields);
+        return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedTableFields);
     } else {
         const newFields: Map<string, Type.TPowerQueryType> = new Map(
-            projectedFieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]),
+            projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
         );
 
         return fieldType.kind === Type.TypeKind.Record
