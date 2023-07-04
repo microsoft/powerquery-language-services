@@ -2,8 +2,9 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Range } from "vscode-languageserver-types";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { AutocompleteItem } from "./autocompleteItem";
 
@@ -29,8 +30,20 @@ export interface AutocompleteFieldAccess {
     readonly autocompleteItems: ReadonlyArray<AutocompleteItem>;
 }
 
+// Given `[this has a space = 1][this| has a space`
+//  - textUnderPosition will be `this`
+//  - textEditRange will be the range of `this`.
+//
+// This is because GeneralizedIdentifiers consume tokens until it reaches a token for either: ",", "]", "="
+// Therefore take the scenario where a customer has a file `let foo = [thing = 1] in ...`,
+// then they add a field selection which triggers an autocomplete for: `let foo = [thing = 1][f| in ...`
+// This creates a GeneralizedIdentifier of `f in ...`.
+//
+// It's safer to assume that the user wants to autocomplete the token they're under,
+// rather than the whole GeneralizedIdentifier.
 export interface InspectedFieldAccess {
-    readonly isAutocompleteAllowed: boolean;
-    readonly identifierUnderPosition: Ast.GeneralizedIdentifier | undefined;
     readonly fieldNames: ReadonlyArray<string>;
+    readonly isAutocompleteAllowed: boolean;
+    readonly textEditRange: Range | undefined;
+    readonly textUnderPosition: string | undefined;
 }

@@ -2,131 +2,426 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { ResultUtils } from "@microsoft/powerquery-parser";
+import { ResultUtils, Task } from "@microsoft/powerquery-parser";
 
+import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
+import { expectNoSuggestions, expectTopSuggestions } from "./autocompleteTestUtils";
+import { Inspection, Position } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
+import { expect } from "chai";
+import { inspectFieldAccess } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteFieldAccess";
 
-describe(`Inspection - Autocomplete - FieldSelection`, () => {
-    async function runTest(textWithPipe: string, expected: ReadonlyArray<string>): Promise<void> {
-        const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-            TestConstants.DefaultInspectionSettings,
+describe(`Inspection - Autocomplete - FieldAccess`, () => {
+    function fieldAccessAutocompleteItemSelector(
+        autocomplete: Inspection.Autocomplete,
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        return ResultUtils.assertOk(autocomplete.triedFieldAccess)?.autocompleteItems ?? [];
+    }
+
+    function expectNoFieldAccessSuggestions(textWithPipe: string): Promise<void> {
+        return expectNoSuggestions(textWithPipe, fieldAccessAutocompleteItemSelector);
+    }
+
+    function expectTopFieldAccessAutocompleteItems(
+        textWithPipe: string,
+        labels: ReadonlyArray<string>,
+        isTextEdit: boolean,
+    ): Promise<void> {
+        return expectTopSuggestions(
             textWithPipe,
-        );
-
-        ResultUtils.assertIsOk(actual.triedFieldAccess);
-
-        TestUtils.assertContainsAutocompleteItemLabels(
-            expected,
-            actual.triedFieldAccess.value?.autocompleteItems ?? [],
+            fieldAccessAutocompleteItemSelector,
+            labels.map((label: string) => ({
+                label,
+                isTextEdit,
+            })),
         );
     }
 
-    describe(`Selection`, () => {
-        describe(`ParseOk`, () => {
-            it(`[cat = 1, car = 2][x|]`, () => runTest(`[cat = 1, car = 2][x|]`, []));
+    function expectTopFieldAccessInserts(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, false);
+    }
 
-            it(`[cat = 1, car = 2][c|]`, () => runTest(`[cat = 1, car = 2][c|]`, ["cat", "car"]));
+    function expectTopFieldAccessReplacements(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
+        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
+    }
 
-            it(`[cat = 1, car = 2][| c]`, () => runTest(`[cat = 1, car = 2][| c]`, []));
+    describe(`InspectedFieldAccess`, () => {
+        async function expectInspectedFieldAccess(
+            textWithPipe: string,
+            expected: Inspection.InspectedFieldAccess | undefined,
+        ): Promise<void> {
+            const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
 
-            it(`[cat = 1, car = 2][c |]`, () => runTest(`[cat = 1, car = 2][c |]`, []));
+            const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(
+                TestConstants.DefaultInspectionSettings,
+                text,
+            );
 
-            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, () =>
-                runTest(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[f|];`, [
-                    "foo",
-                    "foobar",
-                ]));
+            const activeNode: ActiveNode = ActiveNodeUtils.assertActiveNode(parsed.nodeIdMapCollection, position);
+
+            const actual: Inspection.InspectedFieldAccess | undefined = inspectFieldAccess(
+                parsed.lexerSnapshot,
+                parsed.nodeIdMapCollection,
+                activeNode,
+            );
+
+            expect(actual).to.deep.equal(expected);
+        }
+
+        describe(`FieldSelection`, () => {
+            it(`[key with a space = 1][|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|`, {
+                    fieldNames: [],
+                    isAutocompleteAllowed: true,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
+
+            it(`[key with a space = 1][key| with a space`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][key| with a space`, {
+                    fieldNames: ["key with a space"],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 26,
+                        },
+                    },
+                    textUnderPosition: "key",
+                });
+            });
+
+            it(`[key with a space = 1][| key with a space`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][| key with a space`, {
+                    fieldNames: [`key with a space`],
+                    isAutocompleteAllowed: false,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
+
+            it(`[key with a space = 1][|#"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[key with a space = 1][|#"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[key with a space = 1][#"key| with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#"key| with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[key with a space = 1][#|"key with a space" blah`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][#|"key with a space" blah`, {
+                    fieldNames: [`#"key with a space" blah`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 23,
+                        },
+                        end: {
+                            line: 0,
+                            character: 42,
+                        },
+                    },
+                    textUnderPosition: `#"key with a space"`,
+                });
+            });
+
+            it(`[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`, async () => {
+                await expectInspectedFieldAccess(
+                    `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
+                    {
+                        fieldNames: [`#"=requiredQuotedIdentifier"`],
+                        isAutocompleteAllowed: true,
+                        textEditRange: {
+                            start: {
+                                line: 0,
+                                character: 44,
+                            },
+                            end: {
+                                line: 0,
+                                character: 72,
+                            },
+                        },
+                        textUnderPosition: `#"=requiredQuotedIdentifier"`,
+                    },
+                );
+            });
         });
 
-        describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][|]`, () => runTest(`[cat = 1, car = 2][|]`, ["cat", "car"]));
+        describe(`FieldProjection`, () => {
+            it(`[key with a space = 1][ [|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [|`, {
+                    fieldNames: [],
+                    isAutocompleteAllowed: true,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
 
-            it(`[cat = 1, car = 2]|[`, () => runTest(`[cat = 1, car = 2]|[`, []));
+            it(`[key with a space = 1][ [A]|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A]|`, {
+                    fieldNames: ["A"],
+                    isAutocompleteAllowed: false,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
 
-            it(`[cat = 1, car = 2][|`, () => runTest(`[cat = 1, car = 2][|`, ["cat", "car"]));
+            it(`[key with a space = 1][ [A],|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A],|`, {
+                    fieldNames: ["A"],
+                    isAutocompleteAllowed: false,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
 
-            it(`[cat = 1, car = 2][x|`, () => runTest(`[cat = 1, car = 2][x|`, []));
+            it(`[key with a space = 1][ [A], [|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A], [|`, {
+                    fieldNames: ["A"],
+                    isAutocompleteAllowed: true,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
 
-            it(`[cat = 1, car = 2][c|`, () => runTest(`[cat = 1, car = 2][c|`, ["cat", "car"]));
+            it(`[key with a space = 1][ [A|], [B`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A|], [B`, {
+                    fieldNames: ["A", "B"],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 25,
+                        },
+                        end: {
+                            line: 0,
+                            character: 26,
+                        },
+                    },
+                    textUnderPosition: "A",
+                });
+            });
 
-            it(`[cat = 1, car = 2][c |`, () => runTest(`[cat = 1, car = 2][c |`, []));
+            it(`[key with a space = 1][ [A], [B|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A], [B|`, {
+                    fieldNames: ["A", "B"],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 30,
+                        },
+                        end: {
+                            line: 0,
+                            character: 31,
+                        },
+                    },
+                    textUnderPosition: "B",
+                });
+            });
 
-            it(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, () =>
-                runTest(`section x; value = [foo = 1, bar = 2, foobar = 3]; valueAccess = value[|`, [
-                    "foo",
-                    "bar",
-                    "foobar",
-                ]));
+            it(`let _ = [key with a space = 1][ [A], [B| in _ `, async () => {
+                await expectInspectedFieldAccess(`[let _ = [key with a space = 1][ [A], [B| in _`, {
+                    fieldNames: ["A", "B in _"],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 39,
+                        },
+                        end: {
+                            line: 0,
+                            character: 40,
+                        },
+                    },
+                    textUnderPosition: "B",
+                });
+            });
+
+            it(`[key with a space = 1][ [A], [|#"B"`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A], [|#"B"`, {
+                    fieldNames: ["A", `#"B"`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 30,
+                        },
+                        end: {
+                            line: 0,
+                            character: 34,
+                        },
+                    },
+                    textUnderPosition: `#"B"`,
+                });
+            });
+
+            it(`[key with a space = 1][ [A], [#"B"|`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A], [#"B"|`, {
+                    fieldNames: ["A", `#"B"`],
+                    isAutocompleteAllowed: true,
+                    textEditRange: {
+                        start: {
+                            line: 0,
+                            character: 30,
+                        },
+                        end: {
+                            line: 0,
+                            character: 34,
+                        },
+                    },
+                    textUnderPosition: `#"B"`,
+                });
+            });
+
+            it(`[key with a space = 1][ [A], [#"B" |`, async () => {
+                await expectInspectedFieldAccess(`[key with a space = 1][ [A], [#"B" |`, {
+                    fieldNames: ["A", `#"B"`],
+                    isAutocompleteAllowed: false,
+                    textEditRange: undefined,
+                    textUnderPosition: undefined,
+                });
+            });
         });
     });
 
-    describe("Projection", () => {
-        describe("ParseOk", () => {
-            it(`[cat = 1, car = 2][ [x|] ]`, () => runTest(`[cat = 1, car = 2][ [x|] ]`, []));
+    describe(`top suggestions`, () => {
+        describe(`FieldSelection`, () => {
+            it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
 
-            it(`[cat = 1, car = 2][ [c|] ]`, () => runTest(`[cat = 1, car = 2][ [c|] ]`, ["cat", "car"]));
+            it(`[][ |`, () => expectNoFieldAccessSuggestions(`[][ |`));
 
-            it(`[cat = 1, car = 2][ [c |] ]`, () => runTest(`[cat = 1, car = 2][ [c |] ]`, []));
+            it(`[car = 1, cat = 2][| `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][|`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [x], [c|] ]`, () => runTest(`[cat = 1, car = 2][ [x], [c|] ]`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ | `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ |`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [cat], [c|] ]`, () => runTest(`[cat = 1, car = 2][ [cat], [c|] ]`, ["car"]));
+            it(`[car = 1, cat = 2][ | ] `, () =>
+                expectTopFieldAccessInserts(`[car = 1, cat = 2][ | ]`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, () =>
-                runTest(`[cat = 1, car = 2][ [cat], [car], [c|] ]`, []));
+            it(`let foo = [car = 1, cat = 2][#"test"|`, () =>
+                expectTopFieldAccessReplacements(`let foo = [car = 1, cat = 2][#"test"|`, [`cat`, `car`]));
+
+            it(`[car = 1, cat = 2][c|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][ca|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][car|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][cart|`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][c|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|]`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][ca|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|]`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][car|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|]`, [`car`, `cat`]));
+
+            it(`[car = 1, cat = 2][cart|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|]`, [`car`, `cat`]));
+
+            it(`[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`, async () => {
+                await expectTopFieldAccessReplacements(
+                    `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
+                    [`#"=requiredQuotedIdentifier"`, "cat"],
+                );
+            });
         });
 
-        describe(`ParseErr`, () => {
-            it(`[cat = 1, car = 2][ [|`, () => runTest(`[cat = 1, car = 2][ [|`, ["cat", "car"]));
+        describe(`FieldSelection`, () => {
+            it(`[][ [|`, () => expectNoFieldAccessSuggestions(`[][ [|`));
 
-            it(`[cat = 1, car = 2][ [ |`, () => runTest(`[cat = 1, car = 2][ [ |`, ["cat", "car"]));
+            it(`[][ [ |`, () => expectNoFieldAccessSuggestions(`[][ [ |`));
 
-            it(`[cat = 1, car = 2][ [ c|`, () => runTest(`[cat = 1, car = 2][ [ c|`, ["cat", "car"]));
+            it(`[car = 1, cat = 2][ [cat], [car|]`, () =>
+                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ [cat], [car|]`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [ cat|`, () => runTest(`[cat = 1, car = 2][ [ cat|`, ["cat"]));
+            it(`[car = 1, cat = 2][ [|`, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ [|`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [ cat |`, () => runTest(`[cat = 1, car = 2][ [ cat |`, []));
+            it(`[car = 1, cat = 2][ [|`, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ [|`, [`car`, `cat`]));
 
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
+            it(`[key with a space = 1][ [|`, () =>
+                expectTopFieldAccessInserts(`[key with a space = 1][ [|`, [`key with a space`]));
 
-            it(`[cat = 1, car = 2][ [ cat ] |`, () => runTest(`[cat = 1, car = 2][ [ cat ] |`, []));
-
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
-
-            it(`[cat = 1, car = 2][ [ cat ]|`, () => runTest(`[cat = 1, car = 2][ [ cat ]|`, []));
-
-            it(`[cat = 1, car = 2][ [ cat ], |`, () => runTest(`[cat = 1, car = 2][ [ cat ], |`, []));
-
-            it(`[cat = 1, car = 2][ [ cat ], [|`, () => runTest(`[cat = 1, car = 2][ [ cat ], [|`, ["car"]));
-
-            it(`[cat = 1, car = 2][ [ cat ], [|<>`, () => runTest(`[cat = 1, car = 2][ [ cat ], [|<>`, ["car"]));
-
-            it(`[cat = 1, car = 2][ [ cat ], [| <>`, () => runTest(`[cat = 1, car = 2][ [ cat ], [| <>`, ["car"]));
-
-            it(`[cat = 1, car = 2][ [ cat ], [<>|`, () => runTest(`[cat = 1, car = 2][ [ cat ], [<>|`, []));
+            it(`[key with a space = 1][ [key|`, () =>
+                expectTopFieldAccessReplacements(`[key with a space = 1][ [key|`, [`key with a space`]));
         });
     });
 
     describe(`Indirection`, () => {
-        it(`let fn = () => [cat = 1, car = 2] in fn()[|`, () =>
-            runTest(`let fn = () => [cat = 1, car = 2] in fn()[|`, ["cat", "car"]));
+        it(`let fn = () => [car = 1, cat = 2] in fn()[|`, () =>
+            expectTopFieldAccessInserts(`let fn = () => [car = 1, cat = 2] in fn()[|`, ["car", "cat"]));
 
-        it(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, () =>
-            runTest(`let foo = () => [cat = 1, car = 2], bar = foo in bar()[|`, ["cat", "car"]));
+        it(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, () =>
+            expectTopFieldAccessInserts(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, ["car", "cat"]));
 
-        it(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, () =>
-            runTest(`let foo = () => [cat = 1, car = 2], bar = () => foo in bar()()[|`, ["cat", "car"]));
+        it(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, () =>
+            expectTopFieldAccessInserts(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, [
+                "car",
+                "cat",
+            ]));
 
         it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () =>
-            runTest(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, ["cat", "car"]));
-    });
-
-    describe(`GeneralizedIdentifier`, () => {
-        it(`[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`, () =>
-            runTest(`[#"regularIdentifier" = 1, #"generalized identifier" = 2][|`, [
-                `regularIdentifier`,
-                `#"generalized identifier"`,
+            expectTopFieldAccessInserts(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, [
+                "car",
+                "cat",
             ]));
     });
 });
