@@ -11,13 +11,13 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Position } from "vscode-languageserver-types";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
-import { AutocompleteItem, AutocompleteItemUtils } from "./autocompleteItem";
-import { AutocompleteTraceConstant, PositionUtils } from "../..";
+import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils } from "../..";
+import { AutocompleteItem } from "./autocompleteItem";
 import { TrailingToken } from "./trailingToken";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
@@ -47,20 +47,37 @@ function autocompleteLanguageConstant(
     nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
-): AutocompleteItem | undefined {
+): ReadonlyArray<AutocompleteItem> {
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        return undefined;
+        return [];
     }
 
+    const result: AutocompleteItem[] = [];
+
     if (isCatchAllowed(nodeIdMapCollection, activeNode, trailingToken)) {
-        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Catch);
-    } else if (isNullableAllowed(activeNode)) {
-        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Nullable);
-    } else if (isOptionalAllowed(activeNode)) {
-        return AutocompleteItemUtils.fromLanguageConstant(Constant.LanguageConstant.Optional);
-    } else {
-        return undefined;
+        result.push(createAutocompleteItem(Constant.LanguageConstant.Catch));
     }
+
+    if (isNullableAllowed(activeNode)) {
+        result.push(createAutocompleteItem(Constant.LanguageConstant.Nullable));
+    }
+
+    if (isOptionalAllowed(activeNode)) {
+        result.push(createAutocompleteItem(Constant.LanguageConstant.Optional));
+    }
+
+    return result;
+}
+
+export function createAutocompleteItem(label: Constant.LanguageConstant, other?: string): AutocompleteItem {
+    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
+
+    return {
+        jaroWinklerScore,
+        kind: CompletionItemKind.Keyword,
+        label,
+        powerQueryType: Type.NotApplicableInstance,
+    };
 }
 
 function isCatchAllowed(

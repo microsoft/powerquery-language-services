@@ -12,7 +12,10 @@ export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | 
 
 export type TriedAutocompleteKeyword = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
-export type TriedAutocompleteLanguageConstant = PQP.Result<AutocompleteItem | undefined, PQP.CommonError.CommonError>;
+export type TriedAutocompleteLanguageConstant = PQP.Result<
+    ReadonlyArray<AutocompleteItem>,
+    PQP.CommonError.CommonError
+>;
 
 export type TriedAutocompletePrimitiveType = PQP.Result<ReadonlyArray<AutocompleteItem>, PQP.CommonError.CommonError>;
 
