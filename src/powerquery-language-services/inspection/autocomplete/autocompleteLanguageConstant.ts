@@ -13,10 +13,10 @@ import {
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Position } from "vscode-languageserver-types";
+import type { Position, Range } from "vscode-languageserver-types";
 
 import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
-import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils } from "../..";
+import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils, TextEdit } from "../..";
 import { AutocompleteItem } from "./autocompleteItem";
 import { TrailingToken } from "./trailingToken";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
@@ -62,14 +62,20 @@ function autocompleteLanguageConstant(
         result.push(createAutocompleteItem(Constant.LanguageConstant.Nullable));
     }
 
-    if (isOptionalAllowed(activeNode)) {
-        result.push(createAutocompleteItem(Constant.LanguageConstant.Optional));
+    const optionalAutocompleteItem: AutocompleteItem | undefined = getOptionalAutocompleteItem(activeNode);
+
+    if (optionalAutocompleteItem) {
+        result.push(optionalAutocompleteItem);
     }
 
     return result;
 }
 
-export function createAutocompleteItem(label: Constant.LanguageConstant, other?: string): AutocompleteItem {
+export function createAutocompleteItem(
+    label: Constant.LanguageConstant,
+    other?: string,
+    range?: Range | undefined,
+): AutocompleteItem {
     const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
 
     return {
@@ -77,6 +83,7 @@ export function createAutocompleteItem(label: Constant.LanguageConstant, other?:
         kind: CompletionItemKind.Keyword,
         label,
         powerQueryType: Type.NotApplicableInstance,
+        textEdit: range ? TextEdit.replace(range, label) : undefined,
     };
 }
 
@@ -174,64 +181,83 @@ function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, anc
     }
 }
 
-function isOptionalAllowed(activeNode: ActiveNode): boolean {
-    const fnExprAncestryIndex: number | undefined = AncestryUtils.indexOfNodeKind(
+function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem | undefined {
+    const fnExprAncestryIndex: number | undefined = AncestryUtils.indexOfNodeKind<Ast.FunctionExpression>(
         activeNode.ancestry,
         Ast.NodeKind.FunctionExpression,
     );
 
     if (fnExprAncestryIndex === undefined) {
-        return false;
+        return undefined;
     }
 
     // FunctionExpression -> IParenthesisWrapped -> ParameterList -> Csv -> Parameter
+    const parameterAncestryIndex: number = fnExprAncestryIndex - 4;
+
     const parameter: XorNode<Ast.TParameter> | undefined = AncestryUtils.nthChecked<Ast.TParameter>(
         activeNode.ancestry,
-        fnExprAncestryIndex - 4,
+        parameterAncestryIndex,
         Ast.NodeKind.Parameter,
     );
 
     if (parameter === undefined) {
-        return false;
+        return undefined;
     }
 
-    const childOfParameter: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, fnExprAncestryIndex - 5);
+    const childOfParameter: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, parameterAncestryIndex - 1);
 
     if (childOfParameter === undefined) {
-        return true;
+        return createAutocompleteItem(Constant.LanguageConstant.Optional);
     }
 
     switch (childOfParameter.node.attributeIndex) {
         // IParameter.optionalConstant
         case 0:
-            return true;
+            switch (childOfParameter.kind) {
+                case PQP.Parser.XorNodeKind.Ast: {
+                    const optionalConstant: Ast.TConstant = XorNodeUtils.assertAstChecked<Ast.TConstant>(
+                        childOfParameter,
+                        Ast.NodeKind.Constant,
+                    );
+
+                    return createAutocompleteItem(
+                        Constant.LanguageConstant.Optional,
+                        optionalConstant.constantKind,
+                        PositionUtils.rangeFromTokenRange(optionalConstant.tokenRange),
+                    );
+                }
+
+                case PQP.Parser.XorNodeKind.Context:
+                    return createAutocompleteItem(Constant.LanguageConstant.Optional);
+
+                default:
+                    throw Assert.isNever(childOfParameter);
+            }
 
         // IParameter.name
         case 1:
             switch (childOfParameter.kind) {
                 case PQP.Parser.XorNodeKind.Ast: {
-                    const nameAst: Ast.Identifier = XorNodeUtils.assertAstChecked<Ast.Identifier>(
+                    const parameterName: Ast.Identifier = XorNodeUtils.assertAstChecked<Ast.Identifier>(
                         childOfParameter,
                         Ast.NodeKind.Identifier,
                     );
 
-                    const name: string = nameAst.literal;
-
-                    return (
-                        Constant.LanguageConstant.Optional.startsWith(name) &&
-                        name !== Constant.LanguageConstant.Optional &&
-                        PositionUtils.isInAst(activeNode.position, nameAst, false, true)
+                    return createAutocompleteItem(
+                        Constant.LanguageConstant.Optional,
+                        parameterName.literal,
+                        PositionUtils.rangeFromTokenRange(parameterName.tokenRange),
                     );
                 }
 
                 case PQP.Parser.XorNodeKind.Context:
-                    return true;
+                    return createAutocompleteItem(Constant.LanguageConstant.Optional);
 
                 default:
                     throw Assert.isNever(childOfParameter);
             }
 
         default:
-            return false;
+            return undefined;
     }
 }

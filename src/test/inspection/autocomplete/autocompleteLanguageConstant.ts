@@ -5,13 +5,12 @@ import "mocha";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
 import {
     AbridgedAutocompleteItem,
     expectAbridgedAutocompleteItems,
     expectNoSuggestions,
 } from "./autocompleteTestUtils";
+import { Inspection } from "../../../powerquery-language-services";
 
 describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
     function assertAutocompleteLanguageConstant(
@@ -26,9 +25,9 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
 
     async function expectLanguageConstantSuggestion(
         textWithPipe: string,
-        expected: ReadonlyArray<AbridgedAutocompleteItem>,
+        expected: AbridgedAutocompleteItem,
     ): Promise<void> {
-        await expectAbridgedAutocompleteItems(textWithPipe, assertAutocompleteLanguageConstant, expected);
+        await expectAbridgedAutocompleteItems(textWithPipe, assertAutocompleteLanguageConstant, [expected]);
     }
 
     const CatchInsert: AbridgedAutocompleteItem = {
@@ -61,29 +60,47 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
         isTextEdit: true,
     };
 
-    const OtherwiseInsert: AbridgedAutocompleteItem = {
-        label: LanguageConstant.Otherwise,
-        isTextEdit: false,
-    };
-
-    const OtherwiseReplace: AbridgedAutocompleteItem = {
-        label: LanguageConstant.Otherwise,
-        isTextEdit: true,
-    };
-
     describe(`${LanguageConstant.Catch}`, () => {
         it(`try 1|`, () => expectNoLanguageConstantSuggestion(`try 1|`));
 
-        it(`try 1 c|`, () => expectLanguageConstantSuggestion(`try 1 c|`, [CatchInsert]));
+        it(`try 1|`, () => expectLanguageConstantSuggestion(`try 1 |`, CatchInsert));
 
-        it(`try 1 c|`, () => expectLanguageConstantSuggestion(`try 1 c|`, [CatchReplace]));
+        it(`try 1 c|`, () => expectLanguageConstantSuggestion(`try 1 c|`, CatchReplace));
 
-        it(`try 1 |c`, () => expectLanguageConstantSuggestion(`try 1 |c`, [CatchReplace]));
+        it(`try 1 |c`, () => expectLanguageConstantSuggestion(`try 1 |c`, CatchReplace));
     });
 
-    describe(`${LanguageConstant.Nullable}`, () => {});
+    describe(`${LanguageConstant.Nullable}`, () => {
+        it(`a as|`, () => expectNoLanguageConstantSuggestion(`a as|`));
 
-    describe(`${LanguageConstant.Optional}`, () => {});
+        it(`a as |`, () => expectLanguageConstantSuggestion(`a as |`, NullableInsert));
 
-    describe(`${LanguageConstant.Otherwise}`, () => {});
+        it(`a as |n`, () => expectLanguageConstantSuggestion(`a as |n`, NullableReplace));
+
+        it(`a as n|`, () => expectLanguageConstantSuggestion(`a as n|`, NullableReplace));
+
+        it(`a as n |`, () => expectNoLanguageConstantSuggestion(`a as n |`));
+
+        it(`(a as |`, () => expectLanguageConstantSuggestion(`(a as |`, NullableInsert));
+
+        it(`(a as n|`, () => expectLanguageConstantSuggestion(`(a as n|`, NullableReplace));
+
+        it(`(a as |n`, () => expectLanguageConstantSuggestion(`(a as |n`, NullableReplace));
+
+        it(`(a as n |`, () => expectNoLanguageConstantSuggestion(`(a as n |`));
+    });
+
+    describe(`${LanguageConstant.Optional}`, () => {
+        it(`(x, |`, () => expectLanguageConstantSuggestion(`(x, |`, OptionalInsert));
+
+        it(`(x, |opt`, () => expectLanguageConstantSuggestion(`(x, |opt`, OptionalReplace));
+
+        it(`(x, opt|`, () => expectLanguageConstantSuggestion(`(x, opt|`, OptionalReplace));
+
+        it(`(x, opt |`, () => expectNoLanguageConstantSuggestion(`(x, opt |`));
+
+        it(`(x, optional|`, () => expectLanguageConstantSuggestion(`(x, optional|`, OptionalReplace));
+
+        it(`(x, optional |`, () => expectNoLanguageConstantSuggestion(`(x, optional |`));
+    });
 });
