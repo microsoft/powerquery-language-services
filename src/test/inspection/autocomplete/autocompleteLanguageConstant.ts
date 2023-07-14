@@ -12,7 +12,7 @@ import {
 } from "./autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
 
-describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
+describe(`Inspection - Autocomplete - Language constants`, () => {
     function assertAutocompleteLanguageConstant(
         autocomplete: Inspection.Autocomplete,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
@@ -61,13 +61,19 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
     };
 
     describe(`${LanguageConstant.Catch}`, () => {
+        it(`try | 1`, () => expectNoLanguageConstantSuggestion(`try | 1`));
+
         it(`try 1|`, () => expectNoLanguageConstantSuggestion(`try 1|`));
 
-        it(`try 1|`, () => expectLanguageConstantSuggestion(`try 1 |`, CatchInsert));
+        it(`try 1 |`, () => expectLanguageConstantSuggestion(`try 1 |`, CatchInsert));
 
         it(`try 1 c|`, () => expectLanguageConstantSuggestion(`try 1 c|`, CatchReplace));
 
         it(`try 1 |c`, () => expectLanguageConstantSuggestion(`try 1 |c`, CatchReplace));
+
+        it(`try 1 c |`, () => expectNoLanguageConstantSuggestion(`try 1 c |`));
+
+        it(`try 1 | c`, () => expectNoLanguageConstantSuggestion(`try 1 | c`));
     });
 
     describe(`${LanguageConstant.Nullable}`, () => {

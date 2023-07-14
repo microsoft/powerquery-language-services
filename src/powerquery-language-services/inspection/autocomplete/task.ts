@@ -5,13 +5,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import {
-    Autocomplete,
-    TriedAutocompleteFieldAccess,
-    TriedAutocompleteKeyword,
-    TriedAutocompleteLanguageConstant,
-    TriedAutocompletePrimitiveType,
-} from "./commonTypes";
+import { Autocomplete } from "./commonTypes";
 import { AutocompleteTraceConstant } from "../..";
 import { createTrailingToken } from "./trailingTokenUtils";
 import { InspectionSettings } from "../../inspectionSettings";
@@ -56,40 +50,17 @@ export async function autocomplete(
         }
     }
 
-    const triedFieldAccess: TriedAutocompleteFieldAccess = await tryAutocompleteFieldAccess(
-        updatedSettings,
-        parseState,
-        activeNode,
-        typeCache,
-    );
-
-    const triedKeyword: TriedAutocompleteKeyword = await tryAutocompleteKeyword(
-        updatedSettings,
-        nodeIdMapCollection,
-        activeNode,
-        trailingToken,
-    );
-
-    const triedLanguageConstant: TriedAutocompleteLanguageConstant = tryAutocompleteLanguageConstant(
-        updatedSettings,
-        nodeIdMapCollection,
-        activeNode,
-        trailingToken,
-    );
-
-    const triedPrimitiveType: TriedAutocompletePrimitiveType = tryAutocompletePrimitiveType(
-        updatedSettings,
-        nodeIdMapCollection,
-        activeNode,
-        trailingToken,
-    );
-
     trace.exit();
 
     return {
-        triedFieldAccess,
-        triedKeyword,
-        triedLanguageConstant,
-        triedPrimitiveType,
+        triedFieldAccess: await tryAutocompleteFieldAccess(updatedSettings, parseState, activeNode, typeCache),
+        triedKeyword: await tryAutocompleteKeyword(updatedSettings, nodeIdMapCollection, activeNode, trailingToken),
+        triedLanguageConstant: tryAutocompleteLanguageConstant(updatedSettings, activeNode, trailingToken),
+        triedPrimitiveType: tryAutocompletePrimitiveType(
+            updatedSettings,
+            nodeIdMapCollection,
+            activeNode,
+            trailingToken,
+        ),
     };
 }

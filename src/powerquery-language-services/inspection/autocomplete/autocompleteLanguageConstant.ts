@@ -1,30 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
-    NodeIdMap,
-    NodeIdMapUtils,
     TXorNode,
     XorNode,
+    XorNodeKind,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, CommonSettings, ResultUtils, TypeScriptUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Position, Range, TextEdit } from "vscode-languageserver-types";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../activeNode";
+import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils } from "../..";
 import { AutocompleteItem } from "./autocompleteItem";
 import { TrailingToken } from "./trailingToken";
 import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
-    settings: PQP.CommonSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
+    settings: CommonSettings,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
@@ -35,7 +32,7 @@ export function tryAutocompleteLanguageConstant(
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
-        () => autocompleteLanguageConstant(nodeIdMapCollection, activeNode, trailingToken),
+        () => autocompleteLanguageConstant(activeNode, trailingToken),
         settings.locale,
     );
 
@@ -45,7 +42,6 @@ export function tryAutocompleteLanguageConstant(
 }
 
 function autocompleteLanguageConstant(
-    nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
@@ -53,35 +49,14 @@ function autocompleteLanguageConstant(
         return [];
     }
 
-    const result: AutocompleteItem[] = [];
-
-    if (isCatchAllowed(nodeIdMapCollection, activeNode, trailingToken)) {
-        result.push(createAutocompleteItem(LanguageConstant.Catch));
-    }
-
-    const nullableAutocompleteItem: AutocompleteItem | undefined = getNullableAutocompleteItem(
-        activeNode,
-        trailingToken,
-    );
-
-    const optionalAutocompleteItem: AutocompleteItem | undefined = getOptionalAutocompleteItem(activeNode);
-
-    if (nullableAutocompleteItem) {
-        result.push(nullableAutocompleteItem);
-    }
-
-    if (optionalAutocompleteItem) {
-        result.push(optionalAutocompleteItem);
-    }
-
-    return result;
+    return [
+        getCatchAutocompleteItem(activeNode, trailingToken),
+        getNullableAutocompleteItem(activeNode, trailingToken),
+        getOptionalAutocompleteItem(activeNode),
+    ].filter(TypeScriptUtils.isDefined);
 }
 
-export function createAutocompleteItem(
-    label: LanguageConstant,
-    other?: string,
-    range?: Range | undefined,
-): AutocompleteItem {
+function createAutocompleteItem(label: LanguageConstant, other?: string, range?: Range | undefined): AutocompleteItem {
     const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
 
     return {
@@ -93,32 +68,32 @@ export function createAutocompleteItem(
     };
 }
 
-function isCatchAllowed(
-    nodeIdMapCollection: NodeIdMap.Collection,
+function getCatchAutocompleteItem(
     activeNode: ActiveNode,
     trailingToken: TrailingToken | undefined,
-): boolean {
+): AutocompleteItem | undefined {
     const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
-    const numAncestors: number = ancestry.length;
 
-    for (let index: number = 0; index < numAncestors; index += 1) {
-        const xorNode: TXorNode = ancestry[index];
-
+    for (const xorNode of ancestry) {
         if (
-            // We are under an ErrorHandlingExpression
-            xorNode.node.kind === Ast.NodeKind.ErrorHandlingExpression &&
-            // Which was fully parsed
+            XorNodeUtils.isNodeKind<Ast.TErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression) &&
             XorNodeUtils.isAst(xorNode) &&
-            // Yet the cursor is after the end of the Ast
-            activeNode.leafKind === ActiveNodeLeafKind.IsBeforePosition &&
-            // And it only has two children, meaning it hasn't parsed an error handler
-            NodeIdMapUtils.assertChildIds(nodeIdMapCollection.childIdsById, xorNode.node.id).length === 2
+            xorNode.node.handler === undefined &&
+            PositionUtils.isAfterAst(activeNode.position, xorNode.node, true)
         ) {
-            return trailingToken ? LanguageConstant.Catch.startsWith(trailingToken.data) : true;
+            if (!trailingToken) {
+                return createAutocompleteItem(LanguageConstant.Catch);
+            } else if (PositionUtils.isInToken(activeNode.position, trailingToken, true, true)) {
+                return createAutocompleteItem(
+                    LanguageConstant.Catch,
+                    trailingToken.data,
+                    PositionUtils.rangeFromToken(trailingToken),
+                );
+            }
         }
     }
 
-    return false;
+    return undefined;
 }
 
 function getNullableAutocompleteItem(
@@ -162,42 +137,6 @@ function getNullableAutocompleteItem(
     return undefined;
 }
 
-function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
-    const child: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 1);
-
-    if (child?.node.attributeIndex !== 1) {
-        return false;
-    }
-
-    // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
-    const paired: TXorNode = child;
-    const position: Position = activeNode.position;
-
-    // Ast.PrimitiveType
-    if (paired.node.kind === Ast.NodeKind.PrimitiveType && PositionUtils.isBeforeXor(position, paired, false)) {
-        return true;
-    }
-    // Ast.NullablePrimitiveType
-    else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
-        const grandchild: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 2);
-
-        if (grandchild === undefined) {
-            return false;
-        }
-
-        return (
-            // Ast.Constant
-            grandchild.node.kind === Ast.NodeKind.Constant ||
-            // before Ast.PrimitiveType
-            PositionUtils.isBeforeXor(position, grandchild, false)
-        );
-    } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
-        return XorNodeUtils.isContext(paired);
-    } else {
-        return false;
-    }
-}
-
 function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem | undefined {
     const fnExprAncestryIndex: number | undefined = AncestryUtils.indexOfNodeKind<Ast.FunctionExpression>(
         activeNode.ancestry,
@@ -231,7 +170,7 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
         // IParameter.optionalConstant
         case 0:
             switch (childOfParameter.kind) {
-                case PQP.Parser.XorNodeKind.Ast: {
+                case XorNodeKind.Ast: {
                     const optionalConstant: Ast.TConstant = XorNodeUtils.assertAstChecked<Ast.TConstant>(
                         childOfParameter,
                         Ast.NodeKind.Constant,
@@ -244,7 +183,7 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
                     );
                 }
 
-                case PQP.Parser.XorNodeKind.Context:
+                case XorNodeKind.Context:
                     return createAutocompleteItem(LanguageConstant.Optional);
 
                 default:
@@ -254,7 +193,7 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
         // IParameter.name
         case 1:
             switch (childOfParameter.kind) {
-                case PQP.Parser.XorNodeKind.Ast: {
+                case XorNodeKind.Ast: {
                     const parameterName: Ast.Identifier = XorNodeUtils.assertAstChecked<Ast.Identifier>(
                         childOfParameter,
                         Ast.NodeKind.Identifier,
@@ -267,7 +206,7 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
                     );
                 }
 
-                case PQP.Parser.XorNodeKind.Context:
+                case XorNodeKind.Context:
                     return createAutocompleteItem(LanguageConstant.Optional);
 
                 default:
@@ -276,5 +215,41 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
 
         default:
             return undefined;
+    }
+}
+
+function isNullableAllowedForAsNullablePrimitiveType(activeNode: ActiveNode, ancestryIndex: number): boolean {
+    const child: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 1);
+
+    if (child?.node.attributeIndex !== 1) {
+        return false;
+    }
+
+    // Ast.AsNullablePrimitiveType.paired: Ast.TNullablePrimitiveType
+    const paired: TXorNode = child;
+    const position: Position = activeNode.position;
+
+    // Ast.PrimitiveType
+    if (paired.node.kind === Ast.NodeKind.PrimitiveType && PositionUtils.isBeforeXor(position, paired, false)) {
+        return true;
+    }
+    // Ast.NullablePrimitiveType
+    else if (paired.node.kind === Ast.NodeKind.NullablePrimitiveType) {
+        const grandchild: TXorNode | undefined = AncestryUtils.nth(activeNode.ancestry, ancestryIndex - 2);
+
+        if (grandchild === undefined) {
+            return false;
+        }
+
+        return (
+            // Ast.Constant
+            grandchild.node.kind === Ast.NodeKind.Constant ||
+            // before Ast.PrimitiveType
+            PositionUtils.isBeforeXor(position, grandchild, false)
+        );
+    } else if (paired.node.kind === Ast.NodeKind.PrimitiveType) {
+        return XorNodeUtils.isContext(paired);
+    } else {
+        return false;
     }
 }
