@@ -55,7 +55,12 @@ export async function autocomplete(
     return {
         triedFieldAccess: await tryAutocompleteFieldAccess(updatedSettings, parseState, activeNode, typeCache),
         triedKeyword: await tryAutocompleteKeyword(updatedSettings, nodeIdMapCollection, activeNode, trailingToken),
-        triedLanguageConstant: tryAutocompleteLanguageConstant(updatedSettings, activeNode, trailingToken),
+        triedLanguageConstant: tryAutocompleteLanguageConstant(
+            updatedSettings,
+            nodeIdMapCollection,
+            activeNode,
+            trailingToken,
+        ),
         triedPrimitiveType: tryAutocompletePrimitiveType(
             updatedSettings,
             nodeIdMapCollection,

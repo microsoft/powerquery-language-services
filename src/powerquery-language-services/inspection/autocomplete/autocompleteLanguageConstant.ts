@@ -3,6 +3,8 @@
 
 import {
     AncestryUtils,
+    NodeIdMap,
+    NodeIdMapUtils,
     TXorNode,
     XorNode,
     XorNodeKind,
@@ -22,6 +24,7 @@ import { TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: CommonSettings,
+    nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): TriedAutocompleteLanguageConstant {
@@ -32,7 +35,7 @@ export function tryAutocompleteLanguageConstant(
     );
 
     const result: TriedAutocompleteLanguageConstant = ResultUtils.ensureResult(
-        () => autocompleteLanguageConstant(activeNode, trailingToken),
+        () => autocompleteLanguageConstant(nodeIdMapCollection, activeNode, trailingToken),
         settings.locale,
     );
 
@@ -42,6 +45,7 @@ export function tryAutocompleteLanguageConstant(
 }
 
 function autocompleteLanguageConstant(
+    nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: TActiveNode,
     trailingToken: TrailingToken | undefined,
 ): ReadonlyArray<AutocompleteItem> {
@@ -50,7 +54,7 @@ function autocompleteLanguageConstant(
     }
 
     return [
-        getCatchAutocompleteItem(activeNode, trailingToken),
+        getCatchAutocompleteItem(nodeIdMapCollection, activeNode, trailingToken),
         getNullableAutocompleteItem(activeNode, trailingToken),
         getOptionalAutocompleteItem(activeNode),
     ].filter(TypeScriptUtils.isDefined);
@@ -69,28 +73,93 @@ function createAutocompleteItem(label: LanguageConstant, other?: string, range?:
 }
 
 function getCatchAutocompleteItem(
+    nodeIdMapCollection: NodeIdMap.Collection,
     activeNode: ActiveNode,
     trailingToken: TrailingToken | undefined,
 ): AutocompleteItem | undefined {
-    const ancestry: ReadonlyArray<TXorNode> = activeNode.ancestry;
+    const nodeIndex: number | undefined = AncestryUtils.indexOfNodeKind<Ast.TErrorHandlingExpression>(
+        activeNode.ancestry,
+        Ast.NodeKind.ErrorHandlingExpression,
+    );
 
-    for (const xorNode of ancestry) {
-        if (
-            XorNodeUtils.isNodeKind<Ast.TErrorHandlingExpression>(xorNode, Ast.NodeKind.ErrorHandlingExpression) &&
-            XorNodeUtils.isAst(xorNode) &&
-            xorNode.node.handler === undefined &&
-            PositionUtils.isAfterAst(activeNode.position, xorNode.node, true)
-        ) {
-            if (!trailingToken) {
-                return createAutocompleteItem(LanguageConstant.Catch);
-            } else if (PositionUtils.isInToken(activeNode.position, trailingToken, true, true)) {
+    if (nodeIndex === undefined) {
+        return undefined;
+    }
+
+    const errorHandlingExpression: XorNode<Ast.TErrorHandlingExpression> | undefined =
+        AncestryUtils.nthChecked<Ast.TErrorHandlingExpression>(
+            activeNode.ancestry,
+            nodeIndex,
+            Ast.NodeKind.ErrorHandlingExpression,
+        );
+
+    if (!errorHandlingExpression) {
+        return undefined;
+    }
+
+    switch (errorHandlingExpression.kind) {
+        case XorNodeKind.Ast:
+            // `try 1 catch| (exc) => 1`
+            // `try 1 otherwise| 1
+            if (errorHandlingExpression.node.handler) {
+                const handler: Ast.CatchExpression | Ast.OtherwiseExpression = errorHandlingExpression.node.handler;
+
+                if (handler.constant && PositionUtils.isInAst(activeNode.position, handler.constant, true, true)) {
+                    return createAutocompleteItem(
+                        LanguageConstant.Catch,
+                        handler.constant.constantKind,
+                        PositionUtils.rangeFromTokenRange(handler.constant.tokenRange),
+                    );
+                }
+            } else if (PositionUtils.isAfterAst(activeNode.position, errorHandlingExpression.node, true)) {
+                // `try 1 |`
+                if (!trailingToken) {
+                    return createAutocompleteItem(LanguageConstant.Catch);
+                }
+                // `try 1 cat|`
+                else if (PositionUtils.isInToken(activeNode.position, trailingToken, true, true)) {
+                    return createAutocompleteItem(
+                        LanguageConstant.Catch,
+                        trailingToken.data,
+                        PositionUtils.rangeFromToken(trailingToken),
+                    );
+                }
+            }
+
+            break;
+
+        case XorNodeKind.Context: {
+            const catchExpression: XorNode<Ast.CatchExpression> | undefined =
+                AncestryUtils.nthChecked<Ast.CatchExpression>(
+                    activeNode.ancestry,
+                    nodeIndex - 1,
+                    Ast.NodeKind.CatchExpression,
+                );
+
+            if (catchExpression === undefined) {
+                return undefined;
+            }
+
+            const catchConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
+                nodeIdMapCollection,
+                catchExpression.node.id,
+                0,
+                Ast.NodeKind.Constant,
+            );
+
+            if (catchConstant && PositionUtils.isInAst(activeNode.position, catchConstant, true, true)) {
                 return createAutocompleteItem(
                     LanguageConstant.Catch,
-                    trailingToken.data,
-                    PositionUtils.rangeFromToken(trailingToken),
+                    catchConstant.constantKind,
+                    PositionUtils.rangeFromTokenRange(catchConstant.tokenRange),
                 );
             }
+
+            break;
         }
+
+        default:
+            Assert.isNever(errorHandlingExpression);
     }
 
     return undefined;

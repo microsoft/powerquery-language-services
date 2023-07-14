@@ -71,9 +71,21 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
         it(`try 1 |c`, () => expectLanguageConstantSuggestion(`try 1 |c`, CatchReplace));
 
+        it(`try 1 |catch`, () => expectLanguageConstantSuggestion(`try 1 |catch`, CatchReplace));
+
+        it(`try 1 catch|`, () => expectLanguageConstantSuggestion(`try 1 catch|`, CatchReplace));
+
         it(`try 1 c |`, () => expectNoLanguageConstantSuggestion(`try 1 c |`));
 
         it(`try 1 | c`, () => expectNoLanguageConstantSuggestion(`try 1 | c`));
+
+        it(`try 1 |catch (foo) => 1`, () => expectLanguageConstantSuggestion(`try 1 |catch (foo) => 1`, CatchReplace));
+
+        it(`try 1 catch| (foo) => 1`, () => expectLanguageConstantSuggestion(`try 1 catch| (foo) => 1`, CatchReplace));
+
+        it(`try 1 | catch (foo) => 1`, () => expectNoLanguageConstantSuggestion(`try 1 | catch (foo) => 1`));
+
+        it(`try 1 catch | (foo) => 1`, () => expectNoLanguageConstantSuggestion(`try 1 catch | (foo) => 1`));
     });
 
     describe(`${LanguageConstant.Nullable}`, () => {
