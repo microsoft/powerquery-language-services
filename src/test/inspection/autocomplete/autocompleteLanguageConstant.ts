@@ -81,6 +81,8 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
 
         it(`a as n |`, () => expectNoLanguageConstantSuggestion(`a as n |`));
 
+        it(`a as | n`, () => expectNoLanguageConstantSuggestion(`a as | n`));
+
         it(`(a as |`, () => expectLanguageConstantSuggestion(`(a as |`, NullableInsert));
 
         it(`(a as n|`, () => expectLanguageConstantSuggestion(`(a as n|`, NullableReplace));
@@ -88,6 +90,8 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
         it(`(a as |n`, () => expectLanguageConstantSuggestion(`(a as |n`, NullableReplace));
 
         it(`(a as n |`, () => expectNoLanguageConstantSuggestion(`(a as n |`));
+
+        it(`(a as | n`, () => expectNoLanguageConstantSuggestion(`(a as | n`));
     });
 
     describe(`${LanguageConstant.Optional}`, () => {
@@ -96,6 +100,8 @@ describe(`FIXME Inspection - Autocomplete - Language constants`, () => {
         it(`(x, |opt`, () => expectLanguageConstantSuggestion(`(x, |opt`, OptionalReplace));
 
         it(`(x, opt|`, () => expectLanguageConstantSuggestion(`(x, opt|`, OptionalReplace));
+
+        it(`(x, | opt`, () => expectNoLanguageConstantSuggestion(`(x, |`));
 
         it(`(x, opt |`, () => expectNoLanguageConstantSuggestion(`(x, opt |`));
 
