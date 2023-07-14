@@ -129,20 +129,20 @@ function getCatchAutocompleteItem(
             break;
 
         case XorNodeKind.Context: {
-            const catchExpression: XorNode<Ast.CatchExpression> | undefined =
-                AncestryUtils.nthChecked<Ast.CatchExpression>(
+            const handler: XorNode<Ast.CatchExpression | Ast.OtherwiseExpression> | undefined =
+                AncestryUtils.nthChecked<Ast.CatchExpression | Ast.OtherwiseExpression>(
                     activeNode.ancestry,
                     nodeIndex - 1,
-                    Ast.NodeKind.CatchExpression,
+                    [Ast.NodeKind.CatchExpression, Ast.NodeKind.OtherwiseExpression],
                 );
 
-            if (catchExpression === undefined) {
+            if (handler === undefined) {
                 return undefined;
             }
 
             const catchConstant: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
-                catchExpression.node.id,
+                handler.node.id,
                 0,
                 Ast.NodeKind.Constant,
             );
