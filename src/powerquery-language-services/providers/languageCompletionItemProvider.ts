@@ -77,9 +77,7 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
     ): ReadonlyArray<Inspection.AutocompleteItem> {
         cancellationToken?.throwIfCancelled();
 
-        return ResultUtils.isOk(triedLanguageConstantAutocomplete) && triedLanguageConstantAutocomplete.value
-            ? [triedLanguageConstantAutocomplete.value]
-            : [];
+        return ResultUtils.isOk(triedLanguageConstantAutocomplete) ? triedLanguageConstantAutocomplete.value : [];
     }
 
     private getPrimitiveTypes(

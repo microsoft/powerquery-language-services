@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { TestConstants, TestUtils } from "../..";
+import { AutocompleteItemUtils } from "../../../powerquery-language-services/inspection";
 import { Inspection } from "../../../powerquery-language-services";
 
 export interface AbridgedAutocompleteItem {
@@ -58,11 +59,7 @@ export async function expectTopSuggestions(
     );
 
     const byJaroWinklerScore: ReadonlyArray<Inspection.AutocompleteItem> = Array.from(actual).sort(
-        (left: Inspection.AutocompleteItem, right: Inspection.AutocompleteItem) => {
-            const jaroWinklerDiff: number = right.jaroWinklerScore - left.jaroWinklerScore;
-
-            return jaroWinklerDiff !== 0 ? jaroWinklerDiff : left.label.localeCompare(right.label);
-        },
+        AutocompleteItemUtils.comparer,
     );
 
     const topN: ReadonlyArray<AbridgedAutocompleteItem> = byJaroWinklerScore

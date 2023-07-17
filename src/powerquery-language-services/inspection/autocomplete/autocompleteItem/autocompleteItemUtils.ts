@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Constant, Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
 import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
@@ -12,17 +12,6 @@ import { Inspection } from "../../..";
 import { Library } from "../../../library";
 
 export function fromKeywordKind(label: Keyword.KeywordKind, other?: string): AutocompleteItem {
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
-
-    return {
-        jaroWinklerScore,
-        kind: CompletionItemKind.Keyword,
-        label,
-        powerQueryType: Type.NotApplicableInstance,
-    };
-}
-
-export function fromLanguageConstant(label: Constant.LanguageConstant, other?: string): AutocompleteItem {
     const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
 
     return {
