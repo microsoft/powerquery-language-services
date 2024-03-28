@@ -17,7 +17,7 @@ import {
     ValidationSettings,
 } from "../powerquery-language-services";
 
-export const enum TestLibraryName {
+export enum TestLibraryName {
     CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
     CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
     DuplicateText = "Test.DuplicateText",

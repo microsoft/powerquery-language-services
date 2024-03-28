@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export const enum AutocompleteTraceConstant {
+export enum AutocompleteTraceConstant {
     Autocomplete = "Autocomplete",
     AutocompleteFieldAccess = "FieldAccess",
     AutocompleteKeyword = "Keyword",
@@ -9,7 +9,7 @@ export const enum AutocompleteTraceConstant {
     AutocompletePrimitiveType = "PrimitiveType",
 }
 
-export const enum InspectionTraceConstant {
+export enum InspectionTraceConstant {
     Inspect = "Inspect",
     InspectCurrentInvokeExpression = "Inspection.CurrentInvokeExpression",
     InspectExpectedType = "Inspection.ExpectedType",
@@ -21,13 +21,13 @@ export const enum InspectionTraceConstant {
     InspectionUtils = "InspectionUtils",
 }
 
-export const enum ProviderTraceConstant {
+export enum ProviderTraceConstant {
     LanguageCompletionProvider = "LanguageCompletionProvider",
     LibrarySymbolProvider = "LibrarySymbolProvider",
     LocalDocumentSymbolProvider = "LocalDocumentSymbolProvider",
 }
 
-export const enum ValidationTraceConstant {
+export enum ValidationTraceConstant {
     AnalysisBase = "AnalysisBase",
     Validation = "Validation",
 }

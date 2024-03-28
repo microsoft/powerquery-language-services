@@ -63,14 +63,14 @@ export interface ActiveLeafIdentifier extends IActiveLeafIdentifier<Ast.Generali
     readonly isRecursive: false;
 }
 
-export const enum ActiveNodeLeafKind {
+export enum ActiveNodeLeafKind {
     IsBeforePosition = "IsBeforePosition",
     IsInAst = "IsInAst",
     IsAfterPosition = "IsAfterPosition",
     ContextNode = "Context",
 }
 
-export const enum ActiveNodeKind {
+export enum ActiveNodeKind {
     ActiveNode = "ActiveNode",
     OutOfBoundPosition = "OutOfBoundPosition",
 }
