@@ -30,7 +30,7 @@ export type TScopeItem =
 
 export type TKeyValuePairScopeItem = LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem;
 
-export const enum ScopeItemKind {
+export enum ScopeItemKind {
     Each = "Each",
     LetVariable = "LetVariable",
     Parameter = "Parameter",

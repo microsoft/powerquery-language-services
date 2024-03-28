@@ -10,7 +10,7 @@ export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
 
 export type TLibraryDefinition = LibraryConstant | LibraryFunction | LibraryType;
 
-export const enum LibraryDefinitionKind {
+export enum LibraryDefinitionKind {
     Constant = "Constant",
     Function = "Function",
     Type = "Type",

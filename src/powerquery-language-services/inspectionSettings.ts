@@ -6,7 +6,7 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Library } from "./library";
 import { TypeById } from "./inspection";
 
-export const enum TypeStrategy {
+export enum TypeStrategy {
     // Allow evaluation of extended types (such as AnyUnion).
     Extended = "Extended",
     // Strictly Power Query type primitives.

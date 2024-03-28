@@ -32,7 +32,7 @@ export type TExternalValueTypeResolverFn = (
     request: ExternalValueTypeRequest,
 ) => Promise<Type.TPowerQueryType | undefined>;
 
-export const enum ExternalTypeRequestKind {
+export enum ExternalTypeRequestKind {
     Invocation = "Invocation",
     Value = "Value",
 }
