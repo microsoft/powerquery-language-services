@@ -12,15 +12,17 @@ import {
     ExternalType,
     InspectionSettings,
     Library,
-    LibraryUtils,
+    LibraryDefinitionUtils,
     TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
 
 export enum TestLibraryName {
-    CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
     CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
+    CreateFooAndBarRecord = "Test.CreateFooAndBarRecord",
     DuplicateText = "Test.DuplicateText",
+    DynamicFunction = "Test.DynamicFunction",
+    DynamicValue = "Test.DynamicValue",
     Number = "Test.Number",
     NumberOne = "Test.NumberOne",
     SquareIfNumber = "Test.SquareIfNumber",
@@ -92,80 +94,104 @@ export const DuplicateTextDefinedFunction: Type.DefinedFunction = TypeUtils.defi
     Type.TextInstance,
 );
 
-export const SimpleLibraryDefinitions: Library.LibraryDefinitions = new Map<string, Library.TLibraryDefinition>([
-    [
-        TestLibraryName.CreateFooAndBarRecord,
-        LibraryUtils.functionDefinition(
+export const SimpleLibraryDefinitions: Library.LibraryDefinitions = {
+    dynamicLibraryDefinitions: () =>
+        new Map<string, Library.TLibraryDefinition>([
+            [
+                TestLibraryName.DynamicFunction,
+                LibraryDefinitionUtils.functionDefinition(
+                    TestLibraryName.DynamicFunction,
+                    `The name is ${TestLibraryName.DynamicFunction}`,
+                    TypeUtils.definedFunction(false, [], Type.AnyInstance),
+                    CompletionItemKind.Function,
+                    [],
+                ),
+            ],
+            [
+                TestLibraryName.DynamicValue,
+                LibraryDefinitionUtils.constantDefinition(
+                    TestLibraryName.DynamicValue,
+                    `The name is ${TestLibraryName.DynamicValue}`,
+                    Type.AnyInstance,
+                    CompletionItemKind.Value,
+                ),
+            ],
+        ]),
+    staticLibraryDefinitions: new Map<string, Library.TLibraryDefinition>([
+        [
             TestLibraryName.CreateFooAndBarRecord,
-            `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
-            CreateFooAndBarRecordDefinedFunction,
-            CompletionItemKind.Function,
-            [],
-        ),
-    ],
-    [
-        TestLibraryName.Number,
-        LibraryUtils.constantDefinition(
+            LibraryDefinitionUtils.functionDefinition(
+                TestLibraryName.CreateFooAndBarRecord,
+                `The name is ${TestLibraryName.CreateFooAndBarRecord}`,
+                CreateFooAndBarRecordDefinedFunction,
+                CompletionItemKind.Function,
+                [],
+            ),
+        ],
+        [
             TestLibraryName.Number,
-            `The name is ${TestLibraryName.Number}`,
-            Type.NumberInstance,
-            CompletionItemKind.Value,
-        ),
-    ],
-    [
-        TestLibraryName.CombineNumberAndOptionalText,
-        LibraryUtils.functionDefinition(
+            LibraryDefinitionUtils.constantDefinition(
+                TestLibraryName.Number,
+                `The name is ${TestLibraryName.Number}`,
+                Type.NumberInstance,
+                CompletionItemKind.Value,
+            ),
+        ],
+        [
             TestLibraryName.CombineNumberAndOptionalText,
-            `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
-            CombineNumberAndOptionalTextDefinedFunction,
-            CompletionItemKind.Function,
-            [
-                {
-                    isNullable: false,
-                    isOptional: false,
-                    label: "firstArg",
-                    documentation: undefined,
-                    typeKind: Type.TypeKind.Number,
-                },
-                {
-                    isNullable: false,
-                    isOptional: true,
-                    label: "secondArg",
-                    documentation: undefined,
-                    typeKind: Type.TypeKind.Text,
-                },
-            ],
-        ),
-    ],
-    [
-        TestLibraryName.NumberOne,
-        LibraryUtils.constantDefinition(
+            LibraryDefinitionUtils.functionDefinition(
+                TestLibraryName.CombineNumberAndOptionalText,
+                `The name is ${TestLibraryName.CombineNumberAndOptionalText}`,
+                CombineNumberAndOptionalTextDefinedFunction,
+                CompletionItemKind.Function,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        label: "firstArg",
+                        documentation: undefined,
+                        typeKind: Type.TypeKind.Number,
+                    },
+                    {
+                        isNullable: false,
+                        isOptional: true,
+                        label: "secondArg",
+                        documentation: undefined,
+                        typeKind: Type.TypeKind.Text,
+                    },
+                ],
+            ),
+        ],
+        [
             TestLibraryName.NumberOne,
-            `The name is ${TestLibraryName.NumberOne}`,
-            TypeUtils.numberLiteral(false, "1"),
-            CompletionItemKind.Constant,
-        ),
-    ],
-    [
-        TestLibraryName.SquareIfNumber,
-        LibraryUtils.functionDefinition(
+            LibraryDefinitionUtils.constantDefinition(
+                TestLibraryName.NumberOne,
+                `The name is ${TestLibraryName.NumberOne}`,
+                TypeUtils.numberLiteral(false, "1"),
+                CompletionItemKind.Constant,
+            ),
+        ],
+        [
             TestLibraryName.SquareIfNumber,
-            `The name is ${TestLibraryName.SquareIfNumber}`,
-            SquareIfNumberDefinedFunction,
-            CompletionItemKind.Function,
-            [
-                {
-                    isNullable: false,
-                    isOptional: false,
-                    label: "x",
-                    documentation:
-                        "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
-                    typeKind: Type.TypeKind.Any,
-                },
-            ],
-        ),
-    ],
-]);
+            LibraryDefinitionUtils.functionDefinition(
+                TestLibraryName.SquareIfNumber,
+                `The name is ${TestLibraryName.SquareIfNumber}`,
+                SquareIfNumberDefinedFunction,
+                CompletionItemKind.Function,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        label: "x",
+                        documentation:
+                            "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
+                        typeKind: Type.TypeKind.Any,
+                    },
+                ],
+            ),
+        ],
+    ]),
+};
 
 export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (
     request: ExternalType.TExternalTypeRequest,
@@ -231,6 +257,14 @@ export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = 
 export const SimpleLibrary: Library.ILibrary = {
     externalTypeResolver: SimpleExternalTypeResolver,
     libraryDefinitions: SimpleLibraryDefinitions,
+};
+
+export const EmptyLibrary: Library.ILibrary = {
+    externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
+    libraryDefinitions: {
+        dynamicLibraryDefinitions: () => new Map<string, Library.TLibraryDefinition>(),
+        staticLibraryDefinitions: new Map<string, Library.TLibraryDefinition>(),
+    },
 };
 
 export const SimpleInspectionSettings: InspectionSettings = {

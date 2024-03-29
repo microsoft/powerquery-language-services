@@ -7,7 +7,7 @@ import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powe
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { Inspection, PositionUtils } from "..";
+import { Inspection, LibraryUtils, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
@@ -140,7 +140,7 @@ function findUnknownIdentifiers(
         if (
             !nodeScope.has(literal) &&
             !(literal[0] === "@" && nodeScope.has(literal.slice(1))) &&
-            !validationSettings.library.libraryDefinitions.has(literal) &&
+            !LibraryUtils.hasDefinition(validationSettings.library, literal) &&
             // even no external type found
             !validationSettings.library.externalTypeResolver({
                 kind: ExternalTypeRequestKind.Value,
@@ -149,7 +149,7 @@ function findUnknownIdentifiers(
         ) {
             const knownIdentifiers: ReadonlyArray<string> = [
                 ...nodeScope.keys(),
-                ...validationSettings.library.libraryDefinitions.keys(),
+                ...LibraryUtils.getDefinitionKeys(validationSettings.library),
             ];
 
             const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(literal, knownIdentifiers);

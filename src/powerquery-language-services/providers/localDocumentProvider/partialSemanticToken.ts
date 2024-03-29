@@ -259,7 +259,7 @@ function getIdentifierExpressionTokens(
             case Ast.IdentifierContextKind.Value:
                 tokenType = SemanticTokenTypes.variable;
 
-                if (libraryDefinitions.has(identifierExpr.identifier.literal)) {
+                if (libraryDefinitions.staticLibraryDefinitions.has(identifierExpr.identifier.literal)) {
                     tokenModifiers = [SemanticTokenModifiers.defaultLibrary];
                 }
 

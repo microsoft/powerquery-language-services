@@ -6,8 +6,6 @@ import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/languag
 
 import { ExternalType } from "../externalType";
 
-export type LibraryDefinitions = ReadonlyMap<string, TLibraryDefinition>;
-
 export type TLibraryDefinition = LibraryConstant | LibraryFunction | LibraryType;
 
 export enum LibraryDefinitionKind {
@@ -27,6 +25,14 @@ export interface ILibraryDefinition {
     readonly description: string;
     readonly kind: LibraryDefinitionKind;
     readonly label: string;
+}
+
+export interface LibraryDefinitions {
+    /** Used by the host to inject library definitions,
+     * either because they're dynamically generated or if they prefer lazy evaluation. */
+    readonly dynamicLibraryDefinitions: () => ReadonlyMap<string, TLibraryDefinition>;
+    /** Represents an unchanging standard library. It's expected to never change. */
+    readonly staticLibraryDefinitions: ReadonlyMap<string, TLibraryDefinition>;
 }
 
 export interface LibraryConstant extends ILibraryDefinition {
@@ -52,5 +58,8 @@ export interface LibraryType extends ILibraryDefinition {
 
 export const NoOpLibrary: ILibrary = {
     externalTypeResolver: ExternalType.noOpExternalTypeResolver,
-    libraryDefinitions: new Map(),
+    libraryDefinitions: {
+        dynamicLibraryDefinitions: () => new Map<string, TLibraryDefinition>(),
+        staticLibraryDefinitions: new Map<string, TLibraryDefinition>(),
+    },
 };
