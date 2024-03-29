@@ -92,18 +92,10 @@ export function getDefinition(
     libraryDefinitions: LibraryDefinitions,
     identifierLiteral: string,
 ): TLibraryDefinition | undefined {
-    const staticDefinition: TLibraryDefinition | undefined =
-        libraryDefinitions.staticLibraryDefinitions.get(identifierLiteral);
-
-    if (staticDefinition) {
-        return staticDefinition;
-    }
-
-    const dynamicDefinition: TLibraryDefinition | undefined = libraryDefinitions
-        .dynamicLibraryDefinitions()
-        .get(identifierLiteral);
-
-    return dynamicDefinition;
+    return (
+        libraryDefinitions.staticLibraryDefinitions.get(identifierLiteral) ??
+        libraryDefinitions.dynamicLibraryDefinitions().get(identifierLiteral)
+    );
 }
 
 export function getKeys(libraryDefinitions: LibraryDefinitions): ReadonlyArray<string> {
