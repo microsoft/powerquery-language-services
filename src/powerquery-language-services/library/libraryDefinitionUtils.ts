@@ -103,11 +103,7 @@ export function getDefinition(
         .dynamicLibraryDefinitions()
         .get(identifierLiteral);
 
-    if (dynamicDefinition) {
-        return dynamicDefinition;
-    }
-
-    return undefined;
+    return dynamicDefinition;
 }
 
 export function getKeys(libraryDefinitions: LibraryDefinitions): ReadonlyArray<string> {

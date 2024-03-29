@@ -28,9 +28,10 @@ export interface ILibraryDefinition {
 }
 
 export interface LibraryDefinitions {
-    // Used by the host to inject library definitions, such as other files/queries.
+    /** Used by the host to inject library definitions,
+     * either because they're dynamically generated or if they prefer lazy evaluation. */
     readonly dynamicLibraryDefinitions: () => ReadonlyMap<string, TLibraryDefinition>;
-    // Standard library, not expected to change.
+    /** Represents an unchanging standard library. It's expected to never change. */
     readonly staticLibraryDefinitions: ReadonlyMap<string, TLibraryDefinition>;
 }
 
