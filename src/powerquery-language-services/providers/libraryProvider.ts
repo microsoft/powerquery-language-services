@@ -12,19 +12,17 @@ import {
     ILibraryProvider,
     SignatureProviderContext,
 } from "./commonTypes";
-import { ExternalType, Inspection } from "..";
-import { Library, LibraryUtils } from "../library";
+import { Library, LibraryDefinitionUtils, LibraryUtils } from "../library";
 import { AutocompleteItemUtils } from "../inspection";
+import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
 export class LibraryProvider implements ILibraryProvider {
-    public readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn;
-    public readonly libraryDefinitions: Library.LibraryDefinitions;
+    public readonly library: Library.ILibrary;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
 
     constructor(library: Library.ILibrary, protected readonly locale: string) {
-        this.externalTypeResolver = library.externalTypeResolver;
-        this.libraryDefinitions = library.libraryDefinitions;
+        this.library = library;
         this.signatureInformationByLabel = new Map();
     }
 
@@ -50,7 +48,11 @@ export class LibraryProvider implements ILibraryProvider {
             const autocompleteItems: Inspection.AutocompleteItem[] = [];
             const contextText: string | undefined = context.text;
 
-            for (const [label, definition] of this.libraryDefinitions.entries()) {
+            for (const [label, definition] of this.library.libraryDefinitions.staticLibraryDefinitions.entries()) {
+                autocompleteItems.push(AutocompleteItemUtils.fromLibraryDefinition(label, definition, contextText));
+            }
+
+            for (const [label, definition] of this.library.libraryDefinitions.dynamicLibraryDefinitions().entries()) {
                 autocompleteItems.push(AutocompleteItemUtils.fromLibraryDefinition(label, definition, contextText));
             }
 
@@ -78,7 +80,11 @@ export class LibraryProvider implements ILibraryProvider {
             }
 
             const identifierLiteral: string = context.identifier.literal;
-            const definition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
+
+            const definition: Library.TLibraryDefinition | undefined = LibraryUtils.getDefinition(
+                this.library,
+                identifierLiteral,
+            );
 
             if (definition === undefined) {
                 trace.exit({ invalidContext: true });
@@ -131,9 +137,13 @@ export class LibraryProvider implements ILibraryProvider {
             }
 
             const identifierLiteral: string = context.functionName;
-            const definition: Library.TLibraryDefinition | undefined = this.libraryDefinitions.get(identifierLiteral);
 
-            if (!LibraryUtils.isFunction(definition)) {
+            const definition: Library.TLibraryDefinition | undefined = LibraryUtils.getDefinition(
+                this.library,
+                identifierLiteral,
+            );
+
+            if (!LibraryDefinitionUtils.isFunction(definition)) {
                 trace.exit({ invalidContext: true });
 
                 return undefined;
@@ -169,7 +179,10 @@ export class LibraryProvider implements ILibraryProvider {
 
     private getOrCreateSignatureInformation(key: string): SignatureInformation {
         if (!this.signatureInformationByLabel.has(key)) {
-            const definition: Library.LibraryFunction = LibraryUtils.assertAsFunction(this.libraryDefinitions.get(key));
+            const definition: Library.LibraryFunction = LibraryDefinitionUtils.assertAsFunction(
+                LibraryDefinitionUtils.getDefinition(this.library.libraryDefinitions, key),
+            );
+
             this.signatureInformationByLabel.set(key, LibraryUtils.signatureInformation(definition));
         }
 

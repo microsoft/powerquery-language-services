@@ -1,9 +1,12 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import { Assert, PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { ExternalType, ExternalTypeUtils } from "../externalType";
-import { Library, LibraryUtils } from "../library";
+import { Library, LibraryDefinitionUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
 
@@ -13,28 +16,29 @@ export type IncompleteLibrary = {
 };
 
 export type IncompleteLibraryDefinitions = {
-    readonly libraryDefinitions: Library.LibraryDefinitions;
+    readonly libraryDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
     readonly invalidSymbols: ReadonlyArray<LibrarySymbol>;
 };
 
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
+    dynamicLibraryDefinitions: () => ReadonlyMap<string, Library.TLibraryDefinition>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
 ): PartialResult<Library.ILibrary, IncompleteLibrary, ReadonlyArray<LibrarySymbol>> {
     const libraryDefinitionsResult: PartialResult<
-        Library.LibraryDefinitions,
+        ReadonlyMap<string, Library.TLibraryDefinition>,
         IncompleteLibraryDefinitions,
         ReadonlyArray<LibrarySymbol>
     > = createLibraryDefinitions(librarySymbols);
 
-    let libraryDefinitions: Library.LibraryDefinitions;
+    let librarySymbolDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
     let invalidSymbols: ReadonlyArray<LibrarySymbol>;
 
     if (PartialResultUtils.isOk(libraryDefinitionsResult)) {
-        libraryDefinitions = libraryDefinitionsResult.value;
+        librarySymbolDefinitions = libraryDefinitionsResult.value;
         invalidSymbols = [];
     } else if (PartialResultUtils.isIncomplete(libraryDefinitionsResult)) {
-        libraryDefinitions = libraryDefinitionsResult.partial.libraryDefinitions;
+        librarySymbolDefinitions = libraryDefinitionsResult.partial.libraryDefinitions;
         invalidSymbols = libraryDefinitionsResult.partial.invalidSymbols;
     } else if (PartialResultUtils.isError(libraryDefinitionsResult)) {
         return PartialResultUtils.error(libraryDefinitionsResult.error);
@@ -42,14 +46,19 @@ export function createLibrary(
         Assert.isNever(libraryDefinitionsResult);
     }
 
+    const libraryDefinitions: Library.LibraryDefinitions = {
+        dynamicLibraryDefinitions,
+        staticLibraryDefinitions: librarySymbolDefinitions,
+    };
+
     const definitionResolverFn: ExternalType.TExternalTypeResolverFn =
-        LibraryUtils.externalTypeResolver(libraryDefinitions);
+        LibraryDefinitionUtils.externalTypeResolver(libraryDefinitions);
 
     const library: Library.ILibrary = {
-        libraryDefinitions,
         externalTypeResolver: externalTypeResolverFn
             ? ExternalTypeUtils.composeExternalTypeResolvers(externalTypeResolverFn, definitionResolverFn)
             : definitionResolverFn,
+        libraryDefinitions,
     };
 
     if (invalidSymbols.length > 0) {
@@ -64,7 +73,11 @@ export function createLibrary(
 
 export function createLibraryDefinitions(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
-): PartialResult<Library.LibraryDefinitions, IncompleteLibraryDefinitions, ReadonlyArray<LibrarySymbol>> {
+): PartialResult<
+    ReadonlyMap<string, Library.TLibraryDefinition>,
+    IncompleteLibraryDefinitions,
+    ReadonlyArray<LibrarySymbol>
+> {
     const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
     const invalidSymbols: LibrarySymbol[] = [];
 

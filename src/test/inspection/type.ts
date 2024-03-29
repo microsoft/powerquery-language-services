@@ -50,7 +50,10 @@ describe(`Inspection - Type`, () => {
         isWorkspaceCacheAllowed: false,
         library: {
             externalTypeResolver: ExternalTypeResolver,
-            libraryDefinitions: new Map(),
+            libraryDefinitions: {
+                dynamicLibraryDefinitions: () => new Map(),
+                staticLibraryDefinitions: new Map(),
+            },
         },
         eachScopeById: undefined,
         typeStrategy: TypeStrategy.Extended,

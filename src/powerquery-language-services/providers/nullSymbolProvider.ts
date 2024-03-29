@@ -36,7 +36,10 @@ export class NullSymbolProvider
         ISignatureHelpProvider
 {
     public readonly externalTypeResolver: ExternalType.TExternalTypeResolverFn = ExternalType.noOpExternalTypeResolver;
-    public readonly libraryDefinitions: Library.LibraryDefinitions = new Map();
+    public readonly libraryDefinitions: Library.LibraryDefinitions = {
+        dynamicLibraryDefinitions: () => new Map(),
+        staticLibraryDefinitions: new Map(),
+    };
 
     private static instance: NullSymbolProvider | undefined;
 
