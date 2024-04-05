@@ -45,6 +45,8 @@ export function assertContainsAutocompleteItemLabels(
 }
 
 export function extractPosition(textWithPipe: string): [string, Position] {
+    assert.isTrue((textWithPipe.match(/\|/g) ?? []).length == 1, `textWithPipe must contain exactly pipe character`);
+
     const lines: ReadonlyArray<string> = textWithPipe.split("\n");
     const numLines: number = lines.length;
 
@@ -68,7 +70,7 @@ export function extractPosition(textWithPipe: string): [string, Position] {
         throw new Error(`couldn't find a pipe character in the input text`);
     }
 
-    return [textWithPipe.replace("|", ""), position];
+    return [textWithPipe.replace(/\|/g, ""), position];
 }
 
 export function readFile(fileName: string): string {
