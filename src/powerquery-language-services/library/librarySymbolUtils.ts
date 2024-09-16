@@ -89,34 +89,7 @@ export function createLibrary(
     }
 }
 
-export function createLibraryDefinitions(
-    librarySymbols: ReadonlyArray<LibrarySymbol>,
-): Result<ReadonlyMap<string, Library.TLibraryDefinition>, IncompleteLibraryDefinitions> {
-    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
-    const failedLibrarySymbolConversions: FailedLibrarySymbolConversion[] = [];
-
-    for (const librarySymbol of librarySymbols) {
-        const libraryDefinitionResult: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> =
-            librarySymbolToLibraryDefinition(librarySymbol);
-
-        if (ResultUtils.isOk(libraryDefinitionResult)) {
-            libraryDefinitions.set(librarySymbol.name, libraryDefinitionResult.value);
-        } else {
-            failedLibrarySymbolConversions.push(libraryDefinitionResult.error);
-        }
-    }
-
-    if (failedLibrarySymbolConversions.length === 0) {
-        return ResultUtils.ok(libraryDefinitions);
-    } else {
-        return ResultUtils.error({
-            libraryDefinitions,
-            failedLibrarySymbolConversions,
-        });
-    }
-}
-
-export function librarySymbolToLibraryDefinition(
+export function createLibraryDefinition(
     librarySymbol: LibrarySymbol,
 ): Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> {
     const primitiveType: Type.TPrimitiveType | undefined = stringToPrimitiveType(librarySymbol.type);
@@ -182,6 +155,33 @@ export function librarySymbolToLibraryDefinition(
             description,
             asPowerQueryType: primitiveType,
             completionItemKind,
+        });
+    }
+}
+
+export function createLibraryDefinitions(
+    librarySymbols: ReadonlyArray<LibrarySymbol>,
+): Result<ReadonlyMap<string, Library.TLibraryDefinition>, IncompleteLibraryDefinitions> {
+    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
+    const failedLibrarySymbolConversions: FailedLibrarySymbolConversion[] = [];
+
+    for (const librarySymbol of librarySymbols) {
+        const libraryDefinitionResult: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> =
+            createLibraryDefinition(librarySymbol);
+
+        if (ResultUtils.isOk(libraryDefinitionResult)) {
+            libraryDefinitions.set(librarySymbol.name, libraryDefinitionResult.value);
+        } else {
+            failedLibrarySymbolConversions.push(libraryDefinitionResult.error);
+        }
+    }
+
+    if (failedLibrarySymbolConversions.length === 0) {
+        return ResultUtils.ok(libraryDefinitions);
+    } else {
+        return ResultUtils.error({
+            libraryDefinitions,
+            failedLibrarySymbolConversions,
         });
     }
 }
