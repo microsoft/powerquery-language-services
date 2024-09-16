@@ -38,9 +38,11 @@ export enum FailedLibrarySymbolConversionKind {
     PrimitiveType = "PrimitiveType",
 }
 
-// Always returns a library, even if there are failed library symbol conversions.
-// An Ok result indicates that all library symbols were successfully converted.
-// An Error result indicates that some library symbols failed to convert.
+/**
+    Always returns a library, even if there are failed library symbol conversions.
+    An Ok result indicates that all library symbols were successfully converted.
+    An Error result indicates that some library symbols failed to convert.
+*/
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     dynamicLibraryDefinitions: () => ReadonlyMap<string, Library.TLibraryDefinition>,
@@ -185,21 +187,21 @@ export function librarySymbolToLibraryDefinition(
 }
 
 function failedConversionError(
-    libarySymbol: LibrarySymbol,
+    librarySymbol: LibrarySymbol,
     kind: FailedLibrarySymbolConversionKind,
 ): ErrorResult<FailedLibrarySymbolConversion> {
     return ResultUtils.error({
-        librarySymbol: libarySymbol,
+        librarySymbol,
         kind,
     });
 }
 
 function failedParameterConversionError(
-    libarySymbol: LibrarySymbol,
+    librarySymbol: LibrarySymbol,
     index: number,
 ): ErrorResult<FailedLibrarySymbolParameterConversion> {
     return ResultUtils.error({
-        librarySymbol: libarySymbol,
+        librarySymbol,
         kind: FailedLibrarySymbolConversionKind.Parameter,
         index,
     });
