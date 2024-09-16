@@ -11,9 +11,12 @@ import {
     LibrarySymbolUtils,
 } from "../powerquery-language-services";
 import { ExtendedTypeKind, TypeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import {
+    FailedLibrarySymbolConversion,
+    FailedLibrarySymbolConversionKind,
+} from "../powerquery-language-services/library/librarySymbolUtils";
 import { LibraryDefinitionKind, TLibraryDefinition } from "../powerquery-language-services/library/library";
 import { Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { FailedLibrarySymbolConversion } from "../powerquery-language-services/library/librarySymbolUtils";
 import { LibrarySymbol } from "../powerquery-language-services/library/librarySymbol";
 import { TestConstants } from ".";
 
@@ -97,7 +100,7 @@ describe("Library", () => {
         describe("createLibraryDefinition", () => {
             function runTest(params: {
                 readonly librarySymbol: LibrarySymbol;
-                readonly expected: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion>;
+                readonly expected: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversionKind>;
             }): void {
                 const result: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> =
                     LibrarySymbolUtils.createLibraryDefinition(params.librarySymbol);
@@ -107,75 +110,112 @@ describe("Library", () => {
                     expect(result.value).to.deep.equal(params.expected.value);
                 } else {
                     ResultUtils.assertIsError(result);
-                    expect(result.error).to.equal(params.expected.error);
+                    expect(result.error.kind).to.equal(params.expected.error);
                 }
             }
 
-            const validLibrarySymbol: LibrarySymbol = {
-                completionItemKind: 10,
-                documentation: {
-                    description: "description",
-                    longDescription: "longDescription",
-                },
-                functionParameters: [
-                    {
-                        allowedValues: undefined,
-                        caption: undefined,
-                        defaultValue: undefined,
-                        description: undefined,
-                        enumCaptions: undefined,
-                        enumNames: undefined,
-                        fields: undefined,
-                        isNullable: false,
-                        isRequired: false,
-                        name: "parameterName",
-                        sampleValues: undefined,
-                        type: "any",
+            function createValidLibrarySymbol(overrides?: Partial<LibrarySymbol>): LibrarySymbol {
+                return {
+                    completionItemKind: 10,
+                    documentation: {
+                        description: "description",
+                        longDescription: "longDescription",
                     },
-                ],
-                isDataSource: true,
-                name: "name",
-                type: "any",
-            };
-
-            const validLibraryDefinition: TLibraryDefinition = {
-                asPowerQueryType: {
-                    extendedKind: ExtendedTypeKind.DefinedFunction,
-                    isNullable: false,
-                    kind: TypeKind.Function,
-                    parameters: [
+                    functionParameters: [
                         {
+                            allowedValues: undefined,
+                            caption: undefined,
+                            defaultValue: undefined,
+                            description: undefined,
+                            enumCaptions: undefined,
+                            enumNames: undefined,
+                            fields: undefined,
                             isNullable: false,
-                            isOptional: true,
-                            nameLiteral: "parameterName",
-                            type: TypeKind.Any,
+                            isRequired: false,
+                            name: "parameterName",
+                            sampleValues: undefined,
+                            type: "any",
                         },
                     ],
-                    returnType: {
-                        extendedKind: undefined,
+                    isDataSource: true,
+                    name: "name",
+                    type: "any",
+                    ...overrides,
+                };
+            }
+
+            function createValidLibraryDefinition(overrides?: Partial<TLibraryDefinition>): TLibraryDefinition {
+                return {
+                    asPowerQueryType: {
+                        extendedKind: ExtendedTypeKind.DefinedFunction,
                         isNullable: false,
-                        kind: TypeKind.Any,
+                        kind: TypeKind.Function,
+                        parameters: [
+                            {
+                                isNullable: false,
+                                isOptional: true,
+                                nameLiteral: "parameterName",
+                                type: TypeKind.Any,
+                            },
+                        ],
+                        returnType: {
+                            extendedKind: undefined,
+                            isNullable: false,
+                            kind: TypeKind.Any,
+                        },
                     },
-                },
-                completionItemKind: 10,
-                description: "description",
-                kind: LibraryDefinitionKind.Function,
-                label: "(parameterName: optional any) => any",
-                parameters: [
-                    {
-                        documentation: undefined,
-                        isNullable: false,
-                        isOptional: false,
-                        label: "parameterName",
-                        typeKind: TypeKind.Any,
-                    },
-                ],
-            };
+                    completionItemKind: 10,
+                    description: "description",
+                    kind: LibraryDefinitionKind.Function,
+                    label: "(parameterName: optional any) => any",
+                    parameters: [
+                        {
+                            documentation: undefined,
+                            isNullable: false,
+                            isOptional: false,
+                            label: "parameterName",
+                            typeKind: TypeKind.Any,
+                        },
+                    ],
+                    ...overrides,
+                };
+            }
 
             it("happy path", () => {
                 runTest({
-                    librarySymbol: validLibrarySymbol,
-                    expected: ResultUtils.ok(validLibraryDefinition),
+                    librarySymbol: createValidLibrarySymbol(),
+                    expected: ResultUtils.ok(createValidLibraryDefinition()),
+                });
+            });
+
+            it("unknown completionItemKind", () => {
+                runTest({
+                    librarySymbol: createValidLibrarySymbol({
+                        completionItemKind: "unknown" as unknown as number,
+                    }),
+                    expected: ResultUtils.error(FailedLibrarySymbolConversionKind.CompletionItemKind),
+                });
+            });
+
+            it("unknown definedFunction", () => {
+                runTest({
+                    librarySymbol: createValidLibrarySymbol({
+                        functionParameters: [
+                            {
+                                type: "unknown",
+                            },
+                        ] as unknown as [],
+                    }),
+                    expected: ResultUtils.error(FailedLibrarySymbolConversionKind.DefinedFunction),
+                });
+            });
+
+            it("unknown type", () => {
+                runTest({
+                    librarySymbol: createValidLibrarySymbol({
+                        type: "unknown" as unknown as string,
+                    }),
+                    expected: ResultUtils.error(FailedLibrarySymbolConversionKind.PrimitiveType),
                 });
             });
         });

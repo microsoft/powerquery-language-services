@@ -32,8 +32,8 @@ export interface FailedLibrarySymbolParameterConversion extends FailedLibrarySym
 }
 
 export enum FailedLibrarySymbolConversionKind {
-    AsPowerQueryType = "AsPowerQueryType",
     CompletionItemKind = "CompletionItemKind",
+    DefinedFunction = "DefinedFunction",
     Parameter = "Parameter",
     PrimitiveType = "PrimitiveType",
 }
@@ -118,13 +118,13 @@ export function createLibraryDefinition(
             completionItemKind,
         });
     } else if (librarySymbol.functionParameters) {
-        const asPowerQueryType: Type.DefinedFunction | undefined = librarySymbolFunctionSignatureToType(
+        const definedFunction: Type.DefinedFunction | undefined = librarySymbolFunctionParamatersToDefinedFunction(
             librarySymbol,
             primitiveType,
         );
 
-        if (asPowerQueryType === undefined) {
-            return failedConversionError(librarySymbol, FailedLibrarySymbolConversionKind.AsPowerQueryType);
+        if (definedFunction === undefined) {
+            return failedConversionError(librarySymbol, FailedLibrarySymbolConversionKind.DefinedFunction);
         }
 
         const parameters: Library.LibraryParameter[] = [];
@@ -142,9 +142,9 @@ export function createLibraryDefinition(
 
         return ResultUtils.ok({
             kind: Library.LibraryDefinitionKind.Function,
-            label: TypeUtils.nameOf(asPowerQueryType, NoOpTraceManagerInstance, undefined),
+            label: TypeUtils.nameOf(definedFunction, NoOpTraceManagerInstance, undefined),
             description,
-            asPowerQueryType,
+            asPowerQueryType: definedFunction,
             completionItemKind,
             parameters,
         });
@@ -207,7 +207,7 @@ function failedParameterConversionError(
     });
 }
 
-function librarySymbolFunctionSignatureToType(
+function librarySymbolFunctionParamatersToDefinedFunction(
     librarySymbol: LibrarySymbol,
     returnType: Type.TPrimitiveType,
 ): Type.DefinedFunction | undefined {
