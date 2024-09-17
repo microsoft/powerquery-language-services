@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, PartialResult, PartialResultUtils } from "@microsoft/powerquery-parser";
+import { ArrayUtils, ErrorResult, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -10,45 +10,63 @@ import { Library, LibraryDefinitionUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
 
-export type IncompleteLibrary = {
+// Created when non-zero conversion errors occur.
+export interface IncompleteLibrary {
     readonly library: Library.ILibrary;
-    readonly invalidSymbols: ReadonlyArray<LibrarySymbol>;
-};
+    readonly failedLibrarySymbolConversions: ReadonlyArray<FailedLibrarySymbolConversion>;
+}
 
-export type IncompleteLibraryDefinitions = {
+export interface IncompleteLibraryDefinitions {
     readonly libraryDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
-    readonly invalidSymbols: ReadonlyArray<LibrarySymbol>;
-};
+    readonly failedLibrarySymbolConversions: ReadonlyArray<FailedLibrarySymbolConversion>;
+}
 
+export interface FailedLibrarySymbolConversion {
+    readonly librarySymbol: LibrarySymbol;
+    readonly kind: FailedLibrarySymbolConversionKind;
+}
+
+export interface FailedLibrarySymbolParameterConversion extends FailedLibrarySymbolConversion {
+    readonly kind: FailedLibrarySymbolConversionKind.Parameter;
+    readonly index: number;
+}
+
+export enum FailedLibrarySymbolConversionKind {
+    CompletionItemKind = "CompletionItemKind",
+    DefinedFunction = "DefinedFunction",
+    Parameter = "Parameter",
+    PrimitiveType = "PrimitiveType",
+}
+
+/**
+    Always returns a library, even if there are failed library symbol conversions.
+    An Ok result indicates that all library symbols were successfully converted.
+    An Error result indicates that some library symbols failed to convert.
+*/
 export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     dynamicLibraryDefinitions: () => ReadonlyMap<string, Library.TLibraryDefinition>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
-): PartialResult<Library.ILibrary, IncompleteLibrary, ReadonlyArray<LibrarySymbol>> {
-    const libraryDefinitionsResult: PartialResult<
+): Result<Library.ILibrary, IncompleteLibrary> {
+    const libraryDefinitionsResult: Result<
         ReadonlyMap<string, Library.TLibraryDefinition>,
-        IncompleteLibraryDefinitions,
-        ReadonlyArray<LibrarySymbol>
+        IncompleteLibraryDefinitions
     > = createLibraryDefinitions(librarySymbols);
 
-    let librarySymbolDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
-    let invalidSymbols: ReadonlyArray<LibrarySymbol>;
+    let staticLibraryDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
+    let failedLibrarySymbolConversions: ReadonlyArray<FailedLibrarySymbolConversion>;
 
-    if (PartialResultUtils.isOk(libraryDefinitionsResult)) {
-        librarySymbolDefinitions = libraryDefinitionsResult.value;
-        invalidSymbols = [];
-    } else if (PartialResultUtils.isIncomplete(libraryDefinitionsResult)) {
-        librarySymbolDefinitions = libraryDefinitionsResult.partial.libraryDefinitions;
-        invalidSymbols = libraryDefinitionsResult.partial.invalidSymbols;
-    } else if (PartialResultUtils.isError(libraryDefinitionsResult)) {
-        return PartialResultUtils.error(libraryDefinitionsResult.error);
+    if (ResultUtils.isOk(libraryDefinitionsResult)) {
+        staticLibraryDefinitions = libraryDefinitionsResult.value;
+        failedLibrarySymbolConversions = [];
     } else {
-        Assert.isNever(libraryDefinitionsResult);
+        staticLibraryDefinitions = libraryDefinitionsResult.error.libraryDefinitions;
+        failedLibrarySymbolConversions = libraryDefinitionsResult.error.failedLibrarySymbolConversions;
     }
 
     const libraryDefinitions: Library.LibraryDefinitions = {
         dynamicLibraryDefinitions,
-        staticLibraryDefinitions: librarySymbolDefinitions,
+        staticLibraryDefinitions,
     };
 
     const definitionResolverFn: ExternalType.TExternalTypeResolverFn =
@@ -61,114 +79,135 @@ export function createLibrary(
         libraryDefinitions,
     };
 
-    if (invalidSymbols.length > 0) {
-        return PartialResultUtils.incomplete({
+    if (failedLibrarySymbolConversions.length > 0) {
+        return ResultUtils.error({
             library,
-            invalidSymbols,
+            failedLibrarySymbolConversions,
         });
     } else {
-        return PartialResultUtils.ok(library);
+        return ResultUtils.ok(library);
     }
 }
 
-export function createLibraryDefinitions(
-    librarySymbols: ReadonlyArray<LibrarySymbol>,
-): PartialResult<
-    ReadonlyMap<string, Library.TLibraryDefinition>,
-    IncompleteLibraryDefinitions,
-    ReadonlyArray<LibrarySymbol>
-> {
-    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
-    const invalidSymbols: LibrarySymbol[] = [];
-
-    for (const librarySymbol of librarySymbols) {
-        const libraryDefinition: Library.TLibraryDefinition | undefined =
-            librarySymbolToLibraryDefinition(librarySymbol);
-
-        if (libraryDefinition === undefined) {
-            invalidSymbols.push(librarySymbol);
-        } else {
-            libraryDefinitions.set(librarySymbol.name, libraryDefinition);
-        }
-    }
-
-    if (invalidSymbols.length === 0) {
-        return PartialResultUtils.ok(libraryDefinitions);
-    } else if (libraryDefinitions.size > 0) {
-        return PartialResultUtils.incomplete({
-            libraryDefinitions,
-            invalidSymbols,
-        });
-    } else {
-        return PartialResultUtils.error(invalidSymbols);
-    }
-}
-
-export function librarySymbolToLibraryDefinition(librarySymbol: LibrarySymbol): Library.TLibraryDefinition | undefined {
+export function createLibraryDefinition(
+    librarySymbol: LibrarySymbol,
+): Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> {
     const primitiveType: Type.TPrimitiveType | undefined = stringToPrimitiveType(librarySymbol.type);
 
     const completionItemKind: CompletionItemKind | undefined = numberToCompletionItemKind(
         librarySymbol.completionItemKind,
     );
 
-    if (primitiveType === undefined || completionItemKind === undefined) {
-        return undefined;
+    if (primitiveType === undefined) {
+        return failedConversionError(librarySymbol, FailedLibrarySymbolConversionKind.PrimitiveType);
+    }
+
+    if (completionItemKind === undefined) {
+        return failedConversionError(librarySymbol, FailedLibrarySymbolConversionKind.CompletionItemKind);
     }
 
     const label: string = librarySymbol.name;
     const description: string = librarySymbol.documentation?.description ?? "No description available";
 
     if (primitiveType.kind === Type.TypeKind.Type) {
-        return {
+        return ResultUtils.ok({
             kind: Library.LibraryDefinitionKind.Type,
             label,
             description,
             asPowerQueryType: primitiveType,
             completionItemKind,
-        };
+        });
     } else if (librarySymbol.functionParameters) {
-        const asPowerQueryType: Type.DefinedFunction | undefined = librarySymbolFunctionSignatureToType(
+        const definedFunction: Type.DefinedFunction | undefined = librarySymbolFunctionParamatersToDefinedFunction(
             librarySymbol,
             primitiveType,
         );
 
-        if (asPowerQueryType === undefined) {
-            return undefined;
+        if (definedFunction === undefined) {
+            return failedConversionError(librarySymbol, FailedLibrarySymbolConversionKind.DefinedFunction);
         }
 
         const parameters: Library.LibraryParameter[] = [];
 
-        for (const parameter of librarySymbol.functionParameters) {
+        for (const [parameter, index] of ArrayUtils.enumerate(librarySymbol.functionParameters)) {
             const libraryParameter: Library.LibraryParameter | undefined =
                 librarySymbolFunctionParameterToLibraryParameter(parameter);
 
             if (libraryParameter === undefined) {
-                return undefined;
+                return failedParameterConversionError(librarySymbol, index);
             }
 
             parameters.push(libraryParameter);
         }
 
-        return {
+        return ResultUtils.ok({
             kind: Library.LibraryDefinitionKind.Function,
-            label: TypeUtils.nameOf(asPowerQueryType, NoOpTraceManagerInstance, undefined),
+            label: TypeUtils.nameOf(definedFunction, NoOpTraceManagerInstance, undefined),
             description,
-            asPowerQueryType,
+            asPowerQueryType: definedFunction,
             completionItemKind,
             parameters,
-        };
+        });
     } else {
-        return {
+        return ResultUtils.ok({
             kind: Library.LibraryDefinitionKind.Constant,
             label,
             description,
             asPowerQueryType: primitiveType,
             completionItemKind,
-        };
+        });
     }
 }
 
-function librarySymbolFunctionSignatureToType(
+export function createLibraryDefinitions(
+    librarySymbols: ReadonlyArray<LibrarySymbol>,
+): Result<ReadonlyMap<string, Library.TLibraryDefinition>, IncompleteLibraryDefinitions> {
+    const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
+    const failedLibrarySymbolConversions: FailedLibrarySymbolConversion[] = [];
+
+    for (const librarySymbol of librarySymbols) {
+        const libraryDefinitionResult: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> =
+            createLibraryDefinition(librarySymbol);
+
+        if (ResultUtils.isOk(libraryDefinitionResult)) {
+            libraryDefinitions.set(librarySymbol.name, libraryDefinitionResult.value);
+        } else {
+            failedLibrarySymbolConversions.push(libraryDefinitionResult.error);
+        }
+    }
+
+    if (failedLibrarySymbolConversions.length === 0) {
+        return ResultUtils.ok(libraryDefinitions);
+    } else {
+        return ResultUtils.error({
+            libraryDefinitions,
+            failedLibrarySymbolConversions,
+        });
+    }
+}
+
+function failedConversionError(
+    librarySymbol: LibrarySymbol,
+    kind: FailedLibrarySymbolConversionKind,
+): ErrorResult<FailedLibrarySymbolConversion> {
+    return ResultUtils.error({
+        librarySymbol,
+        kind,
+    });
+}
+
+function failedParameterConversionError(
+    librarySymbol: LibrarySymbol,
+    index: number,
+): ErrorResult<FailedLibrarySymbolParameterConversion> {
+    return ResultUtils.error({
+        librarySymbol,
+        kind: FailedLibrarySymbolConversionKind.Parameter,
+        index,
+    });
+}
+
+function librarySymbolFunctionParamatersToDefinedFunction(
     librarySymbol: LibrarySymbol,
     returnType: Type.TPrimitiveType,
 ): Type.DefinedFunction | undefined {
