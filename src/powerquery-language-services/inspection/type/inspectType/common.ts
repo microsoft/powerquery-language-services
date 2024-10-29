@@ -42,7 +42,7 @@ import { TypeById } from "../../typeCache";
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
 export interface InspectTypeState
     extends PQP.CommonSettings,
-        Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
+    Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
@@ -513,6 +513,10 @@ export async function dereferencedIdentifierType(
     // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
     if (deferencedLiteral.startsWith("@") && nextXorNode?.node.id === xorNode.node.id) {
         return Type.AnyInstance;
+    }
+
+    if (deferencedLiteral === "_") {
+        return Type.UnknownInstance;
     }
 
     const result: PQP.Language.Type.TPowerQueryType | undefined = nextXorNode

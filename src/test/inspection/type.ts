@@ -111,6 +111,23 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.numberLiteral(false, `1`),
                     ),
                 ));
+
+            it(`each _`, async () =>
+                await assertEqualRootType(
+                    `each _`,
+                    TypeUtils.definedFunction(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Any,
+                                nameLiteral: `_`,
+                            },
+                        ],
+                        Type.UnknownInstance,
+                    ),
+                ));
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
