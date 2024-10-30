@@ -42,7 +42,7 @@ import { TypeById } from "../../typeCache";
 // Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
 export interface InspectTypeState
     extends PQP.CommonSettings,
-    Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
+        Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
@@ -473,6 +473,10 @@ export async function dereferencedIdentifierType(
         scopeItem = nodeScope.get(deferencedLiteral.slice(1));
     }
 
+    if (deferencedLiteral === "_" && scopeItem?.kind === ScopeItemKind.Each) {
+        return Type.UnknownInstance;
+    }
+
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (scopeItem === undefined) {
@@ -513,10 +517,6 @@ export async function dereferencedIdentifierType(
     // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
     if (deferencedLiteral.startsWith("@") && nextXorNode?.node.id === xorNode.node.id) {
         return Type.AnyInstance;
-    }
-
-    if (deferencedLiteral === "_") {
-        return Type.UnknownInstance;
     }
 
     const result: PQP.Language.Type.TPowerQueryType | undefined = nextXorNode
