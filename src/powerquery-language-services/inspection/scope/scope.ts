@@ -57,7 +57,7 @@ export interface IKeyValuePairScopeItem<
 export interface EachScopeItem extends IScopeItem {
     readonly kind: ScopeItemKind.Each;
     readonly eachExpression: TXorNode;
-    readonly anonymousType: Type.TPowerQueryType | undefined;
+    readonly implicitParameterType: Type.TPowerQueryType | undefined;
 }
 
 export type LetVariableScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.LetVariable>;
