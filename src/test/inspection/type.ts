@@ -111,6 +111,36 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.numberLiteral(false, `1`),
                     ),
                 ));
+
+            it(`each [foo]`, async () =>
+                await assertEqualRootType(
+                    `each [foo]`,
+                    TypeUtils.definedFunction(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Any,
+                                nameLiteral: `_`,
+                            },
+                        ],
+                        TypeUtils.numberLiteral(false, `1`),
+                    ),
+                    {
+                        ...ExtendedInspectionSettings,
+                        eachScopeById: new Map([
+                            [
+                                1,
+                                TypeUtils.definedTable(
+                                    false,
+                                    new PQP.OrderedMap([[`foo`, TypeUtils.numberLiteral(false, 1)]]),
+                                    false,
+                                ),
+                            ],
+                        ]),
+                    },
+                ));
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {

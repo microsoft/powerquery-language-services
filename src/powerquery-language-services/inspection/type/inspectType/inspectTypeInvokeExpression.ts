@@ -102,7 +102,13 @@ async function externalInvokeRequest(
     };
 
     const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await tryDeferenceIdentifier(updatedSettings, state.nodeIdMapCollection, identifier, state.scopeById);
+        await tryDeferenceIdentifier(
+            updatedSettings,
+            state.nodeIdMapCollection,
+            state.eachScopeById,
+            identifier,
+            state.scopeById,
+        );
 
     if (ResultUtils.isError(triedDeferencedIdentifier) || triedDeferencedIdentifier.value === undefined) {
         return undefined;

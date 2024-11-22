@@ -173,6 +173,7 @@ async function getIsNameInLocalScope(
             await assertGetOrCreateNodeScope(
                 updatedSettings,
                 nodeIdMapCollection,
+                updatedSettings.eachScopeById,
                 invokeExpressionXorNode.node.id,
                 typeCache.scopeById,
             ),

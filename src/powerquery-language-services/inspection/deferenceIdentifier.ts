@@ -10,12 +10,14 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { assertGetOrCreateNodeScope, NodeScope, ScopeById, ScopeItemKind, TScopeItem } from "./scope";
 import { Inspection, TraceUtils } from "..";
 import { InspectionTraceConstant } from "../trace";
+import { TypeById } from "./typeCache";
 
 // Recusrive deference of the identifier until it reaches the value node.
 // Does not handle recursive identifiers.
 export async function tryDeferenceIdentifier(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    eachScopeById: TypeById | undefined,
     xorNode: TXorNode,
     // If a map is given, then it's mutated and returned.
     // Else create a new Map instance and return that instead.
@@ -41,9 +43,7 @@ export async function tryDeferenceIdentifier(
         return ResultUtils.ok(undefined);
     }
 
-    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node as
-        | Ast.Identifier
-        | Ast.IdentifierExpression;
+    const identifier: Ast.Identifier | Ast.IdentifierExpression = xorNode.node;
 
     let identifierLiteral: string;
 
@@ -63,6 +63,7 @@ export async function tryDeferenceIdentifier(
     const triedNodeScope: Inspection.TriedNodeScope = await assertGetOrCreateNodeScope(
         updatedSettings,
         nodeIdMapCollection,
+        eachScopeById,
         xorNode.node.id,
         scopeById,
     );
@@ -118,7 +119,7 @@ export async function tryDeferenceIdentifier(
     ) {
         result = Promise.resolve(ResultUtils.ok(xorNode));
     } else {
-        result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, nextXorNode, scopeById);
+        result = tryDeferenceIdentifier(updatedSettings, nodeIdMapCollection, eachScopeById, nextXorNode, scopeById);
     }
 
     trace.exit();
