@@ -475,6 +475,10 @@ export async function dereferencedIdentifierType(
         scopeItem = nodeScope.get(deferencedLiteral.slice(1));
     }
 
+    if (deferencedLiteral === "_" && scopeItem?.kind === ScopeItemKind.Each) {
+        return Type.UnknownInstance;
+    }
+
     // The deferenced identifier can't be resolved within the local scope.
     // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
     if (scopeItem === undefined) {
