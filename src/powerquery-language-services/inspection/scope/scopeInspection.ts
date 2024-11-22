@@ -191,10 +191,9 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
     state.cancellationToken?.throwIfCancelled();
 
     switch (xorNode.node.kind) {
-        case Ast.NodeKind.EachExpression: {
+        case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode, trace.id);
             break;
-        }
 
         case Ast.NodeKind.FunctionExpression:
             inspectFunctionExpression(state, xorNode, trace.id);
