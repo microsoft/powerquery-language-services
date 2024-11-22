@@ -507,6 +507,7 @@ export class AnalysisBase implements Analysis {
                             void (await Inspection.tryNodeScope(
                                 this.inspectionSettings,
                                 parseState.contextState.nodeIdMapCollection,
+                                this.inspectionSettings.eachScopeById,
                                 identifierExpression.id,
                                 scopeById,
                             ));
@@ -919,6 +920,7 @@ export class AnalysisBase implements Analysis {
                         Inspection.tryNodeScope(
                             this.inspectionSettings,
                             nodeIdMapCollection,
+                            this.inspectionSettings.eachScopeById,
                             oneIdentifier.id,
                             this.typeCache.scopeById,
                         ),
@@ -1050,6 +1052,7 @@ export class AnalysisBase implements Analysis {
                 initialCorrelationId: correlationId,
             },
             parseState.contextState.nodeIdMapCollection,
+            this.inspectionSettings.eachScopeById,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             this.typeCache.scopeById,
         );

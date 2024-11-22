@@ -30,6 +30,16 @@ import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/pa
 export * from "./scope";
 export * from "./scopeInspection";
 
+export function assertGetScopeItemChecked<T extends TScopeItem>(nodeScope: NodeScope, key: string, kind: T["kind"]): T {
+    const scopeItem: T | undefined = getScopeItemChecked(nodeScope, key, kind);
+
+    if (scopeItem === undefined) {
+        throw new PQP.CommonError.InvariantError(`expected a '${kind}' scope item with key '${key}'`);
+    }
+
+    return scopeItem;
+}
+
 export function isEach(value: TScopeItem | undefined): value is EachScopeItem {
     return value?.kind === ScopeItemKind.Each;
 }
@@ -52,6 +62,20 @@ export function isSectionMember(value: TScopeItem | undefined): value is Section
 
 export function isUndefined(value: TScopeItem | undefined): value is UndefinedScopeItem {
     return value?.kind === ScopeItemKind.Undefined;
+}
+
+export function getScopeItemChecked<T extends TScopeItem>(
+    nodeScope: NodeScope,
+    key: string,
+    kind: T["kind"],
+): T | undefined {
+    const scopeItem: TScopeItem | undefined = nodeScope.get(key);
+
+    if (scopeItem?.kind !== kind) {
+        return undefined;
+    }
+
+    return scopeItem as T;
 }
 
 export function findScopeItemByLiteral(
@@ -108,12 +132,5 @@ export function findDirectUpperScopeExpression(
         currentNode = astNodeById.get(currentParentId);
     }
 
-    return currentNode as
-        | EachExpression
-        | FunctionExpression
-        | LetExpression
-        | RecordExpression
-        | RecordLiteral
-        | SectionMember
-        | undefined;
+    return currentNode;
 }
