@@ -111,6 +111,23 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.numberLiteral(false, `1`),
                     ),
                 ));
+
+            it(`each _`, async () =>
+                await assertEqualRootType(
+                    `each _`,
+                    TypeUtils.definedFunction(
+                        false,
+                        [
+                            {
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Any,
+                                nameLiteral: `_`,
+                            },
+                        ],
+                        Type.UnknownInstance,
+                    ),
+                ));
         });
 
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
@@ -367,6 +384,9 @@ describe(`Inspection - Type`, () => {
 
             it(`let x = 1 in x`, async () =>
                 await assertEqualRootType(`let x = 1 in x`, TypeUtils.numberLiteral(false, `1`)));
+
+            it(`let _ = 1 in 1`, async () =>
+                await assertEqualRootType(`let _ = 1 in 1`, TypeUtils.numberLiteral(false, `1`)));
         });
 
         describe(`${Ast.NodeKind.IfExpression}`, () => {
