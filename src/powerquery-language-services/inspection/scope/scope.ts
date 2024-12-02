@@ -59,7 +59,7 @@ export interface EachScopeItem extends IScopeItem {
     readonly eachExpression: TXorNode;
     // The typing used for the implicit parameter ('_').
     // Defers to eachScopeById when provided, otherwise Type.UnknownInstance.
-    readonly implicitParameterType: Type.TPowerQueryType | undefined;
+    readonly implicitParameterType: Type.TPowerQueryType;
 }
 
 export type LetVariableScopeItem = IKeyValuePairScopeItem<Ast.Identifier, ScopeItemKind.LetVariable>;

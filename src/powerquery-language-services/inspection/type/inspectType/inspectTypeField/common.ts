@@ -48,7 +48,7 @@ export async function inspectFieldType(
 
     // if the scope is an EachExpression
     if (eachScopeItem) {
-        fieldType = eachScopeItem.implicitParameterType ?? Type.UnknownInstance;
+        fieldType = eachScopeItem.implicitParameterType;
     }
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector
