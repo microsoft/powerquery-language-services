@@ -54,6 +54,7 @@ export class InspectionInstance implements Inspected {
         const result: Promise<Inspection.TriedNodeScope> = tryNodeScope(
             updatedSettings,
             this.nodeIdMapCollection,
+            this.settings.eachScopeById,
             id,
             this.typeCache.scopeById,
         );
@@ -198,6 +199,7 @@ export async function inspect(
         triedNodeScope = tryNodeScope(
             updatedSettings,
             nodeIdMapCollection,
+            updatedSettings.eachScopeById,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             typeCache.scopeById,
         );

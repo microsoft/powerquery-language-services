@@ -118,6 +118,7 @@ export async function getOrCreateScope(
     const result: Inspection.TriedNodeScope = await tryNodeScope(
         updatedState,
         state.nodeIdMapCollection,
+        state.eachScopeById,
         nodeId,
         state.scopeById,
     );
@@ -439,6 +440,7 @@ export async function dereferencedIdentifierType(
     const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> = await tryDeferenceIdentifier(
         updatedSettings,
         state.nodeIdMapCollection,
+        state.eachScopeById,
         xorNode,
         state.scopeById,
     );

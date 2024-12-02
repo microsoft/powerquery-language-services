@@ -70,6 +70,7 @@ export async function assertGetInspectionInstance(
         triedNodeScope = tryNodeScope(
             settings,
             nodeIdMapCollection,
+            settings.eachScopeById,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             typeCache.scopeById,
         );
