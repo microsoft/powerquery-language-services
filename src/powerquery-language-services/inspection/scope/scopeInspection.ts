@@ -10,7 +10,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
@@ -31,11 +31,13 @@ import {
     PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { TypeById } from "../typeCache";
 
 // Builds a scope for the given node.
 export async function tryNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    eachScopeById: TypeById | undefined,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
@@ -58,7 +60,7 @@ export async function tryNodeScope(
             return new Map();
         }
 
-        await inspectScope(updatedSettings, nodeIdMapCollection, ancestry, scopeById, trace.id);
+        await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
 
         const result: NodeScope = MapUtils.assertGet(scopeById, nodeId, `expected nodeId in scope result`, {
             nodeId,
@@ -75,6 +77,7 @@ export async function tryNodeScope(
 export async function assertGetOrCreateNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    eachScopeById: TypeById | undefined,
     nodeId: number,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
@@ -98,7 +101,13 @@ export async function assertGetOrCreateNodeScope(
         return ResultUtils.ok(nodeScope);
     }
 
-    const triedNodeScope: TriedNodeScope = await tryNodeScope(updatedSettings, nodeIdMapCollection, nodeId, scopeById);
+    const triedNodeScope: TriedNodeScope = await tryNodeScope(
+        updatedSettings,
+        nodeIdMapCollection,
+        eachScopeById,
+        nodeId,
+        scopeById,
+    );
 
     if (ResultUtils.isError(triedNodeScope)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
@@ -115,6 +124,7 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
     readonly givenScope: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly eachScopeById: TypeById | undefined;
     readonly cancellationToken: ICancellationToken | undefined;
     ancestryIndex: number;
 }
@@ -122,6 +132,7 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
 async function inspectScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
+    eachScopeById: TypeById | undefined,
     ancestry: ReadonlyArray<TXorNode>,
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
@@ -148,8 +159,9 @@ async function inspectScope(
         traceManager: settings.traceManager,
         givenScope: scopeById,
         ancestry,
-        cancellationToken: settings.cancellationToken,
         nodeIdMapCollection,
+        eachScopeById,
+        cancellationToken: settings.cancellationToken,
         ancestryIndex: 0,
     };
 
@@ -228,6 +240,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
                     id: eachExpr.node.id,
                     isRecursive: false,
                     eachExpression: eachExpr,
+                    implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
                 },
             ],
         ],

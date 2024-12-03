@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ICancellationToken, Settings } from "@microsoft/powerquery-parser";
+import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
 import {
     DocumentSymbol,
     FoldingRange,
@@ -126,9 +126,9 @@ export async function assertEqualHoverAnalysis(
 export async function assertEqualNodeScope(
     textWithPipe: string,
     expected: ReadonlyArray<TAbridgedNodeScopeItem>,
-    settings: Settings,
+    inspectionSettings: InspectionSettings,
 ): Promise<void> {
-    const nodeScope: NodeScope = await TestUtils.assertNodeScope(settings, textWithPipe);
+    const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
     expect(actual).deep.equal(expected);
 }
