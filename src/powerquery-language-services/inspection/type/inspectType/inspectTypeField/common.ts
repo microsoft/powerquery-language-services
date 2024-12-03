@@ -6,20 +6,20 @@ import {
     NodeIdMap,
     NodeIdMapUtils,
     TXorNode,
-    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { assertGetOrCreateNodeScope, InspectTypeState, inspectXor } from "../common";
+import { EachScopeItem, ScopeItemKind, ScopeUtils } from "../../../scope";
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
-import { InspectTypeState, inspectXor } from "../common";
 
 // A field selection/projection is an operation a target value,
 // where the target is either an EachExpression or a RecursivePrimaryExpression.
 // In the code below that target for the FieldSelector/FieldProjection is called the scope.
 //
 // In the case of EachExpression:
-//  use whatever scope was provided in InspectionTypeState.eEachScopeById, else Unknown
+//  use whatever scope was provided in InspectionTypeState.eachScopeById, else Unknown
 //
 // In the case of RecursivePrimaryExpression:
 //  the scope is the previous sibling's type, so use NodeUtils.assertRecursiveExpressionPreviousSibling
@@ -42,13 +42,13 @@ export async function inspectFieldType(
     ]);
 
     // travels up the AST to see if we're in an EachExpression or RecursivePrimaryExpression.
-    const eachExpression: XorNode<Ast.EachExpression> | undefined = findEachExpression(state, xorNode);
+    const eachScopeItem: EachScopeItem | undefined = await findEachScopeItem(state, xorNode, trace.correlationId);
 
     let fieldType: Type.TPowerQueryType;
 
     // if the scope is an EachExpression
-    if (eachExpression) {
-        fieldType = state.eachScopeById?.get(eachExpression.node.id) ?? Type.UnknownInstance;
+    if (eachScopeItem) {
+        fieldType = eachScopeItem.implicitParameterType;
     }
     // else it must be a RecursivePrimaryExpression,
     // so grab the previous sibling of the FieldProjection/FieldSelector
@@ -66,19 +66,25 @@ export async function inspectFieldType(
     return fieldType;
 }
 
-function findEachExpression(state: InspectTypeState, xorNode: TXorNode): XorNode<Ast.EachExpression> | undefined {
+async function findEachScopeItem(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    correlationId: number | undefined,
+): Promise<EachScopeItem | undefined> {
     const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
     let parent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
 
     while (parent) {
-        switch (parent.node.kind) {
-            case Ast.NodeKind.EachExpression:
-                return parent as XorNode<Ast.EachExpression>;
-
-            default:
-                parent = NodeIdMapUtils.parentXor(nodeIdMapCollection, parent.node.id);
-                break;
+        if (parent.node.kind === Ast.NodeKind.EachExpression) {
+            return ScopeUtils.assertGetScopeItemChecked<EachScopeItem>(
+                // eslint-disable-next-line no-await-in-loop
+                await assertGetOrCreateNodeScope(state, xorNode.node.id, correlationId),
+                "_",
+                ScopeItemKind.Each,
+            );
         }
+
+        parent = NodeIdMapUtils.parentXor(nodeIdMapCollection, parent.node.id);
     }
 
     return undefined;

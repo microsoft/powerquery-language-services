@@ -95,9 +95,17 @@ export async function assertRootType(settings: InspectionSettings, text: string)
     return actual.value;
 }
 
-export async function assertNodeScope(settings: Settings, textWithPipe: string): Promise<NodeScope> {
+export async function assertNodeScope(
+    inspectionSettings: InspectionSettings,
+    textWithPipe: string,
+): Promise<NodeScope> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(
+        inspectionSettings,
+        text,
+    );
+
     const nodeIdMapCollection: NodeIdMap.Collection = triedParse.nodeIdMapCollection;
     const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
 
@@ -107,8 +115,9 @@ export async function assertNodeScope(settings: Settings, textWithPipe: string):
 
     return ResultUtils.assertOk(
         await tryNodeScope(
-            settings,
+            inspectionSettings,
             nodeIdMapCollection,
+            inspectionSettings.eachScopeById,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             TypeCacheUtils.emptyCache().scopeById,
         ),

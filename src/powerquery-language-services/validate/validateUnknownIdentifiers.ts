@@ -61,6 +61,7 @@ export async function validateUnknownIdentifiers(
             triedNodeScope: await Inspection.tryNodeScope(
                 updatedSettings,
                 nodeIdMapCollection,
+                updatedSettings.eachScopeById,
                 identifier.id,
                 typeCache.scopeById,
             ),
