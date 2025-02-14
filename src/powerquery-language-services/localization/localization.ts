@@ -87,7 +87,7 @@ export const Localization: ILocalization = {
             return StringUtils.assertGetFormatted(
                 templates.error_validation_invokeExpression_typeMismatch_named,
                 new Map([
-                    ["functionName", functionName],
+                    ["funcName", functionName],
                     ["argName", argName],
                     ["expected", expected],
                     ["actual", actual],
