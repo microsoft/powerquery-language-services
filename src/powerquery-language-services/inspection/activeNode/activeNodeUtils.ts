@@ -13,7 +13,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ArrayUtils, Assert, CommonError } from "@microsoft/powerquery-parser";
-import { Ast, AstUtils, Constant, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, AstUtils, Constant, IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position } from "vscode-languageserver-types";
 
 import {
@@ -423,14 +423,14 @@ function findLeafIdentifier(
             result = {
                 node: identifier,
                 isRecursive: false,
-                normalizedLiteral: TextUtils.normalizeIdentifier(identifier.literal),
+                normalizedLiteral: IdentifierUtils.normalizeIdentifier(identifier.literal),
                 normalizedRecursiveLiteral: undefined,
             };
 
             break;
 
         case Ast.NodeKind.IdentifierExpression: {
-            const normalizedLiteral: string = TextUtils.normalizeIdentifier(identifier.identifier.literal);
+            const normalizedLiteral: string = IdentifierUtils.normalizeIdentifier(identifier.identifier.literal);
 
             result = {
                 node: identifier,

@@ -12,7 +12,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import type { Position, Range } from "vscode-languageserver-types";
 import { Token, TokenKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -162,10 +162,10 @@ function createAutocompleteItem(
     const jaroWinklerScore: number = textUnderPosition ? calculateJaroWinkler(label, textUnderPosition) : 1;
 
     // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: PQP.Language.TextUtils.IdentifierKind = PQP.Language.TextUtils.identifierKind(label, false);
+    const identifierKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(label, false);
 
     const normalizedLabel: string =
-        identifierKind === PQP.Language.TextUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
+        identifierKind === IdentifierUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
 
     return {
         jaroWinklerScore,
