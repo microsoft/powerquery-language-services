@@ -31,6 +31,7 @@ export enum DereferencedIdentifierKind {
 
 export interface IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind;
+    readonly identifierLiteral: string;
 }
 
 // An identifier that is not in scope and dereferences to an external type.
@@ -42,15 +43,13 @@ export interface DereferencedIdentifierExternal extends IDereferencedIdentifier 
 // An identifier that is in scope and dereferences to something else.
 export interface DereferencedIdentifierInScope extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.InScope;
-    readonly identifierLiteral: string;
     readonly nextScopeItem: LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem;
 }
 
 // An identifier that is in scope and has a value node.
 export interface DereferencedIdentifierInScopeValue extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.InScopeValue;
-    readonly identifierLiteral: string;
-    readonly value: TXorNode;
+    readonly xorNode: TXorNode;
 }
 
 // An identifier that is not in scope and has no external type.
@@ -198,7 +197,7 @@ async function recursiveDereferenceIdentifier(
     path.push({
         kind: DereferencedIdentifierKind.InScopeValue,
         identifierLiteral,
-        value: xorNode,
+        xorNode,
     });
 
     trace.exit();
@@ -217,9 +216,11 @@ function onIdentifierNotInScope(
     return externalType
         ? {
               kind: DereferencedIdentifierKind.External,
+              identifierLiteral,
               type: externalType,
           }
         : {
               kind: DereferencedIdentifierKind.Undefined,
+              identifierLiteral,
           };
 }

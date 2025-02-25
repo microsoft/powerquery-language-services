@@ -15,8 +15,9 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 
 import { ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, inspectXor } from "./common";
-import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
+import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
+import { inspectXor } from "./common";
+import { tryGetDereferencedIdentifierPath } from "../../dereferencedIdentifier";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -96,14 +97,9 @@ async function externalInvokeRequest(
         return undefined;
     }
 
-    const updatedSettings: PQP.CommonSettings = {
-        ...state,
-        initialCorrelationId: trace.id,
-    };
-
     const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await tryDeferenceIdentifier(
-            updatedSettings,
+        await tryGetDereferencedIdentifierPath(
+            InspectTypeStateUtils.toInspectionSettings(state, trace),
             state.nodeIdMapCollection,
             state.eachScopeById,
             identifier,

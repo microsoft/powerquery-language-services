@@ -7,8 +7,9 @@ import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powe
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, inspectXor } from "./inspectType";
 import { InspectionSettings, InspectionTraceConstant } from "../..";
+import { InspectTypeState, InspectTypeStateUtils } from "./inspectType/inspectTypeState";
 import { NodeScope, ScopeTypeByKey } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 
@@ -31,7 +32,12 @@ export async function tryScopeType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
+    const state: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
+        settings,
+        nodeIdMapCollection,
+        typeCache,
+        trace.id,
+    );
 
     const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(
         () => inspectScopeType(state, nodeId, trace.id),
@@ -57,7 +63,12 @@ export async function tryType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
+    const state: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
+        settings,
+        nodeIdMapCollection,
+        typeCache,
+        trace.id,
+    );
 
     const result: TriedType = await ResultUtils.ensureResultAsync(
         () => inspectXor(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId), trace.id),
@@ -105,25 +116,4 @@ async function inspectScopeType(
     trace.exit();
 
     return result;
-}
-
-function createState(
-    settings: InspectionSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    typeCache: TypeCache,
-    correlationId: number,
-): InspectTypeState {
-    return {
-        library: settings.library,
-        locale: settings.locale,
-        isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
-        cancellationToken: settings.cancellationToken,
-        eachScopeById: settings.eachScopeById,
-        initialCorrelationId: correlationId,
-        traceManager: settings.traceManager,
-        typeStrategy: settings.typeStrategy,
-        typeById: typeCache.typeById,
-        nodeIdMapCollection,
-        scopeById: typeCache.scopeById,
-    };
 }

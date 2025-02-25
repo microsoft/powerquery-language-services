@@ -7,8 +7,9 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, inspectXor } from "./common";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
+import { InspectTypeState } from "./inspectTypeState";
+import { inspectXor } from "./common";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeTableType(

@@ -15,7 +15,7 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
-import { InspectTypeState } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 
 export interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TPowerQueryType>;

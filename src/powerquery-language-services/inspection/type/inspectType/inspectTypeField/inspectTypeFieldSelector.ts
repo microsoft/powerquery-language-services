@@ -7,7 +7,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
-import { InspectTypeState } from "../common";
+import { InspectTypeState } from "../inspectTypeState";
 
 // A field selection/projection is an operation done on some value.
 // The target can be either an EachExpression or a RecursivePrimaryExpression.

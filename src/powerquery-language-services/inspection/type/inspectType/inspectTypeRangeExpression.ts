@@ -4,10 +4,11 @@
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
-import { Assert } from "@microsoft/powerquery-parser";
+import { inspectTypeFromChildAttributeIndex } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeRangeExpression(

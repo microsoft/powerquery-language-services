@@ -6,7 +6,8 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
+import { inspectTypeFromChildAttributeIndex } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 
 export async function inspectTypeEachExpression(
     state: InspectTypeState,

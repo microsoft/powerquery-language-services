@@ -13,7 +13,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
-import { InspectTypeState } from "../common";
+import { InspectTypeState } from "../inspectTypeState";
 
 export async function inspectTypeFieldProjection(
     state: InspectTypeState,

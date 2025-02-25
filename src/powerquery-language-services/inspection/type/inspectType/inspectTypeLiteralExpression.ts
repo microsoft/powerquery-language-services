@@ -7,7 +7,7 @@ import { TXorNode, XorNodeKind, XorNodeUtils } from "@microsoft/powerquery-parse
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState } from ".";
+import { InspectTypeState } from "./inspectTypeState";
 
 export function inspectTypeLiteralExpression(
     state: InspectTypeState,

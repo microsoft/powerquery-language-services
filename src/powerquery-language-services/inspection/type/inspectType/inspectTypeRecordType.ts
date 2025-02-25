@@ -8,7 +8,7 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { examineFieldSpecificationList } from "./examineFieldSpecificationList";
-import { InspectTypeState } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeRecordType(

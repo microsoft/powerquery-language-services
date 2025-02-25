@@ -12,7 +12,8 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { inspectTypeFromChildAttributeIndex, InspectTypeState, inspectXor } from "./common";
+import { inspectTypeFromChildAttributeIndex, inspectXor } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 
 export async function inspectTypeRecursivePrimaryExpression(
     state: InspectTypeState,
