@@ -22,10 +22,13 @@ interface ArgumentMismatchExec {
 
 const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but (\d+) were given./;
 
-async function assertInvokeExpressionDiagnostics(text: string): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
+async function assertInvokeExpressionDiagnostics(
+    text: string,
+    overrides?: { readonly validationSettings: ValidationSettings },
+): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
     const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
         TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleValidateAllSettings,
+        overrides?.validationSettings ?? TestConstants.SimpleValidateAllSettings,
         text,
     );
 
@@ -163,4 +166,34 @@ describe("Validation - InvokeExpression", () => {
             expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
         });
     });
+
+    // describe(`standard library`, () => {
+    //     const standardLibraryValdiationSettings: ValidationSettings = {
+    //         ...SimpleValidateAllSettings,
+    //         library: TestConstants.StandardLibrary,
+    //     };
+
+    //     it(`TODO let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
+    //         const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+    //             await assertInvokeExpressionDiagnostics(
+    //                 `let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`,
+    //                 { validationSettings: standardLibraryValdiationSettings },
+    //             );
+
+    //         expect(invocationDiagnostics.length).to.equal(2);
+
+    //         const expected: ReadonlyArray<Position> = [
+    //             {
+    //                 character: 61,
+    //                 line: 1,
+    //             },
+    //             {
+    //                 character: 61,
+    //                 line: 2,
+    //             },
+    //         ];
+
+    //         expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
+    //     });
+    // });
 });

@@ -92,6 +92,9 @@ describe(`Inspection - Type`, () => {
             it(`1 as text`, async () => await assertEqualRootType(`1 as text`, Type.TextInstance));
 
             it(`1 as any`, async () => await assertEqualRootType(`1 as any`, Type.AnyInstance));
+
+            // it(`TODO 1 as any`, async () =>
+            //     await assertEqualRootType(`let foo = bar, bar = baz, baz = 1 in foo`, Type.AnyInstance));
         });
 
         describe(`${Ast.NodeKind.EachExpression}`, () => {

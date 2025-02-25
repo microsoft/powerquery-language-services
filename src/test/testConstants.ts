@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
+import * as StandardLibrarySymbolsEnUs from "./standard-library-symbols-en-us.json";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -13,6 +14,7 @@ import {
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
+    LibrarySymbolUtils,
     TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
@@ -193,6 +195,13 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = {
     ]),
 };
 
+export const StandardLibraryDefinitions: Library.LibraryDefinitions = {
+    dynamicLibraryDefinitions: () => new Map<string, Library.TLibraryDefinition>(),
+    staticLibraryDefinitions: PQP.ResultUtils.assertOk(
+        LibrarySymbolUtils.createLibraryDefinitions(StandardLibrarySymbolsEnUs),
+    ),
+};
+
 export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (
     request: ExternalType.TExternalTypeRequest,
 ) => {
@@ -258,6 +267,14 @@ export const SimpleLibrary: Library.ILibrary = {
     externalTypeResolver: SimpleExternalTypeResolver,
     libraryDefinitions: SimpleLibraryDefinitions,
 };
+
+export const StandardLibrary: Library.ILibrary = PQP.ResultUtils.assertOk(
+    LibrarySymbolUtils.createLibrary(
+        StandardLibrarySymbolsEnUs,
+        () => new Map<string, Library.TLibraryDefinition>(),
+        undefined,
+    ),
+);
 
 export const EmptyLibrary: Library.ILibrary = {
     externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
