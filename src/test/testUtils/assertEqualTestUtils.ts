@@ -14,7 +14,7 @@ import { Range, TextEdit } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedUtils";
+import { AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
 import {
     AnalysisSettings,
     Inspection,

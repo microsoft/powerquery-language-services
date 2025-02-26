@@ -12,7 +12,7 @@ import {
     expectAbridgedAutocompleteItems,
     expectNoSuggestions,
     expectTopSuggestions,
-} from "./autocompleteTestUtils";
+} from "../../testUtils/autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
