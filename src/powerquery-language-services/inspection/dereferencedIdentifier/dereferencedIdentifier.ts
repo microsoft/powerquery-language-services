@@ -2,31 +2,32 @@
 // Licensed under the MIT license.
 
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { LetVariableScopeItem, RecordFieldScopeItem, SectionMemberScopeItem, TScopeItem } from "../scope";
 
 export enum DereferencedIdentifierKind {
-    InScope = "InScope",
-    InScopeValue = "InScopeValue",
     External = "External",
+    InScopeDereference = "InScopeDereference",
+    InScopeValue = "InScopeValue",
+    Recursive = "Recursive",
     Undefined = "Undefined",
 }
 
 export interface IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind;
-    readonly identifierLiteral: string;
 }
 
 // An identifier that is not in scope and dereferences to an external type.
 export interface DereferencedIdentifierExternal extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.External;
+    readonly identifierLiteral: string;
     readonly type: TPowerQueryType;
 }
 
 // An identifier that is in scope and dereferences to something else.
-export interface DereferencedIdentifierInScope extends IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind.InScope;
+export interface DereferencedIdentifierInScopeDereference extends IDereferencedIdentifier {
+    readonly kind: DereferencedIdentifierKind.InScopeDereference;
+    readonly identifierLiteral: string;
     readonly nextScopeItem: LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem;
 }
 
@@ -34,16 +35,23 @@ export interface DereferencedIdentifierInScope extends IDereferencedIdentifier {
 export interface DereferencedIdentifierInScopeValue extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.InScopeValue;
     readonly scopeItem: TScopeItem;
-    readonly xorNode: TXorNode;
+}
+
+// A recursive identifier, eg. '@foo' which is defined as 'let foo = @foo in foo'.
+export interface DereferencedIdentifierRecursive extends IDereferencedIdentifier {
+    readonly kind: DereferencedIdentifierKind.Recursive;
+    readonly identifierLiteral: string;
 }
 
 // An identifier that is not in scope and has no external type.
 export interface DereferencedIdentifierUndefined extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.Undefined;
+    readonly identifierLiteral: string;
 }
 
 export type TDereferencedIdentifier =
     | DereferencedIdentifierExternal
-    | DereferencedIdentifierInScope
+    | DereferencedIdentifierInScopeDereference
     | DereferencedIdentifierInScopeValue
+    | DereferencedIdentifierRecursive
     | DereferencedIdentifierUndefined;

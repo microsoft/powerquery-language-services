@@ -156,7 +156,7 @@ export async function inspectScopeItem(
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
             return scopeItem.value === undefined
-                ? Type.UnknownInstance
+                ? Type.AnyInstance
                 : await inspectXor(state, scopeItem.value, correlationId);
 
         case ScopeItemKind.Each:
@@ -166,7 +166,7 @@ export async function inspectScopeItem(
             return createParameterType(scopeItem);
 
         case ScopeItemKind.Undefined:
-            return Type.UnknownInstance;
+            return Type.AnyInstance;
 
         default:
             throw Assert.isNever(scopeItem);
@@ -450,7 +450,7 @@ export async function dereferencedIdentifierType(
 
             return lastDeferencedIdentifier.type;
 
-        case Inspection.DereferencedIdentifierKind.InScope:
+        case Inspection.DereferencedIdentifierKind.InScopeDereference:
             trace.exit({ [TraceConstant.IsThrowing]: true });
 
             throw new PQP.CommonError.InvariantError(
@@ -461,13 +461,26 @@ export async function dereferencedIdentifierType(
             let result: Type.TPowerQueryType;
 
             switch (lastDeferencedIdentifier.scopeItem.kind) {
+                case ScopeItemKind.LetVariable:
+                case ScopeItemKind.RecordField:
+                case ScopeItemKind.SectionMember:
+                    result = await getOrCreateScopeItemType(state, lastDeferencedIdentifier.scopeItem);
+                    break;
+
                 case ScopeItemKind.Each:
                     result = state.eachScopeById?.get(lastDeferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
                     break;
 
-                default:
-                    result = await inspectXor(state, lastDeferencedIdentifier.xorNode, trace.id);
+                case ScopeItemKind.Parameter:
+                    result = createParameterType(lastDeferencedIdentifier.scopeItem);
                     break;
+
+                case ScopeItemKind.Undefined:
+                    result = Type.AnyInstance;
+                    break;
+
+                default:
+                    throw Assert.isNever(lastDeferencedIdentifier.scopeItem);
             }
 
             trace.exit();
@@ -475,10 +488,15 @@ export async function dereferencedIdentifierType(
             return result;
         }
 
+        case Inspection.DereferencedIdentifierKind.Recursive:
+            trace.exit();
+
+            return Type.AnyInstance;
+
         case Inspection.DereferencedIdentifierKind.Undefined:
             trace.exit();
 
-            return undefined;
+            return Type.UnknownInstance;
 
         default:
             throw Assert.isNever(lastDeferencedIdentifier);

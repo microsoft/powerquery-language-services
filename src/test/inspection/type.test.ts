@@ -750,7 +750,7 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
-            it(`let someIdentifier = 1, result = let someIdentifier = 2 in [ outer = someIdentifier, inner = @someIdentifier ] in result`, async () => {
+            it(`WIP let someIdentifier = 1, result = let someIdentifier = 2 in [ outer = someIdentifier, inner = @someIdentifier ] in result`, async () => {
                 const expression: string = `
             let
                 someIdentifier = 1,
@@ -861,7 +861,7 @@ describe(`Inspection - Type`, () => {
                     settings: PrimitiveInspectionSettings,
                 }));
 
-            it(`inclusve identifier`, async () =>
+            it(`WIP inclusve identifier`, async () =>
                 await assertEqualRootType({
                     text: `let foo = @foo in foo`,
                     expected: Type.AnyInstance,
