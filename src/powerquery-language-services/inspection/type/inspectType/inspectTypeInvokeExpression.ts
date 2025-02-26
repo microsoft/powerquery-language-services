@@ -13,11 +13,12 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { DereferencedIdentifierKind, TDereferencedIdentifier } from "../../dereferencedIdentifier";
 import { ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { inspectXor } from "./common";
-import { tryGetDereferencedIdentifierPath } from "../../dereferencedIdentifier";
+import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -97,16 +98,26 @@ async function externalInvokeRequest(
         return undefined;
     }
 
-    const triedDeferencedIdentifier: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> =
-        await tryGetDereferencedIdentifierPath(
-            InspectTypeStateUtils.toInspectionSettings(state, trace),
-            state.nodeIdMapCollection,
-            state.eachScopeById,
-            identifier,
-            state.scopeById,
-        );
+    const triedDereferencedIdentifier: PQP.Result<
+        ReadonlyArray<TDereferencedIdentifier>,
+        PQP.CommonError.CommonError
+    > = await tryBuildDereferencedIdentifierPath(
+        InspectTypeStateUtils.toInspectionSettings(state, trace),
+        state.nodeIdMapCollection,
+        state.eachScopeById,
+        identifier,
+        state.scopeById,
+    );
 
-    if (ResultUtils.isError(triedDeferencedIdentifier) || triedDeferencedIdentifier.value === undefined) {
+    if (ResultUtils.isError(triedDereferencedIdentifier) || triedDereferencedIdentifier.value === undefined) {
+        return undefined;
+    }
+
+    const endOfPath: TDereferencedIdentifier = Assert.asDefined(
+        triedDereferencedIdentifier.value[triedDereferencedIdentifier.value.length - 1],
+    );
+
+    if (endOfPath.kind !== DereferencedIdentifierKind.External) {
         return undefined;
     }
 
@@ -121,7 +132,7 @@ async function externalInvokeRequest(
     }
 
     const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.invocationTypeRequest(
-        Assert.asDefined(XorNodeUtils.identifierExpressionLiteral(triedDeferencedIdentifier.value)),
+        endOfPath.identifierLiteral,
         types,
     );
 

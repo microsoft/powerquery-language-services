@@ -8,66 +8,22 @@ import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
+import { assertGetOrCreateNodeScope, NodeScope, ScopeById, ScopeItemKind, TScopeItem } from "../scope";
 import {
-    assertGetOrCreateNodeScope,
-    LetVariableScopeItem,
-    NodeScope,
-    RecordFieldScopeItem,
-    ScopeById,
-    ScopeItemKind,
-    SectionMemberScopeItem,
-    TScopeItem,
-} from "./scope";
-import { ExternalTypeUtils, Inspection, InspectionSettings, TraceUtils } from "..";
-import { InspectionTraceConstant } from "../trace";
-import { TypeById } from "./typeCache";
-
-export enum DereferencedIdentifierKind {
-    InScope = "InScope",
-    InScopeValue = "InScopeValue",
-    External = "External",
-    Undefined = "Undefined",
-}
-
-export interface IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind;
-    readonly identifierLiteral: string;
-}
-
-// An identifier that is not in scope and dereferences to an external type.
-export interface DereferencedIdentifierExternal extends IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind.External;
-    readonly type: TPowerQueryType;
-}
-
-// An identifier that is in scope and dereferences to something else.
-export interface DereferencedIdentifierInScope extends IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind.InScope;
-    readonly nextScopeItem: LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem;
-}
-
-// An identifier that is in scope and has a value node.
-export interface DereferencedIdentifierInScopeValue extends IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind.InScopeValue;
-    readonly xorNode: TXorNode;
-}
-
-// An identifier that is not in scope and has no external type.
-export interface DereferencedIdentifierUndefined extends IDereferencedIdentifier {
-    readonly kind: DereferencedIdentifierKind.Undefined;
-}
-
-export type TDereferencedIdentifier =
-    | DereferencedIdentifierExternal
-    | DereferencedIdentifierInScope
-    | DereferencedIdentifierInScopeValue
-    | DereferencedIdentifierUndefined;
+    DereferencedIdentifierExternal,
+    DereferencedIdentifierKind,
+    DereferencedIdentifierUndefined,
+    TDereferencedIdentifier,
+} from "././dereferencedIdentifier";
+import { ExternalTypeUtils, Inspection, InspectionSettings, TraceUtils } from "../..";
+import { InspectionTraceConstant } from "../../trace";
+import { TypeById } from "../typeCache";
 
 // Recursively dereference the identifier until it reaches either:
 // - A value node
 // - An external type
 // - Undefined
-export async function tryGetDereferencedIdentifierPath(
+export async function tryBuildDereferencedIdentifierPath(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     eachScopeById: TypeById | undefined,

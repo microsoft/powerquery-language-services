@@ -9,7 +9,6 @@ import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/par
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
 import { NodeScope, ParameterScopeItem, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { TDereferencedIdentifier, tryGetDereferencedIdentifierPath } from "../../dereferencedIdentifier";
 import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
@@ -37,6 +36,8 @@ import { InspectTypeState } from "./inspectTypeState";
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
+import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
+import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
@@ -425,7 +426,7 @@ export async function dereferencedIdentifierType(
     const triedDeference: PQP.Result<
         ReadonlyArray<TDereferencedIdentifier>,
         PQP.CommonError.CommonError
-    > = await tryGetDereferencedIdentifierPath(
+    > = await tryBuildDereferencedIdentifierPath(
         getInspectionSettingsFromInspectTypeState(state, trace),
         state.nodeIdMapCollection,
         state.eachScopeById,
