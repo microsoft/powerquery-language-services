@@ -7,8 +7,8 @@ import { expect } from "chai";
 
 import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { expectLessWhenSurpressed } from "./common";
-import { SimpleValidateAllSettings } from "../testConstants";
+import { expectLessWhenSurpressed } from "../testUtils/validationTestUtils";
+import { SimpleLibraryValidateAllSettings } from "../testConstants";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -25,7 +25,7 @@ const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but
 async function assertInvokeExpressionDiagnostics(text: string): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
     const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
         TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleValidateAllSettings,
+        TestConstants.SimpleLibraryValidateAllSettings,
         text,
     );
 
@@ -96,12 +96,12 @@ describe("Validation - InvokeExpression", () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;
 
             const withInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidateAllSettings,
+                ...SimpleLibraryValidateAllSettings,
                 checkInvokeExpressions: true,
             };
 
             const withoutInvokeCheckSettings: ValidationSettings = {
-                ...SimpleValidateAllSettings,
+                ...SimpleLibraryValidateAllSettings,
                 checkInvokeExpressions: false,
             };
 

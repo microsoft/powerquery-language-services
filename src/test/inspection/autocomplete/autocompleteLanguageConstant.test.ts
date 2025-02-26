@@ -9,7 +9,7 @@ import {
     AbridgedAutocompleteItem,
     expectAbridgedAutocompleteItems,
     expectNoSuggestions,
-} from "./autocompleteTestUtils";
+} from "../../testUtils/autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
