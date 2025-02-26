@@ -27,7 +27,7 @@ async function assertUnknownIdentifierDiagnostics(
 ): Promise<ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>> {
     const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
         TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleValidateAllSettings,
+        TestConstants.SimpleLibraryValidateAllSettings,
         text,
     );
 

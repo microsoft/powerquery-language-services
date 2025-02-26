@@ -116,7 +116,7 @@ describe("Library", () => {
 
             function createValidLibrarySymbol(overrides?: Partial<LibrarySymbol>): LibrarySymbol {
                 return {
-                    completionItemKind: 10,
+                    completionItemKind: CompletionItemKind.Property,
                     documentation: {
                         description: "description",
                         longDescription: "longDescription",
@@ -164,7 +164,7 @@ describe("Library", () => {
                             kind: TypeKind.Any,
                         },
                     },
-                    completionItemKind: 10,
+                    completionItemKind: CompletionItemKind.Property,
                     description: "description",
                     kind: LibraryDefinitionKind.Function,
                     label: "(parameterName: optional any) => any",

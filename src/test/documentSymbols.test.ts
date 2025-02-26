@@ -2,11 +2,95 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { NoOpCancellationToken } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from ".";
+import { AbridgedDocumentSymbol } from "./testUtils";
 import { SymbolKind } from "../powerquery-language-services";
 
-describe(`Document symbol base functions`, () => {
+describe("getDocumentSymbols", () => {
+    async function assertSymbolsForDocument(
+        text: string,
+        expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
+    ): Promise<void> {
+        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+            text,
+            expectedSymbols,
+            TestConstants.SimpleLibraryAnalysisSettings,
+            NoOpCancellationToken,
+        );
+    }
+
+    it(`section foo; shared a = 1;`, async () => {
+        await assertSymbolsForDocument(`section foo; shared a = 1;`, [{ name: "a", kind: SymbolKind.Number }]);
+    });
+
+    it(`section foo; shared query = let a = 1 in a;`, async () => {
+        await assertSymbolsForDocument(`section foo; shared query = let a = 1 in a;`, [
+            { name: "query", kind: SymbolKind.Variable, children: [{ name: "a", kind: SymbolKind.Number }] },
+        ]);
+    });
+
+    it(`let a = 1, b = "hello", c = () => 1 in c`, async () => {
+        await assertSymbolsForDocument(`let a = 1, b = "hello", c = () => 1 in c`, [
+            { name: "a", kind: SymbolKind.Number },
+            { name: "b", kind: SymbolKind.String },
+            { name: "c", kind: SymbolKind.Function },
+        ]);
+    });
+
+    it(`let a = let b = 1, c = let d = 1 in d in c in a`, async () => {
+        await assertSymbolsForDocument(`let a = let b = 1, c = let d = 1 in d in c in a`, [
+            {
+                name: "a",
+                kind: SymbolKind.Variable,
+                children: [
+                    { name: "b", kind: SymbolKind.Number },
+                    { name: "c", kind: SymbolKind.Variable, children: [{ name: "d", kind: SymbolKind.Number }] },
+                ],
+            },
+        ]);
+    });
+
+    // with syntax error
+    it(`section foo; shared a = 1; b = "hello"; c = let a1`, async () => {
+        await assertSymbolsForDocument(`section foo; shared a = 1; b = "hello"; c = let a1`, [
+            { name: "a", kind: SymbolKind.Number },
+            { name: "b", kind: SymbolKind.String },
+        ]);
+    });
+
+    it(`HelloWorldWithDocs.pq`, async () => {
+        await assertSymbolsForDocument(TestUtils.readFile(`HelloWorldWithDocs.pq`), [
+            // HelloWorldWithDocs.Contents comes back as a Variable because of the use of Value.ReplaceType
+            { name: "HelloWorldWithDocs.Contents", kind: SymbolKind.Variable },
+            { name: "HelloWorldType", kind: SymbolKind.TypeParameter },
+            {
+                name: "HelloWorldImpl",
+                kind: SymbolKind.Function,
+                children: [
+                    { name: "_count", kind: SymbolKind.Variable },
+                    { name: "listOfMessages", kind: SymbolKind.Variable },
+                    { name: "table", kind: SymbolKind.Variable },
+                ],
+            },
+            {
+                name: "HelloWorldWithDocs",
+                kind: SymbolKind.Struct,
+                children: [{ name: "Authentication", kind: SymbolKind.Field }],
+            },
+            {
+                name: "HelloWorldWithDocs.Publish",
+                kind: SymbolKind.Struct,
+                children: [
+                    { name: "Beta", kind: SymbolKind.Field },
+                    { name: "Category", kind: SymbolKind.Field },
+                    { name: "ButtonText", kind: SymbolKind.Field },
+                ],
+            },
+        ]);
+    });
+
     it(`section foo; shared a = 1; b = "abc"; c = true;`, async () =>
         await TestUtils.assertEqualDocumentSymbolsAnalysis(
             `section foo; shared a = 1; b = "abc"; c = true;`,
@@ -41,57 +125,57 @@ describe(`Document symbol base functions`, () => {
             TestUtils.readFile(`HelloWorldWithDocs.pq`),
             [
                 {
-                    kind: 13,
+                    kind: SymbolKind.Variable,
                     name: "HelloWorldWithDocs.Contents",
                 },
                 {
-                    kind: 26,
+                    kind: SymbolKind.TypeParameter,
                     name: "HelloWorldType",
                 },
                 {
                     children: [
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "_count",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "listOfMessages",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "table",
                         },
                     ],
-                    kind: 12,
+                    kind: SymbolKind.Function,
                     name: "HelloWorldImpl",
                 },
                 {
                     children: [
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Authentication",
                         },
                     ],
-                    kind: 23,
+                    kind: SymbolKind.Struct,
                     name: "HelloWorldWithDocs",
                 },
                 {
                     children: [
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Beta",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Category",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "ButtonText",
                         },
                     ],
-                    kind: 23,
+                    kind: SymbolKind.Struct,
                     name: "HelloWorldWithDocs.Publish",
                 },
             ],
@@ -107,113 +191,113 @@ describe(`Document symbol base functions`, () => {
                         {
                             children: [
                                 {
-                                    kind: 8,
+                                    kind: SymbolKind.Field,
                                     name: "Driver",
                                 },
                                 {
-                                    kind: 8,
+                                    kind: SymbolKind.Field,
                                     name: "Server",
                                 },
                                 {
-                                    kind: 8,
+                                    kind: SymbolKind.Field,
                                     name: "Database",
                                 },
                             ],
-                            kind: 23,
+                            kind: SymbolKind.Struct,
                             name: "ConnectionString",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "Credential",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "CredentialConnectionString",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "OdbcDataSource",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "Database",
                         },
                     ],
-                    kind: 12,
+                    kind: SymbolKind.Function,
                     name: "DirectSQL.Database",
                 },
                 {
                     children: [
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "json",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "server",
                         },
                         {
-                            kind: 13,
+                            kind: SymbolKind.Variable,
                             name: "database",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "TestConnection",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Authentication",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Label",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "SupportsEncryption",
                         },
                     ],
-                    kind: 23,
+                    kind: SymbolKind.Struct,
                     name: "DirectSQL",
                 },
                 {
                     children: [
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "SupportsDirectQuery",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Category",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "ButtonText",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "SourceImage",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "SourceTypeImage",
                         },
                     ],
-                    kind: 23,
+                    kind: SymbolKind.Struct,
                     name: "DirectSQL.UI",
                 },
                 {
                     children: [
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Icon16",
                         },
                         {
-                            kind: 8,
+                            kind: SymbolKind.Field,
                             name: "Icon32",
                         },
                     ],
-                    kind: 23,
+                    kind: SymbolKind.Struct,
                     name: "DirectSQL.Icons",
                 },
             ],
