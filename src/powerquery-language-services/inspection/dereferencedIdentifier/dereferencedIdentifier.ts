@@ -4,7 +4,7 @@
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { LetVariableScopeItem, RecordFieldScopeItem, SectionMemberScopeItem } from "../scope";
+import { LetVariableScopeItem, RecordFieldScopeItem, SectionMemberScopeItem, TScopeItem } from "../scope";
 
 export enum DereferencedIdentifierKind {
     InScope = "InScope",
@@ -33,6 +33,7 @@ export interface DereferencedIdentifierInScope extends IDereferencedIdentifier {
 // An identifier that is in scope and has a value node.
 export interface DereferencedIdentifierInScopeValue extends IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind.InScopeValue;
+    readonly scopeItem: TScopeItem;
     readonly xorNode: TXorNode;
 }
 

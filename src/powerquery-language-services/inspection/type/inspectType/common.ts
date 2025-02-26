@@ -458,7 +458,17 @@ export async function dereferencedIdentifierType(
             );
 
         case Inspection.DereferencedIdentifierKind.InScopeValue: {
-            const result: Type.TPowerQueryType = await inspectXor(state, lastDeferencedIdentifier.xorNode, trace.id);
+            let result: Type.TPowerQueryType;
+
+            switch (lastDeferencedIdentifier.scopeItem.kind) {
+                case ScopeItemKind.Each:
+                    result = state.eachScopeById?.get(lastDeferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
+                    break;
+
+                default:
+                    result = await inspectXor(state, lastDeferencedIdentifier.xorNode, trace.id);
+                    break;
+            }
 
             trace.exit();
 

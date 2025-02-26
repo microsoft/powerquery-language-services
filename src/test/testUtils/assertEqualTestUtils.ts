@@ -178,13 +178,13 @@ export async function assertEqualRenameEdits(
     }
 }
 
-export async function assertEqualRootType(
-    text: string,
-    expected: TPowerQueryType,
-    settings: InspectionSettings,
-): Promise<void> {
-    const actual: TPowerQueryType = await TestUtils.assertRootType(settings, text);
-    expect(actual).to.deep.equal(expected);
+export async function assertEqualRootType(params: {
+    readonly text: string;
+    readonly expected: TPowerQueryType;
+    readonly settings: InspectionSettings;
+}): Promise<void> {
+    const actual: TPowerQueryType = await TestUtils.assertRootType(params.settings, params.text);
+    expect(actual).to.deep.equal(params.expected);
 }
 
 export async function assertEqualSignatureHelpAnalysis(

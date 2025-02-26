@@ -153,6 +153,7 @@ async function recursiveDereferenceIdentifier(
     path.push({
         kind: DereferencedIdentifierKind.InScopeValue,
         identifierLiteral,
+        scopeItem,
         xorNode,
     });
 

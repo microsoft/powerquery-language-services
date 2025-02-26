@@ -63,15 +63,13 @@ export async function tryType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
-        settings,
-        nodeIdMapCollection,
-        typeCache,
-        trace.id,
-    );
-
     const result: TriedType = await ResultUtils.ensureResultAsync(
-        () => inspectXor(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId), trace.id),
+        () =>
+            inspectXor(
+                InspectTypeStateUtils.fromInspectionSettings(settings, nodeIdMapCollection, typeCache, trace.id),
+                NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId),
+                trace.id,
+            ),
         settings.locale,
     );
 
