@@ -7,7 +7,7 @@ import { expect } from "chai";
 
 import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { expectLessWhenSurpressed } from "./common";
+import { expectLessWhenSurpressed } from "../testUtils/validationTestUtils";
 import { SimpleLibraryValidateAllSettings } from "../testConstants";
 
 interface AbridgedInvocationDiagnostic {
