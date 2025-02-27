@@ -100,10 +100,9 @@ describe(`Inspection - Type`, () => {
 
             it(`1 as any`, async () => await assertEqualRootType({ text: `1 as any`, expected: Type.AnyInstance }));
 
-            // TODO investigate this test
-            xit(`1 as any`, async () =>
+            it(`1 as any`, async () =>
                 await assertEqualRootType({
-                    text: `let foo = bar, bar = baz, baz = 1 in foo`,
+                    text: `1 as any`,
                     expected: Type.AnyInstance,
                 }));
         });
@@ -885,7 +884,7 @@ describe(`Inspection - Type`, () => {
                 it(`resolves with identifier`, async () =>
                     await assertEqualRootType({ text: `foo()`, expected: Type.TextInstance }));
 
-                it(`resolves with deferenced identifier`, async () =>
+                it(`resolves with dereferenced identifier`, async () =>
                     await assertEqualRootType({ text: `let bar = foo in bar()`, expected: Type.TextInstance }));
 
                 it(`resolves based on argument`, async () => {

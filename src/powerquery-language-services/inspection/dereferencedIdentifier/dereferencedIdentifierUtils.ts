@@ -25,6 +25,7 @@ import { InspectionTraceConstant } from "../../trace";
 import { TypeById } from "../typeCache";
 
 // Recursively dereference the identifier until it reaches either:
+// - A recursive identifier which is not supported
 // - A value node
 // - An external type
 // - Undefined

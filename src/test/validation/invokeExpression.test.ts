@@ -167,33 +167,26 @@ describe("Validation - InvokeExpression", () => {
         });
     });
 
-    // describe(`standard library`, () => {
-    //     const standardLibraryValdiationSettings: ValidationSettings = {
-    //         ...SimpleValidateAllSettings,
-    //         library: TestConstants.StandardLibrary,
-    //     };
+    describe(`standard library`, () => {
+        it(`WIP let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                await assertInvokeExpressionDiagnostics(
+                    `let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`,
+                    { validationSettings: TestConstants.StandardLibraryValidateAllSettings },
+                );
 
-    //     it(`TODO let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
-    //         const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-    //             await assertInvokeExpressionDiagnostics(
-    //                 `let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`,
-    //                 { validationSettings: standardLibraryValdiationSettings },
-    //             );
+            const expected: ReadonlyArray<Position> = [
+                {
+                    character: 61,
+                    line: 1,
+                },
+                {
+                    character: 61,
+                    line: 2,
+                },
+            ];
 
-    //         expect(invocationDiagnostics.length).to.equal(2);
-
-    //         const expected: ReadonlyArray<Position> = [
-    //             {
-    //                 character: 61,
-    //                 line: 1,
-    //             },
-    //             {
-    //                 character: 61,
-    //                 line: 2,
-    //             },
-    //         ];
-
-    //         expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
-    //     });
-    // });
+            expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
+        });
+    });
 });

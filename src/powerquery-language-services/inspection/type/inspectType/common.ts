@@ -423,7 +423,7 @@ export async function dereferencedIdentifierType(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const triedDeference: PQP.Result<
+    const triedDereferenceIdentifierPath: PQP.Result<
         ReadonlyArray<TDereferencedIdentifier>,
         PQP.CommonError.CommonError
     > = await tryBuildDereferencedIdentifierPath(
@@ -434,21 +434,21 @@ export async function dereferencedIdentifierType(
         state.scopeById,
     );
 
-    if (ResultUtils.isError(triedDeference)) {
+    if (ResultUtils.isError(triedDereferenceIdentifierPath)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
-        throw triedDeference.error;
+        throw triedDereferenceIdentifierPath.error;
     }
 
-    const path: ReadonlyArray<TDereferencedIdentifier> = triedDeference.value;
+    const path: ReadonlyArray<TDereferencedIdentifier> = triedDereferenceIdentifierPath.value;
 
-    const lastDeferencedIdentifier: Inspection.TDereferencedIdentifier = Assert.asDefined(path[path.length - 1]);
+    const lastDereferencedIdentifier: Inspection.TDereferencedIdentifier = Assert.asDefined(path[path.length - 1]);
 
-    switch (lastDeferencedIdentifier.kind) {
+    switch (lastDereferencedIdentifier.kind) {
         case Inspection.DereferencedIdentifierKind.External:
             trace.exit();
 
-            return lastDeferencedIdentifier.type;
+            return lastDereferencedIdentifier.type;
 
         case Inspection.DereferencedIdentifierKind.InScopeDereference:
             trace.exit({ [TraceConstant.IsThrowing]: true });
@@ -460,19 +460,19 @@ export async function dereferencedIdentifierType(
         case Inspection.DereferencedIdentifierKind.InScopeValue: {
             let result: Type.TPowerQueryType;
 
-            switch (lastDeferencedIdentifier.scopeItem.kind) {
+            switch (lastDereferencedIdentifier.scopeItem.kind) {
                 case ScopeItemKind.LetVariable:
                 case ScopeItemKind.RecordField:
                 case ScopeItemKind.SectionMember:
-                    result = await getOrCreateScopeItemType(state, lastDeferencedIdentifier.scopeItem);
+                    result = await getOrCreateScopeItemType(state, lastDereferencedIdentifier.scopeItem);
                     break;
 
                 case ScopeItemKind.Each:
-                    result = state.eachScopeById?.get(lastDeferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
+                    result = state.eachScopeById?.get(lastDereferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
                     break;
 
                 case ScopeItemKind.Parameter:
-                    result = createParameterType(lastDeferencedIdentifier.scopeItem);
+                    result = createParameterType(lastDereferencedIdentifier.scopeItem);
                     break;
 
                 case ScopeItemKind.Undefined:
@@ -480,7 +480,7 @@ export async function dereferencedIdentifierType(
                     break;
 
                 default:
-                    throw Assert.isNever(lastDeferencedIdentifier.scopeItem);
+                    throw Assert.isNever(lastDereferencedIdentifier.scopeItem);
             }
 
             trace.exit();
@@ -499,7 +499,7 @@ export async function dereferencedIdentifierType(
             return Type.UnknownInstance;
 
         default:
-            throw Assert.isNever(lastDeferencedIdentifier);
+            throw Assert.isNever(lastDereferencedIdentifier);
     }
 }
 
