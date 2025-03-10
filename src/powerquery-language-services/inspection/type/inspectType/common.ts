@@ -8,8 +8,8 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
+import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { NodeScope, ParameterScopeItem, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { InspectionSettings } from "../../../inspectionSettings";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -32,7 +32,6 @@ import { inspectTypeRangeExpression } from "./inspectTypeRangeExpression";
 import { inspectTypeRecord } from "./inspectTypeRecord";
 import { inspectTypeRecordType } from "./inspectTypeRecordType";
 import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePrimaryExpression";
-import { InspectTypeState } from "./inspectTypeState";
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
@@ -427,7 +426,7 @@ export async function dereferencedIdentifierType(
         ReadonlyArray<TDereferencedIdentifier>,
         PQP.CommonError.CommonError
     > = await tryBuildDereferencedIdentifierPath(
-        getInspectionSettingsFromInspectTypeState(state, trace),
+        InspectTypeStateUtils.toInspectionSettings(state, trace),
         state.nodeIdMapCollection,
         state.eachScopeById,
         xorNode,
@@ -444,11 +443,12 @@ export async function dereferencedIdentifierType(
 
     const lastDereferencedIdentifier: Inspection.TDereferencedIdentifier = Assert.asDefined(path[path.length - 1]);
 
+    let result: Type.TPowerQueryType | undefined;
+
     switch (lastDereferencedIdentifier.kind) {
         case Inspection.DereferencedIdentifierKind.External:
-            trace.exit();
-
-            return lastDereferencedIdentifier.type;
+            result = lastDereferencedIdentifier.type;
+            break;
 
         case Inspection.DereferencedIdentifierKind.InScopeDereference:
             trace.exit({ [TraceConstant.IsThrowing]: true });
@@ -458,8 +458,6 @@ export async function dereferencedIdentifierType(
             );
 
         case Inspection.DereferencedIdentifierKind.InScopeValue: {
-            let result: Type.TPowerQueryType;
-
             switch (lastDereferencedIdentifier.scopeItem.kind) {
                 case ScopeItemKind.LetVariable:
                 case ScopeItemKind.RecordField:
@@ -483,24 +481,24 @@ export async function dereferencedIdentifierType(
                     throw Assert.isNever(lastDereferencedIdentifier.scopeItem);
             }
 
-            trace.exit();
-
-            return result;
+            break;
         }
 
         case Inspection.DereferencedIdentifierKind.Recursive:
-            trace.exit();
-
-            return Type.AnyInstance;
+            result = Type.AnyInstance;
+            break;
 
         case Inspection.DereferencedIdentifierKind.Undefined:
-            trace.exit();
-
-            return Type.UnknownInstance;
+            result = Type.UnknownInstance;
+            break;
 
         default:
             throw Assert.isNever(lastDereferencedIdentifier);
     }
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
+
+    return result;
 }
 
 export function createParameterType(parameter: ParameterScopeItem): Type.TPrimitiveType {
@@ -508,21 +506,5 @@ export function createParameterType(parameter: ParameterScopeItem): Type.TPrimit
         kind: parameter.type ? TypeUtils.typeKindFromPrimitiveTypeConstantKind(parameter.type) : Type.TypeKind.Any,
         extendedKind: undefined,
         isNullable: parameter.isNullable || parameter.isOptional,
-    };
-}
-
-function getInspectionSettingsFromInspectTypeState(state: InspectTypeState, trace: Trace): InspectionSettings {
-    return {
-        cancellationToken: state.cancellationToken,
-        eachScopeById: state.eachScopeById,
-        initialCorrelationId: trace.correlationId,
-        isWorkspaceCacheAllowed: state.isWorkspaceCacheAllowed,
-        library: state.library,
-        locale: state.locale,
-        parser: state.parser,
-        traceManager: state.traceManager,
-        typeStrategy: state.typeStrategy,
-        newParseState: state.newParseState,
-        parserEntryPoint: state.parserEntryPoint,
     };
 }

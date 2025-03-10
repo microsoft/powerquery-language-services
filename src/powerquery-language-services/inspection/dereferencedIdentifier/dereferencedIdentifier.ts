@@ -4,6 +4,7 @@
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import { LetVariableScopeItem, RecordFieldScopeItem, SectionMemberScopeItem, TScopeItem } from "../scope";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export enum DereferencedIdentifierKind {
     External = "External",
@@ -15,6 +16,7 @@ export enum DereferencedIdentifierKind {
 
 export interface IDereferencedIdentifier {
     readonly kind: DereferencedIdentifierKind;
+    readonly xorNode: TXorNode;
 }
 
 // An identifier that is not in scope and dereferences to an external type.

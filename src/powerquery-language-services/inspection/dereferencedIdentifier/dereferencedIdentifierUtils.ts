@@ -8,6 +8,7 @@ import {
     AstXorNode,
     NodeIdMap,
     TXorNode,
+    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -96,12 +97,12 @@ async function dereferenceScopeItem(
         initialCorrelationId: trace.id,
     };
 
-    let currentIdentifierLiteral = AstUtils.getIdentifierLiteral(identifierAstXorNode.node);
-    let currentXorNode = identifierAstXorNode;
+    let currentIdentifierLiteral: string = AstUtils.getIdentifierLiteral(identifierAstXorNode.node);
+    let currentXorNode: XorNode<Ast.Identifier | Ast.IdentifierExpression> = identifierAstXorNode;
 
     while (currentIdentifierLiteral !== undefined) {
         if (currentXorNode === undefined) {
-            return onIdentifierNotInScope(path, trace, updatedSettings, currentIdentifierLiteral);
+            return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
         }
 
         // eslint-disable-next-line no-await-in-loop
@@ -127,54 +128,58 @@ async function dereferenceScopeItem(
         }
 
         if (scopeItem === undefined) {
-            return onIdentifierNotInScope(path, trace, updatedSettings, currentIdentifierLiteral);
+            return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
         }
 
         switch (scopeItem.kind) {
             case ScopeItemKind.LetVariable:
             case ScopeItemKind.RecordField:
             case ScopeItemKind.SectionMember:
-                const possibleToDerefence: TXorNode | undefined = scopeItem.value;
+                // eslint-disable-next-line no-lone-blocks
+                {
+                    const possibleToDerefence: TXorNode | undefined = scopeItem.value;
 
-                if (
-                    possibleToDerefence !== undefined &&
-                    XorNodeUtils.isAstChecked<Ast.Identifier | Ast.IdentifierExpression>(possibleToDerefence, [
-                        Ast.NodeKind.Identifier,
-                        Ast.NodeKind.IdentifierExpression,
-                    ])
-                ) {
-                    path.push({
-                        kind: DereferencedIdentifierKind.InScopeDereference,
-                        identifierLiteral: currentIdentifierLiteral,
-                        nextScopeItem: scopeItem,
-                    });
-
-                    currentIdentifierLiteral = AstUtils.getIdentifierLiteral(possibleToDerefence.node);
-
-                    // Infinite recursion on an inclusive identifier.
-                    // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
                     if (
-                        currentIdentifierLiteral.startsWith("@") &&
-                        currentXorNode.node.id === possibleToDerefence.node.id
+                        possibleToDerefence !== undefined &&
+                        XorNodeUtils.isAstChecked<Ast.Identifier | Ast.IdentifierExpression>(possibleToDerefence, [
+                            Ast.NodeKind.Identifier,
+                            Ast.NodeKind.IdentifierExpression,
+                        ])
                     ) {
-                        return onRecursiveIdentifierLiteral(path, trace, currentIdentifierLiteral);
-                    }
+                        path.push({
+                            kind: DereferencedIdentifierKind.InScopeDereference,
+                            identifierLiteral: currentIdentifierLiteral,
+                            nextScopeItem: scopeItem,
+                            xorNode: currentXorNode,
+                        });
 
-                    currentXorNode = possibleToDerefence;
-                } else {
-                    return onInScopeValue(path, trace, scopeItem);
+                        currentIdentifierLiteral = AstUtils.getIdentifierLiteral(possibleToDerefence.node);
+
+                        // Infinite recursion on an inclusive identifier.
+                        // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
+                        if (
+                            currentIdentifierLiteral.startsWith("@") &&
+                            currentXorNode.node.id === possibleToDerefence.node.id
+                        ) {
+                            return onRecursiveIdentifierLiteral(path, currentXorNode, trace, currentIdentifierLiteral);
+                        }
+
+                        currentXorNode = possibleToDerefence;
+                    } else {
+                        return onInScopeValue(path, currentXorNode, trace, scopeItem);
+                    }
                 }
 
                 break;
 
             case ScopeItemKind.Each:
-                return onInScopeValue(path, trace, scopeItem);
+                return onInScopeValue(path, currentXorNode, trace, scopeItem);
 
             case ScopeItemKind.Parameter:
-                return onInScopeValue(path, trace, scopeItem);
+                return onInScopeValue(path, currentXorNode, trace, scopeItem);
 
             case ScopeItemKind.Undefined:
-                return onIdentifierNotInScope(path, trace, updatedSettings, currentIdentifierLiteral);
+                return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
 
             default:
                 throw Assert.isNever(scopeItem);
@@ -188,6 +193,7 @@ async function dereferenceScopeItem(
 
 function onIdentifierNotInScope(
     path: TDereferencedIdentifier[],
+    xorNode: TXorNode,
     trace: Trace,
     inspectionSettings: InspectionSettings,
     identifierLiteral: string,
@@ -199,11 +205,13 @@ function onIdentifierNotInScope(
     const finalPath: DereferencedIdentifierExternal | DereferencedIdentifierUndefined = externalType
         ? {
               kind: DereferencedIdentifierKind.External,
+              xorNode,
               identifierLiteral,
               type: externalType,
           }
         : {
               kind: DereferencedIdentifierKind.Undefined,
+              xorNode,
               identifierLiteral,
           };
 
@@ -216,11 +224,13 @@ function onIdentifierNotInScope(
 
 function onInScopeValue(
     path: TDereferencedIdentifier[],
+    xorNode: TXorNode,
     trace: Trace,
     scopeItem: TScopeItem,
 ): PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError> {
     path.push({
         kind: DereferencedIdentifierKind.InScopeValue,
+        xorNode,
         scopeItem,
     });
 
@@ -231,11 +241,13 @@ function onInScopeValue(
 
 function onRecursiveIdentifierLiteral(
     path: TDereferencedIdentifier[],
+    xorNode: TXorNode,
     trace: Trace,
     identifierLiteral: string,
 ): PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError> {
     path.push({
         kind: DereferencedIdentifierKind.Recursive,
+        xorNode,
         identifierLiteral,
     });
 
