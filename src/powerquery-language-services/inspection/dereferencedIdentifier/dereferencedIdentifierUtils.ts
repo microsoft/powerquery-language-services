@@ -83,7 +83,7 @@ async function dereferenceScopeItem(
     eachScopeById: TypeById | undefined,
     identifierAstXorNode: AstXorNode<Ast.Identifier | Ast.IdentifierExpression>,
     scopeById: ScopeById,
-    path: TDereferencedIdentifier[],
+    deferencePath: TDereferencedIdentifier[],
 ): Promise<PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError>> {
     const trace: Trace = inspectionSettings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
@@ -102,7 +102,13 @@ async function dereferenceScopeItem(
 
     while (currentIdentifierLiteral !== undefined) {
         if (currentXorNode === undefined) {
-            return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
+            return onIdentifierNotInScope(
+                deferencePath,
+                currentXorNode,
+                trace,
+                updatedSettings,
+                currentIdentifierLiteral,
+            );
         }
 
         // eslint-disable-next-line no-await-in-loop
@@ -128,7 +134,13 @@ async function dereferenceScopeItem(
         }
 
         if (scopeItem === undefined) {
-            return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
+            return onIdentifierNotInScope(
+                deferencePath,
+                currentXorNode,
+                trace,
+                updatedSettings,
+                currentIdentifierLiteral,
+            );
         }
 
         switch (scopeItem.kind) {
@@ -146,7 +158,7 @@ async function dereferenceScopeItem(
                             Ast.NodeKind.IdentifierExpression,
                         ])
                     ) {
-                        path.push({
+                        deferencePath.push({
                             kind: DereferencedIdentifierKind.InScopeDereference,
                             identifierLiteral: currentIdentifierLiteral,
                             nextScopeItem: scopeItem,
@@ -161,25 +173,36 @@ async function dereferenceScopeItem(
                             currentIdentifierLiteral.startsWith("@") &&
                             currentXorNode.node.id === possibleToDerefence.node.id
                         ) {
-                            return onRecursiveIdentifierLiteral(path, currentXorNode, trace, currentIdentifierLiteral);
+                            return onRecursiveIdentifierLiteral(
+                                deferencePath,
+                                currentXorNode,
+                                trace,
+                                currentIdentifierLiteral,
+                            );
                         }
 
                         currentXorNode = possibleToDerefence;
                     } else {
-                        return onInScopeValue(path, currentXorNode, trace, scopeItem);
+                        return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
                     }
                 }
 
                 break;
 
             case ScopeItemKind.Each:
-                return onInScopeValue(path, currentXorNode, trace, scopeItem);
+                return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
 
             case ScopeItemKind.Parameter:
-                return onInScopeValue(path, currentXorNode, trace, scopeItem);
+                return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
 
             case ScopeItemKind.Undefined:
-                return onIdentifierNotInScope(path, currentXorNode, trace, updatedSettings, currentIdentifierLiteral);
+                return onIdentifierNotInScope(
+                    deferencePath,
+                    currentXorNode,
+                    trace,
+                    updatedSettings,
+                    currentIdentifierLiteral,
+                );
 
             default:
                 throw Assert.isNever(scopeItem);
@@ -188,11 +211,11 @@ async function dereferenceScopeItem(
 
     trace.exit();
 
-    return ResultUtils.ok(path);
+    return ResultUtils.ok(deferencePath);
 }
 
 function onIdentifierNotInScope(
-    path: TDereferencedIdentifier[],
+    dereferencePath: TDereferencedIdentifier[],
     xorNode: TXorNode,
     trace: Trace,
     inspectionSettings: InspectionSettings,
@@ -215,20 +238,20 @@ function onIdentifierNotInScope(
               identifierLiteral,
           };
 
-    path.push(finalPath);
+    dereferencePath.push(finalPath);
 
     trace.exit({ [TraceConstant.Result]: finalPath });
 
-    return ResultUtils.ok(path);
+    return ResultUtils.ok(dereferencePath);
 }
 
 function onInScopeValue(
-    path: TDereferencedIdentifier[],
+    dereferencePath: TDereferencedIdentifier[],
     xorNode: TXorNode,
     trace: Trace,
     scopeItem: TScopeItem,
 ): PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError> {
-    path.push({
+    dereferencePath.push({
         kind: DereferencedIdentifierKind.InScopeValue,
         xorNode,
         scopeItem,
@@ -236,16 +259,16 @@ function onInScopeValue(
 
     trace.exit();
 
-    return ResultUtils.ok(path);
+    return ResultUtils.ok(dereferencePath);
 }
 
 function onRecursiveIdentifierLiteral(
-    path: TDereferencedIdentifier[],
+    dereferencePath: TDereferencedIdentifier[],
     xorNode: TXorNode,
     trace: Trace,
     identifierLiteral: string,
 ): PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError> {
-    path.push({
+    dereferencePath.push({
         kind: DereferencedIdentifierKind.Recursive,
         xorNode,
         identifierLiteral,
@@ -253,5 +276,5 @@ function onRecursiveIdentifierLiteral(
 
     trace.exit();
 
-    return ResultUtils.ok(path);
+    return ResultUtils.ok(dereferencePath);
 }

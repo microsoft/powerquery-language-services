@@ -168,20 +168,20 @@ describe("Validation - InvokeExpression", () => {
     });
 
     describe(`standard library`, () => {
-        it(`WIP let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
+        it(`let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
                 await assertInvokeExpressionDiagnostics(
-                    `let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`,
+                    `let
+                        Source = #table(type table [ID = number], {{1}}),
+                        First = Table.FirstN(Source, 1)
+                    in
+                        Source`,
                     { validationSettings: TestConstants.StandardLibraryValidateAllSettings },
                 );
 
             const expected: ReadonlyArray<Position> = [
                 {
-                    character: 61,
-                    line: 1,
-                },
-                {
-                    character: 61,
+                    character: 45,
                     line: 2,
                 },
             ];

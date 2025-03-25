@@ -454,12 +454,13 @@ export async function dereferencedIdentifierType(
             trace.exit({ [TraceConstant.IsThrowing]: true });
 
             throw new PQP.CommonError.InvariantError(
-                `expected last dereferenced identifier to be anything other than InScope`,
+                `expected last dereferenced identifier to be anything other than InScopeDereference`,
             );
 
         case Inspection.DereferencedIdentifierKind.InScopeValue: {
             switch (lastDereferencedIdentifier.scopeItem.kind) {
                 case ScopeItemKind.LetVariable:
+                case ScopeItemKind.Parameter:
                 case ScopeItemKind.RecordField:
                 case ScopeItemKind.SectionMember:
                     result = await getOrCreateScopeItemType(state, lastDereferencedIdentifier.scopeItem);
@@ -467,10 +468,6 @@ export async function dereferencedIdentifierType(
 
                 case ScopeItemKind.Each:
                     result = state.eachScopeById?.get(lastDereferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
-                    break;
-
-                case ScopeItemKind.Parameter:
-                    result = createParameterType(lastDereferencedIdentifier.scopeItem);
                     break;
 
                 case ScopeItemKind.Undefined:
