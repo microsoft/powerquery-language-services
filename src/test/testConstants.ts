@@ -4,7 +4,6 @@
 import * as StandardLibrarySymbols from "./standard-library-symbols-en-us.json";
 
 import * as PQP from "@microsoft/powerquery-parser";
-import * as StandardLibrarySymbolsEnUs from "./standard-library-symbols-en-us.json";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -201,7 +200,7 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = {
 export const StandardLibraryDefinitions: Library.LibraryDefinitions = {
     dynamicLibraryDefinitions: () => new Map<string, Library.TLibraryDefinition>(),
     staticLibraryDefinitions: PQP.ResultUtils.assertOk(
-        LibrarySymbolUtils.createLibraryDefinitions(StandardLibrarySymbolsEnUs),
+        LibrarySymbolUtils.createLibraryDefinitions(StandardLibrarySymbols),
     ),
 };
 
