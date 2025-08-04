@@ -10,7 +10,7 @@ import {
     TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
@@ -300,13 +300,21 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         letExpr,
     );
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, createLetVariableScopeItem, trace.id);
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
+        keyValuePairs,
+        keyFactoryForIdentifiers,
+        scopeItemFactoryForLetVariables,
+        trace.id,
+    );
 
     // Places the assignments from the 'let' into LetExpression.expression
-    const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemsFromKeyValuePairs(
+    const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        createLetVariableScopeItem,
+        keyFactoryForIdentifiers,
+        scopeItemFactoryForLetVariables,
     );
 
     expandChildScope(state, letExpr, [3], newEntries, nodeScope, trace.id);
@@ -334,7 +342,15 @@ function inspectRecordExpressionOrRecordLiteral(
         record,
     );
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, createRecordMemberScopeItem, trace.id);
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
+        keyValuePairs,
+        keyFactoryForIdentifiers,
+        scopeItemFactoryForRecordMember,
+        trace.id,
+    );
+
     trace.exit();
 }
 
@@ -359,10 +375,11 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
             continue;
         }
 
-        const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemsFromKeyValuePairs(
+        const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            createSectionMemberScopeItem,
+            keyFactoryForIdentifiers,
+            scopeItemFactoryForSectionMember,
         );
 
         if (newScopeItems.length !== 0) {
@@ -374,11 +391,15 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
 }
 
 // Expands the scope on the value part of the key value pair.
-function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
+function inspectKeyValuePairs<
+    T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
+    KVP extends NodeIdMapIterator.TKeyValuePair,
+>(
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<KVP>,
-    createFn: (keyValuePair: KVP, recursive: boolean) => T,
+    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
+    scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
     const trace: Trace = state.traceManager.entry(
@@ -394,10 +415,11 @@ function inspectKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterato
             continue;
         }
 
-        const newScopeItems: ReadonlyArray<[string, T]> = scopeItemsFromKeyValuePairs(
+        const newScopeItems: ReadonlyArray<[string, T]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            createFn,
+            keyFactory,
+            scopeItemFactory,
         );
 
         if (newScopeItems.length !== 0) {
@@ -500,9 +522,34 @@ function localGetOrCreateNodeScope(
     return newScope;
 }
 
-function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
+// Adds a key to the scope for both the quoted and unquoted versions of the identifier (if possible).
+function keyFactoryForIdentifiers<KVP extends NodeIdMapIterator.TKeyValuePair>(
+    keyValuePair: KVP,
+): ReadonlyArray<string> {
+    const result: string[] = [keyValuePair.keyLiteral];
+
+    // If the key isn't quoted then we can always add the quoted version.
+    if (!IdentifierUtils.isQuotedIdentifier(keyValuePair.key.literal)) {
+        result.push(`#${keyValuePair.keyLiteral}"`);
+    }
+    // The inverse is not true, but we have a simple way to tell if the key has to be quoted or not
+    // as the normalizedKeyLiteral is unquoted if that is possible, so:
+    //  if the literal and normalizedKeyLiteral differ,
+    //  then we can add the (unquoted) normalizedKeyLiteral
+    else if (keyValuePair.key.literal !== keyValuePair.normalizedKeyLiteral) {
+        result.push(keyValuePair.normalizedKeyLiteral);
+    }
+
+    return result;
+}
+
+function scopeItemFactoryForKeyValuePairs<
+    T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
+    KVP extends NodeIdMapIterator.TKeyValuePair,
+>(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
+    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
     scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
@@ -510,7 +557,9 @@ function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMap
     // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
     // A key of foo should only add "foo" to the scope.
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        result.push([kvp.normalizedKeyLiteral, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
+        for (const key of keyFactory(kvp)) {
+            result.push([key, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
+        }
 
         if (kvp.keyLiteral !== kvp.normalizedKeyLiteral) {
             result.push([kvp.keyLiteral, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
@@ -520,20 +569,7 @@ function scopeItemsFromKeyValuePairs<T extends TScopeItem, KVP extends NodeIdMap
     return result;
 }
 
-function createSectionMemberScopeItem(
-    keyValuePair: NodeIdMapIterator.SectionKeyValuePair,
-    isRecursive: boolean,
-): SectionMemberScopeItem {
-    return {
-        kind: ScopeItemKind.SectionMember,
-        id: keyValuePair.source.node.id,
-        isRecursive,
-        key: keyValuePair.key,
-        value: keyValuePair.value,
-    };
-}
-
-function createLetVariableScopeItem(
+function scopeItemFactoryForLetVariables(
     keyValuePair: NodeIdMapIterator.LetKeyValuePair,
     isRecursive: boolean,
 ): LetVariableScopeItem {
@@ -546,12 +582,25 @@ function createLetVariableScopeItem(
     };
 }
 
-function createRecordMemberScopeItem(
+function scopeItemFactoryForRecordMember(
     keyValuePair: NodeIdMapIterator.RecordKeyValuePair,
     isRecursive: boolean,
 ): RecordFieldScopeItem {
     return {
         kind: ScopeItemKind.RecordField,
+        id: keyValuePair.source.node.id,
+        isRecursive,
+        key: keyValuePair.key,
+        value: keyValuePair.value,
+    };
+}
+
+function scopeItemFactoryForSectionMember(
+    keyValuePair: NodeIdMapIterator.SectionKeyValuePair,
+    isRecursive: boolean,
+): SectionMemberScopeItem {
+    return {
+        kind: ScopeItemKind.SectionMember,
         id: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
