@@ -2,9 +2,9 @@
 // Licensed under the MIT license.
 
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { LetVariableScopeItem, RecordFieldScopeItem, SectionMemberScopeItem, TScopeItem } from "../scope";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export enum DereferencedIdentifierKind {
     External = "External",
