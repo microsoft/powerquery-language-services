@@ -91,7 +91,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         type: undefined,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
@@ -119,7 +135,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         type: undefined,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
@@ -140,7 +172,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -163,6 +209,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 7,
                         valueNodeId: 10,
                     },
+                    {
+                        identifier: `@#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
                 ]));
 
             it(`[a=1, b=2|]`, async () =>
@@ -175,7 +228,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 10,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
                         identifier: "@b",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
+                    },
+                    {
+                        identifier: `@#"b"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 14,
@@ -193,6 +260,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 10,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
                         identifier: "@b",
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
@@ -200,7 +274,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 17,
                     },
                     {
+                        identifier: `@#"b"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
+                    },
+                    {
                         identifier: "c",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 21,
+                        valueNodeId: 24,
+                    },
+                    {
+                        identifier: `#"c"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: false,
                         keyNodeId: 21,
@@ -214,6 +302,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 await runTest(`[a=[|b=1]]`, [
                     {
                         identifier: "@a",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
+                        identifier: `@#"a"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 7,
@@ -236,12 +331,26 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 7,
                         valueNodeId: 10,
                     },
+                    {
+                        identifier: `@#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
                 ]));
 
             it(`[a=1|`, async () => {
                 await runTest(`[a=1|`, [
                     {
                         identifier: "@a",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
+                        identifier: `@#"a"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 7,
@@ -260,7 +369,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 10,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
                         identifier: "@b",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 14,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `@#"b"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 14,
@@ -278,7 +401,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 10,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 7,
+                        valueNodeId: 10,
+                    },
+                    {
                         identifier: "@b",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 14,
+                        valueNodeId: 17,
+                    },
+                    {
+                        identifier: `@#"b"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 14,
@@ -291,12 +428,26 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 21,
                         valueNodeId: 24,
                     },
+                    {
+                        identifier: `#"c"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: false,
+                        keyNodeId: 21,
+                        valueNodeId: 24,
+                    },
                 ]));
 
             it(`[a=[|b=1`, async () =>
                 await runTest(`[a=[|b=1`, [
                     {
                         identifier: "@a",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 9,
+                    },
+                    {
+                        identifier: `@#"a"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 7,
@@ -314,7 +465,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `@#"a"`,
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 7,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "@b",
+                        kind: Inspection.ScopeItemKind.RecordField,
+                        isRecursive: true,
+                        keyNodeId: 15,
+                        valueNodeId: 17,
+                    },
+                    {
+                        identifier: `@#"b"`,
                         kind: Inspection.ScopeItemKind.RecordField,
                         isRecursive: true,
                         keyNodeId: 15,
@@ -336,7 +501,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `@#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 15,
@@ -354,7 +533,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "@y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
+                    },
+                    {
+                        identifier: `@#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 15,
@@ -374,7 +567,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 15,
@@ -388,7 +595,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 24,
                     },
                     {
+                        identifier: `@#"z"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 22,
+                        valueNodeId: 24,
+                    },
+                    {
                         identifier: "a",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 29,
+                        valueNodeId: 32,
+                    },
+                    {
+                        identifier: `#"a"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 29,
@@ -410,7 +631,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `@#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: false,
                         keyNodeId: 15,
@@ -428,7 +663,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "@y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 15,
+                        valueNodeId: 18,
+                    },
+                    {
+                        identifier: `@#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 15,
@@ -446,7 +695,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 11,
                     },
                     {
+                        identifier: `#"x"`,
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: false,
+                        keyNodeId: 8,
+                        valueNodeId: 11,
+                    },
+                    {
                         identifier: "@y",
+                        kind: Inspection.ScopeItemKind.SectionMember,
+                        isRecursive: true,
+                        keyNodeId: 15,
+                        valueNodeId: 17,
+                    },
+                    {
+                        identifier: `@#"y"`,
                         kind: Inspection.ScopeItemKind.SectionMember,
                         isRecursive: true,
                         keyNodeId: 15,
@@ -465,6 +728,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 9,
                     },
+                    {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
                 ]));
 
             it(`let a = 1 in x|`, async () =>
@@ -476,12 +746,26 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 9,
                     },
+                    {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
                 ]));
 
             it(`let a = |1 in x`, async () =>
                 await runTest(`let a = |1 in x`, [
                     {
                         identifier: "@a",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
+                        identifier: `@#"a"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 6,
@@ -499,7 +783,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "b",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"b"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -517,7 +815,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `@#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "b",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"b"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -536,7 +848,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         type: undefined,
                     },
                     {
+                        identifier: `#"p1"`,
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
                         identifier: "p2",
+                        kind: Inspection.ScopeItemKind.Parameter,
+                        isRecursive: false,
+                        isNullable: true,
+                        isOptional: false,
+                        type: undefined,
+                    },
+                    {
+                        identifier: `#"p2"`,
                         kind: Inspection.ScopeItemKind.Parameter,
                         isRecursive: false,
                         isNullable: true,
@@ -551,6 +879,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 22,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 19,
+                        valueNodeId: 22,
+                    },
+                    {
                         identifier: "b",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
@@ -558,7 +893,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 29,
                     },
                     {
+                        identifier: `#"b"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 26,
+                        valueNodeId: 29,
+                    },
+                    {
                         identifier: "@c",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 33,
+                        valueNodeId: 36,
+                    },
+                    {
+                        identifier: `@#"c"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: true,
                         keyNodeId: 33,
@@ -576,6 +925,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 8,
                     },
                     {
+                        identifier: `#"eggs"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 8,
+                    },
+                    {
                         identifier: "foo",
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
@@ -583,7 +939,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 26,
                     },
                     {
+                        identifier: `#"foo"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 23,
+                        valueNodeId: 26,
+                    },
+                    {
                         identifier: "bar",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 30,
+                        valueNodeId: 33,
+                    },
+                    {
+                        identifier: `#"bar"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 30,
@@ -601,7 +971,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 8,
                     },
                     {
+                        identifier: `@#"eggs"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 6,
+                        valueNodeId: 8,
+                    },
+                    {
                         identifier: "foo",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 23,
+                        valueNodeId: 26,
+                    },
+                    {
+                        identifier: `#"foo"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 23,
@@ -615,7 +999,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 33,
                     },
                     {
+                        identifier: `#"bar"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 30,
+                        valueNodeId: 33,
+                    },
+                    {
                         identifier: "ham",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"ham"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -634,6 +1032,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         keyNodeId: 6,
                         valueNodeId: 9,
                     },
+                    {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
                 ]));
 
             it(`let a = 1, b = 2 in |`, async () =>
@@ -646,7 +1051,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "b",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"b"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -664,7 +1083,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `@#"a"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "b",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 13,
+                        valueNodeId: 16,
+                    },
+                    {
+                        identifier: `#"b"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 13,
@@ -682,7 +1115,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                         valueNodeId: 9,
                     },
                     {
+                        identifier: `@#"x"`,
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: true,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
                         identifier: "y",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 16,
+                        valueNodeId: 19,
+                    },
+                    {
+                        identifier: `#"y"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 16,
@@ -694,6 +1141,13 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 await runTest(`let x = (let y = 1 in z) in |`, [
                     {
                         identifier: "x",
+                        kind: Inspection.ScopeItemKind.LetVariable,
+                        isRecursive: false,
+                        keyNodeId: 6,
+                        valueNodeId: 9,
+                    },
+                    {
+                        identifier: `#"x"`,
                         kind: Inspection.ScopeItemKind.LetVariable,
                         isRecursive: false,
                         keyNodeId: 6,
@@ -717,7 +1171,21 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                             valueNodeId: 13,
                         },
                         {
+                            identifier: `#"tbl"`,
+                            kind: Inspection.ScopeItemKind.LetVariable,
+                            isRecursive: false,
+                            keyNodeId: 6,
+                            valueNodeId: 13,
+                        },
+                        {
                             identifier: "bar",
+                            kind: Inspection.ScopeItemKind.LetVariable,
+                            isRecursive: false,
+                            keyNodeId: 17,
+                            valueNodeId: 20,
+                        },
+                        {
+                            identifier: `#"bar"`,
                             kind: Inspection.ScopeItemKind.LetVariable,
                             isRecursive: false,
                             keyNodeId: 17,
@@ -766,7 +1234,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     type: undefined,
                 },
                 {
+                    identifier: `#"a"`,
+                    kind: Inspection.ScopeItemKind.Parameter,
+                    isRecursive: false,
+                    isNullable: true,
+                    isOptional: false,
+                    type: undefined,
+                },
+                {
                     identifier: "b",
+                    kind: Inspection.ScopeItemKind.Parameter,
+                    isRecursive: false,
+                    isNullable: false,
+                    isOptional: false,
+                    type: Constant.PrimitiveTypeConstant.Number,
+                },
+                {
+                    identifier: `#"b"`,
                     kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: false,
@@ -782,6 +1266,14 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     type: Constant.PrimitiveTypeConstant.Function,
                 },
                 {
+                    identifier: `#"c"`,
+                    kind: Inspection.ScopeItemKind.Parameter,
+                    isRecursive: false,
+                    isNullable: true,
+                    isOptional: false,
+                    type: Constant.PrimitiveTypeConstant.Function,
+                },
+                {
                     identifier: "d",
                     kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
@@ -790,7 +1282,23 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     type: undefined,
                 },
                 {
+                    identifier: `#"d"`,
+                    kind: Inspection.ScopeItemKind.Parameter,
+                    isRecursive: false,
+                    isNullable: true,
+                    isOptional: true,
+                    type: undefined,
+                },
+                {
                     identifier: "e",
+                    kind: Inspection.ScopeItemKind.Parameter,
+                    isRecursive: false,
+                    isNullable: false,
+                    isOptional: true,
+                    type: Constant.PrimitiveTypeConstant.Table,
+                },
+                {
+                    identifier: `#"e"`,
                     kind: Inspection.ScopeItemKind.Parameter,
                     isRecursive: false,
                     isNullable: false,

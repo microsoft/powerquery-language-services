@@ -130,7 +130,7 @@ export async function assertEqualNodeScope(
 ): Promise<void> {
     const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
-    expect(actual).deep.equal(expected);
+    expect(actual).to.have.deep.members(expected);
 }
 
 export async function assertEqualPartialSemanticTokensAnalysis(

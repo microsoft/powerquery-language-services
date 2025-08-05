@@ -264,6 +264,14 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined, trace.id);
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
+    for (const parameter of pseudoType.parameters) {
+        const name: string = parameter.name.literal;
+
+        for (const key of keyFactoryForIdentifierLiterals(name, IdentifierUtils.normalizeIdentifier(name))) {
+            nodeScope.set(key, scopeItemFactoryForParameter(parameter));
+        }
+    }
+
     const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = pseudoType.parameters.map(
         (parameter: PseudoFunctionParameterType) => [
             parameter.name.literal,
@@ -300,21 +308,14 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         letExpr,
     );
 
-    inspectKeyValuePairs(
-        state,
-        nodeScope,
-        keyValuePairs,
-        keyFactoryForIdentifiers,
-        scopeItemFactoryForLetVariables,
-        trace.id,
-    );
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyFactoryForKvp, scopeItemFactoryForLetVariable, trace.id);
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        keyFactoryForIdentifiers,
-        scopeItemFactoryForLetVariables,
+        keyFactoryForKvp,
+        scopeItemFactoryForLetVariable,
     );
 
     expandChildScope(state, letExpr, [3], newEntries, nodeScope, trace.id);
@@ -342,14 +343,7 @@ function inspectRecordExpressionOrRecordLiteral(
         record,
     );
 
-    inspectKeyValuePairs(
-        state,
-        nodeScope,
-        keyValuePairs,
-        keyFactoryForIdentifiers,
-        scopeItemFactoryForRecordMember,
-        trace.id,
-    );
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyFactoryForKvp, scopeItemFactoryForRecordMember, trace.id);
 
     trace.exit();
 }
@@ -378,7 +372,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            keyFactoryForIdentifiers,
+            keyFactoryForKvp,
             scopeItemFactoryForSectionMember,
         );
 
@@ -522,22 +516,27 @@ function localGetOrCreateNodeScope(
     return newScope;
 }
 
+function keyFactoryForKvp<KVP extends NodeIdMapIterator.TKeyValuePair>(keyValuePair: KVP): ReadonlyArray<string> {
+    return keyFactoryForIdentifierLiterals(keyValuePair.key.literal, keyValuePair.normalizedKeyLiteral);
+}
+
 // Adds a key to the scope for both the quoted and unquoted versions of the identifier (if possible).
-function keyFactoryForIdentifiers<KVP extends NodeIdMapIterator.TKeyValuePair>(
-    keyValuePair: KVP,
+function keyFactoryForIdentifierLiterals(
+    identifierLiteral: string,
+    normalizedKeyLiteral: string,
 ): ReadonlyArray<string> {
-    const result: string[] = [keyValuePair.keyLiteral];
+    const result: string[] = [identifierLiteral];
 
     // If the key isn't quoted then we can always add the quoted version.
-    if (!IdentifierUtils.isQuotedIdentifier(keyValuePair.key.literal)) {
-        result.push(`#${keyValuePair.keyLiteral}"`);
+    if (!IdentifierUtils.isQuotedIdentifier(identifierLiteral)) {
+        result.push(`#"${identifierLiteral}"`);
     }
     // The inverse is not true, but we have a simple way to tell if the key has to be quoted or not
     // as the normalizedKeyLiteral is unquoted if that is possible, so:
     //  if the literal and normalizedKeyLiteral differ,
     //  then we can add the (unquoted) normalizedKeyLiteral
-    else if (keyValuePair.key.literal !== keyValuePair.normalizedKeyLiteral) {
-        result.push(keyValuePair.normalizedKeyLiteral);
+    else if (identifierLiteral !== normalizedKeyLiteral) {
+        result.push(normalizedKeyLiteral);
     }
 
     return result;
@@ -569,7 +568,7 @@ function scopeItemFactoryForKeyValuePairs<
     return result;
 }
 
-function scopeItemFactoryForLetVariables(
+function scopeItemFactoryForLetVariable(
     keyValuePair: NodeIdMapIterator.LetKeyValuePair,
     isRecursive: boolean,
 ): LetVariableScopeItem {
@@ -579,6 +578,18 @@ function scopeItemFactoryForLetVariables(
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,
+    };
+}
+
+function scopeItemFactoryForParameter(parameter: PseudoFunctionParameterType): ParameterScopeItem {
+    return {
+        kind: ScopeItemKind.Parameter,
+        id: parameter.id,
+        isRecursive: false,
+        name: parameter.name,
+        isOptional: parameter.isOptional,
+        isNullable: parameter.isNullable,
+        type: parameter.type ? TypeUtils.primitiveTypeConstantKindFromTypeKind(parameter.type) : undefined,
     };
 }
 
