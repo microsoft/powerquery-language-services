@@ -178,12 +178,7 @@ export async function assertEqualRenameEdits(
     }
 }
 
-export async function assertEqualRootType(
-    text: string,
-    expected: TPowerQueryType,
-    settings: InspectionSettings,
-): Promise<void> {
-    const actual: TPowerQueryType = await TestUtils.assertRootType(settings, text);
+export function assertEqualPowerQueryType(expected: TPowerQueryType, actual: TPowerQueryType): void {
     expect(actual).to.deep.equal(expected);
 }
 
@@ -205,13 +200,11 @@ export async function assertEqualSignatureHelpAnalysis(
     }
 }
 
-export async function assertEqualScopeType(
-    textWithPipe: string,
-    expected: Inspection.ScopeTypeByKey,
-    settings: InspectionSettings,
-): Promise<void> {
-    const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType(settings, textWithPipe);
-    expect(actual).to.deep.equal(expected);
+export function assertEqualScopeType(expected: Inspection.ScopeTypeByKey, actual: Inspection.ScopeTypeByKey): void {
+    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(expected);
+    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(actual);
+
+    expect(actualArray).to.have.deep.members(expectedArray);
 }
 
 function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -224,4 +217,10 @@ function assertIsMarkupContent(value: Hover["contents"]): asserts value is Marku
     if (!MarkupContent.is(value)) {
         throw new Error(`expected value to be MarkupContent`);
     }
+}
+
+function convertScopeTypeByKeyToArray(
+    scopeTypeByKey: Inspection.ScopeTypeByKey,
+): ReadonlyArray<[string, TPowerQueryType]> {
+    return Array.from(scopeTypeByKey.entries()).map(([key, value]: [string, TPowerQueryType]) => [key, value]);
 }

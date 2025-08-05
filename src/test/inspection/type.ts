@@ -38,11 +38,17 @@ describe(`Inspection - Type`, () => {
         expected: Type.TPowerQueryType,
         settings: InspectionSettings = ExtendedInspectionSettings,
     ): Promise<void> {
-        await TestUtils.assertEqualRootType(text, expected, settings);
+        const actual: Type.TPowerQueryType = await TestUtils.assertRootType(settings, text);
+        await TestUtils.assertEqualPowerQueryType(expected, actual);
     }
 
     async function assertEqualScopeType(textWithPipe: string, expected: Inspection.ScopeTypeByKey): Promise<void> {
-        await TestUtils.assertEqualScopeType(textWithPipe, expected, ExtendedInspectionSettings);
+        const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType(
+            ExtendedInspectionSettings,
+            textWithPipe,
+        );
+
+        TestUtils.assertEqualScopeType(expected, actual);
     }
 
     const ExtendedInspectionSettings: InspectionSettings = {
@@ -535,6 +541,7 @@ describe(`Inspection - Type`, () => {
                         false,
                         new Map([
                             [`foo`, TypeUtils.numberLiteral(false, `1`)],
+                            [`#"foo"`, TypeUtils.numberLiteral(false, `1`)],
                             [`bar`, TypeUtils.numberLiteral(false, `2`)],
                         ]),
                         false,
