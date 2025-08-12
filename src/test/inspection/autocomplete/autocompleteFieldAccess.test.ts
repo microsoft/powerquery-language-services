@@ -5,7 +5,7 @@ import "mocha";
 import { ResultUtils, Task } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
-import { expectNoSuggestions, expectTopSuggestions } from "./autocompleteTestUtils";
+import { expectNoSuggestions, expectTopSuggestions } from "../../testUtils/autocompleteTestUtils";
 import { Inspection, Position } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
 import { expect } from "chai";

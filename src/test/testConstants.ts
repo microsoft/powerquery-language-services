@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as StandardLibrarySymbols from "./standard-library-symbols-en-us.json";
+
 import * as PQP from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
@@ -13,9 +15,11 @@ import {
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
+    LibrarySymbolUtils,
     TypeStrategy,
     ValidationSettings,
 } from "../powerquery-language-services";
+import { noOpExternalTypeResolver } from "../powerquery-language-services/externalType/externalType";
 
 export enum TestLibraryName {
     CombineNumberAndOptionalText = "Test.CombineNumberAndOptionalText",
@@ -259,6 +263,14 @@ export const SimpleLibrary: Library.ILibrary = {
     libraryDefinitions: SimpleLibraryDefinitions,
 };
 
+export const StandardLibrary: Library.ILibrary = PQP.ResultUtils.assertOk(
+    LibrarySymbolUtils.createLibrary(
+        StandardLibrarySymbols,
+        () => new Map<string, Library.TLibraryDefinition>(),
+        noOpExternalTypeResolver,
+    ),
+);
+
 export const EmptyLibrary: Library.ILibrary = {
     externalTypeResolver: (_request: ExternalType.TExternalTypeRequest) => undefined,
     libraryDefinitions: {
@@ -272,6 +284,11 @@ export const SimpleInspectionSettings: InspectionSettings = {
     library: SimpleLibrary,
 };
 
+export const StandardLibraryInspectionSettings: InspectionSettings = {
+    ...DefaultInspectionSettings,
+    library: StandardLibrary,
+};
+
 export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     isWorkspaceCacheAllowed: false,
     initialCorrelationId: undefined,
@@ -279,7 +296,14 @@ export const SimpleLibraryAnalysisSettings: AnalysisSettings = {
     inspectionSettings: SimpleInspectionSettings,
 };
 
-export const SimpleValidateAllSettings: ValidationSettings = {
+export const StandardLibraryAnalysisSettings: AnalysisSettings = {
+    isWorkspaceCacheAllowed: false,
+    initialCorrelationId: undefined,
+    traceManager: NoOpTraceManagerInstance,
+    inspectionSettings: StandardLibraryInspectionSettings,
+};
+
+export const SimpleLibraryValidateAllSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
     checkInvokeExpressions: true,
@@ -288,7 +312,25 @@ export const SimpleValidateAllSettings: ValidationSettings = {
     source: "UNIT-TEST-SOURCE",
 };
 
+export const StandardLibraryValidateAllSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: true,
+    checkInvokeExpressions: true,
+    checkUnknownIdentifiers: true,
+    library: StandardLibrary,
+    source: "UNIT-TEST-SOURCE",
+};
+
 export const SimpleValidateNoneSettings: ValidationSettings = {
+    ...SimpleInspectionSettings,
+    checkForDuplicateIdentifiers: false,
+    checkInvokeExpressions: false,
+    checkUnknownIdentifiers: false,
+    library: SimpleLibrary,
+    source: "UNIT-TEST-SOURCE",
+};
+
+export const StandardLibraryValidateNoneSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: false,
     checkInvokeExpressions: false,

@@ -4,9 +4,9 @@
 import "mocha";
 import { expect } from "chai";
 
-import { TestConstants, TestUtils } from "../..";
-import { AutocompleteItemUtils } from "../../../powerquery-language-services/inspection";
-import { Inspection } from "../../../powerquery-language-services";
+import { TestConstants, TestUtils } from "..";
+import { AutocompleteItemUtils } from "../../powerquery-language-services/inspection";
+import { Inspection } from "../../powerquery-language-services";
 
 export interface AbridgedAutocompleteItem {
     readonly label: string;

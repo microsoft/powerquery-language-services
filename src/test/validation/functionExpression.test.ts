@@ -19,7 +19,7 @@ function assertValidationError(diagnostic: Diagnostic, startPosition: Position):
 async function assertNoValidationErrors(text: string): Promise<void> {
     const validationResult: ValidateOk = await TestUtils.assertValidate(
         TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleValidateAllSettings,
+        TestConstants.SimpleLibraryValidateAllSettings,
         text,
     );
 
@@ -34,11 +34,11 @@ describe(`Validation - functionExpression`, () => {
         });
 
         it(`(foo as number, foo as number) => foo * 2`, async () => {
-            const errorSource: string = TestConstants.SimpleValidateAllSettings.source;
+            const errorSource: string = TestConstants.SimpleLibraryValidateAllSettings.source;
 
             const validationResult: ValidateOk = await TestUtils.assertValidate(
                 TestConstants.SimpleLibraryAnalysisSettings,
-                TestConstants.SimpleValidateAllSettings,
+                TestConstants.SimpleLibraryValidateAllSettings,
                 `(foo as number, foo as number) => foo * 2`,
             );
 

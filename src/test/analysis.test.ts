@@ -25,8 +25,8 @@ import type { AutocompleteItem, TypeCache } from "../powerquery-language-service
 import { ILibraryProvider, ILocalDocumentProvider } from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
 import { ILibrary } from "../powerquery-language-services/library/library";
-import { SlowLibraryProvider } from "./providers/slowLibraryProvider";
-import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider";
+import { SlowLibraryProvider } from "./providers/slowLibraryProvider.test";
+import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider.test";
 
 describe(`Analysis`, () => {
     describe(`getAutocompleteItems;`, () => {
