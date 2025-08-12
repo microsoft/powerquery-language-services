@@ -540,10 +540,6 @@ function scopeItemFactoryForKeyValuePairs<
         for (const key of keyFactory(kvp)) {
             result.push([key, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
         }
-
-        if (kvp.keyLiteral !== kvp.normalizedKeyLiteral) {
-            result.push([kvp.keyLiteral, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
-        }
     }
 
     return result;
