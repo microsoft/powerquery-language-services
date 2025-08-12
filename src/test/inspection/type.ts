@@ -38,8 +38,7 @@ describe(`Inspection - Type`, () => {
         expected: Type.TPowerQueryType,
         settings: InspectionSettings = ExtendedInspectionSettings,
     ): Promise<void> {
-        const actual: Type.TPowerQueryType = await TestUtils.assertRootType(settings, text);
-        await TestUtils.assertEqualPowerQueryType(expected, actual);
+        await TestUtils.assertEqualRootType(text, expected, settings);
     }
 
     async function assertEqualScopeType(textWithPipe: string, expected: Inspection.ScopeTypeByKey): Promise<void> {
@@ -87,7 +86,9 @@ describe(`Inspection - Type`, () => {
                     `(foo as number, bar as nullable number) => foo + bar|`,
                     new Map([
                         [`foo`, Type.NumberInstance],
+                        [`#"foo"`, Type.NumberInstance],
                         [`bar`, Type.NullableNumberInstance],
+                        [`#"bar"`, Type.NullableNumberInstance],
                     ]),
                 ));
         });
@@ -521,28 +522,44 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.Parameter}`, () => {
             it(`(foo as number) => foo|`, async () =>
-                await assertEqualScopeType(`(foo as number) => foo|`, new Map([[`foo`, Type.NumberInstance]])));
+                await assertEqualScopeType(
+                    `(foo as number) => foo|`,
+                    new Map([
+                        [`foo`, Type.NumberInstance],
+                        [`#"foo"`, Type.NumberInstance],
+                    ]),
+                ));
 
             it(`(optional foo as number) => foo|`, async () =>
                 await assertEqualScopeType(
                     `(optional foo as number) => foo|`,
-                    new Map([[`foo`, Type.NullableNumberInstance]]),
+                    new Map([
+                        [`foo`, Type.NullableNumberInstance],
+                        [`#"foo"`, Type.NullableNumberInstance],
+                    ]),
                 ));
 
             it(`(foo) => foo|`, async () =>
-                await assertEqualScopeType(`(foo) => foo|`, new Map([[`foo`, Type.NullableAnyInstance]])));
+                await assertEqualScopeType(
+                    `(foo) => foo|`,
+                    new Map([
+                        [`foo`, Type.NullableAnyInstance],
+                        [`#"foo"`, Type.NullableAnyInstance],
+                    ]),
+                ));
         });
 
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
-            it(`[foo = 1] & [bar = 2]`, async () =>
+            it(`[foo = 1] & [bar = 2] & [with space = 3 ] & [#"unneeded quoted" = 4]`, async () =>
                 await assertEqualRootType(
-                    `[foo = 1] & [bar = 2]`,
+                    `[foo = 1] & [bar = 2] & [with space = 3 ] & [#"unneeded quoted" = 4]`,
                     TypeUtils.definedRecord(
                         false,
                         new Map([
                             [`foo`, TypeUtils.numberLiteral(false, `1`)],
-                            [`#"foo"`, TypeUtils.numberLiteral(false, `1`)],
                             [`bar`, TypeUtils.numberLiteral(false, `2`)],
+                            [`with space`, TypeUtils.numberLiteral(false, `3`)],
+                            [`unneeded quoted`, TypeUtils.numberLiteral(false, `4`)],
                         ]),
                         false,
                     ),

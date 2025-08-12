@@ -12,6 +12,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
+import { PrimitiveTypeConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
 import {
@@ -264,28 +265,19 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined, trace.id);
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
-    for (const parameter of pseudoType.parameters) {
-        const name: string = parameter.name.literal;
+    const newEntries: [string, ParameterScopeItem][] = [];
 
-        for (const key of keyFactoryForIdentifierLiterals(name, IdentifierUtils.normalizeIdentifier(name))) {
-            nodeScope.set(key, scopeItemFactoryForParameter(parameter));
+    for (const parameter of pseudoType.parameters) {
+        const type: PrimitiveTypeConstant | undefined = parameter.type
+            ? TypeUtils.primitiveTypeConstantKindFromTypeKind(parameter.type)
+            : undefined;
+
+        const parameterScopeItem: ParameterScopeItem = scopeItemFactoryForParameter(parameter, type);
+
+        for (const scopeKey of IdentifierUtils.getAllowedIdentifiers(parameter.name.literal)) {
+            newEntries.push([scopeKey, parameterScopeItem]);
         }
     }
-
-    const newEntries: ReadonlyArray<[string, ParameterScopeItem]> = pseudoType.parameters.map(
-        (parameter: PseudoFunctionParameterType) => [
-            parameter.name.literal,
-            {
-                kind: ScopeItemKind.Parameter,
-                id: parameter.id,
-                isRecursive: false,
-                name: parameter.name,
-                isOptional: parameter.isOptional,
-                isNullable: parameter.isNullable,
-                type: parameter.type ? TypeUtils.primitiveTypeConstantKindFromTypeKind(parameter.type) : undefined,
-            },
-        ],
-    );
 
     expandChildScope(state, fnExpr, [3], newEntries, nodeScope, trace.id);
     trace.exit();
@@ -308,13 +300,20 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         letExpr,
     );
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyFactoryForKvp, scopeItemFactoryForLetVariable, trace.id);
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
+        keyValuePairs,
+        (kvp: NodeIdMapIterator.LetKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
+        scopeItemFactoryForLetVariable,
+        trace.id,
+    );
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        keyFactoryForKvp,
+        (kvp: NodeIdMapIterator.LetKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
         scopeItemFactoryForLetVariable,
     );
 
@@ -343,7 +342,15 @@ function inspectRecordExpressionOrRecordLiteral(
         record,
     );
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, keyFactoryForKvp, scopeItemFactoryForRecordMember, trace.id);
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
+        keyValuePairs,
+        (kvp: NodeIdMapIterator.RecordKeyValuePair) =>
+            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowGeneralizedIdentifier: true }),
+        scopeItemFactoryForRecordMember,
+        trace.id,
+    );
 
     trace.exit();
 }
@@ -372,7 +379,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            keyFactoryForKvp,
+            (kvp: NodeIdMapIterator.SectionKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
             scopeItemFactoryForSectionMember,
         );
 
@@ -516,32 +523,6 @@ function localGetOrCreateNodeScope(
     return newScope;
 }
 
-function keyFactoryForKvp<KVP extends NodeIdMapIterator.TKeyValuePair>(keyValuePair: KVP): ReadonlyArray<string> {
-    return keyFactoryForIdentifierLiterals(keyValuePair.key.literal, keyValuePair.normalizedKeyLiteral);
-}
-
-// Adds a key to the scope for both the quoted and unquoted versions of the identifier (if possible).
-function keyFactoryForIdentifierLiterals(
-    identifierLiteral: string,
-    normalizedKeyLiteral: string,
-): ReadonlyArray<string> {
-    const result: string[] = [identifierLiteral];
-
-    // If the key isn't quoted then we can always add the quoted version.
-    if (!IdentifierUtils.isQuotedIdentifier(identifierLiteral)) {
-        result.push(`#"${identifierLiteral}"`);
-    }
-    // The inverse is not true, but we have a simple way to tell if the key has to be quoted or not
-    // as the normalizedKeyLiteral is unquoted if that is possible, so:
-    //  if the literal and normalizedKeyLiteral differ,
-    //  then we can add the (unquoted) normalizedKeyLiteral
-    else if (identifierLiteral !== normalizedKeyLiteral) {
-        result.push(normalizedKeyLiteral);
-    }
-
-    return result;
-}
-
 function scopeItemFactoryForKeyValuePairs<
     T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
     KVP extends NodeIdMapIterator.TKeyValuePair,
@@ -581,7 +562,10 @@ function scopeItemFactoryForLetVariable(
     };
 }
 
-function scopeItemFactoryForParameter(parameter: PseudoFunctionParameterType): ParameterScopeItem {
+function scopeItemFactoryForParameter(
+    parameter: PseudoFunctionParameterType,
+    type: PrimitiveTypeConstant | undefined,
+): ParameterScopeItem {
     return {
         kind: ScopeItemKind.Parameter,
         id: parameter.id,
@@ -589,7 +573,7 @@ function scopeItemFactoryForParameter(parameter: PseudoFunctionParameterType): P
         name: parameter.name,
         isOptional: parameter.isOptional,
         isNullable: parameter.isNullable,
-        type: parameter.type ? TypeUtils.primitiveTypeConstantKindFromTypeKind(parameter.type) : undefined,
+        type,
     };
 }
 

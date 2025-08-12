@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable max-len */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
@@ -285,7 +283,8 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
         }
         // Else if the candidate is before the cursor position
         else if (PositionUtils.isAfterAst(position, candidate, includeUpperBound)) {
-            // And we either haven't found a closestNodeOnOrBeforePosition yet, or if the candidate is better (more right) than the current closestNodeOnOrBeforePosition.
+            // And we either haven't found a closestNodeOnOrBeforePosition yet,
+            // or if the candidate is better (more right) than the current closestNodeOnOrBeforePosition.
             if (
                 nodeClosestBeforePosition === undefined ||
                 nodeClosestBeforePosition.tokenRange.tokenIndexStart < candidate.tokenRange.tokenIndexStart
@@ -294,7 +293,8 @@ function leafSearch(nodeIdMapCollection: NodeIdMap.Collection, position: Positio
             }
         }
         // Else the candidate must be after the cursor position.
-        // And we either haven't found a closestAfterPosition yet, or if the candidate is better (more left) than the current nodeClosestAfterPosition.
+        // And we either haven't found a closestAfterPosition yet,
+        // or if the candidate is better (more left) than the current nodeClosestAfterPosition.
         else if (
             nodeClosestAfterPosition === undefined ||
             nodeClosestAfterPosition.tokenRange.tokenIndexStart > candidate.tokenRange.tokenIndexStart
@@ -423,14 +423,24 @@ function findLeafIdentifier(
             result = {
                 node: identifier,
                 isRecursive: false,
-                normalizedLiteral: IdentifierUtils.normalizeIdentifier(identifier.literal),
+                normalizedLiteral: Assert.asDefined(
+                    IdentifierUtils.getNormalizedIdentifier(identifier.literal, {
+                        allowGeneralizedIdentifier: identifier.kind === Ast.NodeKind.GeneralizedIdentifier,
+                    }),
+                    `Expected identifier "${identifier.literal}" to be a valid identifier`,
+                ),
                 normalizedRecursiveLiteral: undefined,
             };
 
             break;
 
         case Ast.NodeKind.IdentifierExpression: {
-            const normalizedLiteral: string = IdentifierUtils.normalizeIdentifier(identifier.identifier.literal);
+            const normalizedLiteral: string = Assert.asDefined(
+                IdentifierUtils.getNormalizedIdentifier(identifier.identifier.literal, {
+                    allowGeneralizedIdentifier: false,
+                }),
+                `Expected identifier "${identifier.identifier.literal}" to be a valid identifier`,
+            );
 
             result = {
                 node: identifier,
