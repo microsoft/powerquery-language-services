@@ -313,7 +313,8 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
+        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
+            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
         scopeItemFactoryForLetVariable,
     );
 
@@ -379,7 +380,8 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            (kvp: NodeIdMapIterator.SectionKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
+            (kvp: NodeIdMapIterator.SectionKeyValuePair) =>
+                IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
             scopeItemFactoryForSectionMember,
         );
 

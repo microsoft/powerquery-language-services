@@ -131,7 +131,18 @@ export async function assertEqualNodeScope(
 ): Promise<void> {
     const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
-    expect(actual).to.have.deep.members(expected);
+
+    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...expected].sort(
+        (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
+            left.identifier.localeCompare(right.identifier),
+    );
+
+    const sortedActual: ReadonlyArray<TAbridgedNodeScopeItem> = [...actual].sort(
+        (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
+            left.identifier.localeCompare(right.identifier),
+    );
+
+    expect(sortedActual).to.have.deep.members(sortedExpected);
 }
 
 export async function assertEqualPartialSemanticTokensAnalysis(
