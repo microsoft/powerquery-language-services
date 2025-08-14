@@ -304,7 +304,10 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         state,
         nodeScope,
         keyValuePairs,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) => IdentifierUtils.getAllowedIdentifiers(kvp.key.literal),
+        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
+            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
+                allowRecursive: true,
+            }),
         scopeItemFactoryForLetVariable,
         trace.id,
     );
@@ -348,7 +351,10 @@ function inspectRecordExpressionOrRecordLiteral(
         nodeScope,
         keyValuePairs,
         (kvp: NodeIdMapIterator.RecordKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowGeneralizedIdentifier: true }),
+            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
+                allowGeneralizedIdentifier: true,
+                allowRecursive: true,
+            }),
         scopeItemFactoryForRecordMember,
         trace.id,
     );
@@ -443,7 +449,7 @@ function expandScope(
     const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, defaultScope, correlationId);
 
     for (const [key, value] of newEntries) {
-        nodeScope.set(value.isRecursive ? `@${key}` : key, value);
+        nodeScope.set(key, value);
     }
 }
 
@@ -539,8 +545,16 @@ function scopeItemFactoryForKeyValuePairs<
     // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
     // A key of foo should only add "foo" to the scope.
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        for (const key of keyFactory(kvp)) {
-            result.push([key, scopeItemFactory(kvp, ancestorKeyNodeId === kvp.key.id)]);
+        const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
+
+        let newKeys: ReadonlyArray<string> = keyFactory(kvp);
+
+        if (isRecursive) {
+            newKeys = newKeys.filter((key: string) => key.includes("@"));
+        }
+
+        for (const key of newKeys) {
+            result.push([key, scopeItemFactory(kvp, isRecursive)]);
         }
     }
 
