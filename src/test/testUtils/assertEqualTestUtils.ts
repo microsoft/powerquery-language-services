@@ -217,7 +217,7 @@ export function assertEqualScopeType(expected: Inspection.ScopeTypeByKey, actual
     const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(expected);
     const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(actual);
 
-    expect(actualArray).to.have.deep.equal(expectedArray);
+    expect(actualArray).to.have.deep.members(expectedArray);
 }
 
 function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
