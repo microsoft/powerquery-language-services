@@ -23,6 +23,7 @@ import {
 } from "../../powerquery-language-services";
 import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
+import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export async function assertContainsAutocompleteAnalysis(
     textWithPipe: string,
@@ -130,7 +131,18 @@ export async function assertEqualNodeScope(
 ): Promise<void> {
     const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
-    expect(actual).deep.equal(expected);
+
+    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...expected].sort(
+        (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
+            left.identifier.localeCompare(right.identifier),
+    );
+
+    const sortedActual: ReadonlyArray<TAbridgedNodeScopeItem> = [...actual].sort(
+        (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
+            left.identifier.localeCompare(right.identifier),
+    );
+
+    expect(sortedActual).to.have.deep.members(sortedExpected);
 }
 
 export async function assertEqualPartialSemanticTokensAnalysis(
@@ -149,11 +161,6 @@ export async function assertEqualPartialSemanticTokensAnalysis(
     } else {
         Assert.isUndefined(semanticTokens);
     }
-}
-
-export function assertEqualLocation(expected: ReadonlyArray<Range>, actual: ReadonlyArray<Location>): void {
-    const actualRange: ReadonlyArray<Range> = actual.map((location: Location) => location.range);
-    expect(actualRange).deep.equals(expected);
 }
 
 export async function assertEqualRenameEdits(
@@ -184,7 +191,11 @@ export async function assertEqualRootType(params: {
     readonly settings: InspectionSettings;
 }): Promise<void> {
     const actual: TPowerQueryType = await TestUtils.assertRootType(params.settings, params.text);
-    expect(actual).to.deep.equal(params.expected);
+
+    return assertEqualPowerQueryType({
+        actual,
+        expected: params.expected,
+    });
 }
 
 export async function assertEqualSignatureHelpAnalysis(
@@ -205,13 +216,11 @@ export async function assertEqualSignatureHelpAnalysis(
     }
 }
 
-export async function assertEqualScopeType(
-    textWithPipe: string,
-    expected: Inspection.ScopeTypeByKey,
-    settings: InspectionSettings,
-): Promise<void> {
-    const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType(settings, textWithPipe);
-    expect(actual).to.deep.equal(expected);
+export function assertEqualScopeType(expected: Inspection.ScopeTypeByKey, actual: Inspection.ScopeTypeByKey): void {
+    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(expected);
+    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(actual);
+
+    expect(actualArray).to.have.deep.members(expectedArray);
 }
 
 function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -220,8 +229,42 @@ function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
+function assertEqualPowerQueryType(params: {
+    readonly expected: TPowerQueryType;
+    readonly actual: TPowerQueryType;
+}): void {
+    // Use PowerQuery's built-in deep equality check which handles complex types (like nested Maps) correctly
+    if (TypeUtils.isEqualType(params.expected, params.actual)) {
+        return;
+    }
+
+    // The default error message doesn't handle maps well, so it's easiest to JSON.stringify the types for comparison.
+    // We use a custom replacer to handle potential Maps.
+    const jsonifiedExpected: string = JSON.stringify(params.expected, mapReplacer, 2);
+    const jsonifiedActual: string = JSON.stringify(params.actual, mapReplacer, 2);
+
+    expect(jsonifiedActual).to.equal(jsonifiedExpected, `PowerQuery types are not equal.`);
+}
+
 function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
     if (!MarkupContent.is(value)) {
         throw new Error(`expected value to be MarkupContent`);
     }
+}
+
+function convertScopeTypeByKeyToArray(
+    scopeTypeByKey: Inspection.ScopeTypeByKey,
+): ReadonlyArray<[string, TPowerQueryType]> {
+    return Array.from(scopeTypeByKey.entries()).map(([key, value]: [string, TPowerQueryType]) => [key, value]);
+}
+
+function mapReplacer(_key: string, value: any): any {
+    if (value instanceof Map) {
+        return {
+            __type: "Map",
+            value: Array.from(value.entries()),
+        };
+    }
+
+    return value;
 }

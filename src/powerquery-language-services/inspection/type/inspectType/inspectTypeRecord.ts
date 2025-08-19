@@ -32,15 +32,12 @@ export async function inspectTypeRecord(
             const fields: Map<string, Type.TPowerQueryType> = new Map();
 
             for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
-                if (keyValuePair.value) {
-                    fields.set(
-                        keyValuePair.normalizedKeyLiteral,
-                        // eslint-disable-next-line no-await-in-loop
-                        await inspectXor(state, keyValuePair.value, trace.id),
-                    );
-                } else {
-                    fields.set(keyValuePair.keyLiteral, Type.UnknownInstance);
-                }
+                const valueType: Type.TPowerQueryType = keyValuePair.value
+                    ? // eslint-disable-next-line no-await-in-loop
+                      await inspectXor(state, keyValuePair.value, trace.id)
+                    : Type.UnknownInstance;
+
+                fields.set(keyValuePair.normalizedKeyLiteral, valueType);
             }
 
             result = {

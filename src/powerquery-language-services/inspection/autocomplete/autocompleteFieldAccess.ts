@@ -161,16 +161,13 @@ function createAutocompleteItem(
 ): AutocompleteItem {
     const jaroWinklerScore: number = textUnderPosition ? calculateJaroWinkler(label, textUnderPosition) : 1;
 
-    // If the key is a quoted identifier but doesn't need to be one then slice out the quote contents.
-    const identifierKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(label, false);
-
-    const normalizedLabel: string =
-        identifierKind === IdentifierUtils.IdentifierKind.Quote ? label.slice(2, -1) : label;
-
     return {
         jaroWinklerScore,
         kind: CompletionItemKind.Field,
-        label: normalizedLabel,
+        label: Assert.asDefined(
+            IdentifierUtils.getNormalizedIdentifier(label, { allowGeneralizedIdentifier: true }),
+            `Expected label "${label}" to be a valid identifier`,
+        ),
         powerQueryType,
         textEdit: textEditRange ? TextEdit.replace(textEditRange, label) : undefined,
     };

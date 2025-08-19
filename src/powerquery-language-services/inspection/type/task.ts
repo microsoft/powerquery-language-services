@@ -17,7 +17,6 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-// eslint-disable-next-line require-await
 export async function tryScopeType(
     settings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -39,7 +38,7 @@ export async function tryScopeType(
         trace.id,
     );
 
-    const result: Promise<TriedScopeType> = ResultUtils.ensureResultAsync(
+    const result: TriedScopeType = await ResultUtils.ensureResultAsync(
         () => inspectScopeType(state, nodeId, trace.id),
         settings.locale,
     );
