@@ -386,7 +386,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                 ]));
 
-            it(`WIP [foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, async () => {
+            it(`[foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, async () => {
                 await runTest(`[foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, [
                     {
                         identifier: "@foo",

@@ -528,6 +528,14 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({ text: `1 is nullable text`, expected: Type.LogicalInstance }));
         });
 
+        describe(`WIP ${Ast.NodeKind.LetExpression}`, () => {
+            it(`let a = "top level", b = [a = a] in b`, async () =>
+                await assertEqualRootType({
+                    text: `let a = "top level", b = [a = a] in b`,
+                    expected: TypeUtils.textLiteral(false, "top level"),
+                }));
+        });
+
         describe(`${Ast.NodeKind.ListExpression}`, () => {
             it(`{1}`, async () =>
                 await assertEqualRootType({

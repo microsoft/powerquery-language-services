@@ -542,18 +542,11 @@ function scopeItemFactoryForKeyValuePairs<
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
 
-    // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
-    // A key of foo should only add "foo" to the scope.
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        const newKeys: ReadonlyArray<string> = keyFactory(kvp);
         const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
 
-        for (const key of newKeys) {
-            // If the KVP isn't a recursive reference then we can add all of the identifiers.
-            // Else we should only include the recursive identifiers.
-            if (!isRecursive || key.includes("@")) {
-                result.push([key, scopeItemFactory(kvp, isRecursive)]);
-            }
+        for (const key of keyFactory(kvp)) {
+            result.push([key, scopeItemFactory(kvp, isRecursive)]);
         }
     }
 

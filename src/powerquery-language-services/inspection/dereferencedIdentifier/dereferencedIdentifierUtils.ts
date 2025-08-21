@@ -30,6 +30,17 @@ import { TypeById } from "../typeCache";
 // - A value node
 // - An external type
 // - Undefined
+//
+// Examples of dereferencing:
+//     // both keys evaluate to "top level"
+//     // it doesn't matter if you add a '@' which isn't needed
+//     let foo = "top level value", bar = [key1 = foo, key2 = @foo] in bar
+//
+//     // evaluates to "top level value"
+//     let foo = "top level value" in [foo = foo]
+//
+//     // throws an error as it's a circular reference (i.e. referencing the key in the record)
+//     let foo = "top level value" in [foo = @foo]
 export async function tryBuildDereferencedIdentifierPath(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
