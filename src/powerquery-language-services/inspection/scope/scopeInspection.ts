@@ -304,10 +304,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         state,
         nodeScope,
         keyValuePairs,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
-                allowRecursive: true,
-            }),
+        { allowRecursive: true },
         scopeItemFactoryForLetVariable,
         trace.id,
     );
@@ -316,8 +313,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
+        { allowRecursive: true },
         scopeItemFactoryForLetVariable,
     );
 
@@ -350,11 +346,10 @@ function inspectRecordExpressionOrRecordLiteral(
         state,
         nodeScope,
         keyValuePairs,
-        (kvp: NodeIdMapIterator.RecordKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
-                allowGeneralizedIdentifier: true,
-                allowRecursive: true,
-            }),
+        {
+            allowGeneralizedIdentifier: true,
+            allowRecursive: true,
+        },
         scopeItemFactoryForRecordMember,
         trace.id,
     );
@@ -386,8 +381,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            (kvp: NodeIdMapIterator.SectionKeyValuePair) =>
-                IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
+            { allowRecursive: true },
             scopeItemFactoryForSectionMember,
         );
 
@@ -407,7 +401,7 @@ function inspectKeyValuePairs<
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<KVP>,
-    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
@@ -427,7 +421,7 @@ function inspectKeyValuePairs<
         const newScopeItems: ReadonlyArray<[string, T]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            keyFactory,
+            getAllowedIdentifiersOptions,
             scopeItemFactory,
         );
 
@@ -537,7 +531,7 @@ function scopeItemFactoryForKeyValuePairs<
 >(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
-    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
@@ -545,8 +539,10 @@ function scopeItemFactoryForKeyValuePairs<
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
         const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
 
-        for (const key of keyFactory(kvp)) {
-            result.push([key, scopeItemFactory(kvp, isRecursive)]);
+        for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
+            if (!isRecursive || key.includes("@")) {
+                result.push([key, scopeItemFactory(kvp, isRecursive)]);
+            }
         }
     }
 
