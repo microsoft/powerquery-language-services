@@ -41,7 +41,7 @@ export enum ScopeItemKind {
 
 export interface IScopeItem {
     readonly kind: ScopeItemKind;
-    readonly id: number;
+    readonly nodeId: number;
     readonly isRecursive: boolean;
 }
 

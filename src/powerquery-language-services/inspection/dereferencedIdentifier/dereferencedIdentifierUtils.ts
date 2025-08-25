@@ -7,14 +7,14 @@ import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parse
 import {
     AstXorNode,
     NodeIdMap,
+    NodeIdMapUtils,
     TXorNode,
-    XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { assertGetOrCreateNodeScope, NodeScope, ScopeById, ScopeItemKind, TScopeItem } from "../scope";
+import { assertGetOrCreateNodeScope, ScopeById, ScopeItemKind, TScopeItem } from "../scope";
 import {
     DereferencedIdentifierExternal,
     DereferencedIdentifierKind,
@@ -23,7 +23,6 @@ import {
 } from "././dereferencedIdentifier";
 import { ExternalTypeUtils, Inspection, InspectionSettings, TraceUtils } from "../..";
 import { InspectionTraceConstant } from "../../trace";
-import { TypeById } from "../typeCache";
 
 // Recursively dereference the identifier until it reaches either:
 // - A recursive identifier which is not supported
@@ -31,20 +30,27 @@ import { TypeById } from "../typeCache";
 // - An external type
 // - Undefined
 //
-// Examples of dereferencing:
-//     // both keys evaluate to "top level"
-//     // it doesn't matter if you add a '@' which isn't needed
-//     let foo = "top level value", bar = [key1 = foo, key2 = @foo] in bar
+// Below some examples of dereferencing local identifiers with the recursive '@' prefix.
 //
-//     // evaluates to "top level value"
-//     let foo = "top level value" in [foo = foo]
+// Evaluates to: [key1 = 42, key2 = 42]
+// let foo = 42 in [key1 = foo, key2 = @foo]
 //
-//     // throws an error as it's a circular reference (i.e. referencing the key in the record)
-//     let foo = "top level value" in [foo = @foo]
+// Evaluates to: -1
+// let
+//   SomeFunction = (x as number) => -1,
+//   Record = [SomeFunction = (x as number) => if x = 42 then 42 else SomeFunction(x + 1)]
+// in
+//   Record[SomeFunction](0)
+//
+// Evaluates to: 42
+// let
+//   SomeFunction = (x as number) => -1,
+//   Record = [SomeFunction = (x as number) => if x = 42 then 42 else @SomeFunction(x + 1)]
+// in
+//   Record[SomeFunction](0)
 export async function tryBuildDereferencedIdentifierPath(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    eachScopeById: TypeById | undefined,
     xorNode: TXorNode,
     // If a map is given, then it's mutated and returned.
     // Else create a new Map instance and return that instead.
@@ -74,7 +80,7 @@ export async function tryBuildDereferencedIdentifierPath(
         const dereferenceResult: PQP.Result<
             ReadonlyArray<TDereferencedIdentifier>,
             PQP.CommonError.CommonError
-        > = await dereferenceScopeItem(updatedSettings, nodeIdMapCollection, eachScopeById, xorNode, scopeById, []);
+        > = await dereferenceScopeItem(updatedSettings, nodeIdMapCollection, xorNode, scopeById, xorNode);
 
         trace.exit();
 
@@ -91,10 +97,9 @@ export async function tryBuildDereferencedIdentifierPath(
 async function dereferenceScopeItem(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-    eachScopeById: TypeById | undefined,
     identifierAstXorNode: AstXorNode<Ast.Identifier | Ast.IdentifierExpression>,
     scopeById: ScopeById,
-    deferencePath: TDereferencedIdentifier[],
+    initialIdentifierXorNode: AstXorNode<Ast.Identifier | Ast.IdentifierExpression>,
 ): Promise<PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError>> {
     const trace: Trace = inspectionSettings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
@@ -108,123 +113,194 @@ async function dereferenceScopeItem(
         initialCorrelationId: trace.id,
     };
 
-    let currentIdentifierLiteral: string = AstUtils.getIdentifierLiteral(identifierAstXorNode.node);
-    let currentXorNode: XorNode<Ast.Identifier | Ast.IdentifierExpression> = identifierAstXorNode;
+    const dereferencedPath: TDereferencedIdentifier[] = [];
 
-    while (currentIdentifierLiteral !== undefined) {
-        if (currentXorNode === undefined) {
-            return onIdentifierNotInScope(
-                deferencePath,
-                currentXorNode,
-                trace,
-                updatedSettings,
-                currentIdentifierLiteral,
-            );
-        }
+    const initialTriedNodeScope: Inspection.TriedNodeScope = await assertGetOrCreateNodeScope(
+        updatedSettings,
+        nodeIdMapCollection,
+        updatedSettings.eachScopeById,
+        initialIdentifierXorNode.node.id,
+        scopeById,
+    );
 
-        // eslint-disable-next-line no-await-in-loop
-        const triedNodeScope: Inspection.TriedNodeScope = await assertGetOrCreateNodeScope(
-            inspectionSettings,
-            nodeIdMapCollection,
-            eachScopeById,
-            currentXorNode.node.id,
-            scopeById,
+    if (ResultUtils.isError(initialTriedNodeScope)) {
+        trace.exit({ [TraceConstant.Result]: initialTriedNodeScope.kind });
+
+        return initialTriedNodeScope;
+    }
+
+    let currentScopeItem: TScopeItem | undefined = initialTriedNodeScope.value.get(
+        AstUtils.getIdentifierLiteral(initialIdentifierXorNode.node),
+    );
+
+    if (currentScopeItem === undefined) {
+        return onIdentifierNotInScope(
+            dereferencedPath,
+            identifierAstXorNode,
+            trace,
+            updatedSettings,
+            AstUtils.getIdentifierLiteral(identifierAstXorNode.node),
         );
+    }
 
-        if (ResultUtils.isError(triedNodeScope)) {
-            trace.exit({ [TraceConstant.Result]: triedNodeScope.kind });
+    while (currentScopeItem.kind) {
+        const currentXorNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, currentScopeItem.nodeId);
 
-            return triedNodeScope;
-        }
-
-        const nodeScope: NodeScope = triedNodeScope.value;
-        let scopeItem: TScopeItem | undefined = nodeScope.get(currentIdentifierLiteral);
-
-        if (scopeItem === undefined && currentIdentifierLiteral.startsWith("@")) {
-            scopeItem = nodeScope.get(currentIdentifierLiteral.slice(1));
-        }
-
-        if (scopeItem === undefined) {
-            return onIdentifierNotInScope(
-                deferencePath,
-                currentXorNode,
-                trace,
-                updatedSettings,
-                currentIdentifierLiteral,
-            );
-        }
-
-        switch (scopeItem.kind) {
+        switch (currentScopeItem.kind) {
             case ScopeItemKind.LetVariable:
             case ScopeItemKind.RecordField:
             case ScopeItemKind.SectionMember:
                 // eslint-disable-next-line no-lone-blocks
                 {
-                    const possibleToDerefence: TXorNode | undefined = scopeItem.value;
+                    const potentialDereference: TXorNode | undefined = currentScopeItem.value;
 
+                    // Most commonly happens when a variable has yet to be defined,
+                    // for example, a context node for a RecordExpression `[let foo = 1, bar = |`
+                    if (potentialDereference === undefined) {
+                        return onIdentifierNotInScope(
+                            dereferencedPath,
+                            identifierAstXorNode,
+                            trace,
+                            updatedSettings,
+                            AstUtils.getIdentifierLiteral(identifierAstXorNode.node),
+                        );
+                    }
+
+                    // It's referencing another identifier
                     if (
-                        possibleToDerefence !== undefined &&
-                        XorNodeUtils.isAstChecked<Ast.Identifier | Ast.IdentifierExpression>(possibleToDerefence, [
+                        potentialDereference !== undefined &&
+                        XorNodeUtils.isAstChecked<Ast.Identifier | Ast.IdentifierExpression>(potentialDereference, [
                             Ast.NodeKind.Identifier,
                             Ast.NodeKind.IdentifierExpression,
                         ])
                     ) {
-                        deferencePath.push({
-                            kind: DereferencedIdentifierKind.InScopeDereference,
-                            identifierLiteral: currentIdentifierLiteral,
-                            nextScopeItem: scopeItem,
-                            xorNode: currentXorNode,
-                        });
+                        const currentIdentifierLiteral: string = AstUtils.getIdentifierLiteral(
+                            potentialDereference.node,
+                        );
 
-                        currentIdentifierLiteral = AstUtils.getIdentifierLiteral(possibleToDerefence.node);
+                        // If it's a non-recursive dereference
+                        if (!currentScopeItem.isRecursive) {
+                            // Generate the scope for the next dereference (if needed)
+                            // eslint-disable-next-line no-await-in-loop
+                            const triedNodeScope: Inspection.TriedNodeScope = await assertGetOrCreateNodeScope(
+                                updatedSettings,
+                                nodeIdMapCollection,
+                                updatedSettings.eachScopeById,
+                                potentialDereference.node.id,
+                                scopeById,
+                            );
 
-                        // Infinite recursion on an inclusive identifier.
-                        // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
-                        if (
-                            currentIdentifierLiteral.startsWith("@") &&
-                            currentXorNode.node.id === possibleToDerefence.node.id
-                        ) {
+                            if (ResultUtils.isError(triedNodeScope)) {
+                                trace.exit({ [TraceConstant.Result]: triedNodeScope.kind });
+
+                                return triedNodeScope;
+                            }
+
+                            const nextScopeItem: TScopeItem | undefined =
+                                triedNodeScope.value.get(currentIdentifierLiteral);
+
+                            if (nextScopeItem === undefined) {
+                                return onIdentifierNotInScope(
+                                    dereferencedPath,
+                                    currentXorNode,
+                                    trace,
+                                    updatedSettings,
+                                    currentIdentifierLiteral,
+                                );
+                            }
+
+                            dereferencedPath.push({
+                                kind: DereferencedIdentifierKind.InScopeDereference,
+                                xorNode: currentXorNode,
+                                identifierLiteral: currentIdentifierLiteral,
+                                nextScopeItem,
+                            });
+
+                            currentScopeItem = nextScopeItem;
+                        }
+                        // Else if it's a recursive scopeItem and we ARE looking for a recursive scopeItem,
+                        // then we're done.
+                        else if (currentIdentifierLiteral.startsWith("@")) {
                             return onRecursiveIdentifierLiteral(
-                                deferencePath,
+                                dereferencedPath,
                                 currentXorNode,
                                 trace,
                                 currentIdentifierLiteral,
                             );
                         }
+                        // Else it's a recursive scopeItem and we ARE NOT looking for a recursive scopeItem,
+                        // then look up the ancestry chain for a non-recursive scopeItem of the same name.
+                        else {
+                            const ancestoryScopeItem: TScopeItem | undefined = findNonRecursiveScopeItemInAncestors(
+                                nodeIdMapCollection,
+                                scopeById,
+                                currentIdentifierLiteral,
+                                currentXorNode.node.id,
+                            );
 
-                        currentXorNode = possibleToDerefence;
+                            if (ancestoryScopeItem === undefined) {
+                                return onIdentifierNotInScope(
+                                    dereferencedPath,
+                                    currentXorNode,
+                                    trace,
+                                    updatedSettings,
+                                    currentIdentifierLiteral,
+                                );
+                            }
+
+                            currentScopeItem = ancestoryScopeItem;
+                        }
                     } else {
-                        return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
+                        return onInScopeValue(dereferencedPath, currentXorNode, trace, currentScopeItem);
                     }
                 }
 
                 break;
 
             case ScopeItemKind.Each:
-                return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
+                return onInScopeValue(dereferencedPath, currentXorNode, trace, currentScopeItem);
 
             case ScopeItemKind.Parameter:
-                return onInScopeValue(deferencePath, currentXorNode, trace, scopeItem);
+                return onInScopeValue(dereferencedPath, currentXorNode, trace, currentScopeItem);
 
             case ScopeItemKind.Undefined:
-                return onIdentifierNotInScope(
-                    deferencePath,
-                    currentXorNode,
-                    trace,
-                    updatedSettings,
-                    currentIdentifierLiteral,
-                );
+                throw new Error("Double check if undefined is even needed");
 
             default:
-                throw Assert.isNever(scopeItem);
+                throw Assert.isNever(currentScopeItem);
         }
     }
 
     trace.exit();
 
-    return ResultUtils.ok(deferencePath);
+    return ResultUtils.ok(dereferencedPath);
 }
 
+// Sometimes in the scope of a lower node (e.g. a leaf node) there's a scopeItem that matches the
+// identifier literal we're looking for, but it's marked as recursive.
+// In that case we want to look up the tree to see if there's a non-recursive scopeItem of the same name further up.
+function findNonRecursiveScopeItemInAncestors(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    scopeById: ScopeById,
+    identifierLiteral: string,
+    initialNodeId: number,
+): TScopeItem | undefined {
+    let currentNodeId: number | undefined = nodeIdMapCollection.parentIdById.get(initialNodeId);
+
+    while (currentNodeId) {
+        const scopeItem: TScopeItem | undefined = scopeById.get(currentNodeId)?.get(identifierLiteral);
+
+        if (scopeItem && !scopeItem.isRecursive) {
+            return scopeItem;
+        }
+
+        currentNodeId = nodeIdMapCollection.parentIdById.get(currentNodeId);
+    }
+
+    return undefined;
+}
+
+// Validates whether an unknown identifier is an externally defined type (e.g. a built-in function)
 function onIdentifierNotInScope(
     dereferencePath: TDereferencedIdentifier[],
     xorNode: TXorNode,

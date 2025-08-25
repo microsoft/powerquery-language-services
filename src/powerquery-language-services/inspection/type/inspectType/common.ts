@@ -128,7 +128,7 @@ export async function getOrCreateScopeItemType(
         state.initialCorrelationId,
     );
 
-    const nodeId: number = scopeItem.id;
+    const nodeId: number = scopeItem.nodeId;
     const type: Type.TPowerQueryType | undefined = state.typeById.get(nodeId);
 
     if (type !== undefined) {
@@ -428,7 +428,6 @@ export async function dereferencedIdentifierType(
     > = await tryBuildDereferencedIdentifierPath(
         InspectTypeStateUtils.toInspectionSettings(state, trace),
         state.nodeIdMapCollection,
-        state.eachScopeById,
         xorNode,
         state.scopeById,
     );
@@ -467,7 +466,7 @@ export async function dereferencedIdentifierType(
                     break;
 
                 case ScopeItemKind.Each:
-                    result = state.eachScopeById?.get(lastDereferencedIdentifier.scopeItem.id) ?? Type.AnyInstance;
+                    result = state.eachScopeById?.get(lastDereferencedIdentifier.scopeItem.nodeId) ?? Type.AnyInstance;
                     break;
 
                 case ScopeItemKind.Undefined:

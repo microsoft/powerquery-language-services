@@ -238,7 +238,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
                 "_",
                 {
                     kind: ScopeItemKind.Each,
-                    id: eachExpr.node.id,
+                    nodeId: eachExpr.node.id,
                     isRecursive: false,
                     eachExpression: eachExpr,
                     implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
@@ -559,7 +559,7 @@ function scopeItemFactoryForLetVariable(
 ): LetVariableScopeItem {
     return {
         kind: ScopeItemKind.LetVariable,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,
@@ -572,7 +572,7 @@ function scopeItemFactoryForParameter(
 ): ParameterScopeItem {
     return {
         kind: ScopeItemKind.Parameter,
-        id: parameter.id,
+        nodeId: parameter.id,
         isRecursive: false,
         name: parameter.name,
         isOptional: parameter.isOptional,
@@ -587,7 +587,7 @@ function scopeItemFactoryForRecordMember(
 ): RecordFieldScopeItem {
     return {
         kind: ScopeItemKind.RecordField,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,
@@ -600,7 +600,7 @@ function scopeItemFactoryForSectionMember(
 ): SectionMemberScopeItem {
     return {
         kind: ScopeItemKind.SectionMember,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,

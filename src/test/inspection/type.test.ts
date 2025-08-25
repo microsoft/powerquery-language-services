@@ -528,10 +528,10 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({ text: `1 is nullable text`, expected: Type.LogicalInstance }));
         });
 
-        describe(`WIP ${Ast.NodeKind.LetExpression}`, () => {
-            it(`let a = "top level", b = [a = a] in b`, async () =>
+        describe(`${Ast.NodeKind.LetExpression}`, () => {
+            it(`let a = "top level" in [a = a][a]`, async () =>
                 await assertEqualRootType({
-                    text: `let a = "top level", b = [a = a] in b`,
+                    text: `let a = "top level" in [a = a][a]`,
                     expected: TypeUtils.textLiteral(false, "top level"),
                 }));
         });
@@ -892,7 +892,7 @@ describe(`Inspection - Type`, () => {
                     settings: PrimitiveInspectionSettings,
                 }));
 
-            it(`inclusve identifier`, async () =>
+            it(`WIP inclusve identifier`, async () =>
                 await assertEqualRootType({
                     text: `let foo = @foo in foo`,
                     expected: Type.AnyInstance,

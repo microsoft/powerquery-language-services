@@ -104,7 +104,6 @@ async function externalInvokeRequest(
     > = await tryBuildDereferencedIdentifierPath(
         InspectTypeStateUtils.toInspectionSettings(state, trace),
         state.nodeIdMapCollection,
-        state.eachScopeById,
         identifier,
         state.scopeById,
     );
