@@ -133,13 +133,15 @@ async function dereferenceScopeItem(
         AstUtils.getIdentifierLiteral(initialIdentifierXorNode.node),
     );
 
+    let currentIdentifierLiteral: string = AstUtils.getIdentifierLiteral(initialIdentifierXorNode.node);
+
     if (currentScopeItem === undefined) {
         return onIdentifierNotInScope(
             dereferencedPath,
             identifierAstXorNode,
             trace,
             updatedSettings,
-            AstUtils.getIdentifierLiteral(identifierAstXorNode.node),
+            currentIdentifierLiteral,
         );
     }
 
@@ -159,10 +161,10 @@ async function dereferenceScopeItem(
                     if (potentialDereference === undefined) {
                         return onIdentifierNotInScope(
                             dereferencedPath,
-                            identifierAstXorNode,
+                            currentXorNode,
                             trace,
                             updatedSettings,
-                            AstUtils.getIdentifierLiteral(identifierAstXorNode.node),
+                            currentIdentifierLiteral,
                         );
                     }
 
@@ -174,9 +176,7 @@ async function dereferenceScopeItem(
                             Ast.NodeKind.IdentifierExpression,
                         ])
                     ) {
-                        const currentIdentifierLiteral: string = AstUtils.getIdentifierLiteral(
-                            potentialDereference.node,
-                        );
+                        currentIdentifierLiteral = AstUtils.getIdentifierLiteral(potentialDereference.node);
 
                         // If it's a non-recursive dereference
                         if (!currentScopeItem.isRecursive) {
@@ -264,7 +264,15 @@ async function dereferenceScopeItem(
                 return onInScopeValue(dereferencedPath, currentXorNode, trace, currentScopeItem);
 
             case ScopeItemKind.Undefined:
-                throw new Error("Double check if undefined is even needed");
+                dereferencedPath.push({
+                    kind: DereferencedIdentifierKind.Undefined,
+                    identifierLiteral: currentIdentifierLiteral,
+                    xorNode: currentXorNode,
+                });
+
+                trace.exit();
+
+                return ResultUtils.ok(dereferencedPath);
 
             default:
                 throw Assert.isNever(currentScopeItem);
