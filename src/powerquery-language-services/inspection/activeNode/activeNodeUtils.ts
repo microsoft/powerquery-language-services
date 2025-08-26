@@ -423,23 +423,18 @@ function findLeafIdentifier(
             result = {
                 node: identifier,
                 isRecursive: false,
-                normalizedLiteral: Assert.asDefined(
-                    IdentifierUtils.getNormalizedIdentifier(identifier.literal, {
-                        allowGeneralizedIdentifier: identifier.kind === Ast.NodeKind.GeneralizedIdentifier,
-                    }),
-                    `Expected identifier "${identifier.literal}" to be a valid identifier`,
-                ),
+                normalizedLiteral: IdentifierUtils.assertNormalizedIdentifier(identifier.literal, {
+                    allowGeneralizedIdentifier: identifier.kind === Ast.NodeKind.GeneralizedIdentifier,
+                }),
                 normalizedRecursiveLiteral: undefined,
             };
 
             break;
 
         case Ast.NodeKind.IdentifierExpression: {
-            const normalizedLiteral: string = Assert.asDefined(
-                IdentifierUtils.getNormalizedIdentifier(identifier.identifier.literal, {
-                    allowGeneralizedIdentifier: false,
-                }),
-                `Expected identifier "${identifier.identifier.literal}" to be a valid identifier`,
+            const normalizedLiteral: string = IdentifierUtils.assertNormalizedIdentifier(
+                identifier.identifier.literal,
+                { allowGeneralizedIdentifier: false },
             );
 
             result = {

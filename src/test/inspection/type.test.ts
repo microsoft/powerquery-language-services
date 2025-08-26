@@ -101,11 +101,16 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.AsExpression}`, () => {
             it(`1 as number`, async () =>
-                await assertEqualRootType({ text: `1 as number`, expected: Type.NumberInstance }));
+                await assertEqualRootType({
+                    text: `1 as number`,
+                    expected: Type.NumberInstance,
+                }));
 
-            it(`1 as text`, async () => await assertEqualRootType({ text: `1 as text`, expected: Type.TextInstance }));
-
-            it(`1 as any`, async () => await assertEqualRootType({ text: `1 as any`, expected: Type.AnyInstance }));
+            it(`1 as text`, async () =>
+                await assertEqualRootType({
+                    text: `1 as text`,
+                    expected: Type.TextInstance,
+                }));
 
             it(`1 as any`, async () =>
                 await assertEqualRootType({

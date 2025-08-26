@@ -4,7 +4,6 @@
 import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
@@ -60,10 +59,7 @@ export async function inspectTypeFieldSelector(
 
     const result: Type.TPowerQueryType = getFieldSelectorType(
         fieldType,
-        Assert.asDefined(
-            IdentifierUtils.getNormalizedIdentifier(fieldName.literal, { allowGeneralizedIdentifier: true }),
-            "Failed to get normalized identifier",
-        ),
+        IdentifierUtils.assertNormalizedIdentifier(fieldName.literal, { allowGeneralizedIdentifier: true }),
         isOptional,
     );
 

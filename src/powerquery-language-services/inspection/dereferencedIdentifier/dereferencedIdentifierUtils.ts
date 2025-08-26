@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, AstUtils, IdentifierExpressionUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AstXorNode,
     NodeIdMap,
@@ -316,17 +316,10 @@ function onIdentifierNotInScope(
     inspectionSettings: InspectionSettings,
     identifierLiteral: string,
 ): PQP.Result<TDereferencedIdentifier[], PQP.CommonError.CommonError> {
-    // Strip `@` and quoted identifier for external type resolution.
-    if (identifierLiteral.startsWith("@")) {
-        identifierLiteral = identifierLiteral.substring(1);
-    }
-
-    if (identifierLiteral.startsWith('#"') && identifierLiteral.endsWith('"')) {
-        identifierLiteral = identifierLiteral.substring(2, identifierLiteral.length - 1);
-    }
-
     const externalType: TPowerQueryType | undefined = inspectionSettings.library.externalTypeResolver(
-        ExternalTypeUtils.valueTypeRequest(identifierLiteral),
+        ExternalTypeUtils.valueTypeRequest(
+            IdentifierExpressionUtils.assertNormalizedIdentifierExpression(identifierLiteral),
+        ),
     );
 
     const finalPath: DereferencedIdentifierExternal | DereferencedIdentifierUndefined = externalType
