@@ -308,6 +308,15 @@ function onIdentifierNotInScope(
     inspectionSettings: InspectionSettings,
     identifierLiteral: string,
 ): PQP.Result<TDereferencedIdentifier[], PQP.CommonError.CommonError> {
+    // Strip `@` and quoted identifier for external type resolution.
+    if (identifierLiteral.startsWith("@")) {
+        identifierLiteral = identifierLiteral.substring(1);
+    }
+
+    if (identifierLiteral.startsWith('#"') && identifierLiteral.endsWith('"')) {
+        identifierLiteral = identifierLiteral.substring(2, identifierLiteral.length - 1);
+    }
+
     const externalType: TPowerQueryType | undefined = inspectionSettings.library.externalTypeResolver(
         ExternalTypeUtils.valueTypeRequest(identifierLiteral),
     );

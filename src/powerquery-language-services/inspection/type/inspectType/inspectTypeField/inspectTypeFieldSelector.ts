@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
@@ -57,7 +58,15 @@ export async function inspectTypeFieldSelector(
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName.literal, isOptional);
+    const result: Type.TPowerQueryType = getFieldSelectorType(
+        fieldType,
+        Assert.asDefined(
+            IdentifierUtils.getNormalizedIdentifier(fieldName.literal, { allowGeneralizedIdentifier: true }),
+            "Failed to get normalized identifier",
+        ),
+        isOptional,
+    );
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;

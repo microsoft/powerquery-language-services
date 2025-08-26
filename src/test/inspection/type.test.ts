@@ -855,79 +855,79 @@ describe(`Inspection - Type`, () => {
 
             it(`+true`, async () => await assertEqualRootType({ text: `+true`, expected: Type.NoneInstance }));
         });
+    });
 
-        describe(`primitive static analysis`, () => {
-            it(`${Ast.NodeKind.ListExpression}`, async () =>
-                await assertEqualRootType({
-                    text: `{1, 2}`,
-                    expected: Type.ListInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+    describe(`primitive static analysis`, () => {
+        it(`${Ast.NodeKind.ListExpression}`, async () =>
+            await assertEqualRootType({
+                text: `{1, 2}`,
+                expected: Type.ListInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
 
-            it(`${Ast.NodeKind.ListType}`, async () =>
-                await assertEqualRootType({
-                    text: `type { foo }`,
-                    expected: Type.TypePrimitiveInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+        it(`${Ast.NodeKind.ListType}`, async () =>
+            await assertEqualRootType({
+                text: `type { foo }`,
+                expected: Type.TypePrimitiveInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
 
-            it(`${Ast.NodeKind.RangeExpression}`, async () =>
-                await assertEqualRootType({
-                    text: `{0..1}`,
-                    expected: Type.ListInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+        it(`${Ast.NodeKind.RangeExpression}`, async () =>
+            await assertEqualRootType({
+                text: `{0..1}`,
+                expected: Type.ListInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
 
-            it(`${Ast.NodeKind.RecordExpression}`, async () =>
-                await assertEqualRootType({
-                    text: `[foo = "bar"]`,
-                    expected: Type.RecordInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+        it(`${Ast.NodeKind.RecordExpression}`, async () =>
+            await assertEqualRootType({
+                text: `[foo = "bar"]`,
+                expected: Type.RecordInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
 
-            it(`${Ast.NodeKind.RecordType}`, async () =>
-                await assertEqualRootType({
-                    text: `type [foo]`,
-                    expected: Type.TypePrimitiveInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+        it(`${Ast.NodeKind.RecordType}`, async () =>
+            await assertEqualRootType({
+                text: `type [foo]`,
+                expected: Type.TypePrimitiveInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
 
-            it(`WIP inclusve identifier`, async () =>
-                await assertEqualRootType({
-                    text: `let foo = @foo in foo`,
-                    expected: Type.AnyInstance,
-                    settings: PrimitiveInspectionSettings,
-                }));
+        it(`inclusve identifier`, async () =>
+            await assertEqualRootType({
+                text: `let foo = @foo in foo`,
+                expected: Type.AnyInstance,
+                settings: PrimitiveInspectionSettings,
+            }));
+    });
+
+    describe(`external type`, () => {
+        describe(`value`, () => {
+            it(`resolves to external type`, async () =>
+                await assertEqualRootType({ text: `foo`, expected: Type.FunctionInstance }));
+
+            it(`indirect identifier resolves to external type`, async () =>
+                await assertEqualRootType({ text: `let bar = foo in bar`, expected: Type.FunctionInstance }));
+
+            it(`fails to resolve to external type`, async () =>
+                await assertEqualRootType({ text: `bar`, expected: Type.UnknownInstance }));
         });
 
-        describe(`external type`, () => {
-            describe(`value`, () => {
-                it(`resolves to external type`, async () =>
-                    await assertEqualRootType({ text: `foo`, expected: Type.FunctionInstance }));
+        describe(`invocation`, () => {
+            it(`resolves with identifier`, async () =>
+                await assertEqualRootType({ text: `foo()`, expected: Type.TextInstance }));
 
-                it(`indirect identifier resolves to external type`, async () =>
-                    await assertEqualRootType({ text: `let bar = foo in bar`, expected: Type.FunctionInstance }));
+            it(`resolves with dereferenced identifier`, async () =>
+                await assertEqualRootType({ text: `let bar = foo in bar()`, expected: Type.TextInstance }));
 
-                it(`fails to resolve to external type`, async () =>
-                    await assertEqualRootType({ text: `bar`, expected: Type.UnknownInstance }));
-            });
+            it(`resolves based on argument`, async () => {
+                const expression1: string = `foo()`;
+                const expected1: Type.Text = Type.TextInstance;
+                await assertEqualRootType({ text: expression1, expected: expected1 });
 
-            describe(`invocation`, () => {
-                it(`resolves with identifier`, async () =>
-                    await assertEqualRootType({ text: `foo()`, expected: Type.TextInstance }));
-
-                it(`resolves with dereferenced identifier`, async () =>
-                    await assertEqualRootType({ text: `let bar = foo in bar()`, expected: Type.TextInstance }));
-
-                it(`resolves based on argument`, async () => {
-                    const expression1: string = `foo()`;
-                    const expected1: Type.Text = Type.TextInstance;
-                    await assertEqualRootType({ text: expression1, expected: expected1 });
-
-                    const expression2: string = `foo("bar")`;
-                    const expected2: Type.Number = Type.NumberInstance;
-                    await assertEqualRootType({ text: expression2, expected: expected2 });
-                });
+                const expression2: string = `foo("bar")`;
+                const expected2: Type.Number = Type.NumberInstance;
+                await assertEqualRootType({ text: expression2, expected: expected2 });
             });
         });
     });
