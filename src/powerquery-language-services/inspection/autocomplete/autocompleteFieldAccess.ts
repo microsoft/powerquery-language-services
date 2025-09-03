@@ -164,10 +164,7 @@ function createAutocompleteItem(
     return {
         jaroWinklerScore,
         kind: CompletionItemKind.Field,
-        label: Assert.asDefined(
-            IdentifierUtils.getNormalizedIdentifier(label, { allowGeneralizedIdentifier: true }),
-            `Expected label "${label}" to be a valid identifier`,
-        ),
+        label: IdentifierUtils.assertNormalizedIdentifier(label, { allowGeneralizedIdentifier: true }),
         powerQueryType,
         textEdit: textEditRange ? TextEdit.replace(textEditRange, label) : undefined,
     };

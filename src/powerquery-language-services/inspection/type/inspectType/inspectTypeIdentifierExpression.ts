@@ -5,8 +5,9 @@ import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/la
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { dereferencedIdentifierType, InspectTypeState } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
+import { dereferencedIdentifierType } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
 
 export async function inspectTypeIdentifierExpression(
     state: InspectTypeState,

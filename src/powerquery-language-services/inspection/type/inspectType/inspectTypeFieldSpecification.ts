@@ -6,7 +6,8 @@ import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-pa
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, inspectXor } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
+import { inspectXor } from "./common";
 
 export async function inspectTypeFieldSpecification(
     state: InspectTypeState,

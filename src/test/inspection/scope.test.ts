@@ -73,6 +73,18 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                 ]));
         });
 
+        describe(`${Ast.NodeKind.FieldProjection}`, () => {
+            // We shouldn't include scope for field projections
+            it(`WIP let person = [name = "john doe", age = 42] in person[ [|`, async () =>
+                await runTest(`let person = [name = "john doe", age = 42] in person[ [|`, []));
+        });
+
+        describe(`${Ast.NodeKind.FieldSelector}`, () => {
+            // We shouldn't include scope for field selectors
+            it(`let person = [name = "john doe", age = 42] in person[|`, async () =>
+                await runTest(`let person = [name = "john doe", age = 42] in person[|`, []));
+        });
+
         describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, async () => await runTest(`|(x) => z`, []));
 
@@ -386,7 +398,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
                     },
                 ]));
 
-            it(`WIP [foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, async () => {
+            it(`[foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, async () => {
                 await runTest(`[foo = (x as number) => if x > 0 then @|foo(x - 1) else 42, bar = null][foo](10)`, [
                     {
                         identifier: "@foo",

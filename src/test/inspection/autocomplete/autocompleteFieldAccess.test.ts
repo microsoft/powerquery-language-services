@@ -5,7 +5,7 @@ import "mocha";
 import { ResultUtils, Task } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
-import { expectNoSuggestions, expectTopSuggestions } from "../../testUtils/autocompleteTestUtils";
+import { expectNoSuggestions, expectSuggestions } from "../../testUtils/autocompleteTestUtils";
 import { Inspection, Position } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
 import { expect } from "chai";
@@ -19,30 +19,25 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
     }
 
     function expectNoFieldAccessSuggestions(textWithPipe: string): Promise<void> {
-        return expectNoSuggestions(textWithPipe, fieldAccessAutocompleteItemSelector);
-    }
-
-    function expectTopFieldAccessAutocompleteItems(
-        textWithPipe: string,
-        labels: ReadonlyArray<string>,
-        isTextEdit: boolean,
-    ): Promise<void> {
-        return expectTopSuggestions(
+        return expectNoSuggestions({
             textWithPipe,
-            fieldAccessAutocompleteItemSelector,
-            labels.map((label: string) => ({
+            autocompleteItemSelector: fieldAccessAutocompleteItemSelector,
+        });
+    }
+
+    function expectFieldAccessSuggestions(params: {
+        readonly textWithPipe: string;
+        readonly expectedLabels: ReadonlyArray<string>;
+        readonly expectedIsTextEdit: boolean;
+    }): Promise<void> {
+        return expectSuggestions({
+            textWithPipe: params.textWithPipe,
+            expected: params.expectedLabels.map((label: string) => ({
                 label,
-                isTextEdit,
+                isTextEdit: params.expectedIsTextEdit,
             })),
-        );
-    }
-
-    function expectTopFieldAccessInserts(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
-        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, false);
-    }
-
-    function expectTopFieldAccessReplacements(textWithPipe: string, labels: ReadonlyArray<string>): Promise<void> {
-        return expectTopFieldAccessAutocompleteItems(textWithPipe, labels, true);
+            autocompleteItemSelector: fieldAccessAutocompleteItemSelector,
+        });
     }
 
     describe(`InspectedFieldAccess`, () => {
@@ -337,52 +332,104 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
         });
     });
 
-    describe(`top suggestions`, () => {
+    describe(`expected labels`, () => {
         describe(`FieldSelection`, () => {
+            it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
+
             it(`[][|`, () => expectNoFieldAccessSuggestions(`[][|`));
 
             it(`[][ |`, () => expectNoFieldAccessSuggestions(`[][ |`));
 
-            it(`[car = 1, cat = 2][| `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][|`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: false,
+                }));
 
-            it(`[car = 1, cat = 2][ | `, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ |`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ |`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ |`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: false,
+                }));
 
-            it(`[car = 1, cat = 2][ | ] `, () =>
-                expectTopFieldAccessInserts(`[car = 1, cat = 2][ | ]`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ | ]`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ | ]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: false,
+                }));
 
             it(`let foo = [car = 1, cat = 2][#"test"|`, () =>
-                expectTopFieldAccessReplacements(`let foo = [car = 1, cat = 2][#"test"|`, [`cat`, `car`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `let foo = [car = 1, cat = 2][#"test"|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][c|`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][c|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][ca|`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ca|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][car|`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][car|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][cart|`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][cart|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][c|]`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][c|]`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][c|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][ca|]`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ca|]`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ca|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][car|]`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][car|]`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][car|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
             it(`[car = 1, cat = 2][cart|]`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][cart|]`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][cart|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
-            it(`[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`, async () => {
-                await expectTopFieldAccessReplacements(
-                    `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
-                    [`#"=requiredQuotedIdentifier"`, "cat"],
-                );
-            });
+            it(`[car = 1, cat = 2][cart|]`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
+                    expectedLabels: [`#"=requiredQuotedIdentifier"`, "cat"],
+                    expectedIsTextEdit: true,
+                }));
         });
 
         describe(`FieldSelection`, () => {
@@ -391,37 +438,76 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
             it(`[][ [ |`, () => expectNoFieldAccessSuggestions(`[][ [ |`));
 
             it(`[car = 1, cat = 2][ [cat], [car|]`, () =>
-                expectTopFieldAccessReplacements(`[car = 1, cat = 2][ [cat], [car|]`, [`car`, `cat`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ [cat], [car|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
-            it(`[car = 1, cat = 2][ [|`, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ [|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ [cat], [car|]`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ [cat], [car|]`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: true,
+                }));
 
-            it(`[car = 1, cat = 2][ [|`, () => expectTopFieldAccessInserts(`[car = 1, cat = 2][ [|`, [`car`, `cat`]));
+            it(`[car = 1, cat = 2][ [|`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ [|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: false,
+                }));
+
+            it(`[car = 1, cat = 2][ [|`, () =>
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[car = 1, cat = 2][ [|`,
+                    expectedLabels: [`car`, `cat`],
+                    expectedIsTextEdit: false,
+                }));
 
             it(`[key with a space = 1][ [|`, () =>
-                expectTopFieldAccessInserts(`[key with a space = 1][ [|`, [`key with a space`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[key with a space = 1][ [|`,
+                    expectedLabels: [`key with a space`],
+                    expectedIsTextEdit: false,
+                }));
 
             it(`[key with a space = 1][ [key|`, () =>
-                expectTopFieldAccessReplacements(`[key with a space = 1][ [key|`, [`key with a space`]));
+                expectFieldAccessSuggestions({
+                    textWithPipe: `[key with a space = 1][ [key|`,
+                    expectedLabels: [`key with a space`],
+                    expectedIsTextEdit: true,
+                }));
         });
     });
 
     describe(`Indirection`, () => {
         it(`let fn = () => [car = 1, cat = 2] in fn()[|`, () =>
-            expectTopFieldAccessInserts(`let fn = () => [car = 1, cat = 2] in fn()[|`, ["car", "cat"]));
+            expectFieldAccessSuggestions({
+                textWithPipe: `let fn = () => [car = 1, cat = 2] in fn()[|`,
+                expectedLabels: ["car", "cat"],
+                expectedIsTextEdit: false,
+            }));
 
         it(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, () =>
-            expectTopFieldAccessInserts(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, ["car", "cat"]));
+            expectFieldAccessSuggestions({
+                textWithPipe: `let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`,
+                expectedLabels: ["car", "cat"],
+                expectedIsTextEdit: false,
+            }));
 
         it(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, () =>
-            expectTopFieldAccessInserts(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, [
-                "car",
-                "cat",
-            ]));
+            expectFieldAccessSuggestions({
+                textWithPipe: `let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`,
+                expectedLabels: ["car", "cat"],
+                expectedIsTextEdit: false,
+            }));
 
         it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, () =>
-            expectTopFieldAccessInserts(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, [
-                "car",
-                "cat",
-            ]));
+            expectFieldAccessSuggestions({
+                textWithPipe: `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
+                expectedLabels: ["car", "cat"],
+                expectedIsTextEdit: false,
+            }));
     });
 });

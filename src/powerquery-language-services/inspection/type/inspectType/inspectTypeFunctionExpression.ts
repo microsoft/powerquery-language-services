@@ -6,13 +6,14 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
-import { allForAnyUnion, inspectTypeFromChildAttributeIndex, InspectTypeState } from "./common";
+import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
     PseudoFunctionParameterType,
 } from "../../pseudoFunctionExpressionType";
+import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeFunctionExpression(

@@ -24,27 +24,49 @@ export async function assertAutocompleteItems(
     return autocompleteItemSelector(await assertAutocomplete(textWithPipe));
 }
 
-export async function expectAbridgedAutocompleteItems(
-    textWithPipe: string,
-    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
-    expected?: ReadonlyArray<AbridgedAutocompleteItem>,
-): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
+export async function expectAbridgedAutocompleteItems(params: {
+    readonly textWithPipe: string;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+    readonly expected?: ReadonlyArray<AbridgedAutocompleteItem>;
+}): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
     const actual: ReadonlyArray<AbridgedAutocompleteItem> = (
-        await assertAutocompleteItems(textWithPipe, autocompleteItemSelector)
+        await assertAutocompleteItems(params.textWithPipe, params.autocompleteItemSelector)
     ).map(createAbridgedAutocompleteItem);
 
-    if (expected !== undefined) {
-        expect(actual).to.deep.equal(expected);
+    if (params.expected !== undefined) {
+        expect(actual).to.have.deep.members(params.expected);
     }
 
     return actual;
 }
 
-export async function expectNoSuggestions(
-    textWithPipe: string,
-    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
-): Promise<void> {
-    await expectAbridgedAutocompleteItems(textWithPipe, autocompleteItemSelector, undefined);
+export async function expectNoSuggestions(params: {
+    readonly textWithPipe: string;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+}): Promise<void> {
+    await expectAbridgedAutocompleteItems({
+        textWithPipe: params.textWithPipe,
+        autocompleteItemSelector: params.autocompleteItemSelector,
+        expected: undefined,
+    });
+}
+
+export async function expectSuggestions(params: {
+    readonly textWithPipe: string;
+    readonly expected: ReadonlyArray<AbridgedAutocompleteItem>;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+}): Promise<void> {
+    await expectAbridgedAutocompleteItems({
+        textWithPipe: params.textWithPipe,
+        autocompleteItemSelector: params.autocompleteItemSelector,
+        expected: params.expected,
+    });
 }
 
 export async function expectTopSuggestions(

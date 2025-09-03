@@ -79,6 +79,11 @@ async function inspectInvokeExpression(
 
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(invokeExpressionXorNode, Ast.NodeKind.InvokeExpression);
 
+    const name: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
+        nodeIdMapCollection,
+        invokeExpressionId,
+    );
+
     const previousNode: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
         nodeIdMapCollection,
         invokeExpressionId,
@@ -86,11 +91,6 @@ async function inspectInvokeExpression(
 
     const functionType: Type.TPowerQueryType = ResultUtils.assertOk(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
-    );
-
-    const name: string | undefined = NodeIdMapUtils.invokeExpressionIdentifierLiteral(
-        nodeIdMapCollection,
-        invokeExpressionId,
     );
 
     let invokeExpressionArgs: InvokeExpressionArguments | undefined;

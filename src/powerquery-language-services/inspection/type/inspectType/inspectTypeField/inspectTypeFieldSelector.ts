@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
-import { InspectTypeState } from "../common";
+import { InspectTypeState } from "../inspectTypeState";
 
 // A field selection/projection is an operation done on some value.
 // The target can be either an EachExpression or a RecursivePrimaryExpression.
@@ -57,7 +57,12 @@ export async function inspectTypeFieldSelector(
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    const result: Type.TPowerQueryType = getFieldSelectorType(fieldType, fieldName.literal, isOptional);
+    const result: Type.TPowerQueryType = getFieldSelectorType(
+        fieldType,
+        IdentifierUtils.assertNormalizedIdentifier(fieldName.literal, { allowGeneralizedIdentifier: true }),
+        isOptional,
+    );
+
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;

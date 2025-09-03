@@ -7,8 +7,9 @@ import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powe
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, InspectTypeState, inspectXor } from "./inspectType";
+import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, inspectXor } from "./inspectType";
 import { InspectionSettings, InspectionTraceConstant } from "../..";
+import { InspectTypeState, InspectTypeStateUtils } from "./inspectType/inspectTypeState";
 import { NodeScope, ScopeTypeByKey } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 
@@ -30,7 +31,12 @@ export async function tryScopeType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
+    const state: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
+        settings,
+        nodeIdMapCollection,
+        typeCache,
+        trace.id,
+    );
 
     const result: TriedScopeType = await ResultUtils.ensureResultAsync(
         () => inspectScopeType(state, nodeId, trace.id),
@@ -56,10 +62,13 @@ export async function tryType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = createState(settings, nodeIdMapCollection, typeCache, trace.id);
-
     const result: TriedType = await ResultUtils.ensureResultAsync(
-        () => inspectXor(state, NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId), trace.id),
+        () =>
+            inspectXor(
+                InspectTypeStateUtils.fromInspectionSettings(settings, nodeIdMapCollection, typeCache, trace.id),
+                NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId),
+                trace.id,
+            ),
         settings.locale,
     );
 
@@ -82,9 +91,9 @@ async function inspectScopeType(
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId, trace.id);
 
     for (const scopeItem of nodeScope.values()) {
-        if (!state.typeById.has(scopeItem.id)) {
+        if (!state.typeById.has(scopeItem.nodeId)) {
             // eslint-disable-next-line no-await-in-loop
-            state.typeById.set(scopeItem.id, await getOrCreateScopeItemType(state, scopeItem));
+            state.typeById.set(scopeItem.nodeId, await getOrCreateScopeItemType(state, scopeItem));
         }
     }
 
@@ -93,9 +102,9 @@ async function inspectScopeType(
     for (const [key, scopeItem] of nodeScope.entries()) {
         const type: Type.TPowerQueryType = MapUtils.assertGet(
             state.typeById,
-            scopeItem.id,
+            scopeItem.nodeId,
             `expected nodeId to be in givenTypeById`,
-            { nodeId: scopeItem.id },
+            { nodeId: scopeItem.nodeId },
         );
 
         result.set(key, type);
@@ -104,25 +113,4 @@ async function inspectScopeType(
     trace.exit();
 
     return result;
-}
-
-function createState(
-    settings: InspectionSettings,
-    nodeIdMapCollection: NodeIdMap.Collection,
-    typeCache: TypeCache,
-    correlationId: number,
-): InspectTypeState {
-    return {
-        library: settings.library,
-        locale: settings.locale,
-        isWorkspaceCacheAllowed: settings.isWorkspaceCacheAllowed,
-        cancellationToken: settings.cancellationToken,
-        eachScopeById: settings.eachScopeById,
-        initialCorrelationId: correlationId,
-        traceManager: settings.traceManager,
-        typeStrategy: settings.typeStrategy,
-        typeById: typeCache.typeById,
-        nodeIdMapCollection,
-        scopeById: typeCache.scopeById,
-    };
 }

@@ -3,6 +3,7 @@
 
 import { ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
+import { IdentifierExpressionUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ILibrary, LibraryDefinitionKind, LibraryFunction, LibraryParameter, TLibraryDefinition } from "./library";
 import { LibraryDefinitionUtils } from ".";
@@ -16,7 +17,10 @@ export function getDefinitionKeys(library: ILibrary): ReadonlyArray<string> {
 }
 
 export function hasDefinition(library: ILibrary, key: string): boolean {
-    return LibraryDefinitionUtils.hasDefinition(library.libraryDefinitions, key);
+    return LibraryDefinitionUtils.hasDefinition(
+        library.libraryDefinitions,
+        IdentifierExpressionUtils.assertNormalizedIdentifierExpression(key),
+    );
 }
 
 export function signatureInformation(libraryFunctionSignature: LibraryFunction): SignatureInformation {

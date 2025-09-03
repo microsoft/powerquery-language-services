@@ -22,10 +22,13 @@ interface ArgumentMismatchExec {
 
 const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but (\d+) were given./;
 
-async function assertInvokeExpressionDiagnostics(text: string): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
+async function assertInvokeExpressionDiagnostics(
+    text: string,
+    overrides?: { readonly validationSettings: ValidationSettings },
+): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
     const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
         TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleLibraryValidateAllSettings,
+        overrides?.validationSettings ?? TestConstants.SimpleLibraryValidateAllSettings,
         text,
     );
 
@@ -156,6 +159,29 @@ describe("Validation - InvokeExpression", () => {
                 },
                 {
                     character: 61,
+                    line: 2,
+                },
+            ];
+
+            expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
+        });
+    });
+
+    describe(`standard library`, () => {
+        it(`let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
+            const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
+                await assertInvokeExpressionDiagnostics(
+                    `let
+                        Source = #table(type table [ID = number], {{1}}),
+                        First = Table.FirstN(Source, 1)
+                    in
+                        Source`,
+                    { validationSettings: TestConstants.StandardLibraryValidateAllSettings },
+                );
+
+            const expected: ReadonlyArray<Position> = [
+                {
+                    character: 45,
                     line: 2,
                 },
             ];

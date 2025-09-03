@@ -238,7 +238,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
                 "_",
                 {
                     kind: ScopeItemKind.Each,
-                    id: eachExpr.node.id,
+                    nodeId: eachExpr.node.id,
                     isRecursive: false,
                     eachExpression: eachExpr,
                     implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
@@ -304,10 +304,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         state,
         nodeScope,
         keyValuePairs,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
-                allowRecursive: true,
-            }),
+        { allowRecursive: true },
         scopeItemFactoryForLetVariable,
         trace.id,
     );
@@ -316,8 +313,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        (kvp: NodeIdMapIterator.LetKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
+        { allowRecursive: true },
         scopeItemFactoryForLetVariable,
     );
 
@@ -350,11 +346,10 @@ function inspectRecordExpressionOrRecordLiteral(
         state,
         nodeScope,
         keyValuePairs,
-        (kvp: NodeIdMapIterator.RecordKeyValuePair) =>
-            IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, {
-                allowGeneralizedIdentifier: true,
-                allowRecursive: true,
-            }),
+        {
+            allowGeneralizedIdentifier: true,
+            allowRecursive: true,
+        },
         scopeItemFactoryForRecordMember,
         trace.id,
     );
@@ -386,8 +381,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            (kvp: NodeIdMapIterator.SectionKeyValuePair) =>
-                IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, { allowRecursive: true }),
+            { allowRecursive: true },
             scopeItemFactoryForSectionMember,
         );
 
@@ -407,7 +401,7 @@ function inspectKeyValuePairs<
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<KVP>,
-    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
@@ -427,7 +421,7 @@ function inspectKeyValuePairs<
         const newScopeItems: ReadonlyArray<[string, T]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            keyFactory,
+            getAllowedIdentifiersOptions,
             scopeItemFactory,
         );
 
@@ -485,9 +479,7 @@ function localGetOrCreateNodeScope(
         InspectionTraceConstant.InspectScope,
         localGetOrCreateNodeScope.name,
         correlationId,
-        {
-            nodeId,
-        },
+        { nodeId },
     );
 
     // If scopeFor has already been called then there should be a nodeId in the givenScope.
@@ -505,6 +497,16 @@ function localGetOrCreateNodeScope(
         trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
         return shallowCopy;
+    }
+
+    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+
+    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+        trace.exit({ [TraceConstant.Result]: "field projection or selector - empty scope" });
+        const newScope: NodeScope = new Map();
+        state.givenScope.set(nodeId, newScope);
+
+        return newScope;
     }
 
     // Default to a parent's scope if the node has a parent.
@@ -537,20 +539,15 @@ function scopeItemFactoryForKeyValuePairs<
 >(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
-    keyFactory: (kvp: KVP) => ReadonlyArray<string>,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
 
-    // A key of `#"foo" should add `foo` and `#"foo"` to the scope.
-    // A key of foo should only add "foo" to the scope.
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        const newKeys: ReadonlyArray<string> = keyFactory(kvp);
         const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
 
-        for (const key of newKeys) {
-            // If the KVP isn't a recursive reference then we can add all of the identifiers.
-            // Else we should only include the recursive identifiers.
+        for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
             if (!isRecursive || key.includes("@")) {
                 result.push([key, scopeItemFactory(kvp, isRecursive)]);
             }
@@ -566,7 +563,7 @@ function scopeItemFactoryForLetVariable(
 ): LetVariableScopeItem {
     return {
         kind: ScopeItemKind.LetVariable,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,
@@ -579,7 +576,7 @@ function scopeItemFactoryForParameter(
 ): ParameterScopeItem {
     return {
         kind: ScopeItemKind.Parameter,
-        id: parameter.id,
+        nodeId: parameter.id,
         isRecursive: false,
         name: parameter.name,
         isOptional: parameter.isOptional,
@@ -594,7 +591,7 @@ function scopeItemFactoryForRecordMember(
 ): RecordFieldScopeItem {
     return {
         kind: ScopeItemKind.RecordField,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,
@@ -607,7 +604,7 @@ function scopeItemFactoryForSectionMember(
 ): SectionMemberScopeItem {
     return {
         kind: ScopeItemKind.SectionMember,
-        id: keyValuePair.source.node.id,
+        nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
         value: keyValuePair.value,

@@ -10,9 +10,10 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { assertGetOrCreateNodeScope, InspectTypeState, inspectXor } from "../common";
+import { assertGetOrCreateNodeScope, inspectXor } from "../common";
 import { EachScopeItem, ScopeItemKind, ScopeUtils } from "../../../scope";
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
+import { InspectTypeState } from "../inspectTypeState";
 
 // A field selection/projection is an operation a target value,
 // where the target is either an EachExpression or a RecursivePrimaryExpression.

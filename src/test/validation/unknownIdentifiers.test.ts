@@ -108,8 +108,19 @@ describe("Validation - UnknownIdentifier", () => {
                 `let fib = (x as number) => if x = 0 or x = 1 then 1 else @fib(x - 1) + @fib(x - 2)`,
             ));
 
-        it(`found in library scope`, async () =>
-            await assertNoUnknownIdentifiers(`${TestLibraryName.CreateFooAndBarRecord}`));
+        describe(`found in library scope`, () => {
+            it(`regular identifier`, async () =>
+                await assertNoUnknownIdentifiers(`${TestLibraryName.CreateFooAndBarRecord}`));
+
+            it(`quoted regular identifier`, async () =>
+                await assertNoUnknownIdentifiers(`#"${TestLibraryName.CreateFooAndBarRecord}"`));
+
+            it(`recursive identifier`, async () =>
+                await assertNoUnknownIdentifiers(`@${TestLibraryName.CreateFooAndBarRecord}`));
+
+            it(`recursive and quoted regular identifier`, async () =>
+                await assertNoUnknownIdentifiers(`@#"${TestLibraryName.CreateFooAndBarRecord}"`));
+        });
     });
 
     describe(`suggestion`, () => {

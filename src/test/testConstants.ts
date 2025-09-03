@@ -197,6 +197,13 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = {
     ]),
 };
 
+export const StandardLibraryDefinitions: Library.LibraryDefinitions = {
+    dynamicLibraryDefinitions: () => new Map<string, Library.TLibraryDefinition>(),
+    staticLibraryDefinitions: PQP.ResultUtils.assertOk(
+        LibrarySymbolUtils.createLibraryDefinitions(StandardLibrarySymbols),
+    ),
+};
+
 export const SimpleExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (
     request: ExternalType.TExternalTypeRequest,
 ) => {

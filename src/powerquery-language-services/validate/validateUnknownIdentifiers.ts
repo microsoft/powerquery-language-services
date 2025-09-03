@@ -140,9 +140,7 @@ function findUnknownIdentifiers(
 
         if (
             !nodeScope.has(literal) &&
-            !(literal[0] === "@" && nodeScope.has(literal.slice(1))) &&
             !LibraryUtils.hasDefinition(validationSettings.library, literal) &&
-            // even no external type found
             !validationSettings.library.externalTypeResolver({
                 kind: ExternalTypeRequestKind.Value,
                 identifierLiteral: literal,

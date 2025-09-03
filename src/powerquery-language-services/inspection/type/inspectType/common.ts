@@ -4,13 +4,12 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
-import { NodeScope, ParameterScopeItem, ScopeById, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
-import { InspectionSettings } from "../../../inspectionSettings";
+import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
+import { NodeScope, ParameterScopeItem, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -36,17 +35,8 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
-import { tryDeferenceIdentifier } from "../../deferenceIdentifier";
-import { TypeById } from "../../typeCache";
-
-// Drops PQP.LexSettings and PQP.ParseSettings as they're not needed.
-export interface InspectTypeState
-    extends PQP.CommonSettings,
-        Omit<InspectionSettings, keyof PQP.Lexer.LexSettings | keyof PQP.Parser.ParseSettings> {
-    readonly typeById: TypeById;
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
-    readonly scopeById: ScopeById;
-}
+import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
+import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
@@ -138,7 +128,7 @@ export async function getOrCreateScopeItemType(
         state.initialCorrelationId,
     );
 
-    const nodeId: number = scopeItem.id;
+    const nodeId: number = scopeItem.nodeId;
     const type: Type.TPowerQueryType | undefined = state.typeById.get(nodeId);
 
     if (type !== undefined) {
@@ -165,7 +155,7 @@ export async function inspectScopeItem(
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
             return scopeItem.value === undefined
-                ? Type.UnknownInstance
+                ? Type.AnyInstance
                 : await inspectXor(state, scopeItem.value, correlationId);
 
         case ScopeItemKind.Each:
@@ -175,7 +165,7 @@ export async function inspectScopeItem(
             return createParameterType(scopeItem);
 
         case ScopeItemKind.Undefined:
-            return Type.UnknownInstance;
+            return Type.AnyInstance;
 
         default:
             throw Assert.isNever(scopeItem);
@@ -432,100 +422,77 @@ export async function dereferencedIdentifierType(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const updatedSettings: PQP.CommonSettings = {
-        ...state,
-        initialCorrelationId: trace.id,
-    };
-
-    const triedDeference: PQP.Result<TXorNode | undefined, PQP.CommonError.CommonError> = await tryDeferenceIdentifier(
-        updatedSettings,
+    const triedDereferenceIdentifierPath: PQP.Result<
+        ReadonlyArray<TDereferencedIdentifier>,
+        PQP.CommonError.CommonError
+    > = await tryBuildDereferencedIdentifierPath(
+        InspectTypeStateUtils.toInspectionSettings(state, trace),
         state.nodeIdMapCollection,
-        state.eachScopeById,
         xorNode,
         state.scopeById,
     );
 
-    if (ResultUtils.isError(triedDeference)) {
+    if (ResultUtils.isError(triedDereferenceIdentifierPath)) {
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
-        throw triedDeference.error;
-    } else if (triedDeference.value === undefined) {
-        trace.exit();
-
-        return undefined;
+        throw triedDereferenceIdentifierPath.error;
     }
 
-    const dereferencedLiteral: string | undefined = XorNodeUtils.identifierExpressionLiteral(triedDeference.value);
+    const path: ReadonlyArray<TDereferencedIdentifier> = triedDereferenceIdentifierPath.value;
 
-    if (dereferencedLiteral === undefined) {
-        trace.exit();
+    const lastDereferencedIdentifier: Inspection.TDereferencedIdentifier = Assert.asDefined(path[path.length - 1]);
 
-        return undefined;
-    }
+    let result: Type.TPowerQueryType | undefined;
 
-    const deferencedLiteral: string = dereferencedLiteral;
-    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, triedDeference.value.node.id, trace.id);
-
-    // When referencing an identifier as a recursive identifier there's no requirements
-    // for it to resolve to a recursive reference.
-    // This if it's a recursive identifier we need to also try the identifier without the recursive `@` prefix.
-    let scopeItem: TScopeItem | undefined = nodeScope.get(deferencedLiteral);
-
-    if (deferencedLiteral.startsWith("@") && scopeItem === undefined) {
-        scopeItem = nodeScope.get(deferencedLiteral.slice(1));
-    }
-
-    if (deferencedLiteral === "_" && scopeItem?.kind === ScopeItemKind.Each) {
-        return Type.UnknownInstance;
-    }
-
-    // The deferenced identifier can't be resolved within the local scope.
-    // It either is either an invalid identifier or an external identifier (e.g `Odbc.Database`).
-    if (scopeItem === undefined) {
-        const request: ExternalType.ExternalValueTypeRequest = ExternalTypeUtils.valueTypeRequest(deferencedLiteral);
-
-        const result: Type.TPowerQueryType | undefined = state.library.externalTypeResolver(request);
-        trace.exit();
-
-        return result;
-    }
-
-    let nextXorNode: TXorNode | undefined;
-
-    switch (scopeItem.kind) {
-        case ScopeItemKind.LetVariable:
-        case ScopeItemKind.RecordField:
-        case ScopeItemKind.SectionMember:
-            nextXorNode = scopeItem.value;
+    switch (lastDereferencedIdentifier.kind) {
+        case Inspection.DereferencedIdentifierKind.External:
+            result = lastDereferencedIdentifier.type;
             break;
 
-        case ScopeItemKind.Each:
-            nextXorNode = scopeItem.eachExpression;
+        case Inspection.DereferencedIdentifierKind.InScopeDereference:
+            trace.exit({ [TraceConstant.IsThrowing]: true });
+
+            throw new PQP.CommonError.InvariantError(
+                `expected last dereferenced identifier to be anything other than InScopeDereference`,
+            );
+
+        case Inspection.DereferencedIdentifierKind.InScopeValue: {
+            switch (lastDereferencedIdentifier.scopeItem.kind) {
+                case ScopeItemKind.LetVariable:
+                case ScopeItemKind.Parameter:
+                case ScopeItemKind.RecordField:
+                case ScopeItemKind.SectionMember:
+                    result = await getOrCreateScopeItemType(state, lastDereferencedIdentifier.scopeItem);
+                    break;
+
+                case ScopeItemKind.Each:
+                    result = state.eachScopeById?.get(lastDereferencedIdentifier.scopeItem.nodeId) ?? Type.AnyInstance;
+                    break;
+
+                case ScopeItemKind.Undefined:
+                    result = Type.AnyInstance;
+                    break;
+
+                default:
+                    throw Assert.isNever(lastDereferencedIdentifier.scopeItem);
+            }
+
+            break;
+        }
+
+        case Inspection.DereferencedIdentifierKind.Recursive:
+            result = Type.AnyInstance;
             break;
 
-        case ScopeItemKind.Parameter:
-            return createParameterType(scopeItem);
-
-        case ScopeItemKind.Undefined:
-            trace.exit();
-
-            return undefined;
+        case Inspection.DereferencedIdentifierKind.Undefined:
+            result = Type.UnknownInstance;
+            break;
 
         default:
-            throw Assert.isNever(scopeItem);
+            throw Assert.isNever(lastDereferencedIdentifier);
     }
 
-    // Infinite recursion on an inclusive identifier.
-    // There's no good way to handle the type of this as it requires evaluation, so mark it as any.
-    if (deferencedLiteral.startsWith("@") && nextXorNode?.node.id === xorNode.node.id) {
-        return Type.AnyInstance;
-    }
-
-    const result: PQP.Language.Type.TPowerQueryType | undefined = nextXorNode
-        ? await inspectXor(state, nextXorNode, trace.id)
-        : undefined;
-
-    trace.exit();
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
 }

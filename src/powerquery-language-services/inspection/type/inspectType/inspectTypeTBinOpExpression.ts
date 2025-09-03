@@ -8,7 +8,8 @@ import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, inspectXor } from "./common";
+import { InspectTypeState } from "./inspectTypeState";
+import { inspectXor } from "./common";
 
 type TRecordOrTable = Type.TRecord | Type.TTable;
 

@@ -185,14 +185,17 @@ export async function assertEqualRenameEdits(
     }
 }
 
-export async function assertEqualRootType(
-    text: string,
-    expected: TPowerQueryType,
-    settings: InspectionSettings,
-): Promise<void> {
-    const actual: TPowerQueryType = await TestUtils.assertRootType(settings, text);
+export async function assertEqualRootType(params: {
+    readonly text: string;
+    readonly expected: TPowerQueryType;
+    readonly settings: InspectionSettings;
+}): Promise<void> {
+    const actual: TPowerQueryType = await TestUtils.assertRootType(params.settings, params.text);
 
-    return assertEqualPowerQueryType(expected, actual);
+    return assertEqualPowerQueryType({
+        actual,
+        expected: params.expected,
+    });
 }
 
 export async function assertEqualSignatureHelpAnalysis(
@@ -226,16 +229,19 @@ function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     return value;
 }
 
-function assertEqualPowerQueryType(expected: TPowerQueryType, actual: TPowerQueryType): void {
+function assertEqualPowerQueryType(params: {
+    readonly expected: TPowerQueryType;
+    readonly actual: TPowerQueryType;
+}): void {
     // Use PowerQuery's built-in deep equality check which handles complex types (like nested Maps) correctly
-    if (TypeUtils.isEqualType(expected, actual)) {
+    if (TypeUtils.isEqualType(params.expected, params.actual)) {
         return;
     }
 
     // The default error message doesn't handle maps well, so it's easiest to JSON.stringify the types for comparison.
     // We use a custom replacer to handle potential Maps.
-    const jsonifiedExpected: string = JSON.stringify(expected, mapReplacer, 2);
-    const jsonifiedActual: string = JSON.stringify(actual, mapReplacer, 2);
+    const jsonifiedExpected: string = JSON.stringify(params.expected, mapReplacer, 2);
+    const jsonifiedActual: string = JSON.stringify(params.actual, mapReplacer, 2);
 
     expect(jsonifiedActual).to.equal(jsonifiedExpected, `PowerQuery types are not equal.`);
 }

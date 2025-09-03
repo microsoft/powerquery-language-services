@@ -6,7 +6,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState } from ".";
+import { InspectTypeState } from "./inspectTypeState";
 
 export function inspectTypePrimitiveType(
     state: InspectTypeState,
