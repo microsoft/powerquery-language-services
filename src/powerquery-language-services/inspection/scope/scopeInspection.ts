@@ -479,9 +479,7 @@ function localGetOrCreateNodeScope(
         InspectionTraceConstant.InspectScope,
         localGetOrCreateNodeScope.name,
         correlationId,
-        {
-            nodeId,
-        },
+        { nodeId },
     );
 
     // If scopeFor has already been called then there should be a nodeId in the givenScope.
@@ -499,6 +497,16 @@ function localGetOrCreateNodeScope(
         trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
         return shallowCopy;
+    }
+
+    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+
+    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+        trace.exit({ [TraceConstant.Result]: "field projection or selector - empty scope" });
+        const newScope: NodeScope = new Map();
+        state.givenScope.set(nodeId, newScope);
+
+        return newScope;
     }
 
     // Default to a parent's scope if the node has a parent.

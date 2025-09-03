@@ -144,10 +144,13 @@ export class AnalysisBase implements Analysis {
 
             const autocompleteItems: Inspection.AutocompleteItem[] = [];
 
+            const results: ReadonlyArray<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> =
+                await Promise.all(autocompleteItemTasks);
+
             // TODO: intellisense improvements
             // - honor expected data type
 
-            for (const result of await Promise.all(autocompleteItemTasks)) {
+            for (const result of results) {
                 if (ResultUtils.isOk(result) && result.value !== undefined) {
                     for (const item of result.value) {
                         autocompleteItems.push(item);
