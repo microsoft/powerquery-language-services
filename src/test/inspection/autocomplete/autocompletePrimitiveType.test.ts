@@ -24,15 +24,18 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     }
 
     function expectNoPrimitiveTypeSuggestions(textWithPipe: string): Promise<void> {
-        return expectNoSuggestions(textWithPipe, assertAutocompletePrimitiveType);
+        return expectNoSuggestions({
+            textWithPipe,
+            autocompleteItemSelector: assertAutocompletePrimitiveType,
+        });
     }
 
     async function expectPrimitiveTypeInserts(textWithPipe: string): Promise<void> {
-        await expectAbridgedAutocompleteItems(
+        await expectAbridgedAutocompleteItems({
             textWithPipe,
-            assertAutocompletePrimitiveType,
-            AbridgedAllowedPrimitiveTypeConstantInserts,
-        );
+            autocompleteItemSelector: assertAutocompletePrimitiveType,
+            expected: AbridgedAllowedPrimitiveTypeConstantInserts,
+        });
     }
 
     function expectDatePrimitiveTypeReplacements(textWithPipe: string): Promise<void> {

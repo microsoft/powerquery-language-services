@@ -7,8 +7,8 @@ import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import {
     AbridgedAutocompleteItem,
-    expectAbridgedAutocompleteItems,
     expectNoSuggestions,
+    expectSuggestions,
 } from "../../testUtils/autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
 
@@ -20,14 +20,18 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     }
 
     function expectNoLanguageConstantSuggestion(textWithPipe: string): Promise<void> {
-        return expectNoSuggestions(textWithPipe, assertAutocompleteLanguageConstant);
+        return expectNoSuggestions({
+            textWithPipe,
+            autocompleteItemSelector: assertAutocompleteLanguageConstant,
+        });
     }
 
-    async function expectLanguageConstantSuggestion(
-        textWithPipe: string,
-        expected: AbridgedAutocompleteItem,
-    ): Promise<void> {
-        await expectAbridgedAutocompleteItems(textWithPipe, assertAutocompleteLanguageConstant, [expected]);
+    function expectLanguageConstantSuggestion(textWithPipe: string, expected: AbridgedAutocompleteItem): Promise<void> {
+        return expectSuggestions({
+            textWithPipe,
+            autocompleteItemSelector: assertAutocompleteLanguageConstant,
+            expected: [expected],
+        });
     }
 
     const CatchInsert: AbridgedAutocompleteItem = {
