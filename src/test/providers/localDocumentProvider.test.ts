@@ -27,7 +27,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
     };
 
-    function runTest(params: {
+    async function runTest(params: {
         readonly textWithPipe: string;
         readonly expected: {
             readonly labels: ReadonlyArray<string>;
@@ -35,7 +35,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         };
         readonly cancellationToken?: ICancellationToken;
     }): Promise<AutocompleteItem[] | undefined> {
-        return TestUtils.assertAutocompleteAnalysis({
+        return await TestUtils.assertAutocompleteAnalysis({
             ...params,
             analysisSettings: IsolatedAnalysisSettings,
         });
@@ -44,8 +44,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     describe(`getAutocompleteItems`, () => {
         describe(`scope`, () => {
             describe(`${Inspection.ScopeItemKind.LetVariable}`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `let foo = 1, bar = 2, foobar = 3 in |`,
                         expected: {
                             labels: [
@@ -66,8 +66,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `let foo = 1, bar = 2, foobar = 3 in foo|`,
                         expected: {
                             labels: [
@@ -90,8 +90,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
 
             describe(`${Inspection.ScopeItemKind.Parameter}`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `(foo, bar, foobar) => |`,
                         expected: {
                             labels: [`foo`, `#"foo"`, `bar`, `#"bar"`, `foobar`, `#"foobar"`],
@@ -99,8 +99,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `(foo, bar, foobar) => foo|`,
                         expected: {
                             labels: [`foo`, `#"foo"`, `bar`, `#"bar"`, `foobar`, `#"foobar"`],
@@ -110,8 +110,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
 
             describe(`${Inspection.ScopeItemKind.RecordField}`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = |][`,
                         expected: {
                             labels: [
@@ -134,8 +134,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = foo|`,
                         expected: {
                             labels: [
@@ -160,8 +160,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
 
             describe(`${Inspection.ScopeItemKind.SectionMember}`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = |`,
                         expected: {
                             labels: [
@@ -184,8 +184,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = foo|`,
                         expected: {
                             labels: [
@@ -212,8 +212,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
 
         describe(`fieldAccess`, () => {
             describe(`fieldProjection`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][|`,
                         expected: {
                             labels: [`foo`, `bar`, `foobar`],
@@ -221,8 +221,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo|`,
                         expected: {
                             labels: [`foo`, `bar`, `foobar`],
@@ -230,8 +230,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                xit(`no repeats`, () =>
-                    runTest({
+                xit(`no repeats`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo], [|`,
                         expected: {
                             labels: [`foo`, `bar`, `foobar`],
@@ -241,8 +241,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
 
             describe(`fieldSelection`, () => {
-                it(`match all`, () =>
-                    runTest({
+                it(`match all`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][|`,
                         expected: {
                             labels: [`foo`, `bar`, `foobar`],
@@ -250,8 +250,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                it(`match some`, () =>
-                    runTest({
+                it(`match some`, async () =>
+                    await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][foo|`,
                         expected: {
                             labels: [`foo`, `bar`, `foobar`],
@@ -263,18 +263,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     });
 
     describe(`getDefinition`, () => {
-        function assertDefinition(params: {
+        async function assertDefinition(params: {
             readonly textWithPipe: string;
             readonly expected: Range[] | undefined;
             readonly cancellationToken?: ICancellationToken;
         }): Promise<void> {
-            return TestUtils.assertEqualDefinitionAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
+            await TestUtils.assertEqualDefinitionAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
-        it(`no definition`, () => assertDefinition({ textWithPipe: `let foo = 1 in baz|`, expected: undefined }));
+        it(`no definition`, async () =>
+            await assertDefinition({
+                textWithPipe: `let foo = 1 in baz|`,
+                expected: undefined,
+            }));
 
-        it(`let expression`, () =>
-            assertDefinition({
+        it(`let expression`, async () =>
+            await assertDefinition({
                 textWithPipe: `let foobar = 1 in foobar|`,
                 expected: [
                     {
@@ -284,8 +288,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`record expression`, () =>
-            assertDefinition({
+        it(`record expression`, async () =>
+            await assertDefinition({
                 textWithPipe: `[foo = 1, bar = foo|]`,
                 expected: [
                     {
@@ -295,14 +299,14 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`record expression, not on key`, () =>
-            assertDefinition({
+        it(`record expression, not on key`, async () =>
+            await assertDefinition({
                 textWithPipe: `[foo = 1, bar = [foo| = 2]]`,
                 expected: undefined,
             }));
 
-        it(`section expression`, () =>
-            assertDefinition({
+        it(`section expression`, async () =>
+            await assertDefinition({
                 textWithPipe: `section foo; bar = 1; baz = bar|`,
                 expected: [
                     {
@@ -312,8 +316,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`parameter`, () =>
-            assertDefinition({
+        it(`parameter`, async () =>
+            await assertDefinition({
                 textWithPipe: `(foo as number) => foo|`,
                 expected: [
                     {
@@ -325,11 +329,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     });
 
     describe(`getFoldingRanges`, () => {
-        function assertFoldingRanges(params: {
+        async function assertFoldingRanges(params: {
             readonly text: string;
             readonly expected: FoldingRange[];
         }): Promise<void> {
-            return TestUtils.assertEqualFoldingRangesAnalysis({
+            await TestUtils.assertEqualFoldingRangesAnalysis({
                 ...params,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
             });
@@ -414,64 +418,91 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     });
 
     describe(`getHover`, () => {
-        function assertHover(params: {
+        async function assertHover(params: {
             readonly textWithPipe: string;
             readonly expected: string | undefined;
         }): Promise<void> {
-            return TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
+            await TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
         describe(`simple`, () => {
-            it(`let-variable`, () => assertHover({ textWithPipe: `let x = 1 in x|`, expected: `[let-variable] x: 1` }));
+            it(`let-variable`, async () =>
+                await assertHover({
+                    textWithPipe: `let x = 1 in x|`,
+                    expected: `[let-variable] x: 1`,
+                }));
 
-            it(`parameter`, () =>
-                assertHover({ textWithPipe: `(x as number) => x|`, expected: `[parameter] x: number` }));
+            it(`parameter`, async () =>
+                await assertHover({
+                    textWithPipe: `(x as number) => x|`,
+                    expected: `[parameter] x: number`,
+                }));
 
-            it(`record-field`, () => assertHover({ textWithPipe: `[x = 1, y = x|]`, expected: `[record-field] x: 1` }));
+            it(`record-field`, async () =>
+                await assertHover({
+                    textWithPipe: `[x = 1, y = x|]`,
+                    expected: `[record-field] x: 1`,
+                }));
 
-            it(`section-member`, () =>
-                assertHover({ textWithPipe: `section; x = 1; y = x|;`, expected: `[section-member] x: 1` }));
+            it(`section-member`, async () =>
+                await assertHover({
+                    textWithPipe: `section; x = 1; y = x|;`,
+                    expected: `[section-member] x: 1`,
+                }));
 
-            it(`undefined`, () => assertHover({ textWithPipe: `x|`, expected: undefined }));
+            it(`undefined`, async () =>
+                await assertHover({
+                    textWithPipe: `x|`,
+                    expected: undefined,
+                }));
 
-            it(`undefined on parameter hover`, () =>
-                assertHover({
+            it(`undefined on parameter hover`, async () =>
+                await assertHover({
                     textWithPipe: `let foo = 10, bar = (foo| as number) => foo in foo`,
                     expected: undefined,
                 }));
         });
 
         describe(`hover the value when over key`, () => {
-            it(`let-variable`, () =>
-                assertHover({ textWithPipe: `let foo| = 1 in foo`, expected: `[let-variable] foo: 1` }));
+            it(`let-variable`, async () =>
+                await assertHover({
+                    textWithPipe: `let foo| = 1 in foo`,
+                    expected: `[let-variable] foo: 1`,
+                }));
 
-            it(`record-field expression`, () =>
-                assertHover({ textWithPipe: `[foo| = 1]`, expected: `[record-field] foo: 1` }));
+            it(`record-field expression`, async () =>
+                await assertHover({
+                    textWithPipe: `[foo| = 1]`,
+                    expected: `[record-field] foo: 1`,
+                }));
 
-            it(`record-field literal`, () =>
-                assertHover({
+            it(`record-field literal`, async () =>
+                await assertHover({
                     textWithPipe: `[foo| = 1] section; bar = 1;`,
                     expected: `[record-field] foo: 1`,
                 }));
 
-            it(`section-member`, () =>
-                assertHover({ textWithPipe: `section; foo| = 1;`, expected: `[section-member] foo: 1` }));
+            it(`section-member`, async () =>
+                await assertHover({
+                    textWithPipe: `section; foo| = 1;`,
+                    expected: `[section-member] foo: 1`,
+                }));
         });
     });
 
     describe(`getPartialSemanticTokens`, () => {
-        function assertSemanticTokens(params: {
+        async function assertSemanticTokens(params: {
             readonly text: string;
             readonly expected: ReadonlyArray<PartialSemanticToken> | undefined;
         }): Promise<void> {
-            return TestUtils.assertEqualPartialSemanticTokensAnalysis({
+            await TestUtils.assertEqualPartialSemanticTokensAnalysis({
                 ...params,
                 analysisSettings: IsolatedAnalysisSettings,
             });
         }
 
-        it(`field projection`, () =>
-            assertSemanticTokens({
+        it(`field projection`, async () =>
+            await assertSemanticTokens({
                 text: `a[[b]]?`,
                 expected: [
                     {
@@ -501,8 +532,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`field selector`, () =>
-            assertSemanticTokens({
+        it(`field selector`, async () =>
+            await assertSemanticTokens({
                 text: `a[b]?`,
                 expected: [
                     {
@@ -532,8 +563,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`numeric literal`, () =>
-            assertSemanticTokens({
+        it(`numeric literal`, async () =>
+            await assertSemanticTokens({
                 text: `1`,
                 expected: [
                     {
@@ -547,8 +578,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`nullable primitive type`, () =>
-            assertSemanticTokens({
+        it(`nullable primitive type`, async () =>
+            await assertSemanticTokens({
                 text: `1 is nullable number`,
                 expected: [
                     {
@@ -586,8 +617,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`primitive type`, () =>
-            assertSemanticTokens({
+        it(`primitive type`, async () =>
+            await assertSemanticTokens({
                 text: `text`,
                 expected: [
                     {
@@ -601,8 +632,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`parameter`, () =>
-            assertSemanticTokens({
+        it(`parameter`, async () =>
+            await assertSemanticTokens({
                 text: `(optional foo as number) => foo`,
                 expected: [
                     {
@@ -648,8 +679,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`record literal`, () =>
-            assertSemanticTokens({
+        it(`record literal`, async () =>
+            await assertSemanticTokens({
                 text: `[foo = 1]section bar;`,
                 expected: [
                     {
@@ -671,8 +702,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`record expression`, () =>
-            assertSemanticTokens({
+        it(`record expression`, async () =>
+            await assertSemanticTokens({
                 text: `[foo = 1]`,
                 expected: [
                     {
@@ -694,8 +725,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`table type`, () =>
-            assertSemanticTokens({
+        it(`table type`, async () =>
+            await assertSemanticTokens({
                 text: `type table [optional foo = nullable number]`,
                 expected: [
                     {
@@ -741,8 +772,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
-        it(`text literal`, () =>
-            assertSemanticTokens({
+        it(`text literal`, async () =>
+            await assertSemanticTokens({
                 text: `""`,
                 expected: [
                     {
@@ -757,7 +788,10 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             }));
 
         it(`non-parsable text returns undefined`, async () =>
-            await assertSemanticTokens({ text: `"`, expected: undefined }));
+            await assertSemanticTokens({
+                text: `"`,
+                expected: undefined,
+            }));
     });
 
     describe(`getSignatureHelp`, () => {
@@ -768,8 +802,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             await TestUtils.assertEqualSignatureHelpAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
-        it(`no closing bracket`, () =>
-            assertSignatureHelp({
+        it(`no closing bracket`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `let fn = (x as number, y as number) => x + y in fn(1|`,
                 expected: {
                     activeParameter: 0,
@@ -790,8 +824,8 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 },
             }));
 
-        it(`closing bracket`, () =>
-            assertSignatureHelp({
+        it(`closing bracket`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `let fn = (x as number, y as number) => x + y in fn(1|)`,
                 expected: {
                     activeParameter: 0,

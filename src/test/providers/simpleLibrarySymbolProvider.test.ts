@@ -22,14 +22,14 @@ describe(`SimpleLibraryProvider`, () => {
     };
 
     describe(`getAutocompleteItems`, () => {
-        function runTest(params: {
+        async function runTest(params: {
             readonly textWithPipe: string;
             readonly expected: {
                 readonly labels: ReadonlyArray<string>;
                 readonly isTextEdit: boolean;
             };
         }): Promise<AutocompleteItem[] | undefined> {
-            return TestUtils.assertAutocompleteAnalysis({
+            return await TestUtils.assertAutocompleteAnalysis({
                 ...params,
                 analysisSettings: IsolatedAnalysisSettings,
             });
@@ -55,8 +55,8 @@ describe(`SimpleLibraryProvider`, () => {
             UnaryOperator.Not,
         ];
 
-        it(`match`, () =>
-            runTest({
+        it(`match`, async () =>
+            await runTest({
                 textWithPipe: `Test.NumberO|`,
                 expected: {
                     labels: expectedAutocompleteLabels,
@@ -64,8 +64,8 @@ describe(`SimpleLibraryProvider`, () => {
                 },
             }));
 
-        it(`match multiple`, () =>
-            runTest({
+        it(`match multiple`, async () =>
+            await runTest({
                 textWithPipe: `Test.Numbe|`,
                 expected: {
                     labels: expectedAutocompleteLabels,
@@ -73,8 +73,8 @@ describe(`SimpleLibraryProvider`, () => {
                 },
             }));
 
-        it(`unknown match`, () =>
-            runTest({
+        it(`unknown match`, async () =>
+            await runTest({
                 textWithPipe: `Unknown|Identifier`,
                 expected: {
                     labels: expectedAutocompleteLabels,
@@ -84,27 +84,27 @@ describe(`SimpleLibraryProvider`, () => {
     });
 
     describe(`getHover`, () => {
-        function assertHoverAnalysis(params: {
+        async function assertHoverAnalysis(params: {
             readonly textWithPipe: string;
             readonly expected: string | undefined;
         }): Promise<void> {
-            return TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
+            await TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
-        it(`constant`, () =>
-            assertHoverAnalysis({
+        it(`constant`, async () =>
+            await assertHoverAnalysis({
                 textWithPipe: `Test.Num|ber`,
                 expected: `[library constant] Test.Number: number`,
             }));
 
-        it(`function`, () =>
-            assertHoverAnalysis({
+        it(`function`, async () =>
+            await assertHoverAnalysis({
                 textWithPipe: `Test.Square|IfNumber`,
                 expected: `[library function] Test.SquareIfNumber: (x: any) => any`,
             }));
 
-        it(`no match`, () =>
-            assertHoverAnalysis({
+        it(`no match`, async () =>
+            await assertHoverAnalysis({
                 textWithPipe: `Unknown|Identifier`,
                 expected: undefined,
             }));
@@ -140,26 +140,26 @@ describe(`SimpleLibraryProvider`, () => {
             });
         }
 
-        it(`unknown identifier`, () =>
-            assertSignatureHelp({
+        it(`unknown identifier`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `Unknown|Identifier`,
                 activeParameter: undefined,
             }));
 
-        it(`first parameter, no literal`, () =>
-            assertSignatureHelp({
+        it(`first parameter, no literal`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `Test.SquareIfNumber(|`,
                 activeParameter: 0,
             }));
 
-        it(`first parameter, literal, no comma`, () =>
-            assertSignatureHelp({
+        it(`first parameter, literal, no comma`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `Test.SquareIfNumber(1|`,
                 activeParameter: 0,
             }));
 
-        it(`first parameter, literal, comma`, () =>
-            assertSignatureHelp({
+        it(`first parameter, literal, comma`, async () =>
+            await assertSignatureHelp({
                 textWithPipe: `Test.SquareIfNumber(1,|`,
                 activeParameter: 1,
             }));

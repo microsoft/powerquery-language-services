@@ -19,15 +19,18 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
         return ResultUtils.assertOk(autocomplete.triedLanguageConstant);
     }
 
-    function expectNoLanguageConstantSuggestion(textWithPipe: string): Promise<void> {
-        return expectNoSuggestions({
+    async function expectNoLanguageConstantSuggestion(textWithPipe: string): Promise<void> {
+        await expectNoSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompleteLanguageConstant,
         });
     }
 
-    function expectLanguageConstantSuggestion(textWithPipe: string, expected: AbridgedAutocompleteItem): Promise<void> {
-        return expectSuggestions({
+    async function expectLanguageConstantSuggestion(
+        textWithPipe: string,
+        expected: AbridgedAutocompleteItem,
+    ): Promise<void> {
+        await expectSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompleteLanguageConstant,
             expected: [expected],
@@ -65,86 +68,92 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     };
 
     describe(`${LanguageConstant.Catch}`, () => {
-        it(`try | 1`, () => expectNoLanguageConstantSuggestion(`try | 1`));
+        it(`try | 1`, async () => await expectNoLanguageConstantSuggestion(`try | 1`));
 
-        it(`try 1|`, () => expectNoLanguageConstantSuggestion(`try 1|`));
+        it(`try 1|`, async () => await expectNoLanguageConstantSuggestion(`try 1|`));
 
-        it(`try 1 |`, () => expectLanguageConstantSuggestion(`try 1 |`, CatchInsert));
+        it(`try 1 |`, async () => await expectLanguageConstantSuggestion(`try 1 |`, CatchInsert));
 
-        it(`try 1 c|`, () => expectLanguageConstantSuggestion(`try 1 c|`, CatchReplace));
+        it(`try 1 c|`, async () => await expectLanguageConstantSuggestion(`try 1 c|`, CatchReplace));
 
-        it(`try 1 |c`, () => expectLanguageConstantSuggestion(`try 1 |c`, CatchReplace));
+        it(`try 1 |c`, async () => await expectLanguageConstantSuggestion(`try 1 |c`, CatchReplace));
 
-        it(`try 1 |catch`, () => expectLanguageConstantSuggestion(`try 1 |catch`, CatchReplace));
+        it(`try 1 |catch`, async () => await expectLanguageConstantSuggestion(`try 1 |catch`, CatchReplace));
 
-        it(`try 1 catch|`, () => expectLanguageConstantSuggestion(`try 1 catch|`, CatchReplace));
+        it(`try 1 catch|`, async () => await expectLanguageConstantSuggestion(`try 1 catch|`, CatchReplace));
 
-        it(`try 1 c |`, () => expectNoLanguageConstantSuggestion(`try 1 c |`));
+        it(`try 1 c |`, async () => await expectNoLanguageConstantSuggestion(`try 1 c |`));
 
-        it(`try 1 | c`, () => expectNoLanguageConstantSuggestion(`try 1 | c`));
+        it(`try 1 | c`, async () => await expectNoLanguageConstantSuggestion(`try 1 | c`));
 
-        it(`try 1 |catch (foo) => 1`, () => expectLanguageConstantSuggestion(`try 1 |catch (foo) => 1`, CatchReplace));
+        it(`try 1 |catch (foo) => 1`, async () =>
+            await expectLanguageConstantSuggestion(`try 1 |catch (foo) => 1`, CatchReplace));
 
-        it(`try 1 catch| (foo) => 1`, () => expectLanguageConstantSuggestion(`try 1 catch| (foo) => 1`, CatchReplace));
+        it(`try 1 catch| (foo) => 1`, async () =>
+            await expectLanguageConstantSuggestion(`try 1 catch| (foo) => 1`, CatchReplace));
 
-        it(`try 1 | catch (foo) => 1`, () => expectNoLanguageConstantSuggestion(`try 1 | catch (foo) => 1`));
+        it(`try 1 | catch (foo) => 1`, async () =>
+            await expectNoLanguageConstantSuggestion(`try 1 | catch (foo) => 1`));
 
-        it(`try 1 catch | (foo) => 1`, () => expectNoLanguageConstantSuggestion(`try 1 catch | (foo) => 1`));
+        it(`try 1 catch | (foo) => 1`, async () =>
+            await expectNoLanguageConstantSuggestion(`try 1 catch | (foo) => 1`));
 
-        it(`try 1 otherwise| 1`, () => expectLanguageConstantSuggestion(`try 1 otherwise| 1`, CatchReplace));
+        it(`try 1 otherwise| 1`, async () =>
+            await expectLanguageConstantSuggestion(`try 1 otherwise| 1`, CatchReplace));
 
-        it(`try 1 |otherwise 1`, () => expectLanguageConstantSuggestion(`try 1 |otherwise 1`, CatchReplace));
+        it(`try 1 |otherwise 1`, async () =>
+            await expectLanguageConstantSuggestion(`try 1 |otherwise 1`, CatchReplace));
 
-        it(`try 1 | otherwise 1`, () => expectNoLanguageConstantSuggestion(`try 1 | otherwise 1`));
+        it(`try 1 | otherwise 1`, async () => await expectNoLanguageConstantSuggestion(`try 1 | otherwise 1`));
 
-        it(`try 1 otherwise | 1`, () => expectNoLanguageConstantSuggestion(`try 1 otherwise | 1`));
+        it(`try 1 otherwise | 1`, async () => await expectNoLanguageConstantSuggestion(`try 1 otherwise | 1`));
 
-        it(`try 1 otherwise|`, () => expectLanguageConstantSuggestion(`try 1 otherwise|`, CatchReplace));
+        it(`try 1 otherwise|`, async () => await expectLanguageConstantSuggestion(`try 1 otherwise|`, CatchReplace));
 
-        it(`try 1 |otherwise`, () => expectLanguageConstantSuggestion(`try 1 |otherwise`, CatchReplace));
+        it(`try 1 |otherwise`, async () => await expectLanguageConstantSuggestion(`try 1 |otherwise`, CatchReplace));
 
-        it(`try 1 | otherwise`, () => expectNoLanguageConstantSuggestion(`try 1 | otherwise`));
+        it(`try 1 | otherwise`, async () => await expectNoLanguageConstantSuggestion(`try 1 | otherwise`));
 
-        it(`try 1 otherwise |`, () => expectNoLanguageConstantSuggestion(`try 1 otherwise |`));
+        it(`try 1 otherwise |`, async () => await expectNoLanguageConstantSuggestion(`try 1 otherwise |`));
     });
 
     describe(`${LanguageConstant.Nullable}`, () => {
-        it(`a as|`, () => expectNoLanguageConstantSuggestion(`a as|`));
+        it(`a as|`, async () => await expectNoLanguageConstantSuggestion(`a as|`));
 
-        it(`a as |`, () => expectLanguageConstantSuggestion(`a as |`, NullableInsert));
+        it(`a as |`, async () => await expectLanguageConstantSuggestion(`a as |`, NullableInsert));
 
-        it(`a as |n`, () => expectLanguageConstantSuggestion(`a as |n`, NullableReplace));
+        it(`a as |n`, async () => await expectLanguageConstantSuggestion(`a as |n`, NullableReplace));
 
-        it(`a as n|`, () => expectLanguageConstantSuggestion(`a as n|`, NullableReplace));
+        it(`a as n|`, async () => await expectLanguageConstantSuggestion(`a as n|`, NullableReplace));
 
-        it(`a as n |`, () => expectNoLanguageConstantSuggestion(`a as n |`));
+        it(`a as n |`, async () => await expectNoLanguageConstantSuggestion(`a as n |`));
 
-        it(`a as | n`, () => expectNoLanguageConstantSuggestion(`a as | n`));
+        it(`a as | n`, async () => await expectNoLanguageConstantSuggestion(`a as | n`));
 
-        it(`(a as |`, () => expectLanguageConstantSuggestion(`(a as |`, NullableInsert));
+        it(`(a as |`, async () => await expectLanguageConstantSuggestion(`(a as |`, NullableInsert));
 
-        it(`(a as n|`, () => expectLanguageConstantSuggestion(`(a as n|`, NullableReplace));
+        it(`(a as n|`, async () => await expectLanguageConstantSuggestion(`(a as n|`, NullableReplace));
 
-        it(`(a as |n`, () => expectLanguageConstantSuggestion(`(a as |n`, NullableReplace));
+        it(`(a as |n`, async () => await expectLanguageConstantSuggestion(`(a as |n`, NullableReplace));
 
-        it(`(a as n |`, () => expectNoLanguageConstantSuggestion(`(a as n |`));
+        it(`(a as n |`, async () => await expectNoLanguageConstantSuggestion(`(a as n |`));
 
-        it(`(a as | n`, () => expectNoLanguageConstantSuggestion(`(a as | n`));
+        it(`(a as | n`, async () => await expectNoLanguageConstantSuggestion(`(a as | n`));
     });
 
     describe(`${LanguageConstant.Optional}`, () => {
-        it(`(x, |`, () => expectLanguageConstantSuggestion(`(x, |`, OptionalInsert));
+        it(`(x, |`, async () => await expectLanguageConstantSuggestion(`(x, |`, OptionalInsert));
 
-        it(`(x, |opt`, () => expectLanguageConstantSuggestion(`(x, |opt`, OptionalReplace));
+        it(`(x, |opt`, async () => await expectLanguageConstantSuggestion(`(x, |opt`, OptionalReplace));
 
-        it(`(x, opt|`, () => expectLanguageConstantSuggestion(`(x, opt|`, OptionalReplace));
+        it(`(x, opt|`, async () => await expectLanguageConstantSuggestion(`(x, opt|`, OptionalReplace));
 
-        it(`(x, | opt`, () => expectNoLanguageConstantSuggestion(`(x, |`));
+        it(`(x, | opt`, async () => await expectNoLanguageConstantSuggestion(`(x, |`));
 
-        it(`(x, opt |`, () => expectNoLanguageConstantSuggestion(`(x, opt |`));
+        it(`(x, opt |`, async () => await expectNoLanguageConstantSuggestion(`(x, opt |`));
 
-        it(`(x, optional|`, () => expectLanguageConstantSuggestion(`(x, optional|`, OptionalReplace));
+        it(`(x, optional|`, async () => await expectLanguageConstantSuggestion(`(x, optional|`, OptionalReplace));
 
-        it(`(x, optional |`, () => expectNoLanguageConstantSuggestion(`(x, optional |`));
+        it(`(x, optional |`, async () => await expectNoLanguageConstantSuggestion(`(x, optional |`));
     });
 });

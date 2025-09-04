@@ -37,55 +37,81 @@ import { MockDocument } from "../mockDocument";
 import { TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
-export async function assertActiveNode(settings: Settings, textWithPipe: string): Promise<TActiveNode> {
-    const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+export async function assertActiveNode(params: {
+    readonly textWithPipe: string;
+    readonly settings: Settings;
+}): Promise<TActiveNode> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
+
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+        text,
+        settings: params.settings,
+    });
 
     return ActiveNodeUtils.activeNode(triedParse.nodeIdMapCollection, position);
 }
 
-export async function assertAutocompleteInspection(
-    settings: InspectionSettings,
-    textWithPipe: string,
-): Promise<Inspection.Autocomplete> {
-    return (await assertInspected(settings, textWithPipe)).autocomplete;
+export async function assertAutocompleteInspection(params: {
+    readonly textWithPipe: string;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<Inspection.Autocomplete> {
+    return (await assertInspected(params)).autocomplete;
 }
 
-export async function assertDocumentSymbolsInspection(
-    settings: Settings,
-    text: string,
-): Promise<ReadonlyArray<DocumentSymbol>> {
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+export async function assertDocumentSymbolsInspection(params: {
+    readonly text: string;
+    readonly inspectionSettings: Settings;
+}): Promise<ReadonlyArray<DocumentSymbol>> {
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+        text: params.text,
+        settings: params.inspectionSettings,
+    });
 
     return getDocumentSymbols(triedParse.nodeIdMapCollection, NoOpCancellationToken);
 }
 
-export async function assertInBoundsActiveNode(settings: Settings, textWithPipe: string): Promise<ActiveNode> {
-    const activeNode: TActiveNode = await assertActiveNode(settings, textWithPipe);
+export async function assertInBoundsActiveNode(params: {
+    readonly settings: Settings;
+    readonly textWithPipe: string;
+}): Promise<ActiveNode> {
+    const activeNode: TActiveNode = await assertActiveNode(params);
     ActiveNodeUtils.assertPositionInBounds(activeNode);
 
     return activeNode;
 }
 
-export async function assertInspected(
-    settings: InspectionSettings,
-    textWithPipe: string,
-    typeCache: TypeCache = TypeCacheUtils.emptyCache(),
-): Promise<Inspected> {
-    const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
+export async function assertInspected(params: {
+    readonly textWithPipe: string;
+    readonly inspectionSettings: InspectionSettings;
+    readonly typeCache?: TypeCache;
+}): Promise<Inspected> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
 
-    return await ResultUtils.assertOk(await Inspection.tryInspect(settings, text, position, typeCache));
+    return await ResultUtils.assertOk(
+        await Inspection.tryInspect(
+            params.inspectionSettings,
+            text,
+            position,
+            params.typeCache ?? TypeCacheUtils.emptyCache(),
+        ),
+    );
 }
 
-export async function assertRootType(settings: InspectionSettings, text: string): Promise<TPowerQueryType> {
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+export async function assertRootType(params: {
+    readonly text: string;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<TPowerQueryType> {
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+        text: params.text,
+        settings: params.inspectionSettings,
+    });
 
     const root: TXorNode = TaskUtils.isParseStageOk(triedParse)
         ? XorNodeUtils.boxAst(triedParse.ast)
         : XorNodeUtils.boxContext(Assert.asDefined(triedParse.parseState.contextState.root));
 
     const actual: Inspection.TriedType = await Inspection.tryType(
-        settings,
+        params.inspectionSettings,
         triedParse.nodeIdMapCollection,
         root.node.id,
     );
@@ -95,16 +121,16 @@ export async function assertRootType(settings: InspectionSettings, text: string)
     return actual.value;
 }
 
-export async function assertNodeScope(
-    inspectionSettings: InspectionSettings,
-    textWithPipe: string,
-): Promise<NodeScope> {
-    const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
+export async function assertNodeScope(params: {
+    readonly textWithPipe: string;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<NodeScope> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
 
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(
-        inspectionSettings,
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
         text,
-    );
+        settings: params.inspectionSettings,
+    });
 
     const nodeIdMapCollection: NodeIdMap.Collection = triedParse.nodeIdMapCollection;
     const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
@@ -115,21 +141,26 @@ export async function assertNodeScope(
 
     return ResultUtils.assertOk(
         await tryNodeScope(
-            inspectionSettings,
+            params.inspectionSettings,
             nodeIdMapCollection,
-            inspectionSettings.eachScopeById,
+            params.inspectionSettings.eachScopeById,
             ActiveNodeUtils.assertGetLeaf(activeNode).node.id,
             TypeCacheUtils.emptyCache().scopeById,
         ),
     );
 }
 
-export async function assertScopeType(
-    settings: InspectionSettings,
-    textWithPipe: string,
-): Promise<Inspection.ScopeTypeByKey> {
-    const [text, position]: [string, Position] = TestUtils.extractPosition(textWithPipe);
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse(settings, text);
+export async function assertScopeType(params: {
+    readonly textWithPipe: string;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<Inspection.ScopeTypeByKey> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
+
+    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+        text,
+        settings: params.inspectionSettings,
+    });
+
     const nodeIdMapCollection: NodeIdMap.Collection = triedParse.nodeIdMapCollection;
 
     const activeNodeLeaf: TXorNode = Inspection.ActiveNodeUtils.assertGetLeaf(
@@ -137,7 +168,7 @@ export async function assertScopeType(
     );
 
     const triedScopeType: Inspection.TriedScopeType = await Inspection.tryScopeType(
-        settings,
+        params.inspectionSettings,
         nodeIdMapCollection,
         activeNodeLeaf.node.id,
     );
@@ -147,17 +178,17 @@ export async function assertScopeType(
     return triedScopeType.value;
 }
 
-export async function assertValidate(
-    analysisSettings: AnalysisSettings,
-    validationSettings: ValidationSettings,
-    text: string,
-): Promise<ValidateOk> {
-    const mockDocument: MockDocument = TestUtils.mockDocument(text);
+export async function assertValidate(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly validationSettings: ValidationSettings;
+}): Promise<ValidateOk> {
+    const mockDocument: MockDocument = TestUtils.mockDocument(params.text);
 
     const triedValidation: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
         mockDocument,
-        analysisSettings,
-        validationSettings,
+        params.analysisSettings,
+        params.validationSettings,
     );
 
     ResultUtils.assertIsOk(triedValidation);
@@ -166,10 +197,10 @@ export async function assertValidate(
     return triedValidation.value;
 }
 
-export async function assertValidateDiagnostics(
-    analysisSettings: AnalysisSettings,
-    validationSettings: ValidationSettings,
-    text: string,
-): Promise<Diagnostic[]> {
-    return (await assertValidate(analysisSettings, validationSettings, text)).diagnostics;
+export async function assertValidateDiagnostics(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly validationSettings: ValidationSettings;
+}): Promise<Diagnostic[]> {
+    return (await assertValidate(params)).diagnostics;
 }

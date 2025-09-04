@@ -14,7 +14,12 @@ export interface AbridgedAutocompleteItem {
 }
 
 export async function assertAutocomplete(textWithPipe: string): Promise<Inspection.Autocomplete> {
-    return (await TestUtils.assertInspected(TestConstants.DefaultInspectionSettings, textWithPipe)).autocomplete;
+    return (
+        await TestUtils.assertInspected({
+            textWithPipe,
+            inspectionSettings: TestConstants.DefaultInspectionSettings,
+        })
+    ).autocomplete;
 }
 
 export async function assertAutocompleteItems(

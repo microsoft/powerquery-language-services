@@ -28,12 +28,12 @@ describe(`dereferenceIdentifierUtils`, () => {
     async function runScopeTypeTest(params: {
         readonly textWithPipe: string;
         readonly expected: ScopeTypeByKey;
-        readonly settings?: InspectionSettings;
+        readonly inspectionSettings?: InspectionSettings;
     }): Promise<void> {
-        const scopeTypeByKey: ScopeTypeByKey = await assertScopeType(
-            params.settings ?? TestConstants.SimpleInspectionSettings,
-            params.textWithPipe,
-        );
+        const scopeTypeByKey: ScopeTypeByKey = await assertScopeType({
+            textWithPipe: params.textWithPipe,
+            inspectionSettings: params.inspectionSettings ?? TestConstants.SimpleInspectionSettings,
+        });
 
         const expectedEntries: [string, Type.TPowerQueryType][] = [...params.expected.entries()];
         const actualEntries: [string, Type.TPowerQueryType][] = [...scopeTypeByKey.entries()];
@@ -46,15 +46,24 @@ describe(`dereferenceIdentifierUtils`, () => {
     describe(`library behavior`, () => {
         describe(`${Ast.NodeKind.LetExpression}`, () => {
             it(`happy path`, async () => {
-                await runTypeTest({ text: `let foo = 42 in foo`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `let foo = 42 in foo`,
+                    expected: numberLiteral,
+                });
             });
 
             it(`happy path with quoted identifer`, async () => {
-                await runTypeTest({ text: `let foo = 42 in #"foo"`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `let foo = 42 in #"foo"`,
+                    expected: numberLiteral,
+                });
             });
 
             it(`multiple dereferences`, async () => {
-                await runTypeTest({ text: `let foo = 42, bar = foo, baz = bar in baz`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `let foo = 42, bar = foo, baz = bar in baz`,
+                    expected: numberLiteral,
+                });
             });
         });
 
@@ -72,19 +81,31 @@ describe(`dereferenceIdentifierUtils`, () => {
 
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
             it(`happy path`, async () => {
-                await runTypeTest({ text: `[foo = 42][foo]`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `[foo = 42][foo]`,
+                    expected: numberLiteral,
+                });
             });
 
             it(`happy path with quoted identifer`, async () => {
-                await runTypeTest({ text: `[foo = 42][#"foo"]`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `[foo = 42][#"foo"]`,
+                    expected: numberLiteral,
+                });
             });
 
             it(`happy path with generalized identifer`, async () => {
-                await runTypeTest({ text: `[with space = 42][with space]`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `[with space = 42][with space]`,
+                    expected: numberLiteral,
+                });
             });
 
             it(`multiple dereferences`, async () => {
-                await runTypeTest({ text: `[foo = 42, bar = foo, baz = bar][baz]`, expected: numberLiteral });
+                await runTypeTest({
+                    text: `[foo = 42, bar = foo, baz = bar][baz]`,
+                    expected: numberLiteral,
+                });
             });
         });
 

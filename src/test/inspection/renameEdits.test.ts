@@ -8,12 +8,12 @@ import type { TextEdit } from "vscode-languageserver-types";
 import { TestConstants, TestUtils } from "..";
 
 describe(`Inspection - RenameEdits - Identifiers`, () => {
-    function runTest(params: {
+    async function runTest(params: {
         readonly textWithPipe: string;
         readonly newName: string;
         readonly expected: TextEdit[] | undefined;
     }): Promise<void> {
-        return TestUtils.assertEqualRenameEdits({
+        await TestUtils.assertEqualRenameEdits({
             ...params,
             analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
         });
@@ -101,8 +101,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
     });
 
     describe("Rename generalized identifiers", () => {
-        it(`Rename one record-expression identifier`, () =>
-            runTest({
+        it(`Rename one record-expression identifier`, async () =>
+            await runTest({
                 textWithPipe: `let
                     foo = 1,
                     bar = 1,
@@ -146,8 +146,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ],
             }));
 
-        it(`Rename one identifier in its paired assignment expression creator`, () =>
-            runTest({
+        it(`Rename one identifier in its paired assignment expression creator`, async () =>
+            await runTest({
                 textWithPipe: `let
                     |foo = 1,
                     bar = 1,
@@ -191,8 +191,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ],
             }));
 
-        it(`Rename one record-expression identifier creator`, () =>
-            runTest({
+        it(`Rename one record-expression identifier creator`, async () =>
+            await runTest({
                 textWithPipe: `let
                 foo = 1,
                 bar = 1,
@@ -223,8 +223,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ],
             }));
 
-        it(`Rename one identifier within a statement`, () =>
-            runTest({
+        it(`Rename one identifier within a statement`, async () =>
+            await runTest({
                 textWithPipe: `let
                     foo| = 1,
                     bar = 1,
@@ -268,8 +268,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ],
             }));
 
-        it(`Rename one generalized identifier within a statement with constant at symbol`, () =>
-            runTest({
+        it(`Rename one generalized identifier within a statement with constant at symbol`, async () =>
+            await runTest({
                 textWithPipe: `let
                     foo = 1,
                     bar = 1,
@@ -313,8 +313,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ],
             }));
 
-        it(`Rename one referred generalized identifier within a statement with constant at symbol`, () =>
-            runTest({
+        it(`Rename one referred generalized identifier within a statement with constant at symbol`, async () =>
+            await runTest({
                 textWithPipe: `let
                     foo = 1,
                     bar = 1,

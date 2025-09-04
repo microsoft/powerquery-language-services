@@ -66,11 +66,11 @@ export function mockDocument(text: string): MockDocument {
     return new MockDocument(text, "powerquery");
 }
 
-export async function assertParse(
-    settings: Settings,
-    text: string,
-): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
-    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
+export async function assertParse(params: {
+    readonly text: string;
+    readonly settings: Settings;
+}): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(params.settings, params.text);
 
     if (TaskUtils.isParseStageOk(triedLexParseTask) || TaskUtils.isParseStageParseError(triedLexParseTask)) {
         return triedLexParseTask;

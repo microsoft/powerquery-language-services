@@ -45,13 +45,16 @@ describe(`Inspection - Type`, () => {
         });
     }
 
-    async function assertEqualScopeType(textWithPipe: string, expected: Inspection.ScopeTypeByKey): Promise<void> {
-        const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType(
-            ExtendedInspectionSettings,
-            textWithPipe,
-        );
+    async function assertEqualScopeType(params: {
+        readonly textWithPipe: string;
+        readonly expected: Inspection.ScopeTypeByKey;
+    }): Promise<void> {
+        const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType({
+            textWithPipe: params.textWithPipe,
+            inspectionSettings: ExtendedInspectionSettings,
+        });
 
-        TestUtils.assertEqualScopeType(expected, actual);
+        TestUtils.assertEqualScopeType({ expected: params.expected, actual });
     }
 
     const ExtendedInspectionSettings: InspectionSettings = {
@@ -75,28 +78,42 @@ describe(`Inspection - Type`, () => {
 
     describe(`extended static analysis`, () => {
         describe(`BinOpExpression`, () => {
-            it(`1 + 1`, async () => await assertEqualRootType({ text: `1 + 1`, expected: Type.NumberInstance }));
+            it(`1 + 1`, async () =>
+                await assertEqualRootType({
+                    text: `1 + 1`,
+                    expected: Type.NumberInstance,
+                }));
 
             it(`true and false`, async () =>
-                await assertEqualRootType({ text: `true and false`, expected: Type.LogicalInstance }));
+                await assertEqualRootType({
+                    text: `true and false`,
+                    expected: Type.LogicalInstance,
+                }));
 
             it(`"hello" & "world"`, async () =>
-                await assertEqualRootType({ text: `"hello" & "world"`, expected: Type.TextInstance }));
+                await assertEqualRootType({
+                    text: `"hello" & "world"`,
+                    expected: Type.TextInstance,
+                }));
 
-            it(`true + 1`, async () => await assertEqualRootType({ text: `true + 1`, expected: Type.NoneInstance }));
+            it(`true + 1`, async () =>
+                await assertEqualRootType({
+                    text: `true + 1`,
+                    expected: Type.NoneInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
             it(`(foo as number, bar as nullable number) => foo + bar|`, async () =>
-                await assertEqualScopeType(
-                    `(foo as number, bar as nullable number) => foo + bar|`,
-                    new Map([
+                await assertEqualScopeType({
+                    textWithPipe: `(foo as number, bar as nullable number) => foo + bar|`,
+                    expected: new Map([
                         [`foo`, Type.NumberInstance],
                         [`#"foo"`, Type.NumberInstance],
                         [`bar`, Type.NullableNumberInstance],
                         [`#"bar"`, Type.NullableNumberInstance],
                     ]),
-                ));
+                }));
         });
 
         describe(`${Ast.NodeKind.AsExpression}`, () => {
@@ -242,7 +259,11 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
-            it(`error 1`, async () => await assertEqualRootType({ text: `error 1`, expected: Type.AnyInstance }));
+            it(`error 1`, async () =>
+                await assertEqualRootType({
+                    text: `error 1`,
+                    expected: Type.AnyInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.FieldProjection}`, () => {
@@ -257,10 +278,16 @@ describe(`Inspection - Type`, () => {
                 }));
 
             it(`[a = 1][[b]]`, async () =>
-                await assertEqualRootType({ text: `[a = 1][[b]]`, expected: Type.NoneInstance }));
+                await assertEqualRootType({
+                    text: `[a = 1][[b]]`,
+                    expected: Type.NoneInstance,
+                }));
 
             it(`[a = 1][[b]]?`, async () =>
-                await assertEqualRootType({ text: `[a = 1][[b]]?`, expected: Type.NullInstance }));
+                await assertEqualRootType({
+                    text: `[a = 1][[b]]?`,
+                    expected: Type.NullInstance,
+                }));
 
             it(`(1 as record)[[a]]`, async () =>
                 await assertEqualRootType({
@@ -275,7 +302,10 @@ describe(`Inspection - Type`, () => {
                 }));
 
             it(`(each [[foo]])([foo = "bar"])`, async () =>
-                await assertEqualRootType({ text: `(each [[foo]])([foo = "bar"])`, expected: Type.UnknownInstance }));
+                await assertEqualRootType({
+                    text: `(each [[foo]])([foo = "bar"])`,
+                    expected: Type.UnknownInstance,
+                }));
 
             it(`(each [[foo]])([foo = "bar", spam = "eggs"])`, async () => {
                 const expression: string = `(each [[foo]])([foo = "bar", spam = "eggs"])`;
@@ -305,23 +335,41 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.FieldSelector}`, () => {
             it(`[a = 1][a]`, async () =>
-                await assertEqualRootType({ text: `[a = 1][a]`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `[a = 1][a]`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
 
             it(`[a = 1][b]`, async () =>
-                await assertEqualRootType({ text: `[a = 1][b]`, expected: Type.NoneInstance }));
+                await assertEqualRootType({
+                    text: `[a = 1][b]`,
+                    expected: Type.NoneInstance,
+                }));
 
             it(`[a = 1][b]?`, async () =>
-                await assertEqualRootType({ text: `[a = 1][b]?`, expected: Type.NullInstance }));
+                await assertEqualRootType({
+                    text: `[a = 1][b]?`,
+                    expected: Type.NullInstance,
+                }));
 
             it(`let x = (1 as record) in x[a]`, async () =>
-                await assertEqualRootType({ text: `let x = (1 as record) in x[a]`, expected: Type.AnyInstance }));
+                await assertEqualRootType({
+                    text: `let x = (1 as record) in x[a]`,
+                    expected: Type.AnyInstance,
+                }));
 
             it(`let x = (1 as record) in x[a]?`, async () =>
-                await assertEqualRootType({ text: `let x = (1 as record) in x[a]?`, expected: Type.AnyInstance }));
+                await assertEqualRootType({
+                    text: `let x = (1 as record) in x[a]?`,
+                    expected: Type.AnyInstance,
+                }));
 
             // Test for when FieldSelector is used in an EachExpression but wasn't a scope
             it(`(each [foo])([foo = "bar"])`, async () =>
-                await assertEqualRootType({ text: `(each [foo])([foo = "bar"])`, expected: Type.UnknownInstance }));
+                await assertEqualRootType({
+                    text: `(each [foo])([foo = "bar"])`,
+                    expected: Type.UnknownInstance,
+                }));
 
             // Test for when FieldSelector is used and was given an eachScope
             it(`(each [foo])([foo = "bar"])`, async () => {
@@ -339,7 +387,11 @@ describe(`Inspection - Type`, () => {
                     eachScopeById: new Map([[4, eachScope]]),
                 };
 
-                await assertEqualRootType({ text: expression, expected, settings: testSettingsWithEachScope });
+                await assertEqualRootType({
+                    text: expression,
+                    expected,
+                    settings: testSettingsWithEachScope,
+                });
             });
         });
 
@@ -431,7 +483,10 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.FunctionType}`, () => {
             it(`type function`, async () =>
-                await assertEqualRootType({ text: `type function`, expected: Type.FunctionInstance }));
+                await assertEqualRootType({
+                    text: `type function`,
+                    expected: Type.FunctionInstance,
+                }));
 
             it(`type function () as text`, async () =>
                 await assertEqualRootType({
@@ -471,18 +526,30 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.IdentifierExpression}`, () => {
             it(`let x = true in x`, async () =>
-                await assertEqualRootType({ text: `let x = true in x`, expected: Type.LogicalInstance }));
+                await assertEqualRootType({
+                    text: `let x = true in x`,
+                    expected: Type.LogicalInstance,
+                }));
 
             it(`let x = 1 in x`, async () =>
-                await assertEqualRootType({ text: `let x = 1 in x`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `let x = 1 in x`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
 
             it(`let _ = 1 in 1`, async () =>
-                await assertEqualRootType({ text: `let _ = 1 in 1`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `let _ = 1 in 1`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
         });
 
         describe(`${Ast.NodeKind.IfExpression}`, () => {
             it(`if true then true else false`, async () =>
-                await assertEqualRootType({ text: `if true then true else false`, expected: Type.LogicalInstance }));
+                await assertEqualRootType({
+                    text: `if true then true else false`,
+                    expected: Type.LogicalInstance,
+                }));
 
             it(`if true then 1 else false`, async () =>
                 await assertEqualRootType({
@@ -496,12 +563,23 @@ describe(`Inspection - Type`, () => {
                     expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.textLiteral(false, `""`)]),
                 }));
 
-            it(`if`, async () => await assertEqualRootType({ text: `if`, expected: Type.UnknownInstance }));
+            it(`if`, async () =>
+                await assertEqualRootType({
+                    text: `if`,
+                    expected: Type.UnknownInstance,
+                }));
 
-            it(`if "a"`, async () => await assertEqualRootType({ text: `if "a"`, expected: Type.NoneInstance }));
+            it(`if "a"`, async () =>
+                await assertEqualRootType({
+                    text: `if "a"`,
+                    expected: Type.NoneInstance,
+                }));
 
             it(`if true or "a"`, async () =>
-                await assertEqualRootType({ text: `if true or "a"`, expected: Type.NoneInstance }));
+                await assertEqualRootType({
+                    text: `if true or "a"`,
+                    expected: Type.NoneInstance,
+                }));
 
             it(`if 1 as any then "a" as text else "b" as text`, async () =>
                 await assertEqualRootType({
@@ -524,13 +602,19 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.IsExpression}`, () => {
             it(`1 is text`, async () => {
-                await assertEqualRootType({ text: `1 is text`, expected: Type.LogicalInstance });
+                await assertEqualRootType({
+                    text: `1 is text`,
+                    expected: Type.LogicalInstance,
+                });
             });
         });
 
         describe(`${Ast.NodeKind.IsNullablePrimitiveType}`, () => {
             it(`1 is nullable text`, async () =>
-                await assertEqualRootType({ text: `1 is nullable text`, expected: Type.LogicalInstance }));
+                await assertEqualRootType({
+                    text: `1 is nullable text`,
+                    expected: Type.LogicalInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.LetExpression}`, () => {
@@ -567,64 +651,98 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.LiteralExpression}`, () => {
-            it(`true`, async () => await assertEqualRootType({ text: `true`, expected: Type.LogicalInstance }));
+            it(`true`, async () =>
+                await assertEqualRootType({
+                    text: `true`,
+                    expected: Type.LogicalInstance,
+                }));
 
-            it(`false`, async () => await assertEqualRootType({ text: `false`, expected: Type.LogicalInstance }));
+            it(`false`, async () =>
+                await assertEqualRootType({
+                    text: `false`,
+                    expected: Type.LogicalInstance,
+                }));
 
             it(`1`, async () =>
-                await assertEqualRootType({ text: `1`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `1`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
 
-            it(`null`, async () => await assertEqualRootType({ text: `null`, expected: Type.NullInstance }));
+            it(`null`, async () =>
+                await assertEqualRootType({
+                    text: `null`,
+                    expected: Type.NullInstance,
+                }));
 
-            it(`{}`, async () => await assertEqualRootType({ text: `{}`, expected: TypeUtils.definedList(false, []) }));
+            it(`{}`, async () =>
+                await assertEqualRootType({
+                    text: `{}`,
+                    expected: TypeUtils.definedList(false, []),
+                }));
 
             it(`[]`, async () =>
-                await assertEqualRootType({ text: `[]`, expected: TypeUtils.definedRecord(false, new Map(), false) }));
+                await assertEqualRootType({
+                    text: `[]`,
+                    expected: TypeUtils.definedRecord(false, new Map(), false),
+                }));
         });
 
         describe(`${Ast.NodeKind.NullableType}`, () => {
             it(`type nullable number`, async () =>
-                await assertEqualRootType({ text: `type nullable number`, expected: Type.NullableNumberInstance }));
+                await assertEqualRootType({
+                    text: `type nullable number`,
+                    expected: Type.NullableNumberInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
             it(`1 ?? 1`, async () =>
-                await assertEqualRootType({ text: `1 ?? 1`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `1 ?? 1`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
 
             it(`1 ?? ""`, async () =>
-                await assertEqualRootType({ text: `1 ?? ""`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                await assertEqualRootType({
+                    text: `1 ?? ""`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
 
             it(`1 ?? (1 + "")`, async () =>
-                await assertEqualRootType({ text: `1 ?? (1 + "")`, expected: Type.NoneInstance }));
+                await assertEqualRootType({
+                    text: `1 ?? (1 + "")`,
+                    expected: Type.NoneInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.Parameter}`, () => {
             it(`(foo as number) => foo|`, async () =>
-                await assertEqualScopeType(
-                    `(foo as number) => foo|`,
-                    new Map([
+                await assertEqualScopeType({
+                    textWithPipe: `(foo as number) => foo|`,
+                    expected: new Map([
                         [`foo`, Type.NumberInstance],
                         [`#"foo"`, Type.NumberInstance],
                     ]),
-                ));
+                }));
 
             it(`(optional foo as number) => foo|`, async () =>
-                await assertEqualScopeType(
-                    `(optional foo as number) => foo|`,
-                    new Map([
+                await assertEqualScopeType({
+                    textWithPipe: `(optional foo as number) => foo|`,
+                    expected: new Map([
                         [`foo`, Type.NullableNumberInstance],
                         [`#"foo"`, Type.NullableNumberInstance],
                     ]),
-                ));
+                }));
 
             it(`(foo) => foo|`, async () =>
-                await assertEqualScopeType(
-                    `(foo) => foo|`,
-                    new Map([
+                await assertEqualScopeType({
+                    textWithPipe: `(foo) => foo|`,
+                    expected: new Map([
                         [`foo`, Type.NullableAnyInstance],
                         [`#"foo"`, Type.NullableAnyInstance],
                     ]),
-                ));
+                }));
         });
 
         describe(`${Ast.NodeKind.RecordExpression}`, () => {
@@ -686,10 +804,16 @@ describe(`Inspection - Type`, () => {
                 }));
 
             it(`([foo = 1]) & [] as record`, async () =>
-                await assertEqualRootType({ text: `([foo = 1]) & [] as record`, expected: Type.RecordInstance }));
+                await assertEqualRootType({
+                    text: `([foo = 1]) & [] as record`,
+                    expected: Type.RecordInstance,
+                }));
 
             it(`([] as record) & [] as record`, async () =>
-                await assertEqualRootType({ text: `([] as record) & [] as record`, expected: Type.RecordInstance }));
+                await assertEqualRootType({
+                    text: `([] as record) & [] as record`,
+                    expected: Type.RecordInstance,
+                }));
         });
 
         describe(`${Ast.NodeKind.RecordType}`, () => {
@@ -723,10 +847,16 @@ describe(`Inspection - Type`, () => {
         describe(`${Ast.NodeKind.RecursivePrimaryExpression}`, () => {
             describe(`any is allowed`, () => {
                 it(`${Ast.NodeKind.InvokeExpression}`, async () =>
-                    await assertEqualRootType({ text: `let x = (_ as any) in x()`, expected: Type.AnyInstance }));
+                    await assertEqualRootType({
+                        text: `let x = (_ as any) in x()`,
+                        expected: Type.AnyInstance,
+                    }));
 
                 it(`${Ast.NodeKind.ItemAccessExpression}`, async () =>
-                    await assertEqualRootType({ text: `let x = (_ as any) in x{0}`, expected: Type.AnyInstance }));
+                    await assertEqualRootType({
+                        text: `let x = (_ as any) in x{0}`,
+                        expected: Type.AnyInstance,
+                    }));
 
                 describe(`${Ast.NodeKind.FieldSelector}`, () => {
                     it(`[a = 1][a]`, async () =>
@@ -736,10 +866,16 @@ describe(`Inspection - Type`, () => {
                         }));
 
                     it(`[a = 1][b]`, async () =>
-                        await assertEqualRootType({ text: `[a = 1][b]`, expected: Type.NoneInstance }));
+                        await assertEqualRootType({
+                            text: `[a = 1][b]`,
+                            expected: Type.NoneInstance,
+                        }));
 
                     it(`a[b]?`, async () =>
-                        await assertEqualRootType({ text: `[a = 1][b]?`, expected: Type.NullInstance }));
+                        await assertEqualRootType({
+                            text: `[a = 1][b]?`,
+                            expected: Type.NullInstance,
+                        }));
                 });
 
                 it(`${Ast.NodeKind.FieldProjection}`, async () =>
@@ -752,7 +888,10 @@ describe(`Inspection - Type`, () => {
                     }));
 
                 it(`${Ast.NodeKind.FieldSelector}`, async () =>
-                    await assertEqualRootType({ text: `[a = 1][a]`, expected: TypeUtils.numberLiteral(false, `1`) }));
+                    await assertEqualRootType({
+                        text: `[a = 1][a]`,
+                        expected: TypeUtils.numberLiteral(false, `1`),
+                    }));
             });
 
             it(`let x = () as function => () as number => 1 in x()()`, async () =>
@@ -810,7 +949,10 @@ describe(`Inspection - Type`, () => {
                     false,
                 );
 
-                await assertEqualRootType({ text: expression, expected });
+                await assertEqualRootType({
+                    text: expression,
+                    expected,
+                });
             });
         });
 
@@ -843,22 +985,46 @@ describe(`Inspection - Type`, () => {
 
         describe(`${Ast.NodeKind.UnaryExpression}`, () => {
             it(`+1`, async () =>
-                await assertEqualRootType({ text: `+1`, expected: TypeUtils.numberLiteral(false, `+1`) }));
+                await assertEqualRootType({
+                    text: `+1`,
+                    expected: TypeUtils.numberLiteral(false, `+1`),
+                }));
 
             it(`-1`, async () =>
-                await assertEqualRootType({ text: `-1`, expected: TypeUtils.numberLiteral(false, `-1`) }));
+                await assertEqualRootType({
+                    text: `-1`,
+                    expected: TypeUtils.numberLiteral(false, `-1`),
+                }));
 
             it(`--1`, async () =>
-                await assertEqualRootType({ text: `--1`, expected: TypeUtils.numberLiteral(false, `--1`) }));
+                await assertEqualRootType({
+                    text: `--1`,
+                    expected: TypeUtils.numberLiteral(false, `--1`),
+                }));
 
-            it(`not true`, async () => await assertEqualRootType({ text: `not true`, expected: Type.LogicalInstance }));
+            it(`not true`, async () =>
+                await assertEqualRootType({
+                    text: `not true`,
+                    expected: Type.LogicalInstance,
+                }));
 
             it(`not false`, async () =>
-                await assertEqualRootType({ text: `not false`, expected: Type.LogicalInstance }));
+                await assertEqualRootType({
+                    text: `not false`,
+                    expected: Type.LogicalInstance,
+                }));
 
-            it(`not 1`, async () => await assertEqualRootType({ text: `not 1`, expected: Type.NoneInstance }));
+            it(`not 1`, async () =>
+                await assertEqualRootType({
+                    text: `not 1`,
+                    expected: Type.NoneInstance,
+                }));
 
-            it(`+true`, async () => await assertEqualRootType({ text: `+true`, expected: Type.NoneInstance }));
+            it(`+true`, async () =>
+                await assertEqualRootType({
+                    text: `+true`,
+                    expected: Type.NoneInstance,
+                }));
         });
     });
 
@@ -909,30 +1075,53 @@ describe(`Inspection - Type`, () => {
     describe(`external type`, () => {
         describe(`value`, () => {
             it(`resolves to external type`, async () =>
-                await assertEqualRootType({ text: `foo`, expected: Type.FunctionInstance }));
+                await assertEqualRootType({
+                    text: `foo`,
+                    expected: Type.FunctionInstance,
+                }));
 
             it(`indirect identifier resolves to external type`, async () =>
-                await assertEqualRootType({ text: `let bar = foo in bar`, expected: Type.FunctionInstance }));
+                await assertEqualRootType({
+                    text: `let bar = foo in bar`,
+                    expected: Type.FunctionInstance,
+                }));
 
             it(`fails to resolve to external type`, async () =>
-                await assertEqualRootType({ text: `bar`, expected: Type.UnknownInstance }));
+                await assertEqualRootType({
+                    text: `bar`,
+                    expected: Type.UnknownInstance,
+                }));
         });
 
         describe(`invocation`, () => {
             it(`resolves with identifier`, async () =>
-                await assertEqualRootType({ text: `foo()`, expected: Type.TextInstance }));
+                await assertEqualRootType({
+                    text: `foo()`,
+                    expected: Type.TextInstance,
+                }));
 
             it(`resolves with dereferenced identifier`, async () =>
-                await assertEqualRootType({ text: `let bar = foo in bar()`, expected: Type.TextInstance }));
+                await assertEqualRootType({
+                    text: `let bar = foo in bar()`,
+                    expected: Type.TextInstance,
+                }));
 
             it(`resolves based on argument`, async () => {
                 const expression1: string = `foo()`;
                 const expected1: Type.Text = Type.TextInstance;
-                await assertEqualRootType({ text: expression1, expected: expected1 });
+
+                await assertEqualRootType({
+                    text: expression1,
+                    expected: expected1,
+                });
 
                 const expression2: string = `foo("bar")`;
                 const expected2: Type.Number = Type.NumberInstance;
-                await assertEqualRootType({ text: expression2, expected: expected2 });
+
+                await assertEqualRootType({
+                    text: expression2,
+                    expected: expected2,
+                });
             });
         });
     });

@@ -8,81 +8,81 @@ import { AutocompleteItem } from "../../powerquery-language-services/inspection"
 
 describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     describe(`getHover for key-value-pair`, () => {
-        function runTest(params: {
+        async function runTest(params: {
             readonly textWithPipe: string;
             readonly expected: string | undefined;
         }): Promise<void> {
-            return TestUtils.assertEqualHoverAnalysis({
+            await TestUtils.assertEqualHoverAnalysis({
                 ...params,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
             });
         }
 
-        it(`let foobar =| ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let foobar =| ${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let foobar =| ${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: undefined,
             }));
 
-        it(`let foobar = |${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let foobar = |${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let foobar = |${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: undefined,
             }));
 
-        it(`let foobar = ${TestConstants.TestLibraryName.SquareIfNumber}|`, () =>
-            runTest({
+        it(`let foobar = ${TestConstants.TestLibraryName.SquareIfNumber}|`, async () =>
+            await runTest({
                 textWithPipe: `let foobar = ${TestConstants.TestLibraryName.SquareIfNumber}|`,
                 expected: "[library function] Test.SquareIfNumber: (x: any) => any",
             }));
 
-        it(`let foobar = ${TestConstants.TestLibraryName.SquareIfNumber} |`, () =>
-            runTest({
+        it(`let foobar = ${TestConstants.TestLibraryName.SquareIfNumber} |`, async () =>
+            await runTest({
                 textWithPipe: `let foobar = ${TestConstants.TestLibraryName.SquareIfNumber} |`,
                 expected: undefined,
             }));
 
-        it(`let| foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let| foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let| foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: undefined,
             }));
 
-        it(`let |foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let |foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let |foobar = ${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: undefined,
             }));
 
-        it(`let foobar| = ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let foobar| = ${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let foobar| = ${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: "[let-variable] foobar: (x: any) => any",
             }));
 
-        it(`let foobar | = ${TestConstants.TestLibraryName.SquareIfNumber}`, () =>
-            runTest({
+        it(`let foobar | = ${TestConstants.TestLibraryName.SquareIfNumber}`, async () =>
+            await runTest({
                 textWithPipe: `let foobar | = ${TestConstants.TestLibraryName.SquareIfNumber}`,
                 expected: undefined,
             }));
     });
 
     describe(`getAutocomplete for key-value-pair`, () => {
-        function runTest(params: {
+        async function runTest(params: {
             readonly textWithPipe: string;
             readonly expected?: {
                 readonly labels: ReadonlyArray<string>;
                 readonly isTextEdit: boolean;
             };
         }): Promise<AutocompleteItem[] | undefined> {
-            return TestUtils.assertAutocompleteAnalysis({
+            return await TestUtils.assertAutocompleteAnalysis({
                 ...params,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
             });
         }
 
-        it(`let|`, () =>
-            runTest({
+        it(`let|`, async () =>
+            await runTest({
                 textWithPipe: `let|`,
                 expected: {
                     labels: [],
@@ -90,11 +90,20 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        xit(`let foo|`, () => runTest({ textWithPipe: `let foo|`, expected: undefined }));
-        xit(`let foo |=`, () => runTest({ textWithPipe: `let foo |=`, expected: undefined }));
+        xit(`let foo|`, async () =>
+            await runTest({
+                textWithPipe: `let foo|`,
+                expected: undefined,
+            }));
 
-        it(`let foo =|`, () =>
-            runTest({
+        xit(`let foo |=`, async () =>
+            await runTest({
+                textWithPipe: `let foo |=`,
+                expected: undefined,
+            }));
+
+        it(`let foo =|`, async () =>
+            await runTest({
                 textWithPipe: `let foo =|`,
                 expected: {
                     labels: ["@foo", `@#"foo"`, "each", "error", "false", "if", "let", "not", "true", "try", "type"],
@@ -102,8 +111,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        it(`let foo = |`, () =>
-            runTest({
+        it(`let foo = |`, async () =>
+            await runTest({
                 textWithPipe: `let foo = |`,
                 expected: {
                     labels: ["@foo", `@#"foo"`, "each", "error", "false", "if", "let", "not", "true", "try", "type"],
@@ -111,8 +120,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        it(`WIP let foo = |Test`, () =>
-            runTest({
+        it(`let foo = |Test`, async () =>
+            await runTest({
                 textWithPipe: `let foo = |Test`,
                 expected: {
                     labels: [
@@ -139,8 +148,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        it(`let foo = | Test`, () =>
-            runTest({
+        it(`let foo = | Test`, async () =>
+            await runTest({
                 textWithPipe: `let foo = | Test`,
                 expected: {
                     labels: [
@@ -167,8 +176,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        it(`let foo = Test|`, () =>
-            runTest({
+        it(`let foo = Test|`, async () =>
+            await runTest({
                 textWithPipe: `let foo = Test|`,
                 expected: {
                     labels: [
@@ -186,8 +195,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        it(`let foo = Test |`, () =>
-            runTest({
+        it(`let foo = Test |`, async () =>
+            await runTest({
                 textWithPipe: `let foo = Test |`,
                 expected: {
                     labels: ["in"],

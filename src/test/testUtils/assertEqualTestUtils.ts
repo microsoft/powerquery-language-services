@@ -103,15 +103,15 @@ export async function assertEqualHoverAnalysis(params: {
     }
 }
 
-export async function assertEqualNodeScope(
-    textWithPipe: string,
-    expected: ReadonlyArray<TAbridgedNodeScopeItem>,
-    inspectionSettings: InspectionSettings,
-): Promise<void> {
-    const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
+export async function assertEqualNodeScope(params: {
+    readonly textWithPipe: string;
+    readonly expected: ReadonlyArray<TAbridgedNodeScopeItem>;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<void> {
+    const nodeScope: NodeScope = await TestUtils.assertNodeScope(params);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
 
-    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...expected].sort(
+    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...params.expected].sort(
         (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
             left.identifier.localeCompare(right.identifier),
     );
@@ -161,7 +161,10 @@ export async function assertEqualRootType(params: {
     readonly expected: TPowerQueryType;
     readonly settings: InspectionSettings;
 }): Promise<void> {
-    const actual: TPowerQueryType = await TestUtils.assertRootType(params.settings, params.text);
+    const actual: TPowerQueryType = await TestUtils.assertRootType({
+        text: params.text,
+        inspectionSettings: params.settings,
+    });
 
     return assertEqualPowerQueryType({
         actual,
@@ -184,9 +187,12 @@ export async function assertEqualSignatureHelpAnalysis(params: {
     }
 }
 
-export function assertEqualScopeType(expected: Inspection.ScopeTypeByKey, actual: Inspection.ScopeTypeByKey): void {
-    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(expected);
-    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(actual);
+export function assertEqualScopeType(params: {
+    readonly expected: Inspection.ScopeTypeByKey;
+    readonly actual: Inspection.ScopeTypeByKey;
+}): void {
+    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.expected);
+    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.actual);
 
     expect(actualArray).to.have.deep.members(expectedArray);
 }

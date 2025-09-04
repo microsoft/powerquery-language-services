@@ -22,15 +22,15 @@ interface ArgumentMismatchExec {
 
 const NumArgumentsPattern: RegExp = /Expected between (\d+)-(\d+) arguments, but (\d+) were given./;
 
-async function assertInvokeExpressionDiagnostics(
-    text: string,
-    overrides?: { readonly validationSettings: ValidationSettings },
-): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
-    const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
-        TestConstants.SimpleLibraryAnalysisSettings,
-        overrides?.validationSettings ?? TestConstants.SimpleLibraryValidateAllSettings,
-        text,
-    );
+async function assertInvokeExpressionDiagnostics(params: {
+    readonly text: string;
+    readonly validationSettings?: ValidationSettings;
+}): Promise<ReadonlyArray<AbridgedInvocationDiagnostic>> {
+    const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics({
+        text: params.text,
+        analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        validationSettings: params.validationSettings ?? TestConstants.SimpleLibraryValidateAllSettings,
+    });
 
     return diagnostics
         .filter(
@@ -98,42 +98,48 @@ describe("Validation - InvokeExpression", () => {
         it(`argument count suppressed`, async () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;
 
-            const withInvokeCheckSettings: ValidationSettings = {
+            const withCheckSettings: ValidationSettings = {
                 ...SimpleLibraryValidateAllSettings,
                 checkInvokeExpressions: true,
             };
 
-            const withoutInvokeCheckSettings: ValidationSettings = {
+            const withoutCheckSettings: ValidationSettings = {
                 ...SimpleLibraryValidateAllSettings,
                 checkInvokeExpressions: false,
             };
 
-            await expectLessWhenSurpressed(text, withInvokeCheckSettings, withoutInvokeCheckSettings);
+            await expectLessWhenSurpressed({
+                text,
+                withCheckSettings,
+                withoutCheckSettings,
+            });
         });
     });
 
     describe(`single invocation`, () => {
         it(`expects [1, 1] arguments, 0 given`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(`${TestConstants.TestLibraryName.SquareIfNumber}()`);
+                await assertInvokeExpressionDiagnostics({
+                    text: `${TestConstants.TestLibraryName.SquareIfNumber}()`,
+                });
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 1, 0);
         });
 
         it(`expects [1, 2] arguments, 0 given`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(
-                    `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
-                );
+                await assertInvokeExpressionDiagnostics({
+                    text: `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()`,
+                });
 
             expectArgumentCountMismatch(invocationDiagnostics, 1, 2, 0);
         });
 
         it(`expects [1, 2] arguments, 2 given`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(
-                    `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
-                );
+                await assertInvokeExpressionDiagnostics({
+                    text: `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
+                });
 
             expect(invocationDiagnostics.length).to.equal(0);
         });
@@ -142,13 +148,13 @@ describe("Validation - InvokeExpression", () => {
     describe(`multiple invocation`, () => {
         it(`position for multiple errors`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(
-                    `let 
+                await assertInvokeExpressionDiagnostics({
+                    text: `let
                         x = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(),
                         y = ${TestConstants.TestLibraryName.CombineNumberAndOptionalText}()
                     in
                         _`,
-                );
+                });
 
             expect(invocationDiagnostics.length).to.equal(2);
 
@@ -170,14 +176,14 @@ describe("Validation - InvokeExpression", () => {
     describe(`standard library`, () => {
         it(`let Source = #table(type table [ID = number], {{1}}), First = Table.FirstN(Source, 1) in Source`, async () => {
             const invocationDiagnostics: ReadonlyArray<AbridgedInvocationDiagnostic> =
-                await assertInvokeExpressionDiagnostics(
-                    `let
+                await assertInvokeExpressionDiagnostics({
+                    text: `let
                         Source = #table(type table [ID = number], {{1}}),
                         First = Table.FirstN(Source, 1)
                     in
                         Source`,
-                    { validationSettings: TestConstants.StandardLibraryValidateAllSettings },
-                );
+                    validationSettings: TestConstants.StandardLibraryValidateAllSettings,
+                });
 
             const expected: ReadonlyArray<Position> = [
                 {
