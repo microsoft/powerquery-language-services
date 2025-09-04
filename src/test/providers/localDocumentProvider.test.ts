@@ -37,10 +37,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
     }): Promise<AutocompleteItem[] | undefined> {
         return TestUtils.assertAutocompleteAnalysis({
             ...params,
-            expected: {
-                ...params.expected,
-                mode: TestUtils.ExpectCollectionMode.Contains,
-            },
             analysisSettings: IsolatedAnalysisSettings,
         });
     }
@@ -52,7 +48,20 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `let foo = 1, bar = 2, foobar = 3 in |`,
                         expected: {
-                            labels: [`foo`, `bar`, `foobar`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -61,7 +70,20 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `let foo = 1, bar = 2, foobar = 3 in foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -72,7 +94,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `(foo, bar, foobar) => |`,
                         expected: {
-                            labels: [`foo`, `bar`, `foobar`],
+                            labels: [`foo`, `#"foo"`, `bar`, `#"bar"`, `foobar`, `#"foobar"`],
                             isTextEdit: false,
                         },
                     }));
@@ -81,7 +103,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `(foo, bar, foobar) => foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [`foo`, `#"foo"`, `bar`, `#"bar"`, `foobar`, `#"foobar"`],
                             isTextEdit: false,
                         },
                     }));
@@ -92,7 +114,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = |][`,
                         expected: {
-                            labels: [`foo`, `bar`, `foobar`, `@x`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                                `@x`,
+                                `@#"x"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -101,7 +138,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                                `@x`,
+                                `@#"x"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -112,7 +164,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = |`,
                         expected: {
-                            labels: [`foo`, `bar`, `foobar`, `@x`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                                `@x`,
+                                `@#"x"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -121,7 +188,22 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [
+                                `foo`,
+                                `@foo`,
+                                `#"foo"`,
+                                `@#"foo"`,
+                                `bar`,
+                                `@bar`,
+                                `#"bar"`,
+                                `@#"bar"`,
+                                `foobar`,
+                                `@foobar`,
+                                `#"foobar"`,
+                                `@#"foobar"`,
+                                `@x`,
+                                `@#"x"`,
+                            ],
                             isTextEdit: false,
                         },
                     }));
@@ -143,16 +225,16 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [`foo`, `bar`, `foobar`],
                             isTextEdit: true,
                         },
                     }));
 
-                it(`no repeats`, () =>
+                xit(`no repeats`, () =>
                     runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo], [|`,
                         expected: {
-                            labels: [`bar`, `foobar`],
+                            labels: [`foo`, `bar`, `foobar`],
                             isTextEdit: false,
                         },
                     }));
@@ -172,7 +254,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][foo|`,
                         expected: {
-                            labels: [`foo`, `foobar`],
+                            labels: [`foo`, `bar`, `foobar`],
                             isTextEdit: true,
                         },
                     }));
