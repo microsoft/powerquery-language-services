@@ -5,9 +5,10 @@ import "mocha";
 import { SignatureInformation } from "vscode-languageserver-types";
 
 import { AnalysisSettings, NullSymbolProvider } from "../../powerquery-language-services";
+import { AutocompleteItem, TypeCache } from "../../powerquery-language-services/inspection";
 import { TestConstants, TestUtils } from "..";
+import { ExpectCollectionMode } from "../testUtils";
 import { ILibrary } from "../../powerquery-language-services/library/library";
-import { TypeCache } from "../../powerquery-language-services/inspection";
 
 describe(`SimpleLibraryProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -17,40 +18,77 @@ describe(`SimpleLibraryProvider`, () => {
     };
 
     describe(`getAutocompleteItems`, () => {
-        async function assertContainsAutocompleteAnalysis(
-            textWithPipe: string,
-            expected: ReadonlyArray<string>,
-        ): Promise<void> {
-            await TestUtils.assertContainsAutocompleteAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
+        function runTest(params: {
+            readonly textWithPipe: string;
+            readonly expected: {
+                readonly labels: ReadonlyArray<string>;
+                readonly isTextEdit: boolean;
+                readonly mode?: ExpectCollectionMode;
+            };
+        }): Promise<AutocompleteItem[] | undefined> {
+            return TestUtils.assertAutocompleteAnalysis({
+                ...params,
+                expected: {
+                    ...params.expected,
+                    mode: params.expected.mode ?? ExpectCollectionMode.Contains,
+                },
+                analysisSettings: IsolatedAnalysisSettings,
+            });
         }
 
-        it(`match`, async () => {
-            await assertContainsAutocompleteAnalysis(`Test.NumberO|`, [TestConstants.TestLibraryName.NumberOne]);
-        });
+        it(`match`, () =>
+            runTest({
+                textWithPipe: `Test.NumberO|`,
+                expected: {
+                    labels: [TestConstants.TestLibraryName.NumberOne],
+                    isTextEdit: false,
+                },
+            }));
 
-        it(`match multiple`, async () =>
-            await assertContainsAutocompleteAnalysis(`Test.Numbe|`, [
-                TestConstants.TestLibraryName.Number,
-                TestConstants.TestLibraryName.NumberOne,
-            ]));
+        it(`match multiple`, () =>
+            runTest({
+                textWithPipe: `Test.Numbe|`,
+                expected: {
+                    labels: [TestConstants.TestLibraryName.Number, TestConstants.TestLibraryName.NumberOne],
+                    isTextEdit: false,
+                },
+            }));
 
-        it(`unknown match`, async () => await assertContainsAutocompleteAnalysis(`Unknown|Identifier`, []));
+        it(`unknown match`, () =>
+            runTest({
+                textWithPipe: `Unknown|Identifier`,
+                expected: {
+                    labels: [],
+                    isTextEdit: false,
+                },
+            }));
     });
 
     describe(`getHover`, () => {
-        async function assertHoverAnalysis(textWithPipe: string, expected: string | undefined): Promise<void> {
-            await TestUtils.assertEqualHoverAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
+        function assertHoverAnalysis(params: {
+            readonly textWithPipe: string;
+            readonly expected: string | undefined;
+        }): Promise<void> {
+            return TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
-        it(`constant`, async () => await assertHoverAnalysis(`Test.Num|ber`, `[library constant] Test.Number: number`));
+        it(`constant`, () =>
+            assertHoverAnalysis({
+                textWithPipe: `Test.Num|ber`,
+                expected: `[library constant] Test.Number: number`,
+            }));
 
-        it(`function`, async () =>
-            await assertHoverAnalysis(
-                `Test.Square|IfNumber`,
-                `[library function] Test.SquareIfNumber: (x: any) => any`,
-            ));
+        it(`function`, () =>
+            assertHoverAnalysis({
+                textWithPipe: `Test.Square|IfNumber`,
+                expected: `[library function] Test.SquareIfNumber: (x: any) => any`,
+            }));
 
-        it(`no match`, async () => await assertHoverAnalysis(`Unknown|Identifier`, undefined));
+        it(`no match`, () =>
+            assertHoverAnalysis({
+                textWithPipe: `Unknown|Identifier`,
+                expected: undefined,
+            }));
     });
 
     describe(`getSignatureHelp`, () => {
@@ -65,26 +103,46 @@ describe(`SimpleLibraryProvider`, () => {
             ],
         };
 
-        async function assertSignatureHelp(textWithPipe: string, activeParameter?: number): Promise<void> {
-            await TestUtils.assertEqualSignatureHelpAnalysis(
-                textWithPipe,
-                activeParameter !== undefined
-                    ? {
-                          activeParameter,
-                          activeSignature: 0,
-                          signatures: [squareIfNumberSignatureInformation],
-                      }
-                    : undefined,
-                IsolatedAnalysisSettings,
-            );
+        async function assertSignatureHelp(params: {
+            readonly textWithPipe: string;
+            readonly activeParameter?: number;
+        }): Promise<void> {
+            await TestUtils.assertEqualSignatureHelpAnalysis({
+                textWithPipe: params.textWithPipe,
+                expected:
+                    params.activeParameter !== undefined
+                        ? {
+                              activeParameter: params.activeParameter,
+                              activeSignature: 0,
+                              signatures: [squareIfNumberSignatureInformation],
+                          }
+                        : undefined,
+                analysisSettings: IsolatedAnalysisSettings,
+            });
         }
 
-        it(`unknown identifier`, async () => await assertSignatureHelp(`Unknown|Identifier`, undefined));
+        it(`unknown identifier`, () =>
+            assertSignatureHelp({
+                textWithPipe: `Unknown|Identifier`,
+                activeParameter: undefined,
+            }));
 
-        it(`first parameter, no literal`, async () => await assertSignatureHelp(`Test.SquareIfNumber(|`, 0));
+        it(`first parameter, no literal`, () =>
+            assertSignatureHelp({
+                textWithPipe: `Test.SquareIfNumber(|`,
+                activeParameter: 0,
+            }));
 
-        it(`first parameter, literal, no comma`, async () => await assertSignatureHelp(`Test.SquareIfNumber(1|`, 0));
+        it(`first parameter, literal, no comma`, () =>
+            assertSignatureHelp({
+                textWithPipe: `Test.SquareIfNumber(1|`,
+                activeParameter: 0,
+            }));
 
-        it(`first parameter, literal, comma`, async () => await assertSignatureHelp(`Test.SquareIfNumber(1,|`, 1));
+        it(`first parameter, literal, comma`, () =>
+            assertSignatureHelp({
+                textWithPipe: `Test.SquareIfNumber(1,|`,
+                activeParameter: 1,
+            }));
     });
 });

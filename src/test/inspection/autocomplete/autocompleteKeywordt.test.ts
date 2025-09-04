@@ -7,6 +7,7 @@ import {
     KeywordKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { expect } from "chai";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
@@ -20,7 +21,12 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
         );
 
         ResultUtils.assertIsOk(actual.triedKeyword);
-        TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedKeyword.value);
+
+        const actualLabels: ReadonlyArray<string> = actual.triedKeyword.value.map(
+            (item: Inspection.AutocompleteItem) => item.label,
+        );
+
+        expect(actualLabels).to.include.members(expected);
     }
 
     it(`|`, () => runTest("|", [...ExpressionKeywordKinds, KeywordKind.Section]));

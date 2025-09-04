@@ -75,7 +75,7 @@ describe(`subset Inspection - Scope - Identifier`, () => {
 
         describe(`${Ast.NodeKind.FieldProjection}`, () => {
             // We shouldn't include scope for field projections
-            it(`WIP let person = [name = "john doe", age = 42] in person[ [|`, async () =>
+            it(`let person = [name = "john doe", age = 42] in person[ [|`, async () =>
                 await runTest(`let person = [name = "john doe", age = 42] in person[ [|`, []));
         });
 

@@ -17,6 +17,8 @@ import {
     SignatureHelp,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
+import { AutocompleteItem } from "../../powerquery-language-services/inspection";
+import { expect } from "chai";
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -25,249 +27,371 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
     };
 
-    async function assertAutocompleteItems(text: string, expected: ReadonlyArray<string>): Promise<void> {
-        await TestUtils.assertEqualAutocompleteAnalysis(text, expected, IsolatedAnalysisSettings);
+    function runTest(params: {
+        readonly textWithPipe: string;
+        readonly expected: {
+            readonly labels: ReadonlyArray<string>;
+            readonly isTextEdit: boolean;
+        };
+        readonly cancellationToken?: ICancellationToken;
+    }): Promise<AutocompleteItem[] | undefined> {
+        return TestUtils.assertAutocompleteAnalysis({
+            ...params,
+            expected: {
+                ...params.expected,
+                mode: TestUtils.ExpectCollectionMode.Contains,
+            },
+            analysisSettings: IsolatedAnalysisSettings,
+        });
     }
 
     describe(`getAutocompleteItems`, () => {
         describe(`scope`, () => {
             describe(`${Inspection.ScopeItemKind.LetVariable}`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`let foo = 1, bar = 2, foobar = 3 in |`, [`foo`, `bar`, `foobar`]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `let foo = 1, bar = 2, foobar = 3 in |`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`let foo = 1, bar = 2, foobar = 3 in foo|`, [`foo`, `foobar`]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `let foo = 1, bar = 2, foobar = 3 in foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
             });
 
             describe(`${Inspection.ScopeItemKind.Parameter}`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`(foo, bar, foobar) => |`, [`foo`, `bar`, `foobar`]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `(foo, bar, foobar) => |`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`(foo, bar, foobar) => foo|`, [`foo`, `foobar`]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `(foo, bar, foobar) => foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
             });
 
             describe(`${Inspection.ScopeItemKind.RecordField}`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3, x = |][`, [
-                        `foo`,
-                        `bar`,
-                        `foobar`,
-                        `@x`,
-                    ]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = |][`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`, `@x`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3, x = foo|`, [`foo`, `foobar`]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3, x = foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
             });
 
             describe(`${Inspection.ScopeItemKind.SectionMember}`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`section; foo = 1; bar = 2; foobar = 3; x = |`, [
-                        `foo`,
-                        `bar`,
-                        `foobar`,
-                        `@x`,
-                    ]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = |`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`, `@x`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`section; foo = 1; bar = 2; foobar = 3; x = foo|`, [
-                        `foo`,
-                        `foobar`,
-                    ]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `section; foo = 1; bar = 2; foobar = 3; x = foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
             });
         });
 
         describe(`fieldAccess`, () => {
             describe(`fieldProjection`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][|`, [`foo`, `bar`, `foobar`]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3][|`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][[foo|`, [`foo`, `foobar`]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: true,
+                        },
+                    }));
 
-                it(`no repeats`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][[foo], [|`, [`bar`, `foobar`]));
+                it(`no repeats`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo], [|`,
+                        expected: {
+                            labels: [`bar`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
             });
 
             describe(`fieldSelection`, () => {
-                it(`match all`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][|`, [`foo`, `bar`, `foobar`]));
+                it(`match all`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3][|`,
+                        expected: {
+                            labels: [`foo`, `bar`, `foobar`],
+                            isTextEdit: false,
+                        },
+                    }));
 
-                it(`match some`, async () =>
-                    await assertAutocompleteItems(`[foo = 1, bar = 2, foobar = 3][foo|`, [`foo`, `foobar`]));
+                it(`match some`, () =>
+                    runTest({
+                        textWithPipe: `[foo = 1, bar = 2, foobar = 3][foo|`,
+                        expected: {
+                            labels: [`foo`, `foobar`],
+                            isTextEdit: true,
+                        },
+                    }));
             });
         });
     });
 
     describe(`getDefinition`, () => {
-        async function assertDefinition(
-            textWithPipe: string,
-            expected: Range[] | undefined,
-            cancellationToken?: ICancellationToken,
-        ): Promise<void> {
-            await TestUtils.assertEqualDefinitionAnalysis(
-                textWithPipe,
-                expected,
-                IsolatedAnalysisSettings,
-                cancellationToken,
-            );
+        function assertDefinition(params: {
+            readonly textWithPipe: string;
+            readonly expected: Range[] | undefined;
+            readonly cancellationToken?: ICancellationToken;
+        }): Promise<void> {
+            return TestUtils.assertEqualDefinitionAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
-        it(`no definition`, async () => await assertDefinition(`let foo = 1 in baz|`, undefined));
+        it(`no definition`, () => assertDefinition({ textWithPipe: `let foo = 1 in baz|`, expected: undefined }));
 
-        it(`let expression`, async () =>
-            await assertDefinition(`let foobar = 1 in foobar|`, [
-                {
-                    end: { character: 10, line: 0 },
-                    start: { character: 4, line: 0 },
-                },
-            ]));
+        it(`let expression`, () =>
+            assertDefinition({
+                textWithPipe: `let foobar = 1 in foobar|`,
+                expected: [
+                    {
+                        end: { character: 10, line: 0 },
+                        start: { character: 4, line: 0 },
+                    },
+                ],
+            }));
 
-        it(`record expression`, async () =>
-            await assertDefinition(`[foo = 1, bar = foo|]`, [
-                {
-                    end: { character: 4, line: 0 },
-                    start: { character: 1, line: 0 },
-                },
-            ]));
+        it(`record expression`, () =>
+            assertDefinition({
+                textWithPipe: `[foo = 1, bar = foo|]`,
+                expected: [
+                    {
+                        end: { character: 4, line: 0 },
+                        start: { character: 1, line: 0 },
+                    },
+                ],
+            }));
 
-        it(`record expression, not on key`, async () =>
-            await assertDefinition(`[foo = 1, bar = [foo| = 2]]`, undefined));
+        it(`record expression, not on key`, () =>
+            assertDefinition({
+                textWithPipe: `[foo = 1, bar = [foo| = 2]]`,
+                expected: undefined,
+            }));
 
-        it(`section expression`, async () =>
-            await assertDefinition(`section foo; bar = 1; baz = bar|`, [
-                {
-                    end: { character: 16, line: 0 },
-                    start: { character: 13, line: 0 },
-                },
-            ]));
+        it(`section expression`, () =>
+            assertDefinition({
+                textWithPipe: `section foo; bar = 1; baz = bar|`,
+                expected: [
+                    {
+                        end: { character: 16, line: 0 },
+                        start: { character: 13, line: 0 },
+                    },
+                ],
+            }));
 
-        it(`parameter`, async () =>
-            await assertDefinition(`(foo as number) => foo|`, [
-                {
-                    end: { character: 4, line: 0 },
-                    start: { character: 1, line: 0 },
-                },
-            ]));
+        it(`parameter`, () =>
+            assertDefinition({
+                textWithPipe: `(foo as number) => foo|`,
+                expected: [
+                    {
+                        end: { character: 4, line: 0 },
+                        start: { character: 1, line: 0 },
+                    },
+                ],
+            }));
     });
 
     describe(`getFoldingRanges`, () => {
-        async function assertFoldingRanges(text: string, expected: FoldingRange[]): Promise<void> {
-            await TestUtils.assertEqualFoldingRangesAnalysis(
-                text,
-                expected,
-                TestConstants.SimpleLibraryAnalysisSettings,
-            );
+        function assertFoldingRanges(params: {
+            readonly text: string;
+            readonly expected: FoldingRange[];
+        }): Promise<void> {
+            return TestUtils.assertEqualFoldingRangesAnalysis({
+                ...params,
+                analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+            });
         }
 
         it(`LetExpression`, async () =>
-            await assertFoldingRanges(`let \n foo = 1 \n in \n baz`, [
-                {
-                    endCharacter: 4,
-                    endLine: 3,
-                    startCharacter: 0,
-                    startLine: 0,
-                },
-            ]));
+            await assertFoldingRanges({
+                text: `let \n foo = 1 \n in \n baz`,
+                expected: [
+                    {
+                        endCharacter: 4,
+                        endLine: 3,
+                        startCharacter: 0,
+                        startLine: 0,
+                    },
+                ],
+            }));
 
         it(`MetaExpression`, async () =>
-            await assertFoldingRanges(`1 meta [ \n foo = number \n ]`, [
-                {
-                    endCharacter: 2,
-                    endLine: 2,
-                    startCharacter: 0,
-                    startLine: 0,
-                },
-                {
-                    endCharacter: 2,
-                    endLine: 2,
-                    startCharacter: 7,
-                    startLine: 0,
-                },
-            ]));
+            await assertFoldingRanges({
+                text: `1 meta [ \n foo = number \n ]`,
+                expected: [
+                    {
+                        endCharacter: 2,
+                        endLine: 2,
+                        startCharacter: 0,
+                        startLine: 0,
+                    },
+                    {
+                        endCharacter: 2,
+                        endLine: 2,
+                        startCharacter: 7,
+                        startLine: 0,
+                    },
+                ],
+            }));
 
         it(`RecordExpression`, async () =>
-            await assertFoldingRanges(`[ \n a=1, \n b=2 \n ]`, [
-                {
-                    endCharacter: 2,
-                    endLine: 3,
-                    startCharacter: 0,
-                    startLine: 0,
-                },
-            ]));
+            await assertFoldingRanges({
+                text: `[ \n a=1, \n b=2 \n ]`,
+                expected: [
+                    {
+                        endCharacter: 2,
+                        endLine: 3,
+                        startCharacter: 0,
+                        startLine: 0,
+                    },
+                ],
+            }));
 
         it(`RecordLiteral`, async () =>
-            await assertFoldingRanges(`[ \n a=1, \n b=2 \n ] \n section foo; bar = 1`, [
-                {
-                    endCharacter: 2,
-                    endLine: 3,
-                    startCharacter: 0,
-                    startLine: 0,
-                },
-            ]));
+            await assertFoldingRanges({
+                text: `[ \n a=1, \n b=2 \n ] \n section foo; bar = 1`,
+                expected: [
+                    {
+                        endCharacter: 2,
+                        endLine: 3,
+                        startCharacter: 0,
+                        startLine: 0,
+                    },
+                ],
+            }));
 
         it(`SectionMember`, async () =>
-            await assertFoldingRanges(`[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1`, [
-                {
-                    endCharacter: 2,
-                    endLine: 8,
-                    startCharacter: 1,
-                    startLine: 5,
-                },
-                {
-                    endCharacter: 2,
-                    endLine: 3,
-                    startCharacter: 0,
-                    startLine: 0,
-                },
-            ]));
+            await assertFoldingRanges({
+                text: `[ \n a=1, \n b=2 \n ] \n section foo; bar = \n let \n foo = 1 \n in \n 1`,
+                expected: [
+                    {
+                        endCharacter: 2,
+                        endLine: 8,
+                        startCharacter: 1,
+                        startLine: 5,
+                    },
+                    {
+                        endCharacter: 2,
+                        endLine: 3,
+                        startCharacter: 0,
+                        startLine: 0,
+                    },
+                ],
+            }));
     });
 
     describe(`getHover`, () => {
-        async function assertHover(textWithPipe: string, expected: string | undefined): Promise<void> {
-            await TestUtils.assertEqualHoverAnalysis(
-                textWithPipe,
-                expected,
-                TestConstants.SimpleLibraryAnalysisSettings,
-            );
+        function assertHover(params: {
+            readonly textWithPipe: string;
+            readonly expected: string | undefined;
+        }): Promise<void> {
+            return TestUtils.assertEqualHoverAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
         describe(`simple`, () => {
-            it(`let-variable`, async () => await assertHover(`let x = 1 in x|`, `[let-variable] x: 1`));
+            it(`let-variable`, () => assertHover({ textWithPipe: `let x = 1 in x|`, expected: `[let-variable] x: 1` }));
 
-            it(`parameter`, async () => await assertHover(`(x as number) => x|`, `[parameter] x: number`));
+            it(`parameter`, () =>
+                assertHover({ textWithPipe: `(x as number) => x|`, expected: `[parameter] x: number` }));
 
-            it(`record-field`, async () => await assertHover(`[x = 1, y = x|]`, `[record-field] x: 1`));
+            it(`record-field`, () => assertHover({ textWithPipe: `[x = 1, y = x|]`, expected: `[record-field] x: 1` }));
 
-            it(`section-member`, async () => await assertHover(`section; x = 1; y = x|;`, `[section-member] x: 1`));
+            it(`section-member`, () =>
+                assertHover({ textWithPipe: `section; x = 1; y = x|;`, expected: `[section-member] x: 1` }));
 
-            it(`undefined`, async () => await assertHover(`x|`, undefined));
+            it(`undefined`, () => assertHover({ textWithPipe: `x|`, expected: undefined }));
 
-            it(`undefined on parameter hover`, async () =>
-                await assertHover(`let foo = 10, bar = (foo| as number) => foo in foo`, undefined));
-
-            describe(`hover the value when over key`, () => {
-                it(`let-variable`, async () => await assertHover(`let foo| = 1 in foo`, `[let-variable] foo: 1`));
-
-                it(`record-field expression`, async () => await assertHover(`[foo| = 1]`, `[record-field] foo: 1`));
-
-                it(`record-field literal`, async () =>
-                    await assertHover(`[foo| = 1] section; bar = 1;`, `[record-field] foo: 1`));
-
-                it(`section-member`, async () => await assertHover(`section; foo| = 1;`, `[section-member] foo: 1`));
-            });
+            it(`undefined on parameter hover`, () =>
+                assertHover({
+                    textWithPipe: `let foo = 10, bar = (foo| as number) => foo in foo`,
+                    expected: undefined,
+                }));
         });
 
-        describe(`getPartialSemanticTokens`, () => {
-            async function assertSemanticTokens(
-                text: string,
-                expected: ReadonlyArray<PartialSemanticToken> | undefined,
-            ): Promise<void> {
-                await TestUtils.assertEqualPartialSemanticTokensAnalysis(expected, IsolatedAnalysisSettings, text);
-            }
+        describe(`hover the value when over key`, () => {
+            it(`let-variable`, () =>
+                assertHover({ textWithPipe: `let foo| = 1 in foo`, expected: `[let-variable] foo: 1` }));
 
-            it(`field projection`, async () =>
-                await assertSemanticTokens(`a[[b]]?`, [
+            it(`record-field expression`, () =>
+                assertHover({ textWithPipe: `[foo| = 1]`, expected: `[record-field] foo: 1` }));
+
+            it(`record-field literal`, () =>
+                assertHover({
+                    textWithPipe: `[foo| = 1] section; bar = 1;`,
+                    expected: `[record-field] foo: 1`,
+                }));
+
+            it(`section-member`, () =>
+                assertHover({ textWithPipe: `section; foo| = 1;`, expected: `[section-member] foo: 1` }));
+        });
+    });
+
+    describe(`getPartialSemanticTokens`, () => {
+        function assertSemanticTokens(params: {
+            readonly text: string;
+            readonly expected: ReadonlyArray<PartialSemanticToken> | undefined;
+        }): Promise<void> {
+            return TestUtils.assertEqualPartialSemanticTokensAnalysis({
+                ...params,
+                analysisSettings: IsolatedAnalysisSettings,
+            });
+        }
+
+        it(`field projection`, () =>
+            assertSemanticTokens({
+                text: `a[[b]]?`,
+                expected: [
                     {
                         range: {
                             end: { character: 4, line: 0 },
@@ -292,10 +416,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
                     },
-                ]));
+                ],
+            }));
 
-            it(`field selector`, async () =>
-                await assertSemanticTokens(`a[b]?`, [
+        it(`field selector`, () =>
+            assertSemanticTokens({
+                text: `a[b]?`,
+                expected: [
                     {
                         range: {
                             end: { character: 3, line: 0 },
@@ -320,10 +447,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
                     },
-                ]));
+                ],
+            }));
 
-            it(`numeric literal`, async () =>
-                await assertSemanticTokens(`1`, [
+        it(`numeric literal`, () =>
+            assertSemanticTokens({
+                text: `1`,
+                expected: [
                     {
                         range: {
                             end: { character: 1, line: 0 },
@@ -332,10 +462,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.number,
                     },
-                ]));
+                ],
+            }));
 
-            it(`nullable primitive type`, async () =>
-                await assertSemanticTokens(`1 is nullable number`, [
+        it(`nullable primitive type`, () =>
+            assertSemanticTokens({
+                text: `1 is nullable number`,
+                expected: [
                     {
                         range: {
                             end: { character: 1, line: 0 },
@@ -368,10 +501,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.keyword,
                     },
-                ]));
+                ],
+            }));
 
-            it(`primitive type`, async () =>
-                await assertSemanticTokens(`text`, [
+        it(`primitive type`, () =>
+            assertSemanticTokens({
+                text: `text`,
+                expected: [
                     {
                         range: {
                             end: { character: 4, line: 0 },
@@ -380,10 +516,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
                     },
-                ]));
+                ],
+            }));
 
-            it(`parameter`, async () =>
-                await assertSemanticTokens(`(optional foo as number) => foo`, [
+        it(`parameter`, () =>
+            assertSemanticTokens({
+                text: `(optional foo as number) => foo`,
+                expected: [
                     {
                         range: {
                             end: { character: 16, line: 0 },
@@ -424,10 +563,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
                     },
-                ]));
+                ],
+            }));
 
-            it(`record literal`, async () =>
-                await assertSemanticTokens(`[foo = 1]section bar;`, [
+        it(`record literal`, () =>
+            assertSemanticTokens({
+                text: `[foo = 1]section bar;`,
+                expected: [
                     {
                         range: {
                             end: { character: 4, line: 0 },
@@ -444,10 +586,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.number,
                     },
-                ]));
+                ],
+            }));
 
-            it(`record expression`, async () =>
-                await assertSemanticTokens(`[foo = 1]`, [
+        it(`record expression`, () =>
+            assertSemanticTokens({
+                text: `[foo = 1]`,
+                expected: [
                     {
                         range: {
                             end: { character: 4, line: 0 },
@@ -464,10 +609,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.number,
                     },
-                ]));
+                ],
+            }));
 
-            it(`table type`, async () =>
-                await assertSemanticTokens(`type table [optional foo = nullable number]`, [
+        it(`table type`, () =>
+            assertSemanticTokens({
+                text: `type table [optional foo = nullable number]`,
+                expected: [
                     {
                         range: {
                             end: { character: 20, line: 0 },
@@ -508,10 +656,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.type,
                     },
-                ]));
+                ],
+            }));
 
-            it(`text literal`, async () =>
-                await assertSemanticTokens(`""`, [
+        it(`text literal`, () =>
+            assertSemanticTokens({
+                text: `""`,
+                expected: [
                     {
                         range: {
                             end: { character: 2, line: 0 },
@@ -520,21 +671,25 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.string,
                     },
-                ]));
+                ],
+            }));
 
-            it(`non-parsable text returns undefined`, async () => await assertSemanticTokens(`"`, undefined));
-        });
+        it(`non-parsable text returns undefined`, async () =>
+            await assertSemanticTokens({ text: `"`, expected: undefined }));
+    });
 
-        describe(`getSignatureHelp`, () => {
-            async function assertSignatureHelp(
-                textWithPipe: string,
-                expected: SignatureHelp | undefined,
-            ): Promise<void> {
-                await TestUtils.assertEqualSignatureHelpAnalysis(textWithPipe, expected, IsolatedAnalysisSettings);
-            }
+    describe(`getSignatureHelp`, () => {
+        async function assertSignatureHelp(params: {
+            readonly textWithPipe: string;
+            readonly expected: SignatureHelp | undefined;
+        }): Promise<void> {
+            await TestUtils.assertEqualSignatureHelpAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
+        }
 
-            it(`no closing bracket`, async () =>
-                await assertSignatureHelp(`let fn = (x as number, y as number) => x + y in fn(1|`, {
+        it(`no closing bracket`, () =>
+            assertSignatureHelp({
+                textWithPipe: `let fn = (x as number, y as number) => x + y in fn(1|`,
+                expected: {
                     activeParameter: 0,
                     activeSignature: 0,
                     signatures: [
@@ -550,10 +705,13 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                             ],
                         },
                     ],
-                }));
+                },
+            }));
 
-            it(`closing bracket`, async () =>
-                await assertSignatureHelp(`let fn = (x as number, y as number) => x + y in fn(1|)`, {
+        it(`closing bracket`, () =>
+            assertSignatureHelp({
+                textWithPipe: `let fn = (x as number, y as number) => x + y in fn(1|)`,
+                expected: {
                     activeParameter: 0,
                     activeSignature: 0,
                     signatures: [
@@ -569,40 +727,45 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                             ],
                         },
                     ],
-                }));
-        });
+                },
+            }));
+    });
 
-        describe(`.pq tests`, () => {
-            it(`DirectQueryForSQL file`, async () => {
-                const position: Position = {
-                    line: 40,
-                    character: 25,
-                };
+    describe(`.pq tests`, () => {
+        it(`DirectQueryForSQL file`, async () => {
+            const position: Position = {
+                line: 40,
+                character: 25,
+            };
 
-                const analysis: Analysis = TestUtils.assertAnalysisFromText(
-                    IsolatedAnalysisSettings,
-                    TestUtils.readFile(`DirectQueryForSQL.pq`),
-                );
-
-                const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
-                    await analysis.getAutocompleteItems(position);
-
-                const expected: string[] = [
-                    `ConnectionString`,
-                    `Credential`,
-                    `CredentialConnectionString`,
-                    `Database`,
-                    `DirectSQL`,
-                    `DirectSQL.UI`,
-                    `DirectSQL.Icons`,
-                    `server`,
-                    `database`,
-                ];
-
-                ResultUtils.assertIsOk(actual);
-                Assert.isDefined(actual.value);
-                TestUtils.assertContainsAutocompleteItemLabels(expected, actual.value);
+            const analysis: Analysis = TestUtils.assertAnalysisFromText({
+                text: TestUtils.readFile(`DirectQueryForSQL.pq`),
+                analysisSettings: IsolatedAnalysisSettings,
             });
+
+            const actual: Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError> =
+                await analysis.getAutocompleteItems(position);
+
+            const expected: string[] = [
+                `ConnectionString`,
+                `Credential`,
+                `CredentialConnectionString`,
+                `Database`,
+                `DirectSQL`,
+                `DirectSQL.UI`,
+                `DirectSQL.Icons`,
+                `server`,
+                `database`,
+            ];
+
+            ResultUtils.assertIsOk(actual);
+            Assert.isDefined(actual.value);
+
+            const actualLabels: ReadonlyArray<string> = actual.value.map(
+                (item: Inspection.AutocompleteItem) => item.label,
+            );
+
+            expect(actualLabels).to.include.members(expected);
         });
     });
 });

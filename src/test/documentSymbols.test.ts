@@ -11,14 +11,14 @@ import { SymbolKind } from "../powerquery-language-services";
 describe("getDocumentSymbols", () => {
     async function assertSymbolsForDocument(
         text: string,
-        expectedSymbols: ReadonlyArray<AbridgedDocumentSymbol>,
+        expected: ReadonlyArray<AbridgedDocumentSymbol>,
     ): Promise<void> {
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
             text,
-            expectedSymbols,
-            TestConstants.SimpleLibraryAnalysisSettings,
-            NoOpCancellationToken,
-        );
+            expected,
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+            cancellationToken: NoOpCancellationToken,
+        });
     }
 
     it(`section foo; shared a = 1;`, async () => {
@@ -92,38 +92,38 @@ describe("getDocumentSymbols", () => {
     });
 
     it(`section foo; shared a = 1; b = "abc"; c = true;`, async () =>
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
-            `section foo; shared a = 1; b = "abc"; c = true;`,
-            [
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
+            text: `section foo; shared a = 1; b = "abc"; c = true;`,
+            expected: [
                 { name: `a`, kind: SymbolKind.Number },
                 { name: `b`, kind: SymbolKind.String },
                 { name: `c`, kind: SymbolKind.Boolean },
             ],
-            TestConstants.SimpleLibraryAnalysisSettings,
-        ));
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        }));
 
     it(`section foo; a = {1,2};`, async () =>
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
-            `section foo; a = {1,2};`,
-            [{ name: `a`, kind: SymbolKind.Array }],
-            TestConstants.SimpleLibraryAnalysisSettings,
-        ));
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
+            text: `section foo; a = {1,2};`,
+            expected: [{ name: `a`, kind: SymbolKind.Array }],
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        }));
 
     it(`let a = 1, b = 2, c = 3 in c`, async () =>
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
-            `let a = 1, b = 2, c = 3 in c`,
-            [
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
+            text: `let a = 1, b = 2, c = 3 in c`,
+            expected: [
                 { name: `a`, kind: SymbolKind.Number },
                 { name: `b`, kind: SymbolKind.Number },
                 { name: `c`, kind: SymbolKind.Number },
             ],
-            TestConstants.SimpleLibraryAnalysisSettings,
-        ));
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        }));
 
     it("HelloWorldWithDocs file section", async () =>
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
-            TestUtils.readFile(`HelloWorldWithDocs.pq`),
-            [
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
+            text: TestUtils.readFile(`HelloWorldWithDocs.pq`),
+            expected: [
                 {
                     kind: SymbolKind.Variable,
                     name: "HelloWorldWithDocs.Contents",
@@ -179,13 +179,13 @@ describe("getDocumentSymbols", () => {
                     name: "HelloWorldWithDocs.Publish",
                 },
             ],
-            TestConstants.SimpleLibraryAnalysisSettings,
-        ));
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        }));
 
     it("DirectQueryForSQL file section", async () =>
-        await TestUtils.assertEqualDocumentSymbolsAnalysis(
-            TestUtils.readFile(`DirectQueryForSQL.pq`),
-            [
+        await TestUtils.assertEqualDocumentSymbolsAnalysis({
+            text: TestUtils.readFile(`DirectQueryForSQL.pq`),
+            expected: [
                 {
                     children: [
                         {
@@ -301,6 +301,6 @@ describe("getDocumentSymbols", () => {
                     name: "DirectSQL.Icons",
                 },
             ],
-            TestConstants.SimpleLibraryAnalysisSettings,
-        ));
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        }));
 });

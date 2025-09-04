@@ -11,6 +11,11 @@ import { Inspection } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
 import { TestUtils } from "..";
 
+export enum ExpectCollectionMode {
+    Contains = "Contains",
+    UnorderedEquality = "UnorderedEquality",
+}
+
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
 
@@ -36,12 +41,12 @@ export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, a
     expect(TestUtils.abridgedSignatureHelp(actual)).deep.equals(expected);
 }
 
-export function assertContainsAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
-    expect(actualLabels).to.include.members(expected);
+export function assertContainsAutocompleteItemLabels(params: {
+    readonly expectedLabels: ReadonlyArray<string>;
+    readonly actual: ReadonlyArray<Inspection.AutocompleteItem>;
+}): void {
+    const actualLabels: ReadonlyArray<string> = params.actual.map((item: Inspection.AutocompleteItem) => item.label);
+    expect(actualLabels).to.include.members(params.expectedLabels);
 }
 
 export function extractPosition(textWithPipe: string): [string, Position] {

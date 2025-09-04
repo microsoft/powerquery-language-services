@@ -96,7 +96,7 @@ export async function expectTopSuggestions(
     expect(remainderAboveThreshold).to.be.empty;
 }
 
-function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
+export function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
     return {
         label: value.label,
         isTextEdit: value.textEdit !== undefined,
