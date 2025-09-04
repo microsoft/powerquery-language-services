@@ -18,11 +18,11 @@ describe(`subset Inspection - Scope - Identifier`, () => {
         typeStrategy: TypeStrategy.Extended,
     };
 
-    function runTest(params: {
+    async function runTest(params: {
         readonly textWithPipe: string;
         readonly expected: ReadonlyArray<TAbridgedNodeScopeItem>;
     }): Promise<void> {
-        return TestUtils.assertEqualNodeScope({
+        await TestUtils.assertEqualNodeScope({
             textWithPipe: params.textWithPipe,
             expected: params.expected,
             inspectionSettings: DefaultSettings,
@@ -2091,8 +2091,8 @@ describe(`subset Inspection - Scope - Identifier`, () => {
     });
 
     describe(`Parameter`, () => {
-        it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, () =>
-            runTest({
+        it(`(a, b as number, c as nullable function, optional d, optional e as table) => 1|`, async () =>
+            await runTest({
                 textWithPipe: `(a, b as number, c as nullable function, optional d, optional e as table) => 1|`,
                 expected: [
                     {
