@@ -38,7 +38,6 @@ export async function assertAutocompleteAnalysis(params: {
     readonly expected?: {
         readonly labels: ReadonlyArray<string>;
         readonly isTextEdit: boolean;
-        readonly mode?: TestUtils.ExpectCollectionMode;
     };
 }): Promise<AutocompleteItem[] | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);

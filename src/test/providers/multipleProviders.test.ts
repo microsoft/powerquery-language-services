@@ -5,7 +5,6 @@ import "mocha";
 
 import { TestConstants, TestUtils } from "..";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
-import { ExpectCollectionMode } from "../testUtils";
 
 describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     describe(`getHover for key-value-pair`, () => {
@@ -78,10 +77,6 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
         }): Promise<AutocompleteItem[] | undefined> {
             return TestUtils.assertAutocompleteAnalysis({
                 ...params,
-                expected:
-                    params.expected !== undefined
-                        ? { ...params.expected, mode: ExpectCollectionMode.Contains }
-                        : undefined,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
             });
         }
@@ -102,7 +97,7 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
             runTest({
                 textWithPipe: `let foo =|`,
                 expected: {
-                    labels: ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"],
+                    labels: ["@foo", `@#"foo"`, "each", "error", "false", "if", "let", "not", "true", "try", "type"],
                     isTextEdit: false,
                 },
             }));
@@ -111,17 +106,18 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
             runTest({
                 textWithPipe: `let foo = |`,
                 expected: {
-                    labels: ["@foo", "each", "error", "false", "if", "let", "not", "true", "try", "type"],
+                    labels: ["@foo", `@#"foo"`, "each", "error", "false", "if", "let", "not", "true", "try", "type"],
                     isTextEdit: false,
                 },
             }));
 
-        it(`let foo = |Test`, () =>
+        it(`WIP let foo = |Test`, () =>
             runTest({
                 textWithPipe: `let foo = |Test`,
                 expected: {
                     labels: [
                         "@foo",
+                        `@#"foo"`,
                         "each",
                         "error",
                         "false",
@@ -133,6 +129,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                         "type",
                         TestConstants.TestLibraryName.CombineNumberAndOptionalText,
                         TestConstants.TestLibraryName.CreateFooAndBarRecord,
+                        TestConstants.TestLibraryName.DynamicFunction,
+                        TestConstants.TestLibraryName.DynamicValue,
                         TestConstants.TestLibraryName.Number,
                         TestConstants.TestLibraryName.NumberOne,
                         TestConstants.TestLibraryName.SquareIfNumber,
@@ -147,6 +145,7 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 expected: {
                     labels: [
                         "@foo",
+                        `@#"foo"`,
                         "each",
                         "error",
                         "false",
@@ -158,6 +157,8 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                         "type",
                         TestConstants.TestLibraryName.CombineNumberAndOptionalText,
                         TestConstants.TestLibraryName.CreateFooAndBarRecord,
+                        TestConstants.TestLibraryName.DynamicFunction,
+                        TestConstants.TestLibraryName.DynamicValue,
                         TestConstants.TestLibraryName.Number,
                         TestConstants.TestLibraryName.NumberOne,
                         TestConstants.TestLibraryName.SquareIfNumber,
@@ -172,8 +173,11 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 expected: {
                     labels: [
                         "@foo",
+                        `@#"foo"`,
                         TestConstants.TestLibraryName.CombineNumberAndOptionalText,
                         TestConstants.TestLibraryName.CreateFooAndBarRecord,
+                        TestConstants.TestLibraryName.DynamicFunction,
+                        TestConstants.TestLibraryName.DynamicValue,
                         TestConstants.TestLibraryName.Number,
                         TestConstants.TestLibraryName.NumberOne,
                         TestConstants.TestLibraryName.SquareIfNumber,

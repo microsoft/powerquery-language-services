@@ -11,11 +11,6 @@ import { Inspection } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
 import { TestUtils } from "..";
 
-export enum ExpectCollectionMode {
-    Contains = "Contains",
-    UnorderedEquality = "UnorderedEquality",
-}
-
 export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
 

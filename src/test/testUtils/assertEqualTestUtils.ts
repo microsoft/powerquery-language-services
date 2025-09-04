@@ -22,7 +22,6 @@ import {
     PartialSemanticToken,
 } from "../../powerquery-language-services";
 import { AbridgedAutocompleteItem } from "./autocompleteTestUtils";
-import { ExpectCollectionMode } from "./testUtils";
 import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -31,7 +30,6 @@ export function assertEqualAbridgedAutocompleteItems(params: {
     readonly expected: {
         readonly labels: ReadonlyArray<string>;
         readonly isTextEdit: boolean;
-        readonly mode?: ExpectCollectionMode;
     };
     readonly actual: ReadonlyArray<Inspection.AutocompleteItem>;
 }): void {
@@ -47,16 +45,7 @@ export function assertEqualAbridgedAutocompleteItems(params: {
         isTextEdit: params.expected.isTextEdit,
     }));
 
-    switch (params.expected.mode) {
-        case undefined:
-        case ExpectCollectionMode.UnorderedEquality:
-            expect(abridgedActual).to.have.deep.members(abridgedExpected);
-            break;
-
-        case ExpectCollectionMode.Contains:
-            expect(abridgedActual).to.include.deep.members(abridgedExpected);
-            break;
-    }
+    expect(abridgedActual).to.have.deep.members(abridgedExpected);
 }
 
 export async function assertEqualDefinitionAnalysis(params: {
