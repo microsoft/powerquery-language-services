@@ -2,13 +2,17 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import {
+    KeywordConstant,
+    UnaryOperator,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { SignatureInformation } from "vscode-languageserver-types";
 
 import { AnalysisSettings, NullSymbolProvider } from "../../powerquery-language-services";
 import { AutocompleteItem, TypeCache } from "../../powerquery-language-services/inspection";
 import { TestConstants, TestUtils } from "..";
-import { ExpectCollectionMode } from "../testUtils";
 import { ILibrary } from "../../powerquery-language-services/library/library";
+import { TestLibraryName } from "../testConstants";
 
 describe(`SimpleLibraryProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -23,24 +27,39 @@ describe(`SimpleLibraryProvider`, () => {
             readonly expected: {
                 readonly labels: ReadonlyArray<string>;
                 readonly isTextEdit: boolean;
-                readonly mode?: ExpectCollectionMode;
             };
         }): Promise<AutocompleteItem[] | undefined> {
             return TestUtils.assertAutocompleteAnalysis({
                 ...params,
-                expected: {
-                    ...params.expected,
-                    mode: params.expected.mode ?? ExpectCollectionMode.Contains,
-                },
                 analysisSettings: IsolatedAnalysisSettings,
             });
         }
+
+        const expectedAutocompleteLabels: ReadonlyArray<string> = [
+            KeywordConstant.Each,
+            KeywordConstant.Error,
+            KeywordConstant.False,
+            KeywordConstant.If,
+            KeywordConstant.Let,
+            KeywordConstant.Section,
+            KeywordConstant.True,
+            KeywordConstant.Try,
+            KeywordConstant.Type,
+            TestLibraryName.CombineNumberAndOptionalText,
+            TestLibraryName.CreateFooAndBarRecord,
+            TestLibraryName.DynamicFunction,
+            TestLibraryName.DynamicValue,
+            TestLibraryName.Number,
+            TestLibraryName.NumberOne,
+            TestLibraryName.SquareIfNumber,
+            UnaryOperator.Not,
+        ];
 
         it(`match`, () =>
             runTest({
                 textWithPipe: `Test.NumberO|`,
                 expected: {
-                    labels: [TestConstants.TestLibraryName.NumberOne],
+                    labels: expectedAutocompleteLabels,
                     isTextEdit: false,
                 },
             }));
@@ -49,7 +68,7 @@ describe(`SimpleLibraryProvider`, () => {
             runTest({
                 textWithPipe: `Test.Numbe|`,
                 expected: {
-                    labels: [TestConstants.TestLibraryName.Number, TestConstants.TestLibraryName.NumberOne],
+                    labels: expectedAutocompleteLabels,
                     isTextEdit: false,
                 },
             }));
@@ -58,7 +77,7 @@ describe(`SimpleLibraryProvider`, () => {
             runTest({
                 textWithPipe: `Unknown|Identifier`,
                 expected: {
-                    labels: [],
+                    labels: expectedAutocompleteLabels,
                     isTextEdit: false,
                 },
             }));
