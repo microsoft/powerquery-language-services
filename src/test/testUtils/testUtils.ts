@@ -7,7 +7,6 @@ import { assert, expect } from "chai";
 import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
 
-import { Inspection } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
 import { TestUtils } from "..";
 
@@ -15,15 +14,6 @@ export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
     assertIsMarkupContent(value);
 
     return value;
-}
-
-export function assertAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    expected = [...expected].sort();
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
-    expect(actualLabels).to.deep.equal(expected);
 }
 
 export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
@@ -34,14 +24,6 @@ export function assertIsMarkupContent(value: Hover["contents"]): asserts value i
 
 export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
     expect(TestUtils.abridgedSignatureHelp(actual)).deep.equals(expected);
-}
-
-export function assertContainsAutocompleteItemLabels(params: {
-    readonly expectedLabels: ReadonlyArray<string>;
-    readonly actual: ReadonlyArray<Inspection.AutocompleteItem>;
-}): void {
-    const actualLabels: ReadonlyArray<string> = params.actual.map((item: Inspection.AutocompleteItem) => item.label);
-    expect(actualLabels).to.include.members(params.expectedLabels);
 }
 
 export function extractPosition(textWithPipe: string): [string, Position] {
