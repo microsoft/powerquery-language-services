@@ -14,7 +14,7 @@ import { Range, TextEdit } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
+import { AbridgedAutocompleteItem, AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
 import {
     AnalysisSettings,
     Inspection,
@@ -25,114 +25,77 @@ import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-export async function assertContainsAutocompleteAnalysis(
-    textWithPipe: string,
-    expected: ReadonlyArray<string> | undefined,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const actual: Inspection.AutocompleteItem[] | undefined = await TestUtils.assertAutocompleteAnalysis(
-        textWithPipe,
-        settings,
-        cancellationToken,
-    );
-
-    if (expected) {
-        Assert.isDefined(actual);
-        TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
-    } else {
-        Assert.isUndefined(actual);
-    }
+export function assertEqualAbridgedAutocompleteItems(params: {
+    readonly expected: ReadonlyArray<AbridgedAutocompleteItem>;
+    readonly actual: ReadonlyArray<AbridgedAutocompleteItem>;
+}): void {
+    expect(params.actual).to.have.deep.members(params.expected);
 }
 
-export async function assertEqualAutocompleteAnalysis(
-    textWithPipe: string,
-    expected: ReadonlyArray<string>,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const actual: ReadonlyArray<Inspection.AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis(
-        textWithPipe,
-        settings,
-        cancellationToken,
-    );
-
-    Assert.isDefined(actual);
-    TestUtils.assertContainsAutocompleteItemLabels(expected, actual);
-}
-
-export async function assertEqualDefinitionAnalysis(
-    textWithPipe: string,
-    expected: Range[] | undefined,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const actual: Location[] | undefined = await TestUtils.assertDefinitionAnalysis(
-        textWithPipe,
-        settings,
-        cancellationToken,
-    );
+export async function assertEqualDefinitionAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly expected: Range[] | undefined;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<void> {
+    const actual: Location[] | undefined = await TestUtils.assertDefinitionAnalysis(params);
 
     if (actual) {
         Assert.isDefined(actual);
-        expect(expected).to.deep.equal(actual.map((location: Location) => location.range));
+        expect(params.expected).to.deep.equal(actual.map((location: Location) => location.range));
     } else {
         Assert.isUndefined(actual);
     }
 }
 
-export async function assertEqualDocumentSymbolsAnalysis(
-    textWithPipe: string,
-    expected: ReadonlyArray<AbridgedDocumentSymbol>,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const actual: ReadonlyArray<DocumentSymbol> | undefined = await TestUtils.assertDocumentSymbolsAnalysis(
-        textWithPipe,
-        settings,
-        cancellationToken,
-    );
+export async function assertEqualDocumentSymbolsAnalysis(params: {
+    readonly text: string;
+    readonly expected: ReadonlyArray<AbridgedDocumentSymbol>;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<void> {
+    const actual: ReadonlyArray<DocumentSymbol> | undefined = await TestUtils.assertDocumentSymbolsAnalysis(params);
 
     Assert.isDefined(actual);
-    expect(expected).to.deep.equal(TestUtils.abridgedDocumentSymbols(actual));
+    expect(params.expected).to.deep.equal(TestUtils.abridgedDocumentSymbols(actual));
 }
 
-export async function assertEqualFoldingRangesAnalysis(
-    text: string,
-    expected: ReadonlyArray<FoldingRange>,
-    settings: AnalysisSettings,
-): Promise<void> {
-    const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(text, settings);
+export async function assertEqualFoldingRangesAnalysis(params: {
+    readonly text: string;
+    readonly expected: ReadonlyArray<FoldingRange>;
+    readonly analysisSettings: AnalysisSettings;
+}): Promise<void> {
+    const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(params);
 
     Assert.isDefined(foldingRanges);
-    expect(foldingRanges).to.deep.equal(expected);
+    expect(foldingRanges).to.deep.equal(params.expected);
 }
 
-export async function assertEqualHoverAnalysis(
-    textWithPipe: string,
-    expected: string | undefined,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const actual: Hover | undefined = await TestUtils.assertHoverAnalysis(textWithPipe, settings, cancellationToken);
+export async function assertEqualHoverAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly expected: string | undefined;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<void> {
+    const actual: Hover | undefined = await TestUtils.assertHoverAnalysis(params);
 
-    if (expected) {
+    if (params.expected) {
         Assert.isDefined(actual);
-        expect(assertAsMarkupContent(actual.contents).value).to.equal(expected);
+        expect(assertAsMarkupContent(actual.contents).value).to.equal(params.expected);
     } else {
         Assert.isUndefined(actual);
     }
 }
 
-export async function assertEqualNodeScope(
-    textWithPipe: string,
-    expected: ReadonlyArray<TAbridgedNodeScopeItem>,
-    inspectionSettings: InspectionSettings,
-): Promise<void> {
-    const nodeScope: NodeScope = await TestUtils.assertNodeScope(inspectionSettings, textWithPipe);
+export async function assertEqualNodeScope(params: {
+    readonly textWithPipe: string;
+    readonly expected: ReadonlyArray<TAbridgedNodeScopeItem>;
+    readonly inspectionSettings: InspectionSettings;
+}): Promise<void> {
+    const nodeScope: NodeScope = await TestUtils.assertNodeScope(params);
     const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
 
-    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...expected].sort(
+    const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...params.expected].sort(
         (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
             left.identifier.localeCompare(right.identifier),
     );
@@ -145,41 +108,33 @@ export async function assertEqualNodeScope(
     expect(sortedActual).to.have.deep.members(sortedExpected);
 }
 
-export async function assertEqualPartialSemanticTokensAnalysis(
-    expected: ReadonlyArray<PartialSemanticToken> | undefined,
-    settings: AnalysisSettings,
-    text: string,
-): Promise<void> {
-    const semanticTokens: PartialSemanticToken[] | undefined = await TestUtils.assertPartialSemanticTokens(
-        text,
-        settings,
-    );
+export async function assertEqualPartialSemanticTokensAnalysis(params: {
+    readonly expected: ReadonlyArray<PartialSemanticToken> | undefined;
+    readonly analysisSettings: AnalysisSettings;
+    readonly text: string;
+}): Promise<void> {
+    const semanticTokens: PartialSemanticToken[] | undefined = await TestUtils.assertPartialSemanticTokens(params);
 
-    if (expected) {
+    if (params.expected) {
         Assert.isDefined(semanticTokens);
-        expect(semanticTokens).to.deep.equal(expected);
+        expect(semanticTokens).to.deep.equal(params.expected);
     } else {
         Assert.isUndefined(semanticTokens);
     }
 }
 
-export async function assertEqualRenameEdits(
-    textWithPipe: string,
-    newName: string,
-    expected: TextEdit[] | undefined,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<void> {
-    const textEdits: TextEdit[] | undefined = await TestUtils.assertRenameEdits(
-        textWithPipe,
-        newName,
-        settings,
-        cancellationToken,
-    );
+export async function assertEqualRenameEdits(params: {
+    readonly textWithPipe: string;
+    readonly newName: string;
+    readonly expected: TextEdit[] | undefined;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<void> {
+    const textEdits: TextEdit[] | undefined = await TestUtils.assertRenameEdits(params);
 
-    if (expected) {
+    if (params.expected) {
         Assert.isDefined(textEdits);
-        expect(textEdits).to.deep.equal(expected);
+        expect(textEdits).to.deep.equal(params.expected);
     } else {
         Assert.isUndefined(textEdits);
     }
@@ -190,7 +145,10 @@ export async function assertEqualRootType(params: {
     readonly expected: TPowerQueryType;
     readonly settings: InspectionSettings;
 }): Promise<void> {
-    const actual: TPowerQueryType = await TestUtils.assertRootType(params.settings, params.text);
+    const actual: TPowerQueryType = await TestUtils.assertRootType({
+        text: params.text,
+        inspectionSettings: params.settings,
+    });
 
     return assertEqualPowerQueryType({
         actual,
@@ -198,27 +156,27 @@ export async function assertEqualRootType(params: {
     });
 }
 
-export async function assertEqualSignatureHelpAnalysis(
-    textWithPipe: string,
-    expected: SignatureHelp | undefined,
-    settings: AnalysisSettings,
-): Promise<void> {
-    const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(
-        textWithPipe,
-        settings,
-    );
+export async function assertEqualSignatureHelpAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly expected: SignatureHelp | undefined;
+    readonly analysisSettings: AnalysisSettings;
+}): Promise<void> {
+    const signatureHelp: SignatureHelp | undefined = await TestUtils.assertSignatureHelpAnalysis(params);
 
-    if (expected) {
+    if (params.expected) {
         Assert.isDefined(signatureHelp);
-        expect(signatureHelp).to.deep.equal(expected);
+        expect(signatureHelp).to.deep.equal(params.expected);
     } else {
         Assert.isUndefined(signatureHelp);
     }
 }
 
-export function assertEqualScopeType(expected: Inspection.ScopeTypeByKey, actual: Inspection.ScopeTypeByKey): void {
-    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(expected);
-    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(actual);
+export function assertEqualScopeType(params: {
+    readonly expected: Inspection.ScopeTypeByKey;
+    readonly actual: Inspection.ScopeTypeByKey;
+}): void {
+    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.expected);
+    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.actual);
 
     expect(actualArray).to.have.deep.members(expectedArray);
 }

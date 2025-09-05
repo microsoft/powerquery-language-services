@@ -32,10 +32,10 @@ describe(`Analysis`, () => {
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: Inspection.AutocompleteItem[] | undefined =
-                await TestUtils.assertAutocompleteAnalysis(
-                    `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
-                    TestConstants.SimpleLibraryAnalysisSettings,
-                );
+                await TestUtils.assertAutocompleteAnalysis({
+                    textWithPipe: `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+                    analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+                });
 
             Assert.isDefined(autocompleteItems);
 
@@ -53,11 +53,11 @@ describe(`Analysis`, () => {
 
     describe(`getHoverItem`, () => {
         it(`prefer local over library`, async () =>
-            await TestUtils.assertEqualHoverAnalysis(
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
-                `[let-variable] Test.SquareIfNumber: logical`,
-                TestConstants.SimpleLibraryAnalysisSettings,
-            ));
+            await TestUtils.assertEqualHoverAnalysis({
+                textWithPipe: `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+                expected: `[let-variable] Test.SquareIfNumber: logical`,
+                analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+            }));
 
         it(`timeout library provider`, async () => {
             await runHoverTimeoutTest(`library`);
@@ -70,9 +70,9 @@ describe(`Analysis`, () => {
 
     describe(`getSignatureHelp`, () => {
         it(`prefer local over library`, async () =>
-            await TestUtils.assertEqualSignatureHelpAnalysis(
-                `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
-                {
+            await TestUtils.assertEqualSignatureHelpAnalysis({
+                textWithPipe: `let ${TestConstants.TestLibraryName.SquareIfNumber} = (str as text) as text => str in ${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+                expected: {
                     activeParameter: 0,
                     activeSignature: 0,
                     signatures: [
@@ -86,8 +86,8 @@ describe(`Analysis`, () => {
                         },
                     ],
                 },
-                TestConstants.SimpleLibraryAnalysisSettings,
-            ));
+                analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+            }));
 
         it(`timeout`, async () => {
             const analysisSettings: AnalysisSettings = {
@@ -96,10 +96,10 @@ describe(`Analysis`, () => {
                     new SlowLibraryProvider(library, DefaultLocale, 100),
             };
 
-            const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
-                `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
+            const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText({
+                textWithPipe: `${TestConstants.TestLibraryName.SquareIfNumber}(|`,
                 analysisSettings,
-            );
+            });
 
             const signatureHelp: Result<SignatureHelp | undefined, CommonError.CommonError> =
                 await analysis.getSignatureHelp(position, ExpiredCancellationToken);
@@ -143,10 +143,10 @@ async function runHoverTimeoutTest(provider: `local` | `library`): Promise<void>
         localDocumentProviderFactory,
     };
 
-    const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText(
-        `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
+    const [analysis, position]: [Analysis, Position] = TestUtils.assertAnalysisAndPositionFromText({
+        textWithPipe: `let ${TestConstants.TestLibraryName.SquareIfNumber} = true in ${TestConstants.TestLibraryName.SquareIfNumber}|`,
         analysisSettings,
-    );
+    });
 
     const hover: Result<Hover | undefined, CommonError.CommonError> = await analysis.getHover(
         position,

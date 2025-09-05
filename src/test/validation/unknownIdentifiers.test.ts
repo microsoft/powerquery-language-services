@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { TestConstants, TestUtils } from "..";
-import { expectLessWhenSurpressed } from "../testUtils/validationTestUtils";
+import { assertLessWhenSurpressed } from "../testUtils/validationTestUtils";
 
 interface AbridgedUnknownIdentifierDiagnostic {
     readonly message: string;
@@ -25,11 +25,11 @@ const UnknownIdentifierSettings: ValidationSettings = {
 async function assertUnknownIdentifierDiagnostics(
     text: string,
 ): Promise<ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>> {
-    const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics(
-        TestConstants.SimpleLibraryAnalysisSettings,
-        TestConstants.SimpleLibraryValidateAllSettings,
+    const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics({
         text,
-    );
+        analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        validationSettings: TestConstants.SimpleLibraryValidateAllSettings,
+    });
 
     return diagnostics
         .filter((diagnostic: Diagnostic) => diagnostic.code === DiagnosticErrorCode.UnknownIdentifier)
@@ -89,14 +89,18 @@ describe("Validation - UnknownIdentifier", () => {
         it(`argument count suppressed`, async () => {
             const text: string = `let foo = 1 in bar`;
 
-            const withInvokeCheckSettings: ValidationSettings = {
+            const withCheckSettings: ValidationSettings = {
                 ...UnknownIdentifierSettings,
                 checkUnknownIdentifiers: true,
             };
 
-            const withoutInvokeCheckSettings: ValidationSettings = SimpleValidateNoneSettings;
+            const withoutCheckSettings: ValidationSettings = SimpleValidateNoneSettings;
 
-            await expectLessWhenSurpressed(text, withInvokeCheckSettings, withoutInvokeCheckSettings);
+            await assertLessWhenSurpressed({
+                text,
+                withCheckSettings,
+                withoutCheckSettings,
+            });
         });
     });
 

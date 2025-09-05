@@ -10,35 +10,85 @@ import { TestUtils } from "..";
 
 describe(`ActiveNodeUtils`, () => {
     describe(`isInKey`, () => {
-        async function runTest(textWithPipe: string, expected: boolean | undefined): Promise<void> {
-            const activeNode: TActiveNode = await TestUtils.assertActiveNode(DefaultSettings, textWithPipe);
+        async function runTest(params: {
+            readonly textWithPipe: string;
+            readonly expected: boolean | undefined;
+        }): Promise<void> {
+            const activeNode: TActiveNode = await TestUtils.assertActiveNode({
+                textWithPipe: params.textWithPipe,
+                settings: DefaultSettings,
+            });
 
-            if (expected !== undefined) {
+            if (params.expected !== undefined) {
                 ActiveNodeUtils.assertPositionInBounds(activeNode);
-                expect(activeNode.isInKey).to.equal(expected);
+                expect(activeNode.isInKey).to.equal(params.expected);
             }
         }
 
-        it(`let |`, async () => await runTest(`let |`, true));
+        it(`let |`, async () =>
+            await runTest({
+                textWithPipe: `let |`,
+                expected: true,
+            }));
 
-        it(`let k|`, async () => await runTest(`let k|`, true));
+        it(`let k|`, async () =>
+            await runTest({
+                textWithPipe: `let k|`,
+                expected: true,
+            }));
 
-        it(`let |k`, async () => await runTest(`let |k`, true));
+        it(`let |k`, async () =>
+            await runTest({
+                textWithPipe: `let |k`,
+                expected: true,
+            }));
 
-        it(`let k|=`, async () => await runTest(`let k|=`, true));
+        it(`let k|=`, async () =>
+            await runTest({
+                textWithPipe: `let k|=`,
+                expected: true,
+            }));
 
-        it(`let k=|`, async () => await runTest(`let k=|`, false));
+        it(`let k=|`, async () =>
+            await runTest({
+                textWithPipe: `let k=|`,
+                expected: false,
+            }));
 
-        it(`let k=1|`, async () => await runTest(`let k=1|`, false));
+        it(`let k=1|`, async () =>
+            await runTest({
+                textWithPipe: `let k=1|`,
+                expected: false,
+            }));
 
-        it(`let k=1,|`, async () => await runTest(`let k=1,|`, true));
+        it(`let k=1,|`, async () =>
+            await runTest({
+                textWithPipe: `let k=1,|`,
+                expected: true,
+            }));
 
-        it(`let k=1,|k`, async () => await runTest(`let k=1,|k`, true));
+        it(`let k=1,|k`, async () =>
+            await runTest({
+                textWithPipe: `let k=1,|k`,
+                expected: true,
+            }));
 
-        it(`let k=1,k|`, async () => await runTest(`let k=1,k|`, true));
+        it(`let k=1,k|`, async () =>
+            await runTest({
+                textWithPipe: `let k=1,k|`,
+                expected: true,
+            }));
 
-        it(`let k=1, k|`, async () => await runTest(`let k=1, k|`, true));
+        it(`let k=1, k|`, async () =>
+            await runTest({
+                textWithPipe: `let k=1, k|`,
+                expected: true,
+            }));
 
-        it(`let k=1, k|=`, async () => await runTest(`let k=1, k|=`, true));
+        it(`let k=1, k|=`, async () =>
+            await runTest({
+                textWithPipe: `let k=1, k|=`,
+                expected: true,
+            }));
     });
 });

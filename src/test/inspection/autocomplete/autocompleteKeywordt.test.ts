@@ -7,298 +7,718 @@ import {
     KeywordKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { expect } from "chai";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
 import { Inspection } from "../../../powerquery-language-services";
 
 describe(`Inspection - Autocomplete - Keyword`, () => {
-    async function runTest(textWithPipe: string, expected: ReadonlyArray<KeywordKind>): Promise<void> {
-        const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection(
-            TestConstants.DefaultInspectionSettings,
-            textWithPipe,
-        );
+    async function runTest(params: {
+        readonly textWithPipe: string;
+        readonly expected: ReadonlyArray<KeywordKind>;
+    }): Promise<void> {
+        const actual: Inspection.Autocomplete = await TestUtils.assertAutocompleteInspection({
+            textWithPipe: params.textWithPipe,
+            inspectionSettings: TestConstants.DefaultInspectionSettings,
+        });
 
         ResultUtils.assertIsOk(actual.triedKeyword);
-        TestUtils.assertContainsAutocompleteItemLabels(expected, actual.triedKeyword.value);
+
+        const actualLabels: ReadonlyArray<string> = actual.triedKeyword.value.map(
+            (item: Inspection.AutocompleteItem) => item.label,
+        );
+
+        expect(actualLabels).to.include.members(params.expected);
     }
 
-    it(`|`, () => runTest("|", [...ExpressionKeywordKinds, KeywordKind.Section]));
+    it(`|`, async () =>
+        await runTest({
+            textWithPipe: "|",
+            expected: [...ExpressionKeywordKinds, KeywordKind.Section],
+        }));
 
     describe("partial keyword", () => {
-        it(`a|`, () => runTest("|", []));
+        it(`a|`, async () =>
+            await runTest({
+                textWithPipe: "a|",
+                expected: [],
+            }));
 
-        it(`x a|`, () => runTest("x a|", [KeywordKind.And, KeywordKind.As]));
+        it(`x a|`, async () =>
+            await runTest({
+                textWithPipe: "x a|",
+                expected: [KeywordKind.And, KeywordKind.As],
+            }));
 
-        it(`e|`, () => runTest("e|", [KeywordKind.Each, KeywordKind.Error]));
+        it(`e|`, async () =>
+            await runTest({
+                textWithPipe: "e|",
+                expected: [KeywordKind.Each, KeywordKind.Error],
+            }));
 
-        it(`if x then x e|`, () => runTest("if x then x e|", [KeywordKind.Else]));
+        it(`if x then x e|`, async () =>
+            await runTest({
+                textWithPipe: "if x then x e|",
+                expected: [KeywordKind.Else],
+            }));
 
-        it(`i|`, () => runTest("i|", [KeywordKind.If]));
+        it(`i|`, async () =>
+            await runTest({
+                textWithPipe: "i|",
+                expected: [KeywordKind.If],
+            }));
 
-        it(`l|`, () => runTest("l|", [KeywordKind.Let]));
+        it(`l|`, async () =>
+            await runTest({
+                textWithPipe: "l|",
+                expected: [KeywordKind.Let],
+            }));
 
-        it(`m|`, () => runTest("m|", []));
+        it(`m|`, async () =>
+            await runTest({
+                textWithPipe: "m|",
+                expected: [],
+            }));
 
-        it(`x m|`, () => runTest("x m|", [KeywordKind.Meta]));
+        it(`x m|`, async () =>
+            await runTest({
+                textWithPipe: "x m|",
+                expected: [KeywordKind.Meta],
+            }));
 
-        it(`n|`, () => runTest("n|", [KeywordKind.Not]));
+        it(`n|`, async () =>
+            await runTest({
+                textWithPipe: "n|",
+                expected: [KeywordKind.Not],
+            }));
 
-        it(`true o|`, () => runTest("true o|", [KeywordKind.Or]));
+        it(`true o|`, async () =>
+            await runTest({
+                textWithPipe: "true o|",
+                expected: [KeywordKind.Or],
+            }));
 
-        it(`try true o|`, () => runTest("try true o|", [KeywordKind.Or, KeywordKind.Otherwise]));
+        it(`try true o|`, async () =>
+            await runTest({
+                textWithPipe: "try true o|",
+                expected: [KeywordKind.Or, KeywordKind.Otherwise],
+            }));
 
-        it(`try true o |`, () => runTest("|", []));
+        it(`try true o |`, async () =>
+            await runTest({
+                textWithPipe: "try true o |",
+                expected: [],
+            }));
 
-        it(`try true ot|`, () => runTest("try true ot|", [KeywordKind.Otherwise]));
+        it(`try true ot|`, async () =>
+            await runTest({
+                textWithPipe: "try true ot|",
+                expected: [KeywordKind.Otherwise],
+            }));
 
-        it(`try true oth|`, () => runTest("try true oth|", [KeywordKind.Otherwise]));
+        it(`try true oth|`, async () =>
+            await runTest({
+                textWithPipe: "try true oth|",
+                expected: [KeywordKind.Otherwise],
+            }));
 
-        it(`s|`, () => runTest("s|", [KeywordKind.Section]));
+        it(`s|`, async () =>
+            await runTest({
+                textWithPipe: "s|",
+                expected: [KeywordKind.Section],
+            }));
 
-        it(`[] |`, () => runTest("[] |", [KeywordKind.Section]));
+        it(`[] |`, async () =>
+            await runTest({
+                textWithPipe: "[] |",
+                expected: [KeywordKind.Section],
+            }));
 
-        it(`[] |s`, () => runTest("[] |s", []));
+        it(`[] |s`, async () =>
+            await runTest({
+                textWithPipe: "[] |s",
+                expected: [],
+            }));
 
-        it(`[] s|`, () => runTest("[] s|", [KeywordKind.Section]));
+        it(`[] s|`, async () =>
+            await runTest({
+                textWithPipe: "[] s|",
+                expected: [KeywordKind.Section],
+            }));
 
-        it(`[] s |`, () => runTest("[] s |", []));
+        it(`[] s |`, async () =>
+            await runTest({
+                textWithPipe: "[] s |",
+                expected: [],
+            }));
 
-        it(`section; s|`, () => runTest("section; s|", [KeywordKind.Shared]));
+        it(`section; s|`, async () =>
+            await runTest({
+                textWithPipe: "section; s|",
+                expected: [KeywordKind.Shared],
+            }));
 
-        it(`section; shared x|`, () => runTest("section; shared x|", []));
+        it(`section; shared x|`, async () =>
+            await runTest({
+                textWithPipe: "section; shared x|",
+                expected: [],
+            }));
 
-        it(`section; [] s|`, () => runTest("section; [] s|", [KeywordKind.Shared]));
+        it(`section; [] s|`, async () =>
+            await runTest({
+                textWithPipe: "section; [] s|",
+                expected: [KeywordKind.Shared],
+            }));
 
-        it(`if true t|`, () => runTest("if true t|", [KeywordKind.Then]));
+        it(`if true t|`, async () =>
+            await runTest({
+                textWithPipe: "if true t|",
+                expected: [KeywordKind.Then],
+            }));
 
-        it(`t|`, () => runTest("t|", [KeywordKind.True, KeywordKind.Try, KeywordKind.Type]));
+        it(`t|`, async () =>
+            await runTest({
+                textWithPipe: "t|",
+                expected: [KeywordKind.True, KeywordKind.Try, KeywordKind.Type],
+            }));
     });
 
     describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
-        it(`try |`, () => runTest("try |", ExpressionKeywordKinds));
+        it(`try |`, async () =>
+            await runTest({
+                textWithPipe: "try |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`try true|`, () => runTest("try true|", [KeywordKind.True]));
+        it(`try true|`, async () =>
+            await runTest({
+                textWithPipe: "try true|",
+                expected: [KeywordKind.True],
+            }));
 
-        it(`try true |`, () =>
-            runTest("try true |", [
-                KeywordKind.And,
-                KeywordKind.As,
-                KeywordKind.Is,
-                KeywordKind.Meta,
-                KeywordKind.Or,
-                KeywordKind.Otherwise,
-            ]));
+        it(`try true |`, async () =>
+            await runTest({
+                textWithPipe: "try true |",
+                expected: [
+                    KeywordKind.And,
+                    KeywordKind.As,
+                    KeywordKind.Is,
+                    KeywordKind.Meta,
+                    KeywordKind.Or,
+                    KeywordKind.Otherwise,
+                ],
+            }));
     });
 
     describe(`${Ast.NodeKind.ErrorRaisingExpression}`, () => {
-        it(`if |error`, () => runTest("if |error", ExpressionKeywordKinds));
+        it(`if |error`, async () =>
+            await runTest({
+                textWithPipe: "if |error",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if error|`, () => runTest("if error|", []));
+        it(`if error|`, async () =>
+            await runTest({
+                textWithPipe: "if error|",
+                expected: [],
+            }));
 
-        it(`error |`, () => runTest("error |", ExpressionKeywordKinds));
+        it(`error |`, async () =>
+            await runTest({
+                textWithPipe: "error |",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.FunctionExpression}`, () => {
-        it(`let x = (_ |) => a in x`, () => runTest("let x = (_ |) => a in x", [KeywordKind.As]));
+        it(`let x = (_ |) => a in x`, async () =>
+            await runTest({
+                textWithPipe: "let x = (_ |) => a in x",
+                expected: [KeywordKind.As],
+            }));
 
-        it(`let x = (_ a|) => a in`, () => runTest("let x = (_ a|) => a in", [KeywordKind.As]));
+        it(`let x = (_ a|) => a in`, async () =>
+            await runTest({
+                textWithPipe: "let x = (_ a|) => a in",
+                expected: [KeywordKind.As],
+            }));
     });
 
     describe(`${Ast.NodeKind.IfExpression}`, () => {
-        it(`if|`, () => runTest("if|", []));
+        it(`if|`, async () =>
+            await runTest({
+                textWithPipe: "if|",
+                expected: [],
+            }));
 
-        it(`if |`, () => runTest("if |", ExpressionKeywordKinds));
+        it(`if |`, async () =>
+            await runTest({
+                textWithPipe: "if |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if 1|`, () => runTest("if 1|", []));
+        it(`if 1|`, async () =>
+            await runTest({
+                textWithPipe: "if 1|",
+                expected: [],
+            }));
 
-        it(`if |if`, () => runTest("if |if", ExpressionKeywordKinds));
+        it(`if |if`, async () =>
+            await runTest({
+                textWithPipe: "if |if",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if i|f`, () => runTest("if i|f", [KeywordKind.If]));
+        it(`if i|f`, async () =>
+            await runTest({
+                textWithPipe: "if i|f",
+                expected: [KeywordKind.If],
+            }));
 
-        it(`if if |`, () => runTest("if if |", ExpressionKeywordKinds));
+        it(`if if |`, async () =>
+            await runTest({
+                textWithPipe: "if if |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if 1 |`, () => runTest("if 1 |", [KeywordKind.Then]));
+        it(`if 1 |`, async () =>
+            await runTest({
+                textWithPipe: "if 1 |",
+                expected: [KeywordKind.Then],
+            }));
 
-        it(`if 1 t|`, () => runTest("if 1 t|", [KeywordKind.Then]));
+        it(`if 1 t|`, async () =>
+            await runTest({
+                textWithPipe: "if 1 t|",
+                expected: [KeywordKind.Then],
+            }));
 
-        it(`if 1 then |`, () => runTest("if 1 then |", ExpressionKeywordKinds));
+        it(`if 1 then |`, async () =>
+            await runTest({
+                textWithPipe: "if 1 then |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if 1 then 1|`, () => runTest("if 1 then 1|", []));
+        it(`if 1 then 1|`, async () =>
+            await runTest({
+                textWithPipe: "if 1 then 1|",
+                expected: [],
+            }));
 
-        it(`if 1 then 1 e|`, () => runTest("if 1 then 1 e|", [KeywordKind.Else]));
+        it(`if 1 then 1 e|`, async () =>
+            await runTest({
+                textWithPipe: "if 1 then 1 e|",
+                expected: [KeywordKind.Else],
+            }));
 
-        it(`if 1 then 1 else|`, () => runTest("if 1 then 1 else|", []));
+        it(`if 1 then 1 else|`, async () =>
+            await runTest({
+                textWithPipe: "if 1 then 1 else|",
+                expected: [],
+            }));
 
-        it(`if 1 th|en 1 else`, () => runTest(`if 1 th|en 1 else`, [KeywordKind.Then]));
+        it(`if 1 th|en 1 else`, async () =>
+            await runTest({
+                textWithPipe: "if 1 th|en 1 else",
+                expected: [KeywordKind.Then],
+            }));
 
-        it(`if 1 then 1 else |`, () => runTest(`if 1 then 1 else |`, ExpressionKeywordKinds));
+        it(`if 1 then 1 else |`, async () =>
+            await runTest({
+                textWithPipe: "if 1 then 1 else |",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.InvokeExpression}`, () => {
-        it(`foo(|`, () => runTest(`foo(|`, ExpressionKeywordKinds));
+        it(`foo(|`, async () =>
+            await runTest({
+                textWithPipe: `foo(|`,
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`foo(a|`, () => runTest(`foo(a|`, []));
+        it(`foo(a|`, async () =>
+            await runTest({
+                textWithPipe: "foo(a|",
+                expected: [],
+            }));
 
-        it(`foo(a|,`, () => runTest(`foo(a|,`, []));
+        it(`foo(a|,`, async () =>
+            await runTest({
+                textWithPipe: "foo(a|,",
+                expected: [],
+            }));
 
-        it(`foo(a,|`, () => runTest(`foo(a,|`, ExpressionKeywordKinds));
+        it(`foo(a,|`, async () =>
+            await runTest({
+                textWithPipe: "foo(a,|",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.ListExpression}`, () => {
-        it(`{|`, () => runTest(`{|`, ExpressionKeywordKinds));
+        it(`{|`, async () =>
+            await runTest({
+                textWithPipe: "{|",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`{1|`, () => runTest(`{1|`, []));
+        it(`{1|`, async () =>
+            await runTest({
+                textWithPipe: "{1|",
+                expected: [],
+            }));
 
-        it(`{1|,`, () => runTest(`{1|,`, []));
+        it(`{1|,`, async () =>
+            await runTest({
+                textWithPipe: "{1|,",
+                expected: [],
+            }));
 
-        it(`{1,|`, () => runTest(`{1,|`, ExpressionKeywordKinds));
+        it(`{1,|`, async () =>
+            await runTest({
+                textWithPipe: "{1,|",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`{1,|2`, () => runTest(`{1,|2`, ExpressionKeywordKinds));
+        it(`{1,|2`, async () =>
+            await runTest({
+                textWithPipe: "{1,|2",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`{1,|2,`, () => runTest(`{1,|2,`, ExpressionKeywordKinds));
+        it(`{1,|2,`, async () =>
+            await runTest({
+                textWithPipe: "{1,|2,",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`{1..|`, () => runTest(`{1..|`, ExpressionKeywordKinds));
+        it(`{1..|`, async () =>
+            await runTest({
+                textWithPipe: "{1..|",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.OtherwiseExpression}`, () => {
-        it(`try true otherwise| false`, () => runTest(`try true otherwise| false`, []));
+        it(`try true otherwise| false`, async () =>
+            await runTest({
+                textWithPipe: "try true otherwise| false",
+                expected: [],
+            }));
 
-        it(`try true otherwise |false`, () => runTest(`try true otherwise |false`, ExpressionKeywordKinds));
+        it(`try true otherwise |false`, async () =>
+            await runTest({
+                textWithPipe: "try true otherwise |false",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`try true oth|`, () => runTest(`try true oth|`, [KeywordKind.Otherwise]));
+        it(`try true oth|`, async () =>
+            await runTest({
+                textWithPipe: "try true oth|",
+                expected: [KeywordKind.Otherwise],
+            }));
 
-        it(`try true otherwise |`, () => runTest(`try true otherwise |`, ExpressionKeywordKinds));
+        it(`try true otherwise |`, async () =>
+            await runTest({
+                textWithPipe: "try true otherwise |",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.ParenthesizedExpression}`, () => {
-        it(`+(|`, () => runTest(`+(|`, ExpressionKeywordKinds));
+        it(`+(|`, async () =>
+            await runTest({
+                textWithPipe: "+(|",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.RecordExpression}`, () => {
-        it(`+[|`, () => runTest(`+[|`, []));
+        it(`+[|`, async () =>
+            await runTest({
+                textWithPipe: "+[|",
+                expected: [],
+            }));
 
-        it(`+[a=|`, () => runTest(`+[a=|`, ExpressionKeywordKinds));
+        it(`+[a=|`, async () =>
+            await runTest({
+                textWithPipe: "+[a=|",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`+[a=1|`, () => runTest(`+[a=1|`, []));
+        it(`+[a=1|`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1|",
+                expected: [],
+            }));
 
-        it(`+[a|=1`, () => runTest(`+[a|=1`, []));
+        it(`+[a|=1`, async () =>
+            await runTest({
+                textWithPipe: "+[a|=1",
+                expected: [],
+            }));
 
-        it(`+[a=1|]`, () => runTest(`+[a=1|]`, []));
+        it(`+[a=1|]`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1|]",
+                expected: [],
+            }));
 
-        it(`+[a=|1]`, () => runTest(`+[a=|1]`, ExpressionKeywordKinds));
+        it(`+[a=|1]`, async () =>
+            await runTest({
+                textWithPipe: "+[a=|1]",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`+[a=1|,`, () => runTest(`+[a=1|,`, []));
+        it(`+[a=1|,`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1|,",
+                expected: [],
+            }));
 
-        it(`+[a=1,|`, () => runTest(`+[a=1,|`, []));
+        it(`+[a=1,|`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1,|",
+                expected: [],
+            }));
 
-        it(`+[a=1|,b`, () => runTest(`+[a=1|,b`, []));
+        it(`+[a=1|,b`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1|,b",
+                expected: [],
+            }));
 
-        it(`+[a=1|,b=`, () => runTest(`+[a=1|,b=`, []));
+        it(`+[a=1|,b=`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1|,b=",
+                expected: [],
+            }));
 
-        it(`+[a=|1,b=`, () => runTest(`+[a=|1,b=`, ExpressionKeywordKinds));
+        it(`+[a=|1,b=`, async () =>
+            await runTest({
+                textWithPipe: "+[a=|1,b=",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`+[a=1,b=2|`, () => runTest(`+[a=1,b=2|`, []));
+        it(`+[a=1,b=2|`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1,b=2|",
+                expected: [],
+            }));
 
-        it(`+[a=1,b=2 |`, () => runTest(`+[a=1,b=2 |`, []));
+        it(`+[a=1,b=2 |`, async () =>
+            await runTest({
+                textWithPipe: "+[a=1,b=2 |",
+                expected: [],
+            }));
     });
 
     describe(`AutocompleteExpression`, () => {
-        it(`error |`, () => runTest(`error |`, ExpressionKeywordKinds));
+        it(`error |`, async () =>
+            await runTest({
+                textWithPipe: "error |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`let x = |`, () => runTest(`let x = |`, ExpressionKeywordKinds));
+        it(`let x = |`, async () =>
+            await runTest({
+                textWithPipe: "let x = |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`() => |`, () => runTest(`() => |`, ExpressionKeywordKinds));
+        it(`() => |`, async () =>
+            await runTest({
+                textWithPipe: "() => |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if |`, () => runTest(`if |`, ExpressionKeywordKinds));
+        it(`if |`, async () =>
+            await runTest({
+                textWithPipe: "if |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if true then |`, () => runTest(`if true then |`, ExpressionKeywordKinds));
+        it(`if true then |`, async () =>
+            await runTest({
+                textWithPipe: "if true then |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`if true then true else |`, () => runTest(`if true then true else |`, ExpressionKeywordKinds));
+        it(`if true then true else |`, async () =>
+            await runTest({
+                textWithPipe: "if true then true else |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`foo(|`, () => runTest(`foo(|`, ExpressionKeywordKinds));
+        it(`foo(|`, async () =>
+            await runTest({
+                textWithPipe: "foo(|",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`let x = 1 in |`, () => runTest(`let x = 1 in |`, ExpressionKeywordKinds));
+        it(`let x = 1 in |`, async () =>
+            await runTest({
+                textWithPipe: "let x = 1 in |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`+{|`, () => runTest(`+{|`, ExpressionKeywordKinds));
+        it(`+{|`, async () =>
+            await runTest({
+                textWithPipe: "+{|",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`try true otherwise |`, () => runTest(`try true otherwise |`, ExpressionKeywordKinds));
+        it(`try true otherwise |`, async () =>
+            await runTest({
+                textWithPipe: "try true otherwise |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`+(|`, () => runTest(`+(|`, ExpressionKeywordKinds));
+        it(`+(|`, async () =>
+            await runTest({
+                textWithPipe: "+(|",
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.SectionMember}`, () => {
-        it(`section; [] |`, () => runTest(`section; [] |`, [KeywordKind.Shared]));
+        it(`section; [] |`, async () =>
+            await runTest({
+                textWithPipe: "section; [] |",
+                expected: [KeywordKind.Shared],
+            }));
 
-        it(`section; [] x |`, () => runTest(`section; [] x |`, []));
+        it(`section; [] x |`, async () =>
+            await runTest({
+                textWithPipe: "section; [] x |",
+                expected: [],
+            }));
 
-        it(`section; x = |`, () => runTest(`section; x = |`, ExpressionKeywordKinds));
+        it(`section; x = |`, async () =>
+            await runTest({
+                textWithPipe: "section; x = |",
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`section; x = 1 |`, () =>
-            runTest(`section; x = 1 |`, [
-                KeywordKind.And,
-                KeywordKind.As,
-                KeywordKind.Is,
-                KeywordKind.Meta,
-                KeywordKind.Or,
-            ]));
+        it(`section; x = 1 |`, async () =>
+            await runTest({
+                textWithPipe: "section; x = 1 |",
+                expected: [KeywordKind.And, KeywordKind.As, KeywordKind.Is, KeywordKind.Meta, KeywordKind.Or],
+            }));
 
-        it(`section; x = 1 i|`, () => runTest(`section; x = 1 i|`, [KeywordKind.Is]));
+        it(`section; x = 1 i|`, async () =>
+            await runTest({
+                textWithPipe: "section; x = 1 i|",
+                expected: [KeywordKind.Is],
+            }));
 
-        it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, () =>
-            runTest(`section foo; a = () => true; b = "string"; c = 1; d = |;`, ExpressionKeywordKinds));
+        it(`section foo; a = () => true; b = "string"; c = 1; d = |;`, async () =>
+            await runTest({
+                textWithPipe: `section foo; a = () => true; b = "string"; c = 1; d = |;`,
+                expected: ExpressionKeywordKinds,
+            }));
     });
 
     describe(`${Ast.NodeKind.LetExpression}`, () => {
-        it(`let a = |`, () => runTest(`let a = |`, ExpressionKeywordKinds));
+        it(`let a = |`, async () =>
+            await runTest({
+                textWithPipe: `let a = |`,
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`let a = 1|`, () => runTest(`let a = 1|`, []));
+        it(`let a = 1|`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1|`,
+                expected: [],
+            }));
 
-        it(`let a = 1 |`, () =>
-            runTest(`let a = 1 |`, [
-                KeywordKind.And,
-                KeywordKind.As,
-                KeywordKind.Is,
-                KeywordKind.Meta,
-                KeywordKind.Or,
-                KeywordKind.In,
-            ]));
+        it(`let a = 1 |`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1 |`,
+                expected: [
+                    KeywordKind.And,
+                    KeywordKind.As,
+                    KeywordKind.Is,
+                    KeywordKind.Meta,
+                    KeywordKind.Or,
+                    KeywordKind.In,
+                ],
+            }));
 
-        it(`let a = 1 | foobar`, () =>
-            runTest(`let a = 1 | foobar`, [
-                KeywordKind.And,
-                KeywordKind.As,
-                KeywordKind.Is,
-                KeywordKind.Meta,
-                KeywordKind.Or,
-                KeywordKind.In,
-            ]));
+        it(`let a = 1 | foobar`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1 | foobar`,
+                expected: [
+                    KeywordKind.And,
+                    KeywordKind.As,
+                    KeywordKind.Is,
+                    KeywordKind.Meta,
+                    KeywordKind.Or,
+                    KeywordKind.In,
+                ],
+            }));
 
-        it(`let a = 1 i|`, () => runTest(`let a = 1 i|`, [KeywordKind.Is, KeywordKind.In]));
+        it(`let a = 1 i|`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1 i|`,
+                expected: [KeywordKind.Is, KeywordKind.In],
+            }));
 
-        it(`let a = 1 o|`, () => runTest(`let a = 1 o|`, [KeywordKind.Or]));
+        it(`let a = 1 o|`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1 o|`,
+                expected: [KeywordKind.Or],
+            }));
 
-        it(`let a = 1 m|`, () => runTest(`let a = 1 m|`, [KeywordKind.Meta]));
+        it(`let a = 1 m|`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1 m|`,
+                expected: [KeywordKind.Meta],
+            }));
 
-        it(`let a = 1, |`, () => runTest(`let a = 1, |`, []));
+        it(`let a = 1, |`, async () =>
+            await runTest({
+                textWithPipe: `let a = 1, |`,
+                expected: [],
+            }));
 
-        it(`let a = let b = |`, () => runTest(`let a = let b = |`, ExpressionKeywordKinds));
+        it(`let a = let b = |`, async () =>
+            await runTest({
+                textWithPipe: `let a = let b = |`,
+                expected: ExpressionKeywordKinds,
+            }));
 
-        it(`let a = let b = 1 |`, () =>
-            runTest(`let a = let b = 1 |`, [
-                KeywordKind.And,
-                KeywordKind.As,
-                KeywordKind.Is,
-                KeywordKind.Meta,
-                KeywordKind.Or,
-                KeywordKind.In,
-            ]));
+        it(`let a = let b = 1 |`, async () =>
+            await runTest({
+                textWithPipe: `let a = let b = 1 |`,
+                expected: [
+                    KeywordKind.And,
+                    KeywordKind.As,
+                    KeywordKind.Is,
+                    KeywordKind.Meta,
+                    KeywordKind.Or,
+                    KeywordKind.In,
+                ],
+            }));
 
-        it(`let a = let b = 1, |`, () => runTest(`let a = let b = 1, |`, []));
+        it(`let a = let b = 1, |`, async () =>
+            await runTest({
+                textWithPipe: `let a = let b = 1, |`,
+                expected: [],
+            }));
 
-        it(`let x = e|`, () => runTest(`let x = e|`, [KeywordKind.Each, KeywordKind.Error]));
+        it(`let x = e|`, async () =>
+            await runTest({
+                textWithPipe: `let x = e|`,
+                expected: [KeywordKind.Each, KeywordKind.Error],
+            }));
 
-        it(`let x = error let x = e|`, () =>
-            runTest(`let x = error let x = e|`, [KeywordKind.Each, KeywordKind.Error]));
+        it(`let x = error let x = e|`, async () =>
+            await runTest({
+                textWithPipe: `let x = error let x = e|`,
+                expected: [KeywordKind.Each, KeywordKind.Error],
+            }));
     });
 });

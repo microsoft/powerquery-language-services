@@ -198,10 +198,10 @@ function expectNestedInvocation(inspected: Inspection.CurrentInvokeExpression): 
 
 describe(`subset Inspection - InvokeExpression`, () => {
     async function assertCurrentInvokeExpression(textWithPipe: string): Promise<Inspection.CurrentInvokeExpression> {
-        const inspected: Inspection.Inspected = await TestUtils.assertInspected(
-            TestConstants.SimpleInspectionSettings,
+        const inspected: Inspection.Inspected = await TestUtils.assertInspected({
             textWithPipe,
-        );
+            inspectionSettings: TestConstants.SimpleInspectionSettings,
+        });
 
         return Assert.asDefined(ResultUtils.assertOk(await inspected.triedCurrentInvokeExpression));
     }

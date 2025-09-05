@@ -3,46 +3,10 @@
 
 import * as File from "fs";
 import * as Path from "path";
-import { assert, expect } from "chai";
-import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
-import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { assert } from "chai";
+import { Position } from "vscode-languageserver-types";
 
-import { Inspection } from "../../powerquery-language-services";
 import { MockDocument } from "../mockDocument";
-import { TestUtils } from "..";
-
-export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
-    assertIsMarkupContent(value);
-
-    return value;
-}
-
-export function assertAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    expected = [...expected].sort();
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label).sort();
-    expect(actualLabels).to.deep.equal(expected);
-}
-
-export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
-    if (!MarkupContent.is(value)) {
-        throw new Error(`expected value to be MarkupContent`);
-    }
-}
-
-export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
-    expect(TestUtils.abridgedSignatureHelp(actual)).deep.equals(expected);
-}
-
-export function assertContainsAutocompleteItemLabels(
-    expected: ReadonlyArray<string>,
-    actual: ReadonlyArray<Inspection.AutocompleteItem>,
-): void {
-    const actualLabels: ReadonlyArray<string> = actual.map((item: Inspection.AutocompleteItem) => item.label);
-    expect(actualLabels).to.include.members(expected);
-}
 
 export function extractPosition(textWithPipe: string): [string, Position] {
     assert.isTrue((textWithPipe.match(/\|/g) ?? []).length == 1, `textWithPipe must contain exactly pipe character`);
@@ -82,17 +46,4 @@ export function readFile(fileName: string): string {
 
 export function mockDocument(text: string): MockDocument {
     return new MockDocument(text, "powerquery");
-}
-
-export async function assertParse(
-    settings: Settings,
-    text: string,
-): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
-    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, text);
-
-    if (TaskUtils.isParseStageOk(triedLexParseTask) || TaskUtils.isParseStageParseError(triedLexParseTask)) {
-        return triedLexParseTask;
-    } else {
-        throw new Error(`unexpected task stage: ${triedLexParseTask.stage}`);
-    }
 }

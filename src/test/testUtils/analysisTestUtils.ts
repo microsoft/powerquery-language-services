@@ -10,102 +10,105 @@ import { AutocompleteItem } from "../../powerquery-language-services/inspection"
 import { MockDocument } from "../mockDocument";
 import { TextEdit } from "vscode-languageserver-textdocument";
 
-export function assertAnalysisFromText(analysisSettings: AnalysisSettings, text: string): Analysis {
-    const document: MockDocument = TestUtils.mockDocument(text);
+export function assertAnalysisFromText(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+}): Analysis {
+    const document: MockDocument = TestUtils.mockDocument(params.text);
 
-    return AnalysisUtils.analysis(document, analysisSettings);
+    return AnalysisUtils.analysis(document, params.analysisSettings);
 }
 
-export function assertAnalysisAndPositionFromText(
-    textWithPipe: string,
-    analysisSettings: AnalysisSettings,
-): [Analysis, Position] {
-    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(textWithPipe);
+export function assertAnalysisAndPositionFromText(params: {
+    readonly textWithPipe: string;
+    readonly analysisSettings: AnalysisSettings;
+}): [Analysis, Position] {
+    const [document, position]: [MockDocument, Position] = createMockDocumentAndPosition(params.textWithPipe);
 
-    const analysis: Analysis = AnalysisUtils.analysis(document, analysisSettings);
+    const analysis: Analysis = AnalysisUtils.analysis(document, params.analysisSettings);
 
     return [analysis, position];
 }
 
-export async function assertAutocompleteAnalysis(
-    textWithPipe: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<AutocompleteItem[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
+export async function assertAutocompleteAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<AutocompleteItem[] | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getAutocompleteItems(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getAutocompleteItems(position, params.cancellationToken));
 }
 
-export async function assertDefinitionAnalysis(
-    textWithPipe: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<Location[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
+export async function assertDefinitionAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<Location[] | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getDefinition(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getDefinition(position, params.cancellationToken));
 }
 
-export async function assertDocumentSymbolsAnalysis(
-    textWithPipe: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<DocumentSymbol[] | undefined> {
-    const analysis: Analysis = assertAnalysisFromText(settings, textWithPipe);
+export async function assertDocumentSymbolsAnalysis(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<DocumentSymbol[] | undefined> {
+    const analysis: Analysis = assertAnalysisFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getDocumentSymbols(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getDocumentSymbols(params.cancellationToken));
 }
 
-export async function assertFoldingRangesAnalysis(
-    text: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<FoldingRange[] | undefined> {
-    const analysis: Analysis = assertAnalysisFromText(settings, text);
+export async function assertFoldingRangesAnalysis(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<FoldingRange[] | undefined> {
+    const analysis: Analysis = assertAnalysisFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getFoldingRanges(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getFoldingRanges(params.cancellationToken));
 }
 
-export async function assertHoverAnalysis(
-    textWithPipe: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<Hover | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
+export async function assertHoverAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<Hover | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getHover(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getHover(position, params.cancellationToken));
 }
 
-export async function assertPartialSemanticTokens(
-    text: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<PartialSemanticToken[] | undefined> {
-    const analysis: Analysis = assertAnalysisFromText(settings, text);
+export async function assertPartialSemanticTokens(params: {
+    readonly text: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<PartialSemanticToken[] | undefined> {
+    const analysis: Analysis = assertAnalysisFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getPartialSemanticTokens(cancellationToken));
+    return ResultUtils.assertOk(await analysis.getPartialSemanticTokens(params.cancellationToken));
 }
 
-export async function assertRenameEdits(
-    textWithPipe: string,
-    newName: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<TextEdit[] | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
+export async function assertRenameEdits(params: {
+    readonly textWithPipe: string;
+    readonly newName: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<TextEdit[] | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getRenameEdits(position, newName, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getRenameEdits(position, params.newName, params.cancellationToken));
 }
 
-export async function assertSignatureHelpAnalysis(
-    textWithPipe: string,
-    settings: AnalysisSettings,
-    cancellationToken?: ICancellationToken,
-): Promise<SignatureHelp | undefined> {
-    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(textWithPipe, settings);
+export async function assertSignatureHelpAnalysis(params: {
+    readonly textWithPipe: string;
+    readonly analysisSettings: AnalysisSettings;
+    readonly cancellationToken?: ICancellationToken;
+}): Promise<SignatureHelp | undefined> {
+    const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    return ResultUtils.assertOk(await analysis.getSignatureHelp(position, cancellationToken));
+    return ResultUtils.assertOk(await analysis.getSignatureHelp(position, params.cancellationToken));
 }
 
 function createMockDocumentAndPosition(textWithPipe: string): [MockDocument, Position] {

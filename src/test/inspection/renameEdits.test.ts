@@ -8,45 +8,51 @@ import type { TextEdit } from "vscode-languageserver-types";
 import { TestConstants, TestUtils } from "..";
 
 describe(`Inspection - RenameEdits - Identifiers`, () => {
-    async function runTest(textWithPipe: string, newName: string, expected: TextEdit[] | undefined): Promise<void> {
-        await TestUtils.assertEqualRenameEdits(
-            textWithPipe,
-            newName,
-            expected,
-            TestConstants.SimpleLibraryAnalysisSettings,
-        );
+    async function runTest(params: {
+        readonly textWithPipe: string;
+        readonly newName: string;
+        readonly expected: TextEdit[] | undefined;
+    }): Promise<void> {
+        await TestUtils.assertEqualRenameEdits({
+            ...params,
+            analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+        });
     }
 
     describe("Rename identifiers", () => {
-        async function renameOneIdentifier(textWithPipe: string): Promise<void> {
-            await runTest(textWithPipe, "newName", [
-                {
-                    newText: "newName",
-                    range: {
-                        end: {
-                            character: 21,
-                            line: 6,
-                        },
-                        start: {
-                            character: 20,
-                            line: 6,
-                        },
-                    },
-                },
-                {
-                    newText: "newName",
-                    range: {
-                        end: {
-                            character: 21,
-                            line: 4,
-                        },
-                        start: {
-                            character: 20,
-                            line: 4,
+        function renameOneIdentifier(textWithPipe: string): Promise<void> {
+            return runTest({
+                textWithPipe,
+                newName: "newName",
+                expected: [
+                    {
+                        newText: "newName",
+                        range: {
+                            end: {
+                                character: 21,
+                                line: 6,
+                            },
+                            start: {
+                                character: 20,
+                                line: 6,
+                            },
                         },
                     },
-                },
-            ]);
+                    {
+                        newText: "newName",
+                        range: {
+                            end: {
+                                character: 21,
+                                line: 4,
+                            },
+                            start: {
+                                character: 20,
+                                line: 4,
+                            },
+                        },
+                    },
+                ],
+            });
         }
 
         it(`Rename one in-expression identifier`, async () =>
@@ -96,8 +102,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
 
     describe("Rename generalized identifiers", () => {
         it(`Rename one record-expression identifier`, async () =>
-            await runTest(
-                `let
+            await runTest({
+                textWithPipe: `let
                     foo = 1,
                     bar = 1,
                     ThirdPQConn = [
@@ -109,8 +115,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     ]
                 in
                     ThirdPQConn`,
-                `foo1`,
-                [
+                newName: `foo1`,
+                expected: [
                     {
                         newText: "foo1",
                         range: {
@@ -138,11 +144,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            ));
+            }));
 
         it(`Rename one identifier in its paired assignment expression creator`, async () =>
-            await runTest(
-                `let
+            await runTest({
+                textWithPipe: `let
                     |foo = 1,
                     bar = 1,
                     ThirdPQConn = [
@@ -154,8 +160,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     ]
                 in
                     ThirdPQConn`,
-                `foo2`,
-                [
+                newName: `foo2`,
+                expected: [
                     {
                         newText: "foo2",
                         range: {
@@ -183,11 +189,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            ));
+            }));
 
-        it(`Rename one record-expression identifier creator`, async () => {
-            await runTest(
-                `let
+        it(`Rename one record-expression identifier creator`, async () =>
+            await runTest({
+                textWithPipe: `let
                 foo = 1,
                 bar = 1,
                 ThirdPQConn = [
@@ -199,8 +205,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                 ]
             in
                 ThirdPQConn`,
-                `foo2`,
-                [
+                newName: `foo2`,
+                expected: [
                     {
                         newText: "foo2",
                         range: {
@@ -215,12 +221,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            );
-        });
+            }));
 
-        it(`Rename one identifier within a statement`, async () => {
-            await runTest(
-                `let
+        it(`Rename one identifier within a statement`, async () =>
+            await runTest({
+                textWithPipe: `let
                     foo| = 1,
                     bar = 1,
                     ThirdPQConn = [
@@ -232,8 +237,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     ]
                 in
                     ThirdPQConn`,
-                `foo3`,
-                [
+                newName: `foo3`,
+                expected: [
                     {
                         newText: "foo3",
                         range: {
@@ -261,12 +266,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            );
-        });
+            }));
 
-        it(`Rename one generalized identifier within a statement with constant at symbol`, async () => {
-            await runTest(
-                `let
+        it(`Rename one generalized identifier within a statement with constant at symbol`, async () =>
+            await runTest({
+                textWithPipe: `let
                     foo = 1,
                     bar = 1,
                     ThirdPQConn = [
@@ -278,8 +282,8 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     ]
                 in
                     ThirdPQConn`,
-                "Implicit4",
-                [
+                newName: "Implicit4",
+                expected: [
                     {
                         newText: "Implicit4",
                         range: {
@@ -307,12 +311,11 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            );
-        });
+            }));
 
-        it(`Rename one referred generalized identifier within a statement with constant at symbol`, async () => {
-            await runTest(
-                `let
+        it(`Rename one referred generalized identifier within a statement with constant at symbol`, async () =>
+            await runTest({
+                textWithPipe: `let
                     foo = 1,
                     bar = 1,
                     ThirdPQConn = [
@@ -324,8 +327,9 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                     ]
                 in
                     ThirdPQConn`,
-                "Implicit4",
-                [
+
+                newName: "Implicit4",
+                expected: [
                     {
                         newText: "Implicit4",
                         range: {
@@ -353,7 +357,6 @@ describe(`Inspection - RenameEdits - Identifiers`, () => {
                         },
                     },
                 ],
-            );
-        });
+            }));
     });
 });
