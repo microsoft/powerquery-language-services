@@ -27,14 +27,16 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
 
     async function expectFieldAccessSuggestions(params: {
         readonly textWithPipe: string;
-        readonly expectedLabels: ReadonlyArray<string>;
-        readonly expectedIsTextEdit: boolean;
+        readonly expected: {
+            readonly labels: ReadonlyArray<string>;
+            readonly isTextEdit: boolean;
+        };
     }): Promise<void> {
         await expectSuggestions({
             textWithPipe: params.textWithPipe,
-            expected: params.expectedLabels.map((label: string) => ({
+            expected: params.expected.labels.map((label: string) => ({
                 label,
-                isTextEdit: params.expectedIsTextEdit,
+                isTextEdit: params.expected.isTextEdit,
             })),
             autocompleteItemSelector: fieldAccessAutocompleteItemSelector,
         });
@@ -343,92 +345,118 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
             it(`[car = 1, cat = 2][|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ |`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ |`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ | ]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ | ]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`let foo = [car = 1, cat = 2][#"test"|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `let foo = [car = 1, cat = 2][#"test"|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][c|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][c|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ca|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ca|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][car|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][car|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][cart|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][cart|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][c|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][c|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ca|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ca|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][car|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][car|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][cart|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][cart|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][cart|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[cat = 1, #"=requiredQuotedIdentifier" = 2][#"=requiredQuotedIdentifier"|]`,
-                    expectedLabels: [`#"=requiredQuotedIdentifier"`, "cat"],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`#"=requiredQuotedIdentifier"`, "cat"],
+                        isTextEdit: true,
+                    },
                 }));
         });
 
@@ -440,43 +468,55 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
             it(`[car = 1, cat = 2][ [cat], [car|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ [cat], [car|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ [cat], [car|]`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ [cat], [car|]`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: true,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ [|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ [|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`[car = 1, cat = 2][ [|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ [|`,
-                    expectedLabels: [`car`, `cat`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`[key with a space = 1][ [|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[key with a space = 1][ [|`,
-                    expectedLabels: [`key with a space`],
-                    expectedIsTextEdit: false,
+                    expected: {
+                        labels: [`key with a space`],
+                        isTextEdit: false,
+                    },
                 }));
 
             it(`[key with a space = 1][ [key|`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[key with a space = 1][ [key|`,
-                    expectedLabels: [`key with a space`],
-                    expectedIsTextEdit: true,
+                    expected: {
+                        labels: [`key with a space`],
+                        isTextEdit: true,
+                    },
                 }));
         });
     });
@@ -485,29 +525,37 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
         it(`let fn = () => [car = 1, cat = 2] in fn()[|`, async () =>
             await expectFieldAccessSuggestions({
                 textWithPipe: `let fn = () => [car = 1, cat = 2] in fn()[|`,
-                expectedLabels: ["car", "cat"],
-                expectedIsTextEdit: false,
+                expected: {
+                    labels: ["car", "cat"],
+                    isTextEdit: false,
+                },
             }));
 
         it(`let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`, async () =>
             await expectFieldAccessSuggestions({
                 textWithPipe: `let foo = () => [car = 1, cat = 2], bar = foo in bar()[|`,
-                expectedLabels: ["car", "cat"],
-                expectedIsTextEdit: false,
+                expected: {
+                    labels: ["car", "cat"],
+                    isTextEdit: false,
+                },
             }));
 
         it(`let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`, async () =>
             await expectFieldAccessSuggestions({
                 textWithPipe: `let foo = () => [car = 1, cat = 2], bar = () => foo in bar()()[|`,
-                expectedLabels: ["car", "cat"],
-                expectedIsTextEdit: false,
+                expected: {
+                    labels: ["car", "cat"],
+                    isTextEdit: false,
+                },
             }));
 
         it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, async () =>
             await expectFieldAccessSuggestions({
                 textWithPipe: `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
-                expectedLabels: ["car", "cat"],
-                expectedIsTextEdit: false,
+                expected: {
+                    labels: ["car", "cat"],
+                    isTextEdit: false,
+                },
             }));
     });
 });
