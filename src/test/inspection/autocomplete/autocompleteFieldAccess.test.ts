@@ -5,7 +5,6 @@ import "mocha";
 import { ResultUtils, Task } from "@microsoft/powerquery-parser";
 
 import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
-import { expectNoSuggestions, expectSuggestions } from "../../testUtils/autocompleteTestUtils";
 import { Inspection, Position } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
 import { expect } from "chai";
@@ -19,7 +18,7 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
     }
 
     async function expectNoFieldAccessSuggestions(textWithPipe: string): Promise<void> {
-        await expectNoSuggestions({
+        await TestUtils.expectNoSuggestions({
             textWithPipe,
             autocompleteItemSelector: fieldAccessAutocompleteItemSelector,
         });
@@ -32,7 +31,7 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
             readonly isTextEdit: boolean;
         };
     }): Promise<void> {
-        await expectSuggestions({
+        await TestUtils.expectSuggestions({
             textWithPipe: params.textWithPipe,
             expected: params.expected.labels.map((label: string) => ({
                 label,

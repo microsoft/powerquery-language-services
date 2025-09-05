@@ -7,14 +7,9 @@ import {
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import {
-    AbridgedAutocompleteItem,
-    expectAbridgedAutocompleteItems,
-    expectNoSuggestions,
-    expectTopSuggestions,
-} from "../../testUtils/autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
 import { ResultUtils } from "@microsoft/powerquery-parser";
+import { TestUtils } from "../..";
 
 describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     function assertAutocompletePrimitiveType(
@@ -24,22 +19,27 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     }
 
     async function expectNoPrimitiveTypeSuggestions(textWithPipe: string): Promise<void> {
-        await expectNoSuggestions({
+        await TestUtils.expectNoSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompletePrimitiveType,
         });
     }
 
     async function expectPrimitiveTypeInserts(textWithPipe: string): Promise<void> {
-        await expectAbridgedAutocompleteItems({
-            textWithPipe,
-            autocompleteItemSelector: assertAutocompletePrimitiveType,
+        const actual: ReadonlyArray<TestUtils.AbridgedAutocompleteItem> =
+            await TestUtils.expectAbridgedAutocompleteItems({
+                textWithPipe,
+                autocompleteItemSelector: assertAutocompletePrimitiveType,
+            });
+
+        TestUtils.assertEqualAbridgedAutocompleteItems({
+            actual,
             expected: AbridgedAllowedPrimitiveTypeConstantInserts,
         });
     }
 
     async function expectDatePrimitiveTypeReplacements(textWithPipe: string): Promise<void> {
-        await expectTopSuggestions({
+        await TestUtils.expectTopSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompletePrimitiveType,
             expected: AbridgedDateEdits,
@@ -54,13 +54,13 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
         (constant: PrimitiveTypeConstant) => constant.includes(PrimitiveTypeConstant.Date),
     );
 
-    const AbridgedAllowedPrimitiveTypeConstantInserts: ReadonlyArray<AbridgedAutocompleteItem> =
+    const AbridgedAllowedPrimitiveTypeConstantInserts: ReadonlyArray<TestUtils.AbridgedAutocompleteItem> =
         AllowedPrimitiveTypeConstants.map((value: PrimitiveTypeConstant) => ({
             label: value,
             isTextEdit: false,
         }));
 
-    const AbridgedDateEdits: ReadonlyArray<AbridgedAutocompleteItem> = DateConstants.map(
+    const AbridgedDateEdits: ReadonlyArray<TestUtils.AbridgedAutocompleteItem> = DateConstants.map(
         (value: PrimitiveTypeConstant) => ({
             label: value,
             isTextEdit: true,

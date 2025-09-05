@@ -5,15 +5,20 @@ import "mocha";
 import { expect } from "chai";
 
 import { TestConstants, TestUtils } from "..";
+import { AbridgedAutocompleteItem } from "./abridgedTestUtils";
 import { AutocompleteItemUtils } from "../../powerquery-language-services/inspection";
 import { Inspection } from "../../powerquery-language-services";
 
-export interface AbridgedAutocompleteItem {
-    readonly label: string;
-    readonly isTextEdit: boolean;
+export async function expectAbridgedAutocompleteItems(params: {
+    readonly textWithPipe: string;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+}): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
+    return (await expectAutocompleteItems(params)).map(createAbridgedAutocompleteItem);
 }
 
-export async function assertAutocomplete(textWithPipe: string): Promise<Inspection.Autocomplete> {
+export async function expectAutocomplete(textWithPipe: string): Promise<Inspection.Autocomplete> {
     return (
         await TestUtils.assertInspected({
             textWithPipe,
@@ -22,31 +27,13 @@ export async function assertAutocomplete(textWithPipe: string): Promise<Inspecti
     ).autocomplete;
 }
 
-export async function assertAutocompleteItems(params: {
+export async function expectAutocompleteItems(params: {
     readonly textWithPipe: string;
     readonly autocompleteItemSelector: (
         autocomplete: Inspection.Autocomplete,
     ) => ReadonlyArray<Inspection.AutocompleteItem>;
 }): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return params.autocompleteItemSelector(await assertAutocomplete(params.textWithPipe));
-}
-
-export async function expectAbridgedAutocompleteItems(params: {
-    readonly textWithPipe: string;
-    readonly autocompleteItemSelector: (
-        autocomplete: Inspection.Autocomplete,
-    ) => ReadonlyArray<Inspection.AutocompleteItem>;
-    readonly expected?: ReadonlyArray<AbridgedAutocompleteItem>;
-}): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
-    const actual: ReadonlyArray<AbridgedAutocompleteItem> = (await assertAutocompleteItems(params)).map(
-        createAbridgedAutocompleteItem,
-    );
-
-    if (params.expected !== undefined) {
-        expect(actual).to.have.deep.members(params.expected);
-    }
-
-    return actual;
+    return params.autocompleteItemSelector(await expectAutocomplete(params.textWithPipe));
 }
 
 export async function expectNoSuggestions(params: {
@@ -58,7 +45,6 @@ export async function expectNoSuggestions(params: {
     await expectAbridgedAutocompleteItems({
         textWithPipe: params.textWithPipe,
         autocompleteItemSelector: params.autocompleteItemSelector,
-        expected: undefined,
     });
 }
 
@@ -69,10 +55,14 @@ export async function expectSuggestions(params: {
         autocomplete: Inspection.Autocomplete,
     ) => ReadonlyArray<Inspection.AutocompleteItem>;
 }): Promise<void> {
-    await expectAbridgedAutocompleteItems({
+    const actual: ReadonlyArray<AbridgedAutocompleteItem> = await expectAbridgedAutocompleteItems({
         textWithPipe: params.textWithPipe,
         autocompleteItemSelector: params.autocompleteItemSelector,
+    });
+
+    TestUtils.assertEqualAbridgedAutocompleteItems({
         expected: params.expected,
+        actual,
     });
 }
 
@@ -86,7 +76,7 @@ export async function expectTopSuggestions(params: {
 }): Promise<void> {
     const remainderScoreThreshold: number = params.remainderScoreThreshold ?? 0.8;
 
-    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertAutocompleteItems(params);
+    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await expectAutocompleteItems(params);
 
     const byJaroWinklerScore: ReadonlyArray<Inspection.AutocompleteItem> = Array.from(actual).sort(
         AutocompleteItemUtils.comparer,
@@ -104,7 +94,7 @@ export async function expectTopSuggestions(params: {
     expect(remainderAboveThreshold).to.be.empty;
 }
 
-export function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
+function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
     return {
         label: value.label,
         isTextEdit: value.textEdit !== undefined,

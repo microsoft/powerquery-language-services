@@ -14,38 +14,22 @@ import { Range, TextEdit } from "vscode-languageserver-textdocument";
 import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
+import { AbridgedAutocompleteItem, AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
 import {
     AnalysisSettings,
     Inspection,
     InspectionSettings,
     PartialSemanticToken,
 } from "../../powerquery-language-services";
-import { AbridgedAutocompleteItem } from "./autocompleteTestUtils";
 import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export function assertEqualAbridgedAutocompleteItems(params: {
-    readonly expected: {
-        readonly labels: ReadonlyArray<string>;
-        readonly isTextEdit: boolean;
-    };
-    readonly actual: ReadonlyArray<Inspection.AutocompleteItem>;
+    readonly expected: ReadonlyArray<AbridgedAutocompleteItem>;
+    readonly actual: ReadonlyArray<AbridgedAutocompleteItem>;
 }): void {
-    const abridgedActual: ReadonlyArray<AbridgedAutocompleteItem> = params.actual.map(
-        (item: Inspection.AutocompleteItem) => ({
-            label: item.label,
-            isTextEdit: item.textEdit !== undefined,
-        }),
-    );
-
-    const abridgedExpected: ReadonlyArray<AbridgedAutocompleteItem> = params.expected.labels.map((label: string) => ({
-        label,
-        isTextEdit: params.expected.isTextEdit,
-    }));
-
-    expect(abridgedActual).to.have.deep.members(abridgedExpected);
+    expect(params.actual).to.have.deep.members(params.expected);
 }
 
 export async function assertEqualDefinitionAnalysis(params: {

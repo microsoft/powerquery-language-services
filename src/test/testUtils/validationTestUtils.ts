@@ -9,7 +9,7 @@ import * as PQLS from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { MockDocument } from "../mockDocument";
 
-export async function expectLessWhenSurpressed(params: {
+export async function assertLessWhenSurpressed(params: {
     readonly text: string;
     readonly withCheckSettings: PQLS.ValidationSettings;
     readonly withoutCheckSettings: PQLS.ValidationSettings;

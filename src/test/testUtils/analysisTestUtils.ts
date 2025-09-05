@@ -6,7 +6,6 @@ import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as TestUtils from "./testUtils";
 import { Analysis, AnalysisSettings, AnalysisUtils, PartialSemanticToken } from "../../powerquery-language-services";
-import { assertEqualAbridgedAutocompleteItems } from "./assertEqualTestUtils";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
 import { MockDocument } from "../mockDocument";
 import { TextEdit } from "vscode-languageserver-textdocument";
@@ -35,25 +34,10 @@ export async function assertAutocompleteAnalysis(params: {
     readonly textWithPipe: string;
     readonly analysisSettings: AnalysisSettings;
     readonly cancellationToken?: ICancellationToken;
-    readonly expected?: {
-        readonly labels: ReadonlyArray<string>;
-        readonly isTextEdit: boolean;
-    };
 }): Promise<AutocompleteItem[] | undefined> {
     const [analysis, position]: [Analysis, Position] = assertAnalysisAndPositionFromText(params);
 
-    const result: AutocompleteItem[] | undefined = ResultUtils.assertOk(
-        await analysis.getAutocompleteItems(position, params.cancellationToken),
-    );
-
-    if (params.expected !== undefined) {
-        assertEqualAbridgedAutocompleteItems({
-            actual: result ?? [],
-            expected: params.expected,
-        });
-    }
-
-    return result;
+    return ResultUtils.assertOk(await analysis.getAutocompleteItems(position, params.cancellationToken));
 }
 
 export async function assertDefinitionAnalysis(params: {

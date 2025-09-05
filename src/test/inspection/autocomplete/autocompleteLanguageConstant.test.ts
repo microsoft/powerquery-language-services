@@ -5,12 +5,8 @@ import "mocha";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import {
-    AbridgedAutocompleteItem,
-    expectNoSuggestions,
-    expectSuggestions,
-} from "../../testUtils/autocompleteTestUtils";
 import { Inspection } from "../../../powerquery-language-services";
+import { TestUtils } from "../..";
 
 describe(`Inspection - Autocomplete - Language constants`, () => {
     function assertAutocompleteLanguageConstant(
@@ -20,7 +16,7 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
     }
 
     async function expectNoLanguageConstantSuggestion(textWithPipe: string): Promise<void> {
-        await expectNoSuggestions({
+        await TestUtils.expectNoSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompleteLanguageConstant,
         });
@@ -28,41 +24,41 @@ describe(`Inspection - Autocomplete - Language constants`, () => {
 
     async function expectLanguageConstantSuggestion(
         textWithPipe: string,
-        expected: AbridgedAutocompleteItem,
+        expected: TestUtils.AbridgedAutocompleteItem,
     ): Promise<void> {
-        await expectSuggestions({
+        await TestUtils.expectSuggestions({
             textWithPipe,
             autocompleteItemSelector: assertAutocompleteLanguageConstant,
             expected: [expected],
         });
     }
 
-    const CatchInsert: AbridgedAutocompleteItem = {
+    const CatchInsert: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Catch,
         isTextEdit: false,
     };
 
-    const CatchReplace: AbridgedAutocompleteItem = {
+    const CatchReplace: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Catch,
         isTextEdit: true,
     };
 
-    const NullableInsert: AbridgedAutocompleteItem = {
+    const NullableInsert: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Nullable,
         isTextEdit: false,
     };
 
-    const NullableReplace: AbridgedAutocompleteItem = {
+    const NullableReplace: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Nullable,
         isTextEdit: true,
     };
 
-    const OptionalInsert: AbridgedAutocompleteItem = {
+    const OptionalInsert: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Optional,
         isTextEdit: false,
     };
 
-    const OptionalReplace: AbridgedAutocompleteItem = {
+    const OptionalReplace: TestUtils.AbridgedAutocompleteItem = {
         label: LanguageConstant.Optional,
         isTextEdit: true,
     };

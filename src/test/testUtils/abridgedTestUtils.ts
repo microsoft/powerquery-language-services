@@ -64,6 +64,11 @@ export interface AbridgedUndefinedScopeItem extends IAbridgedNodeScopeItem {
     readonly nodeId: number;
 }
 
+export interface AbridgedAutocompleteItem {
+    readonly label: string;
+    readonly isTextEdit: boolean;
+}
+
 export function abridgedDocumentSymbols(
     documentSymbols: ReadonlyArray<DocumentSymbol>,
 ): ReadonlyArray<AbridgedDocumentSymbol> {

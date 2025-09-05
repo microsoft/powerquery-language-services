@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { TestConstants, TestUtils } from "..";
-import { expectLessWhenSurpressed } from "../testUtils/validationTestUtils";
+import { assertLessWhenSurpressed } from "../testUtils/validationTestUtils";
 
 interface AbridgedUnknownIdentifierDiagnostic {
     readonly message: string;
@@ -96,7 +96,7 @@ describe("Validation - UnknownIdentifier", () => {
 
             const withoutCheckSettings: ValidationSettings = SimpleValidateNoneSettings;
 
-            await expectLessWhenSurpressed({
+            await assertLessWhenSurpressed({
                 text,
                 withCheckSettings,
                 withoutCheckSettings,

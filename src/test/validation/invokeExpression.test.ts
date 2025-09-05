@@ -7,7 +7,7 @@ import { expect } from "chai";
 
 import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { expectLessWhenSurpressed } from "../testUtils/validationTestUtils";
+import { assertLessWhenSurpressed } from "../testUtils/validationTestUtils";
 import { SimpleLibraryValidateAllSettings } from "../testConstants";
 
 interface AbridgedInvocationDiagnostic {
@@ -108,7 +108,7 @@ describe("Validation - InvokeExpression", () => {
                 checkInvokeExpressions: false,
             };
 
-            await expectLessWhenSurpressed({
+            await assertLessWhenSurpressed({
                 text,
                 withCheckSettings,
                 withoutCheckSettings,
