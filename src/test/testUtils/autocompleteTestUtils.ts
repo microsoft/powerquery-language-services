@@ -15,7 +15,7 @@ export async function expectAbridgedAutocompleteItems(params: {
         autocomplete: Inspection.Autocomplete,
     ) => ReadonlyArray<Inspection.AutocompleteItem>;
 }): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
-    return (await expectAutocompleteItems(params)).map(createAbridgedAutocompleteItem);
+    return (await expectAutocompleteItems(params)).map(TestUtils.abridgedAutocompleteItem);
 }
 
 export async function expectAutocomplete(textWithPipe: string): Promise<Inspection.Autocomplete> {
@@ -84,7 +84,7 @@ export async function expectTopSuggestions(params: {
 
     const topN: ReadonlyArray<AbridgedAutocompleteItem> = byJaroWinklerScore
         .slice(0, params.expected.length)
-        .map(createAbridgedAutocompleteItem);
+        .map(TestUtils.abridgedAutocompleteItem);
 
     const remainderAboveThreshold: ReadonlyArray<Inspection.AutocompleteItem> = byJaroWinklerScore
         .slice(params.expected.length)
@@ -92,11 +92,4 @@ export async function expectTopSuggestions(params: {
 
     expect(topN).to.deep.equal(params.expected);
     expect(remainderAboveThreshold).to.be.empty;
-}
-
-function createAbridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
-    return {
-        label: value.label,
-        isTextEdit: value.textEdit !== undefined,
-    };
 }

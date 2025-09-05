@@ -69,6 +69,13 @@ export interface AbridgedAutocompleteItem {
     readonly isTextEdit: boolean;
 }
 
+export function abridgedAutocompleteItem(value: Inspection.AutocompleteItem): AbridgedAutocompleteItem {
+    return {
+        label: value.label,
+        isTextEdit: value.textEdit !== undefined,
+    };
+}
+
 export function abridgedDocumentSymbols(
     documentSymbols: ReadonlyArray<DocumentSymbol>,
 ): ReadonlyArray<AbridgedDocumentSymbol> {

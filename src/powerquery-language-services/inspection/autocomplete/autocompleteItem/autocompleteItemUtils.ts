@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CompletionItemKind, TextEdit } from "vscode-languageserver-types";
 import { Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
-import { CompletionItemKind } from "vscode-languageserver-types";
 import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
+import { AutocompleteItemProviderContext, Inspection } from "../../..";
 import type { AutocompleteItem } from "./autocompleteItem";
 import { calculateJaroWinkler } from "../../../jaroWinkler";
-import { Inspection } from "../../..";
 import { Library } from "../../../library";
 
 export function fromKeywordKind(label: Keyword.KeywordKind, other?: string): AutocompleteItem {
@@ -41,7 +41,7 @@ export function fromScopeItem(
     label: string,
     scopeItem: Inspection.TScopeItem,
     powerQueryType: Type.TPowerQueryType,
-    other?: string,
+    context: AutocompleteItemProviderContext,
 ): AutocompleteItem | undefined {
     switch (scopeItem.kind) {
         case Inspection.ScopeItemKind.LetVariable:
@@ -72,13 +72,12 @@ export function fromScopeItem(
             throw Assert.isNever(scopeItem);
     }
 
-    const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;
-
     return {
-        jaroWinklerScore,
+        jaroWinklerScore: context?.text ? calculateJaroWinkler(label, context.text) : 1,
         kind: CompletionItemKind.Variable,
         label,
         powerQueryType,
+        textEdit: context.range ? TextEdit.replace(context.range, label) : undefined,
     };
 }
 

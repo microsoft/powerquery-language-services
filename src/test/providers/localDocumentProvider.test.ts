@@ -34,10 +34,18 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             readonly isTextEdit: boolean;
         };
         readonly cancellationToken?: ICancellationToken;
-    }): Promise<AutocompleteItem[] | undefined> {
-        return await TestUtils.assertAutocompleteAnalysis({
+    }): Promise<void> {
+        const actual: ReadonlyArray<AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis({
             ...params,
             analysisSettings: IsolatedAnalysisSettings,
+        });
+
+        TestUtils.assertEqualAbridgedAutocompleteItems({
+            expected: params.expected.labels.map((label: string) => ({
+                label,
+                isTextEdit: params.expected.isTextEdit,
+            })),
+            actual: (actual ?? []).map(TestUtils.abridgedAutocompleteItem),
         });
     }
 
@@ -84,7 +92,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                                 `#"foobar"`,
                                 `@#"foobar"`,
                             ],
-                            isTextEdit: false,
+                            isTextEdit: true,
                         },
                     }));
             });
@@ -104,7 +112,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         textWithPipe: `(foo, bar, foobar) => foo|`,
                         expected: {
                             labels: [`foo`, `#"foo"`, `bar`, `#"bar"`, `foobar`, `#"foobar"`],
-                            isTextEdit: false,
+                            isTextEdit: true,
                         },
                     }));
             });
@@ -154,7 +162,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                                 `@x`,
                                 `@#"x"`,
                             ],
-                            isTextEdit: false,
+                            isTextEdit: true,
                         },
                     }));
             });
@@ -204,7 +212,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                                 `@x`,
                                 `@#"x"`,
                             ],
-                            isTextEdit: false,
+                            isTextEdit: true,
                         },
                     }));
             });

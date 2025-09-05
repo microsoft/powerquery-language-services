@@ -38,23 +38,22 @@ export function getAutocompleteItemsFromScope(
     const nodeScope: Inspection.NodeScope = triedNodeScope.value;
     const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(triedScopeType, new Map());
 
-    const contextText: string | undefined = context.text;
-    const partial: Inspection.AutocompleteItem[] = [];
+    const result: Inspection.AutocompleteItem[] = [];
 
     for (const [label, scopeItem] of nodeScope.entries()) {
         const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
             label,
             scopeItem,
             scopeTypeByKey.get(label) ?? Type.UnknownInstance,
-            contextText,
+            context,
         );
 
         if (autocompleteItem) {
-            partial.push(autocompleteItem);
+            result.push(autocompleteItem);
         }
     }
 
-    return partial;
+    return result;
 }
 
 export async function getIdentifierType(
