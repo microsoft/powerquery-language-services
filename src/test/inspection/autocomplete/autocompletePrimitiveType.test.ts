@@ -39,7 +39,11 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
     }
 
     async function expectDatePrimitiveTypeReplacements(textWithPipe: string): Promise<void> {
-        await expectTopSuggestions(textWithPipe, assertAutocompletePrimitiveType, AbridgedDateEdits);
+        await expectTopSuggestions({
+            textWithPipe,
+            autocompleteItemSelector: assertAutocompletePrimitiveType,
+            expected: AbridgedDateEdits,
+        });
     }
 
     const AllowedPrimitiveTypeConstants: ReadonlyArray<PrimitiveTypeConstant> = PrimitiveTypeConstants.filter(

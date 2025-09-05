@@ -22,11 +22,13 @@ export async function assertAutocomplete(textWithPipe: string): Promise<Inspecti
     ).autocomplete;
 }
 
-export async function assertAutocompleteItems(
-    textWithPipe: string,
-    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
-): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-    return autocompleteItemSelector(await assertAutocomplete(textWithPipe));
+export async function assertAutocompleteItems(params: {
+    readonly textWithPipe: string;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+}): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    return params.autocompleteItemSelector(await assertAutocomplete(params.textWithPipe));
 }
 
 export async function expectAbridgedAutocompleteItems(params: {
@@ -36,9 +38,9 @@ export async function expectAbridgedAutocompleteItems(params: {
     ) => ReadonlyArray<Inspection.AutocompleteItem>;
     readonly expected?: ReadonlyArray<AbridgedAutocompleteItem>;
 }): Promise<ReadonlyArray<AbridgedAutocompleteItem>> {
-    const actual: ReadonlyArray<AbridgedAutocompleteItem> = (
-        await assertAutocompleteItems(params.textWithPipe, params.autocompleteItemSelector)
-    ).map(createAbridgedAutocompleteItem);
+    const actual: ReadonlyArray<AbridgedAutocompleteItem> = (await assertAutocompleteItems(params)).map(
+        createAbridgedAutocompleteItem,
+    );
 
     if (params.expected !== undefined) {
         expect(actual).to.have.deep.members(params.expected);
@@ -74,30 +76,31 @@ export async function expectSuggestions(params: {
     });
 }
 
-export async function expectTopSuggestions(
-    textWithPipe: string,
-    autocompleteItemSelector: (autocomplete: Inspection.Autocomplete) => ReadonlyArray<Inspection.AutocompleteItem>,
-    expected: ReadonlyArray<AbridgedAutocompleteItem>,
-    remainderScoreThreshold: number = 0.8,
-): Promise<void> {
-    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertAutocompleteItems(
-        textWithPipe,
-        autocompleteItemSelector,
-    );
+export async function expectTopSuggestions(params: {
+    readonly textWithPipe: string;
+    readonly autocompleteItemSelector: (
+        autocomplete: Inspection.Autocomplete,
+    ) => ReadonlyArray<Inspection.AutocompleteItem>;
+    readonly expected: ReadonlyArray<AbridgedAutocompleteItem>;
+    readonly remainderScoreThreshold?: number;
+}): Promise<void> {
+    const remainderScoreThreshold: number = params.remainderScoreThreshold ?? 0.8;
+
+    const actual: ReadonlyArray<Inspection.AutocompleteItem> = await assertAutocompleteItems(params);
 
     const byJaroWinklerScore: ReadonlyArray<Inspection.AutocompleteItem> = Array.from(actual).sort(
         AutocompleteItemUtils.comparer,
     );
 
     const topN: ReadonlyArray<AbridgedAutocompleteItem> = byJaroWinklerScore
-        .slice(0, expected.length)
+        .slice(0, params.expected.length)
         .map(createAbridgedAutocompleteItem);
 
     const remainderAboveThreshold: ReadonlyArray<Inspection.AutocompleteItem> = byJaroWinklerScore
-        .slice(expected.length)
+        .slice(params.expected.length)
         .filter((value: Inspection.AutocompleteItem) => value.jaroWinklerScore >= remainderScoreThreshold);
 
-    expect(topN).to.deep.equal(expected);
+    expect(topN).to.deep.equal(params.expected);
     expect(remainderAboveThreshold).to.be.empty;
 }
 

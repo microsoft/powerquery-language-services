@@ -1,22 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import {
-    Assert,
-    CommonError,
-    NoOpCancellationToken,
-    Result,
-    ResultUtils,
-    Settings,
-    Task,
-    TaskUtils,
-} from "@microsoft/powerquery-parser";
-import { Diagnostic, DocumentSymbol, Position } from "vscode-languageserver-types";
+import { Assert, CommonError, Result, ResultUtils, Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { Diagnostic, Position } from "vscode-languageserver-types";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import {
-    ActiveNode,
     ActiveNodeUtils,
     Inspected,
     NodeScope,
@@ -27,7 +17,6 @@ import {
 } from "../../powerquery-language-services/inspection";
 import {
     AnalysisSettings,
-    getDocumentSymbols,
     Inspection,
     InspectionSettings,
     validate,
@@ -56,28 +45,6 @@ export async function assertAutocompleteInspection(params: {
     readonly inspectionSettings: InspectionSettings;
 }): Promise<Inspection.Autocomplete> {
     return (await assertInspected(params)).autocomplete;
-}
-
-export async function assertDocumentSymbolsInspection(params: {
-    readonly text: string;
-    readonly inspectionSettings: Settings;
-}): Promise<ReadonlyArray<DocumentSymbol>> {
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
-        text: params.text,
-        settings: params.inspectionSettings,
-    });
-
-    return getDocumentSymbols(triedParse.nodeIdMapCollection, NoOpCancellationToken);
-}
-
-export async function assertInBoundsActiveNode(params: {
-    readonly settings: Settings;
-    readonly textWithPipe: string;
-}): Promise<ActiveNode> {
-    const activeNode: TActiveNode = await assertActiveNode(params);
-    ActiveNodeUtils.assertPositionInBounds(activeNode);
-
-    return activeNode;
 }
 
 export async function assertInspected(params: {

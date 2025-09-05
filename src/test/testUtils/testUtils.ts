@@ -3,28 +3,11 @@
 
 import * as File from "fs";
 import * as Path from "path";
-import { assert, expect } from "chai";
-import { Hover, MarkupContent, Position, SignatureHelp } from "vscode-languageserver-types";
 import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { assert } from "chai";
+import { Position } from "vscode-languageserver-types";
 
 import { MockDocument } from "../mockDocument";
-import { TestUtils } from "..";
-
-export function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
-    assertIsMarkupContent(value);
-
-    return value;
-}
-
-export function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {
-    if (!MarkupContent.is(value)) {
-        throw new Error(`expected value to be MarkupContent`);
-    }
-}
-
-export function assertSignatureHelp(expected: TestUtils.AbridgedSignatureHelp, actual: SignatureHelp): void {
-    expect(TestUtils.abridgedSignatureHelp(actual)).deep.equals(expected);
-}
 
 export function extractPosition(textWithPipe: string): [string, Position] {
     assert.isTrue((textWithPipe.match(/\|/g) ?? []).length == 1, `textWithPipe must contain exactly pipe character`);
