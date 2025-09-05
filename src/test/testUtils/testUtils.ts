@@ -3,7 +3,6 @@
 
 import * as File from "fs";
 import * as Path from "path";
-import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
 import { assert } from "chai";
 import { Position } from "vscode-languageserver-types";
 
@@ -47,17 +46,4 @@ export function readFile(fileName: string): string {
 
 export function mockDocument(text: string): MockDocument {
     return new MockDocument(text, "powerquery");
-}
-
-export async function assertParse(params: {
-    readonly text: string;
-    readonly settings: Settings;
-}): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
-    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(params.settings, params.text);
-
-    if (TaskUtils.isParseStageOk(triedLexParseTask) || TaskUtils.isParseStageParseError(triedLexParseTask)) {
-        return triedLexParseTask;
-    } else {
-        throw new Error(`unexpected task stage: ${triedLexParseTask.stage}`);
-    }
 }

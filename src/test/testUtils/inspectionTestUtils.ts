@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils, Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
-import { Diagnostic, Position } from "vscode-languageserver-types";
+import { Assert, ResultUtils, Task, TaskUtils } from "@microsoft/powerquery-parser";
 import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Position } from "vscode-languageserver-types";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import {
@@ -15,30 +15,8 @@ import {
     TypeCache,
     TypeCacheUtils,
 } from "../../powerquery-language-services/inspection";
-import {
-    AnalysisSettings,
-    Inspection,
-    InspectionSettings,
-    validate,
-    ValidationSettings,
-} from "../../powerquery-language-services";
-import { MockDocument } from "../mockDocument";
+import { Inspection, InspectionSettings } from "../../powerquery-language-services";
 import { TestUtils } from "..";
-import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
-
-export async function assertActiveNode(params: {
-    readonly textWithPipe: string;
-    readonly settings: Settings;
-}): Promise<TActiveNode> {
-    const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
-
-    const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
-        text,
-        settings: params.settings,
-    });
-
-    return ActiveNodeUtils.activeNode(triedParse.nodeIdMapCollection, position);
-}
 
 export async function assertAutocompleteInspection(params: {
     readonly textWithPipe: string;
@@ -143,31 +121,4 @@ export async function assertScopeType(params: {
     ResultUtils.assertIsOk(triedScopeType);
 
     return triedScopeType.value;
-}
-
-export async function assertValidate(params: {
-    readonly text: string;
-    readonly analysisSettings: AnalysisSettings;
-    readonly validationSettings: ValidationSettings;
-}): Promise<ValidateOk> {
-    const mockDocument: MockDocument = TestUtils.mockDocument(params.text);
-
-    const triedValidation: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
-        mockDocument,
-        params.analysisSettings,
-        params.validationSettings,
-    );
-
-    ResultUtils.assertIsOk(triedValidation);
-    Assert.isDefined(triedValidation.value);
-
-    return triedValidation.value;
-}
-
-export async function assertValidateDiagnostics(params: {
-    readonly text: string;
-    readonly analysisSettings: AnalysisSettings;
-    readonly validationSettings: ValidationSettings;
-}): Promise<Diagnostic[]> {
-    return (await assertValidate(params)).diagnostics;
 }
