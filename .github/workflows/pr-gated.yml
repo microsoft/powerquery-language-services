@@ -22,17 +22,7 @@ jobs:
             - run: npm audit
             - run: npm run build
             - name: Run tests
-              run: npm run test > test-output.txt 2>&1
-              continue-on-error: true
-            - name: Create test summary
-              if: always()
-              run: |
-                  echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-                  echo "" >> $GITHUB_STEP_SUMMARY
-                  echo '```' >> $GITHUB_STEP_SUMMARY
-                  Get-Content test-output.txt | Select-Object -Last 10 >> $GITHUB_STEP_SUMMARY
-                  echo '```' >> $GITHUB_STEP_SUMMARY
-              shell: pwsh
+              run: npm run test
             - name: Publish test results
               uses: dorny/test-reporter@v2.1.1
               if: success() || failure()
