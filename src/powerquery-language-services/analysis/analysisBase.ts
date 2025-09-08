@@ -74,7 +74,10 @@ export class AnalysisBase implements Analysis {
         typeById: new Map(),
     };
 
-    constructor(protected textDocument: TextDocument, analysisSettings: AnalysisSettings) {
+    constructor(
+        protected textDocument: TextDocument,
+        analysisSettings: AnalysisSettings,
+    ) {
         this.initialCorrelationId = analysisSettings.initialCorrelationId;
         this.inspectionSettings = analysisSettings.inspectionSettings;
         this.locale = analysisSettings.inspectionSettings.locale;
@@ -1088,9 +1091,8 @@ export class AnalysisBase implements Analysis {
         position: Position,
         trace: Trace | undefined,
     ): Promise<TActiveNode | undefined> {
-        const activeNodeResult: Result<TActiveNode | undefined, CommonError.CommonError> = await this.getActiveNode(
-            position,
-        );
+        const activeNodeResult: Result<TActiveNode | undefined, CommonError.CommonError> =
+            await this.getActiveNode(position);
 
         if (ResultUtils.isError(activeNodeResult)) {
             trace?.exit({ [TraceConstant.IsThrowing]: true });

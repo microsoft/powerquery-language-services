@@ -13,6 +13,7 @@ export function inspectTypeConstant(xorNode: TXorNode): Type.TPowerQueryType {
 
     const constant: Ast.TConstant = xorNode.node;
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (constant.constantKind) {
         case Constant.PrimitiveTypeConstant.Action:
             return Type.ActionInstance;

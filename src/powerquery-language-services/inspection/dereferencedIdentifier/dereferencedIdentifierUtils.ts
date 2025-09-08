@@ -152,7 +152,6 @@ async function dereferenceScopeItem(
             case ScopeItemKind.LetVariable:
             case ScopeItemKind.RecordField:
             case ScopeItemKind.SectionMember:
-                // eslint-disable-next-line no-lone-blocks
                 {
                     const potentialDereference: TXorNode | undefined = currentScopeItem.value;
 

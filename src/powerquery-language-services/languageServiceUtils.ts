@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { CompletionItemKind, SymbolKind } from "vscode-languageserver-types";
+import { Assert } from "@microsoft/powerquery-parser";
 
 export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): CompletionItemKind | undefined {
     switch (symbolKind) {
@@ -42,7 +43,22 @@ export function symbolKindToCompletionItemKind(symbolKind: SymbolKind): Completi
         case SymbolKind.TypeParameter:
             return CompletionItemKind.TypeParameter;
 
-        default:
+        // Either these symbol kinds don't have a valid mapping,
+        // or the mapping hasn't been decided yet.
+        case SymbolKind.File:
+        case SymbolKind.Namespace:
+        case SymbolKind.Package:
+        case SymbolKind.Class:
+        case SymbolKind.Method:
+        case SymbolKind.Property:
+        case SymbolKind.Interface:
+        case SymbolKind.Object:
+        case SymbolKind.Key:
+        case SymbolKind.Event:
+        case SymbolKind.Operator:
             return undefined;
+
+        default:
+            throw Assert.isNever(symbolKind);
     }
 }

@@ -47,6 +47,7 @@ export async function inspectTypeFieldProjection(
 
     let result: Type.TPowerQueryType;
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (fieldType.kind) {
         case Type.TypeKind.Any: {
             const projectedFields: Type.UnorderedFields = new Map(
