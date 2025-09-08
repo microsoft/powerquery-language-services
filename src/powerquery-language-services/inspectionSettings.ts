@@ -33,6 +33,4 @@ export interface InspectionSettings extends PQP.Settings {
     // While useful for in-depth analysis and/or Intellisense operations they can be costly in terms of time.
     // Changing the strategy determines how types are evaluated during inspections.
     readonly typeStrategy: TypeStrategy;
-    // Cancellation token for long-running inspection operations
-    readonly cancellationToken: PQP.ICancellationToken | undefined;
 }

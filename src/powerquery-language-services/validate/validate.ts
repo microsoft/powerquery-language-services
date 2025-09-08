@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Diagnostic } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
@@ -17,6 +16,7 @@ import { validateParse } from "./validateParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
 import type { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
+import { processSequentiallyWithCancellation } from "../utils/promiseUtils";
 
 export function validate(
     textDocument: TextDocument,
@@ -35,17 +35,12 @@ export function validate(
             initialCorrelationId: trace.id,
         };
 
-        // Create analysis settings with the updated validation settings (which include cancellation token)
-        const updatedAnalysisSettings: AnalysisSettings = {
-            ...analysisSettings,
-            inspectionSettings: updatedSettings,
-        };
-
-        const analysis: Analysis = AnalysisUtils.analysis(textDocument, updatedAnalysisSettings);
-
+        const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
         validationSettings.cancellationToken?.throwIfCancelled();
 
         const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 
         if (parseState === undefined) {
@@ -56,55 +51,53 @@ export function validate(
 
         validationSettings.cancellationToken?.throwIfCancelled();
 
-        let functionExpressionDiagnostics: Diagnostic[];
-        let invokeExpressionDiagnostics: Diagnostic[];
-        let unknownIdentifiersDiagnostics: Diagnostic[];
-
         const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
         const typeCache: TypeCache = analysis.getTypeCache();
 
-        if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
-            validationSettings.cancellationToken?.throwIfCancelled();
+        // Define validation operations to run sequentially
+        const validationOperations = [
+            // Parse validation (if there are parse errors)
+            async () => await validateParse(parseError, updatedSettings),
+        ];
 
-            functionExpressionDiagnostics = await validateFunctionExpression(validationSettings, nodeIdMapCollection);
-
-            validationSettings.cancellationToken?.throwIfCancelled();
-
-            invokeExpressionDiagnostics = await validateInvokeExpression(
-                validationSettings,
-                nodeIdMapCollection,
-                typeCache,
+        // Add conditional validations based on settings
+        if (validationSettings.checkForDuplicateIdentifiers && nodeIdMapCollection) {
+            validationOperations.push(
+                async () =>
+                    await validateDuplicateIdentifiers(
+                        textDocument,
+                        nodeIdMapCollection,
+                        updatedSettings,
+                        validationSettings.cancellationToken,
+                    ),
             );
-        } else {
-            functionExpressionDiagnostics = [];
-            invokeExpressionDiagnostics = [];
+        }
+
+        if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
+            validationOperations.push(
+                async () => await validateFunctionExpression(validationSettings, nodeIdMapCollection),
+                async () => await validateInvokeExpression(validationSettings, nodeIdMapCollection, typeCache),
+            );
         }
 
         if (validationSettings.checkUnknownIdentifiers && nodeIdMapCollection) {
-            validationSettings.cancellationToken?.throwIfCancelled();
-
-            unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
-                validationSettings,
-                nodeIdMapCollection,
-                typeCache,
+            validationOperations.push(
+                async () => await validateUnknownIdentifiers(validationSettings, nodeIdMapCollection, typeCache),
             );
-        } else {
-            unknownIdentifiersDiagnostics = [];
         }
 
+        // Execute all validation operations sequentially with cancellation support
+        const allDiagnostics = await processSequentiallyWithCancellation(
+            validationOperations,
+            operation => operation(),
+            validationSettings.cancellationToken,
+        );
+
+        // Flatten all diagnostics into a single array
+        const flattenedDiagnostics = allDiagnostics.flat();
+
         const result: ValidateOk = {
-            diagnostics: [
-                ...validateDuplicateIdentifiers(
-                    textDocument,
-                    nodeIdMapCollection,
-                    updatedSettings,
-                    validationSettings.cancellationToken,
-                ),
-                ...(await validateParse(parseError, updatedSettings)),
-                ...functionExpressionDiagnostics,
-                ...invokeExpressionDiagnostics,
-                ...unknownIdentifiersDiagnostics,
-            ],
+            diagnostics: flattenedDiagnostics,
             hasSyntaxError: parseError !== undefined,
         };
 

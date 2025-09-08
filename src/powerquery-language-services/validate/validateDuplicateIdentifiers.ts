@@ -20,12 +20,12 @@ import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
-export function validateDuplicateIdentifiers(
+export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiers.name,
@@ -45,7 +45,7 @@ export function validateDuplicateIdentifiers(
 
     const documentUri: string = textDocument.uri;
 
-    const result: ReadonlyArray<Diagnostic> = [
+    const result: Diagnostic[] = [
         ...validateDuplicateIdentifiersForLetExpresion(
             documentUri,
             nodeIdMapCollection,

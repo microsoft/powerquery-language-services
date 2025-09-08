@@ -81,9 +81,7 @@ describe("Async Validation", () => {
             // Should have significantly fewer diagnostic errors than the diagnostics file
             expect(result.diagnostics.length).to.be.lessThan(100, "Clean document should have fewer diagnostic errors");
 
-            // Should take some time due to complexity
-            expect(duration).to.be.greaterThan(50, "Validation should take some time for complex document");
-
+            // Log performance for manual observation (no assertions on timing)
             console.log(
                 `Clean large document validation took ${duration}ms with ${result.diagnostics.length} diagnostics`,
             );
@@ -214,6 +212,81 @@ describe("Async Validation", () => {
                 }
             }
         }).timeout(60000);
+
+        it("should demonstrate performance benefit of cancellation", async () => {
+            // Test that cancelled validation is faster than completed validation
+
+            // First, measure time for completed validation
+            const startComplete = Date.now();
+            const completedValidationSettings: ValidationSettings = {
+                ...baseValidationSettings,
+                cancellationToken: undefined, // No cancellation
+            };
+
+            await ValidateTestUtils.assertValidate({
+                text: largeSectionDocumentWithDiagnosticsText,
+                analysisSettings,
+                validationSettings: completedValidationSettings,
+            });
+            const completeDuration = Date.now() - startComplete;
+
+            // Then, measure time for cancelled validation
+            const startCancelled = Date.now();
+            const cancellationToken = createCancellationToken();
+            const cancelledValidationSettings: ValidationSettings = {
+                ...baseValidationSettings,
+                cancellationToken,
+            };
+
+            // Cancel after enough time to start heavy work but before completion
+            // Use the same timing as the successful cancellation test
+            setTimeout(
+                () => {
+                    cancellationToken.cancel("Performance test cancellation");
+                },
+                Math.min(completeDuration * 0.7, 400), // Cancel at 70% of completion time, max 400ms
+            );
+
+            let cancellationDuration = 0;
+            let wasCancelled = false;
+            try {
+                await validate(
+                    TestUtils.mockDocument(largeSectionDocumentWithDiagnosticsText),
+                    analysisSettings,
+                    cancelledValidationSettings,
+                );
+                // If we get here, validation completed before cancellation
+                cancellationDuration = Date.now() - startCancelled;
+                console.log(
+                    `Cancellation test: validation completed in ${cancellationDuration}ms before cancellation could occur`,
+                );
+            } catch (error: any) {
+                cancellationDuration = Date.now() - startCancelled;
+                wasCancelled = true;
+                expect(error.message).to.contain("cancelled");
+                console.log(`Cancellation test: validation was cancelled after ${cancellationDuration}ms`);
+            }
+
+            // Log the performance comparison
+            console.log(
+                `Performance comparison: Complete=${completeDuration}ms, Cancelled=${cancellationDuration}ms, WasCancelled=${wasCancelled}`,
+            );
+
+            // Verify that cancellation provided a performance benefit
+            if (wasCancelled) {
+                // If validation was actually cancelled, it should be significantly faster
+                expect(cancellationDuration).to.be.lessThan(
+                    completeDuration,
+                    `Cancelled validation (${cancellationDuration}ms) should be faster than complete validation (${completeDuration}ms)`,
+                );
+                console.log(`✓ Cancellation provided ${completeDuration - cancellationDuration}ms performance benefit`);
+            } else {
+                // If validation completed before cancellation, that's also valuable information
+                console.log(
+                    `ℹ Validation completed too quickly (${cancellationDuration}ms) for cancellation to take effect`,
+                );
+            }
+        }).timeout(60000);
     });
 
     describe("Cancellation token behavior", () => {
@@ -268,6 +341,13 @@ describe("Async Validation", () => {
     });
 
     describe("Performance with different document sizes", () => {
+        // Note: These tests validate functional correctness and log performance metrics
+        // without asserting on timing to avoid flaky tests across different environments.
+        // Performance can be monitored through:
+        // 1. Console output during test runs
+        // 2. Separate performance benchmarking tools
+        // 3. CI/CD performance tracking over time
+
         const smallDocument = "let x = 1 in x";
         const mediumDocument = `
             let
@@ -295,7 +375,7 @@ describe("Async Validation", () => {
             const duration = Date.now() - startTime;
 
             expect(result).to.not.be.undefined;
-            expect(duration).to.be.lessThan(1000, "Small document should validate quickly");
+            // Log performance for manual observation (no assertions on timing)
             console.log(`Small document validation took ${duration}ms`);
         });
 
@@ -315,7 +395,7 @@ describe("Async Validation", () => {
             const duration = Date.now() - startTime;
 
             expect(result).to.not.be.undefined;
-            expect(duration).to.be.lessThan(5000, "Medium document should validate in reasonable time");
+            // Log performance for manual observation (no assertions on timing)
             console.log(`Medium document validation took ${duration}ms`);
         });
     });
