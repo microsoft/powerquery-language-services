@@ -1,19 +1,17 @@
 {
-    "typescript.tsdk": "node_modules\\typescript\\lib",
-    "files.exclude": {
-        "src/**/*.js": true
-    },
-    "editor.formatOnSave": true,
-
     // VS Code Test Runner configuration
     "testing.openTesting": "openOnTestStart",
     "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
     "testing.defaultGutterClickAction": "run",
     "testing.followRunningTest": true,
-
-    // Mocha Explorer settings
-    "mochaExplorer.files": ["src/test/**/*.test.ts"],
-    "mochaExplorer.require": ["ts-node/register"],
+    
+    // Mocha-specific settings
+    "mochaExplorer.files": [
+        "src/test/**/*.test.ts"
+    ],
+    "mochaExplorer.require": [
+        "ts-node/register"
+    ],
     "mochaExplorer.env": {
         "NODE_ENV": "test"
     },
