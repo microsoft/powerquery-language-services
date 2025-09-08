@@ -68,7 +68,7 @@ export async function inspectTypeTBinOpExpression(
         if (allowedTypeKinds === undefined) {
             result = Type.NoneInstance;
         } else if (allowedTypeKinds.size === 1) {
-            const [firstValue] = Array.from(allowedTypeKinds);
+            const firstValue = allowedTypeKinds.values().next().value;
             if (firstValue !== undefined) {
                 result = TypeUtils.primitiveType(leftType.isNullable, firstValue);
             } else {
