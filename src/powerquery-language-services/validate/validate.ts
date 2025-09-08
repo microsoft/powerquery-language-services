@@ -35,7 +35,16 @@ export function validate(
             initialCorrelationId: trace.id,
         };
 
-        const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
+        // Create analysis settings with the updated validation settings (which include cancellation token)
+        const updatedAnalysisSettings: AnalysisSettings = {
+            ...analysisSettings,
+            inspectionSettings: updatedSettings,
+        };
+
+        const analysis: Analysis = AnalysisUtils.analysis(textDocument, updatedAnalysisSettings);
+
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
         const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 
@@ -45,6 +54,8 @@ export function validate(
             return undefined;
         }
 
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         let functionExpressionDiagnostics: Diagnostic[];
         let invokeExpressionDiagnostics: Diagnostic[];
         let unknownIdentifiersDiagnostics: Diagnostic[];
@@ -53,7 +64,11 @@ export function validate(
         const typeCache: TypeCache = analysis.getTypeCache();
 
         if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
-            functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
+            validationSettings.cancellationToken?.throwIfCancelled();
+
+            functionExpressionDiagnostics = await validateFunctionExpression(validationSettings, nodeIdMapCollection);
+
+            validationSettings.cancellationToken?.throwIfCancelled();
 
             invokeExpressionDiagnostics = await validateInvokeExpression(
                 validationSettings,
@@ -66,6 +81,8 @@ export function validate(
         }
 
         if (validationSettings.checkUnknownIdentifiers && nodeIdMapCollection) {
+            validationSettings.cancellationToken?.throwIfCancelled();
+
             unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
                 validationSettings,
                 nodeIdMapCollection,

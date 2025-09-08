@@ -130,6 +130,8 @@ function findUnknownIdentifiers(
     const unknownIdentifiers: UnknownIdentifier[] = [];
 
     for (const identifierWithNodeScope of identifiersWithNodeScope) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         if (ResultUtils.isError(identifierWithNodeScope.triedNodeScope)) {
             continue;
         }

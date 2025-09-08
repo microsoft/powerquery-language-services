@@ -20,10 +20,10 @@ import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // Check for repeat parameter names for FunctionExpressions.
-export function validateFunctionExpression(
+export async function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateFunctionExpression.name,
@@ -50,7 +50,9 @@ export function validateFunctionExpression(
     for (const nodeId of fnExpressionIds) {
         validationSettings.cancellationToken?.throwIfCancelled();
 
-        diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
+        const nodeDiagnostics = await validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId);
+        diagnostics.push(nodeDiagnostics);
+
         updatedSettings.cancellationToken?.throwIfCancelled();
     }
 
@@ -59,11 +61,11 @@ export function validateFunctionExpression(
     return diagnostics.flat();
 }
 
-function validateNoDuplicateParameter(
+async function validateNoDuplicateParameter(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpressionId: number,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const fnExpression: TXorNode = NodeIdMapUtils.assertXorChecked<Ast.FunctionExpression>(
         nodeIdMapCollection,
         fnExpressionId,

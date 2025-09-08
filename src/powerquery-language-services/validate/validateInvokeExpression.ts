@@ -49,7 +49,15 @@ export async function validateInvokeExpression(
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
-    const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
+    // Process inspections with cancellation support
+    const inspections: Inspection.TriedInvokeExpression[] = [];
+    for (const task of inspectionTasks) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
+        // eslint-disable-next-line no-await-in-loop
+        const inspection = await task;
+        inspections.push(inspection);
+    }
 
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 
@@ -67,7 +75,15 @@ export async function validateInvokeExpression(
         }
     }
 
-    const diagnostics: ReadonlyArray<ReadonlyArray<Diagnostic>> = await Promise.all(diagnosticTasks);
+    // Process diagnostics with cancellation support
+    const diagnostics: ReadonlyArray<Diagnostic>[] = [];
+    for (const task of diagnosticTasks) {
+        validationSettings.cancellationToken?.throwIfCancelled();
+
+        // eslint-disable-next-line no-await-in-loop
+        const diagnostic = await task;
+        diagnostics.push(diagnostic);
+    }
     trace.exit();
 
     return diagnostics.flat();
