@@ -10,7 +10,7 @@
         "link:start": "npm link && npm uninstall @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm link @microsoft/powerquery-parser @microsoft/powerquery-formatter",
         "link:stop": "npm unlink @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm install @microsoft/powerquery-parser@latest @microsoft/powerquery-formatter@latest --save-exact",
         "lint": "eslint src --ext ts",
-        "test": "npm run build && mocha --reporter mocha-multi-reporters --reporter-options configFile=src/test/mochaConfig.json lib/test/**/*.js"
+        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json"
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services#readme",
     "repository": {
@@ -24,7 +24,7 @@
     "main": "lib/powerquery-language-services/index.js",
     "types": "lib/powerquery-language-services/index.d.ts",
     "engines": {
-        "node": ">=22.0.0"
+        "node": ">=22"
     },
     "keywords": [
         "power query",
@@ -50,7 +50,7 @@
         "mocha-junit-reporter": "^2.2.1",
         "mocha-multi-reporters": "^1.5.1",
         "prettier": "^3.3.3",
-        "ts-loader": "^9.5.1",
+        "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.2"
     },

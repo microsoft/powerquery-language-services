@@ -31,12 +31,17 @@ import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
 export class LocalDocumentProvider implements ILocalDocumentProvider {
-    constructor(
-        private readonly uri: DocumentUri,
-        private readonly typeCache: Inspection.TypeCache,
-        private readonly library: ILibrary,
-        protected readonly locale: string,
-    ) {}
+    private readonly uri: DocumentUri;
+    private readonly typeCache: Inspection.TypeCache;
+    private readonly library: ILibrary;
+    protected readonly locale: string;
+
+    constructor(uri: DocumentUri, typeCache: Inspection.TypeCache, library: ILibrary, locale: string) {
+        this.uri = uri;
+        this.typeCache = typeCache;
+        this.library = library;
+        this.locale = locale;
+    }
 
     public getAutocompleteItems(
         context: AutocompleteItemProviderContext,

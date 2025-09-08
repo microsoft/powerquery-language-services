@@ -10,8 +10,11 @@ import {
 } from "../../powerquery-language-services";
 
 export class SlowLanguageAutocompleteItemProvider extends LanguageAutocompleteItemProvider {
-    constructor(locale: string, private readonly delayInMs: number) {
+    private readonly delayInMs: number;
+
+    constructor(locale: string, delayInMs: number) {
         super(locale);
+        this.delayInMs = delayInMs;
     }
 
     public override async getAutocompleteItems(
