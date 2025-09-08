@@ -8,11 +8,11 @@ jobs:
         runs-on: windows-latest
         steps:
             - name: checkout
-              uses: actions/checkout@v4.1.2
+              uses: actions/checkout@v5
             - name: setup node
-              uses: actions/setup-node@v4.0.2
+              uses: actions/setup-node@v5
               with:
-                  node-version: "18.17"
+                  node-version-file: "package.json"
             - run: node -v
             - run: npm ci
             - run: npm audit
