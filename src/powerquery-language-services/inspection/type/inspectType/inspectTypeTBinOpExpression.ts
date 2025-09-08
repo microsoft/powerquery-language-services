@@ -68,7 +68,8 @@ export async function inspectTypeTBinOpExpression(
         if (allowedTypeKinds === undefined) {
             result = Type.NoneInstance;
         } else if (allowedTypeKinds.size === 1) {
-            result = TypeUtils.primitiveType(leftType.isNullable, allowedTypeKinds.values().next().value);
+            const [firstValue] = Array.from(allowedTypeKinds);
+            result = TypeUtils.primitiveType(leftType.isNullable, firstValue);
         } else {
             const unionedTypePairs: Type.TPowerQueryType[] = [];
 
