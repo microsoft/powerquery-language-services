@@ -5,10 +5,7 @@ import "mocha";
 import { assert, expect } from "chai";
 import { ICancellationToken } from "@microsoft/powerquery-parser";
 
-import {
-    processSequentiallyWithCancellation,
-    promiseAllWithCancellation,
-} from "../../powerquery-language-services/utils/promiseUtils";
+import { processSequentiallyWithCancellation } from "../../powerquery-language-services/utils/promiseUtils";
 
 function createTestCancellationToken(): ICancellationToken & { cancel: (reason: string) => void } {
     let isCancelled: boolean = false;
@@ -26,107 +23,7 @@ function createTestCancellationToken(): ICancellationToken & { cancel: (reason: 
     };
 }
 
-function createDelayedPromise(delayMs: number, value: string): Promise<string> {
-    return new Promise((resolve: (value: string) => void) => {
-        setTimeout(() => resolve(value), delayMs);
-    });
-}
-
-function createDelayedRejectingPromise(delayMs: number, errorMessage: string): Promise<string> {
-    return new Promise((_: (value: string) => void, reject: (reason: Error) => void) => {
-        setTimeout(() => reject(new Error(errorMessage)), delayMs);
-    });
-}
-
 describe("Promise Utils", () => {
-    describe("promiseAllWithCancellation", () => {
-        it("should resolve all promises when no cancellation token is provided", async () => {
-            const promises: Promise<string>[] = [
-                createDelayedPromise(10, "first"),
-                createDelayedPromise(20, "second"),
-                createDelayedPromise(15, "third"),
-            ];
-
-            const result: string[] = await promiseAllWithCancellation(promises);
-            expect(result).to.deep.equal(["first", "second", "third"]);
-        });
-
-        it("should resolve all promises when cancellation token is not cancelled", async () => {
-            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
-                createTestCancellationToken();
-
-            const promises: Promise<string>[] = [
-                createDelayedPromise(10, "first"),
-                createDelayedPromise(20, "second"),
-                createDelayedPromise(15, "third"),
-            ];
-
-            const result: string[] = await promiseAllWithCancellation(promises, cancellationToken);
-            expect(result).to.deep.equal(["first", "second", "third"]);
-            expect(cancellationToken.isCancelled()).to.be.false;
-        });
-
-        it("should reject immediately if cancellation token is already cancelled", async () => {
-            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
-                createTestCancellationToken();
-
-            cancellationToken.cancel("Pre-cancelled");
-
-            const promises: Promise<string>[] = [
-                createDelayedPromise(100, "first"),
-                createDelayedPromise(200, "second"),
-            ];
-
-            try {
-                await promiseAllWithCancellation(promises, cancellationToken);
-                assert.fail("Expected promise to be rejected due to pre-cancelled token");
-            } catch (error: any) {
-                expect(error.message).to.contain("cancelled");
-            }
-        });
-
-        it("should reject when cancellation token is cancelled during execution", async () => {
-            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
-                createTestCancellationToken();
-
-            const promises: Promise<string>[] = [
-                createDelayedPromise(100, "first"),
-                createDelayedPromise(200, "second"),
-                createDelayedPromise(300, "third"),
-            ];
-
-            // Cancel after 50ms
-            setTimeout(() => {
-                cancellationToken.cancel("Cancelled during execution");
-            }, 50);
-
-            try {
-                await promiseAllWithCancellation(promises, cancellationToken);
-                assert.fail("Expected promise to be rejected due to cancellation");
-            } catch (error: any) {
-                expect(error.message).to.contain("cancelled");
-            }
-        });
-
-        it("should handle promise rejections normally when not cancelled", async () => {
-            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
-                createTestCancellationToken();
-
-            const promises: Promise<string>[] = [
-                createDelayedPromise(10, "first"),
-                createDelayedRejectingPromise(20, "Test error"),
-                createDelayedPromise(15, "third"),
-            ];
-
-            try {
-                await promiseAllWithCancellation(promises, cancellationToken);
-                assert.fail("Expected promise to be rejected due to promise rejection");
-            } catch (error: any) {
-                expect(error.message).to.equal("Test error");
-            }
-        });
-    });
-
     describe("processSequentiallyWithCancellation", () => {
         it("should process all items sequentially when no cancellation token is provided", async () => {
             const items: string[] = ["a", "b", "c"];
