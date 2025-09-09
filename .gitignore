@@ -356,3 +356,5 @@ lib/
 tsconfig.tsbuildinfo
 test-results.xml
 *.tgz
+
+.copilot-current-task.md

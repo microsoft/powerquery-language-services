@@ -175,6 +175,7 @@ function getNullableAutocompleteItem(
     for (let index: number = 0; index < numAncestors; index += 1) {
         const xorNode: TXorNode = ancestry[index];
 
+        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (xorNode.node.kind) {
             case Ast.NodeKind.AsNullablePrimitiveType:
                 if (isNullableAllowedForAsNullablePrimitiveType(activeNode, index)) {
@@ -281,6 +282,9 @@ function getOptionalAutocompleteItem(activeNode: ActiveNode): AutocompleteItem |
                 default:
                     throw Assert.isNever(childOfParameter);
             }
+
+        case undefined:
+            return undefined;
 
         default:
             return undefined;

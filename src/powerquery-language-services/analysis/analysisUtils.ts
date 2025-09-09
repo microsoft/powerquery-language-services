@@ -15,7 +15,6 @@ export function analysis(document: TextDocument, analysisSettings: AnalysisSetti
     const cacheKey: string = document.uri.toString();
 
     if (analysisSettings.isWorkspaceCacheAllowed && analysisByUri.has(cacheKey)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const [analysis, version]: [Analysis, number] = analysisByUri.get(cacheKey)!;
 
         if (version === document.version) {

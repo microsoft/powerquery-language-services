@@ -169,6 +169,7 @@ function getArgumentOrdinal(
 
     let arrayWrapperXorNode: TXorNode;
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (previousXor?.node.kind) {
         case Ast.NodeKind.Constant: {
             arrayWrapperXorNode = NodeIdMapUtils.assertNthChildXorChecked<Ast.TArrayWrapper>(

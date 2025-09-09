@@ -191,6 +191,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
 
     state.cancellationToken?.throwIfCancelled();
 
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode, trace.id);
