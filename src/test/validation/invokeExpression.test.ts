@@ -179,16 +179,21 @@ describe("Validation - InvokeExpression", () => {
                 await assertInvokeExpressionDiagnostics({
                     text: `let
                         Source = #table(type table [ID = number], {{1}}),
-                        First = Table.FirstN(Source, 1)
+                        WithColumn = Table.AddColumn(Source, "NewColumn", each [ID] + 1),
+                        First = Table.FirstN(WithColumn, 1)
                     in
-                        Source`,
+                        First`,
                     validationSettings: TestConstants.StandardLibraryValidateAllSettings,
                 });
 
             const expected: ReadonlyArray<Position> = [
                 {
-                    character: 45,
+                    character: 53,
                     line: 2,
+                },
+                {
+                    character: 45,
+                    line: 3,
                 },
             ];
 
