@@ -6,7 +6,7 @@
     "editor.formatOnSave": true,
 
     // VS Code Test Runner configuration
-    "testing.openTesting": "openOnTestStart",
+    "testing.automaticallyOpenTestResults": "openOnTestStart",
     "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
     "testing.defaultGutterClickAction": "run",
     "testing.followRunningTest": true,
