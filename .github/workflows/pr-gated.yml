@@ -20,6 +20,7 @@ jobs:
             - run: node -v
             - run: npm ci
             - run: npm audit
+            - run: npm lint
             - run: npm run build
             - name: Run tests
               run: npm run test
