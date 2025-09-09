@@ -7,17 +7,17 @@ import { ICancellationToken } from "@microsoft/powerquery-parser";
  * Promise.all with cancellation support. Useful when you want parallel execution
  * but need the ability to cancel if needed.
  */
-export async function promiseAllWithCancellation<T>(
+export function promiseAllWithCancellation<T>(
     promises: Promise<T>[],
     cancellationToken?: ICancellationToken,
 ): Promise<T[]> {
     if (cancellationToken) {
         cancellationToken.throwIfCancelled();
 
-        return new Promise((resolve, reject) => {
-            let isFinished = false;
+        return new Promise((resolve: (value: T[]) => void, reject: (reason?: any) => void) => {
+            let isFinished: boolean = false;
 
-            const cancellationCheck = () => {
+            const cancellationCheck: () => void = (): void => {
                 if (isFinished) return;
 
                 try {
@@ -25,8 +25,10 @@ export async function promiseAllWithCancellation<T>(
                 } catch (error) {
                     isFinished = true;
                     reject(error);
+
                     return;
                 }
+
                 // Check again after a short delay
                 setTimeout(cancellationCheck, 10);
             };
@@ -35,12 +37,13 @@ export async function promiseAllWithCancellation<T>(
             cancellationCheck();
 
             // Start the actual Promise.all
+            // eslint-disable-next-line promise/prefer-await-to-then
             Promise.all(promises).then(
-                result => {
+                (result: T[]) => {
                     isFinished = true;
                     resolve(result);
                 },
-                error => {
+                (error: any) => {
                     isFinished = true;
                     reject(error);
                 },
@@ -64,7 +67,8 @@ export async function processSequentiallyWithCancellation<T, R>(
 
     for (const item of items) {
         cancellationToken?.throwIfCancelled();
-        const result = await processor(item);
+        // eslint-disable-next-line no-await-in-loop
+        const result: R = await processor(item);
         results.push(result);
     }
 

@@ -48,12 +48,19 @@ export async function validateFunctionExpression(
     const diagnostics: Diagnostic[][] = [];
 
     for (const nodeId of fnExpressionIds) {
-        validationSettings.cancellationToken?.throwIfCancelled();
+        const nodeDiagnostics: Diagnostic[] = validateNoDuplicateParameter(
+            updatedSettings,
+            nodeIdMapCollection,
+            nodeId,
+        );
 
-        const nodeDiagnostics = await validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId);
         diagnostics.push(nodeDiagnostics);
 
-        updatedSettings.cancellationToken?.throwIfCancelled();
+        // Yield control periodically for better async behavior
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.resolve();
+
+        validationSettings.cancellationToken?.throwIfCancelled();
     }
 
     trace.exit();
@@ -61,11 +68,11 @@ export async function validateFunctionExpression(
     return diagnostics.flat();
 }
 
-async function validateNoDuplicateParameter(
+function validateNoDuplicateParameter(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     fnExpressionId: number,
-): Promise<Diagnostic[]> {
+): Diagnostic[] {
     const fnExpression: TXorNode = NodeIdMapUtils.assertXorChecked<Ast.FunctionExpression>(
         nodeIdMapCollection,
         fnExpressionId,

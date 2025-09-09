@@ -6,34 +6,34 @@ import { assert, expect } from "chai";
 import { ICancellationToken } from "@microsoft/powerquery-parser";
 
 import {
-    promiseAllWithCancellation,
     processSequentiallyWithCancellation,
+    promiseAllWithCancellation,
 } from "../../powerquery-language-services/utils/promiseUtils";
 
 function createTestCancellationToken(): ICancellationToken & { cancel: (reason: string) => void } {
-    let isCancelled = false;
+    let isCancelled: boolean = false;
 
     return {
-        isCancelled: () => isCancelled,
-        throwIfCancelled: () => {
+        isCancelled: (): boolean => isCancelled,
+        throwIfCancelled: (): void => {
             if (isCancelled) {
                 throw new Error("Operation was cancelled");
             }
         },
-        cancel: (_reason: string) => {
+        cancel: (_reason: string): void => {
             isCancelled = true;
         },
     };
 }
 
 function createDelayedPromise(delayMs: number, value: string): Promise<string> {
-    return new Promise(resolve => {
+    return new Promise((resolve: (value: string) => void) => {
         setTimeout(() => resolve(value), delayMs);
     });
 }
 
 function createDelayedRejectingPromise(delayMs: number, errorMessage: string): Promise<string> {
-    return new Promise((_, reject) => {
+    return new Promise((_: (value: string) => void, reject: (reason: Error) => void) => {
         setTimeout(() => reject(new Error(errorMessage)), delayMs);
     });
 }
@@ -41,34 +41,41 @@ function createDelayedRejectingPromise(delayMs: number, errorMessage: string): P
 describe("Promise Utils", () => {
     describe("promiseAllWithCancellation", () => {
         it("should resolve all promises when no cancellation token is provided", async () => {
-            const promises = [
+            const promises: Promise<string>[] = [
                 createDelayedPromise(10, "first"),
                 createDelayedPromise(20, "second"),
                 createDelayedPromise(15, "third"),
             ];
 
-            const result = await promiseAllWithCancellation(promises);
+            const result: string[] = await promiseAllWithCancellation(promises);
             expect(result).to.deep.equal(["first", "second", "third"]);
         });
 
         it("should resolve all promises when cancellation token is not cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const promises = [
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const promises: Promise<string>[] = [
                 createDelayedPromise(10, "first"),
                 createDelayedPromise(20, "second"),
                 createDelayedPromise(15, "third"),
             ];
 
-            const result = await promiseAllWithCancellation(promises, cancellationToken);
+            const result: string[] = await promiseAllWithCancellation(promises, cancellationToken);
             expect(result).to.deep.equal(["first", "second", "third"]);
             expect(cancellationToken.isCancelled()).to.be.false;
         });
 
         it("should reject immediately if cancellation token is already cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
             cancellationToken.cancel("Pre-cancelled");
 
-            const promises = [createDelayedPromise(100, "first"), createDelayedPromise(200, "second")];
+            const promises: Promise<string>[] = [
+                createDelayedPromise(100, "first"),
+                createDelayedPromise(200, "second"),
+            ];
 
             try {
                 await promiseAllWithCancellation(promises, cancellationToken);
@@ -79,8 +86,10 @@ describe("Promise Utils", () => {
         });
 
         it("should reject when cancellation token is cancelled during execution", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const promises = [
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const promises: Promise<string>[] = [
                 createDelayedPromise(100, "first"),
                 createDelayedPromise(200, "second"),
                 createDelayedPromise(300, "third"),
@@ -100,8 +109,10 @@ describe("Promise Utils", () => {
         });
 
         it("should handle promise rejections normally when not cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const promises = [
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const promises: Promise<string>[] = [
                 createDelayedPromise(10, "first"),
                 createDelayedRejectingPromise(20, "Test error"),
                 createDelayedPromise(15, "third"),
@@ -118,37 +129,46 @@ describe("Promise Utils", () => {
 
     describe("processSequentiallyWithCancellation", () => {
         it("should process all items sequentially when no cancellation token is provided", async () => {
-            const items = ["a", "b", "c"];
-            const processor = async (item: string) => {
-                await new Promise(resolve => setTimeout(resolve, 10));
+            const items: string[] = ["a", "b", "c"];
+
+            const processor: (item: string) => Promise<string> = async (item: string): Promise<string> => {
+                await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 10));
+
                 return item.toUpperCase();
             };
 
-            const result = await processSequentiallyWithCancellation(items, processor);
+            const result: string[] = await processSequentiallyWithCancellation(items, processor);
             expect(result).to.deep.equal(["A", "B", "C"]);
         });
 
         it("should process all items when cancellation token is not cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items = ["a", "b", "c"];
-            const processor = async (item: string) => {
-                await new Promise(resolve => setTimeout(resolve, 10));
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const items: string[] = ["a", "b", "c"];
+
+            const processor: (item: string) => Promise<string> = async (item: string): Promise<string> => {
+                await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 10));
+
                 return item.toUpperCase();
             };
 
-            const result = await processSequentiallyWithCancellation(items, processor, cancellationToken);
+            const result: string[] = await processSequentiallyWithCancellation(items, processor, cancellationToken);
             expect(result).to.deep.equal(["A", "B", "C"]);
             expect(cancellationToken.isCancelled()).to.be.false;
         });
 
         it("should stop processing when cancellation token is cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items = ["a", "b", "c", "d", "e"];
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const items: string[] = ["a", "b", "c", "d", "e"];
             const processedItems: string[] = [];
 
-            const processor = async (item: string) => {
+            const processor: (item: string) => Promise<string> = async (item: string): Promise<string> => {
                 processedItems.push(item);
-                await new Promise(resolve => setTimeout(resolve, 20));
+                await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 20));
+
                 return item.toUpperCase();
             };
 
@@ -169,11 +189,15 @@ describe("Promise Utils", () => {
         });
 
         it("should reject immediately if cancellation token is already cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
             cancellationToken.cancel("Pre-cancelled");
 
-            const items = ["a", "b", "c"];
-            const processor = async (item: string) => item.toUpperCase();
+            const items: string[] = ["a", "b", "c"];
+
+            const processor: (item: string) => Promise<string> = (item: string): Promise<string> =>
+                Promise.resolve(item.toUpperCase());
 
             try {
                 await processSequentiallyWithCancellation(items, processor, cancellationToken);
@@ -184,22 +208,30 @@ describe("Promise Utils", () => {
         });
 
         it("should handle empty arrays", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items: string[] = [];
-            const processor = async (item: string) => item.toUpperCase();
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
 
-            const result = await processSequentiallyWithCancellation(items, processor, cancellationToken);
+            const items: string[] = [];
+
+            const processor: (item: string) => Promise<string> = (item: string): Promise<string> =>
+                Promise.resolve(item.toUpperCase());
+
+            const result: string[] = await processSequentiallyWithCancellation(items, processor, cancellationToken);
             expect(result).to.deep.equal([]);
         });
 
         it("should handle processor errors normally when not cancelled", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items = ["a", "b", "c"];
-            const processor = async (item: string) => {
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const items: string[] = ["a", "b", "c"];
+
+            const processor: (item: string) => Promise<string> = (item: string): Promise<string> => {
                 if (item === "b") {
                     throw new Error("Test processor error");
                 }
-                return item.toUpperCase();
+
+                return Promise.resolve(item.toUpperCase());
             };
 
             try {
@@ -211,13 +243,16 @@ describe("Promise Utils", () => {
         });
 
         it("should check cancellation before each item", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items = ["a", "b", "c"];
-            let processorCallCount = 0;
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
 
-            const processor = async (item: string) => {
-                processorCallCount++;
-                return item.toUpperCase();
+            const items: string[] = ["a", "b", "c"];
+            let processorCallCount: number = 0;
+
+            const processor: (item: string) => Promise<string> = (item: string): Promise<string> => {
+                processorCallCount += 1;
+
+                return Promise.resolve(item.toUpperCase());
             };
 
             // Cancel before any processing
@@ -235,14 +270,17 @@ describe("Promise Utils", () => {
 
     describe("cancellation timing behavior", () => {
         it("should demonstrate different cancellation points in sequential processing", async () => {
-            const cancellationToken = createTestCancellationToken();
-            const items = [1, 2, 3, 4, 5];
+            const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } =
+                createTestCancellationToken();
+
+            const items: number[] = [1, 2, 3, 4, 5];
             const processedItems: number[] = [];
 
-            const processor = async (item: number) => {
+            const processor: (item: number) => Promise<number> = async (item: number): Promise<number> => {
                 processedItems.push(item);
                 // Each item takes 30ms to process
-                await new Promise(resolve => setTimeout(resolve, 30));
+                await new Promise((resolve: (value: unknown) => void) => setTimeout(resolve, 30));
+
                 return item * 2;
             };
 
@@ -256,6 +294,7 @@ describe("Promise Utils", () => {
                 assert.fail("Expected processing to be cancelled");
             } catch (error: any) {
                 expect(error.message).to.contain("cancelled");
+
                 console.log(
                     `Processed ${processedItems.length} items before cancellation: [${processedItems.join(", ")}]`,
                 );
@@ -265,7 +304,7 @@ describe("Promise Utils", () => {
                 expect(processedItems.length).to.be.lessThan(items.length);
 
                 // Should have processed items in order
-                for (let i = 0; i < processedItems.length; i++) {
+                for (let i: number = 0; i < processedItems.length; i = i + 1) {
                     expect(processedItems[i]).to.equal(i + 1);
                 }
             }

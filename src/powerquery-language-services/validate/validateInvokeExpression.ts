@@ -51,11 +51,12 @@ export async function validateInvokeExpression(
 
     // Process inspections with cancellation support
     const inspections: Inspection.TriedInvokeExpression[] = [];
+
     for (const task of inspectionTasks) {
         validationSettings.cancellationToken?.throwIfCancelled();
 
         // eslint-disable-next-line no-await-in-loop
-        const inspection = await task;
+        const inspection: Inspection.TriedInvokeExpression = await task;
         inspections.push(inspection);
     }
 
@@ -77,13 +78,15 @@ export async function validateInvokeExpression(
 
     // Process diagnostics with cancellation support
     const diagnostics: ReadonlyArray<Diagnostic>[] = [];
+
     for (const task of diagnosticTasks) {
         validationSettings.cancellationToken?.throwIfCancelled();
 
         // eslint-disable-next-line no-await-in-loop
-        const diagnostic = await task;
+        const diagnostic: ReadonlyArray<Diagnostic> = await task;
         diagnostics.push(diagnostic);
     }
+
     trace.exit();
 
     return diagnostics.flat();
