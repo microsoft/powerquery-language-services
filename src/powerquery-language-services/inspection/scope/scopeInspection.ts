@@ -500,17 +500,8 @@ function localGetOrCreateNodeScope(
         return shallowCopy;
     }
 
-    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
-
-    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-        trace.exit({ [TraceConstant.Result]: "field projection or selector - empty scope" });
-        const newScope: NodeScope = new Map();
-        state.givenScope.set(nodeId, newScope);
-
-        return newScope;
-    }
-
     // Default to a parent's scope if the node has a parent.
+    // Special handling is needed for FieldProjection/FieldSelector which should only copy the EachExpression scope.
     const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(state.nodeIdMapCollection, nodeId);
 
     if (parent !== undefined) {
@@ -518,11 +509,23 @@ function localGetOrCreateNodeScope(
         const parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
 
         if (parentGivenScope !== undefined) {
-            const shallowCopy: NodeScope = new Map(parentGivenScope.entries());
+            const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+
+            let shallowCopy: NodeScope;
+
+            if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+                shallowCopy = MapUtils.filter(
+                    parentGivenScope,
+                    (_key: string, value: TScopeItem) => value.kind === ScopeItemKind.Each,
+                );
+            } else {
+                shallowCopy = new Map(parentGivenScope.entries());
+            }
+
             state.givenScope.set(nodeId, shallowCopy);
             trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
 
-            return parentGivenScope;
+            return shallowCopy;
         }
     }
 
