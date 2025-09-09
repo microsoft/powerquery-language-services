@@ -82,8 +82,6 @@ function validateNoDuplicateParameter(
     const parameterNames: Map<string, Ast.Identifier[]> = new Map();
 
     for (const parameter of NodeIdMapIterator.iterFunctionExpressionParameterNames(nodeIdMapCollection, fnExpression)) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
         const existingNames: Ast.Identifier[] = parameterNames.get(parameter.literal) ?? [];
         existingNames.push(parameter);
         parameterNames.set(parameter.literal, existingNames);
