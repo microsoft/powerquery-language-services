@@ -4,9 +4,10 @@
 import "mocha";
 
 import { expect } from "chai";
-import { PerformanceTraceManager } from "./performanceTraceManager";
-import { TestConstants, TestUtils } from ".";
 import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
+import { TestConstants, TestUtils } from ".";
+import { PerformanceTraceManager } from "./performanceTraceManager";
 import { TypeStrategy } from "../powerquery-language-services";
 
 import * as PQLS from "../powerquery-language-services";
