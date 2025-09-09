@@ -15,10 +15,15 @@ export async function promiseAllWithCancellation<T>(
         cancellationToken.throwIfCancelled();
 
         return new Promise((resolve, reject) => {
+            let isFinished = false;
+
             const cancellationCheck = () => {
+                if (isFinished) return;
+
                 try {
                     cancellationToken.throwIfCancelled();
                 } catch (error) {
+                    isFinished = true;
                     reject(error);
                     return;
                 }
@@ -30,7 +35,16 @@ export async function promiseAllWithCancellation<T>(
             cancellationCheck();
 
             // Start the actual Promise.all
-            Promise.all(promises).then(resolve, reject);
+            Promise.all(promises).then(
+                result => {
+                    isFinished = true;
+                    resolve(result);
+                },
+                error => {
+                    isFinished = true;
+                    reject(error);
+                },
+            );
         });
     }
 
