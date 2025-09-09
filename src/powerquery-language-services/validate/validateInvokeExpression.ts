@@ -12,6 +12,7 @@ import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
+import { processSequentiallyWithCancellation } from "../utils/promiseUtils";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
@@ -47,16 +48,11 @@ export async function validateInvokeExpression(
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
-    // Process inspections with cancellation support
-    const inspections: Inspection.TriedInvokeExpression[] = [];
-
-    for (const task of inspectionTasks) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
-        // eslint-disable-next-line no-await-in-loop
-        const inspection: Inspection.TriedInvokeExpression = await task;
-        inspections.push(inspection);
-    }
+    const inspections: Inspection.TriedInvokeExpression[] = await processSequentiallyWithCancellation(
+        inspectionTasks,
+        (task: Promise<Inspection.TriedInvokeExpression>) => task,
+        validationSettings.cancellationToken,
+    );
 
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 
@@ -72,16 +68,11 @@ export async function validateInvokeExpression(
         }
     }
 
-    // Process diagnostics with cancellation support
-    const diagnostics: ReadonlyArray<Diagnostic>[] = [];
-
-    for (const task of diagnosticTasks) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
-        // eslint-disable-next-line no-await-in-loop
-        const diagnostic: ReadonlyArray<Diagnostic> = await task;
-        diagnostics.push(diagnostic);
-    }
+    const diagnostics: ReadonlyArray<Diagnostic>[] = await processSequentiallyWithCancellation(
+        diagnosticTasks,
+        (task: Promise<ReadonlyArray<Diagnostic>>) => task,
+        validationSettings.cancellationToken,
+    );
 
     trace.exit();
 
