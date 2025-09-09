@@ -10,13 +10,7 @@ import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft
 
 import * as ValidateTestUtils from "../testUtils/validationTestUtils";
 
-import {
-    AnalysisSettings,
-    TypeStrategy,
-    validate,
-    ValidateOk,
-    ValidationSettings,
-} from "../../powerquery-language-services";
+import { AnalysisSettings, validate, ValidateOk, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
 function createCancellationToken(): ICancellationToken {
@@ -39,12 +33,8 @@ describe("Async Validation", () => {
     const analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
 
     const baseValidationSettings: ValidationSettings = {
-        // TODO: Using Standard library results in an error - "expected a 'Each' scope item with key '_'"
-        // https://github.com/microsoft/powerquery-language-services/issues/255
-        // ...TestConstants.StandardLibraryValidateAllSettings,
-        ...TestConstants.SimpleLibraryValidateAllSettings,
+        ...TestConstants.StandardLibraryValidateAllSettings,
         isWorkspaceCacheAllowed: false,
-        typeStrategy: TypeStrategy.Extended,
     };
 
     describe("Large document validation", () => {
