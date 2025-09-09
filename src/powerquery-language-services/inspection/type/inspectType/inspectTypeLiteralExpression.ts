@@ -33,6 +33,7 @@ export function inspectTypeLiteralExpression(
             literalExpression = xorNode.node;
             typeKind = TypeUtils.typeKindFromLiteralKind(literalExpression.literalKind);
 
+            // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
             switch (typeKind) {
                 case Type.TypeKind.Number:
                     result = TypeUtils.numberLiteral(false, literalExpression.literal);

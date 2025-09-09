@@ -6,15 +6,29 @@ on:
 jobs:
     build-and-test:
         runs-on: windows-latest
+        permissions:
+            contents: read
+            actions: read
+            checks: write
         steps:
             - name: checkout
-              uses: actions/checkout@v4.1.2
+              uses: actions/checkout@v5
             - name: setup node
-              uses: actions/setup-node@v4.0.2
+              uses: actions/setup-node@v5
               with:
-                  node-version: "18.17"
+                  node-version-file: "package.json"
             - run: node -v
             - run: npm ci
             - run: npm audit
+            - run: npm run lint
             - run: npm run build
-            - run: npm run test
+            - name: Run tests
+              run: npm run test
+            - name: Publish test results
+              uses: dorny/test-reporter@v2.1.1
+              if: success() || failure()
+              with:
+                  name: Mocha Tests
+                  path: test-results.xml
+                  reporter: java-junit
+                  fail-on-error: true

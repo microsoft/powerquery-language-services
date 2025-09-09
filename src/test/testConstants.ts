@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as StandardLibrarySymbols from "./standard-library-symbols-en-us.json";
+import StandardLibrarySymbols from "./standard-library-symbols-en-us.json";
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";

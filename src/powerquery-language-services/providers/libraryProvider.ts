@@ -19,10 +19,12 @@ import { ProviderTraceConstant } from "../trace";
 
 export class LibraryProvider implements ILibraryProvider {
     public readonly library: Library.ILibrary;
+    protected readonly locale: string;
     protected readonly signatureInformationByLabel: Map<string, SignatureInformation>;
 
-    constructor(library: Library.ILibrary, protected readonly locale: string) {
+    constructor(library: Library.ILibrary, locale: string) {
         this.library = library;
+        this.locale = locale;
         this.signatureInformationByLabel = new Map();
     }
 

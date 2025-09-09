@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
 import {
     NodeIdMap,
     NodeIdMapUtils,
@@ -11,7 +12,6 @@ import {
 import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ICancellationToken } from "@microsoft/powerquery-parser";
 
 import { Library, PositionUtils } from "../..";
 import { PartialSemanticToken } from "../commonTypes";
@@ -246,7 +246,13 @@ function getIdentifierExpressionTokens(
         let tokenType: SemanticTokenTypes | undefined;
         let tokenModifiers: SemanticTokenModifiers[] = [];
 
-        switch (identifierExpr?.identifier.identifierContextKind) {
+        if (identifierExpr === undefined) {
+            continue;
+        }
+
+        const identifier: Ast.Identifier = identifierExpr.identifier;
+
+        switch (identifier.identifierContextKind) {
             case Ast.IdentifierContextKind.Key:
                 tokenType = SemanticTokenTypes.property;
                 tokenModifiers = [SemanticTokenModifiers.declaration];
@@ -259,14 +265,17 @@ function getIdentifierExpressionTokens(
             case Ast.IdentifierContextKind.Value:
                 tokenType = SemanticTokenTypes.variable;
 
-                if (libraryDefinitions.staticLibraryDefinitions.has(identifierExpr.identifier.literal)) {
+                if (libraryDefinitions.staticLibraryDefinitions.has(identifier.literal)) {
                     tokenModifiers = [SemanticTokenModifiers.defaultLibrary];
                 }
 
                 break;
 
-            default:
+            case Ast.IdentifierContextKind.Keyword:
                 continue;
+
+            default:
+                throw Assert.isNever(identifier.identifierContextKind);
         }
 
         tokens.push({
@@ -358,6 +367,7 @@ function getLiteralTokens(
 
         let tokenType: SemanticTokenTypes | undefined;
 
+        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (literal?.literalKind) {
             case Ast.LiteralKind.Numeric:
                 tokenType = SemanticTokenTypes.number;

@@ -26,7 +26,11 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
         KeywordKind.HashTime,
     ];
 
-    constructor(protected readonly locale: string) {}
+    protected readonly locale: string;
+
+    constructor(locale: string) {
+        this.locale = locale;
+    }
 
     public async getAutocompleteItems(
         context: AutocompleteItemProviderContext,

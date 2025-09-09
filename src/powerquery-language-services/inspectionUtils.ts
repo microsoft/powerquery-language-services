@@ -113,6 +113,7 @@ export function getSymbolKindFromLiteralExpression(node: Ast.LiteralExpression):
 }
 
 export function getSymbolKindFromNode(node: Ast.TNode): SymbolKind {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (node.kind) {
         case Ast.NodeKind.Constant:
             return SymbolKind.Constant;

@@ -180,6 +180,7 @@ function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFie
 }
 
 function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
             let fields: [string, Type.TPowerQueryType][] = [];
