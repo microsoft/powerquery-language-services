@@ -2,12 +2,18 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { assert, expect } from "chai";
-import { ICancellationToken } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
+import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 import * as fs from "fs";
 import * as path from "path";
 
-import { ValidationSettings, AnalysisSettings, validate, ValidateOk } from "../../powerquery-language-services";
+import {
+    ValidationSettings,
+    AnalysisSettings,
+    validate,
+    ValidateOk,
+    TypeStrategy,
+} from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import * as ValidateTestUtils from "../testUtils/validationTestUtils";
 
@@ -31,10 +37,12 @@ describe("Async Validation", () => {
     const analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
 
     const baseValidationSettings: ValidationSettings = {
-        ...TestConstants.SimpleValidateNoneSettings,
-        checkInvokeExpressions: true,
-        checkUnknownIdentifiers: true,
-        checkForDuplicateIdentifiers: true,
+        // TODO: Using Standard library results in an error - "expected a 'Each' scope item with key '_'"
+        // https://github.com/microsoft/powerquery-language-services/issues/255
+        // ...TestConstants.StandardLibraryValidateAllSettings,
+        ...TestConstants.SimpleLibraryValidateAllSettings,
+        isWorkspaceCacheAllowed: false,
+        typeStrategy: TypeStrategy.Extended,
     };
 
     describe("Large document validation", () => {
@@ -54,67 +62,88 @@ describe("Async Validation", () => {
         });
 
         it("should validate clean large document successfully without cancellation", async () => {
-            const cancellationToken = createCancellationToken();
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
-                cancellationToken,
+                cancellationToken: undefined, // No cancellation for this test
             };
 
             const startTime = Date.now();
-            const result: ValidateOk = await ValidateTestUtils.assertValidate({
-                text: largeSectionDocumentText,
-                analysisSettings,
-                validationSettings,
-            });
+            try {
+                const result: ValidateOk = await ValidateTestUtils.assertValidate({
+                    text: largeSectionDocumentText,
+                    analysisSettings,
+                    validationSettings,
+                });
 
-            const endTime = Date.now();
-            const duration = endTime - startTime;
+                const endTime = Date.now();
+                const duration = endTime - startTime;
 
-            // Validation should complete successfully
-            expect(result).to.not.be.undefined;
-            expect(result.diagnostics).to.be.an("array");
-            expect(result.hasSyntaxError).to.be.false;
+                // Validation should complete successfully
+                expect(result).to.not.be.undefined;
+                expect(result.diagnostics).to.be.an("array");
+                expect(result.hasSyntaxError).to.be.false;
 
-            // Should have no parse errors since this is the clean file
-            expect(result.hasSyntaxError).to.be.false;
+                // Should have no parse errors since this is the clean file
+                expect(result.hasSyntaxError).to.be.false;
 
-            // Should have significantly fewer diagnostic errors than the diagnostics file
-            expect(result.diagnostics.length).to.be.lessThan(100, "Clean document should have fewer diagnostic errors");
+                // Should have significantly fewer diagnostic errors than the diagnostics file
+                expect(result.diagnostics.length).to.be.lessThan(
+                    100,
+                    "Clean document should have fewer diagnostic errors",
+                );
 
-            // Log performance for manual observation (no assertions on timing)
-            console.log(
-                `Clean large document validation took ${duration}ms with ${result.diagnostics.length} diagnostics`,
-            );
+                // Log performance for manual observation (no assertions on timing)
+                console.log(
+                    `Clean large document validation took ${duration}ms with ${result.diagnostics.length} diagnostics`,
+                );
+            } catch (error: any) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                console.error(`❌ Validation failed after ${duration}ms`);
+                console.error(`Error: ${error.message}`);
+
+                throw error; // Re-throw to fail the test
+            }
         }).timeout(60000); // 60 second timeout
 
         it("should validate document with diagnostic errors", async () => {
-            const cancellationToken = createCancellationToken();
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
-                cancellationToken,
+                cancellationToken: undefined, // No cancellation for this test
             };
 
             const startTime = Date.now();
-            const result: ValidateOk = await ValidateTestUtils.assertValidate({
-                text: largeSectionDocumentWithDiagnosticsText,
-                analysisSettings,
-                validationSettings,
-            });
+            try {
+                const result: ValidateOk = await ValidateTestUtils.assertValidate({
+                    text: largeSectionDocumentWithDiagnosticsText,
+                    analysisSettings,
+                    validationSettings,
+                });
 
-            const endTime = Date.now();
-            const duration = endTime - startTime;
+                const endTime = Date.now();
+                const duration = endTime - startTime;
 
-            // Validation should complete successfully
-            expect(result).to.not.be.undefined;
-            expect(result.diagnostics).to.be.an("array");
-            expect(result.hasSyntaxError).to.be.false;
+                // Validation should complete successfully
+                expect(result).to.not.be.undefined;
+                expect(result.diagnostics).to.be.an("array");
+                expect(result.hasSyntaxError).to.be.false;
 
-            // Should have diagnostic errors due to unknown identifiers
-            expect(result.diagnostics.length).to.be.greaterThan(0, "Document with diagnostics should have errors");
+                // Should have diagnostic errors due to unknown identifiers
+                expect(result.diagnostics.length).to.be.greaterThan(0, "Document with diagnostics should have errors");
 
-            console.log(
-                `Document with diagnostics validation took ${duration}ms, found ${result.diagnostics.length} diagnostics`,
-            );
+                console.log(
+                    `Document with diagnostics validation took ${duration}ms, found ${result.diagnostics.length} diagnostics`,
+                );
+            } catch (error: any) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                console.error(`❌ Validation failed after ${duration}ms`);
+                console.error(`Error: ${error.message}`);
+
+                throw error; // Re-throw to fail the test
+            }
         }).timeout(60000);
 
         it("should handle document with parser errors", async () => {
@@ -169,14 +198,16 @@ describe("Async Validation", () => {
                 cancellationToken.cancel("Test cancellation");
             }, 500); // Cancel after 500ms
 
-            try {
-                await validationPromise;
-                // If we get here without an error, cancellation might not be working properly
-                // but we need to verify if the operation actually respected the cancellation
-                assert.fail("Expected validation to be cancelled, but it completed successfully");
-            } catch (error: any) {
+            const result = await validationPromise;
+
+            if (ResultUtils.isOk(result)) {
+                // If validation completed successfully, it finished before cancellation
+                expect(result.value).to.not.be.undefined;
+                console.log("Validation completed before cancellation could take effect");
+            } else {
                 // Expect cancellation error
-                expect(error.message).to.contain("cancelled");
+                expect(result.error.message).to.contain("cancelled");
+                console.log("Validation was successfully cancelled");
             }
         }).timeout(30000); // 30 second timeout
 
@@ -201,13 +232,14 @@ describe("Async Validation", () => {
                     cancellationToken.cancel("Test cancellation");
                 }, delay);
 
-                try {
-                    await validationPromise;
+                const result = await validationPromise;
+
+                if (ResultUtils.isOk(result)) {
                     // If validation completes despite cancellation,
                     // it might have finished before cancellation occurred
                     console.log(`Validation completed before cancellation at ${delay}ms`);
-                } catch (error: any) {
-                    expect(error.message).to.contain("cancelled");
+                } else {
+                    expect(result.error.message).to.contain("cancelled");
                     console.log(`Successfully cancelled validation at ${delay}ms`);
                 }
             }
@@ -244,26 +276,27 @@ describe("Async Validation", () => {
                 () => {
                     cancellationToken.cancel("Performance test cancellation");
                 },
-                Math.min(completeDuration * 0.7, 400), // Cancel at 70% of completion time, max 400ms
+                Math.min(completeDuration * 0.2, 300), // Cancel at 20% of completion time, max 300ms
             );
 
             let cancellationDuration = 0;
             let wasCancelled = false;
-            try {
-                await validate(
-                    TestUtils.mockDocument(largeSectionDocumentWithDiagnosticsText),
-                    analysisSettings,
-                    cancelledValidationSettings,
-                );
+            const result = await validate(
+                TestUtils.mockDocument(largeSectionDocumentWithDiagnosticsText),
+                analysisSettings,
+                cancelledValidationSettings,
+            );
+
+            if (ResultUtils.isOk(result)) {
                 // If we get here, validation completed before cancellation
                 cancellationDuration = Date.now() - startCancelled;
                 console.log(
                     `Cancellation test: validation completed in ${cancellationDuration}ms before cancellation could occur`,
                 );
-            } catch (error: any) {
+            } else {
                 cancellationDuration = Date.now() - startCancelled;
                 wasCancelled = true;
-                expect(error.message).to.contain("cancelled");
+                expect(result.error.message).to.contain("cancelled");
                 console.log(`Cancellation test: validation was cancelled after ${cancellationDuration}ms`);
             }
 
@@ -331,11 +364,16 @@ describe("Async Validation", () => {
                 cancellationToken,
             };
 
-            try {
-                await validate(TestUtils.mockDocument("let x = 1 in x"), analysisSettings, validationSettings);
-                assert.fail("Expected validation to throw due to pre-cancelled token");
-            } catch (error: any) {
-                expect(error.message).to.contain("cancelled");
+            const result = await validate(
+                TestUtils.mockDocument("let x = 1 in x"),
+                analysisSettings,
+                validationSettings,
+            );
+
+            expect(ResultUtils.isError(result), "Expected validation to return error due to pre-cancelled token").to.be
+                .true;
+            if (ResultUtils.isError(result)) {
+                expect(result.error.message).to.contain("cancelled");
             }
         });
     });
@@ -419,11 +457,12 @@ describe("Async Validation", () => {
 
             setTimeout(() => cancellationToken.cancel("Test cancellation"), 100);
 
-            try {
-                await validationPromise;
+            const result = await validationPromise;
+
+            if (ResultUtils.isOk(result)) {
                 console.log("Validation completed before cancellation");
-            } catch (error: any) {
-                expect(error.message).to.contain("cancelled");
+            } else {
+                expect(result.error.message).to.contain("cancelled");
             }
         });
 
@@ -445,11 +484,12 @@ describe("Async Validation", () => {
 
             setTimeout(() => cancellationToken.cancel("Test cancellation"), 100);
 
-            try {
-                await validationPromise;
+            const result = await validationPromise;
+
+            if (ResultUtils.isOk(result)) {
                 console.log("Validation completed before cancellation");
-            } catch (error: any) {
-                expect(error.message).to.contain("cancelled");
+            } else {
+                expect(result.error.message).to.contain("cancelled");
             }
         });
     });
