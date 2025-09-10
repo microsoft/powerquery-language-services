@@ -6,11 +6,11 @@ import { expect } from "chai";
 
 import { Diagnostic, DiagnosticSeverity, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { assertLessWhenSurpressed } from "../testUtils/validationTestUtils";
+import { assertLessWhenSuppressed } from "../testUtils/validationTestUtils";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 // Test settings with checkDiagnosticsOnParseError = false
-const ValidateWithoutDiagnosticsOnParseErrorSettings: ValidationSettings = {
+const validateWithoutDiagnosticsOnParseErrorSettings: ValidationSettings = {
     ...TestConstants.SimpleLibraryValidateAllSettings,
     checkDiagnosticsOnParseError: false,
 };
@@ -86,10 +86,10 @@ describe("checkDiagnosticsOnParseError validation setting", () => {
                     y
             `;
 
-            await assertLessWhenSurpressed({
+            await assertLessWhenSuppressed({
                 text,
                 withCheckSettings: TestConstants.SimpleLibraryValidateAllSettings,
-                withoutCheckSettings: ValidateWithoutDiagnosticsOnParseErrorSettings,
+                withoutCheckSettings: validateWithoutDiagnosticsOnParseErrorSettings,
             });
         });
 
@@ -107,7 +107,7 @@ describe("checkDiagnosticsOnParseError validation setting", () => {
             const validationResult: ValidateOk = await TestUtils.assertValidate({
                 text,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
-                validationSettings: ValidateWithoutDiagnosticsOnParseErrorSettings,
+                validationSettings: validateWithoutDiagnosticsOnParseErrorSettings,
             });
 
             expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");
@@ -139,7 +139,7 @@ describe("checkDiagnosticsOnParseError validation setting", () => {
             const validationResult: ValidateOk = await TestUtils.assertValidate({
                 text,
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
-                validationSettings: ValidateWithoutDiagnosticsOnParseErrorSettings,
+                validationSettings: validateWithoutDiagnosticsOnParseErrorSettings,
             });
 
             expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
