@@ -86,21 +86,21 @@ export function findScopeItemByLiteral(
         return undefined;
     }
 
-    // Phase 8.2: Use enhanced lookup to handle both lazy and full mode scopes
-    // This handles mixed scopes where some may have full variants and others lazy variants
-    return findScopeItemWithVariants(nodeScope, literalString);
+    // Phase 9: Use adaptive lookup to handle both full and optimized scopes
+    // This handles mixed scopes where some may have full variants and others optimized variants
+    return findScopeItemWithAdaptiveVariants(nodeScope, literalString);
 }
 
-// Phase 8.2: Enhanced scope lookup that handles both full and lazy modes
-function findScopeItemWithVariants(nodeScope: NodeScope, identifier: string): TScopeItem | undefined {
-    // Phase 8.2: Fast path - direct lookup first (handles both full and lazy modes)
+// Phase 9: Adaptive scope lookup that handles both full and optimized modes
+function findScopeItemWithAdaptiveVariants(nodeScope: NodeScope, identifier: string): TScopeItem | undefined {
+    // Phase 9: Fast path - direct lookup first (handles both full and optimized modes)
     let item: TScopeItem | undefined = nodeScope.get(identifier);
 
     if (item !== undefined) {
         return item;
     }
 
-    // Phase 8.2: Enhanced variant checking for mixed storage modes
+    // Phase 9: Enhanced variant checking for adaptive storage modes
     // Try canonical form lookups (works for lazy mode)
     let canonicalForm: string = identifier;
 
@@ -135,7 +135,7 @@ function findScopeItemWithVariants(nodeScope: NodeScope, identifier: string): TS
         }
     }
 
-    // Phase 8.2: Reverse lookup for cases where full mode was used
+    // Phase 9: Reverse lookup for cases where full mode was used
     // Check if any variant forms exist in the scope (needed for full mode compatibility)
     for (const [storedKey] of nodeScope.entries()) {
         // Check @ variants
