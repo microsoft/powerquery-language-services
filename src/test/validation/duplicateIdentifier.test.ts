@@ -44,7 +44,6 @@ interface DuplicateIdentifierError {
 const DuplicateIdentifierSettings: ValidationSettings = {
     ...TestConstants.SimpleValidateNoneSettings,
     checkForDuplicateIdentifiers: true,
-    checkDiagnosticsOnParseError: true,
 };
 
 async function validateDuplicateIdentifierDiagnostics(params: {
