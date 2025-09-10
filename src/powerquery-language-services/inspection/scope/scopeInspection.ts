@@ -506,7 +506,13 @@ function localGetOrCreateNodeScope(
 
     if (parent !== undefined) {
         const parentNodeId: number = parent.node.id;
-        const parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
+        let parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
+
+        // Phase 2.6: Recursive parent scope resolution to avoid O(n²) parent chain traversals
+        if (parentGivenScope === undefined) {
+            // Build parent scope recursively to ensure proper inheritance chain
+            parentGivenScope = localGetOrCreateNodeScope(state, parentNodeId, undefined, correlationId);
+        }
 
         if (parentGivenScope !== undefined) {
             const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
@@ -523,7 +529,7 @@ function localGetOrCreateNodeScope(
             }
 
             state.givenScope.set(nodeId, shallowCopy);
-            trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
+            trace.exit({ [TraceConstant.Result]: "parent scope resolved recursively" });
 
             return shallowCopy;
         }
