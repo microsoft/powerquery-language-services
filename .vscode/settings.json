@@ -6,7 +6,7 @@
     "editor.formatOnSave": true,
 
     "chat.instructionsFilesLocations": {
-        ".github/copilot-instructions.md": true
+        ".github/copilot.instructions.md": true
     },
 
     // VS Code Test Runner configuration
