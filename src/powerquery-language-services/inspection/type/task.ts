@@ -90,7 +90,7 @@ async function inspectScopeType(
 
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId, trace.id);
 
-    for (const scopeItem of nodeScope.values()) {
+    for (const scopeItem of nodeScope.scopeItemByKey.values()) {
         if (!state.typeById.has(scopeItem.nodeId)) {
             // eslint-disable-next-line no-await-in-loop
             state.typeById.set(scopeItem.nodeId, await getOrCreateScopeItemType(state, scopeItem));
@@ -99,7 +99,7 @@ async function inspectScopeType(
 
     const result: ScopeTypeByKey = new Map();
 
-    for (const [key, scopeItem] of nodeScope.entries()) {
+    for (const [key, scopeItem] of nodeScope.scopeItemByKey.entries()) {
         const type: Type.TPowerQueryType = MapUtils.assertGet(
             state.typeById,
             scopeItem.nodeId,

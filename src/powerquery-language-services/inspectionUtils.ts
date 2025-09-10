@@ -40,7 +40,7 @@ export function getAutocompleteItemsFromScope(
 
     const result: Inspection.AutocompleteItem[] = [];
 
-    for (const [label, scopeItem] of nodeScope.entries()) {
+    for (const [label, scopeItem] of nodeScope.scopeItemByKey.entries()) {
         const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
             label,
             scopeItem,

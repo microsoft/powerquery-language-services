@@ -9,7 +9,7 @@ import { Inspection, InspectionSettings, Library, TypeStrategy } from "../../pow
 import { TAbridgedNodeScopeItem } from "../testUtils";
 import { TestUtils } from "..";
 
-describe(`subset Inspection - Scope - Identifier`, () => {
+describe(`WIP Inspection - Scope - Identifier`, () => {
     const DefaultSettings: InspectionSettings = {
         ...PQP.DefaultSettings,
         isWorkspaceCacheAllowed: false,

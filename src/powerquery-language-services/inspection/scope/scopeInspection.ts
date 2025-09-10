@@ -58,7 +58,7 @@ export async function tryNodeScope(
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
-            return new Map();
+            throw new PQP.CommonError.InvariantError(`expected ancestry to have at least one node`, { nodeId });
         }
 
         await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
@@ -215,10 +215,26 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
             break;
 
         default:
-            localGetOrCreateNodeScope(state, xorNode.node.id, undefined, trace.id);
+            assignScopeForNodeId(
+                state,
+                xorNode.node.id,
+                getParentScope(state, xorNode.node.id),
+                /* newEntries */ undefined,
+                trace.id,
+            );
     }
 
     trace.exit();
+}
+
+function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope | undefined {
+    const parentNodeId: number | undefined = state.nodeIdMapCollection.parentIdById.get(nodeId);
+
+    if (parentNodeId === undefined) {
+        return undefined;
+    }
+
+    return state.givenScope.get(parentNodeId);
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, correlationId: number): void {
@@ -230,25 +246,39 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
 
     XorNodeUtils.assertIsNodeKind<Ast.EachExpression>(eachExpr, Ast.NodeKind.EachExpression);
 
-    expandChildScope(
+    // Generate the scope for the EachExpression
+    const nodeScope: NodeScope = assignScopeForNodeId(
         state,
-        eachExpr,
-        [1],
-        [
-            [
-                "_",
-                {
-                    kind: ScopeItemKind.Each,
-                    nodeId: eachExpr.node.id,
-                    isRecursive: false,
-                    eachExpression: eachExpr,
-                    implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
-                },
-            ],
-        ],
-        localGetOrCreateNodeScope(state, eachExpr.node.id, undefined, trace.id),
+        eachExpr.node.id,
+        getParentScope(state, eachExpr.node.id),
+        /* newEntries */ undefined,
         trace.id,
     );
+
+    // Propegate the scope to the paired expression (if one exists)
+    const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, eachExpr.node.id, 1);
+
+    if (expression !== undefined) {
+        assignScopeForNodeId(
+            state,
+            expression.node.id,
+            nodeScope,
+            // Append the implicit "_" parameter for the 'each' expression.
+            [
+                [
+                    "_",
+                    {
+                        kind: ScopeItemKind.Each,
+                        nodeId: eachExpr.node.id,
+                        isRecursive: false,
+                        eachExpression: eachExpr,
+                        implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
+                    },
+                ],
+            ],
+            trace.id,
+        );
+    }
 
     trace.exit();
 }
@@ -262,11 +292,18 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
 
     XorNodeUtils.assertIsNodeKind<Ast.FunctionExpression>(fnExpr, Ast.NodeKind.FunctionExpression);
 
-    // Propegates the parent's scope.
-    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, fnExpr.node.id, undefined, trace.id);
-    const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
+    // Creates the NodeScope for the FunctionExpression.
+    const nodeScope: NodeScope = assignScopeForNodeId(
+        state,
+        fnExpr.node.id,
+        getParentScope(state, fnExpr.node.id),
+        /* newEntries */ undefined,
+        trace.id,
+    );
 
+    // Build up a list of new scope items derived from the function's parameters.
     const newEntries: [string, ParameterScopeItem][] = [];
+    const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
     for (const parameter of pseudoType.parameters) {
         const type: PrimitiveTypeConstant | undefined = parameter.type
@@ -280,7 +317,17 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
         }
     }
 
-    expandChildScope(state, fnExpr, [3], newEntries, nodeScope, trace.id);
+    // Propagate the FunctionExpression's scope to its body.
+    const functionExpressionBody: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
+        state.nodeIdMapCollection,
+        fnExpr.node.id,
+        3,
+    );
+
+    if (functionExpressionBody !== undefined) {
+        assignScopeForNodeId(state, functionExpressionBody.node.id, nodeScope, newEntries, trace.id);
+    }
+
     trace.exit();
 }
 
@@ -293,8 +340,14 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
 
     XorNodeUtils.assertIsNodeKind<Ast.LetExpression>(letExpr, Ast.NodeKind.LetExpression);
 
-    // Propegates the parent's scope.
-    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, letExpr.node.id, undefined, trace.id);
+    // Creates the NodeScope for the LetExpression.
+    const nodeScope: NodeScope = assignScopeForNodeId(
+        state,
+        letExpr.node.id,
+        getParentScope(state, letExpr.node.id),
+        /* newEntries */ undefined,
+        trace.id,
+    );
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
         state.nodeIdMapCollection,
@@ -318,7 +371,12 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         scopeItemFactoryForLetVariable,
     );
 
-    expandChildScope(state, letExpr, [3], newEntries, nodeScope, trace.id);
+    const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, letExpr.node.id, 3);
+
+    if (expression !== undefined) {
+        assignScopeForNodeId(state, expression.node.id, nodeScope, newEntries, trace.id);
+    }
+
     trace.exit();
 }
 
@@ -335,8 +393,14 @@ function inspectRecordExpressionOrRecordLiteral(
 
     XorNodeUtils.assertIsRecord(record);
 
-    // Propegates the parent's scope.
-    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, record.node.id, undefined, trace.id);
+    // Creates the NodeScope for the record.
+    const nodeScope: NodeScope = assignScopeForNodeId(
+        state,
+        record.node.id,
+        getParentScope(state, record.node.id),
+        /* newEntries */ undefined,
+        trace.id,
+    );
 
     const keyValuePairs: ReadonlyArray<NodeIdMapIterator.RecordKeyValuePair> = NodeIdMapIterator.iterRecord(
         state.nodeIdMapCollection,
@@ -379,16 +443,19 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
             continue;
         }
 
-        const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
-            keyValuePairs,
-            kvp.key.id,
-            { allowRecursive: true },
-            scopeItemFactoryForSectionMember,
+        assignScopeForNodeId(
+            state,
+            kvp.value.node.id,
+            // Sections are assumed to be top-level, so they do not inherit from any parent scope.
+            /* inheritedScope */ undefined,
+            scopeItemFactoryForKeyValuePairs(
+                keyValuePairs,
+                kvp.key.id,
+                { allowRecursive: true },
+                scopeItemFactoryForSectionMember,
+            ),
+            trace.id,
         );
-
-        if (newScopeItems.length !== 0) {
-            expandScope(state, kvp.value, newScopeItems, new Map(), trace.id);
-        }
     }
 
     trace.exit();
@@ -400,7 +467,7 @@ function inspectKeyValuePairs<
     KVP extends NodeIdMapIterator.TKeyValuePair,
 >(
     state: ScopeInspectionState,
-    parentScope: NodeScope,
+    inheritedScope: NodeScope | undefined,
     keyValuePairs: ReadonlyArray<KVP>,
     getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
@@ -419,122 +486,94 @@ function inspectKeyValuePairs<
             continue;
         }
 
-        const newScopeItems: ReadonlyArray<[string, T]> = scopeItemFactoryForKeyValuePairs(
-            keyValuePairs,
-            kvp.key.id,
-            getAllowedIdentifiersOptions,
-            scopeItemFactory,
+        assignScopeForNodeId(
+            state,
+            kvp.value.node.id,
+            inheritedScope,
+            scopeItemFactoryForKeyValuePairs(keyValuePairs, kvp.key.id, getAllowedIdentifiersOptions, scopeItemFactory),
+            trace.id,
         );
-
-        if (newScopeItems.length !== 0) {
-            expandScope(state, kvp.value, newScopeItems, parentScope, trace.id);
-        }
     }
 
     trace.exit();
 }
 
-function expandScope(
-    state: ScopeInspectionState,
-    xorNode: TXorNode,
-    newEntries: ReadonlyArray<[string, TScopeItem]>,
-    defaultScope: NodeScope | undefined,
-    correlationId: number,
-): void {
-    const nodeScope: NodeScope = localGetOrCreateNodeScope(state, xorNode.node.id, defaultScope, correlationId);
-
-    for (const [key, value] of newEntries) {
-        nodeScope.set(key, value);
-    }
-}
-
-function expandChildScope(
-    state: ScopeInspectionState,
-    parent: TXorNode,
-    childAttributeIds: ReadonlyArray<number>,
-    newEntries: ReadonlyArray<[string, TScopeItem]>,
-    defaultScope: NodeScope | undefined,
-    correlationId: number,
-): void {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const parentId: number = parent.node.id;
-
-    // TODO: optimize this
-    for (const attributeId of childAttributeIds) {
-        const child: TXorNode | undefined = NodeIdMapUtils.nthChildXor(nodeIdMapCollection, parentId, attributeId);
-
-        if (child !== undefined) {
-            expandScope(state, child, newEntries, defaultScope, correlationId);
-        }
-    }
-}
-
-// Any operation done on a scope should first invoke `scopeFor` for data integrity.
-function localGetOrCreateNodeScope(
+function assignScopeForNodeId(
     state: ScopeInspectionState,
     nodeId: number,
-    defaultScope: NodeScope | undefined,
+    inheritedScope: NodeScope | undefined,
+    newEntries: ReadonlyArray<[string, TScopeItem]> | undefined,
     correlationId: number,
 ): NodeScope {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
-        localGetOrCreateNodeScope.name,
+        assignScopeForNodeId.name,
         correlationId,
         { nodeId },
     );
 
-    // If scopeFor has already been called then there should be a nodeId in the givenScope.
-    const givenScope: NodeScope | undefined = state.givenScope.get(nodeId);
+    // If a scope has already been generated for this nodeId, return it.
+    // This can happen as a parent might have assigned a scope to its child already,
+    // e.g. LetExpression assigns scope to its expression.
+    const existingNodeScope: NodeScope | undefined = state.givenScope.get(nodeId);
 
-    if (givenScope !== undefined) {
-        trace.exit({ [TraceConstant.Result]: "givenScope cache hit" });
+    if (existingNodeScope !== undefined) {
+        trace.exit({ [TraceConstant.Result]: "cache hit" });
 
-        return givenScope;
+        return existingNodeScope;
     }
 
-    if (defaultScope !== undefined) {
-        const shallowCopy: NodeScope = new Map(defaultScope.entries());
-        state.givenScope.set(nodeId, shallowCopy);
-        trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
+    // Unique case for root node.
+    if (inheritedScope === undefined) {
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map(newEntries ?? []),
+        };
 
-        return shallowCopy;
+        state.givenScope.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "new root scope" });
+
+        return nodeScope;
     }
 
-    // Default to a parent's scope if the node has a parent.
-    // Special handling is needed for FieldProjection/FieldSelector which should only copy the EachExpression scope.
-    const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(state.nodeIdMapCollection, nodeId);
+    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
 
-    if (parent !== undefined) {
-        const parentNodeId: number = parent.node.id;
-        const parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
+    // We can't actually inherit everything if node is a FieldSelector or FieldProjection,
+    // so we create a new scope that only includes allowed items.
+    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
+            ...inheritedScope.scopeItemByKey.entries(),
+        ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
 
-        if (parentGivenScope !== undefined) {
-            const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map([...inheritedEachScopeItemEntries, ...(newEntries ?? [])]),
+        };
 
-            let shallowCopy: NodeScope;
+        state.givenScope.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "inherited filtered scope" });
 
-            if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-                shallowCopy = MapUtils.filter(
-                    parentGivenScope,
-                    (_key: string, value: TScopeItem) => value.kind === ScopeItemKind.Each,
-                );
-            } else {
-                shallowCopy = new Map(parentGivenScope.entries());
-            }
-
-            state.givenScope.set(nodeId, shallowCopy);
-            trace.exit({ [TraceConstant.Result]: "parent givenScope hit" });
-
-            return shallowCopy;
-        }
+        return nodeScope;
     }
+    // Else if there are no new entries we can simply inherit the scope.
+    else if (!newEntries) {
+        state.givenScope.set(nodeId, inheritedScope);
+        trace.exit({ [TraceConstant.Result]: "inherited scope" });
 
-    // The node has no parent or it hasn't been visited.
-    const newScope: NodeScope = new Map();
-    state.givenScope.set(nodeId, newScope);
-    trace.exit({ [TraceConstant.Result]: "set new entry" });
+        return inheritedScope;
+    }
+    // Else there are new entries so we create a new scope that merges the inherited scope with the new entries.
+    else {
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map([...inheritedScope.scopeItemByKey.entries(), ...newEntries]),
+        };
 
-    return newScope;
+        state.givenScope.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "created new scope" });
+
+        return nodeScope;
+    }
 }
 
 function scopeItemFactoryForKeyValuePairs<
@@ -542,14 +581,14 @@ function scopeItemFactoryForKeyValuePairs<
     KVP extends NodeIdMapIterator.TKeyValuePair,
 >(
     keyValuePairs: ReadonlyArray<KVP>,
-    ancestorKeyNodeId: number,
+    keyNodeId: number,
     getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
 
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
-        const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
+        const isRecursive: boolean = keyNodeId === kvp.key.id;
 
         for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
             if (!isRecursive || key.includes("@")) {
