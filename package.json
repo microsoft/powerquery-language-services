@@ -1,6 +1,6 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "0.11.1",
+    "version": "0.11.2",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
@@ -10,7 +10,7 @@
         "link:start": "npm link && npm uninstall @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm link @microsoft/powerquery-parser @microsoft/powerquery-formatter",
         "link:stop": "npm unlink @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm install @microsoft/powerquery-parser@latest @microsoft/powerquery-formatter@latest --save-exact",
         "lint": "eslint src --ext ts",
-        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json"
+        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json -g \"Performance Baseline Tests\""
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services#readme",
     "repository": {
