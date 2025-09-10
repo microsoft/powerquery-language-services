@@ -122,12 +122,22 @@ export async function assertGetOrCreateNodeScope(
 }
 
 interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> {
-    readonly givenScope: ScopeById;
+    readonly scopeById: ScopeById;
     readonly ancestry: ReadonlyArray<TXorNode>;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly eachScopeById: TypeById | undefined;
     readonly cancellationToken: ICancellationToken | undefined;
     ancestryIndex: number;
+}
+
+function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope | undefined {
+    const parentNodeId: number | undefined = state.nodeIdMapCollection.parentIdById.get(nodeId);
+
+    if (parentNodeId === undefined) {
+        return undefined;
+    }
+
+    return state.scopeById.get(parentNodeId);
 }
 
 async function inspectScope(
@@ -158,7 +168,7 @@ async function inspectScope(
 
     const state: ScopeInspectionState = {
         traceManager: settings.traceManager,
-        givenScope: scopeById,
+        scopeById,
         ancestry,
         nodeIdMapCollection,
         eachScopeById,
@@ -225,16 +235,6 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
     }
 
     trace.exit();
-}
-
-function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope | undefined {
-    const parentNodeId: number | undefined = state.nodeIdMapCollection.parentIdById.get(nodeId);
-
-    if (parentNodeId === undefined) {
-        return undefined;
-    }
-
-    return state.givenScope.get(parentNodeId);
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, correlationId: number): void {
@@ -446,8 +446,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         assignScopeForNodeId(
             state,
             kvp.value.node.id,
-            // Sections are assumed to be top-level, so they do not inherit from any parent scope.
-            /* inheritedScope */ undefined,
+            getParentScope(state, kvp.value.node.id),
             scopeItemFactoryForKeyValuePairs(
                 keyValuePairs,
                 kvp.key.id,
@@ -515,7 +514,7 @@ function assignScopeForNodeId(
     // If a scope has already been generated for this nodeId, return it.
     // This can happen as a parent might have assigned a scope to its child already,
     // e.g. LetExpression assigns scope to its expression.
-    const existingNodeScope: NodeScope | undefined = state.givenScope.get(nodeId);
+    const existingNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
 
     if (existingNodeScope !== undefined) {
         trace.exit({ [TraceConstant.Result]: "cache hit" });
@@ -530,7 +529,7 @@ function assignScopeForNodeId(
             scopeItemByKey: new Map(newEntries ?? []),
         };
 
-        state.givenScope.set(nodeId, nodeScope);
+        state.scopeById.set(nodeId, nodeScope);
         trace.exit({ [TraceConstant.Result]: "new root scope" });
 
         return nodeScope;
@@ -550,14 +549,14 @@ function assignScopeForNodeId(
             scopeItemByKey: new Map([...inheritedEachScopeItemEntries, ...(newEntries ?? [])]),
         };
 
-        state.givenScope.set(nodeId, nodeScope);
+        state.scopeById.set(nodeId, nodeScope);
         trace.exit({ [TraceConstant.Result]: "inherited filtered scope" });
 
         return nodeScope;
     }
     // Else if there are no new entries we can simply inherit the scope.
     else if (!newEntries) {
-        state.givenScope.set(nodeId, inheritedScope);
+        state.scopeById.set(nodeId, inheritedScope);
         trace.exit({ [TraceConstant.Result]: "inherited scope" });
 
         return inheritedScope;
@@ -569,7 +568,7 @@ function assignScopeForNodeId(
             scopeItemByKey: new Map([...inheritedScope.scopeItemByKey.entries(), ...newEntries]),
         };
 
-        state.givenScope.set(nodeId, nodeScope);
+        state.scopeById.set(nodeId, nodeScope);
         trace.exit({ [TraceConstant.Result]: "created new scope" });
 
         return nodeScope;
