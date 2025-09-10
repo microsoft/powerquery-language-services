@@ -20,6 +20,7 @@ const ExpectedNameAndSuggestionPattern: RegExp = /Cannot find the name '([^']+)'
 const UnknownIdentifierSettings: ValidationSettings = {
     ...SimpleValidateNoneSettings,
     checkForDuplicateIdentifiers: true,
+    checkDiagnosticsOnParseError: true,
 };
 
 async function assertUnknownIdentifierDiagnostics(

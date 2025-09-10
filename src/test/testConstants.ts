@@ -313,6 +313,7 @@ export const StandardLibraryAnalysisSettings: AnalysisSettings = {
 export const SimpleLibraryValidateAllSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
+    checkDiagnosticsOnParseError: true,
     checkInvokeExpressions: true,
     checkUnknownIdentifiers: true,
     library: SimpleLibrary,
@@ -322,6 +323,7 @@ export const SimpleLibraryValidateAllSettings: ValidationSettings = {
 export const StandardLibraryValidateAllSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: true,
+    checkDiagnosticsOnParseError: true,
     checkInvokeExpressions: true,
     checkUnknownIdentifiers: true,
     library: StandardLibrary,
@@ -331,6 +333,7 @@ export const StandardLibraryValidateAllSettings: ValidationSettings = {
 export const SimpleValidateNoneSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: false,
+    checkDiagnosticsOnParseError: true,
     checkInvokeExpressions: false,
     checkUnknownIdentifiers: false,
     library: SimpleLibrary,
@@ -340,6 +343,7 @@ export const SimpleValidateNoneSettings: ValidationSettings = {
 export const StandardLibraryValidateNoneSettings: ValidationSettings = {
     ...SimpleInspectionSettings,
     checkForDuplicateIdentifiers: false,
+    checkDiagnosticsOnParseError: true,
     checkInvokeExpressions: false,
     checkUnknownIdentifiers: false,
     library: SimpleLibrary,

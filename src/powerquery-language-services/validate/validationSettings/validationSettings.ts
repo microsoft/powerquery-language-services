@@ -8,6 +8,7 @@ import { Library } from "../../library";
 
 export interface ValidationSettings extends InspectionSettings {
     readonly cancellationToken: ICancellationToken | undefined;
+    readonly checkDiagnosticsOnParseError: boolean;
     readonly checkForDuplicateIdentifiers: boolean;
     readonly checkInvokeExpressions: boolean;
     readonly checkUnknownIdentifiers: boolean;
