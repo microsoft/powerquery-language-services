@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Diagnostic } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { processSequentiallyWithCancellation } from "../utils/promiseUtils";
 import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
@@ -42,14 +43,13 @@ export function validate(
         validationSettings.cancellationToken?.throwIfCancelled();
 
         const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
+        validationSettings.cancellationToken?.throwIfCancelled();
 
         if (parseState === undefined) {
             trace.exit();
 
             return undefined;
         }
-
-        validationSettings.cancellationToken?.throwIfCancelled();
 
         const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
         const typeCache: TypeCache = analysis.getTypeCache();
@@ -90,7 +90,7 @@ export function validate(
         }
 
         // Execute all validation operations sequentially with cancellation support
-        const allDiagnostics: Diagnostic[][] = await processSequentiallyWithCancellation(
+        const allDiagnostics: Diagnostic[][] = await PromiseUtils.processSequentiallyWithCancellation(
             validationOperations,
             (operation: () => Promise<Diagnostic[]>) => operation(),
             validationSettings.cancellationToken,

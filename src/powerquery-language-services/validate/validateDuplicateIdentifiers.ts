@@ -14,10 +14,11 @@ import { ICancellationToken } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
-import { processSequentiallyWithCancellation } from "../utils/promiseUtils";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
@@ -83,7 +84,7 @@ export async function validateDuplicateIdentifiers(
     ];
 
     // Process all validation functions sequentially with cancellation support
-    const diagnosticArrays: ReadonlyArray<Diagnostic>[] = await processSequentiallyWithCancellation(
+    const diagnosticArrays: ReadonlyArray<Diagnostic>[] = await PromiseUtils.processSequentiallyWithCancellation(
         validationFunctions,
         (validationFunction: () => Promise<ReadonlyArray<Diagnostic>>) => validationFunction(),
         cancellationToken,

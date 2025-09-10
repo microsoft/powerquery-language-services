@@ -5,7 +5,7 @@ import "mocha";
 import { assert, expect } from "chai";
 import { ICancellationToken } from "@microsoft/powerquery-parser";
 
-import { processSequentiallyWithCancellation } from "../../powerquery-language-services/utils/promiseUtils";
+import { processSequentiallyWithCancellation } from "../../powerquery-language-services/promiseUtils";
 
 function createTestCancellationToken(): ICancellationToken & { cancel: (reason: string) => void } {
     let isCancelled: boolean = false;

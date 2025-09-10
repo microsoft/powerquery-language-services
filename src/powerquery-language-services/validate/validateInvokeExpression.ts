@@ -8,11 +8,12 @@ import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parse
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Range } from "vscode-languageserver-textdocument";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
-import { processSequentiallyWithCancellation } from "../utils/promiseUtils";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
@@ -48,7 +49,7 @@ export async function validateInvokeExpression(
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
-    const inspections: Inspection.TriedInvokeExpression[] = await processSequentiallyWithCancellation(
+    const inspections: Inspection.TriedInvokeExpression[] = await PromiseUtils.processSequentiallyWithCancellation(
         inspectionTasks,
         (task: Promise<Inspection.TriedInvokeExpression>) => task,
         validationSettings.cancellationToken,
@@ -68,7 +69,7 @@ export async function validateInvokeExpression(
         }
     }
 
-    const diagnostics: ReadonlyArray<Diagnostic>[] = await processSequentiallyWithCancellation(
+    const diagnostics: ReadonlyArray<Diagnostic>[] = await PromiseUtils.processSequentiallyWithCancellation(
         diagnosticTasks,
         (task: Promise<ReadonlyArray<Diagnostic>>) => task,
         validationSettings.cancellationToken,
