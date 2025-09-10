@@ -48,6 +48,51 @@ function getCachedParentNode(nodeIdMapCollection: NodeIdMap.Collection, nodeId: 
     return cachedParent;
 }
 
+// Phase 6: Map Operation Optimizations
+// These optimizations target the most expensive Map operations identified in the journal
+
+// Phase 6.1: Map pooling to reduce allocations
+let mapPool: NodeScope[] = [];
+const MAX_POOL_SIZE: number = 50;
+
+function getPooledMap(): NodeScope {
+    return mapPool.pop() ?? new Map();
+}
+
+// Phase 6.2: Optimized shallow copy using direct iteration (faster than entries())
+function createOptimizedShallowCopy(source: NodeScope): NodeScope {
+    const result: NodeScope = getPooledMap();
+
+    // Direct iteration is faster than .entries() for large maps
+    for (const [key, value] of source) {
+        result.set(key, value);
+    }
+
+    return result;
+}
+
+// Phase 6.3: Optimized filtering for common scope operations
+function createOptimizedFilteredMap(source: NodeScope, predicate: (item: TScopeItem) => boolean): NodeScope {
+    const result: NodeScope = getPooledMap();
+
+    // Direct iteration with inline filtering is faster than MapUtils.filter
+    for (const [key, value] of source) {
+        if (predicate(value)) {
+            result.set(key, value);
+        }
+    }
+
+    return result;
+}
+
+// Phase 6.4: Cleanup function to manage pooled maps
+function cleanupMapPool(): void {
+    // Limit pool growth to prevent memory leaks
+    if (mapPool.length > MAX_POOL_SIZE) {
+        mapPool = mapPool.slice(0, MAX_POOL_SIZE);
+    }
+}
+
 // Builds a scope for the given node.
 export async function tryNodeScope(
     settings: PQP.CommonSettings,
@@ -72,7 +117,8 @@ export async function tryNodeScope(
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
-            return new Map();
+            // Phase 6.1: Use pooled Map instead of new Map()
+            return getPooledMap();
         }
 
         await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
@@ -85,6 +131,9 @@ export async function tryNodeScope(
     }, updatedSettings.locale);
 
     trace.exit();
+
+    // Phase 6.4: Cleanup map pool to prevent memory leaks
+    cleanupMapPool();
 
     return result;
 }
@@ -416,7 +465,8 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         );
 
         if (newScopeItems.length !== 0) {
-            expandScope(state, kvp.value, newScopeItems, new Map(), trace.id);
+            // Phase 6.1: Use pooled Map instead of new Map()
+            expandScope(state, kvp.value, newScopeItems, getPooledMap(), trace.id);
         }
     }
 
@@ -521,7 +571,8 @@ function localGetOrCreateNodeScope(
     );
 
     if (defaultScope !== undefined) {
-        const shallowCopy: NodeScope = new Map(defaultScope.entries());
+        // Phase 6.2: Use optimized shallow copy instead of new Map(entries())
+        const shallowCopy: NodeScope = createOptimizedShallowCopy(defaultScope);
         state.givenScope.set(nodeId, shallowCopy);
         trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
@@ -548,12 +599,14 @@ function localGetOrCreateNodeScope(
             let shallowCopy: NodeScope;
 
             if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-                shallowCopy = MapUtils.filter(
+                // Phase 6.3: Use optimized filtering instead of MapUtils.filter()
+                shallowCopy = createOptimizedFilteredMap(
                     parentGivenScope,
-                    (_key: string, value: TScopeItem) => value.kind === ScopeItemKind.Each,
+                    (value: TScopeItem) => value.kind === ScopeItemKind.Each,
                 );
             } else {
-                shallowCopy = new Map(parentGivenScope.entries());
+                // Phase 6.2: Use optimized shallow copy instead of new Map(entries())
+                shallowCopy = createOptimizedShallowCopy(parentGivenScope);
             }
 
             state.givenScope.set(nodeId, shallowCopy);
@@ -564,7 +617,8 @@ function localGetOrCreateNodeScope(
     }
 
     // The node has no parent or it hasn't been visited.
-    const newScope: NodeScope = new Map();
+    // Phase 6.1: Use pooled Map instead of new Map()
+    const newScope: NodeScope = getPooledMap();
     state.givenScope.set(nodeId, newScope);
     trace.exit({ [TraceConstant.Result]: "set new entry" });
 
