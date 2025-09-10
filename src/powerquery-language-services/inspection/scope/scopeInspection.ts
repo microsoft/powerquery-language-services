@@ -34,6 +34,20 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TypeById } from "../typeCache";
 
+// Phase 4.1: Parent node lookup caching to reduce NodeIdMapUtils.parentXor overhead
+const parentNodeCache: Map<number, TXorNode | undefined> = new Map();
+
+function getCachedParentNode(nodeIdMapCollection: NodeIdMap.Collection, nodeId: number): TXorNode | undefined {
+    let cachedParent: TXorNode | undefined = parentNodeCache.get(nodeId);
+
+    if (cachedParent === undefined && !parentNodeCache.has(nodeId)) {
+        cachedParent = NodeIdMapUtils.parentXor(nodeIdMapCollection, nodeId);
+        parentNodeCache.set(nodeId, cachedParent);
+    }
+
+    return cachedParent;
+}
+
 // Builds a scope for the given node.
 export async function tryNodeScope(
     settings: PQP.CommonSettings,
@@ -166,6 +180,9 @@ async function inspectScope(
         ancestryIndex: 0,
     };
 
+    // Phase 4.1: Clear parent node cache for each new inspection
+    parentNodeCache.clear();
+
     // Build up the scope through a top-down inspection.
     const numNodes: number = ancestry.length;
 
@@ -182,43 +199,55 @@ async function inspectScope(
 
 // eslint-disable-next-line require-await
 async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlationId: number): Promise<void> {
-    const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectScope,
-        inspectNode.name,
-        correlationId,
-        TraceUtils.xorNodeDetails(xorNode),
-    );
+    // Phase 4.3: Only trace for complex operations that significantly impact scope
+    const needsTracing: boolean = [
+        Ast.NodeKind.EachExpression,
+        Ast.NodeKind.FunctionExpression,
+        Ast.NodeKind.LetExpression,
+        Ast.NodeKind.RecordExpression,
+        Ast.NodeKind.RecordLiteral,
+        Ast.NodeKind.Section,
+    ].includes(xorNode.node.kind);
+
+    const trace: Trace | undefined = needsTracing
+        ? state.traceManager.entry(
+              InspectionTraceConstant.InspectScope,
+              inspectNode.name,
+              correlationId,
+              TraceUtils.xorNodeDetails(xorNode),
+          )
+        : undefined;
 
     state.cancellationToken?.throwIfCancelled();
 
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
-            inspectEachExpression(state, xorNode, trace.id);
+            inspectEachExpression(state, xorNode, trace?.id ?? correlationId);
             break;
 
         case Ast.NodeKind.FunctionExpression:
-            inspectFunctionExpression(state, xorNode, trace.id);
+            inspectFunctionExpression(state, xorNode, trace?.id ?? correlationId);
             break;
 
         case Ast.NodeKind.LetExpression:
-            inspectLetExpression(state, xorNode, trace.id);
+            inspectLetExpression(state, xorNode, trace?.id ?? correlationId);
             break;
 
         case Ast.NodeKind.RecordExpression:
         case Ast.NodeKind.RecordLiteral:
-            inspectRecordExpressionOrRecordLiteral(state, xorNode, trace.id);
+            inspectRecordExpressionOrRecordLiteral(state, xorNode, trace?.id ?? correlationId);
             break;
 
         case Ast.NodeKind.Section:
-            inspectSection(state, xorNode, trace.id);
+            inspectSection(state, xorNode, trace?.id ?? correlationId);
             break;
 
         default:
-            localGetOrCreateNodeScope(state, xorNode.node.id, undefined, trace.id);
+            localGetOrCreateNodeScope(state, xorNode.node.id, undefined, trace?.id ?? correlationId);
     }
 
-    trace.exit();
+    trace?.exit();
 }
 
 function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, correlationId: number): void {
@@ -476,6 +505,14 @@ function localGetOrCreateNodeScope(
     defaultScope: NodeScope | undefined,
     correlationId: number,
 ): NodeScope {
+    // Phase 4.2: Skip tracing for cache hits to reduce overhead
+    const givenScope: NodeScope | undefined = state.givenScope.get(nodeId);
+
+    if (givenScope !== undefined) {
+        return givenScope;
+    }
+
+    // Only trace when creating new scope entries
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         localGetOrCreateNodeScope.name,
@@ -483,35 +520,17 @@ function localGetOrCreateNodeScope(
         { nodeId },
     );
 
-    // If scopeFor has already been called then there should be a nodeId in the givenScope.
-    const givenScope: NodeScope | undefined = state.givenScope.get(nodeId);
-
-    if (givenScope !== undefined) {
-        trace.exit({ [TraceConstant.Result]: "givenScope cache hit" });
-
-        return givenScope;
-    }
-
     if (defaultScope !== undefined) {
-        // Phase 3.3: Optimize Map copying - only copy if defaultScope has entries to avoid empty Map overhead
-        if (defaultScope.size === 0) {
-            const emptyScope: NodeScope = new Map();
-            state.givenScope.set(nodeId, emptyScope);
-            trace.exit({ [TraceConstant.Result]: "defaultScope empty" });
+        const shallowCopy: NodeScope = new Map(defaultScope.entries());
+        state.givenScope.set(nodeId, shallowCopy);
+        trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
 
-            return emptyScope;
-        } else {
-            const shallowCopy: NodeScope = new Map(defaultScope.entries());
-            state.givenScope.set(nodeId, shallowCopy);
-            trace.exit({ [TraceConstant.Result]: "defaultScope copied" });
-
-            return shallowCopy;
-        }
+        return shallowCopy;
     }
 
     // Default to a parent's scope if the node has a parent.
     // Special handling is needed for FieldProjection/FieldSelector which should only copy the EachExpression scope.
-    const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(state.nodeIdMapCollection, nodeId);
+    const parent: TXorNode | undefined = getCachedParentNode(state.nodeIdMapCollection, nodeId);
 
     if (parent !== undefined) {
         const parentNodeId: number = parent.node.id;
@@ -533,9 +552,6 @@ function localGetOrCreateNodeScope(
                     parentGivenScope,
                     (_key: string, value: TScopeItem) => value.kind === ScopeItemKind.Each,
                 );
-            } else if (parentGivenScope.size === 0) {
-                // Phase 3.3: Optimize parent scope copying - avoid copying empty parent scopes
-                shallowCopy = new Map();
             } else {
                 shallowCopy = new Map(parentGivenScope.entries());
             }
