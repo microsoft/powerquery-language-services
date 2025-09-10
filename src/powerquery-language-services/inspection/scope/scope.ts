@@ -15,9 +15,10 @@ export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 export type ScopeById = Map<number, NodeScope>;
 
 // Scope that was generated for a specific nodeId.
-// Child nodes will inherit the scope instance of their parents if the child scope does not differ.
+// Has the potential to be reused for its child nodes.
 export interface NodeScope {
     readonly createdForNodeId: number | undefined;
+    // Mostly a tag for debugging.
     readonly scopeItemByKey: ReadonlyMap<string, TScopeItem>;
 }
 
