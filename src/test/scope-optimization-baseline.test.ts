@@ -4,13 +4,16 @@
 import "mocha";
 
 import { expect } from "chai";
-import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
+import * as PQLS from "../powerquery-language-services";
+import {
+    NoOpTraceManagerInstance,
+    TraceManager,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { TestConstants, TestUtils } from ".";
 import { PerformanceTraceManager } from "./performanceTraceManager";
 import { TypeStrategy } from "../powerquery-language-services";
-
-import * as PQLS from "../powerquery-language-services";
 
 interface PerformanceBaseline {
     readonly documentSize: number;
@@ -19,6 +22,7 @@ interface PerformanceBaseline {
     readonly diagnosticsCount: number;
     readonly diagnosticsHash: string;
     readonly scopeOperations?: number;
+    readonly tracingEnabled: boolean;
 }
 
 /**
@@ -122,6 +126,50 @@ async function measureValidationPerformance(
         diagnosticsCount: diagnostics.length,
         diagnosticsHash: createDiagnosticsHash(diagnostics),
         scopeOperations: scopeSummary.totalOperations,
+        tracingEnabled: true,
+    };
+}
+
+/**
+ * Measures validation performance without tracing (production-like scenario)
+ */
+async function measureValidationPerformanceNoTracing(
+    documentContent: string,
+    typeStrategy: TypeStrategy,
+): Promise<PerformanceBaseline> {
+    const analysisSettings: PQLS.AnalysisSettings = {
+        ...TestConstants.StandardLibraryAnalysisSettings,
+        inspectionSettings: {
+            ...TestConstants.StandardLibraryInspectionSettings,
+            traceManager: NoOpTraceManagerInstance, // Use no-op tracer for production-like performance
+            typeStrategy,
+        },
+    };
+
+    const validationSettings: PQLS.ValidationSettings = createBaseValidationSettings(NoOpTraceManagerInstance);
+
+    // High-precision timing
+    const startTime: number = Date.now();
+
+    const diagnostics: ReadonlyArray<PQLS.Diagnostic> = await TestUtils.assertValidateDiagnostics({
+        text: documentContent,
+        analysisSettings,
+        validationSettings,
+    });
+
+    const endTime: number = Date.now();
+    const durationMs: number = endTime - startTime;
+
+    console.log(`DEBUG: No tracing mode - only timing measurement available`);
+
+    return {
+        documentSize: documentContent.length,
+        typeStrategy: typeStrategy === TypeStrategy.Extended ? "Extended" : "Primitive",
+        validationTimeMs: durationMs,
+        diagnosticsCount: diagnostics.length,
+        diagnosticsHash: createDiagnosticsHash(diagnostics),
+        scopeOperations: undefined, // No tracing means no operation counts available
+        tracingEnabled: false,
     };
 }
 
@@ -246,4 +294,57 @@ describe("Performance Baseline Tests", () => {
         expect(baseline.validationTimeMs).to.be.lessThan(1000); // Should be under 1 second
         expect(baseline.diagnosticsCount).to.equal(0); // Should have no errors
     });
+
+    // === NO TRACING TESTS (Production-like Performance) ===
+
+    it("should measure Kusto.pq validation performance with Extended TypeStrategy (No Tracing)", async () => {
+        console.log("\\n=== Kusto.pq Performance Baseline (Extended, No Tracing) ===");
+
+        const baseline: PerformanceBaseline = await measureValidationPerformanceNoTracing(
+            kustoContent,
+            TypeStrategy.Extended,
+        );
+
+        console.log(`Document size: ${baseline.documentSize} characters`);
+        console.log(`Validation time: ${baseline.validationTimeMs.toFixed(2)}ms`);
+        console.log(`Diagnostics count: ${baseline.diagnosticsCount}`);
+        console.log(`Diagnostics hash: ${baseline.diagnosticsHash}`);
+        console.log(`Tracing enabled: ${baseline.tracingEnabled}`);
+        console.log(`Scope operations: N/A (no tracing)`);
+
+        // Store baseline for future comparisons
+        expect(baseline.validationTimeMs).to.be.greaterThan(0);
+        expect(baseline.diagnosticsCount).to.be.greaterThanOrEqual(0);
+        expect(baseline.tracingEnabled).to.be.false;
+        expect(baseline.scopeOperations).to.be.undefined;
+
+        // Log comparison note
+        console.log("📊 This represents production-like performance without tracing overhead");
+    }).timeout(120000); // 2 minutes timeout for large file validation
+
+    it("should measure Kusto.pq validation performance with Primitive TypeStrategy (No Tracing)", async () => {
+        console.log("\\n=== Kusto.pq Performance Baseline (Primitive, No Tracing) ===");
+
+        const baseline: PerformanceBaseline = await measureValidationPerformanceNoTracing(
+            kustoContent,
+            TypeStrategy.Primitive,
+        );
+
+        console.log(`Document size: ${baseline.documentSize} characters`);
+        console.log(`Validation time: ${baseline.validationTimeMs.toFixed(2)}ms`);
+        console.log(`Diagnostics count: ${baseline.diagnosticsCount}`);
+        console.log(`Diagnostics hash: ${baseline.diagnosticsHash}`);
+        console.log(`Tracing enabled: ${baseline.tracingEnabled}`);
+        console.log(`Scope operations: N/A (no tracing)`);
+
+        // Store baseline for future comparisons
+        expect(baseline.validationTimeMs).to.be.greaterThan(0);
+        expect(baseline.diagnosticsCount).to.be.greaterThanOrEqual(0);
+        expect(baseline.tracingEnabled).to.be.false;
+        expect(baseline.scopeOperations).to.be.undefined;
+
+        // Primitive strategy should generally be faster
+        console.log("Note: Primitive TypeStrategy should generally be faster than Extended");
+        console.log("📊 This represents production-like performance without tracing overhead");
+    }).timeout(120000); // 2 minutes timeout for large file validation
 });
