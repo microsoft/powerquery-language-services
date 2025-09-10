@@ -82,7 +82,79 @@ export function findScopeItemByLiteral(
     nodeScope: NodeScope | undefined,
     literalString: string,
 ): TScopeItem | undefined {
-    return nodeScope?.get(literalString);
+    if (nodeScope === undefined) {
+        return undefined;
+    }
+
+    // Phase 9: Use adaptive lookup to handle both full and optimized scopes
+    // This handles mixed scopes where some may have full variants and others optimized variants
+    return findScopeItemWithAdaptiveVariants(nodeScope, literalString);
+}
+
+// Phase 9: Adaptive scope lookup that handles both full and optimized modes
+function findScopeItemWithAdaptiveVariants(nodeScope: NodeScope, identifier: string): TScopeItem | undefined {
+    // Phase 9: Fast path - direct lookup first (handles both full and optimized modes)
+    let item: TScopeItem | undefined = nodeScope.get(identifier);
+
+    if (item !== undefined) {
+        return item;
+    }
+
+    // Phase 9: Enhanced variant checking for adaptive storage modes
+    // Try canonical form lookups (works for lazy mode)
+    let canonicalForm: string = identifier;
+
+    // Remove @ prefix to get canonical form
+    if (identifier.startsWith("@")) {
+        canonicalForm = identifier.substring(1);
+
+        // Handle @#"name" -> #"name"
+        if (canonicalForm.startsWith('#"') && canonicalForm.endsWith('"')) {
+            item = nodeScope.get(canonicalForm);
+
+            if (item !== undefined) {
+                return item;
+            }
+        } else {
+            // Handle @name -> name
+            item = nodeScope.get(canonicalForm);
+
+            if (item !== undefined) {
+                return item;
+            }
+        }
+    }
+
+    // Handle #"name" -> name (remove generalized identifier quotes)
+    if (identifier.startsWith('#"') && identifier.endsWith('"')) {
+        canonicalForm = identifier.slice(2, -1);
+        item = nodeScope.get(canonicalForm);
+
+        if (item !== undefined) {
+            return item;
+        }
+    }
+
+    // Phase 9: Reverse lookup for cases where full mode was used
+    // Check if any variant forms exist in the scope (needed for full mode compatibility)
+    for (const [storedKey] of nodeScope.entries()) {
+        // Check @ variants
+        if (storedKey === `@${identifier}`) {
+            return nodeScope.get(storedKey);
+        }
+
+        // Check #"name" variants
+        if (storedKey === `#"${identifier}"`) {
+            return nodeScope.get(storedKey);
+        }
+
+        // Check @#"name" variants
+        if (storedKey === `@#"${identifier}"`) {
+            return nodeScope.get(storedKey);
+        }
+    }
+
+    return undefined;
 }
 
 export function scopeCreatorIdentifier(
