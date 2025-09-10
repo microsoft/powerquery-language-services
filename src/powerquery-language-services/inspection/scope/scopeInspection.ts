@@ -93,6 +93,20 @@ function cleanupMapPool(): void {
     }
 }
 
+// Phase 7: Advanced Scope Caching and Lookup Optimizations
+// These optimizations target the core scope resolution algorithm
+
+// Phase 7.1: Scope resolution cache to avoid repeated recursive lookups
+const scopeResolutionCache: Map<number, NodeScope> = new Map();
+
+// Phase 7.4: Smart cache management - only clear when cache gets too large
+function manageScopeCache(): void {
+    // Only clear cache if it grows too large to prevent memory bloat
+    if (scopeResolutionCache.size > 500) {
+        scopeResolutionCache.clear();
+    }
+}
+
 // Builds a scope for the given node.
 export async function tryNodeScope(
     settings: PQP.CommonSettings,
@@ -134,6 +148,9 @@ export async function tryNodeScope(
 
     // Phase 6.4: Cleanup map pool to prevent memory leaks
     cleanupMapPool();
+
+    // Phase 7.4: Manage scope cache size to prevent memory leaks
+    manageScopeCache();
 
     return result;
 }
@@ -231,6 +248,9 @@ async function inspectScope(
 
     // Phase 4.1: Clear parent node cache for each new inspection
     parentNodeCache.clear();
+
+    // Phase 7.1: Manage scope resolution cache size but don't clear entirely
+    manageScopeCache();
 
     // Build up the scope through a top-down inspection.
     const numNodes: number = ancestry.length;
@@ -587,10 +607,20 @@ function localGetOrCreateNodeScope(
         const parentNodeId: number = parent.node.id;
         let parentGivenScope: NodeScope | undefined = state.givenScope.get(parentNodeId);
 
-        // Phase 2.6: Recursive parent scope resolution to avoid O(n²) parent chain traversals
+        // Phase 7.2: Recursive parent scope resolution with caching to avoid redundant calls
         if (parentGivenScope === undefined) {
-            // Build parent scope recursively to ensure proper inheritance chain
-            parentGivenScope = localGetOrCreateNodeScope(state, parentNodeId, undefined, correlationId);
+            // Check scope cache first to avoid repeated recursive resolution
+            parentGivenScope = scopeResolutionCache.get(parentNodeId);
+
+            if (parentGivenScope === undefined) {
+                // Build parent scope recursively to ensure proper inheritance chain
+                parentGivenScope = localGetOrCreateNodeScope(state, parentNodeId, undefined, correlationId);
+
+                // Cache the resolved scope for future lookups
+                if (parentGivenScope !== undefined) {
+                    scopeResolutionCache.set(parentNodeId, parentGivenScope);
+                }
+            }
         }
 
         if (parentGivenScope !== undefined) {
