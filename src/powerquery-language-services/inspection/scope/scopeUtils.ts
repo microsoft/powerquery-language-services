@@ -82,7 +82,79 @@ export function findScopeItemByLiteral(
     nodeScope: NodeScope | undefined,
     literalString: string,
 ): TScopeItem | undefined {
-    return nodeScope?.get(literalString);
+    if (nodeScope === undefined) {
+        return undefined;
+    }
+
+    // Phase 8.1: Use optimized lookup to handle identifier variants on-demand
+    // This replaces the simple nodeScope.get() with smart variant checking
+    return findScopeItemWithVariants(nodeScope, literalString);
+}
+
+// Phase 8.1: Optimized scope lookup that checks identifier variants on-demand
+function findScopeItemWithVariants(nodeScope: NodeScope, identifier: string): TScopeItem | undefined {
+    // Phase 8.1: Fast path - direct lookup first (most common case)
+    let item: TScopeItem | undefined = nodeScope.get(identifier);
+
+    if (item !== undefined) {
+        return item;
+    }
+
+    // Phase 8.1: On-demand variant checking without pre-generating all combinations
+    // Check if this is already a variant, try to find canonical form
+    let canonicalForm: string = identifier;
+
+    // Remove @ prefix to get canonical form
+    if (identifier.startsWith("@")) {
+        canonicalForm = identifier.substring(1);
+
+        // Handle @#"name" -> #"name"
+        if (canonicalForm.startsWith('#"') && canonicalForm.endsWith('"')) {
+            item = nodeScope.get(canonicalForm);
+
+            if (item !== undefined) {
+                return item;
+            }
+        } else {
+            // Handle @name -> name
+            item = nodeScope.get(canonicalForm);
+
+            if (item !== undefined) {
+                return item;
+            }
+        }
+    }
+
+    // Handle #"name" -> name (remove generalized identifier quotes)
+    if (identifier.startsWith('#"') && identifier.endsWith('"')) {
+        canonicalForm = identifier.slice(2, -1);
+        item = nodeScope.get(canonicalForm);
+
+        if (item !== undefined) {
+            return item;
+        }
+    }
+
+    // Phase 8.1: Also check the reverse - if we're looking for canonical form,
+    // check if any variant forms exist in the scope
+    for (const [storedKey] of nodeScope.entries()) {
+        // Check @ variants
+        if (storedKey === `@${identifier}`) {
+            return nodeScope.get(storedKey);
+        }
+
+        // Check #"name" variants
+        if (storedKey === `#"${identifier}"`) {
+            return nodeScope.get(storedKey);
+        }
+
+        // Check @#"name" variants
+        if (storedKey === `@#"${identifier}"`) {
+            return nodeScope.get(storedKey);
+        }
+    }
+
+    return undefined;
 }
 
 export function scopeCreatorIdentifier(

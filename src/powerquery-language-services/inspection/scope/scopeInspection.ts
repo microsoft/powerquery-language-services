@@ -399,20 +399,12 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         letExpr,
     );
 
-    inspectKeyValuePairs(
-        state,
-        nodeScope,
-        keyValuePairs,
-        { allowRecursive: true },
-        scopeItemFactoryForLetVariable,
-        trace.id,
-    );
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, scopeItemFactoryForLetVariable, trace.id);
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
         keyValuePairs,
         -1,
-        { allowRecursive: true },
         scopeItemFactoryForLetVariable,
     );
 
@@ -441,17 +433,7 @@ function inspectRecordExpressionOrRecordLiteral(
         record,
     );
 
-    inspectKeyValuePairs(
-        state,
-        nodeScope,
-        keyValuePairs,
-        {
-            allowGeneralizedIdentifier: true,
-            allowRecursive: true,
-        },
-        scopeItemFactoryForRecordMember,
-        trace.id,
-    );
+    inspectKeyValuePairs(state, nodeScope, keyValuePairs, scopeItemFactoryForRecordMember, trace.id);
 
     trace.exit();
 }
@@ -480,7 +462,6 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         const newScopeItems: ReadonlyArray<[string, SectionMemberScopeItem]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            { allowRecursive: true },
             scopeItemFactoryForSectionMember,
         );
 
@@ -501,7 +482,6 @@ function inspectKeyValuePairs<
     state: ScopeInspectionState,
     parentScope: NodeScope,
     keyValuePairs: ReadonlyArray<KVP>,
-    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
@@ -518,10 +498,10 @@ function inspectKeyValuePairs<
             continue;
         }
 
+        // Phase 8.1: Updated call to use new signature without getAllowedIdentifiersOptions
         const newScopeItems: ReadonlyArray<[string, T]> = scopeItemFactoryForKeyValuePairs(
             keyValuePairs,
             kvp.key.id,
-            getAllowedIdentifiersOptions,
             scopeItemFactory,
         );
 
@@ -661,18 +641,19 @@ function scopeItemFactoryForKeyValuePairs<
 >(
     keyValuePairs: ReadonlyArray<KVP>,
     ancestorKeyNodeId: number,
-    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
     scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
+    // Phase 8.1: Lazy Identifier Optimization - Store only canonical forms instead of all variants
     const result: [string, T][] = [];
 
     for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
         const isRecursive: boolean = ancestorKeyNodeId === kvp.key.id;
+        const canonicalKey: string = kvp.key.literal;
 
-        for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
-            if (!isRecursive || key.includes("@")) {
-                result.push([key, scopeItemFactory(kvp, isRecursive)]);
-            }
+        // Store only the canonical form instead of generating all 4 variants
+        // Runtime lookup will check variants on-demand using optimizedScopeLookup
+        if (!isRecursive || canonicalKey.includes("@")) {
+            result.push([canonicalKey, scopeItemFactory(kvp, isRecursive)]);
         }
     }
 
