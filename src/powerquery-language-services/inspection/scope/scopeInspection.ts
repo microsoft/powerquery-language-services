@@ -493,11 +493,20 @@ function localGetOrCreateNodeScope(
     }
 
     if (defaultScope !== undefined) {
-        const shallowCopy: NodeScope = new Map(defaultScope.entries());
-        state.givenScope.set(nodeId, shallowCopy);
-        trace.exit({ [TraceConstant.Result]: "defaultScope entry" });
+        // Phase 3.3: Optimize Map copying - only copy if defaultScope has entries to avoid empty Map overhead
+        if (defaultScope.size === 0) {
+            const emptyScope: NodeScope = new Map();
+            state.givenScope.set(nodeId, emptyScope);
+            trace.exit({ [TraceConstant.Result]: "defaultScope empty" });
 
-        return shallowCopy;
+            return emptyScope;
+        } else {
+            const shallowCopy: NodeScope = new Map(defaultScope.entries());
+            state.givenScope.set(nodeId, shallowCopy);
+            trace.exit({ [TraceConstant.Result]: "defaultScope copied" });
+
+            return shallowCopy;
+        }
     }
 
     // Default to a parent's scope if the node has a parent.
@@ -524,6 +533,9 @@ function localGetOrCreateNodeScope(
                     parentGivenScope,
                     (_key: string, value: TScopeItem) => value.kind === ScopeItemKind.Each,
                 );
+            } else if (parentGivenScope.size === 0) {
+                // Phase 3.3: Optimize parent scope copying - avoid copying empty parent scopes
+                shallowCopy = new Map();
             } else {
                 shallowCopy = new Map(parentGivenScope.entries());
             }
