@@ -69,7 +69,7 @@ export function getScopeItemChecked<T extends TScopeItem>(
     key: string,
     kind: T["kind"],
 ): T | undefined {
-    const scopeItem: TScopeItem | undefined = nodeScope.get(key);
+    const scopeItem: TScopeItem | undefined = nodeScope.scopeItemByKey.get(key);
 
     if (scopeItem?.kind !== kind) {
         return undefined;
@@ -82,7 +82,7 @@ export function findScopeItemByLiteral(
     nodeScope: NodeScope | undefined,
     literalString: string,
 ): TScopeItem | undefined {
-    return nodeScope?.get(literalString);
+    return nodeScope?.scopeItemByKey.get(literalString);
 }
 
 export function scopeCreatorIdentifier(

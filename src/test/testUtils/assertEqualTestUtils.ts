@@ -92,8 +92,8 @@ export async function assertEqualNodeScope(params: {
     readonly expected: ReadonlyArray<TAbridgedNodeScopeItem>;
     readonly inspectionSettings: InspectionSettings;
 }): Promise<void> {
-    const nodeScope: NodeScope = await TestUtils.assertNodeScope(params);
-    const actual: ReadonlyArray<TAbridgedNodeScopeItem> = TestUtils.abridgedNodeScopeItems(nodeScope);
+    const nodeScope: NodeScope | undefined = await TestUtils.assertNodeScopeOrUndefined(params);
+    const actual: ReadonlyArray<TAbridgedNodeScopeItem> = nodeScope ? TestUtils.abridgedNodeScopeItems(nodeScope) : [];
 
     const sortedExpected: ReadonlyArray<TAbridgedNodeScopeItem> = [...params.expected].sort(
         (left: TAbridgedNodeScopeItem, right: TAbridgedNodeScopeItem) =>
