@@ -98,7 +98,7 @@ export function abridgedDocumentSymbols(
 export function abridgedNodeScopeItems(nodeScope: NodeScope): ReadonlyArray<TAbridgedNodeScopeItem> {
     const result: TAbridgedNodeScopeItem[] = [];
 
-    for (const [identifier, scopeItem] of nodeScope) {
+    for (const [identifier, scopeItem] of nodeScope.scopeItemByKey) {
         switch (scopeItem.kind) {
             case Inspection.ScopeItemKind.LetVariable:
             case Inspection.ScopeItemKind.RecordField:

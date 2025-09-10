@@ -129,7 +129,7 @@ async function dereferenceScopeItem(
         return initialTriedNodeScope;
     }
 
-    let currentScopeItem: TScopeItem | undefined = initialTriedNodeScope.value.get(
+    let currentScopeItem: TScopeItem | undefined = initialTriedNodeScope.value.scopeItemByKey.get(
         AstUtils.getIdentifierLiteral(initialIdentifierXorNode.node),
     );
 
@@ -196,7 +196,7 @@ async function dereferenceScopeItem(
                             }
 
                             const nextScopeItem: TScopeItem | undefined =
-                                triedNodeScope.value.get(currentIdentifierLiteral);
+                                triedNodeScope.value.scopeItemByKey.get(currentIdentifierLiteral);
 
                             if (nextScopeItem === undefined) {
                                 return onIdentifierNotInScope(
@@ -295,7 +295,7 @@ function findNonRecursiveScopeItemInAncestors(
     let currentNodeId: number | undefined = nodeIdMapCollection.parentIdById.get(initialNodeId);
 
     while (currentNodeId) {
-        const scopeItem: TScopeItem | undefined = scopeById.get(currentNodeId)?.get(identifierLiteral);
+        const scopeItem: TScopeItem | undefined = scopeById.get(currentNodeId)?.scopeItemByKey.get(identifierLiteral);
 
         if (scopeItem && !scopeItem.isRecursive) {
             return scopeItem;

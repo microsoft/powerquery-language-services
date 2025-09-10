@@ -14,8 +14,13 @@ export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 // Serves as a cache when building the scope for a specific node.
 export type ScopeById = Map<number, NodeScope>;
 
-// Scope for a specific node.
-export type NodeScope = Map<string, TScopeItem>;
+// Scope that was generated for a specific nodeId.
+// Has the potential to be reused for its child nodes.
+export interface NodeScope {
+    readonly createdForNodeId: number | undefined;
+    // Mostly a tag for debugging.
+    readonly scopeItemByKey: ReadonlyMap<string, TScopeItem>;
+}
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
