@@ -86,22 +86,22 @@ export function findScopeItemByLiteral(
         return undefined;
     }
 
-    // Phase 8.1: Use optimized lookup to handle identifier variants on-demand
-    // This replaces the simple nodeScope.get() with smart variant checking
+    // Phase 8.2: Use enhanced lookup to handle both lazy and full mode scopes
+    // This handles mixed scopes where some may have full variants and others lazy variants
     return findScopeItemWithVariants(nodeScope, literalString);
 }
 
-// Phase 8.1: Optimized scope lookup that checks identifier variants on-demand
+// Phase 8.2: Enhanced scope lookup that handles both full and lazy modes
 function findScopeItemWithVariants(nodeScope: NodeScope, identifier: string): TScopeItem | undefined {
-    // Phase 8.1: Fast path - direct lookup first (most common case)
+    // Phase 8.2: Fast path - direct lookup first (handles both full and lazy modes)
     let item: TScopeItem | undefined = nodeScope.get(identifier);
 
     if (item !== undefined) {
         return item;
     }
 
-    // Phase 8.1: On-demand variant checking without pre-generating all combinations
-    // Check if this is already a variant, try to find canonical form
+    // Phase 8.2: Enhanced variant checking for mixed storage modes
+    // Try canonical form lookups (works for lazy mode)
     let canonicalForm: string = identifier;
 
     // Remove @ prefix to get canonical form
@@ -135,8 +135,8 @@ function findScopeItemWithVariants(nodeScope: NodeScope, identifier: string): TS
         }
     }
 
-    // Phase 8.1: Also check the reverse - if we're looking for canonical form,
-    // check if any variant forms exist in the scope
+    // Phase 8.2: Reverse lookup for cases where full mode was used
+    // Check if any variant forms exist in the scope (needed for full mode compatibility)
     for (const [storedKey] of nodeScope.entries()) {
         // Check @ variants
         if (storedKey === `@${identifier}`) {
