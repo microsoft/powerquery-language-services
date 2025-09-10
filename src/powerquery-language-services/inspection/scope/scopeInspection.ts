@@ -130,6 +130,93 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
     ancestryIndex: number;
 }
 
+// The only function that should directly mutate `ScopeInspectionState.scopeById`.
+// It attempts to reuse the inherited scope instance whenever:
+//  1. there's no `newEntries`,
+//  2. the node is not a FieldSelector or FieldProjection (which have special scoping rules)
+//
+// For scenario (1) we take a shallow copy of the parent's scope, then merge in the new entries.
+// This means the `newEntries` take precedence over the inherited scope.
+//
+// For scenario (2) we only inherit `EachScopeItem`s from the parent scope.
+function assignScopeForNodeId(
+    state: ScopeInspectionState,
+    nodeId: number,
+    inheritedScope: NodeScope | undefined,
+    newEntries: ReadonlyArray<[string, TScopeItem]> | undefined,
+    correlationId: number,
+): NodeScope {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScope,
+        assignScopeForNodeId.name,
+        correlationId,
+        { nodeId },
+    );
+
+    // If a scope has already been generated for this nodeId, return it.
+    // This can happen as a parent might have assigned a scope to its child already,
+    // e.g. LetExpression assigns scope to its expression.
+    const existingNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
+
+    if (existingNodeScope !== undefined) {
+        trace.exit({ [TraceConstant.Result]: "cache hit" });
+
+        return existingNodeScope;
+    }
+
+    // Unique case for root node.
+    if (inheritedScope === undefined) {
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map(newEntries ?? []),
+        };
+
+        state.scopeById.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "new root scope" });
+
+        return nodeScope;
+    }
+
+    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+
+    // We can't actually inherit everything if node is a FieldSelector or FieldProjection,
+    // so we create a new scope that only includes allowed items.
+    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
+            ...inheritedScope.scopeItemByKey.entries(),
+        ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
+
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map([...inheritedEachScopeItemEntries, ...(newEntries ?? [])]),
+        };
+
+        state.scopeById.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "inherited filtered scope" });
+
+        return nodeScope;
+    }
+    // Else if there are no new entries we can simply inherit the scope.
+    else if (!newEntries) {
+        state.scopeById.set(nodeId, inheritedScope);
+        trace.exit({ [TraceConstant.Result]: "inherited scope" });
+
+        return inheritedScope;
+    }
+    // Else there are new entries so we create a new scope that merges the inherited scope with the new entries.
+    else {
+        const nodeScope: NodeScope = {
+            createdForNodeId: nodeId,
+            scopeItemByKey: new Map([...inheritedScope.scopeItemByKey.entries(), ...newEntries]),
+        };
+
+        state.scopeById.set(nodeId, nodeScope);
+        trace.exit({ [TraceConstant.Result]: "created new scope" });
+
+        return nodeScope;
+    }
+}
+
 function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope | undefined {
     const parentNodeId: number | undefined = state.nodeIdMapCollection.parentIdById.get(nodeId);
 
@@ -495,84 +582,6 @@ function inspectKeyValuePairs<
     }
 
     trace.exit();
-}
-
-function assignScopeForNodeId(
-    state: ScopeInspectionState,
-    nodeId: number,
-    inheritedScope: NodeScope | undefined,
-    newEntries: ReadonlyArray<[string, TScopeItem]> | undefined,
-    correlationId: number,
-): NodeScope {
-    const trace: Trace = state.traceManager.entry(
-        InspectionTraceConstant.InspectScope,
-        assignScopeForNodeId.name,
-        correlationId,
-        { nodeId },
-    );
-
-    // If a scope has already been generated for this nodeId, return it.
-    // This can happen as a parent might have assigned a scope to its child already,
-    // e.g. LetExpression assigns scope to its expression.
-    const existingNodeScope: NodeScope | undefined = state.scopeById.get(nodeId);
-
-    if (existingNodeScope !== undefined) {
-        trace.exit({ [TraceConstant.Result]: "cache hit" });
-
-        return existingNodeScope;
-    }
-
-    // Unique case for root node.
-    if (inheritedScope === undefined) {
-        const nodeScope: NodeScope = {
-            createdForNodeId: nodeId,
-            scopeItemByKey: new Map(newEntries ?? []),
-        };
-
-        state.scopeById.set(nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "new root scope" });
-
-        return nodeScope;
-    }
-
-    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
-
-    // We can't actually inherit everything if node is a FieldSelector or FieldProjection,
-    // so we create a new scope that only includes allowed items.
-    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
-            ...inheritedScope.scopeItemByKey.entries(),
-        ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
-
-        const nodeScope: NodeScope = {
-            createdForNodeId: nodeId,
-            scopeItemByKey: new Map([...inheritedEachScopeItemEntries, ...(newEntries ?? [])]),
-        };
-
-        state.scopeById.set(nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "inherited filtered scope" });
-
-        return nodeScope;
-    }
-    // Else if there are no new entries we can simply inherit the scope.
-    else if (!newEntries) {
-        state.scopeById.set(nodeId, inheritedScope);
-        trace.exit({ [TraceConstant.Result]: "inherited scope" });
-
-        return inheritedScope;
-    }
-    // Else there are new entries so we create a new scope that merges the inherited scope with the new entries.
-    else {
-        const nodeScope: NodeScope = {
-            createdForNodeId: nodeId,
-            scopeItemByKey: new Map([...inheritedScope.scopeItemByKey.entries(), ...newEntries]),
-        };
-
-        state.scopeById.set(nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "created new scope" });
-
-        return nodeScope;
-    }
 }
 
 function scopeItemFactoryForKeyValuePairs<
