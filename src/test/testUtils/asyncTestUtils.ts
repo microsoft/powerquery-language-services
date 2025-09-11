@@ -65,7 +65,7 @@ export function createTestCancellationToken(options?: TestCancellationTokenOptio
                     log(`Cancellation triggered at call ${callCount} (threshold: ${cancelAfterCount}) [synchronous]`);
                 }
             } else if (asyncDelayMs === 0) {
-                // Use setImmediate for immediate async cancellation (better for async validation)
+                // Use setImmediate for immediate async cancellation
                 setImmediate(() => {
                     isCancelled = true;
 
