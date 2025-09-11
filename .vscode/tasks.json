@@ -13,8 +13,7 @@
                 "isDefault": true
             },
             "presentation": {
-                "showReuseMessage": false,
-                "close": true
+                "clear": true
             }
         }
     ]
