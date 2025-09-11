@@ -13,7 +13,8 @@ import * as ValidateTestUtils from "../testUtils/validationTestUtils";
 import { AnalysisSettings, validate, ValidateOk, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
-const TEST_TIMEOUT_MS: number = 60000;
+const TEST_TIMEOUT_MS: number = 5000;
+const TEST_SLOW_MS: number = 1000;
 
 describe("Async Validation", () => {
     const analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
@@ -57,7 +58,7 @@ describe("Async Validation", () => {
 
             // Should have diagnostic errors due to unknown identifiers
             expect(result.diagnostics.length).to.be.greaterThan(0, "Document with diagnostics should have errors");
-        }).timeout(TEST_TIMEOUT_MS);
+        });
 
         it("should respect cancellation token when cancelled after few cancellation checks", async () => {
             const cancellationToken: ICancellationToken & { getCallCount: () => number } =
@@ -85,7 +86,7 @@ describe("Async Validation", () => {
                 result,
                 "Expected validation to be cancelled after 3 cancellation checks with immediate cancellation",
             );
-        }).timeout(TEST_TIMEOUT_MS);
+        });
 
         it("should respect cancellation token when cancelled after moderate cancellation checks", async () => {
             const cancellationToken: ICancellationToken & { getCallCount: () => number } =
@@ -116,7 +117,7 @@ describe("Async Validation", () => {
                     // Validation was successfully cancelled
                 },
             );
-        }).timeout(TEST_TIMEOUT_MS);
+        });
 
         it("should respect cancellation token when cancelled after many cancellation checks", async () => {
             const cancellationToken: ICancellationToken & { getCallCount: () => number } =
@@ -147,7 +148,7 @@ describe("Async Validation", () => {
                     // Validation was successfully cancelled
                 },
             );
-        }).timeout(TEST_TIMEOUT_MS);
+        });
 
         it("should handle cancellation gracefully at different thresholds", async () => {
             const thresholds: number[] = [5, 25, 50, 200]; // Different cancellation thresholds
@@ -217,7 +218,7 @@ describe("Async Validation", () => {
                     );
                 }
             }
-        }).timeout(TEST_TIMEOUT_MS);
+        });
 
         it("should demonstrate performance benefit of cancellation", async () => {
             // Test that cancelled validation is faster than completed validation
@@ -283,7 +284,7 @@ describe("Async Validation", () => {
                 completeDuration,
                 `Cancelled validation (${cancellationDuration}ms) should be faster than complete validation (${completeDuration}ms)`,
             );
-        }).timeout(TEST_TIMEOUT_MS);
+        });
     });
 
     describe("Cancellation token behavior", () => {
@@ -422,4 +423,6 @@ describe("Async Validation", () => {
             );
         });
     });
-});
+})
+    .timeout(TEST_TIMEOUT_MS)
+    .slow(TEST_SLOW_MS);
