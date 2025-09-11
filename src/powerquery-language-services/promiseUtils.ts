@@ -27,7 +27,7 @@ export async function processSequentiallyWithCancellation<T, R>(
 export async function yieldForCancellation(cancellationToken?: ICancellationToken): Promise<void> {
     if (cancellationToken) {
         await Promise.resolve();
-        cancellationToken?.throwIfCancelled();
+        cancellationToken.throwIfCancelled();
     }
 
     return Promise.resolve();
