@@ -257,13 +257,12 @@ async function validateDuplicateIdentifiersForKeyValuePair(
 
     const result: Diagnostic[] = [];
 
+    // Yield control to allow for cancellation.
+    // If we need more cancellability, we can move this into the loop and yield every N iterations.
+    await PromiseUtils.yieldForCancellation(cancellationToken);
+
     for (const collection of nodeIdCollections) {
         for (const nodeId of collection) {
-            cancellationToken?.throwIfCancelled();
-            // Yield control to allow for cancellation
-            // eslint-disable-next-line no-await-in-loop
-            await Promise.resolve();
-
             const node: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId);
             const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
             const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();

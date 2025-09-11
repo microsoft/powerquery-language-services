@@ -12,6 +12,8 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { Range } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
@@ -44,6 +46,10 @@ export async function validateFunctionExpression(
 
         return [];
     }
+
+    // Yield control to allow for cancellation.
+    // If we need more cancellability, we can move this into the loop and yield every N iterations.
+    await PromiseUtils.yieldForCancellation(validationSettings.cancellationToken);
 
     const diagnostics: Diagnostic[][] = [];
 
