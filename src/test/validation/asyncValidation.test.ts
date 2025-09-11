@@ -15,22 +15,6 @@ import { TestConstants, TestUtils } from "..";
 
 const TEST_TIMEOUT_MS: number = 60000;
 
-function createCancellationToken(): ICancellationToken {
-    let isCancelled: boolean = false;
-
-    return {
-        isCancelled: (): boolean => isCancelled,
-        throwIfCancelled: (): void => {
-            if (isCancelled) {
-                throw new Error("Operation was cancelled");
-            }
-        },
-        cancel: (_reason: string): void => {
-            isCancelled = true;
-        },
-    };
-}
-
 describe("Async Validation", () => {
     const analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
 
@@ -152,7 +136,7 @@ describe("Async Validation", () => {
         }).timeout(TEST_TIMEOUT_MS);
 
         it("should handle document with parser errors", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -187,7 +171,7 @@ describe("Async Validation", () => {
         }).timeout(TEST_TIMEOUT_MS);
 
         it("should respect cancellation token when cancelled during validation", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -225,7 +209,7 @@ describe("Async Validation", () => {
             const delays: number[] = [100, 250, 500, 1000]; // Different cancellation timings
 
             for (const delay of delays) {
-                const cancellationToken: ICancellationToken = createCancellationToken();
+                const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
                 const validationSettings: ValidationSettings = {
                     ...baseValidationSettings,
@@ -281,7 +265,7 @@ describe("Async Validation", () => {
 
             // Then, measure time for cancelled validation
             const startCancelled: number = Date.now();
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const cancelledValidationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -362,7 +346,7 @@ describe("Async Validation", () => {
         });
 
         it("should not throw when cancellation token is not cancelled", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -380,7 +364,7 @@ describe("Async Validation", () => {
         });
 
         it("should throw immediately when cancellation token is already cancelled", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
             cancellationToken.cancel("Pre-cancelled for testing"); // Cancel before starting
 
             const validationSettings: ValidationSettings = {
@@ -422,7 +406,7 @@ describe("Async Validation", () => {
         `;
 
         it("should have reasonable performance for small documents", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -445,7 +429,7 @@ describe("Async Validation", () => {
         });
 
         it("should have reasonable performance for medium documents", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -470,7 +454,7 @@ describe("Async Validation", () => {
 
     describe("Async validation with different validation settings", () => {
         it("should respect cancellation with all validation checks enabled", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -502,7 +486,7 @@ describe("Async Validation", () => {
         });
 
         it("should respect cancellation with only specific checks enabled", async () => {
-            const cancellationToken: ICancellationToken = createCancellationToken();
+            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,

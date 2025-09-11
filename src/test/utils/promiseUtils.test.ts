@@ -5,6 +5,7 @@ import "mocha";
 import { assert, expect } from "chai";
 import { ICancellationToken } from "@microsoft/powerquery-parser";
 
+import * as TestUtils from "../testUtils";
 import { processSequentiallyWithCancellation } from "../../powerquery-language-services/promiseUtils";
 
 function isErrorWithMessage(error: unknown): error is { message: string } {
@@ -41,7 +42,7 @@ async function expectAsyncError<T>(
  */
 async function expectCancellationAfterTimeout<T>(
     operation: () => Promise<T>,
-    cancellationToken: ICancellationToken & { cancel: (reason: string) => void },
+    cancellationToken: ICancellationToken,
     timeoutMs: number,
     cancellationReason: string = "Test cancellation",
     additionalAssertions?: () => void,
@@ -57,29 +58,13 @@ async function expectCancellationAfterTimeout<T>(
     additionalAssertions?.();
 }
 
-function createTestCancellationToken(): ICancellationToken & { cancel: (reason: string) => void } {
-    let isCancelled: boolean = false;
-
-    return {
-        isCancelled: (): boolean => isCancelled,
-        throwIfCancelled: (): void => {
-            if (isCancelled) {
-                throw new Error("Operation was cancelled");
-            }
-        },
-        cancel: (_reason: string): void => {
-            isCancelled = true;
-        },
-    };
-}
-
 /**
  * Interface for test setup return values
  */
 interface TestSetup {
     readonly items: string[];
     readonly processor: (item: string) => Promise<string>;
-    readonly cancellationToken: ICancellationToken & { cancel: (reason: string) => void };
+    readonly cancellationToken: ICancellationToken;
     readonly processedItems: string[];
     readonly processorCallCount: () => number;
 }
@@ -100,7 +85,8 @@ function testSetup(options?: {
     const errorOnItem: string | undefined = options?.errorOnItem;
     const countCalls: boolean = options?.countCalls ?? false;
 
-    const cancellationToken: ICancellationToken & { cancel: (reason: string) => void } = createTestCancellationToken();
+    const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
+
     const processedItems: string[] = [];
     let processorCallCount: number = 0;
 
