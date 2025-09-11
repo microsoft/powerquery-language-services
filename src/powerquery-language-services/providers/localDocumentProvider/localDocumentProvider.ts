@@ -92,7 +92,9 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            const scopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.get(context.identifier.literal);
+            const scopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.scopeItemByKey.get(
+                context.identifier.literal,
+            );
 
             if (scopeItem === undefined) {
                 return undefined;
@@ -396,7 +398,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         correlationId: number,
     ): Hover | undefined {
         const identifierLiteral: string = context.identifier.literal;
-        const scopeItem: Inspection.TScopeItem | undefined = nodeScope.get(identifierLiteral);
+        const scopeItem: Inspection.TScopeItem | undefined = nodeScope.scopeItemByKey.get(identifierLiteral);
 
         if (scopeItem === undefined || scopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             return undefined;

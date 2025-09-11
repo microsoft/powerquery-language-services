@@ -185,7 +185,7 @@ async function getIsNameInLocalScope(
             ),
         );
 
-        const nameScopeItem: TScopeItem | undefined = scope.get(name);
+        const nameScopeItem: TScopeItem | undefined = scope.scopeItemByKey.get(name);
 
         trace.exit();
 

@@ -209,7 +209,12 @@ export async function inspect(
 
         triedExpectedType = tryExpectedType(updatedSettings, activeNode);
     } else {
-        triedNodeScope = Promise.resolve(PQP.ResultUtils.ok(new Map()));
+        triedNodeScope = Promise.resolve(
+            PQP.ResultUtils.error(
+                new PQP.CommonError.CommonError(new PQP.CommonError.InvariantError("ActiveNode is out of bounds")),
+            ),
+        );
+
         triedScopeType = Promise.resolve(PQP.ResultUtils.ok(new Map()));
         triedExpectedType = PQP.ResultUtils.ok(undefined);
     }
