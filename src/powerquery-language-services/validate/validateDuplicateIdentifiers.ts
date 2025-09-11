@@ -257,7 +257,6 @@ async function validateDuplicateIdentifiersForKeyValuePair(
 
     const result: Diagnostic[] = [];
 
-    // Yield control to allow for cancellation.
     // If we need more cancellability, we can move this into the loop and yield every N iterations.
     await PromiseUtils.yieldForCancellation(cancellationToken);
 
