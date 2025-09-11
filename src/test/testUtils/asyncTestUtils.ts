@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { ICancellationToken } from "@microsoft/powerquery-parser";
+import { setImmediate } from "timers";
 
 export interface TestCancellationTokenOptions {
     /**
@@ -11,10 +12,18 @@ export interface TestCancellationTokenOptions {
     cancelAfterCount?: number;
 
     /**
-     * Delay in milliseconds before setting cancelled state (via setTimeout).
-     * Defaults to 0ms to simulate async cancellation behavior.
+     * Delay before setting cancelled state.
+     * - undefined: Synchronous cancellation (for deterministic tests)
+     * - 0: Use setImmediate for immediate async cancellation (better for async validation)
+     * - >0: Use setTimeout with the specified delay in milliseconds
      */
     asyncDelayMs?: number;
+
+    /**
+     * Test identifier for logging purposes.
+     * When provided, will log the final call count when the test completes.
+     */
+    testId?: string;
 }
 
 /**
@@ -24,20 +33,54 @@ export interface TestCancellationTokenOptions {
  * @param options Configuration for the cancellation token behavior
  * @returns A cancellation token with a cancel method for testing
  */
-export function createTestCancellationToken(options?: TestCancellationTokenOptions): ICancellationToken {
+export function createTestCancellationToken(
+    options?: TestCancellationTokenOptions,
+): ICancellationToken & { getCallCount: () => number } {
     let isCancelled: boolean = false;
     let callCount: number = 0;
+    let cancellationScheduled: boolean = false; // Prevent multiple async cancellations
     const cancelAfterCount: number | undefined = options?.cancelAfterCount;
-    const asyncDelayMs: number = options?.asyncDelayMs ?? 0;
+    const asyncDelayMs: number | undefined = options?.asyncDelayMs;
+    const testId: string | undefined = options?.testId;
 
     const checkAndTriggerCancellation: () => void = (): void => {
         callCount += 1;
 
-        if (cancelAfterCount !== undefined && callCount >= cancelAfterCount && !isCancelled) {
-            // Use setTimeout to simulate async cancellation behavior
-            setTimeout(() => {
+        if (cancelAfterCount !== undefined && callCount >= cancelAfterCount && !isCancelled && !cancellationScheduled) {
+            cancellationScheduled = true; // Mark that we've scheduled cancellation
+
+            if (asyncDelayMs === undefined) {
+                // Synchronous cancellation for deterministic tests
                 isCancelled = true;
-            }, asyncDelayMs);
+
+                if (testId) {
+                    console.log(
+                        `${testId}: Cancellation triggered at call ${callCount} (threshold: ${cancelAfterCount}) [synchronous]`,
+                    );
+                }
+            } else if (asyncDelayMs === 0) {
+                // Use setImmediate for immediate async cancellation (better for async validation)
+                setImmediate(() => {
+                    isCancelled = true;
+
+                    if (testId) {
+                        console.log(
+                            `${testId}: Cancellation triggered at call ${callCount} (threshold: ${cancelAfterCount}) [setImmediate]`,
+                        );
+                    }
+                });
+            } else {
+                // Use setTimeout with the specified delay
+                setTimeout(() => {
+                    isCancelled = true;
+
+                    if (testId) {
+                        console.log(
+                            `${testId}: Cancellation triggered at call ${callCount} (threshold: ${cancelAfterCount}) [setTimeout:${asyncDelayMs}ms]`,
+                        );
+                    }
+                }, asyncDelayMs);
+            }
         }
     };
 
@@ -57,5 +100,6 @@ export function createTestCancellationToken(options?: TestCancellationTokenOptio
         cancel: (_reason: string): void => {
             isCancelled = true;
         },
+        getCallCount: (): number => callCount,
     };
 }
