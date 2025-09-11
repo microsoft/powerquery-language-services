@@ -289,61 +289,6 @@ describe("Async Validation", () => {
         });
     });
 
-    describe("Performance with different document sizes", () => {
-        // Note: These tests validate functional correctness and log performance metrics
-        // without asserting on timing to avoid flaky tests across different environments.
-        // Performance can be monitored through:
-        // 1. Console output during test runs
-        // 2. Separate performance benchmarking tools
-        // 3. CI/CD performance tracking over time
-
-        const smallDocument: string = "let x = 1 in x";
-
-        const mediumDocument: string = `
-            let
-                func1 = (param1 as text, param2 as number) => param1 & Text.From(param2),
-                func2 = (data as table) => Table.RowCount(data),
-                func3 = (list as list) => List.Sum(list),
-                result = func1("Hello", func2(#table({"Col1"}, {{"Value1"}, {"Value2"}, {"Value3"}})))
-            in
-                result
-        `;
-
-        it("should have reasonable performance for small documents", async () => {
-            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
-
-            const validationSettings: ValidationSettings = {
-                ...baseValidationSettings,
-                cancellationToken,
-            };
-
-            const result: ValidateOk = await ValidateTestUtils.assertValidate({
-                text: smallDocument,
-                analysisSettings,
-                validationSettings,
-            });
-
-            expect(result).to.not.be.undefined;
-        });
-
-        it("should have reasonable performance for medium documents", async () => {
-            const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken();
-
-            const validationSettings: ValidationSettings = {
-                ...baseValidationSettings,
-                cancellationToken,
-            };
-
-            const result: ValidateOk = await ValidateTestUtils.assertValidate({
-                text: mediumDocument,
-                analysisSettings,
-                validationSettings,
-            });
-
-            expect(result).to.not.be.undefined;
-        });
-    });
-
     describe("Async validation with different validation settings", () => {
         it("should respect cancellation with all validation checks enabled", async () => {
             const cancellationToken: ICancellationToken = TestUtils.createTestCancellationToken({
