@@ -17,6 +17,10 @@ import { ITestCancellationToken } from "../testUtils/asyncTestUtils";
 const TEST_TIMEOUT_MS: number = 5000;
 const TEST_SLOW_MS: number = 1000;
 
+// *******************
+// TODO: consolidate test code and cleanup test cases
+// *******************
+
 describe("Async Validation", () => {
     // Set to true to enable console logging in tests for debugging
     const enableConsoleTrace: boolean = true;
