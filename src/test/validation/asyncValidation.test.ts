@@ -19,7 +19,7 @@ const TEST_SLOW_MS: number = 1000;
 
 describe("Async Validation", () => {
     // Set to true to enable console logging in tests for debugging
-    const enableConsoleTrace: boolean = false;
+    const enableConsoleTrace: boolean = true;
 
     const consoleLogger: ((message: string) => void) | undefined = enableConsoleTrace
         ? (message: string): void => console.log(message)
@@ -68,10 +68,10 @@ describe("Async Validation", () => {
             expect(result.diagnostics.length).to.be.greaterThan(0, "Document with diagnostics should have errors");
         });
 
-        it("should respect cancellation token when cancelled after few cancellation checks", async () => {
+        it("should respect cancellation token when cancelled after 3 cancellation checks", async () => {
             const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
-                cancelAfterCount: 3, // Cancel after 3 calls to isCancelled/throwIfCancelled
-                asyncDelayMs: 0, // Immediate cancellation for deterministic testing
+                cancelAfterCount: 3,
+                asyncDelayMs: 0,
                 log: consoleLogger,
             });
 
@@ -86,7 +86,9 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            if (consoleLogger) {
+                consoleLogger(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            }
 
             // This test expects cancellation to occur with immediate cancellation
             ValidateTestUtils.assertValidationCancelled(
@@ -95,7 +97,7 @@ describe("Async Validation", () => {
             );
         });
 
-        it("should respect cancellation token when cancelled after moderate cancellation checks", async () => {
+        it("should respect cancellation token when cancelled after 100 cancellation checks", async () => {
             const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
                 cancelAfterCount: 100, // Cancel after 100 calls to isCancelled/throwIfCancelled
                 log: consoleLogger,
@@ -112,17 +114,11 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            if (consoleLogger) {
+                consoleLogger(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            }
 
-            ValidateTestUtils.assertValidationSuccessOrCancelled(
-                result,
-                () => {
-                    // Validation completed before reaching cancellation threshold
-                },
-                () => {
-                    // Validation was successfully cancelled
-                },
-            );
+            ValidateTestUtils.assertValidationCancelled(result);
         });
 
         it("should respect cancellation token when cancelled after many cancellation checks", async () => {
@@ -142,28 +138,21 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            if (consoleLogger) {
+                consoleLogger(`Test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            }
 
-            ValidateTestUtils.assertValidationSuccessOrCancelled(
-                result,
-                () => {
-                    // Validation completed before reaching cancellation threshold
-                },
-                () => {
-                    // Validation was successfully cancelled
-                },
-            );
+            ValidateTestUtils.assertValidationCancelled(result);
         });
 
         it("should handle cancellation gracefully at different thresholds", async () => {
             const thresholds: number[] = [5, 25, 50, 200]; // Different cancellation thresholds
 
             for (const threshold of thresholds) {
-                // Low thresholds should definitely trigger cancellation with synchronous cancellation
                 if (threshold <= 25) {
                     const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
                         cancelAfterCount: threshold,
-                        asyncDelayMs: undefined, // Synchronous cancellation for deterministic testing
+                        asyncDelayMs: 0,
                         log: consoleLogger,
                     });
 
@@ -179,9 +168,11 @@ describe("Async Validation", () => {
                         validationSettings,
                     );
 
-                    console.log(
-                        `Threshold ${threshold} test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
-                    );
+                    if (consoleLogger) {
+                        consoleLogger(
+                            `Threshold ${threshold} test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                        );
+                    }
 
                     ValidateTestUtils.assertValidationCancelled(
                         result,
@@ -191,6 +182,7 @@ describe("Async Validation", () => {
                     const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
                         cancelAfterCount: threshold,
                         log: consoleLogger,
+                        asyncDelayMs: 0,
                     });
 
                     const validationSettings: ValidationSettings = {
@@ -205,20 +197,13 @@ describe("Async Validation", () => {
                         validationSettings,
                     );
 
-                    console.log(
-                        `Threshold ${threshold} test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
-                    );
+                    if (consoleLogger) {
+                        consoleLogger(
+                            `Threshold ${threshold} test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                        );
+                    }
 
-                    // Higher thresholds might complete before cancellation occurs
-                    ValidateTestUtils.assertValidationSuccessOrCancelled(
-                        result,
-                        () => {
-                            // Validation completed before reaching cancellation threshold
-                        },
-                        () => {
-                            // Validation was successfully cancelled
-                        },
-                    );
+                    ValidateTestUtils.assertValidationCancelled(result);
                 }
             }
         });
@@ -265,7 +250,11 @@ describe("Async Validation", () => {
                 cancelledValidationSettings,
             );
 
-            console.log(`Performance test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            if (consoleLogger) {
+                consoleLogger(
+                    `Performance test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                );
+            }
 
             if (ResultUtils.isOk(result)) {
                 // This test expects cancellation to occur, so fail if it doesn't
@@ -321,9 +310,11 @@ describe("Async Validation", () => {
                 validationSettings,
             });
 
-            console.log(
-                `No cancellation test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
-            );
+            if (consoleLogger) {
+                consoleLogger(
+                    `No cancellation test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                );
+            }
 
             expect(result).to.not.be.undefined;
             expect(cancellationToken.isCancelled()).to.be.false;
@@ -347,7 +338,11 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(`Pre-cancelled test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`);
+            if (consoleLogger) {
+                consoleLogger(
+                    `Pre-cancelled test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                );
+            }
 
             ValidateTestUtils.assertValidationCancelled(
                 result,
@@ -378,9 +373,11 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(
-                `All validation checks test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
-            );
+            if (consoleLogger) {
+                consoleLogger(
+                    `All validation checks test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                );
+            }
 
             // This test expects cancellation to occur with a low threshold
             ValidateTestUtils.assertValidationCancelled(
@@ -410,11 +407,12 @@ describe("Async Validation", () => {
                 validationSettings,
             );
 
-            console.log(
-                `Specific validation checks test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
-            );
+            if (consoleLogger) {
+                consoleLogger(
+                    `Specific validation checks test completed - Total cancellation calls: ${cancellationToken.getCallCount()}`,
+                );
+            }
 
-            // This test expects cancellation to occur with a low threshold
             ValidateTestUtils.assertValidationCancelled(
                 result,
                 "Expected validation to be cancelled after 5 cancellation checks with specific validation enabled",
