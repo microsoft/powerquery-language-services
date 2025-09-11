@@ -13,6 +13,8 @@ import * as ValidateTestUtils from "../testUtils/validationTestUtils";
 import { AnalysisSettings, validate, ValidateOk, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
+const TEST_TIMEOUT_MS: number = 60000;
+
 function createCancellationToken(): ICancellationToken {
     let isCancelled: boolean = false;
 
@@ -88,9 +90,6 @@ describe("Async Validation", () => {
                 expect(result.diagnostics).to.be.an("array");
                 expect(result.hasSyntaxError).to.be.false;
 
-                // Should have no parse errors since this is the clean file
-                expect(result.hasSyntaxError).to.be.false;
-
                 // Should have significantly fewer diagnostic errors than the diagnostics file
                 expect(result.diagnostics.length).to.be.lessThan(
                     100,
@@ -110,7 +109,7 @@ describe("Async Validation", () => {
 
                 throw error; // Re-throw to fail the test
             }
-        }).timeout(60000); // 60 second timeout
+        }).timeout(TEST_TIMEOUT_MS); // 60 second timeout
 
         it("should validate document with diagnostic errors", async () => {
             const validationSettings: ValidationSettings = {
@@ -150,7 +149,7 @@ describe("Async Validation", () => {
 
                 throw error; // Re-throw to fail the test
             }
-        }).timeout(60000);
+        }).timeout(TEST_TIMEOUT_MS);
 
         it("should handle document with parser errors", async () => {
             const cancellationToken: ICancellationToken = createCancellationToken();
@@ -185,7 +184,7 @@ describe("Async Validation", () => {
             console.log(
                 `Document with parser errors validation took ${duration}ms, found ${result.diagnostics.length} diagnostics`,
             );
-        }).timeout(60000);
+        }).timeout(TEST_TIMEOUT_MS);
 
         it("should respect cancellation token when cancelled during validation", async () => {
             const cancellationToken: ICancellationToken = createCancellationToken();
@@ -259,7 +258,7 @@ describe("Async Validation", () => {
                     },
                 );
             }
-        }).timeout(60000);
+        }).timeout(TEST_TIMEOUT_MS);
 
         it("should demonstrate performance benefit of cancellation", async () => {
             // Test that cancelled validation is faster than completed validation
@@ -343,7 +342,7 @@ describe("Async Validation", () => {
                     `ℹ Validation completed too quickly (${cancellationDuration}ms) for cancellation to take effect`,
                 );
             }
-        }).timeout(60000);
+        }).timeout(TEST_TIMEOUT_MS);
     });
 
     describe("Cancellation token behavior", () => {
