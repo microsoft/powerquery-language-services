@@ -61,117 +61,78 @@ async function runTest(params: {
     return validationResult;
 }
 
+// Test cases data structure
+interface TestCase {
+    readonly name: string;
+    readonly text: string;
+    readonly expectedWhenTrue: { diagnosticsCount: number; hasSyntaxError: boolean };
+    readonly expectedWhenFalse: { diagnosticsCount: number; hasSyntaxError: boolean };
+    readonly expectedDefault: { diagnosticsCount: number; hasSyntaxError: boolean };
+}
+
+const testCases: TestCase[] = [
+    {
+        name: "both parse errors and other diagnostics",
+        text: expressionDuplicateIdentifierAndSyntaxError,
+        expectedWhenTrue: { diagnosticsCount: 3, hasSyntaxError: true },
+        expectedWhenFalse: { diagnosticsCount: 1, hasSyntaxError: true },
+        expectedDefault: { diagnosticsCount: 3, hasSyntaxError: true },
+    },
+    {
+        name: "only syntax error",
+        text: expressionSyntaxError,
+        expectedWhenTrue: { diagnosticsCount: 1, hasSyntaxError: true },
+        expectedWhenFalse: { diagnosticsCount: 1, hasSyntaxError: true },
+        expectedDefault: { diagnosticsCount: 1, hasSyntaxError: true },
+    },
+    {
+        name: "other diagnostics (no syntax error)",
+        text: expressionDuplicateIdentifier,
+        expectedWhenTrue: { diagnosticsCount: 2, hasSyntaxError: false },
+        expectedWhenFalse: { diagnosticsCount: 2, hasSyntaxError: false },
+        expectedDefault: { diagnosticsCount: 2, hasSyntaxError: false },
+    },
+    {
+        name: "no errors",
+        text: expressionNoErrors,
+        expectedWhenTrue: { diagnosticsCount: 0, hasSyntaxError: false },
+        expectedWhenFalse: { diagnosticsCount: 0, hasSyntaxError: false },
+        expectedDefault: { diagnosticsCount: 0, hasSyntaxError: false },
+    },
+];
+
 describe("checkDiagnosticsOnParseError validation setting", () => {
     describe("when checkDiagnosticsOnParseError is true", () => {
-        it("should return both parse errors and other diagnostics when there's a syntax error", async () => {
-            await runTest({
-                text: expressionDuplicateIdentifierAndSyntaxError,
-                checkDiagnosticsOnParseError: true,
-                expected: {
-                    diagnosticsCount: 3,
-                    hasSyntaxError: true,
-                },
-            });
-        });
-
-        it("should return only syntax error when there's only a syntax error", async () => {
-            await runTest({
-                text: expressionSyntaxError,
-                checkDiagnosticsOnParseError: true,
-                expected: {
-                    diagnosticsCount: 1,
-                    hasSyntaxError: true,
-                },
-            });
-        });
-
-        it("should return other diagnostics when there's no syntax error", async () => {
-            await runTest({
-                text: expressionDuplicateIdentifier,
-                checkDiagnosticsOnParseError: true,
-                expected: {
-                    diagnosticsCount: 2,
-                    hasSyntaxError: false,
-                },
-            });
-        });
-
-        it("should return no diagnostics when there are no errors", async () => {
-            await runTest({
-                text: expressionNoErrors,
-                checkDiagnosticsOnParseError: true,
-                expected: {
-                    diagnosticsCount: 0,
-                    hasSyntaxError: false,
-                },
+        testCases.forEach((testCase: TestCase) => {
+            it(`should handle ${testCase.name}`, async () => {
+                await runTest({
+                    text: testCase.text,
+                    checkDiagnosticsOnParseError: true,
+                    expected: testCase.expectedWhenTrue,
+                });
             });
         });
     });
 
     describe("when checkDiagnosticsOnParseError is false", () => {
-        it("should skip other diagnostics when there's a syntax error", async () => {
-            await runTest({
-                text: expressionDuplicateIdentifierAndSyntaxError,
-                checkDiagnosticsOnParseError: false,
-                expected: {
-                    diagnosticsCount: 1,
-                    hasSyntaxError: true,
-                },
-            });
-        });
-
-        it("should return only syntax error when there's only a syntax error", async () => {
-            await runTest({
-                text: expressionSyntaxError,
-                checkDiagnosticsOnParseError: false,
-                expected: {
-                    diagnosticsCount: 1,
-                    hasSyntaxError: true,
-                },
-            });
-        });
-
-        it("should return other diagnostics when there's no syntax error", async () => {
-            await runTest({
-                text: expressionDuplicateIdentifier,
-                checkDiagnosticsOnParseError: false,
-                expected: {
-                    diagnosticsCount: 2,
-                    hasSyntaxError: false,
-                },
-            });
-        });
-
-        it("should return no diagnostics when there are no errors", async () => {
-            await runTest({
-                text: expressionNoErrors,
-                checkDiagnosticsOnParseError: false,
-                expected: {
-                    diagnosticsCount: 0,
-                    hasSyntaxError: false,
-                },
+        testCases.forEach((testCase: TestCase) => {
+            it(`should handle ${testCase.name}`, async () => {
+                await runTest({
+                    text: testCase.text,
+                    checkDiagnosticsOnParseError: false,
+                    expected: testCase.expectedWhenFalse,
+                });
             });
         });
     });
 
     describe("checkDiagnosticsOnParseError default value", () => {
-        it("checkDiagnosticsOnParseError should default to true", async () => {
-            await runTest({
-                text: expressionDuplicateIdentifierAndSyntaxError,
-                expected: {
-                    diagnosticsCount: 3,
-                    hasSyntaxError: true,
-                },
-            });
-        });
-
-        it("should handle no errors case with default settings", async () => {
-            await runTest({
-                text: expressionNoErrors,
-                expected: {
-                    diagnosticsCount: 0,
-                    hasSyntaxError: false,
-                },
+        testCases.forEach((testCase: TestCase) => {
+            it(`should use default behavior for ${testCase.name}`, async () => {
+                await runTest({
+                    text: testCase.text,
+                    expected: testCase.expectedDefault,
+                });
             });
         });
     });
