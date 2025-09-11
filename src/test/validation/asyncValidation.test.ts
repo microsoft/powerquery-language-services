@@ -6,17 +6,25 @@ import * as fs from "fs";
 import * as path from "path";
 import { expect } from "chai";
 
-import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as ValidateTestUtils from "../testUtils/validationTestUtils";
 
 import { AnalysisSettings, validate, ValidateOk, ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
+import { ITestCancellationToken } from "../testUtils/asyncTestUtils";
 
 const TEST_TIMEOUT_MS: number = 5000;
 const TEST_SLOW_MS: number = 1000;
 
 describe("Async Validation", () => {
+    // Set to true to enable console logging in tests for debugging
+    const enableConsoleTrace: boolean = false;
+
+    const consoleLogger: ((message: string) => void) | undefined = enableConsoleTrace
+        ? (message: string): void => console.log(message)
+        : undefined;
+
     const analysisSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
 
     const baseValidationSettings: ValidationSettings = {
@@ -61,12 +69,11 @@ describe("Async Validation", () => {
         });
 
         it("should respect cancellation token when cancelled after few cancellation checks", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 3, // Cancel after 3 calls to isCancelled/throwIfCancelled
-                    asyncDelayMs: 0, // Immediate cancellation for deterministic testing
-                    testId: "Few cancellation checks",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 3, // Cancel after 3 calls to isCancelled/throwIfCancelled
+                asyncDelayMs: 0, // Immediate cancellation for deterministic testing
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -89,11 +96,10 @@ describe("Async Validation", () => {
         });
 
         it("should respect cancellation token when cancelled after moderate cancellation checks", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 100, // Cancel after 100 calls to isCancelled/throwIfCancelled
-                    testId: "Moderate cancellation checks",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 100, // Cancel after 100 calls to isCancelled/throwIfCancelled
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -120,11 +126,10 @@ describe("Async Validation", () => {
         });
 
         it("should respect cancellation token when cancelled after many cancellation checks", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 1000, // Cancel after 1000 calls to isCancelled/throwIfCancelled
-                    testId: "Many cancellation checks",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 1000, // Cancel after 1000 calls to isCancelled/throwIfCancelled
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -156,12 +161,11 @@ describe("Async Validation", () => {
             for (const threshold of thresholds) {
                 // Low thresholds should definitely trigger cancellation with synchronous cancellation
                 if (threshold <= 25) {
-                    const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                        TestUtils.createTestCancellationToken({
-                            cancelAfterCount: threshold,
-                            asyncDelayMs: undefined, // Synchronous cancellation for deterministic testing
-                            testId: `Threshold ${threshold}`,
-                        });
+                    const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                        cancelAfterCount: threshold,
+                        asyncDelayMs: undefined, // Synchronous cancellation for deterministic testing
+                        log: consoleLogger,
+                    });
 
                     const validationSettings: ValidationSettings = {
                         ...baseValidationSettings,
@@ -184,11 +188,10 @@ describe("Async Validation", () => {
                         `Expected validation to be cancelled with low threshold of ${threshold} calls`,
                     );
                 } else {
-                    const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                        TestUtils.createTestCancellationToken({
-                            cancelAfterCount: threshold,
-                            testId: `Threshold ${threshold}`,
-                        });
+                    const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                        cancelAfterCount: threshold,
+                        log: consoleLogger,
+                    });
 
                     const validationSettings: ValidationSettings = {
                         ...baseValidationSettings,
@@ -242,12 +245,11 @@ describe("Async Validation", () => {
             // Then, measure time for cancelled validation with early threshold
             const startCancelled: number = Date.now();
 
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 10, // Cancel after 10 calls
-                    asyncDelayMs: 0, // Immediate cancellation for deterministic testing
-                    testId: "Performance benefit test",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 10, // Cancel after 10 calls
+                asyncDelayMs: 0, // Immediate cancellation for deterministic testing
+                log: consoleLogger,
+            });
 
             const cancelledValidationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -304,10 +306,9 @@ describe("Async Validation", () => {
         });
 
         it("should not throw when cancellation token is not cancelled", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    testId: "No cancellation test",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -329,10 +330,9 @@ describe("Async Validation", () => {
         });
 
         it("should throw immediately when cancellation token is already cancelled", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    testId: "Pre-cancelled test",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                log: consoleLogger,
+            });
 
             cancellationToken.cancel("Pre-cancelled for testing"); // Cancel before starting
 
@@ -358,12 +358,11 @@ describe("Async Validation", () => {
 
     describe("Async validation with different validation settings", () => {
         it("should respect cancellation with all validation checks enabled", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 5, // Cancel after 5 calls to test early cancellation with all checks
-                    asyncDelayMs: 0, // Immediate cancellation for deterministic testing
-                    testId: "All validation checks",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 5, // Cancel after 5 calls to test early cancellation with all checks
+                asyncDelayMs: 0, // Immediate cancellation for deterministic testing
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
@@ -391,12 +390,11 @@ describe("Async Validation", () => {
         });
 
         it("should respect cancellation with only specific checks enabled", async () => {
-            const cancellationToken: ICancellationToken & { getCallCount: () => number } =
-                TestUtils.createTestCancellationToken({
-                    cancelAfterCount: 5, // Cancel after 5 calls to test with fewer validation checks
-                    asyncDelayMs: undefined, // Synchronous cancellation for deterministic testing
-                    testId: "Specific validation checks",
-                });
+            const cancellationToken: ITestCancellationToken = TestUtils.createTestCancellationToken({
+                cancelAfterCount: 5, // Cancel after 5 calls to test with fewer validation checks
+                asyncDelayMs: undefined, // Synchronous cancellation for deterministic testing
+                log: consoleLogger,
+            });
 
             const validationSettings: ValidationSettings = {
                 ...baseValidationSettings,
