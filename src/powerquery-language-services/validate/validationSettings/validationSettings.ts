@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken } from "@microsoft/powerquery-parser";
+import * as PQP from "@microsoft/powerquery-parser";
 
 import { InspectionSettings } from "../../inspectionSettings";
 import { Library } from "../../library";
 
 export interface ValidationSettings extends InspectionSettings {
-    readonly cancellationToken: ICancellationToken | undefined;
     readonly checkForDuplicateIdentifiers: boolean;
     readonly checkInvokeExpressions: boolean;
     readonly checkUnknownIdentifiers: boolean;
     readonly isWorkspaceCacheAllowed: boolean;
     readonly library: Library.ILibrary;
     readonly source: string;
+    // Keep cancellationToken here for backward compatibility
+    readonly cancellationToken: PQP.ICancellationToken | undefined;
 }

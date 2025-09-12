@@ -35,6 +35,7 @@ module.exports = [
                 __dirname: "readonly",
                 module: "readonly",
                 setTimeout: "readonly",
+                console: "readonly",
             },
         },
         plugins: {

@@ -93,6 +93,8 @@ async function inspectInvokeExpression(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
 
+    settings.cancellationToken?.throwIfCancelled();
+
     let invokeExpressionArgs: InvokeExpressionArguments | undefined;
 
     if (TypeUtils.isDefinedFunction(functionType)) {
@@ -109,6 +111,8 @@ async function inspectInvokeExpression(
         );
 
         const givenArguments: ReadonlyArray<TXorNode> = iterableArguments.slice(0, givenArgumentTypes.length);
+
+        settings.cancellationToken?.throwIfCancelled();
 
         const [numMinExpectedArguments, numMaxExpectedArguments]: [number, number] =
             getNumExpectedArguments(functionType);
@@ -166,6 +170,8 @@ async function getIsNameInLocalScope(
         initialCorrelationId: trace.id,
     };
 
+    settings.cancellationToken?.throwIfCancelled();
+
     // Try to find out if the identifier is a local or external name.
     if (name !== undefined) {
         // Seed local scope
@@ -211,6 +217,8 @@ async function getArgumentTypes(
     const result: Type.TPowerQueryType[] = [];
 
     for (const xorNode of argXorNodes) {
+        settings.cancellationToken?.throwIfCancelled();
+
         // eslint-disable-next-line no-await-in-loop
         const triedArgType: TriedType = await tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
 

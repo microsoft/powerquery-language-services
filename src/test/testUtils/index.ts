@@ -4,6 +4,7 @@
 export * from "./abridgedTestUtils";
 export * from "./analysisTestUtils";
 export * from "./assertEqualTestUtils";
+export * from "./asyncTestUtils";
 export * from "./autocompleteTestUtils";
 export * from "./inspectionTestUtils";
 export * from "./parseTestUtils";
