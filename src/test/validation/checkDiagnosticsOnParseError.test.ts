@@ -8,15 +8,22 @@ import { Diagnostic, DiagnosticErrorCode, ValidationSettings } from "../../power
 import { TestConstants, TestUtils } from "..";
 import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
+const TestExpressions: {
+    readonly NoErrors: string;
+    readonly SyntaxError: string;
+    readonly DuplicateIdentifier: string;
+    readonly DuplicateIdentifierAndSyntaxError: string;
+} = {
+    NoErrors: "let x = 1, y = 2 in y",
+    SyntaxError: "let x , in x",
+    DuplicateIdentifier: "let x = 1, x = 2, y = 3 in y",
+    DuplicateIdentifierAndSyntaxError: "let x = 1, x = 2, y = in y",
+} as const;
+
 // Test settings with checkDiagnosticsOnParseError = false
 const defaultValidationSettings: ValidationSettings = {
     ...TestConstants.SimpleLibraryValidateAllSettings,
 };
-
-const expressionNoErrors: string = `let x = 1, y = 2 in y`;
-const expressionSyntaxError: string = `let x , in x`;
-const expressionDuplicateIdentifier: string = `let x = 1, x = 2, y = 3 in y`;
-const expressionDuplicateIdentifierAndSyntaxError: string = `let x = 1, x = 2, y = in y`;
 
 async function runTest(params: {
     readonly text: string;
@@ -26,10 +33,11 @@ async function runTest(params: {
         readonly hasSyntaxError: boolean;
     };
 }): Promise<ValidateOk> {
-    const validationSettings: ValidationSettings =
-        params.checkDiagnosticsOnParseError !== undefined
-            ? { ...defaultValidationSettings, checkDiagnosticsOnParseError: params.checkDiagnosticsOnParseError }
-            : { ...defaultValidationSettings };
+    const validationSettings: ValidationSettings = {
+        ...defaultValidationSettings,
+        checkDiagnosticsOnParseError:
+            params.checkDiagnosticsOnParseError ?? defaultValidationSettings.checkDiagnosticsOnParseError,
+    };
 
     const validationResult: ValidateOk = await TestUtils.assertValidate({
         text: params.text,
@@ -65,36 +73,36 @@ async function runTest(params: {
 interface TestCase {
     readonly name: string;
     readonly text: string;
-    readonly expectedWhenTrue: { diagnosticsCount: number; hasSyntaxError: boolean };
-    readonly expectedWhenFalse: { diagnosticsCount: number; hasSyntaxError: boolean };
-    readonly expectedDefault: { diagnosticsCount: number; hasSyntaxError: boolean };
+    readonly expectedWhenTrue: { readonly diagnosticsCount: number; readonly hasSyntaxError: boolean };
+    readonly expectedWhenFalse: { readonly diagnosticsCount: number; readonly hasSyntaxError: boolean };
+    readonly expectedDefault: { readonly diagnosticsCount: number; readonly hasSyntaxError: boolean };
 }
 
 const testCases: TestCase[] = [
     {
         name: "both parse errors and other diagnostics",
-        text: expressionDuplicateIdentifierAndSyntaxError,
+        text: TestExpressions.DuplicateIdentifierAndSyntaxError,
         expectedWhenTrue: { diagnosticsCount: 3, hasSyntaxError: true },
         expectedWhenFalse: { diagnosticsCount: 1, hasSyntaxError: true },
         expectedDefault: { diagnosticsCount: 3, hasSyntaxError: true },
     },
     {
         name: "only syntax error",
-        text: expressionSyntaxError,
+        text: TestExpressions.SyntaxError,
         expectedWhenTrue: { diagnosticsCount: 1, hasSyntaxError: true },
         expectedWhenFalse: { diagnosticsCount: 1, hasSyntaxError: true },
         expectedDefault: { diagnosticsCount: 1, hasSyntaxError: true },
     },
     {
         name: "other diagnostics (no syntax error)",
-        text: expressionDuplicateIdentifier,
+        text: TestExpressions.DuplicateIdentifier,
         expectedWhenTrue: { diagnosticsCount: 2, hasSyntaxError: false },
         expectedWhenFalse: { diagnosticsCount: 2, hasSyntaxError: false },
         expectedDefault: { diagnosticsCount: 2, hasSyntaxError: false },
     },
     {
         name: "no errors",
-        text: expressionNoErrors,
+        text: TestExpressions.NoErrors,
         expectedWhenTrue: { diagnosticsCount: 0, hasSyntaxError: false },
         expectedWhenFalse: { diagnosticsCount: 0, hasSyntaxError: false },
         expectedDefault: { diagnosticsCount: 0, hasSyntaxError: false },
