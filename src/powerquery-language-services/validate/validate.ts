@@ -45,6 +45,19 @@ export function validate(
             return undefined;
         }
 
+        // If we have a parse error and checkDiagnosticsOnParseError is false,
+        // only return parse error diagnostics without checking other validations
+        if (parseError !== undefined && !validationSettings.checkDiagnosticsOnParseError) {
+            const result: ValidateOk = {
+                diagnostics: await validateParse(parseError, updatedSettings),
+                hasSyntaxError: true,
+            };
+
+            trace.exit();
+
+            return result;
+        }
+
         let functionExpressionDiagnostics: Diagnostic[];
         let invokeExpressionDiagnostics: Diagnostic[];
         let unknownIdentifiersDiagnostics: Diagnostic[];

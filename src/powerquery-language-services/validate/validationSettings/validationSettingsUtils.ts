@@ -11,6 +11,7 @@ export function createValidationSettings(
 ): ValidationSettings {
     return {
         ...inspectionSettings,
+        checkDiagnosticsOnParseError: overrides?.checkDiagnosticsOnParseError ?? true,
         checkForDuplicateIdentifiers: overrides?.checkForDuplicateIdentifiers ?? true,
         checkInvokeExpressions: overrides?.checkInvokeExpressions ?? true,
         checkUnknownIdentifiers: overrides?.checkUnknownIdentifiers ?? true,
