@@ -5,6 +5,10 @@
     },
     "editor.formatOnSave": true,
 
+    "chat.instructionsFilesLocations": {
+        ".github/copilot.instructions.md": true
+    },
+
     // VS Code Test Runner configuration
     "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
     "testing.automaticallyOpenTestResults": "openOnTestStart",

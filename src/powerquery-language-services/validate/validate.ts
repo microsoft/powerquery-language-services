@@ -37,18 +37,30 @@ export function validate(
             initialCorrelationId: trace.id,
         };
 
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
 
         const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
-        validationSettings.cancellationToken?.throwIfCancelled();
-
         const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
-        validationSettings.cancellationToken?.throwIfCancelled();
 
         if (parseState === undefined) {
             trace.exit();
 
             return undefined;
+        }
+
+        // If we have a parse error and checkDiagnosticsOnParseError is false,
+        // only return parse error diagnostics without checking other validations
+        if (parseError !== undefined && !validationSettings.checkDiagnosticsOnParseError) {
+            const result: ValidateOk = {
+                diagnostics: await validateParse(parseError, updatedSettings),
+                hasSyntaxError: true,
+            };
+
+            trace.exit();
+
+            return result;
         }
 
         const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;

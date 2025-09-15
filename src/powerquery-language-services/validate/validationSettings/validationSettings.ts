@@ -7,12 +7,12 @@ import { InspectionSettings } from "../../inspectionSettings";
 import { Library } from "../../library";
 
 export interface ValidationSettings extends InspectionSettings {
+    readonly cancellationToken: PQP.ICancellationToken | undefined;
+    readonly checkDiagnosticsOnParseError: boolean;
     readonly checkForDuplicateIdentifiers: boolean;
     readonly checkInvokeExpressions: boolean;
     readonly checkUnknownIdentifiers: boolean;
     readonly isWorkspaceCacheAllowed: boolean;
     readonly library: Library.ILibrary;
     readonly source: string;
-    // Keep cancellationToken here for backward compatibility
-    readonly cancellationToken: PQP.ICancellationToken | undefined;
 }
