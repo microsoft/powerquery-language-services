@@ -4,6 +4,9 @@
 import { InspectionSettings } from "../..";
 import { ValidationSettings } from "./validationSettings";
 
+/** Creates a ValidationSettings instance by:
+ *  1. shallow copying InspectionSettings
+ *  2. applying optional overrides for properties specific to ValidationSettings */
 export function createValidationSettings(
     inspectionSettings: InspectionSettings,
     overrides?: Partial<Omit<ValidationSettings, keyof InspectionSettings>>,
