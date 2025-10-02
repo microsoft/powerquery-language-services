@@ -14,7 +14,7 @@ import { Library } from "./library";
 
 export function inspectionSettings(
     settings: PQP.Settings,
-    overrides?: Partial<InspectionSettings>,
+    overrides?: Partial<Omit<InspectionSettings, keyof PQP.Settings>>,
 ): InspectionSettings {
     return {
         ...settings,
