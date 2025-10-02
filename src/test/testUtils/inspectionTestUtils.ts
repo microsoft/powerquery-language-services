@@ -66,10 +66,10 @@ export async function assertRootType(params: {
     return actual.value;
 }
 
-export async function assertNodeScope(params: {
+export async function assertNodeScopeOrUndefined(params: {
     readonly textWithPipe: string;
     readonly inspectionSettings: InspectionSettings;
-}): Promise<NodeScope> {
+}): Promise<NodeScope | undefined> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
 
     const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
@@ -81,7 +81,7 @@ export async function assertNodeScope(params: {
     const activeNode: TActiveNode = ActiveNodeUtils.activeNode(nodeIdMapCollection, position);
 
     if (!ActiveNodeUtils.isPositionInBounds(activeNode)) {
-        return new Map();
+        return undefined;
     }
 
     return ResultUtils.assertOk(

@@ -139,7 +139,7 @@ function findUnknownIdentifiers(
         const literal: string = identifierWithNodeScope.literal;
 
         if (
-            !nodeScope.has(literal) &&
+            !nodeScope.scopeItemByKey.has(literal) &&
             !LibraryUtils.hasDefinition(validationSettings.library, literal) &&
             !validationSettings.library.externalTypeResolver({
                 kind: ExternalTypeRequestKind.Value,
@@ -147,7 +147,7 @@ function findUnknownIdentifiers(
             })
         ) {
             const knownIdentifiers: ReadonlyArray<string> = [
-                ...nodeScope.keys(),
+                ...nodeScope.scopeItemByKey.keys(),
                 ...LibraryUtils.getDefinitionKeys(validationSettings.library),
             ];
 
