@@ -12,9 +12,12 @@ import { AutocompleteItemProviderContext } from "./providers/commonTypes";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { Library } from "./library";
 
+/** Creates a InspectionSettings instance by:
+ *  1. shallow copying Settings
+ *  2. applying optional overrides for properties specific to InspectionSettings */
 export function inspectionSettings(
     settings: PQP.Settings,
-    overrides?: Partial<InspectionSettings>,
+    overrides?: Partial<Omit<InspectionSettings, keyof PQP.Settings>>,
 ): InspectionSettings {
     return {
         ...settings,

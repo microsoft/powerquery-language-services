@@ -4,10 +4,12 @@
 import { InspectionSettings } from "../..";
 import { ValidationSettings } from "./validationSettings";
 
+/** Creates a ValidationSettings instance by:
+ *  1. shallow copying InspectionSettings
+ *  2. applying optional overrides for properties specific to ValidationSettings */
 export function createValidationSettings(
     inspectionSettings: InspectionSettings,
-    source: string,
-    overrides?: Partial<ValidationSettings>,
+    overrides?: Partial<Omit<ValidationSettings, keyof InspectionSettings>>,
 ): ValidationSettings {
     return {
         ...inspectionSettings,
@@ -15,7 +17,6 @@ export function createValidationSettings(
         checkForDuplicateIdentifiers: overrides?.checkForDuplicateIdentifiers ?? true,
         checkInvokeExpressions: overrides?.checkInvokeExpressions ?? true,
         checkUnknownIdentifiers: overrides?.checkUnknownIdentifiers ?? true,
-        library: inspectionSettings.library,
-        source,
+        source: overrides?.source ?? "Unknown Source",
     };
 }
