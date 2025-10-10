@@ -12,6 +12,8 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { Range } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ILocalizationTemplates } from "../localization/templates";
@@ -20,10 +22,10 @@ import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // Check for repeat parameter names for FunctionExpressions.
-export function validateFunctionExpression(
+export async function validateFunctionExpression(
     validationSettings: ValidationSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
-): Diagnostic[] {
+): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateFunctionExpression.name,
@@ -45,13 +47,26 @@ export function validateFunctionExpression(
         return [];
     }
 
+    // Yield control to allow for cancellation.
+    // If we need more cancellability, we can move this into the loop and yield every N iterations.
+    await PromiseUtils.yieldForCancellation(validationSettings.cancellationToken);
+
     const diagnostics: Diagnostic[][] = [];
 
     for (const nodeId of fnExpressionIds) {
-        validationSettings.cancellationToken?.throwIfCancelled();
+        const nodeDiagnostics: Diagnostic[] = validateNoDuplicateParameter(
+            updatedSettings,
+            nodeIdMapCollection,
+            nodeId,
+        );
 
-        diagnostics.push(validateNoDuplicateParameter(updatedSettings, nodeIdMapCollection, nodeId));
-        updatedSettings.cancellationToken?.throwIfCancelled();
+        diagnostics.push(nodeDiagnostics);
+
+        // Yield control periodically for better async behavior
+        // eslint-disable-next-line no-await-in-loop
+        await Promise.resolve();
+
+        validationSettings.cancellationToken?.throwIfCancelled();
     }
 
     trace.exit();
@@ -73,8 +88,6 @@ function validateNoDuplicateParameter(
     const parameterNames: Map<string, Ast.Identifier[]> = new Map();
 
     for (const parameter of NodeIdMapIterator.iterFunctionExpressionParameterNames(nodeIdMapCollection, fnExpression)) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
         const existingNames: Ast.Identifier[] = parameterNames.get(parameter.literal) ?? [];
         existingNames.push(parameter);
         parameterNames.set(parameter.literal, existingNames);

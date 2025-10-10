@@ -14,18 +14,20 @@ import { ICancellationToken } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
 import { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
-export function validateDuplicateIdentifiers(
+export async function validateDuplicateIdentifiers(
     textDocument: TextDocument,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<Diagnostic[]> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiers.name,
@@ -45,49 +47,64 @@ export function validateDuplicateIdentifiers(
 
     const documentUri: string = textDocument.uri;
 
-    const result: ReadonlyArray<Diagnostic> = [
-        ...validateDuplicateIdentifiersForLetExpresion(
-            documentUri,
-            nodeIdMapCollection,
-            updatedSettings,
-            trace.id,
-            cancellationToken,
-        ),
-        ...validateDuplicateIdentifiersForRecord(
-            documentUri,
-            nodeIdMapCollection,
-            updatedSettings,
-            trace.id,
-            cancellationToken,
-        ),
-        ...validateDuplicateIdentifiersForRecordType(
-            documentUri,
-            nodeIdMapCollection,
-            updatedSettings,
-            trace.id,
-            cancellationToken,
-        ),
-        ...validateDuplicateIdentifiersForSection(
-            documentUri,
-            nodeIdMapCollection,
-            updatedSettings,
-            trace.id,
-            cancellationToken,
-        ),
+    // Create an array of validation functions to process sequentially
+    const validationFunctions: Array<() => Promise<ReadonlyArray<Diagnostic>>> = [
+        (): Promise<ReadonlyArray<Diagnostic>> =>
+            validateDuplicateIdentifiersForLetExpresion(
+                documentUri,
+                nodeIdMapCollection,
+                updatedSettings,
+                trace.id,
+                cancellationToken,
+            ),
+        (): Promise<ReadonlyArray<Diagnostic>> =>
+            validateDuplicateIdentifiersForRecord(
+                documentUri,
+                nodeIdMapCollection,
+                updatedSettings,
+                trace.id,
+                cancellationToken,
+            ),
+        (): Promise<ReadonlyArray<Diagnostic>> =>
+            validateDuplicateIdentifiersForRecordType(
+                documentUri,
+                nodeIdMapCollection,
+                updatedSettings,
+                trace.id,
+                cancellationToken,
+            ),
+        (): Promise<ReadonlyArray<Diagnostic>> =>
+            validateDuplicateIdentifiersForSection(
+                documentUri,
+                nodeIdMapCollection,
+                updatedSettings,
+                trace.id,
+                cancellationToken,
+            ),
     ];
+
+    // Process all validation functions sequentially with cancellation support
+    const diagnosticArrays: ReadonlyArray<Diagnostic>[] = await PromiseUtils.processSequentiallyWithCancellation(
+        validationFunctions,
+        (validationFunction: () => Promise<ReadonlyArray<Diagnostic>>) => validationFunction(),
+        cancellationToken,
+    );
+
+    // Flatten the results
+    const result: Diagnostic[] = diagnosticArrays.flat();
 
     trace.exit();
 
     return result;
 }
 
-function validateDuplicateIdentifiersForLetExpresion(
+async function validateDuplicateIdentifiersForLetExpresion(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiersForLetExpresion.name,
@@ -96,7 +113,7 @@ function validateDuplicateIdentifiersForLetExpresion(
 
     const letIds: Set<number> = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? new Set();
 
-    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
+    const result: ReadonlyArray<Diagnostic> = await validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         [letIds],
@@ -111,13 +128,13 @@ function validateDuplicateIdentifiersForLetExpresion(
     return result;
 }
 
-function validateDuplicateIdentifiersForRecord(
+async function validateDuplicateIdentifiersForRecord(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiersForRecord.name,
@@ -129,7 +146,7 @@ function validateDuplicateIdentifiersForRecord(
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordLiteral) ?? new Set(),
     ];
 
-    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
+    const result: ReadonlyArray<Diagnostic> = await validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         recordIds,
@@ -144,13 +161,13 @@ function validateDuplicateIdentifiersForRecord(
     return result;
 }
 
-function validateDuplicateIdentifiersForRecordType(
+async function validateDuplicateIdentifiersForRecordType(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiersForRecordType.name,
@@ -161,7 +178,7 @@ function validateDuplicateIdentifiersForRecordType(
         nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.RecordType) ?? new Set(),
     ];
 
-    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
+    const result: ReadonlyArray<Diagnostic> = await validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         recordTypeIds,
@@ -176,13 +193,13 @@ function validateDuplicateIdentifiersForRecordType(
     return result;
 }
 
-function validateDuplicateIdentifiersForSection(
+async function validateDuplicateIdentifiersForSection(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
         validateDuplicateIdentifiersForSection.name,
@@ -191,7 +208,7 @@ function validateDuplicateIdentifiersForSection(
 
     const sectionIds: Set<number> = nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Section) ?? new Set<number>();
 
-    const result: ReadonlyArray<Diagnostic> = validateDuplicateIdentifiersForKeyValuePair(
+    const result: ReadonlyArray<Diagnostic> = await validateDuplicateIdentifiersForKeyValuePair(
         documentUri,
         nodeIdMapCollection,
         [sectionIds],
@@ -210,7 +227,7 @@ function validateDuplicateIdentifiersForSection(
 //  for node in nodeIds:
 //      for childOfNode in iterNodeFactory(node):
 //          ...
-function validateDuplicateIdentifiersForKeyValuePair(
+async function validateDuplicateIdentifiersForKeyValuePair(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     nodeIdCollections: ReadonlyArray<Set<number>>,
@@ -221,7 +238,7 @@ function validateDuplicateIdentifiersForKeyValuePair(
     validationSettings: ValidationSettings,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): ReadonlyArray<Diagnostic> {
+): Promise<ReadonlyArray<Diagnostic>> {
     const numIds: number = nodeIdCollections.reduce<number>(
         (partial: number, set: Set<number>) => partial + set.size,
         0,
@@ -240,10 +257,11 @@ function validateDuplicateIdentifiersForKeyValuePair(
 
     const result: Diagnostic[] = [];
 
+    // If we need more cancellability, we can move this into the loop and yield every N iterations.
+    await PromiseUtils.yieldForCancellation(cancellationToken);
+
     for (const collection of nodeIdCollections) {
         for (const nodeId of collection) {
-            cancellationToken?.throwIfCancelled();
-
             const node: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId);
             const duplicateFieldsByKey: Map<string, NodeIdMapIterator.TKeyValuePair[]> = new Map();
             const knownFieldByKey: Map<string, NodeIdMapIterator.TKeyValuePair> = new Map();
