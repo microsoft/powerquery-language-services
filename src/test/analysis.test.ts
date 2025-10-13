@@ -1,30 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
 import {
     Assert,
     CommonError,
     DefaultLocale,
     ExpiredCancellationToken,
-    Result,
+    type Result,
     ResultUtils,
 } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
+import { describe, expect, it } from "bun:test";
 
-import type {
-    Analysis,
-    AnalysisSettings,
-    Hover,
-    Inspection,
-    Library,
-    Position,
-    SignatureHelp,
+import {
+    type Analysis,
+    type AnalysisSettings,
+    type Hover,
+    type Inspection,
+    type Library,
+    type Position,
+    type SignatureHelp,
 } from "../powerquery-language-services";
-import type { AutocompleteItem, TypeCache } from "../powerquery-language-services/inspection";
-import { ILibraryProvider, ILocalDocumentProvider } from "../powerquery-language-services/providers/commonTypes";
+import { type AutocompleteItem, type TypeCache } from "../powerquery-language-services/inspection";
+import {
+    type ILibraryProvider,
+    type ILocalDocumentProvider,
+} from "../powerquery-language-services/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
-import { ILibrary } from "../powerquery-language-services/library/library";
+import { type ILibrary } from "../powerquery-language-services/library/library";
 import { SlowLibraryProvider } from "./providers/slowLibraryProvider.test";
 import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider.test";
 
@@ -45,9 +47,9 @@ describe(`Analysis`, () => {
                 ),
             );
 
-            expect(autocompleteItem.jaroWinklerScore).to.equal(1);
+            expect(autocompleteItem.jaroWinklerScore).toBe(1);
             expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
-            expect(autocompleteItem.documentation).to.equal(undefined, `local definition should have no documentation`);
+            expect(autocompleteItem.documentation).toBeUndefined(); // local definition should have no documentation
         });
     });
 

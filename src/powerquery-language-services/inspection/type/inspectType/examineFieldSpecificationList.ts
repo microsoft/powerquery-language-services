@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ArrayUtils } from "@microsoft/powerquery-parser";
-import { FieldSpecificationKeyValuePair } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type FieldSpecificationKeyValuePair } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMapIterator";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFieldSpecification } from "./inspectTypeFieldSpecification";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 
 export interface ExaminedFieldSpecificationList {
     readonly fields: Map<string, Type.TPowerQueryType>;

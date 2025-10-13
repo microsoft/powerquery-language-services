@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Type, type TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export interface IInvokeExpression<T extends InvokeExpressionArguments> {
     readonly invokeExpressionXorNode: TXorNode;

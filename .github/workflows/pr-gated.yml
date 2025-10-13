@@ -13,22 +13,27 @@ jobs:
         steps:
             - name: checkout
               uses: actions/checkout@v5
+            - name: setup bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
             - name: setup node
               uses: actions/setup-node@v5
               with:
                   node-version-file: "package.json"
             - run: node -v
+            - run: bun -v
             - run: npm ci
             - run: npm audit
             - run: npm run lint
             - run: npm run build
             - name: Run tests
-              run: npm run test
+              run: bun test --bail --reporter=junit --reporter=spec > test-results.xml
             - name: Publish test results
               uses: dorny/test-reporter@v2.1.1
               if: success() || failure()
               with:
-                  name: Mocha Tests
+                  name: Bun Tests
                   path: test-results.xml
                   reporter: java-junit
                   fail-on-error: true

@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
-import type {
-    FoldingRange,
-    Hover,
-    Location,
-    Range,
-    SemanticTokenModifiers,
-    SemanticTokenTypes,
-    SignatureHelp,
+import { type Ast, type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type CommonError, type ICancellationToken, type Result } from "@microsoft/powerquery-parser";
+import {
+    type FoldingRange,
+    type Hover,
+    type Location,
+    type Range,
+    type SemanticTokenModifiers,
+    type SemanticTokenTypes,
+    type SignatureHelp,
 } from "vscode-languageserver-types";
-import { NodeIdMap, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type NodeIdMap, type ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import type { Autocomplete, TriedCurrentInvokeExpression } from "../inspection";
-import { Inspection, InspectionSettings } from "..";
-import type { AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
-import type { ILibrary } from "../library/library";
+import { type Autocomplete, type TriedCurrentInvokeExpression } from "../inspection";
+import { type Inspection, type InspectionSettings } from "..";
+import { type AutocompleteItem } from "../inspection/autocomplete/autocompleteItem";
+import { type ILibrary } from "../library/library";
 
 export interface IAutocompleteItemProvider {
     getAutocompleteItems(

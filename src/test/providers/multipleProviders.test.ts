@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it, xit } from "bun:test";
 
 import { TestConstants, TestUtils } from "..";
-import { AutocompleteItem } from "../../powerquery-language-services/inspection";
+import { type AutocompleteItem } from "../../powerquery-language-services/inspection";
 
 describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () => {
     describe(`getHover for key-value-pair`, () => {

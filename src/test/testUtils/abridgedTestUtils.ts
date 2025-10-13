@@ -2,10 +2,15 @@
 // Licensed under the MIT license.
 
 import { Assert } from "@microsoft/powerquery-parser";
-import { Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { DocumentSymbol, Inspection, SignatureHelp, SymbolKind } from "../../powerquery-language-services";
-import { NodeScope } from "../../powerquery-language-services/inspection";
+import {
+    type DocumentSymbol,
+    Inspection,
+    type SignatureHelp,
+    type SymbolKind,
+} from "../../powerquery-language-services";
+import { type NodeScope } from "../../powerquery-language-services/inspection";
 
 export interface AbridgedDocumentSymbol {
     readonly name: string;

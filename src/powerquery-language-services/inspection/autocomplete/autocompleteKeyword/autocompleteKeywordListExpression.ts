@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { AncestryUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { AncestryUtils, type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 
-import { ActiveNode } from "../../activeNode";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type ActiveNode } from "../../activeNode";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
 
 export function autocompleteKeywordListExpression(

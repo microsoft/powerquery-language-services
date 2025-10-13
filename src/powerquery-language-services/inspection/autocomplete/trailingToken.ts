@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-import { TokenPositionComparison } from "../../tokenPositionComparison";
+import type * as PQP from "@microsoft/powerquery-parser";
+import { type TokenPositionComparison } from "../../tokenPositionComparison";
 
 // A ParseError includes the token it failed to parse.
 // This is that token plus a flag for where it is in relation to a Position.

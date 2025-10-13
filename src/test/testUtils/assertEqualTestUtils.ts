@@ -1,27 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
-import {
-    DocumentSymbol,
-    FoldingRange,
-    Hover,
-    Location,
-    MarkupContent,
-    SignatureHelp,
-} from "vscode-languageserver-types";
-import { Range, TextEdit } from "vscode-languageserver-textdocument";
-import { expect } from "chai";
-import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { expect } from "bun:test";
 
-import { AbridgedAutocompleteItem, AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
+import { Assert, type ICancellationToken } from "@microsoft/powerquery-parser";
 import {
-    AnalysisSettings,
-    Inspection,
-    InspectionSettings,
-    PartialSemanticToken,
+    type DocumentSymbol,
+    type FoldingRange,
+    type Hover,
+    type Location,
+    MarkupContent,
+    type SignatureHelp,
+} from "vscode-languageserver-types";
+import { type Range, type TextEdit } from "vscode-languageserver-textdocument";
+import { type TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+
+import {
+    type AbridgedAutocompleteItem,
+    type AbridgedDocumentSymbol,
+    type TAbridgedNodeScopeItem,
+} from "./abridgedTestUtils";
+import {
+    type AnalysisSettings,
+    type Inspection,
+    type InspectionSettings,
+    type PartialSemanticToken,
 } from "../../powerquery-language-services";
-import { NodeScope } from "../../powerquery-language-services/inspection";
+import { type NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -29,7 +34,7 @@ export function assertEqualAbridgedAutocompleteItems(params: {
     readonly expected: ReadonlyArray<AbridgedAutocompleteItem>;
     readonly actual: ReadonlyArray<AbridgedAutocompleteItem>;
 }): void {
-    expect(params.actual).to.have.deep.members(params.expected);
+    expect(params.actual).toEqual(expect.arrayContaining(params.expected));
 }
 
 export async function assertEqualDefinitionAnalysis(params: {
@@ -42,7 +47,7 @@ export async function assertEqualDefinitionAnalysis(params: {
 
     if (actual) {
         Assert.isDefined(actual);
-        expect(params.expected).to.deep.equal(actual.map((location: Location) => location.range));
+        expect(params.expected).toEqual(actual.map((location: Location) => location.range));
     } else {
         Assert.isUndefined(actual);
     }
@@ -57,7 +62,7 @@ export async function assertEqualDocumentSymbolsAnalysis(params: {
     const actual: ReadonlyArray<DocumentSymbol> | undefined = await TestUtils.assertDocumentSymbolsAnalysis(params);
 
     Assert.isDefined(actual);
-    expect(params.expected).to.deep.equal(TestUtils.abridgedDocumentSymbols(actual));
+    expect(params.expected).toEqual(TestUtils.abridgedDocumentSymbols(actual));
 }
 
 export async function assertEqualFoldingRangesAnalysis(params: {
@@ -68,7 +73,7 @@ export async function assertEqualFoldingRangesAnalysis(params: {
     const foldingRanges: FoldingRange[] | undefined = await TestUtils.assertFoldingRangesAnalysis(params);
 
     Assert.isDefined(foldingRanges);
-    expect(foldingRanges).to.deep.equal(params.expected);
+    expect(foldingRanges).toEqual(Array.from(params.expected));
 }
 
 export async function assertEqualHoverAnalysis(params: {
@@ -81,7 +86,7 @@ export async function assertEqualHoverAnalysis(params: {
 
     if (params.expected) {
         Assert.isDefined(actual);
-        expect(assertAsMarkupContent(actual.contents).value).to.equal(params.expected);
+        expect(assertAsMarkupContent(actual.contents).value).toBe(params.expected);
     } else {
         Assert.isUndefined(actual);
     }
@@ -105,7 +110,7 @@ export async function assertEqualNodeScope(params: {
             left.identifier.localeCompare(right.identifier),
     );
 
-    expect(sortedActual).to.have.deep.members(sortedExpected);
+    expect(sortedActual).toEqual(expect.arrayContaining(sortedExpected));
 }
 
 export async function assertEqualPartialSemanticTokensAnalysis(params: {
@@ -117,7 +122,7 @@ export async function assertEqualPartialSemanticTokensAnalysis(params: {
 
     if (params.expected) {
         Assert.isDefined(semanticTokens);
-        expect(semanticTokens).to.deep.equal(params.expected);
+        expect(semanticTokens).toEqual(Array.from(params.expected));
     } else {
         Assert.isUndefined(semanticTokens);
     }
@@ -134,7 +139,7 @@ export async function assertEqualRenameEdits(params: {
 
     if (params.expected) {
         Assert.isDefined(textEdits);
-        expect(textEdits).to.deep.equal(params.expected);
+        expect(textEdits).toEqual(params.expected);
     } else {
         Assert.isUndefined(textEdits);
     }
@@ -165,7 +170,7 @@ export async function assertEqualSignatureHelpAnalysis(params: {
 
     if (params.expected) {
         Assert.isDefined(signatureHelp);
-        expect(signatureHelp).to.deep.equal(params.expected);
+        expect(signatureHelp).toEqual(params.expected);
     } else {
         Assert.isUndefined(signatureHelp);
     }
@@ -178,7 +183,7 @@ export function assertEqualScopeType(params: {
     const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.expected);
     const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.actual);
 
-    expect(actualArray).to.have.deep.members(expectedArray);
+    expect(actualArray).toEqual(expect.arrayContaining(expectedArray));
 }
 
 function assertAsMarkupContent(value: Hover["contents"]): MarkupContent {
@@ -201,7 +206,7 @@ function assertEqualPowerQueryType(params: {
     const jsonifiedExpected: string = JSON.stringify(params.expected, mapReplacer, 2);
     const jsonifiedActual: string = JSON.stringify(params.actual, mapReplacer, 2);
 
-    expect(jsonifiedActual).to.equal(jsonifiedExpected, `PowerQuery types are not equal.`);
+    expect(jsonifiedActual).toBe(jsonifiedExpected); // PowerQuery types are not equal
 }
 
 function assertIsMarkupContent(value: Hover["contents"]): asserts value is MarkupContent {

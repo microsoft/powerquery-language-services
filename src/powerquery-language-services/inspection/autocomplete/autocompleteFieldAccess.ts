@@ -4,26 +4,30 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position, Range } from "vscode-languageserver-types";
-import { Token, TokenKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Position, type Range } from "vscode-languageserver-types";
+import { type Token, TokenKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
-import { AutocompleteFieldAccess, InspectedFieldAccess, TriedAutocompleteFieldAccess } from "./commonTypes";
+import { type ActiveNode, ActiveNodeUtils, type TActiveNode } from "../activeNode";
+import {
+    type AutocompleteFieldAccess,
+    type InspectedFieldAccess,
+    type TriedAutocompleteFieldAccess,
+} from "./commonTypes";
 import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils, TextEdit } from "../..";
-import { TriedType, tryType } from "../type";
-import { AutocompleteItem } from "./autocompleteItem";
-import { InspectionSettings } from "../../inspectionSettings";
-import { TypeCache } from "../typeCache";
+import { type TriedType, tryType } from "../type";
+import { type AutocompleteItem } from "./autocompleteItem";
+import { type InspectionSettings } from "../../inspectionSettings";
+import { type TypeCache } from "../typeCache";
 
 export function inspectFieldAccess(
     lexerSnapshot: PQP.Lexer.LexerSnapshot,

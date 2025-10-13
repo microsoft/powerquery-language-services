@@ -4,7 +4,7 @@
 import {
     AncestryUtils,
     NodeIdMapIterator,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -12,7 +12,7 @@ import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordRightMostLeaf } from "./common";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
 
 export async function autocompleteKeywordLetExpression(

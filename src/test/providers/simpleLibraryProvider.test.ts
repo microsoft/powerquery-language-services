@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it } from "bun:test";
 import {
     KeywordConstant,
     UnaryOperator,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
-import { SignatureInformation } from "vscode-languageserver-types";
+import { type SignatureInformation } from "vscode-languageserver-types";
 
-import { AnalysisSettings, NullSymbolProvider } from "../../powerquery-language-services";
-import { AutocompleteItem, TypeCache } from "../../powerquery-language-services/inspection";
+import { type AnalysisSettings, NullSymbolProvider } from "../../powerquery-language-services";
+import { type AutocompleteItem, type TypeCache } from "../../powerquery-language-services/inspection";
 import { TestConstants, TestUtils } from "..";
-import { ILibrary } from "../../powerquery-language-services/library/library";
+import { type ILibrary } from "../../powerquery-language-services/library/library";
 import { TestLibraryName } from "../testConstants";
 
 describe(`SimpleLibraryProvider`, () => {

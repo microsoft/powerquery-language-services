@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
-import type {
-    DocumentSymbol,
-    FoldingRange,
-    Hover,
-    Location,
-    Position,
-    SignatureHelp,
+import { type CommonError, type ICancellationToken, type Result } from "@microsoft/powerquery-parser";
+import {
+    type DocumentSymbol,
+    type FoldingRange,
+    type Hover,
+    type Location,
+    type Position,
+    type SignatureHelp,
 } from "vscode-languageserver-types";
-import { ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type ParseError, type ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { AutocompleteItem, TActiveNode, TypeCache } from "../inspection";
-import { IDisposable } from "../commonTypes";
-import { PartialSemanticToken } from "../providers";
-import { TextEdit } from "vscode-languageserver-textdocument";
+import { type AutocompleteItem, type TActiveNode, type TypeCache } from "../inspection";
+import { type IDisposable } from "../commonTypes";
+import { type PartialSemanticToken } from "../providers";
+import { type TextEdit } from "vscode-languageserver-textdocument";
 
 // All language services related methods are of type Result<T | undefined, CommonError>.
 // The type is essentially a trinary type where:

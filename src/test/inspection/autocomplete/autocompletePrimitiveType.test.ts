@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it } from "bun:test";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import { Inspection } from "../../../powerquery-language-services";
+import { type Inspection } from "../../../powerquery-language-services";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TestUtils } from "../..";
 
@@ -101,29 +101,29 @@ describe(`Inspection - Autocomplete - PrimitiveType`, () => {
 
     it(`type nullable |date`, async () => await expectDatePrimitiveTypeReplacements(`type nullable |date`));
 
-    it(`type {|`, async () => await expectPrimitiveTypeInserts(`type {|`));
+    it(`{|`, async () => await expectPrimitiveTypeInserts(`{|`));
 
-    it(`type { |`, async () => await expectPrimitiveTypeInserts(`type { |`));
+    it(`{ |`, async () => await expectPrimitiveTypeInserts(`{ |`));
 
-    it(`type { number |`, async () => await expectNoPrimitiveTypeSuggestions(`type { number |`));
+    it(`{ number |`, async () => await expectNoPrimitiveTypeSuggestions(`{ number |`));
 
-    it(`type { number |}`, async () => await expectNoPrimitiveTypeSuggestions(`type { number |}`));
+    it(`{ number |}`, async () => await expectNoPrimitiveTypeSuggestions(`{ number |}`));
 
-    it(`type { number }|`, async () => await expectNoPrimitiveTypeSuggestions(`type { number }|`));
+    it(`{ number }|`, async () => await expectNoPrimitiveTypeSuggestions(`{ number }|`));
 
-    it(`type { date|`, async () => await expectDatePrimitiveTypeReplacements(`type { date|`));
+    it(`{ date|`, async () => await expectDatePrimitiveTypeReplacements(`{ date|`));
 
-    it(`type { |date`, async () => await expectDatePrimitiveTypeReplacements(`type { |date`));
+    it(`{ |date`, async () => await expectDatePrimitiveTypeReplacements(`{ |date`));
 
-    it(`type { | date`, async () => await expectNoPrimitiveTypeSuggestions(`type { | date`));
+    it(`{ | date`, async () => await expectNoPrimitiveTypeSuggestions(`{ | date`));
 
-    it(`type { date | `, async () => await expectNoPrimitiveTypeSuggestions(`type { date | `));
+    it(`{ date | `, async () => await expectNoPrimitiveTypeSuggestions(`{ date | `));
 
-    it(`type { date | } `, async () => await expectNoPrimitiveTypeSuggestions(`type { date | } `));
+    it(`{ date | } `, async () => await expectNoPrimitiveTypeSuggestions(`{ date | } `));
 
-    it(`type {date|}`, async () => await expectDatePrimitiveTypeReplacements(`type {date|}`));
+    it(`{date|}`, async () => await expectDatePrimitiveTypeReplacements(`{date|}`));
 
-    it(`type {|date}`, async () => await expectDatePrimitiveTypeReplacements(`type {|date}`));
+    it(`{|date}`, async () => await expectDatePrimitiveTypeReplacements(`{|date}`));
 
     it(`type [x =|`, async () => await expectPrimitiveTypeInserts(`type [x =|`));
 

@@ -1,6 +1,6 @@
 import { StringUtils } from "@microsoft/powerquery-parser";
 
-import { ILocalizationTemplates } from "./templates";
+import { type ILocalizationTemplates } from "./templates";
 
 interface ILocalization {
     error_validation_duplicate_identifier: (templates: ILocalizationTemplates, identifier: string) => string;

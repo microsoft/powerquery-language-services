@@ -3,24 +3,24 @@
 
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    ParseContext,
-    TXorNode,
-    XorNode,
+    type ParseContext,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ArrayUtils, Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
+import { type Position } from "vscode-languageserver-types";
 
 import {
-    ActiveNode,
+    type ActiveNode,
     ActiveNodeKind,
     ActiveNodeLeafKind,
-    OutOfBoundPosition,
-    TActiveLeafIdentifier,
-    TActiveNode,
+    type OutOfBoundPosition,
+    type TActiveLeafIdentifier,
+    type TActiveNode,
 } from "./activeNode";
 import { PositionUtils } from "../..";
 

@@ -4,35 +4,35 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
-import { PrimitiveTypeConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
+import { type ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
+import { type PrimitiveTypeConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
+import { type Inspection, InspectionTraceConstant, TraceUtils } from "../..";
 import {
-    LetVariableScopeItem,
-    NodeScope,
-    ParameterScopeItem,
-    RecordFieldScopeItem,
-    ScopeById,
+    type LetVariableScopeItem,
+    type NodeScope,
+    type ParameterScopeItem,
+    type RecordFieldScopeItem,
+    type ScopeById,
     ScopeItemKind,
-    SectionMemberScopeItem,
-    TriedNodeScope,
-    TScopeItem,
+    type SectionMemberScopeItem,
+    type TriedNodeScope,
+    type TScopeItem,
 } from "./scope";
 import {
-    PseduoFunctionExpressionType,
+    type PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
-    PseudoFunctionParameterType,
+    type PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TypeById } from "../typeCache";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TypeById } from "../typeCache";
 
 // Builds a scope for the given node.
 export async function tryNodeScope(

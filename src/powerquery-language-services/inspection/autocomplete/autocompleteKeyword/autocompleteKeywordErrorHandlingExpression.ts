@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Keyword, Token } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import type { Position } from "vscode-languageserver-types";
+import { type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Position } from "vscode-languageserver-types";
 
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
-import { TrailingToken } from "../trailingToken";
+import { type TrailingToken } from "../trailingToken";
 
 export function autocompleteKeywordErrorHandlingExpression(
     state: InspectAutocompleteKeywordState,

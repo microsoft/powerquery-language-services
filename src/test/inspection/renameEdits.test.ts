@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it } from "bun:test";
 
-import type { TextEdit } from "vscode-languageserver-types";
+import { type TextEdit } from "vscode-languageserver-types";
 
 import { TestConstants, TestUtils } from "..";
 

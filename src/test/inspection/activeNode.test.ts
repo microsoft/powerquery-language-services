@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, expect, it } from "bun:test";
 import { DefaultSettings } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 
-import { ActiveNodeUtils, TActiveNode } from "../../powerquery-language-services/inspection";
+import { ActiveNodeUtils, type TActiveNode } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 
 describe(`ActiveNodeUtils`, () => {
@@ -21,7 +20,7 @@ describe(`ActiveNodeUtils`, () => {
 
             if (params.expected !== undefined) {
                 ActiveNodeUtils.assertPositionInBounds(activeNode);
-                expect(activeNode.isInKey).to.equal(params.expected);
+                expect(activeNode.isInKey).toEqual(params.expected);
             }
         }
 

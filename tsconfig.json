@@ -19,10 +19,17 @@
         "target": "es2022",
         "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
         "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "types": [
+            "bun-types"
+        ]
     },
-    "include": ["src/**/*.ts"],
-    "exclude": ["node_modules"],
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
     "ts-node": {
         "compilerOptions": {
             "module": "commonjs"

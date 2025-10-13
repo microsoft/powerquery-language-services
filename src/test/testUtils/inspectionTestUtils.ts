@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ResultUtils, Task, TaskUtils } from "@microsoft/powerquery-parser";
-import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Position } from "vscode-languageserver-types";
-import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { Assert, ResultUtils, type Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { type NodeIdMap, type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Position } from "vscode-languageserver-types";
+import { type TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import {
     ActiveNodeUtils,
-    Inspected,
-    NodeScope,
-    TActiveNode,
+    type Inspected,
+    type NodeScope,
+    type TActiveNode,
     tryNodeScope,
-    TypeCache,
+    type TypeCache,
     TypeCacheUtils,
 } from "../../powerquery-language-services/inspection";
-import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { Inspection, type InspectionSettings } from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
 export async function assertAutocompleteInspection(params: {

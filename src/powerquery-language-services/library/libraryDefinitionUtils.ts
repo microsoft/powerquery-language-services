@@ -1,19 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    type CompletionItemKind,
+    type ParameterInformation,
+    type SignatureInformation,
+} from "vscode-languageserver-types";
+import { type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
-    LibraryConstant,
+    type LibraryConstant,
     LibraryDefinitionKind,
-    LibraryDefinitions,
-    LibraryFunction,
-    LibraryParameter,
-    LibraryType,
-    TLibraryDefinition,
+    type LibraryDefinitions,
+    type LibraryFunction,
+    type LibraryParameter,
+    type LibraryType,
+    type TLibraryDefinition,
 } from "./library";
-import { ExternalType } from "../externalType";
+import { type ExternalType } from "../externalType";
 
 export function assertAsConstant(definition: TLibraryDefinition | undefined): LibraryConstant {
     assertIsConstant(definition);

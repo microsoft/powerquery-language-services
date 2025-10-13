@@ -16,11 +16,15 @@ import {
     MarkupContent,
     Position,
     Range,
-    SignatureHelp,
+    type SignatureHelp,
     SymbolKind,
     TextEdit,
 } from "vscode-languageserver-types";
-import { DocumentUri, TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+import {
+    type DocumentUri,
+    TextDocument,
+    type TextDocumentContentChangeEvent,
+} from "vscode-languageserver-textdocument";
 
 export {
     CompletionItem,

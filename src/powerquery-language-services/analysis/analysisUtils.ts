@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import type { TextDocument } from "vscode-languageserver-textdocument";
+import { type TextDocument } from "vscode-languageserver-textdocument";
 
-import { Analysis } from "./analysis";
-import { AnalysisSettings } from "./analysisSettings";
+import { type Analysis } from "./analysis";
+import { type AnalysisSettings } from "./analysisSettings";
 import { DocumentAnalysis } from "./documentAnalysis";
 
 const analysisByUri: Map<string, [Analysis, number]> = new Map();

@@ -3,9 +3,9 @@
 
 import * as PQF from "@microsoft/powerquery-formatter";
 import * as PQP from "@microsoft/powerquery-parser";
-import { Range, TextEdit } from "vscode-languageserver-types";
+import { type Range, TextEdit } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { type TextDocument } from "vscode-languageserver-textdocument";
 
 export function tryFormat(
     document: TextDocument,

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { type CommonError, type ICancellationToken, type Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
-import { Inspection } from "..";
+import { type AutocompleteItemProviderContext, type IAutocompleteItemProvider } from "./commonTypes";
+import { type Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
 export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvider {

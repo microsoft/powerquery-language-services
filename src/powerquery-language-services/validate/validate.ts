@@ -1,21 +1,25 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Diagnostic } from "vscode-languageserver-types";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import {
+    type NodeIdMap,
+    type ParseError,
+    type ParseState,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Diagnostic } from "vscode-languageserver-types";
+import { type TextDocument } from "vscode-languageserver-textdocument";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { TypeCache } from "../inspection";
+import { type Analysis, type AnalysisSettings, AnalysisUtils } from "../analysis";
+import { type CommonError, type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { type TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
 import { validateInvokeExpression } from "./validateInvokeExpression";
-import type { ValidateOk } from "./validateOk";
+import { type ValidateOk } from "./validateOk";
 import { validateParse } from "./validateParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
-import type { ValidationSettings } from "./validationSettings";
+import { type ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 export function validate(

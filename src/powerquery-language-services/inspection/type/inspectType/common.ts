@@ -4,12 +4,12 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
-import { NodeScope, ParameterScopeItem, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
+import { type InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
+import { type NodeScope, type ParameterScopeItem, ScopeItemKind, tryNodeScope, type TScopeItem } from "../../scope";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -35,7 +35,7 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
-import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
+import { type TDereferencedIdentifier } from "../../dereferencedIdentifier";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
