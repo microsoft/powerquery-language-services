@@ -1,27 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { assert, expect } from "chai";
+import { describe, expect, it } from "bun:test";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import {
-    Diagnostic,
+    type Diagnostic,
     DiagnosticErrorCode,
-    DiagnosticRelatedInformation,
+    type DiagnosticRelatedInformation,
     DiagnosticSeverity,
-    Position,
-    ValidationSettings,
+    type Position,
+    type ValidationSettings,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
+import { type ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
-    assert.isDefined(diagnostic.code);
-    assert.isDefined(diagnostic.message);
-    assert.isDefined(diagnostic.range);
-    expect(diagnostic.range.start).to.deep.equal(startPosition);
-    expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
+    if (diagnostic.code === undefined) {
+        throw new Error("diagnostic.code is undefined");
+    }
+
+    if (diagnostic.message === undefined) {
+        throw new Error("diagnostic.message is undefined");
+    }
+
+    if (diagnostic.range === undefined) {
+        throw new Error("diagnostic.range is undefined");
+    }
+
+    expect(diagnostic.range.start).toEqual(startPosition);
+    expect(diagnostic.severity).toBe(DiagnosticSeverity.Error);
 }
 
 async function expectNoValidationErrors(text: string): Promise<void> {
@@ -31,8 +39,8 @@ async function expectNoValidationErrors(text: string): Promise<void> {
         validationSettings: DuplicateIdentifierSettings,
     });
 
-    expect(validationResult.hasSyntaxError).to.equal(false, "hasSyntaxError flag should be false");
-    expect(validationResult.diagnostics.length).to.equal(0, "no diagnostics expected");
+    expect(validationResult.hasSyntaxError).toBe(false); // hasSyntaxError flag should be false
+    expect(validationResult.diagnostics.length).toBe(0); // no diagnostics expected
 }
 
 interface DuplicateIdentifierError {
@@ -67,8 +75,8 @@ async function validateDuplicateIdentifierDiagnostics(params: {
 
     for (const diagnostic of actual) {
         Assert.isDefined(diagnostic.relatedInformation);
-        expect(diagnostic.relatedInformation?.length).to.be.greaterThan(0, "expected at least one relatedInformation");
-        expect(diagnostic.source).to.equal(errorSource, `expected diagnostic to have errorSource of ${errorSource}`);
+        expect(diagnostic.relatedInformation?.length).toBeGreaterThan(0); // expected at least one relatedInformation
+        expect(diagnostic.source).toBe(errorSource); // expected diagnostic to have errorSource
 
         const match: RegExpMatchArray | null = diagnostic.message.match(/'(.*?)'/);
         const name: string = match ? match[1] : "";
@@ -82,7 +90,7 @@ async function validateDuplicateIdentifierDiagnostics(params: {
         });
     }
 
-    expect(abridgedActual).deep.equals(params.expected);
+    expect(abridgedActual).toEqual(Array.from(params.expected));
 }
 
 describe(`Validation - duplicateIdentifier`, () => {
@@ -98,9 +106,9 @@ describe(`Validation - duplicateIdentifier`, () => {
                 validationSettings: DuplicateIdentifierSettings,
             });
 
-            expect(validationResult.hasSyntaxError).to.equal(true, "hasSyntaxError flag should be true");
-            expect(validationResult.diagnostics.length).to.equal(1);
-            expect(validationResult.diagnostics[0].source).to.equal(errorSource);
+            expect(validationResult.hasSyntaxError).toBe(true); // hasSyntaxError flag should be true
+            expect(validationResult.diagnostics.length).toBe(1);
+            expect(validationResult.diagnostics[0].source).toBe(errorSource);
             assertValidationError(validationResult.diagnostics[0], { line: 0, character: 4 });
         });
 

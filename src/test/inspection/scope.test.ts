@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { describe, it } from "bun:test";
 
-import { Inspection, InspectionSettings, Library, TypeStrategy } from "../../powerquery-language-services";
-import { TAbridgedNodeScopeItem } from "../testUtils";
+import { Inspection, type InspectionSettings, Library, TypeStrategy } from "../../powerquery-language-services";
+import { type TAbridgedNodeScopeItem } from "../testUtils";
 import { TestUtils } from "..";
 
 describe(`Inspection - Scope - Identifier`, () => {

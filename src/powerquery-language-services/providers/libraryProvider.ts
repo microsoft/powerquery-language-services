@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { Hover, MarkupKind, SignatureHelp, SignatureInformation } from "vscode-languageserver-types";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert, type CommonError, type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { type Hover, MarkupKind, type SignatureHelp, type SignatureInformation } from "vscode-languageserver-types";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
-    AutocompleteItemProviderContext,
-    HoverProviderContext,
-    ILibraryProvider,
-    SignatureProviderContext,
+    type AutocompleteItemProviderContext,
+    type HoverProviderContext,
+    type ILibraryProvider,
+    type SignatureProviderContext,
 } from "./commonTypes";
 import { Library, LibraryDefinitionUtils, LibraryUtils } from "../library";
 import { AutocompleteItemUtils } from "../inspection";
-import { Inspection } from "..";
+import { type Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
 export class LibraryProvider implements ILibraryProvider {

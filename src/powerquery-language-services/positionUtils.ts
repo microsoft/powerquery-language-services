@@ -3,14 +3,14 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import type { Position, Range } from "vscode-languageserver-types";
+import { type Position, type Range } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TokenPositionComparison } from "./tokenPositionComparison";
 
 export function compareTokenPosition(

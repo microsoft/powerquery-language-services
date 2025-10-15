@@ -3,20 +3,20 @@
 
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Assert, CommonError, CommonSettings, ResultUtils, Trace } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, type CommonSettings, ResultUtils, type Trace } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     PrimitiveTypeConstant,
     PrimitiveTypeConstants,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
+import { type ActiveNode, ActiveNodeUtils, type TActiveNode } from "../activeNode";
 import {
     AutocompleteTraceConstant,
     calculateJaroWinkler,
@@ -25,9 +25,9 @@ import {
     Range,
     TextEdit,
 } from "../..";
-import { AutocompleteItem } from "./autocompleteItem";
-import { TrailingToken } from "./trailingToken";
-import { TriedAutocompletePrimitiveType } from "./commonTypes";
+import { type AutocompleteItem } from "./autocompleteItem";
+import { type TrailingToken } from "./trailingToken";
+import { type TriedAutocompletePrimitiveType } from "./commonTypes";
 
 export function tryAutocompletePrimitiveType(
     settings: CommonSettings,

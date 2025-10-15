@@ -3,16 +3,20 @@
 
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
-import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import type { Range } from "vscode-languageserver-textdocument";
+import { type Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
+import {
+    type NodeIdMap,
+    NodeIdMapUtils,
+    type TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Range } from "vscode-languageserver-textdocument";
 
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
-import { ILocalizationTemplates } from "../localization/templates";
-import { ValidationSettings } from "./validationSettings";
+import { type ILocalizationTemplates } from "../localization/templates";
+import { type ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 export async function validateInvokeExpression(

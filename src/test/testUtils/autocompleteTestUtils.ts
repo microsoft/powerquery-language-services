@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { expect } from "chai";
+import { expect } from "bun:test";
 
 import { TestConstants, TestUtils } from "..";
-import { AbridgedAutocompleteItem } from "./abridgedTestUtils";
+import { type AbridgedAutocompleteItem } from "./abridgedTestUtils";
 import { AutocompleteItemUtils } from "../../powerquery-language-services/inspection";
-import { Inspection } from "../../powerquery-language-services";
+import { type Inspection } from "../../powerquery-language-services";
 
 export async function expectAbridgedAutocompleteItems(params: {
     readonly textWithPipe: string;
@@ -90,6 +89,6 @@ export async function expectTopSuggestions(params: {
         .slice(params.expected.length)
         .filter((value: Inspection.AutocompleteItem) => value.jaroWinklerScore >= remainderScoreThreshold);
 
-    expect(topN).to.deep.equal(params.expected);
-    expect(remainderAboveThreshold).to.be.empty;
+    expect(topN).toEqual(params.expected);
+    expect(remainderAboveThreshold).toHaveLength(0);
 }

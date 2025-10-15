@@ -3,11 +3,11 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type NodeIdMap, type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "../../activeNode";
-import { AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
+import { type ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, type TActiveNode } from "../../activeNode";
+import { type AutocompleteItem, AutocompleteItemUtils } from "../autocompleteItem";
 import { autocompleteKeywordDefault } from "./autocompleteKeywordDefault";
 import { autocompleteKeywordErrorHandlingExpression } from "./autocompleteKeywordErrorHandlingExpression";
 import { autocompleteKeywordIdentifierPairedExpression } from "./autocompleteKeywordIdentifierPairedExpression";
@@ -15,10 +15,10 @@ import { autocompleteKeywordLetExpression } from "./autocompleteKeywordLetExpres
 import { autocompleteKeywordListExpression } from "./autocompleteKeywordListExpression";
 import { autocompleteKeywordSectionMember } from "./autocompleteKeywordSectionMember";
 import { autocompleteKeywordTrailingText } from "./autocompleteKeywordTrailingText";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 import { PositionUtils } from "../../..";
-import { TrailingToken } from "../trailingToken";
-import { TriedAutocompleteKeyword } from "../commonTypes";
+import { type TrailingToken } from "../trailingToken";
+import { type TriedAutocompleteKeyword } from "../commonTypes";
 
 export function tryAutocompleteKeyword(
     settings: PQP.CommonSettings,

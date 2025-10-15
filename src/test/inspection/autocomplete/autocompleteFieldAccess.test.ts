@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { ResultUtils, Task } from "@microsoft/powerquery-parser";
+import { describe, expect, it } from "bun:test";
+import { ResultUtils, type Task } from "@microsoft/powerquery-parser";
 
-import { ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
-import { Inspection, Position } from "../../../powerquery-language-services";
+import { type ActiveNode, ActiveNodeUtils } from "../../../powerquery-language-services/inspection";
+import { type Inspection, type Position } from "../../../powerquery-language-services";
 import { TestConstants, TestUtils } from "../..";
-import { expect } from "chai";
 import { inspectFieldAccess } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteFieldAccess";
 
 describe(`Inspection - Autocomplete - FieldAccess`, () => {
@@ -61,7 +60,7 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                 activeNode,
             );
 
-            expect(actual).to.deep.equal(expected);
+            expect(actual).toEqual(expected);
         }
 
         describe(`FieldSelection`, () => {

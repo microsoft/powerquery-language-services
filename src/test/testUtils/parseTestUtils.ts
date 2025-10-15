@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
-import { Position } from "vscode-languageserver-types";
+import { type Settings, type Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { type Position } from "vscode-languageserver-types";
 
-import { ActiveNodeUtils, TActiveNode } from "../../powerquery-language-services/inspection";
+import { ActiveNodeUtils, type TActiveNode } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 
 export async function assertActiveNode(params: {

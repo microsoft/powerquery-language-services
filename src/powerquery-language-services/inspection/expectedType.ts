@@ -4,10 +4,10 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, TActiveNode } from "./activeNode";
+import { type ActiveNode, ActiveNodeLeafKind, ActiveNodeUtils, type TActiveNode } from "./activeNode";
 import { InspectionTraceConstant } from "../trace";
 
 export type TriedExpectedType = PQP.Result<Type.TPowerQueryType | undefined, PQP.CommonError.CommonError>;

@@ -2,11 +2,11 @@
 // Licensed under the MIT license.
 
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 
 export function inspectTypePrimitiveType(
     state: InspectTypeState,

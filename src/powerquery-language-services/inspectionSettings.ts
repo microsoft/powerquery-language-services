@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 
-import { Library } from "./library";
-import { TypeById } from "./inspection";
+import { type Library } from "./library";
+import { type TypeById } from "./inspection";
 
 export enum TypeStrategy {
     // Allow evaluation of extended types (such as AnyUnion).

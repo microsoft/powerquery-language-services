@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex } from "./common";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeRangeExpression(

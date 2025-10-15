@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { TScopeItem } from "../scope";
+import { type TScopeItem } from "../scope";
 
 export enum DereferencedIdentifierKind {
     External = "External",

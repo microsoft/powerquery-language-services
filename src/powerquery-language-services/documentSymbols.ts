@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    XorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { DocumentSymbol, SymbolKind } from "./commonTypes";
+import { type DocumentSymbol, SymbolKind } from "./commonTypes";
 import { InspectionUtils } from ".";
 
 export function getDocumentSymbols(

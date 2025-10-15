@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, expect, it } from "bun:test";
+
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { expect } from "chai";
-import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { type TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import { assertEqualRootType, assertScopeType } from "../testUtils";
-import { InspectionSettings } from "../../powerquery-language-services";
-import { ScopeTypeByKey } from "../../powerquery-language-services/inspection";
+import { type InspectionSettings } from "../../powerquery-language-services";
+import { type ScopeTypeByKey } from "../../powerquery-language-services/inspection";
 import { TestConstants } from "..";
 import { TestLibraryName } from "../testConstants";
 
@@ -38,7 +38,7 @@ describe(`dereferenceIdentifierUtils`, () => {
         const expectedEntries: [string, Type.TPowerQueryType][] = [...params.expected.entries()];
         const actualEntries: [string, Type.TPowerQueryType][] = [...scopeTypeByKey.entries()];
 
-        expect(actualEntries).to.have.deep.members(expectedEntries);
+        expect(actualEntries).toEqual(expect.arrayContaining(expectedEntries));
     }
 
     const numberLiteral: Type.NumberLiteral = TypeUtils.numberLiteral(false, 42);

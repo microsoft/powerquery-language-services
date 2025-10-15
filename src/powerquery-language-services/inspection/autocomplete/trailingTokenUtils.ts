@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-import type { Position } from "vscode-languageserver-types";
+import type * as PQP from "@microsoft/powerquery-parser";
+import { type Position } from "vscode-languageserver-types";
 
 import { PositionUtils, TokenPositionComparison } from "../..";
-import { TrailingToken } from "./trailingToken";
+import { type TrailingToken } from "./trailingToken";
 
 export function createTrailingToken(position: Position, parseErrorToken: PQP.Language.Token.Token): TrailingToken {
     const tokenStartComparison: TokenPositionComparison = PositionUtils.compareTokenPosition(

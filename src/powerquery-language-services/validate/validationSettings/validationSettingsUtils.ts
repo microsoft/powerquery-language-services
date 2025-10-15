@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { InspectionSettings } from "../..";
-import { ValidationSettings } from "./validationSettings";
+import { type InspectionSettings } from "../..";
+import { type ValidationSettings } from "./validationSettings";
 
 /** Creates a ValidationSettings instance by:
  *  1. shallow copying InspectionSettings

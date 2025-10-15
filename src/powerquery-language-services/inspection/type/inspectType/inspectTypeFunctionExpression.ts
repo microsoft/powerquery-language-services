@@ -2,18 +2,18 @@
 // Licensed under the MIT license.
 
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
-    PseduoFunctionExpressionType,
+    type PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
-    PseudoFunctionParameterType,
+    type PseudoFunctionParameterType,
 } from "../../pseudoFunctionExpressionType";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeFunctionExpression(

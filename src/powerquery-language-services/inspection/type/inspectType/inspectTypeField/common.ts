@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { assertGetOrCreateNodeScope, inspectXor } from "../common";
-import { EachScopeItem, ScopeItemKind, ScopeUtils } from "../../../scope";
+import { type EachScopeItem, ScopeItemKind, ScopeUtils } from "../../../scope";
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
-import { InspectTypeState } from "../inspectTypeState";
+import { type InspectTypeState } from "../inspectTypeState";
 
 // A field selection/projection is an operation a target value,
 // where the target is either an EachExpression or a RecursivePrimaryExpression.

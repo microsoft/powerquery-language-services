@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, expect, it } from "bun:test";
 import { Assert } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
 
-import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
+import {
+    type Diagnostic,
+    DiagnosticErrorCode,
+    type Position,
+    type ValidationSettings,
+} from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { assertLessWhenSuppressed } from "../testUtils/validationTestUtils";
 import { SimpleLibraryValidateAllSettings } from "../testConstants";
@@ -77,9 +81,9 @@ function expectArgumentCountMismatch(
         10,
     );
 
-    expect(actualNumMin).to.equal(expectedNumMin);
-    expect(actualNumMax).to.equal(expectedNumMax);
-    expect(actualNumGiven).to.equal(expectedNumGiven);
+    expect(actualNumMin).toBe(expectedNumMin);
+    expect(actualNumMax).toBe(expectedNumMax);
+    expect(actualNumGiven).toBe(expectedNumGiven);
 }
 
 function expectInvocationDiagnosticPositions(
@@ -90,7 +94,7 @@ function expectInvocationDiagnosticPositions(
         (abridged: AbridgedInvocationDiagnostic) => abridged.startPosition,
     );
 
-    expect(abridgedPositions).to.deep.equal(expectedStartPositions);
+    expect(abridgedPositions).toEqual(expectedStartPositions);
 }
 
 describe("Validation - InvokeExpression", () => {
@@ -141,7 +145,7 @@ describe("Validation - InvokeExpression", () => {
                     text: `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(0, "")`,
                 });
 
-            expect(invocationDiagnostics.length).to.equal(0);
+            expect(invocationDiagnostics.length).toBe(0);
         });
     });
 
@@ -156,7 +160,7 @@ describe("Validation - InvokeExpression", () => {
                         _`,
                 });
 
-            expect(invocationDiagnostics.length).to.equal(2);
+            expect(invocationDiagnostics.length).toBe(2);
 
             const expected: ReadonlyArray<Position> = [
                 {

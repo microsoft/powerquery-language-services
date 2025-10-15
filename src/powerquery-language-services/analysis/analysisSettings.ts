@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { IAutocompleteItemProvider, ILibraryProvider, ILocalDocumentProvider } from "../providers";
-import { ILibrary } from "../library/library";
-import { InspectionSettings } from "../inspectionSettings";
-import { TypeCache } from "../inspection";
+import { type IAutocompleteItemProvider, type ILibraryProvider, type ILocalDocumentProvider } from "../providers";
+import { type ILibrary } from "../library/library";
+import { type InspectionSettings } from "../inspectionSettings";
+import { type TypeCache } from "../inspection";
 
 export interface AnalysisSettings {
     // Allows injection of custom providers.

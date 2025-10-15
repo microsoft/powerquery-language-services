@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "@microsoft/powerquery-parser";
+import { type CommonError, type Result } from "@microsoft/powerquery-parser";
 
 import {
-    AutocompleteItemProviderContext,
-    Hover,
-    HoverProviderContext,
-    Inspection,
+    type AutocompleteItemProviderContext,
+    type Hover,
+    type HoverProviderContext,
+    type Inspection,
     LibraryProvider,
-    SignatureHelp,
-    SignatureProviderContext,
+    type SignatureHelp,
+    type SignatureProviderContext,
 } from "../../powerquery-language-services";
-import { ILibrary } from "../../powerquery-language-services/library/library";
+import { type ILibrary } from "../../powerquery-language-services/library/library";
 
 export class SlowLibraryProvider extends LibraryProvider {
     private readonly delayInMs: number;

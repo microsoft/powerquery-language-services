@@ -3,26 +3,26 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import {
-    AstNodeById,
-    ChildIdsById,
+    type AstNodeById,
+    type ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
-import { NodeIdMap, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type NodeIdMap, type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
+import { type Position } from "vscode-languageserver-types";
 
-import { ActiveNodeUtils, TActiveNode } from "./activeNode";
+import { ActiveNodeUtils, type TActiveNode } from "./activeNode";
 
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
-import { Inspection, InspectionTraceConstant } from "..";
-import { TriedExpectedType, tryExpectedType } from "./expectedType";
-import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
-import { TriedScopeType, tryScopeType } from "./type";
-import { TypeCache, TypeCacheUtils } from "./typeCache";
+import { type Inspection, InspectionTraceConstant } from "..";
+import { type TriedExpectedType, tryExpectedType } from "./expectedType";
+import { type TriedNodeScope, tryNodeScope, type TScopeItem } from "./scope";
+import { type TriedScopeType, tryScopeType } from "./type";
+import { type TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
-import { Inspected } from "./commonTypes";
-import { InspectionSettings } from "../inspectionSettings";
-import { TriedCurrentInvokeExpression } from "./invokeExpression";
+import { type Inspected } from "./commonTypes";
+import { type InspectionSettings } from "../inspectionSettings";
+import { type TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 
 export class InspectionInstance implements Inspected {

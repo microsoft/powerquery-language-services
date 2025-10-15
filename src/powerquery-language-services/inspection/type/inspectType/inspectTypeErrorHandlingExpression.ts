@@ -5,15 +5,15 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex } from "./common";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 
 export async function inspectTypeErrorHandlingExpression(
     state: InspectTypeState,

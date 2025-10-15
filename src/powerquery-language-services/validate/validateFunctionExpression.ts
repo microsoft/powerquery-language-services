@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
+import { type Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Range } from "vscode-languageserver-textdocument";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Range } from "vscode-languageserver-textdocument";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
-import { ILocalizationTemplates } from "../localization/templates";
+import { type ILocalizationTemplates } from "../localization/templates";
 import { PositionUtils } from "..";
-import { ValidationSettings } from "./validationSettings";
+import { type ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // Check for repeat parameter names for FunctionExpressions.

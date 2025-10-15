@@ -1,14 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { AncestryUtils, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    AncestryUtils,
+    NodeIdMapUtils,
+    type TXorNode,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert, CommonError } from "@microsoft/powerquery-parser";
-import { Ast, Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Ast, type Keyword, KeywordUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ActiveNode } from "../../activeNode";
-import { AutocompleteItem } from "../autocompleteItem";
+import { type ActiveNode } from "../../activeNode";
+import { type AutocompleteItem } from "../autocompleteItem";
 import { autocompleteKeyword } from "./autocompleteKeyword";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 
 export async function autocompleteKeywordRightMostLeaf(
     state: InspectAutocompleteKeywordState,

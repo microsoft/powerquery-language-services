@@ -1,14 +1,26 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { DocumentSymbol, FoldingRange, Hover, Location, Position, SignatureHelp } from "vscode-languageserver-types";
-import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    type DocumentSymbol,
+    type FoldingRange,
+    type Hover,
+    type Location,
+    type Position,
+    type SignatureHelp,
+} from "vscode-languageserver-types";
+import { type ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 
 import * as TestUtils from "./testUtils";
-import { Analysis, AnalysisSettings, AnalysisUtils, PartialSemanticToken } from "../../powerquery-language-services";
-import { AutocompleteItem } from "../../powerquery-language-services/inspection";
-import { MockDocument } from "../mockDocument";
-import { TextEdit } from "vscode-languageserver-textdocument";
+import {
+    type Analysis,
+    type AnalysisSettings,
+    AnalysisUtils,
+    type PartialSemanticToken,
+} from "../../powerquery-language-services";
+import { type AutocompleteItem } from "../../powerquery-language-services/inspection";
+import { type MockDocument } from "../mockDocument";
+import { type TextEdit } from "vscode-languageserver-textdocument";
 
 export function assertAnalysisFromText(params: {
     readonly text: string;

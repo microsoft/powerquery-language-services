@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import type * as PQP from "@microsoft/powerquery-parser";
+import { type Ast, type Constant, type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 // Keys are identifier literals.
 export type ScopeTypeByKey = Map<string, Type.TPowerQueryType>;

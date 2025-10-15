@@ -18,7 +18,7 @@
 // Eg. `Table.AddColumn(tbl, "foo", each 1)` could be implemented so the evaluated type is a modification
 // of its first argument.
 
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 export type TExternalTypeRequest = ExternalValueTypeRequest | ExternalInvocationTypeRequest;
 

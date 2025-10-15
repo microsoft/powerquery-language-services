@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ExternalType } from ".";
 

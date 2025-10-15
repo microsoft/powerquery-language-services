@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it } from "bun:test";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { Inspection } from "../../../powerquery-language-services";
+import { type Inspection } from "../../../powerquery-language-services";
 import { TestUtils } from "../..";
 
 describe(`Inspection - Autocomplete - Language constants`, () => {

@@ -7,15 +7,15 @@ import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { inspectTypeFromChildAttributeIndex } from "./common";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeFunctionType(

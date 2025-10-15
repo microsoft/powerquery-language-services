@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "@microsoft/powerquery-parser";
-import { FoldingRange, Location } from "vscode-languageserver-types";
+import { type CommonError, type Result } from "@microsoft/powerquery-parser";
+import { type FoldingRange, type Location } from "vscode-languageserver-types";
 
 import {
-    AutocompleteItemProviderContext,
-    DefinitionProviderContext,
-    FoldingRangeProviderContext,
-    Hover,
-    HoverProviderContext,
-    Inspection,
+    type AutocompleteItemProviderContext,
+    type DefinitionProviderContext,
+    type FoldingRangeProviderContext,
+    type Hover,
+    type HoverProviderContext,
+    type Inspection,
     LocalDocumentProvider,
-    PartialSemanticToken,
-    SemanticTokenProviderContext,
-    SignatureHelp,
-    SignatureProviderContext,
+    type PartialSemanticToken,
+    type SemanticTokenProviderContext,
+    type SignatureHelp,
+    type SignatureProviderContext,
 } from "../../powerquery-language-services";
-import { ILibrary } from "../../powerquery-language-services/library/library";
-import { TypeCache } from "../../powerquery-language-services/inspection";
+import { type ILibrary } from "../../powerquery-language-services/library/library";
+import { type TypeCache } from "../../powerquery-language-services/inspection";
 
 export class SlowLocalDocumentProvider extends LocalDocumentProvider {
     private readonly delayInMs: number;

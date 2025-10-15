@@ -2,22 +2,27 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticRelatedInformation, DiagnosticSeverity, DocumentUri } from "vscode-languageserver-types";
 import {
-    NodeIdMap,
+    type Diagnostic,
+    type DiagnosticRelatedInformation,
+    DiagnosticSeverity,
+    type DocumentUri,
+} from "vscode-languageserver-types";
+import {
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ICancellationToken } from "@microsoft/powerquery-parser";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type ICancellationToken } from "@microsoft/powerquery-parser";
+import { type TextDocument } from "vscode-languageserver-textdocument";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { PositionUtils } from "..";
-import { ValidationSettings } from "./validationSettings";
+import { type ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 export function validateDuplicateIdentifiers(

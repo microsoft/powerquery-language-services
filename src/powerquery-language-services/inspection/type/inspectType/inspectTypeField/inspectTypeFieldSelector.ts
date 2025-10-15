@@ -2,12 +2,12 @@
 // Licensed under the MIT license.
 
 import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { NodeIdMapUtils, type TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
-import { InspectTypeState } from "../inspectTypeState";
+import { type InspectTypeState } from "../inspectTypeState";
 
 // A field selection/projection is an operation done on some value.
 // The target can be either an EachExpression or a RecursivePrimaryExpression.

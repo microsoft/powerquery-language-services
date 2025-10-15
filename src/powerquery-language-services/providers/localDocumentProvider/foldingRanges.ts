@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, type TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { FoldingRange } from "vscode-languageserver-types";
-import { TokenRange } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
+import { type FoldingRange } from "vscode-languageserver-types";
+import { type TokenRange } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/token";
 
 import { ProviderTraceConstant } from "../../trace";
 

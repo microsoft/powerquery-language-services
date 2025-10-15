@@ -4,19 +4,19 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
-import { IInvokeExpression, InvokeExpressionArguments } from "./common";
-import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
-import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { InspectionSettings } from "../../inspectionSettings";
+import { type ActiveNode, ActiveNodeUtils, type TActiveNode } from "../activeNode";
+import { type IInvokeExpression, type InvokeExpressionArguments } from "./common";
+import { type InvokeExpression, type TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
+import { type TypeCache, TypeCacheUtils } from "../typeCache";
+import { type InspectionSettings } from "../../inspectionSettings";
 import { InspectionTraceConstant } from "../..";
 
 // An inspection of the inner most invoke expression for an ActiveNode.

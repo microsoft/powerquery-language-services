@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { expect } from "chai";
+import { describe, expect, it } from "bun:test";
 
-import { Diagnostic, DiagnosticErrorCode, ValidationSettings } from "../../powerquery-language-services";
+import { type Diagnostic, DiagnosticErrorCode, type ValidationSettings } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
+import { type ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 const TestExpressions: {
     readonly NoErrors: string;
@@ -45,25 +44,19 @@ async function runTest(params: {
         validationSettings,
     });
 
-    expect(validationResult.diagnostics.length).to.equal(
-        params.expected.diagnosticsCount,
-        "unexpected diagnostics count",
-    );
+    // unexpected diagnostics count
+    expect(validationResult.diagnostics.length).toBe(params.expected.diagnosticsCount);
 
-    expect(validationResult.hasSyntaxError).to.equal(
-        params.expected.hasSyntaxError,
-        "unexpected value for hasSyntaxError",
-    );
+    // unexpected value for hasSyntaxError
+    expect(validationResult.hasSyntaxError).toBe(params.expected.hasSyntaxError);
 
     if (params.expected.hasSyntaxError) {
         const hasParseError: boolean = validationResult.diagnostics.some(
             (diagnostic: Diagnostic) => diagnostic.code === DiagnosticErrorCode.ParseError,
         );
 
-        expect(hasParseError).to.equal(
-            true,
-            "expected at least one Error.Parse diagnostic when hasSyntaxError is true",
-        );
+        // expected at least one Error.Parse diagnostic when hasSyntaxError is true
+        expect(hasParseError).toBe(true);
     }
 
     return validationResult;

@@ -1,12 +1,12 @@
-const js = require("@eslint/js");
-const tseslint = require("@typescript-eslint/eslint-plugin");
-const tsparser = require("@typescript-eslint/parser");
-const prettier = require("eslint-plugin-prettier");
-const promise = require("eslint-plugin-promise");
-const security = require("eslint-plugin-security");
-const prettierConfig = require("eslint-config-prettier");
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import prettier from "eslint-plugin-prettier";
+import promise from "eslint-plugin-promise";
+import security from "eslint-plugin-security";
+import prettierConfig from "eslint-config-prettier";
 
-module.exports = [
+export default [
     js.configs.recommended,
     {
         files: ["src/**/*.ts"],
@@ -81,6 +81,13 @@ module.exports = [
                 },
             ],
             "@typescript-eslint/unified-signatures": "error",
+            "@typescript-eslint/consistent-type-imports": [
+                    "warn",
+                    {
+                        prefer: "type-imports",
+                        fixStyle: "inline-type-imports",
+                    },
+                ],
 
             // Standard ESLint rules
             "no-unused-vars": "off", // Disabled in favor of @typescript-eslint/no-unused-vars

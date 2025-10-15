@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { InspectionSettings } from "../../../../inspectionSettings";
-import { InspectTypeState } from "./inspectTypeState";
-import { TypeCache } from "../../../typeCache";
+import { type InspectionSettings } from "../../../../inspectionSettings";
+import { type InspectTypeState } from "./inspectTypeState";
+import { type TypeCache } from "../../../typeCache";
 
 export function toInspectionSettings(inspectTypeState: InspectTypeState, trace: Trace): InspectionSettings {
     return {

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
-import { Range } from "vscode-languageserver-types";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import type * as PQP from "@microsoft/powerquery-parser";
+import { type Range } from "vscode-languageserver-types";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { AutocompleteItem } from "./autocompleteItem";
+import { type AutocompleteItem } from "./autocompleteItem";
 
 export type TriedAutocompleteFieldAccess = PQP.Result<AutocompleteFieldAccess | undefined, PQP.CommonError.CommonError>;
 

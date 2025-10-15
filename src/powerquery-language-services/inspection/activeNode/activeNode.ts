@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import type { Position } from "vscode-languageserver-types";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Position } from "vscode-languageserver-types";
+import { type TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export type TActiveNode =
     // A Position located inside an Ast (either fully or partially parsed).

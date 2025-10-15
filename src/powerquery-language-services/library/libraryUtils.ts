@@ -1,11 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+import { type ParameterInformation, type SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { IdentifierExpressionUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ILibrary, LibraryDefinitionKind, LibraryFunction, LibraryParameter, TLibraryDefinition } from "./library";
+import {
+    type ILibrary,
+    LibraryDefinitionKind,
+    type LibraryFunction,
+    type LibraryParameter,
+    type TLibraryDefinition,
+} from "./library";
 import { LibraryDefinitionUtils } from ".";
 
 export function getDefinition(library: ILibrary, identifierLiteral: string): TLibraryDefinition | undefined {

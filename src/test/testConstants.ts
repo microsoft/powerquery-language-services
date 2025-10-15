@@ -9,15 +9,15 @@ import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
-    AnalysisSettings,
+    type AnalysisSettings,
     CompletionItemKind,
     ExternalType,
-    InspectionSettings,
+    type InspectionSettings,
     Library,
     LibraryDefinitionUtils,
     LibrarySymbolUtils,
     TypeStrategy,
-    ValidationSettings,
+    type ValidationSettings,
 } from "../powerquery-language-services";
 import { noOpExternalTypeResolver } from "../powerquery-language-services/externalType/externalType";
 

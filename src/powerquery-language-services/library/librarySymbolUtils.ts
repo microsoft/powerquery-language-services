@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, ErrorResult, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { ArrayUtils, type ErrorResult, type Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ExternalType, ExternalTypeUtils } from "../externalType";
+import { type ExternalType, ExternalTypeUtils } from "../externalType";
 import { Library, LibraryDefinitionUtils } from "../library";
-import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
+import { type LibrarySymbol, type LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
 
 // Created when non-zero conversion errors occur.

@@ -3,8 +3,8 @@
 
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
-import { Autocomplete } from "./commonTypes";
-import { AutocompleteItem } from "./autocompleteItem";
+import { type Autocomplete } from "./commonTypes";
+import { type AutocompleteItem } from "./autocompleteItem";
 
 export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
     let result: string[] = [];

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 
-import { Position, Range } from "./commonTypes";
+import { type Position, type Range } from "./commonTypes";
 
 export function rangeFromTokenRange(tokenRange: PQP.Language.Token.TokenRange): Range {
     return {

@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Inspection } from "..";
-import { TActiveNode } from "./activeNode";
-import { TriedExpectedType } from "./expectedType";
-import { TriedNodeScope } from "./scope";
-import { TypeCache } from "./typeCache";
+import { type Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Inspection } from "..";
+import { type TActiveNode } from "./activeNode";
+import { type TriedExpectedType } from "./expectedType";
+import { type TriedNodeScope } from "./scope";
+import { type TypeCache } from "./typeCache";
 
 export type TriedInspection = PQP.Result<Inspected, PQP.CommonError.CommonError>;
 

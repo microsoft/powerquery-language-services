@@ -1,24 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { FoldingRange, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
-import type { Range } from "vscode-languageserver-textdocument";
+import { describe, expect, it, xit } from "bun:test";
 
 import {
-    Analysis,
-    AnalysisSettings,
+    Assert,
+    type CommonError,
+    type ICancellationToken,
+    type Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
+import { type FoldingRange, type Range, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
+
+import {
+    type Analysis,
+    type AnalysisSettings,
     Inspection,
-    Library,
+    type Library,
     NullSymbolProvider,
-    PartialSemanticToken,
-    Position,
-    SignatureHelp,
+    type PartialSemanticToken,
+    type Position,
+    type SignatureHelp,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { AutocompleteItem } from "../../powerquery-language-services/inspection";
-import { expect } from "chai";
+import { type AutocompleteItem } from "../../powerquery-language-services/inspection";
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -889,7 +894,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 (item: Inspection.AutocompleteItem) => item.label,
             );
 
-            expect(actualLabels).to.include.members(expected);
+            expect(actualLabels).toEqual(expect.arrayContaining(expected));
         });
     });
 });

@@ -3,30 +3,37 @@
 
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { DocumentUri, FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Ast, type Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type CommonError, type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    type DocumentUri,
+    type FoldingRange,
+    type Hover,
+    type Location,
+    MarkupKind,
+    type SignatureHelp,
+} from "vscode-languageserver-types";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
 import {
-    AutocompleteItemProviderContext,
-    DefinitionProviderContext,
-    FoldingRangeProviderContext,
-    HoverProviderContext,
-    ILocalDocumentProvider,
-    PartialSemanticToken,
-    SemanticTokenProviderContext,
-    SignatureProviderContext,
+    type AutocompleteItemProviderContext,
+    type DefinitionProviderContext,
+    type FoldingRangeProviderContext,
+    type HoverProviderContext,
+    type ILocalDocumentProvider,
+    type PartialSemanticToken,
+    type SemanticTokenProviderContext,
+    type SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, PositionUtils } from "../..";
 import { createFoldingRanges } from "./foldingRanges";
 import { createPartialSemanticTokens } from "./partialSemanticToken";
-import { ILibrary } from "../../library/library";
+import { type ILibrary } from "../../library/library";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 

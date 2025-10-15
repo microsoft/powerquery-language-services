@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, ICancellationToken } from "@microsoft/powerquery-parser";
+import { Assert, type ICancellationToken } from "@microsoft/powerquery-parser";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
-import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, type TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { Library, PositionUtils } from "../..";
-import { PartialSemanticToken } from "../commonTypes";
+import { type Library, PositionUtils } from "../..";
+import { type PartialSemanticToken } from "../commonTypes";
 import { ProviderTraceConstant } from "../../trace";
 
 export function createPartialSemanticTokens(

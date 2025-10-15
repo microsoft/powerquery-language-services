@@ -2,14 +2,14 @@
 // Licensed under the MIT license.
 
 import { CompletionItemKind, TextEdit } from "vscode-languageserver-types";
-import { Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-import { AutocompleteItemProviderContext, Inspection } from "../../..";
-import type { AutocompleteItem } from "./autocompleteItem";
+import { type AutocompleteItemProviderContext, Inspection } from "../../..";
+import { type AutocompleteItem } from "./autocompleteItem";
 import { calculateJaroWinkler } from "../../../jaroWinkler";
-import { Library } from "../../../library";
+import { type Library } from "../../../library";
 
 export function fromKeywordKind(label: Keyword.KeywordKind, other?: string): AutocompleteItem {
     const jaroWinklerScore: number = other !== undefined ? calculateJaroWinkler(label, other) : 1;

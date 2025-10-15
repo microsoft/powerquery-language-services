@@ -3,18 +3,18 @@
 
 import { Ast, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
 
 export async function inspectTypeUnaryExpression(

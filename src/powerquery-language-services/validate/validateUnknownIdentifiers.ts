@@ -2,19 +2,19 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
-import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
+import { type NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Inspection, LibraryUtils, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ExternalTypeRequestKind } from "../externalType/externalType";
-import { ILocalizationTemplates } from "../localization/templates";
-import { TriedNodeScope } from "../inspection";
-import { ValidationSettings } from "./validationSettings";
+import { type ILocalizationTemplates } from "../localization/templates";
+import { type TriedNodeScope } from "../inspection";
+import { type ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
 
 export async function validateUnknownIdentifiers(

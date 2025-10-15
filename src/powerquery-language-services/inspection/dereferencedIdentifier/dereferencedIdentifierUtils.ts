@@ -5,23 +5,23 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, IdentifierExpressionUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
-    AstXorNode,
-    NodeIdMap,
+    type AstXorNode,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { assertGetOrCreateNodeScope, ScopeById, ScopeItemKind, TScopeItem } from "../scope";
+import { assertGetOrCreateNodeScope, type ScopeById, ScopeItemKind, type TScopeItem } from "../scope";
 import {
-    DereferencedIdentifierExternal,
+    type DereferencedIdentifierExternal,
     DereferencedIdentifierKind,
-    DereferencedIdentifierUndefined,
-    TDereferencedIdentifier,
+    type DereferencedIdentifierUndefined,
+    type TDereferencedIdentifier,
 } from "././dereferencedIdentifier";
-import { ExternalTypeUtils, Inspection, InspectionSettings, TraceUtils } from "../..";
+import { ExternalTypeUtils, type Inspection, type InspectionSettings, TraceUtils } from "../..";
 import { InspectionTraceConstant } from "../../trace";
 
 // Recursively dereference the identifier until it reaches either:

@@ -3,24 +3,24 @@
 
 import {
     AncestryUtils,
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeKind,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Assert, CommonSettings, ResultUtils, TypeScriptUtils } from "@microsoft/powerquery-parser";
+import { Assert, type CommonSettings, ResultUtils, TypeScriptUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Position, Range, TextEdit } from "vscode-languageserver-types";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Position, type Range, TextEdit } from "vscode-languageserver-types";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { LanguageConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
-import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
+import { type ActiveNode, ActiveNodeUtils, type TActiveNode } from "../activeNode";
 import { AutocompleteTraceConstant, calculateJaroWinkler, CompletionItemKind, PositionUtils } from "../..";
-import { AutocompleteItem } from "./autocompleteItem";
-import { TrailingToken } from "./trailingToken";
-import { TriedAutocompleteLanguageConstant } from "./commonTypes";
+import { type AutocompleteItem } from "./autocompleteItem";
+import { type TrailingToken } from "./trailingToken";
+import { type TriedAutocompleteLanguageConstant } from "./commonTypes";
 
 export function tryAutocompleteLanguageConstant(
     settings: CommonSettings,

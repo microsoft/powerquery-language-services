@@ -2,54 +2,64 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import {
-    AstNodeById,
-    ChildIdsById,
+    Assert,
+    type CommonError,
+    type ICancellationToken,
+    type Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
+import {
+    type AstNodeById,
+    type ChildIdsById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import {
-    DocumentSymbol,
-    FoldingRange,
-    Hover,
-    Location,
-    Position,
-    SignatureHelp,
+    type DocumentSymbol,
+    type FoldingRange,
+    type Hover,
+    type Location,
+    type Position,
+    type SignatureHelp,
     SymbolKind,
 } from "vscode-languageserver-types";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapUtils,
-    ParseError,
-    ParseState,
-    TXorNode,
-    XorNode,
+    type ParseError,
+    type ParseState,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument";
-import { Trace, TraceConstant, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type TextDocument, type TextEdit } from "vscode-languageserver-textdocument";
+import {
+    type Trace,
+    TraceConstant,
+    type TraceManager,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { ActiveNodeUtils, TActiveLeafIdentifier, TActiveNode, TypeCache } from "../inspection";
-import type {
-    AutocompleteItemProviderContext,
-    DefinitionProviderContext,
-    HoverProviderContext,
-    IAutocompleteItemProvider,
-    ILibraryProvider,
-    ILocalDocumentProvider,
-    PartialSemanticToken,
-    SignatureProviderContext,
+import { ActiveNodeUtils, type TActiveLeafIdentifier, type TActiveNode, type TypeCache } from "../inspection";
+import {
+    type AutocompleteItemProviderContext,
+    type DefinitionProviderContext,
+    type HoverProviderContext,
+    type IAutocompleteItemProvider,
+    type ILibraryProvider,
+    type ILocalDocumentProvider,
+    type PartialSemanticToken,
+    type SignatureProviderContext,
 } from "../providers/commonTypes";
-import { CommonTypesUtils, Inspection, InspectionSettings, InspectionUtils, PositionUtils } from "..";
+import { CommonTypesUtils, Inspection, type InspectionSettings, InspectionUtils, PositionUtils } from "..";
 import {
     findDirectUpperScopeExpression,
     findScopeItemByLiteral,
     scopeCreatorIdentifier,
-    TScopeItem,
+    type TScopeItem,
 } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
-import type { Analysis } from "./analysis";
-import type { AnalysisSettings } from "./analysisSettings";
+import { type Analysis } from "./analysis";
+import { type AnalysisSettings } from "./analysisSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // Implementation of Analysis.

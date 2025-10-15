@@ -2,30 +2,30 @@
 // Licensed under the MIT license.
 import * as PQP from "@microsoft/powerquery-parser";
 import {
-    AstNodeById,
-    ParentIdById,
+    type AstNodeById,
+    type ParentIdById,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser/nodeIdMap/nodeIdMap";
 import {
-    EachExpression,
-    FunctionExpression,
-    LetExpression,
-    RecordExpression,
-    RecordLiteral,
-    SectionMember,
+    type EachExpression,
+    type FunctionExpression,
+    type LetExpression,
+    type RecordExpression,
+    type RecordLiteral,
+    type SectionMember,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast";
 import {
-    EachScopeItem,
-    LetVariableScopeItem,
-    NodeScope,
-    ParameterScopeItem,
-    RecordFieldScopeItem,
+    type EachScopeItem,
+    type LetVariableScopeItem,
+    type NodeScope,
+    type ParameterScopeItem,
+    type RecordFieldScopeItem,
     ScopeItemKind,
-    SectionMemberScopeItem,
-    TScopeItem,
-    UndefinedScopeItem,
+    type SectionMemberScopeItem,
+    type TScopeItem,
+    type UndefinedScopeItem,
 } from "./scope";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 export * from "./scope";
 export * from "./scopeInspection";

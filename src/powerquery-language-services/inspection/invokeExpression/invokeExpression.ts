@@ -3,21 +3,21 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, type Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
-    NodeIdMap,
+    type NodeIdMap,
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
+    type TXorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
-import { IInvokeExpression, InvokeExpressionArguments } from "./common";
-import { TriedType, tryType } from "../type";
-import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { InspectionSettings } from "../../inspectionSettings";
+import { assertGetOrCreateNodeScope, type NodeScope, ScopeItemKind, type TScopeItem } from "../scope";
+import { type IInvokeExpression, type InvokeExpressionArguments } from "./common";
+import { type TriedType, tryType } from "../type";
+import { type TypeCache, TypeCacheUtils } from "../typeCache";
+import { type InspectionSettings } from "../../inspectionSettings";
 import { InspectionTraceConstant } from "../../trace";
 
 // An inspection of an arbitrary invoke expression.
