@@ -28,7 +28,7 @@ jobs:
             - run: npm run lint
             - run: npm run build
             - name: Run tests
-              run: bun test --bail --reporter=junit --reporter=spec > test-results.xml
+              run: bun test --bail --reporter=junit > test-results.xml
             - name: Publish test results
               uses: dorny/test-reporter@v2.1.1
               if: success() || failure()
