@@ -3,6 +3,6 @@
 
 export * as AnalysisUtils from "./analysisUtils";
 export { AnalysisBase } from "./analysisBase";
-export { Analysis } from "./analysis";
+export { type Analysis } from "./analysis";
 export { DocumentAnalysis } from "./documentAnalysis";
-export { AnalysisSettings } from "./analysisSettings";
+export { type AnalysisSettings } from "./analysisSettings";

@@ -1,19 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { Assert, CommonError, NoOpCancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
+import {
+    Assert,
+    type CommonError,
+    NoOpCancellationToken,
+    type Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
+import { describe, expect, it } from "bun:test";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
-    Analysis,
-    AnalysisSettings,
+    type Analysis,
+    type AnalysisSettings,
     AnalysisUtils,
     CompletionItemKind,
     DiagnosticSeverity,
-    Hover,
-    Position,
+    type Hover,
+    type Position,
     SymbolKind,
     textDocument,
 } from "../powerquery-language-services";
@@ -47,19 +52,19 @@ describe("External consumption", () => {
     });
 
     it("CompletionItemKind", () => {
-        expect(CompletionItemKind.Text).to.equal(1);
-        expect(CompletionItemKind.Keyword).to.equal(14);
+        expect(CompletionItemKind.Text).toBe(1);
+        expect(CompletionItemKind.Keyword).toBe(14);
     });
 
     it("DiagnosticSeverity", () => {
-        expect(DiagnosticSeverity.Error).to.equal(1);
-        expect(DiagnosticSeverity.Warning).to.equal(2);
-        expect(DiagnosticSeverity.Information).to.equal(3);
-        expect(DiagnosticSeverity.Hint).to.equal(4);
+        expect(DiagnosticSeverity.Error).toBe(1);
+        expect(DiagnosticSeverity.Warning).toBe(2);
+        expect(DiagnosticSeverity.Information).toBe(3);
+        expect(DiagnosticSeverity.Hint).toBe(4);
     });
 
     it("SymbolKind", () => {
-        expect(SymbolKind.Function).to.equal(12);
-        expect(SymbolKind.Constant).to.equal(14);
+        expect(SymbolKind.Function).toBe(12);
+        expect(SymbolKind.Constant).toBe(14);
     });
 });

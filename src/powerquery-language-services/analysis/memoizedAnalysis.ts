@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
-import { Position } from "vscode-languageserver-types";
+import { type CommonError, type ICancellationToken, type Result } from "@microsoft/powerquery-parser";
+import { type Position } from "vscode-languageserver-types";
 
 import {
     ActiveNodeUtils,
-    Autocomplete,
-    TActiveNode,
-    TriedCurrentInvokeExpression,
-    TriedNodeScope,
-    TriedScopeType,
+    type Autocomplete,
+    type TActiveNode,
+    type TriedCurrentInvokeExpression,
+    type TriedNodeScope,
+    type TriedScopeType,
 } from "../inspection";
 import { AnalysisBase } from "./analysisBase";
 

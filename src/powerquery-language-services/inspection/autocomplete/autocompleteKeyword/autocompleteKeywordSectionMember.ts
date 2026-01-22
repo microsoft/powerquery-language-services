@@ -4,14 +4,14 @@
 import {
     AncestryUtils,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, Keyword } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { autocompleteKeywordRightMostLeaf } from "./common";
-import { InspectAutocompleteKeywordState } from "./commonTypes";
+import { type InspectAutocompleteKeywordState } from "./commonTypes";
 
 export function autocompleteKeywordSectionMember(
     state: InspectAutocompleteKeywordState,

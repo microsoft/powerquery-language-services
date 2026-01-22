@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Position, Range } from "vscode-languageserver-types";
-import { TextDocument, TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
+import { Position, type Range } from "vscode-languageserver-types";
+import { type TextDocument, type TextDocumentContentChangeEvent } from "vscode-languageserver-textdocument";
 
 export class MockDocument implements TextDocument {
     private static NextUri: number = 0;

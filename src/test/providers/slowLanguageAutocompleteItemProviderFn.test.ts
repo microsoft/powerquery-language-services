@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result } from "@microsoft/powerquery-parser";
+import { type CommonError, type Result } from "@microsoft/powerquery-parser";
 
 import {
-    AutocompleteItemProviderContext,
-    Inspection,
+    type AutocompleteItemProviderContext,
+    type Inspection,
     LanguageAutocompleteItemProvider,
 } from "../../powerquery-language-services";
 

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, it } from "bun:test";
 import { NoOpCancellationToken } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from ".";
-import { AbridgedDocumentSymbol } from "./testUtils";
+import { type AbridgedDocumentSymbol } from "./testUtils";
 import { SymbolKind } from "../powerquery-language-services";
 
 describe("getDocumentSymbols", () => {

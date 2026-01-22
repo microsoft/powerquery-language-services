@@ -1,19 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { assert, expect } from "chai";
+import { describe, expect, it } from "bun:test";
 
-import { Diagnostic, DiagnosticErrorCode, DiagnosticSeverity, Position } from "../../powerquery-language-services";
+import {
+    type Diagnostic,
+    DiagnosticErrorCode,
+    DiagnosticSeverity,
+    type Position,
+} from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { ValidateOk } from "../../powerquery-language-services/validate/validateOk";
+import { type ValidateOk } from "../../powerquery-language-services/validate/validateOk";
 
 function assertValidationError(diagnostic: Diagnostic, startPosition: Position): void {
-    assert.isDefined(diagnostic.code);
-    assert.isDefined(diagnostic.message);
-    assert.isDefined(diagnostic.range);
-    expect(diagnostic.range.start).to.deep.equal(startPosition);
-    expect(diagnostic.severity).to.equal(DiagnosticSeverity.Error);
+    if (diagnostic.code === undefined) {
+        throw new Error("diagnostic.code is undefined");
+    }
+
+    if (diagnostic.message === undefined) {
+        throw new Error("diagnostic.message is undefined");
+    }
+
+    if (diagnostic.range === undefined) {
+        throw new Error("diagnostic.range is undefined");
+    }
+
+    expect(diagnostic.range.start).toEqual(startPosition);
+    expect(diagnostic.severity).toBe(DiagnosticSeverity.Error);
 }
 
 async function assertNoValidationErrors(text: string): Promise<void> {
@@ -23,8 +36,8 @@ async function assertNoValidationErrors(text: string): Promise<void> {
         validationSettings: TestConstants.SimpleLibraryValidateAllSettings,
     });
 
-    expect(validationResult.hasSyntaxError).to.equal(false, `hasSyntaxError flag should be false`);
-    expect(validationResult.diagnostics.length).to.equal(0, `no diagnostics expected`);
+    expect(validationResult.hasSyntaxError).toBe(false); // hasSyntaxError flag should be false
+    expect(validationResult.diagnostics.length).toBe(0); // no diagnostics expected
 }
 
 describe(`Validation - functionExpression`, () => {
@@ -42,15 +55,15 @@ describe(`Validation - functionExpression`, () => {
                 validationSettings: TestConstants.SimpleLibraryValidateAllSettings,
             });
 
-            expect(validationResult.hasSyntaxError).to.equal(false, `hasSyntaxError flag should be false`);
+            expect(validationResult.hasSyntaxError).toBe(false); // hasSyntaxError flag should be false
 
             assertValidationError(validationResult.diagnostics[0], { line: 0, character: 1 });
             assertValidationError(validationResult.diagnostics[1], { line: 0, character: 16 });
-            expect(validationResult.diagnostics.length).to.equal(2);
-            expect(validationResult.diagnostics[0].source).to.equal(errorSource);
-            expect(validationResult.diagnostics[1].source).to.equal(errorSource);
-            expect(validationResult.diagnostics[0].code).to.equal(DiagnosticErrorCode.DuplicateIdentifier);
-            expect(validationResult.diagnostics[1].code).to.equal(DiagnosticErrorCode.DuplicateIdentifier);
+            expect(validationResult.diagnostics.length).toBe(2);
+            expect(validationResult.diagnostics[0].source).toBe(errorSource);
+            expect(validationResult.diagnostics[1].source).toBe(errorSource);
+            expect(validationResult.diagnostics[0].code).toBe(DiagnosticErrorCode.DuplicateIdentifier);
+            expect(validationResult.diagnostics[1].code).toBe(DiagnosticErrorCode.DuplicateIdentifier);
         });
     });
 });

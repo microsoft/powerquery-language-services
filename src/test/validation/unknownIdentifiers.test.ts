@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
 import { Assert, MapUtils } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
+import { describe, expect, it, xit } from "bun:test";
 
-import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
+import {
+    type Diagnostic,
+    DiagnosticErrorCode,
+    type Position,
+    type ValidationSettings,
+} from "../../powerquery-language-services";
 import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { TestConstants, TestUtils } from "..";
 import { assertLessWhenSuppressed } from "../testUtils/validationTestUtils";
@@ -43,7 +47,7 @@ async function assertNoUnknownIdentifiers(text: string): Promise<void> {
     const abridgedDiagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
         await assertUnknownIdentifierDiagnostics(text);
 
-    expect(abridgedDiagnostics.length).equal(0);
+    expect(abridgedDiagnostics.length).toBe(0);
 }
 
 async function assertUnknownIdentifierSuggestions(

@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ICancellationToken } from "@microsoft/powerquery-parser";
+import { type ICancellationToken } from "@microsoft/powerquery-parser";
 
-import { InspectionSettings } from "../../inspectionSettings";
-import { Library } from "../../library";
+import { type InspectionSettings } from "../../inspectionSettings";
+import { type Library } from "../../library";
 
 export interface ValidationSettings extends InspectionSettings {
     readonly cancellationToken: ICancellationToken | undefined;

@@ -2,20 +2,20 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { Autocomplete } from "./commonTypes";
+import { type Autocomplete } from "./commonTypes";
 import { AutocompleteTraceConstant } from "../..";
 import { createTrailingToken } from "./trailingTokenUtils";
-import { InspectionSettings } from "../../inspectionSettings";
-import { TActiveNode } from "../activeNode";
-import { TrailingToken } from "./trailingToken";
+import { type InspectionSettings } from "../../inspectionSettings";
+import { type TActiveNode } from "../activeNode";
+import { type TrailingToken } from "./trailingToken";
 import { tryAutocompleteFieldAccess } from "./autocompleteFieldAccess";
 import { tryAutocompleteKeyword } from "./autocompleteKeyword/autocompleteKeyword";
 import { tryAutocompleteLanguageConstant } from "./autocompleteLanguageConstant";
 import { tryAutocompletePrimitiveType } from "./autocompletePrimitiveType";
-import { TypeCache } from "../typeCache";
+import { type TypeCache } from "../typeCache";
 
 // Given some Position and ParseState, return autocomplete suggestions.
 export async function autocomplete(

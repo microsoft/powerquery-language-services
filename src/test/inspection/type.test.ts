@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
+import { describe, it } from "bun:test";
+
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ExternalType, Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
+import {
+    ExternalType,
+    type Inspection,
+    type InspectionSettings,
+    TypeStrategy,
+} from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
 describe(`Inspection - Type`, () => {
@@ -643,9 +649,9 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.ListType}`, () => {
-            it(`type { number }`, async () =>
+            it(`{ number }`, async () =>
                 await assertEqualRootType({
-                    text: `type { number }`,
+                    text: `{ number }`,
                     expected: TypeUtils.listType(false, Type.NumberInstance),
                 }));
         });
@@ -1038,7 +1044,7 @@ describe(`Inspection - Type`, () => {
 
         it(`${Ast.NodeKind.ListType}`, async () =>
             await assertEqualRootType({
-                text: `type { foo }`,
+                text: `{ foo }`,
                 expected: Type.TypePrimitiveInstance,
                 settings: PrimitiveInspectionSettings,
             }));

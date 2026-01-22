@@ -3,13 +3,14 @@
 
 import * as File from "fs";
 import * as Path from "path";
-import { assert } from "chai";
-import { Position } from "vscode-languageserver-types";
+import { type Position } from "vscode-languageserver-types";
 
 import { MockDocument } from "../mockDocument";
 
 export function extractPosition(textWithPipe: string): [string, Position] {
-    assert.isTrue((textWithPipe.match(/\|/g) ?? []).length == 1, `textWithPipe must contain exactly pipe character`);
+    if ((textWithPipe.match(/\|/g) ?? []).length !== 1) {
+        throw new Error(`textWithPipe must contain exactly pipe character`);
+    }
 
     const lines: ReadonlyArray<string> = textWithPipe.split("\n");
     const numLines: number = lines.length;
@@ -39,7 +40,10 @@ export function extractPosition(textWithPipe: string): [string, Position] {
 
 export function readFile(fileName: string): string {
     const fullPath: string = Path.join(Path.dirname(__filename), "..", "files", fileName);
-    assert.isTrue(File.existsSync(fullPath), `file ${fullPath} not found.`);
+
+    if (!File.existsSync(fullPath)) {
+        throw new Error(`file ${fullPath} not found.`);
+    }
 
     return File.readFileSync(fullPath, "utf8").replace(/^\uFEFF/, "");
 }

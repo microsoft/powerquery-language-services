@@ -1,30 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { FoldingRange, Location } from "vscode-languageserver-types";
+import { type CommonError, type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { type FoldingRange, type Location } from "vscode-languageserver-types";
 
 import {
-    AutocompleteItemProviderContext,
-    DefinitionProviderContext,
-    HoverProviderContext,
-    PartialSemanticToken,
-    ProviderContext,
-    SignatureProviderContext,
+    type AutocompleteItemProviderContext,
+    type DefinitionProviderContext,
+    type HoverProviderContext,
+    type PartialSemanticToken,
+    type ProviderContext,
+    type SignatureProviderContext,
 } from "./commonTypes";
 import {
-    IAutocompleteItemProvider,
-    IDefinitionProvider,
-    IFoldingRangeProvider,
-    IHoverProvider,
-    ISemanticTokenProvider,
-    ISignatureHelpProvider,
+    type IAutocompleteItemProvider,
+    type IDefinitionProvider,
+    type IFoldingRangeProvider,
+    type IHoverProvider,
+    type ISemanticTokenProvider,
+    type ISignatureHelpProvider,
 } from "../providers";
 
-import { ExternalType, Library } from "..";
-import { Hover, SignatureHelp } from "../commonTypes";
+import { ExternalType, type Library } from "..";
+import { type Hover, type SignatureHelp } from "../commonTypes";
 
-import { AutocompleteItem } from "../inspection/autocomplete";
+import { type AutocompleteItem } from "../inspection/autocomplete";
 
 export class NullSymbolProvider
     implements

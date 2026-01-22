@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
-    TXorNode,
-    XorNode,
+    type TXorNode,
+    type XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { DereferencedIdentifierKind, TDereferencedIdentifier } from "../../dereferencedIdentifier";
-import { ExternalType, ExternalTypeUtils } from "../../../externalType";
+import { DereferencedIdentifierKind, type TDereferencedIdentifier } from "../../dereferencedIdentifier";
+import { type ExternalType, ExternalTypeUtils } from "../../../externalType";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
+import { type InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 

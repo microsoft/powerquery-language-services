@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
+import { describe, expect, it } from "bun:test";
 import {
     ExpressionKeywordKinds,
     KeywordKind,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { expect } from "chai";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 
 import { TestConstants, TestUtils } from "../..";
-import { Inspection } from "../../../powerquery-language-services";
+import { type Inspection } from "../../../powerquery-language-services";
 
 describe(`Inspection - Autocomplete - Keyword`, () => {
     async function runTest(params: {
@@ -29,7 +28,7 @@ describe(`Inspection - Autocomplete - Keyword`, () => {
             (item: Inspection.AutocompleteItem) => item.label,
         );
 
-        expect(actualLabels).to.include.members(params.expected);
+        expect(actualLabels).toEqual(expect.arrayContaining(params.expected));
     }
 
     it(`|`, async () =>

@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
+import type * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
+import { type DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
 
 import { Inspection, PositionUtils } from ".";
-import { InspectionSettings, TypeStrategy } from "./inspectionSettings";
-import { AutocompleteItemProviderContext } from "./providers/commonTypes";
+import { type InspectionSettings, TypeStrategy } from "./inspectionSettings";
+import { type AutocompleteItemProviderContext } from "./providers/commonTypes";
 import { AutocompleteItemUtils } from "./inspection/autocomplete";
 import { Library } from "./library";
 

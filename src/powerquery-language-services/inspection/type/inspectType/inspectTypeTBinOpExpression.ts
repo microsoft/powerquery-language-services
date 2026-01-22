@@ -3,12 +3,22 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, CommonError } from "@microsoft/powerquery-parser";
-import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import {
+    type Ast,
+    AstUtils,
+    Constant,
+    Type,
+    TypeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMapIterator,
+    type TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import { InspectTypeState } from "./inspectTypeState";
+import { type InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
 
 type TRecordOrTable = Type.TRecord | Type.TTable;

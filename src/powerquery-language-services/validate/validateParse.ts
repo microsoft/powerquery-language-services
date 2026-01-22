@@ -2,12 +2,16 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Diagnostic, DiagnosticSeverity, Range } from "vscode-languageserver-types";
-import { NodeIdMapUtils, ParseContext, ParseError } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { type Diagnostic, DiagnosticSeverity, type Range } from "vscode-languageserver-types";
+import {
+    NodeIdMapUtils,
+    type ParseContext,
+    ParseError,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { type Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
-import { ValidationSettings } from "./validationSettings";
+import { type ValidationSettings } from "./validationSettings";
 
 export async function validateParse(
     parseError: ParseError.ParseError | undefined,

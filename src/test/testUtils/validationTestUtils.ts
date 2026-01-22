@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import "mocha";
-import { Assert, CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { expect } from "chai";
+import { Assert, type CommonError, type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { expect } from "bun:test";
 
 import * as PQLS from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
-import { MockDocument } from "../mockDocument";
+import { type MockDocument } from "../mockDocument";
 
 export async function assertLessWhenSuppressed(params: {
     readonly text: string;
@@ -26,7 +25,7 @@ export async function assertLessWhenSuppressed(params: {
         validationSettings: params.withoutCheckSettings,
     });
 
-    expect(withoutCheckResult.diagnostics.length).to.be.lessThan(withCheckResult.diagnostics.length);
+    expect(withoutCheckResult.diagnostics.length).toBeLessThan(withCheckResult.diagnostics.length);
 }
 
 export async function assertValidate(params: {

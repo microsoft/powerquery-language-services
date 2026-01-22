@@ -1,23 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { expect } from "chai";
+import { describe, expect, it } from "bun:test";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
     CompletionItemKind,
-    Library,
+    type Library,
     LibraryDefinitionUtils,
     LibrarySymbolUtils,
 } from "../powerquery-language-services";
 import { ExtendedTypeKind, TypeKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 import {
-    FailedLibrarySymbolConversion,
+    type FailedLibrarySymbolConversion,
     FailedLibrarySymbolConversionKind,
 } from "../powerquery-language-services/library/librarySymbolUtils";
-import { LibraryDefinitionKind, TLibraryDefinition } from "../powerquery-language-services/library/library";
-import { Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { LibrarySymbol } from "../powerquery-language-services/library/librarySymbol";
+import { LibraryDefinitionKind, type TLibraryDefinition } from "../powerquery-language-services/library/library";
+import { type Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { type LibrarySymbol } from "../powerquery-language-services/library/librarySymbol";
 import { TestConstants } from ".";
 
 describe("Library", () => {
@@ -60,11 +60,11 @@ describe("Library", () => {
                 );
 
                 if (params.isExpected) {
-                    expect(hasResult).to.equal(true);
-                    expect(getResult).to.not.equal(undefined);
+                    expect(hasResult).toBe(true);
+                    expect(getResult).not.toBe(undefined);
                 } else {
-                    expect(hasResult).to.equal(false);
-                    expect(getResult).to.equal(undefined);
+                    expect(hasResult).toBe(false);
+                    expect(getResult).toBe(undefined);
                 }
             }
 
@@ -107,10 +107,10 @@ describe("Library", () => {
 
                 if (ResultUtils.isOk(params.expected)) {
                     ResultUtils.assertIsOk(result);
-                    expect(result.value).to.deep.equal(params.expected.value);
+                    expect(result.value).toEqual(params.expected.value);
                 } else {
                     ResultUtils.assertIsError(result);
-                    expect(result.error.kind).to.equal(params.expected.error);
+                    expect(result.error.kind).toBe(params.expected.error);
                 }
             }
 
