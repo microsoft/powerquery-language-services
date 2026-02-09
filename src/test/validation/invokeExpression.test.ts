@@ -186,16 +186,10 @@ describe("Validation - InvokeExpression", () => {
                     validationSettings: TestConstants.StandardLibraryValidateAllSettings,
                 });
 
-            const expected: ReadonlyArray<Position> = [
-                {
-                    character: 53,
-                    line: 2,
-                },
-                {
-                    character: 45,
-                    line: 3,
-                },
-            ];
+            // With proper function return type resolution, the type system correctly
+            // identifies that Source is a table (from #table) and WithColumn is also
+            // a table (from Table.AddColumn), so no type mismatch errors are expected.
+            const expected: ReadonlyArray<Position> = [];
 
             expectInvocationDiagnosticPositions(invocationDiagnostics, expected);
         });
