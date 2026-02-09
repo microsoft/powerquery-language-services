@@ -4,6 +4,7 @@
 import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { ExternalTypeRequestKind, TExternalTypeRequest, TExternalTypeResolverFn } from "../externalType/externalType";
 import {
     LibraryConstant,
     LibraryDefinitionKind,
@@ -13,8 +14,6 @@ import {
     LibraryType,
     TLibraryDefinition,
 } from "./library";
-import { ExternalType } from "../externalType";
-import { ExternalTypeRequestKind } from "../externalType/externalType";
 
 export function assertAsConstant(definition: TLibraryDefinition | undefined): LibraryConstant {
     assertIsConstant(definition);
@@ -67,8 +66,8 @@ export function constantDefinition(
     };
 }
 
-export function externalTypeResolver(libraryDefinitions: LibraryDefinitions): ExternalType.TExternalTypeResolverFn {
-    return (request: ExternalType.TExternalTypeRequest): Type.TPowerQueryType | undefined => {
+export function externalTypeResolver(libraryDefinitions: LibraryDefinitions): TExternalTypeResolverFn {
+    return (request: TExternalTypeRequest): Type.TPowerQueryType | undefined => {
         const definition: TLibraryDefinition | undefined = getDefinition(libraryDefinitions, request.identifierLiteral);
 
         if (definition === undefined) {
