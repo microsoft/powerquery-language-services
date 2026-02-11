@@ -10,8 +10,8 @@
     },
 
     // VS Code Test Runner configuration
-    "testing.automaticallyOpenTestResults": "openOnTestStart",
     "testing.automaticallyOpenPeekView": "failureInVisibleDocument",
+    "testing.automaticallyOpenTestResults": "openOnTestStart",
     "testing.defaultGutterClickAction": "run",
     "testing.followRunningTest": true,
 

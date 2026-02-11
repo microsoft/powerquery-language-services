@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { NodeIdMap, ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Diagnostic } from "vscode-languageserver-types";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
@@ -35,7 +37,10 @@ export function validate(
             initialCorrelationId: trace.id,
         };
 
+        validationSettings.cancellationToken?.throwIfCancelled();
+
         const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
+
         const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
         const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 
@@ -58,49 +63,56 @@ export function validate(
             return result;
         }
 
-        let functionExpressionDiagnostics: Diagnostic[];
-        let invokeExpressionDiagnostics: Diagnostic[];
-        let unknownIdentifiersDiagnostics: Diagnostic[];
-
         const nodeIdMapCollection: NodeIdMap.Collection = parseState.contextState.nodeIdMapCollection;
         const typeCache: TypeCache = analysis.getTypeCache();
 
-        if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
-            functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
+        // Define validation operations to run sequentially
+        const validationOperations: (() => Promise<Diagnostic[]>)[] = [
+            // Parse validation (if there are parse errors)
+            async (): Promise<Diagnostic[]> => await validateParse(parseError, updatedSettings),
+        ];
 
-            invokeExpressionDiagnostics = await validateInvokeExpression(
-                validationSettings,
-                nodeIdMapCollection,
-                typeCache,
+        // Add conditional validations based on settings
+        if (validationSettings.checkForDuplicateIdentifiers && nodeIdMapCollection) {
+            validationOperations.push(
+                async (): Promise<Diagnostic[]> =>
+                    await validateDuplicateIdentifiers(
+                        textDocument,
+                        nodeIdMapCollection,
+                        updatedSettings,
+                        validationSettings.cancellationToken,
+                    ),
             );
-        } else {
-            functionExpressionDiagnostics = [];
-            invokeExpressionDiagnostics = [];
+        }
+
+        if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
+            validationOperations.push(
+                async (): Promise<Diagnostic[]> =>
+                    await validateFunctionExpression(validationSettings, nodeIdMapCollection),
+                async (): Promise<Diagnostic[]> =>
+                    await validateInvokeExpression(validationSettings, nodeIdMapCollection, typeCache),
+            );
         }
 
         if (validationSettings.checkUnknownIdentifiers && nodeIdMapCollection) {
-            unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
-                validationSettings,
-                nodeIdMapCollection,
-                typeCache,
+            validationOperations.push(
+                async (): Promise<Diagnostic[]> =>
+                    await validateUnknownIdentifiers(validationSettings, nodeIdMapCollection, typeCache),
             );
-        } else {
-            unknownIdentifiersDiagnostics = [];
         }
 
+        // Execute all validation operations sequentially with cancellation support
+        const allDiagnostics: Diagnostic[][] = await PromiseUtils.processSequentiallyWithCancellation(
+            validationOperations,
+            (operation: () => Promise<Diagnostic[]>) => operation(),
+            validationSettings.cancellationToken,
+        );
+
+        // Flatten all diagnostics into a single array
+        const flattenedDiagnostics: Diagnostic[] = allDiagnostics.flat();
+
         const result: ValidateOk = {
-            diagnostics: [
-                ...validateDuplicateIdentifiers(
-                    textDocument,
-                    nodeIdMapCollection,
-                    updatedSettings,
-                    validationSettings.cancellationToken,
-                ),
-                ...(await validateParse(parseError, updatedSettings)),
-                ...functionExpressionDiagnostics,
-                ...invokeExpressionDiagnostics,
-                ...unknownIdentifiersDiagnostics,
-            ],
+            diagnostics: flattenedDiagnostics,
             hasSyntaxError: parseError !== undefined,
         };
 

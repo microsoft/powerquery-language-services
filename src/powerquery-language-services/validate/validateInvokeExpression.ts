@@ -8,6 +8,8 @@ import { NodeIdMap, NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parse
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import type { Range } from "vscode-languageserver-textdocument";
 
+import * as PromiseUtils from "../promiseUtils";
+
 import { Inspection, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
@@ -44,18 +46,18 @@ export async function validateInvokeExpression(
     const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
 
     for (const nodeId of invokeExpressionIds) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
         inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
 
-    const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
+    const inspections: Inspection.TriedInvokeExpression[] = await PromiseUtils.processSequentiallyWithCancellation(
+        inspectionTasks,
+        (task: Promise<Inspection.TriedInvokeExpression>) => task,
+        validationSettings.cancellationToken,
+    );
 
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 
     for (const triedInvokeExpression of inspections) {
-        validationSettings.cancellationToken?.throwIfCancelled();
-
         if (ResultUtils.isOk(triedInvokeExpression)) {
             diagnosticTasks.push(
                 invokeExpressionToDiagnostics(updatedSettings, nodeIdMapCollection, triedInvokeExpression.value),
@@ -67,7 +69,12 @@ export async function validateInvokeExpression(
         }
     }
 
-    const diagnostics: ReadonlyArray<ReadonlyArray<Diagnostic>> = await Promise.all(diagnosticTasks);
+    const diagnostics: ReadonlyArray<Diagnostic>[] = await PromiseUtils.processSequentiallyWithCancellation(
+        diagnosticTasks,
+        (task: Promise<ReadonlyArray<Diagnostic>>) => task,
+        validationSettings.cancellationToken,
+    );
+
     trace.exit();
 
     return diagnostics.flat();

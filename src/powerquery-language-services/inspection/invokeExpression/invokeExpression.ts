@@ -65,8 +65,6 @@ async function inspectInvokeExpression(
         correlationId,
     );
 
-    settings.cancellationToken?.throwIfCancelled();
-
     const invokeExpressionXorNode: TXorNode | undefined = NodeIdMapUtils.xor(nodeIdMapCollection, invokeExpressionId);
 
     if (invokeExpressionXorNode === undefined) {
@@ -92,6 +90,8 @@ async function inspectInvokeExpression(
     const functionType: Type.TPowerQueryType = ResultUtils.assertOk(
         await tryType(settings, nodeIdMapCollection, previousNode.node.id, typeCache),
     );
+
+    settings.cancellationToken?.throwIfCancelled();
 
     let invokeExpressionArgs: InvokeExpressionArguments | undefined;
 
@@ -213,6 +213,7 @@ async function getArgumentTypes(
     for (const xorNode of argXorNodes) {
         // eslint-disable-next-line no-await-in-loop
         const triedArgType: TriedType = await tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
+        settings.cancellationToken?.throwIfCancelled();
 
         if (ResultUtils.isError(triedArgType)) {
             throw triedArgType;
