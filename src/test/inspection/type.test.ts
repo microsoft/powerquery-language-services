@@ -7,8 +7,15 @@ import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquer
 import { Assert } from "@microsoft/powerquery-parser";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { ExternalType, Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
-import { TestUtils } from "..";
+import {
+    ExternalType,
+    Inspection,
+    InspectionSettings,
+    Library,
+    LibraryDefinitionUtils,
+    TypeStrategy,
+} from "../../powerquery-language-services";
+import { TestConstants, TestUtils } from "..";
 
 describe(`Inspection - Type`, () => {
     const ExternalTypeResolver: ExternalType.TExternalTypeResolverFn = (request: ExternalType.TExternalTypeRequest) => {
@@ -1121,6 +1128,106 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({
                     text: expression2,
                     expected: expected2,
+                });
+            });
+        });
+    });
+
+    describe(`library function invocation return type`, () => {
+        // Create a library that uses the generic externalTypeResolver from LibraryDefinitionUtils
+        const libraryWithGenericResolver: Library.ILibrary = {
+            externalTypeResolver: LibraryDefinitionUtils.externalTypeResolver(TestConstants.SimpleLibraryDefinitions),
+            libraryDefinitions: TestConstants.SimpleLibraryDefinitions,
+        };
+
+        const settingsWithGenericResolver: InspectionSettings = {
+            ...PQP.DefaultSettings,
+            isWorkspaceCacheAllowed: false,
+            library: libraryWithGenericResolver,
+            eachScopeById: undefined,
+            typeStrategy: TypeStrategy.Extended,
+        };
+
+        async function assertLibraryRootType(params: {
+            readonly text: string;
+            readonly expected: Type.TPowerQueryType;
+        }): Promise<void> {
+            await TestUtils.assertEqualRootType({
+                text: params.text,
+                expected: params.expected,
+                settings: settingsWithGenericResolver,
+            });
+        }
+
+        describe(`direct invocation`, () => {
+            it(`function returning record type`, async () => {
+                // Test.CreateFooAndBarRecord returns a defined record with foo and bar fields
+                await assertLibraryRootType({
+                    text: `${TestConstants.TestLibraryName.CreateFooAndBarRecord}()`,
+                    expected: TestConstants.CreateFooAndBarRecordDefinedFunction.returnType,
+                });
+            });
+
+            it(`function returning text type`, async () => {
+                // Test.DuplicateText returns text
+                await assertLibraryRootType({
+                    text: `${TestConstants.TestLibraryName.DuplicateText}("hello")`,
+                    expected: Type.TextInstance,
+                });
+            });
+
+            it(`function returning null type`, async () => {
+                // Test.CombineNumberAndOptionalText returns null
+                await assertLibraryRootType({
+                    text: `${TestConstants.TestLibraryName.CombineNumberAndOptionalText}(1)`,
+                    expected: Type.NullInstance,
+                });
+            });
+
+            it(`function returning any type (unknown return)`, async () => {
+                // Test.SquareIfNumber returns any
+                await assertLibraryRootType({
+                    text: `${TestConstants.TestLibraryName.SquareIfNumber}(5)`,
+                    expected: Type.AnyInstance,
+                });
+            });
+        });
+
+        describe(`assigned to variable`, () => {
+            it(`let variable has function return type`, async () => {
+                await assertLibraryRootType({
+                    text: `let Source = ${TestConstants.TestLibraryName.CreateFooAndBarRecord}() in Source`,
+                    expected: TestConstants.CreateFooAndBarRecordDefinedFunction.returnType,
+                });
+            });
+
+            it(`chained let variables preserve return type`, async () => {
+                await assertLibraryRootType({
+                    text: `let Source = ${TestConstants.TestLibraryName.DuplicateText}("x"), Result = Source in Result`,
+                    expected: Type.TextInstance,
+                });
+            });
+        });
+
+        describe(`function reference (not invoked)`, () => {
+            it(`referencing function returns function type`, async () => {
+                await assertLibraryRootType({
+                    text: `${TestConstants.TestLibraryName.CreateFooAndBarRecord}`,
+                    expected: TestConstants.CreateFooAndBarRecordDefinedFunction,
+                });
+            });
+
+            it(`let variable assigned to function reference`, async () => {
+                await assertLibraryRootType({
+                    text: `let fn = ${TestConstants.TestLibraryName.DuplicateText} in fn`,
+                    expected: TestConstants.DuplicateTextDefinedFunction,
+                });
+            });
+
+            it(`let variable assigned to function reference`, async () => {
+                await assertLibraryRootType({
+                    text: `let fn1 = ${TestConstants.TestLibraryName.DuplicateText}, fn2 = fn1 in fn2`,
+                    expected: TestConstants.DuplicateTextDefinedFunction,
                 });
             });
         });
