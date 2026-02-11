@@ -46,7 +46,7 @@ export function validateDuplicateIdentifiers(
     const documentUri: string = textDocument.uri;
 
     const result: ReadonlyArray<Diagnostic> = [
-        ...validateDuplicateIdentifiersForLetExpresion(
+        ...validateDuplicateIdentifiersForLetExpression(
             documentUri,
             nodeIdMapCollection,
             updatedSettings,
@@ -81,7 +81,7 @@ export function validateDuplicateIdentifiers(
     return result;
 }
 
-function validateDuplicateIdentifiersForLetExpresion(
+function validateDuplicateIdentifiersForLetExpression(
     documentUri: DocumentUri,
     nodeIdMapCollection: NodeIdMap.Collection,
     validationSettings: ValidationSettings,
@@ -90,7 +90,7 @@ function validateDuplicateIdentifiersForLetExpresion(
 ): ReadonlyArray<Diagnostic> {
     const trace: Trace = validationSettings.traceManager.entry(
         ValidationTraceConstant.Validation,
-        validateDuplicateIdentifiersForLetExpresion.name,
+        validateDuplicateIdentifiersForLetExpression.name,
         correlationId,
     );
 

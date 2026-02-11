@@ -23,7 +23,7 @@ export async function autocompleteKeywordLetExpression(
     const child: TXorNode = state.child;
     let inspected: ReadonlyArray<Keyword.KeywordKind> | undefined;
 
-    // Might be either `in` or whatever the autocomplete is for the the last child of the variableList.
+    // Might be either `in` or whatever the autocomplete is for the last child of the variableList.
     // `let x = 1 |`
     if (child.node.attributeIndex === 2 && XorNodeUtils.isContext(child)) {
         inspected = await autocompleteLastKeyValuePair(

@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 export enum DiagnosticErrorCode {
-    DuplicateIdentifier = "Error.DuplicateIndentifier",
+    DuplicateIdentifier = "Error.DuplicateIdentifier",
     InvokeArgumentCountMismatch = "Error.InvokeArgumentCountMismatch",
     InvokeArgumentTypeMismatch = "Error.InvokeArgumentTypeMismatch",
     UnknownIdentifier = "Error.UnknownIdentifier",
