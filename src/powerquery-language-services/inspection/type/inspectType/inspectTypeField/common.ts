@@ -51,15 +51,21 @@ export async function inspectFieldType(
     if (eachScopeItem) {
         fieldType = eachScopeItem.implicitParameterType;
     }
-    // else it must be a RecursivePrimaryExpression,
-    // so grab the previous sibling of the FieldProjection/FieldSelector
-    else {
+    // Check if we're inside a RecursivePrimaryExpression (e.g. record[Column1])
+    // before trying to grab the previous sibling.
+    // This should be the only expected scenario, but we add this check to prevent an exception from being thrown.
+    else if (isInRecursivePrimaryExpression(state.nodeIdMapCollection, xorNode)) {
         const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
             state.nodeIdMapCollection,
             xorNode.node.id,
         );
 
         fieldType = await inspectXor(state, previousSibling, trace.id);
+    }
+    // The FieldSelector/FieldProjection is a standalone implicit target field access
+    // (e.g. [Column1] used as a function argument) without an explicit target scope.
+    else {
+        fieldType = Type.UnknownInstance;
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(fieldType) });
@@ -89,4 +95,20 @@ async function findEachScopeItem(
     }
 
     return undefined;
+}
+
+// Checks whether a FieldSelector/FieldProjection is a direct child of a
+// RecursivePrimaryExpression's ArrayWrapper (e.g. `record[Column1]`).
+// Returns false when the FieldSelector is a standalone implicit target field access
+// (e.g. `[Column1]` used as a function argument).
+function isInRecursivePrimaryExpression(nodeIdMapCollection: NodeIdMap.Collection, xorNode: TXorNode): boolean {
+    const parent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, xorNode.node.id);
+
+    if (parent === undefined || parent.node.kind !== Ast.NodeKind.ArrayWrapper) {
+        return false;
+    }
+
+    const grandparent: TXorNode | undefined = NodeIdMapUtils.parentXor(nodeIdMapCollection, parent.node.id);
+
+    return grandparent?.node.kind === Ast.NodeKind.RecursivePrimaryExpression;
 }

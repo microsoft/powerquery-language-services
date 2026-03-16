@@ -163,5 +163,17 @@ describe(`SimpleLibraryProvider`, () => {
                 textWithPipe: `Test.SquareIfNumber(1,|`,
                 activeParameter: 1,
             }));
+
+        it(`first parameter, field selector, no comma`, async () =>
+            await assertSignatureHelp({
+                textWithPipe: `Test.SquareIfNumber([Column1]|`,
+                activeParameter: 0,
+            }));
+
+        it(`first parameter, field selector, comma`, async () =>
+            await assertSignatureHelp({
+                textWithPipe: `Test.SquareIfNumber([Column1],|`,
+                activeParameter: 1,
+            }));
     });
 });
