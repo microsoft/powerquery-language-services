@@ -90,13 +90,13 @@ describe(`Multiple providers (TestConstants.SimpleLibraryAnalysisSettings)`, () 
                 },
             }));
 
-        xit(`let foo|`, async () =>
+        it(`let foo|`, async () =>
             await runTest({
                 textWithPipe: `let foo|`,
                 expected: undefined,
             }));
 
-        xit(`let foo |=`, async () =>
+        it(`let foo |=`, async () =>
             await runTest({
                 textWithPipe: `let foo |=`,
                 expected: undefined,

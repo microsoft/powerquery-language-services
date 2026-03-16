@@ -1077,6 +1077,30 @@ describe(`Inspection - Type`, () => {
                 expected: Type.AnyInstance,
                 settings: PrimitiveInspectionSettings,
             }));
+
+        // GitHub issue #225: recursive function definitions should not cause infinite loops
+        describe("recursive function definitions should not cause infinite loops", () => {
+            it(`recursive function with self-call`, async () =>
+                await assertEqualRootType({
+                    text: `let count = (x as number) => if x = 0 then 0 else 1 + @count(x - 1) in @count(10)`,
+                    expected: Type.AnyInstance,
+                    settings: PrimitiveInspectionSettings,
+                }));
+
+            it(`recursive fibonacci`, async () =>
+                await assertEqualRootType({
+                    text: `let fib = (x as number) => if x = 0 or x = 1 then 1 else @fib(x - 1) + @fib(x - 2) in @fib(5)`,
+                    expected: Type.AnyInstance,
+                    settings: PrimitiveInspectionSettings,
+                }));
+
+            it(`mutually recursive let bindings`, async () =>
+                await assertEqualRootType({
+                    text: `let a = @b, b = @a in a`,
+                    expected: Type.AnyInstance,
+                    settings: PrimitiveInspectionSettings,
+                }));
+        });
     });
 
     describe(`external type`, () => {

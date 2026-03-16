@@ -33,6 +33,7 @@ export function fromInspectionSettings(
 ): InspectTypeState {
     return {
         cancellationToken: inspectionSettings.cancellationToken,
+        computingNodeIds: new Set<number>(),
         eachScopeById: inspectionSettings.eachScopeById,
         initialCorrelationId: correlationId,
         isWorkspaceCacheAllowed: inspectionSettings.isWorkspaceCacheAllowed,
