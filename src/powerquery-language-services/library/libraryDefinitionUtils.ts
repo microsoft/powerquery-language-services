@@ -4,6 +4,7 @@
 import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
+import { ExternalTypeRequestKind, TExternalTypeRequest, TExternalTypeResolverFn } from "../externalType/externalType";
 import {
     LibraryConstant,
     LibraryDefinitionKind,
@@ -13,7 +14,6 @@ import {
     LibraryType,
     TLibraryDefinition,
 } from "./library";
-import { ExternalType } from "../externalType";
 
 export function assertAsConstant(definition: TLibraryDefinition | undefined): LibraryConstant {
     assertIsConstant(definition);
@@ -66,9 +66,31 @@ export function constantDefinition(
     };
 }
 
-export function externalTypeResolver(libraryDefinitions: LibraryDefinitions): ExternalType.TExternalTypeResolverFn {
-    return (request: ExternalType.TExternalTypeRequest): Type.TPowerQueryType | undefined =>
-        getDefinition(libraryDefinitions, request.identifierLiteral)?.asPowerQueryType;
+export function externalTypeResolver(libraryDefinitions: LibraryDefinitions): TExternalTypeResolverFn {
+    return (request: TExternalTypeRequest): Type.TPowerQueryType | undefined => {
+        const definition: TLibraryDefinition | undefined = getDefinition(libraryDefinitions, request.identifierLiteral);
+
+        if (definition === undefined) {
+            return undefined;
+        }
+
+        const asPowerQueryType: Type.TPowerQueryType = definition.asPowerQueryType;
+
+        // For value requests, return the type as-is (the function signature)
+        if (request.kind !== ExternalTypeRequestKind.Invocation) {
+            return asPowerQueryType;
+        }
+
+        // For invocation requests, extract the return type from the function
+
+        // If it's a DefinedFunction, return its return type
+        if (asPowerQueryType.extendedKind === Type.ExtendedTypeKind.DefinedFunction) {
+            return asPowerQueryType.returnType;
+        }
+
+        // For non-DefinedFunction types (e.g., generic Function), we can't know the return type
+        return Type.AnyInstance;
+    };
 }
 
 export function functionDefinition(

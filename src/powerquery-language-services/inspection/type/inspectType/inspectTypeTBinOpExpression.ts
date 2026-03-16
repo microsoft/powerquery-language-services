@@ -284,7 +284,7 @@ export const PartialLookup: ReadonlyMap<string, ReadonlySet<Type.TypeKind>> = ne
                 // Add the potentialNewValue if it's a new Type.
                 const values: Set<Type.TypeKind> | undefined = binaryExpressionPartialLookup.get(partialKey);
 
-                // First occurance of '<first operand> , <operator>'
+                // First occurrence of '<first operand> , <operator>'
                 if (values === undefined) {
                     binaryExpressionPartialLookup.set(partialKey, new Set([potentialNewValue]));
                 } else {

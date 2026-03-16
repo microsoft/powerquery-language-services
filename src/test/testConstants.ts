@@ -194,6 +194,24 @@ export const SimpleLibraryDefinitions: Library.LibraryDefinitions = {
                 ],
             ),
         ],
+        [
+            TestLibraryName.DuplicateText,
+            LibraryDefinitionUtils.functionDefinition(
+                TestLibraryName.DuplicateText,
+                `The name is ${TestLibraryName.DuplicateText}`,
+                DuplicateTextDefinedFunction,
+                CompletionItemKind.Function,
+                [
+                    {
+                        isNullable: false,
+                        isOptional: false,
+                        label: "txt",
+                        documentation: undefined,
+                        typeKind: Type.TypeKind.Text,
+                    },
+                ],
+            ),
+        ],
     ]),
 };
 

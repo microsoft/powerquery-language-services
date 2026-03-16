@@ -52,7 +52,7 @@ describe(`dereferenceIdentifierUtils`, () => {
                 });
             });
 
-            it(`happy path with quoted identifer`, async () => {
+            it(`happy path with quoted identifier`, async () => {
                 await runTypeTest({
                     text: `let foo = 42 in #"foo"`,
                     expected: numberLiteral,
@@ -87,14 +87,14 @@ describe(`dereferenceIdentifierUtils`, () => {
                 });
             });
 
-            it(`happy path with quoted identifer`, async () => {
+            it(`happy path with quoted identifier`, async () => {
                 await runTypeTest({
                     text: `[foo = 42][#"foo"]`,
                     expected: numberLiteral,
                 });
             });
 
-            it(`happy path with generalized identifer`, async () => {
+            it(`happy path with generalized identifier`, async () => {
                 await runTypeTest({
                     text: `[with space = 42][with space]`,
                     expected: numberLiteral,
@@ -124,7 +124,7 @@ describe(`dereferenceIdentifierUtils`, () => {
                 });
             });
 
-            it(`happy path with quoted identifer`, async () => {
+            it(`happy path with quoted identifier`, async () => {
                 await runScopeTypeTest({
                     textWithPipe: `section Document1; foo = 42; bar = #"foo"; baz = |`,
                     expected: new Map<string, Type.TPowerQueryType>([
