@@ -53,6 +53,7 @@ export async function inspectFieldType(
     }
     // Check if we're inside a RecursivePrimaryExpression (e.g. record[Column1])
     // before trying to grab the previous sibling.
+    // This should be the only expected scenario, but we add this check to prevent an exception from being thrown.
     else if (isInRecursivePrimaryExpression(state.nodeIdMapCollection, xorNode)) {
         const previousSibling: TXorNode = NodeIdMapUtils.assertRecursiveExpressionPreviousSibling(
             state.nodeIdMapCollection,
