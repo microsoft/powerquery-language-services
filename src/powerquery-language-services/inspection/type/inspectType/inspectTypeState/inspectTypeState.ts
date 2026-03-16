@@ -11,4 +11,7 @@ export interface InspectTypeState extends InspectionSettings {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
+    // Tracks node IDs currently being computed to break infinite cycles
+    // in recursive type analysis (e.g. `let f = (x) => @f(x) in @f(1)`).
+    readonly computingNodeIds: Set<number>;
 }

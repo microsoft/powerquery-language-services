@@ -145,8 +145,18 @@ async function dereferenceScopeItem(
         );
     }
 
+    const visitedNodeIds: Set<number> = new Set<number>();
+
     while (currentScopeItem.kind) {
         const currentXorNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, currentScopeItem.nodeId);
+
+        // Detect mutual recursion cycles (e.g. `let a = @b, b = @a`).
+        // If we've already visited this scope item, treat it as a recursive reference.
+        if (visitedNodeIds.has(currentScopeItem.nodeId)) {
+            return onRecursiveIdentifierLiteral(dereferencedPath, currentXorNode, trace, currentIdentifierLiteral);
+        }
+
+        visitedNodeIds.add(currentScopeItem.nodeId);
 
         switch (currentScopeItem.kind) {
             case ScopeItemKind.LetVariable:

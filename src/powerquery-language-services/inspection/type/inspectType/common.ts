@@ -137,7 +137,17 @@ export async function getOrCreateScopeItemType(
         return type;
     }
 
+    // Break infinite cycles for recursive definitions (e.g. `let f = (x) => @f(x) in @f(1)`).
+    // If we're already computing this node's type, return Any to stop the recursion.
+    if (state.computingNodeIds.has(nodeId)) {
+        trace.exit({ cycleBroken: true });
+
+        return Type.AnyInstance;
+    }
+
+    state.computingNodeIds.add(nodeId);
     const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem, trace.id);
+    state.computingNodeIds.delete(nodeId);
     trace.exit();
 
     return scopeType;

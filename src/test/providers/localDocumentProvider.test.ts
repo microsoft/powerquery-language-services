@@ -238,7 +238,7 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
 
-                xit(`no repeats`, async () =>
+                it(`no repeats`, async () =>
                     await runTest({
                         textWithPipe: `[foo = 1, bar = 2, foobar = 3][[foo], [|`,
                         expected: {
