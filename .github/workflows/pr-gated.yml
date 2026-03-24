@@ -20,13 +20,8 @@ jobs:
             - run: node -v
             - run: npm ci
             - name: Run npm audit
-              shell: pwsh
-              run: |
-                  npm audit
-                  if ($LASTEXITCODE -ne 0) {
-                      Write-Output "::warning title=npm audit::npm audit reported vulnerabilities; review the audit output above."
-                      exit 0
-                  }
+              continue-on-error: true
+              run: npm audit
             - run: npm run lint
             - run: npm run build
             - name: Run tests
