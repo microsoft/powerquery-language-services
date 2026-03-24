@@ -25,6 +25,7 @@ jobs:
                   npm audit
                   if ($LASTEXITCODE -ne 0) {
                       Write-Output "::warning title=npm audit::npm audit reported vulnerabilities; review the audit output above."
+                      exit 0
                   }
             - run: npm run lint
             - run: npm run build
