@@ -86,6 +86,7 @@ const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKi
     Type.ExtendedTypeKind.AnyUnion,
     Type.ExtendedTypeKind.DefinedRecord,
     Type.ExtendedTypeKind.DefinedTable,
+    Type.ExtendedTypeKind.RecordType,
 ];
 
 async function autocompleteFieldAccess(
@@ -196,6 +197,7 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
 
         case Type.ExtendedTypeKind.DefinedRecord:
         case Type.ExtendedTypeKind.DefinedTable:
+        case Type.ExtendedTypeKind.RecordType:
             return [...type.fields.entries()];
 
         default:

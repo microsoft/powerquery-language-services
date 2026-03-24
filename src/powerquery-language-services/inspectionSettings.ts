@@ -14,6 +14,7 @@ export enum TypeStrategy {
 }
 
 export interface InspectionSettings extends PQP.Settings {
+    readonly isTypeDirectiveAllowed: boolean;
     // Allows the caching of scope and Power Query type datastructures built during an inspection.
     readonly isWorkspaceCacheAllowed: boolean;
     readonly library: Library.ILibrary;

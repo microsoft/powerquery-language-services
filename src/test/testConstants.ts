@@ -34,6 +34,7 @@ export enum TestLibraryName {
 
 export const DefaultInspectionSettings: InspectionSettings = {
     ...PQP.DefaultSettings,
+    isTypeDirectiveAllowed: false,
     isWorkspaceCacheAllowed: false,
     library: Library.NoOpLibrary,
     eachScopeById: undefined,

@@ -66,6 +66,7 @@ describe(`Inspection - Type`, () => {
 
     const ExtendedInspectionSettings: InspectionSettings = {
         ...PQP.DefaultSettings,
+        isTypeDirectiveAllowed: false,
         isWorkspaceCacheAllowed: false,
         library: {
             externalTypeResolver: ExternalTypeResolver,
@@ -1166,6 +1167,7 @@ describe(`Inspection - Type`, () => {
 
         const settingsWithGenericResolver: InspectionSettings = {
             ...PQP.DefaultSettings,
+            isTypeDirectiveAllowed: false,
             isWorkspaceCacheAllowed: false,
             library: libraryWithGenericResolver,
             eachScopeById: undefined,
