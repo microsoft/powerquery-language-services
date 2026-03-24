@@ -23,9 +23,9 @@ import {
     ScopeById,
     ScopeItemKind,
     SectionMemberScopeItem,
-    TypeDirective,
     TriedNodeScope,
     TScopeItem,
+    TypeDirective,
 } from "./scope";
 import {
     PseduoFunctionExpressionType,
@@ -680,6 +680,7 @@ function scopeItemFactoryForSectionMember(
 
 function findTypeDirective(state: ScopeInspectionState, nodeId: number): TypeDirective | undefined {
     const astNode: Ast.TNode | undefined = state.nodeIdMapCollection.astNodeById.get(nodeId);
+
     const directives: ReadonlyArray<TypeDirective> | undefined = (
         astNode as (Ast.TNode & { precedingDirectives?: ReadonlyArray<TypeDirective> }) | undefined
     )?.precedingDirectives;

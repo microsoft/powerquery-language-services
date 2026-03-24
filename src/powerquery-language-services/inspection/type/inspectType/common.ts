@@ -9,19 +9,21 @@ import {
     Type,
     TypeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
 import { Inspection, InspectionSettings, InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
+import { NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
 import {
     NodeScope,
     ParameterScopeItem,
     ScopeItemKind,
-    tryNodeScope,
     TKeyValuePairScopeItem,
+    tryNodeScope,
     TScopeItem,
 } from "../../scope";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
+import { ExternalTypeUtils } from "../../../externalType";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -47,10 +49,12 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
+
 import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
-import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
-import { ExternalTypeUtils } from "../../../externalType";
+
 import { TypeCacheUtils } from "../../typeCache";
+
+import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
 // maps each entry into a boolean,
@@ -216,13 +220,20 @@ async function inspectScopeItemTypeDirective(
     }
 
     switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
         case ScopeItemKind.LetVariable:
+        case ScopeItemKind.Parameter:
         case ScopeItemKind.RecordField:
         case ScopeItemKind.SectionMember:
-            return await inspectTypeDirective(state, scopeItem, correlationId);
+        case ScopeItemKind.Undefined:
+            return scopeItem.kind === ScopeItemKind.LetVariable ||
+                scopeItem.kind === ScopeItemKind.RecordField ||
+                scopeItem.kind === ScopeItemKind.SectionMember
+                ? await inspectTypeDirective(state, scopeItem, correlationId)
+                : undefined;
 
         default:
-            return undefined;
+            throw Assert.isNever(scopeItem);
     }
 }
 
