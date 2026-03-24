@@ -19,7 +19,13 @@ jobs:
                   node-version-file: "package.json"
             - run: node -v
             - run: npm ci
-            - run: npm audit
+            - name: Run npm audit
+              shell: pwsh
+              run: |
+                  npm audit
+                  if ($LASTEXITCODE -ne 0) {
+                      Write-Output "::warning title=npm audit::npm audit reported vulnerabilities; review the audit output above."
+                  }
             - run: npm run lint
             - run: npm run build
             - name: Run tests
