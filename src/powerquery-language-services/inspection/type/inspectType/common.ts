@@ -53,6 +53,7 @@ import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
 import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
 
 import { TypeCacheUtils } from "../../typeCache";
+import { TypeStrategy } from "../../../inspectionSettings";
 
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
@@ -278,7 +279,36 @@ async function tryResolveTypeDirectiveFromScope(
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, scopeNodeId, correlationId);
     const referencedScopeItem: TScopeItem | undefined = nodeScope.scopeItemByKey.get(payload);
 
-    return referencedScopeItem ? await getOrCreateScopeItemType(state, referencedScopeItem) : undefined;
+    if (referencedScopeItem === undefined) {
+        return undefined;
+    }
+
+    switch (referencedScopeItem.kind) {
+        case ScopeItemKind.Each:
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.Parameter:
+        case ScopeItemKind.RecordField:
+        case ScopeItemKind.SectionMember:
+        case ScopeItemKind.Undefined:
+            if (
+                referencedScopeItem.kind === ScopeItemKind.LetVariable ||
+                referencedScopeItem.kind === ScopeItemKind.RecordField ||
+                referencedScopeItem.kind === ScopeItemKind.SectionMember
+            ) {
+                return referencedScopeItem.value === undefined
+                    ? undefined
+                    : await inspectDirectiveSourceWithExtendedTypeStrategy(
+                          state,
+                          referencedScopeItem.value,
+                          correlationId,
+                      );
+            }
+
+            return await getOrCreateScopeItemType(state, referencedScopeItem);
+
+        default:
+            throw Assert.isNever(referencedScopeItem);
+    }
 }
 
 function tryResolveTypeDirectiveFromLibrary(
@@ -308,6 +338,7 @@ async function tryResolveTypeDirectiveFromStandaloneText(
     const settings: InspectionSettings = {
         ...InspectTypeStateUtils.toInspectionSettings(state, trace),
         isTypeDirectiveAllowed: false,
+        typeStrategy: TypeStrategy.Extended,
     };
 
     const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
@@ -343,6 +374,21 @@ async function tryResolveTypeDirectiveFromStandaloneText(
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+async function inspectDirectiveSourceWithExtendedTypeStrategy(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType> {
+    const directiveState: InspectTypeState = {
+        ...state,
+        computingNodeIds: new Set(state.computingNodeIds),
+        typeById: TypeCacheUtils.emptyCache().typeById,
+        typeStrategy: TypeStrategy.Extended,
+    };
+
+    return await inspectXor(directiveState, xorNode, correlationId);
 }
 
 function normalizeTypeDirectivePayload(payload: string): string {

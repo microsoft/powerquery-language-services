@@ -27,7 +27,10 @@ export interface IAutocompleteItemProvider {
 }
 
 export interface AutocompleteItemProviderContext extends ProviderContext {
+    readonly activeNode: Inspection.TActiveNode;
     readonly autocomplete: Autocomplete;
+    readonly inspectionSettings: InspectionSettings;
+    readonly parseState: ParseState;
     readonly triedNodeScope: Inspection.TriedNodeScope;
     readonly triedScopeType: Inspection.TriedScopeType;
     readonly text?: string;

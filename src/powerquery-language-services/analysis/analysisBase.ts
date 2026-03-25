@@ -615,6 +615,7 @@ export class AnalysisBase implements Analysis {
         );
 
         const activeNode: TActiveNode | undefined = await this.getActiveNodeOkOrThrow(position, trace);
+        const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(trace);
 
         if (activeNode === undefined || (ActiveNodeUtils.isPositionInBounds(activeNode) && activeNode.isInKey)) {
             trace.exit();
@@ -648,7 +649,14 @@ export class AnalysisBase implements Analysis {
 
         if (activeLeafIdentifier !== undefined) {
             result = {
+                activeNode,
                 autocomplete,
+                inspectionSettings: {
+                    ...this.inspectionSettings,
+                    cancellationToken,
+                    initialCorrelationId: trace.id,
+                },
+                parseState: Assert.asDefined(parseState, "autocomplete context requires parse state"),
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.traceManager,
@@ -660,7 +668,14 @@ export class AnalysisBase implements Analysis {
             };
         } else {
             result = {
+                activeNode,
                 autocomplete,
+                inspectionSettings: {
+                    ...this.inspectionSettings,
+                    cancellationToken,
+                    initialCorrelationId: trace.id,
+                },
+                parseState: Assert.asDefined(parseState, "autocomplete context requires parse state"),
                 triedNodeScope,
                 triedScopeType,
                 traceManager: this.traceManager,

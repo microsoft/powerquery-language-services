@@ -6,13 +6,18 @@ import { expect } from "chai";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { Inspection, InspectionSettings } from "../../powerquery-language-services";
+import { Inspection, InspectionSettings, TypeStrategy } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 
 describe("Inspection - Type directives", () => {
     const EnabledInspectionSettings: InspectionSettings = {
         ...TestConstants.SimpleInspectionSettings,
         isTypeDirectiveAllowed: true,
+    };
+
+    const PrimitiveEnabledInspectionSettings: InspectionSettings = {
+        ...EnabledInspectionSettings,
+        typeStrategy: TypeStrategy.Primitive,
     };
 
     function fieldAccessAutocompleteItemSelector(
@@ -72,6 +77,34 @@ in
 in
     value[|]`,
             EnabledInspectionSettings,
+        );
+
+        expect(actual).to.include.members(["Foo", "Bar"]);
+    });
+
+    it("applies inline type directives when enabled under primitive strategy", async () => {
+        const actual: Type.TPowerQueryType = await TestUtils.assertRootType({
+            text: `let
+    /// @type [ Foo = text, Bar = number ]
+    value = []
+in
+    value`,
+            inspectionSettings: PrimitiveEnabledInspectionSettings,
+        });
+
+        expect(actual.extendedKind).to.equal(Type.ExtendedTypeKind.RecordType);
+        expect([...(actual as Type.RecordType).fields.keys()]).to.deep.equal(["Foo", "Bar"]);
+    });
+
+    it("applies identifier type directives when enabled under primitive strategy", async () => {
+        const actual: ReadonlyArray<string> = await autocompleteLabels(
+            `let
+    Resource.Type = type [ Foo = text, Bar = number ],
+    /// @type Resource.Type
+    value = []
+in
+    value[|]`,
+            PrimitiveEnabledInspectionSettings,
         );
 
         expect(actual).to.include.members(["Foo", "Bar"]);
