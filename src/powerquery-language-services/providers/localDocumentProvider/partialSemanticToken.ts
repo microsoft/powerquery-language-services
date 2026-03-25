@@ -99,6 +99,7 @@ function getAsNullablePrimitiveTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.AsNullablePrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = asConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
@@ -121,6 +122,7 @@ function getEachExpressionTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.EachExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = eachConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
@@ -143,6 +145,7 @@ function getFieldSelectorTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldSelector) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 1 = fieldName (GeneralizedIdentifier)
         pushNthChild(
             nodeIdMapCollection,
             nodeId,
@@ -152,6 +155,7 @@ function getFieldSelectorTokens(
             SemanticTokenTypes.variable,
         );
 
+        // 3 = optionalOperator
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 3, tokens, SemanticTokenTypes.operator);
     }
 
@@ -174,6 +178,7 @@ function getFieldProjectionTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldProjection) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 3 = optionalOperator
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 3, tokens, SemanticTokenTypes.operator);
     }
 
@@ -196,6 +201,7 @@ function getFieldSpecificationTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldSpecification) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = optionalConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
@@ -338,6 +344,7 @@ function getIfExpressionTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IfExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = ifConstant, 2 = thenConstant, 4 = elseConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 2, tokens, SemanticTokenTypes.keyword);
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 4, tokens, SemanticTokenTypes.keyword);
@@ -397,6 +404,7 @@ function getLetExpressionTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = letConstant, 2 = inConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 2, tokens, SemanticTokenTypes.keyword);
     }
@@ -471,6 +479,7 @@ function getNullablePrimitiveTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.NullablePrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = nullableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
@@ -493,6 +502,7 @@ function getNullableTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.NullableType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = nullableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
@@ -515,6 +525,7 @@ function getParameterTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Parameter) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = optionalConstant, 1 = name (Identifier)
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
 
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Identifier, 1, tokens, SemanticTokenTypes.parameter, [
@@ -595,6 +606,7 @@ function getTBinOpExpressionTokens(
                 continue;
             }
 
+            // 1 = operator constant (TBinOpExpression: 0 = left, 1 = operator, 2 = right)
             const operatorNode: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 exprXorNode.node.id,
@@ -641,6 +653,7 @@ function getTableTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.TableType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = tableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.type);
     }
 
@@ -663,6 +676,7 @@ function getTypePrimaryTypeTokens(
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.TypePrimaryType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = typeConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.type);
     }
 
@@ -692,6 +706,7 @@ function getPairedExpressionTokens<
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(pairedKind) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // IKeyValuePair: 0 = key, 1 = equalConstant, 2 = value
         const keyNode: T["key"] | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             nodeId,

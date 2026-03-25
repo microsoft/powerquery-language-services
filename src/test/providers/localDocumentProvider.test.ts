@@ -733,6 +733,37 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 ],
             }));
 
+        it(`record with function value`, async () =>
+            await assertSemanticTokens({
+                text: `[fn = (x) => x]`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 1, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                    {
+                        range: {
+                            end: { character: 8, line: 0 },
+                            start: { character: 7, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration],
+                        tokenType: SemanticTokenTypes.parameter,
+                    },
+                    {
+                        range: {
+                            end: { character: 14, line: 0 },
+                            start: { character: 13, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                ],
+            }));
+
         it(`each expression`, async () =>
             await assertSemanticTokens({
                 text: `each 1`,
