@@ -893,13 +893,10 @@ describe(`Inspection - Type`, () => {
                             },
                         }));
 
-                    it(`out-of-bounds index falls back to union of element types`, async () =>
+                    it(`out-of-bounds index returns none`, async () =>
                         await assertEqualRootType({
                             text: `{1, "hello"}{8}`,
-                            expected: anyUnion([
-                                TypeUtils.numberLiteral(false, `1`),
-                                TypeUtils.textLiteral(false, `"hello"`),
-                            ]),
+                            expected: Type.NoneInstance,
                         }));
                 });
 
