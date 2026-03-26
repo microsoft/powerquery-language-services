@@ -104,6 +104,11 @@ function getElementType(
                     return collectionType.elements[indexValue];
                 }
 
+                // Known index but out of bounds — this will error at runtime.
+                if (indexValue !== undefined) {
+                    return Type.NoneInstance;
+                }
+
                 return TypeUtils.anyUnion(collectionType.elements, state.traceManager, correlationId);
             }
 
