@@ -851,7 +851,7 @@ other = OAuthError.Publish|;`,
                             end: { character: 4, line: 0 },
                             start: { character: 1, line: 0 },
                         },
-                        tokenModifiers: [SemanticTokenModifiers.declaration],
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
                         tokenType: SemanticTokenTypes.variable,
                     },
                     {
@@ -874,7 +874,7 @@ other = OAuthError.Publish|;`,
                             end: { character: 4, line: 0 },
                             start: { character: 1, line: 0 },
                         },
-                        tokenModifiers: [SemanticTokenModifiers.declaration],
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
                         tokenType: SemanticTokenTypes.variable,
                     },
                     {
@@ -884,6 +884,278 @@ other = OAuthError.Publish|;`,
                         },
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.number,
+                    },
+                ],
+            }));
+
+        it(`record with function value`, async () =>
+            await assertSemanticTokens({
+                text: `[fn = (x) => x]`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 1, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                    {
+                        range: {
+                            end: { character: 8, line: 0 },
+                            start: { character: 7, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration],
+                        tokenType: SemanticTokenTypes.parameter,
+                    },
+                    {
+                        range: {
+                            end: { character: 14, line: 0 },
+                            start: { character: 13, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                ],
+            }));
+
+        it(`each expression`, async () =>
+            await assertSemanticTokens({
+                text: `each 1`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 4, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 6, line: 0 },
+                            start: { character: 5, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.number,
+                    },
+                ],
+            }));
+
+        it(`let expression`, async () =>
+            await assertSemanticTokens({
+                text: `let x = 1 in x`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 5, line: 0 },
+                            start: { character: 4, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 12, line: 0 },
+                            start: { character: 10, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 9, line: 0 },
+                            start: { character: 8, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.number,
+                    },
+                    {
+                        range: {
+                            end: { character: 14, line: 0 },
+                            start: { character: 13, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                ],
+            }));
+
+        it(`if expression`, async () =>
+            await assertSemanticTokens({
+                text: `if true then 1 else 2`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 2, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 12, line: 0 },
+                            start: { character: 8, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 19, line: 0 },
+                            start: { character: 15, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 7, line: 0 },
+                            start: { character: 3, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 14, line: 0 },
+                            start: { character: 13, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.number,
+                    },
+                    {
+                        range: {
+                            end: { character: 21, line: 0 },
+                            start: { character: 20, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.number,
+                    },
+                ],
+            }));
+
+        it(`logical literal true`, async () =>
+            await assertSemanticTokens({
+                text: `true`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 4, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                ],
+            }));
+
+        it(`logical literal false`, async () =>
+            await assertSemanticTokens({
+                text: `false`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 5, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                ],
+            }));
+
+        it(`null literal`, async () =>
+            await assertSemanticTokens({
+                text: `null`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 4, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                ],
+            }));
+
+        it(`function definition vs variable`, async () =>
+            await assertSemanticTokens({
+                text: `let fn = (x) => x in fn(1)`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 6, line: 0 },
+                            start: { character: 4, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                    {
+                        range: {
+                            end: { character: 23, line: 0 },
+                            start: { character: 21, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 20, line: 0 },
+                            start: { character: 18, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.keyword,
+                    },
+                    {
+                        range: {
+                            end: { character: 25, line: 0 },
+                            start: { character: 24, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.number,
+                    },
+                    {
+                        range: {
+                            end: { character: 11, line: 0 },
+                            start: { character: 10, line: 0 },
+                        },
+                        tokenModifiers: [SemanticTokenModifiers.declaration],
+                        tokenType: SemanticTokenTypes.parameter,
+                    },
+                    {
+                        range: {
+                            end: { character: 17, line: 0 },
+                            start: { character: 16, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                    {
+                        range: {
+                            end: { character: 23, line: 0 },
+                            start: { character: 21, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.variable,
                     },
                 ],
             }));

@@ -30,50 +30,53 @@ export function createPartialSemanticTokens(
         correlationId,
     );
 
-    let tokens: PartialSemanticToken[] = [];
+    const tokens: PartialSemanticToken[] = [];
 
     // Consumed as first-come first-serve priority.
-    tokens = tokens
-        .concat(getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getFieldSelectorTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getFieldProjectionTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getFieldSpecificationTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(
-            getGeneralizedIdentifierPairedAnyLiteralTokens(
-                nodeIdMapCollection,
-                traceManager,
-                trace.id,
-                cancellationToken,
-            ),
-        )
-        .concat(
-            getGeneralizedIdentifierPairedExpressionTokens(
-                nodeIdMapCollection,
-                traceManager,
-                trace.id,
-                cancellationToken,
-            ),
-        )
-        .concat(getIdentifierPairedExpressionTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getInvokeExpressionTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getLiteralTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getNullablePrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getNullableTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getParameterTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getPrimitiveTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getTBinOpExpressionTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getTableTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        .concat(getTypePrimaryTypeTokens(nodeIdMapCollection, traceManager, trace.id, cancellationToken))
-        // Should be the lowest priority
-        .concat(
-            getIdentifierExpressionTokens(
-                nodeIdMapCollection,
-                libraryDefinitions,
-                traceManager,
-                trace.id,
-                cancellationToken,
-            ),
-        );
+    getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getEachExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getFieldSelectorTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getFieldProjectionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getFieldSpecificationTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+
+    getGeneralizedIdentifierPairedAnyLiteralTokens(
+        nodeIdMapCollection,
+        tokens,
+        traceManager,
+        trace.id,
+        cancellationToken,
+    );
+
+    getGeneralizedIdentifierPairedExpressionTokens(
+        nodeIdMapCollection,
+        tokens,
+        traceManager,
+        trace.id,
+        cancellationToken,
+    );
+
+    getIdentifierPairedExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getIfExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getInvokeExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getLetExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getLiteralTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getNullablePrimitiveTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getNullableTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getParameterTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getPrimitiveTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getTBinOpExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getTableTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+    getTypePrimaryTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
+
+    // Should be the lowest priority
+    getIdentifierExpressionTokens(
+        nodeIdMapCollection,
+        libraryDefinitions,
+        tokens,
+        traceManager,
+        trace.id,
+        cancellationToken,
+    );
 
     trace.exit();
 
@@ -82,46 +85,67 @@ export function createPartialSemanticTokens(
 
 function getAsNullablePrimitiveTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getAsNullablePrimitiveTypeTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.AsNullablePrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = asConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
     trace.exit();
+}
 
-    return tokens;
+function getEachExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
+    traceManager: TraceManager,
+    correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
+): void {
+    const trace: Trace = traceManager.entry(
+        ProviderTraceConstant.LocalDocumentSymbolProvider,
+        getEachExpressionTokens.name,
+        correlationId,
+    );
+
+    for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.EachExpression) ?? []) {
+        cancellationToken?.throwIfCancelled();
+
+        // 0 = eachConstant
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
+    }
+
+    trace.exit();
 }
 
 function getFieldSelectorTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldSelectorTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldSelector) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 1 = fieldName (GeneralizedIdentifier)
         pushNthChild(
             nodeIdMapCollection,
             nodeId,
@@ -131,74 +155,71 @@ function getFieldSelectorTokens(
             SemanticTokenTypes.variable,
         );
 
+        // 3 = optionalOperator
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 3, tokens, SemanticTokenTypes.operator);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getFieldProjectionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldProjectionTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldProjection) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 3 = optionalOperator
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 3, tokens, SemanticTokenTypes.operator);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getFieldSpecificationTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFieldSpecificationTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.FieldSpecification) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = optionalConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getGeneralizedIdentifierPairedExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
-    return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedExpression>(
+): void {
+    getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedExpression>(
         nodeIdMapCollection,
         Ast.NodeKind.GeneralizedIdentifierPairedExpression,
         Ast.NodeKind.GeneralizedIdentifier,
+        tokens,
         traceManager,
         correlationId,
         cancellationToken,
@@ -207,14 +228,16 @@ function getGeneralizedIdentifierPairedExpressionTokens(
 
 function getGeneralizedIdentifierPairedAnyLiteralTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
-    return getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedAnyLiteral>(
+): void {
+    getPairedExpressionTokens<Ast.GeneralizedIdentifierPairedAnyLiteral>(
         nodeIdMapCollection,
         Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral,
         Ast.NodeKind.GeneralizedIdentifier,
+        tokens,
         traceManager,
         correlationId,
         cancellationToken,
@@ -224,17 +247,16 @@ function getGeneralizedIdentifierPairedAnyLiteralTokens(
 function getIdentifierExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
     libraryDefinitions: Library.LibraryDefinitions,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getIdentifierExpressionTokens.name,
         correlationId,
     );
-
-    const tokens: PartialSemanticToken[] = [];
 
     for (const identifierId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IdentifierExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
@@ -286,39 +308,63 @@ function getIdentifierExpressionTokens(
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getIdentifierPairedExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
-    return getPairedExpressionTokens<Ast.IdentifierPairedExpression>(
+): void {
+    getPairedExpressionTokens<Ast.IdentifierPairedExpression>(
         nodeIdMapCollection,
         Ast.NodeKind.IdentifierPairedExpression,
         Ast.NodeKind.Identifier,
+        tokens,
         traceManager,
         correlationId,
         cancellationToken,
     );
 }
 
-function getInvokeExpressionTokens(
+function getIfExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
+    const trace: Trace = traceManager.entry(
+        ProviderTraceConstant.LocalDocumentSymbolProvider,
+        getIfExpressionTokens.name,
+        correlationId,
+    );
+
+    for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.IfExpression) ?? []) {
+        cancellationToken?.throwIfCancelled();
+
+        // 0 = ifConstant, 2 = thenConstant, 4 = elseConstant
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 2, tokens, SemanticTokenTypes.keyword);
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 4, tokens, SemanticTokenTypes.keyword);
+    }
+
+    trace.exit();
+}
+
+function getInvokeExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
+    traceManager: TraceManager,
+    correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getInvokeExpressionTokens.name,
         correlationId,
     );
-
-    const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
@@ -340,23 +386,44 @@ function getInvokeExpressionTokens(
     }
 
     trace.exit();
+}
 
-    return tokens;
+function getLetExpressionTokens(
+    nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
+    traceManager: TraceManager,
+    correlationId: number,
+    cancellationToken: ICancellationToken | undefined,
+): void {
+    const trace: Trace = traceManager.entry(
+        ProviderTraceConstant.LocalDocumentSymbolProvider,
+        getLetExpressionTokens.name,
+        correlationId,
+    );
+
+    for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LetExpression) ?? []) {
+        cancellationToken?.throwIfCancelled();
+
+        // 0 = letConstant, 2 = inConstant
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
+        pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 2, tokens, SemanticTokenTypes.keyword);
+    }
+
+    trace.exit();
 }
 
 function getLiteralTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getLiteralTokens.name,
         correlationId,
     );
-
-    const tokens: PartialSemanticToken[] = [];
 
     for (const literalId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.LiteralExpression) ?? []) {
         cancellationToken?.throwIfCancelled();
@@ -377,6 +444,11 @@ function getLiteralTokens(
                 tokenType = SemanticTokenTypes.string;
                 break;
 
+            case Ast.LiteralKind.Logical:
+            case Ast.LiteralKind.Null:
+                tokenType = SemanticTokenTypes.keyword;
+                break;
+
             default:
                 continue;
         }
@@ -389,77 +461,71 @@ function getLiteralTokens(
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getNullablePrimitiveTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getNullablePrimitiveTypeTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.NullablePrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = nullableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getNullableTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getNullableTypeTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.NullableType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = nullableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getParameterTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getParameterTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.Parameter) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = optionalConstant, 1 = name (Identifier)
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.keyword);
 
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Identifier, 1, tokens, SemanticTokenTypes.parameter, [
@@ -468,23 +534,20 @@ function getParameterTokens(
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getPrimitiveTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getPrimitiveTypeTokens.name,
         correlationId,
     );
-
-    const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.PrimitiveType) ?? []) {
         cancellationToken?.throwIfCancelled();
@@ -507,16 +570,15 @@ function getPrimitiveTypeTokens(
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getTBinOpExpressionTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getTBinOpExpressionTokens.name,
@@ -534,8 +596,6 @@ function getTBinOpExpressionTokens(
         Ast.NodeKind.RelationalExpression,
     ];
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeKind of binOpExprNodeKinds) {
         for (const binOpExprId of nodeIdMapCollection.idsByNodeKind.get(nodeKind) ?? []) {
             cancellationToken?.throwIfCancelled();
@@ -546,6 +606,7 @@ function getTBinOpExpressionTokens(
                 continue;
             }
 
+            // 1 = operator constant (TBinOpExpression: 0 = left, 1 = operator, 2 = right)
             const operatorNode: Ast.TConstant | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
                 nodeIdMapCollection,
                 exprXorNode.node.id,
@@ -574,58 +635,52 @@ function getTBinOpExpressionTokens(
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getTableTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getTableTypeTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.TableType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = tableConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.type);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getTypePrimaryTypeTokens(
     nodeIdMapCollection: NodeIdMap.Collection,
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getTypePrimaryTypeTokens.name,
         correlationId,
     );
 
-    const tokens: PartialSemanticToken[] = [];
-
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.TypePrimaryType) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // 0 = typeConstant
         pushNthChild(nodeIdMapCollection, nodeId, Ast.NodeKind.Constant, 0, tokens, SemanticTokenTypes.type);
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function getPairedExpressionTokens<
@@ -637,21 +692,21 @@ function getPairedExpressionTokens<
     nodeIdMapCollection: NodeIdMap.Collection,
     pairedKind: T["kind"],
     keyKind: T["key"]["kind"],
+    tokens: PartialSemanticToken[],
     traceManager: TraceManager,
     correlationId: number,
     cancellationToken: ICancellationToken | undefined,
-): PartialSemanticToken[] {
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
-        getIdentifierExpressionTokens.name,
+        getPairedExpressionTokens.name,
         correlationId,
     );
-
-    const tokens: PartialSemanticToken[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(pairedKind) ?? []) {
         cancellationToken?.throwIfCancelled();
 
+        // IKeyValuePair: 0 = key, 1 = equalConstant, 2 = value
         const keyNode: T["key"] | undefined = NodeIdMapUtils.nthChildAstChecked(
             nodeIdMapCollection,
             nodeId,
@@ -663,16 +718,22 @@ function getPairedExpressionTokens<
             continue;
         }
 
+        // Distinguish function definitions from variable definitions
+        const valueNode: Ast.FunctionExpression | undefined = NodeIdMapUtils.nthChildAstChecked<Ast.FunctionExpression>(
+            nodeIdMapCollection,
+            nodeId,
+            2,
+            Ast.NodeKind.FunctionExpression,
+        );
+
         tokens.push({
             range: PositionUtils.rangeFromTokenRange(keyNode.tokenRange),
-            tokenModifiers: [SemanticTokenModifiers.declaration],
-            tokenType: SemanticTokenTypes.variable,
+            tokenModifiers: [SemanticTokenModifiers.declaration, SemanticTokenModifiers.readonly],
+            tokenType: valueNode !== undefined ? SemanticTokenTypes.function : SemanticTokenTypes.variable,
         });
     }
 
     trace.exit();
-
-    return tokens;
 }
 
 function pushNthChild<T extends Ast.TNode>(
