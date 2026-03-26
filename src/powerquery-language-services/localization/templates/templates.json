@@ -24,5 +24,14 @@
     "_error_validation_unknownIdentifier_noSuggestion.comment": "An error when an unknown variable is referenced. Expected to be user facing.",
 
     "error_validation_unknownIdentifier_suggestion": "Cannot find the name '{identifier}', did you mean '{suggestion}'?",
-    "_error_validation_unknownIdentifier_suggestion.comment": "An error when an unknown variable is referenced, but a similarly named variable is in scope. Expected to be user facing."
+    "_error_validation_unknownIdentifier_suggestion.comment": "An error when an unknown variable is referenced, but a similarly named variable is in scope. Expected to be user facing.",
+
+    "parameterDocumentation_default": "Default: `{value}`",
+    "_parameterDocumentation_default.comment": "Label shown in parameter documentation indicating the default value. The {value} placeholder is the actual default. Expected to be user facing.",
+    "parameterDocumentation_allowedValues": "Allowed values: {values}",
+    "_parameterDocumentation_allowedValues.comment": "Label shown in parameter documentation listing the allowed values. The {values} placeholder is a comma-separated list. Expected to be user facing.",
+    "parameterDocumentation_sampleValues": "Sample values: {values}",
+    "_parameterDocumentation_sampleValues.comment": "Label shown in parameter documentation listing sample values. The {values} placeholder is a comma-separated list. Expected to be user facing.",
+    "parameterDocumentation_type": "Type: `{type}`",
+    "_parameterDocumentation_type.comment": "Label shown in parameter documentation indicating the type. The {type} placeholder is the type name. Expected to be user facing."
 }

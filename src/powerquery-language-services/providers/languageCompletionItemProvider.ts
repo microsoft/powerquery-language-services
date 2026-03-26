@@ -6,6 +6,7 @@ import { KeywordKind } from "@microsoft/powerquery-parser/lib/powerquery-parser/
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { AutocompleteItemProviderContext, IAutocompleteItemProvider } from "./commonTypes";
+import { AutocompleteItemUtils } from "../inspection/autocomplete/autocompleteItem";
 import { Inspection } from "..";
 import { ProviderTraceConstant } from "../trace";
 
@@ -25,6 +26,14 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
         KeywordKind.HashTable,
         KeywordKind.HashTime,
     ];
+
+    // Keywords that have corresponding snippet completions
+    private static readonly SnippetKeywords: ReadonlySet<string> = new Set([
+        KeywordKind.Let,
+        KeywordKind.If,
+        KeywordKind.Try,
+        KeywordKind.Each,
+    ]);
 
     protected readonly locale: string;
 
@@ -47,8 +56,14 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
 
             const autocomplete: Inspection.Autocomplete = context.autocomplete;
 
+            const keywords: ReadonlyArray<Inspection.AutocompleteItem> = this.getKeywords(
+                autocomplete.triedKeyword,
+                context.cancellationToken,
+            );
+
             const autocompleteItems: Inspection.AutocompleteItem[] = [
-                ...this.getKeywords(autocomplete.triedKeyword, context.cancellationToken),
+                ...keywords,
+                ...this.getSnippets(keywords),
                 ...this.getLanguageConstants(autocomplete.triedLanguageConstant, context.cancellationToken),
                 ...this.getPrimitiveTypes(autocomplete.triedPrimitiveType, context.cancellationToken),
             ];
@@ -73,6 +88,17 @@ export class LanguageAutocompleteItemProvider implements IAutocompleteItemProvid
             (autocompleteItem: Inspection.AutocompleteItem) =>
                 LanguageAutocompleteItemProvider.ExcludedKeywords.includes(autocompleteItem.label) === false,
         );
+    }
+
+    // Include snippet completions when relevant keywords (let, if, try, each) are in the keyword results.
+    private getSnippets(
+        keywords: ReadonlyArray<Inspection.AutocompleteItem>,
+    ): ReadonlyArray<Inspection.AutocompleteItem> {
+        const hasSnippetKeyword: boolean = keywords.some((item: Inspection.AutocompleteItem) =>
+            LanguageAutocompleteItemProvider.SnippetKeywords.has(item.label),
+        );
+
+        return hasSnippetKeyword ? AutocompleteItemUtils.createSnippetItems() : [];
     }
 
     private getLanguageConstants(

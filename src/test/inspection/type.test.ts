@@ -866,23 +866,16 @@ describe(`Inspection - Type`, () => {
                     }));
 
                 describe(`${Ast.NodeKind.ItemAccessExpression} - element type inference`, () => {
-                    it(`list literal access returns element type union`, async () =>
+                    it(`list literal access with known index returns exact element type`, async () =>
                         await assertEqualRootType({
                             text: `{1, 2, 3}{0}`,
-                            expected: anyUnion([
-                                TypeUtils.numberLiteral(false, `1`),
-                                TypeUtils.numberLiteral(false, `2`),
-                                TypeUtils.numberLiteral(false, `3`),
-                            ]),
+                            expected: TypeUtils.numberLiteral(false, `1`),
                         }));
 
-                    it(`mixed list literal access returns mixed union`, async () =>
+                    it(`list literal access with second index`, async () =>
                         await assertEqualRootType({
-                            text: `{1, "hello"}{0}`,
-                            expected: anyUnion([
-                                TypeUtils.numberLiteral(false, `1`),
-                                TypeUtils.textLiteral(false, `"hello"`),
-                            ]),
+                            text: `{1, "hello"}{1}`,
+                            expected: TypeUtils.textLiteral(false, `"hello"`),
                         }));
 
                     it(`single-element list access`, async () =>
@@ -898,6 +891,15 @@ describe(`Inspection - Type`, () => {
                                 ...TypeUtils.numberLiteral(false, `1`),
                                 isNullable: true,
                             },
+                        }));
+
+                    it(`out-of-bounds index falls back to union of element types`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, "hello"}{8}`,
+                            expected: anyUnion([
+                                TypeUtils.numberLiteral(false, `1`),
+                                TypeUtils.textLiteral(false, `"hello"`),
+                            ]),
                         }));
                 });
 

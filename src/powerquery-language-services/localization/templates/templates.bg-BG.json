@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "\"{funcName}\" очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Не можем да намерим името '{identifier}', да не би да имахте предвид '{suggestion}'?"
+  "error_validation_unknownIdentifier_suggestion": "Не можем да намерим името '{identifier}', да не би да имахте предвид '{suggestion}'?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

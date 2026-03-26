@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName}' mengharapkan argumen untuk '{argName}' adalah '{expected}', namun mendapatkan '{actual}' sebagai gantinya.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Argumen yang diharapkan untuk '{argName}' adalah '{expected}', namun yang didapatkan adalah '{actual}'.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Tidak dapat menemukan nama '{identifier}', apakah maksud Anda '{suggestion}'?"
+  "error_validation_unknownIdentifier_suggestion": "Tidak dapat menemukan nama '{identifier}', apakah maksud Anda '{suggestion}'?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }
