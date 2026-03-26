@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Navnet '{identifier}' blev ikke fundet. Mente du '{suggestion}'?"
+  "error_validation_unknownIdentifier_suggestion": "Navnet '{identifier}' blev ikke fundet. Mente du '{suggestion}'?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

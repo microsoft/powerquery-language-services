@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "Funkcia '{funcName}' očakávala, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Očakávalo sa, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
   "error_validation_unknownIdentifier_noSuggestion": "Nepodarilo sa nájsť názov {identifier}.",
-  "error_validation_unknownIdentifier_suggestion": "Nepodarilo sa nájsť názov {identifier}, mali ste na mysli {suggestion}?"
+  "error_validation_unknownIdentifier_suggestion": "Nepodarilo sa nájsť názov {identifier}, mali ste na mysli {suggestion}?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

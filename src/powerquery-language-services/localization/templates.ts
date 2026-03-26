@@ -142,6 +142,10 @@ export interface ILocalizationTemplates {
     readonly error_validation_invokeExpression_numArgs: string;
     readonly error_validation_unknownIdentifier_noSuggestion: string;
     readonly error_validation_unknownIdentifier_suggestion: string;
+    readonly parameterDocumentation_default: string;
+    readonly parameterDocumentation_allowedValues: string;
+    readonly parameterDocumentation_sampleValues: string;
+    readonly parameterDocumentation_type: string;
 }
 
 export const DefaultTemplates: ILocalizationTemplates = en_US;
