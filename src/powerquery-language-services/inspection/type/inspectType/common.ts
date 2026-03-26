@@ -22,6 +22,7 @@ import { inspectTypeIdentifier } from "./inspectTypeIdentifier";
 import { inspectTypeIdentifierExpression } from "./inspectTypeIdentifierExpression";
 import { inspectTypeIfExpression } from "./inspectTypeIfExpression";
 import { inspectTypeInvokeExpression } from "./inspectTypeInvokeExpression";
+import { inspectTypeItemAccessExpression } from "./inspectTypeItemAccessExpression";
 import { inspectTypeList } from "./inspectTypeList";
 import { inspectTypeListType } from "./inspectTypeListType";
 import { inspectTypeLiteralExpression } from "./inspectTypeLiteralExpression";
@@ -357,7 +358,7 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.ItemAccessExpression:
-            result = Type.AnyInstance;
+            result = await inspectTypeItemAccessExpression(state, xorNode, trace.id);
             break;
 
         case Ast.NodeKind.LetExpression:

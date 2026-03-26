@@ -865,6 +865,42 @@ describe(`Inspection - Type`, () => {
                         expected: Type.AnyInstance,
                     }));
 
+                describe(`${Ast.NodeKind.ItemAccessExpression} - element type inference`, () => {
+                    it(`list literal access returns element type union`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, 2, 3}{0}`,
+                            expected: anyUnion([
+                                TypeUtils.numberLiteral(false, `1`),
+                                TypeUtils.numberLiteral(false, `2`),
+                                TypeUtils.numberLiteral(false, `3`),
+                            ]),
+                        }));
+
+                    it(`mixed list literal access returns mixed union`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, "hello"}{0}`,
+                            expected: anyUnion([
+                                TypeUtils.numberLiteral(false, `1`),
+                                TypeUtils.textLiteral(false, `"hello"`),
+                            ]),
+                        }));
+
+                    it(`single-element list access`, async () =>
+                        await assertEqualRootType({
+                            text: `{1}{0}`,
+                            expected: TypeUtils.numberLiteral(false, `1`),
+                        }));
+
+                    it(`optional item access is nullable`, async () =>
+                        await assertEqualRootType({
+                            text: `{1}{0}?`,
+                            expected: {
+                                ...TypeUtils.numberLiteral(false, `1`),
+                                isNullable: true,
+                            },
+                        }));
+                });
+
                 describe(`${Ast.NodeKind.FieldSelector}`, () => {
                     it(`[a = 1][a]`, async () =>
                         await assertEqualRootType({
