@@ -90,10 +90,7 @@ export function fromScopeItem(
 export function createSnippetItems(): ReadonlyArray<AutocompleteItem> {
     return [
         createSnippetItem("let...in", "let\n\t${1:name} = ${2:value}\nin\n\t${0:result}"),
-        createSnippetItem(
-            "if...then...else",
-            "if ${1:condition} then ${2:trueValue} else ${3:falseValue}",
-        ),
+        createSnippetItem("if...then...else", "if ${1:condition} then ${2:trueValue} else ${3:falseValue}"),
         createSnippetItem("try...otherwise", "try ${1:expression} otherwise ${2:default}"),
         createSnippetItem("each", "each ${0:expression}"),
     ];

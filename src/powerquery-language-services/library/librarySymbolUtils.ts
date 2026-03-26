@@ -5,12 +5,12 @@ import { ArrayUtils, ErrorResult, Result, ResultUtils } from "@microsoft/powerqu
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { DefaultTemplates, ILocalizationTemplates } from "../localization/templates";
 import { ExternalType, ExternalTypeUtils } from "../externalType";
 import { Library, LibraryDefinitionUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
 import { Localization } from "../localization/localization";
-import { DefaultTemplates, ILocalizationTemplates } from "../localization/templates";
 
 // Created when non-zero conversion errors occur.
 export interface IncompleteLibrary {
@@ -255,7 +255,10 @@ function librarySymbolFunctionParameterToLibraryParameter(
     };
 }
 
-function buildParameterDocumentation(parameter: LibrarySymbolFunctionParameter, templates: ILocalizationTemplates): string | undefined {
+function buildParameterDocumentation(
+    parameter: LibrarySymbolFunctionParameter,
+    templates: ILocalizationTemplates,
+): string | undefined {
     const parts: string[] = [];
 
     if (parameter.caption) {
@@ -271,11 +274,21 @@ function buildParameterDocumentation(parameter: LibrarySymbolFunctionParameter, 
     }
 
     if (parameter.allowedValues && parameter.allowedValues.length > 0) {
-        parts.push(Localization.parameterDocumentation_allowedValues(templates, parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", ")));
+        parts.push(
+            Localization.parameterDocumentation_allowedValues(
+                templates,
+                parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", "),
+            ),
+        );
     }
 
     if (parameter.sampleValues && parameter.sampleValues.length > 0) {
-        parts.push(Localization.parameterDocumentation_sampleValues(templates, parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", ")));
+        parts.push(
+            Localization.parameterDocumentation_sampleValues(
+                templates,
+                parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", "),
+            ),
+        );
     }
 
     // Only include type info when there's other documentation content,

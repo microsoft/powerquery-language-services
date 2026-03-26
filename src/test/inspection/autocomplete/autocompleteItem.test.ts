@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { expect } from "chai";
 import { CompletionItemKind, InsertTextFormat, MarkupKind } from "vscode-languageserver-types";
 import { Keyword, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { expect } from "chai";
 
-import { AutocompleteItemUtils } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteItem";
-import { AutocompleteItem } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteItem/autocompleteItem";
 import { Library, LibraryDefinitionUtils } from "../../../powerquery-language-services";
+import { AutocompleteItem } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteItem/autocompleteItem";
+import { AutocompleteItemUtils } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteItem";
 
 describe("AutocompleteItemUtils", () => {
     describe("createSnippetItems", () => {
@@ -41,9 +41,7 @@ describe("AutocompleteItemUtils", () => {
             expect(ifSnippet).to.not.equal(undefined);
             expect(ifSnippet!.kind).to.equal(CompletionItemKind.Snippet);
             expect(ifSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(ifSnippet!.insertText).to.equal(
-                "if ${1:condition} then ${2:trueValue} else ${3:falseValue}",
-            );
+            expect(ifSnippet!.insertText).to.equal("if ${1:condition} then ${2:trueValue} else ${3:falseValue}");
         });
 
         it("try...otherwise snippet has correct properties", () => {
@@ -129,19 +127,13 @@ describe("AutocompleteItemUtils", () => {
 
         describe("commitCharacters", () => {
             it("function definition has commitCharacters ['(']", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestFunc",
-                    functionDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestFunc", functionDef);
 
                 expect(item.commitCharacters).to.deep.equal(["("]);
             });
 
             it("constant definition has commitCharacters undefined", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestConst",
-                    constantDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestConst", constantDef);
 
                 expect(item.commitCharacters).to.equal(undefined);
             });
@@ -149,10 +141,7 @@ describe("AutocompleteItemUtils", () => {
 
         describe("documentation", () => {
             it("function definition has PlainText documentation with description", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestFunc",
-                    functionDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestFunc", functionDef);
 
                 expect(item.documentation).to.deep.equal({
                     kind: MarkupKind.PlainText,
@@ -161,10 +150,7 @@ describe("AutocompleteItemUtils", () => {
             });
 
             it("constant definition has PlainText documentation with description", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestConst",
-                    constantDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestConst", constantDef);
 
                 expect(item.documentation).to.deep.equal({
                     kind: MarkupKind.PlainText,
@@ -175,10 +161,7 @@ describe("AutocompleteItemUtils", () => {
 
         describe("jaroWinklerScore", () => {
             it("has jaroWinklerScore of 1 when no other text", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestFunc",
-                    functionDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestFunc", functionDef);
 
                 expect(item.jaroWinklerScore).to.equal(1);
             });
@@ -186,10 +169,7 @@ describe("AutocompleteItemUtils", () => {
 
         describe("kind", () => {
             it("uses completionItemKind from library definition", () => {
-                const funcItem: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestFunc",
-                    functionDef,
-                );
+                const funcItem: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestFunc", functionDef);
 
                 expect(funcItem.kind).to.equal(CompletionItemKind.Function);
 
@@ -204,10 +184,7 @@ describe("AutocompleteItemUtils", () => {
 
         describe("powerQueryType", () => {
             it("uses asPowerQueryType from library definition", () => {
-                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition(
-                    "TestConst",
-                    constantDef,
-                );
+                const item: AutocompleteItem = AutocompleteItemUtils.fromLibraryDefinition("TestConst", constantDef);
 
                 expect(item.powerQueryType).to.equal(Type.NumberInstance);
             });

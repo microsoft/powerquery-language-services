@@ -2,12 +2,15 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { expect } from "chai";
-import { ResultUtils } from "@microsoft/powerquery-parser";
+import { Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
+import { expect } from "chai";
 
 import { Library, LibrarySymbolUtils } from "../../powerquery-language-services";
-import { LibrarySymbol, LibrarySymbolFunctionParameter } from "../../powerquery-language-services/library/librarySymbol";
+import {
+    LibrarySymbol,
+    LibrarySymbolFunctionParameter,
+} from "../../powerquery-language-services/library/librarySymbol";
 
 function createLibrarySymbolWithParameter(paramOverrides: Partial<LibrarySymbolFunctionParameter>): LibrarySymbol {
     return {
@@ -37,7 +40,9 @@ function createLibrarySymbolWithParameter(paramOverrides: Partial<LibrarySymbolF
 }
 
 function getParameterDocumentation(librarySymbol: LibrarySymbol): string | undefined {
-    const result = LibrarySymbolUtils.createLibraryDefinition(librarySymbol);
+    const result: Result<Library.TLibraryDefinition, LibrarySymbolUtils.FailedLibrarySymbolConversion> =
+        LibrarySymbolUtils.createLibraryDefinition(librarySymbol);
+
     ResultUtils.assertIsOk(result);
     const funcDef: Library.LibraryFunction = result.value as Library.LibraryFunction;
 

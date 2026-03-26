@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CompletionItemKind, MarkupKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+import {
+    CompletionItemKind,
+    MarkupKind,
+    ParameterInformation,
+    SignatureInformation,
+} from "vscode-languageserver-types";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ExternalTypeRequestKind, TExternalTypeRequest, TExternalTypeResolverFn } from "../externalType/externalType";
