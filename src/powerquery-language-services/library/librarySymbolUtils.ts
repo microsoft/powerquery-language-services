@@ -5,10 +5,12 @@ import { ArrayUtils, ErrorResult, Result, ResultUtils } from "@microsoft/powerqu
 import { Constant, ConstantUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { DefaultTemplates, ILocalizationTemplates } from "../localization/templates";
 import { ExternalType, ExternalTypeUtils } from "../externalType";
 import { Library, LibraryDefinitionUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
+import { Localization } from "../localization/localization";
 
 // Created when non-zero conversion errors occur.
 export interface IncompleteLibrary {
@@ -47,11 +49,12 @@ export function createLibrary(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
     dynamicLibraryDefinitions: () => ReadonlyMap<string, Library.TLibraryDefinition>,
     externalTypeResolverFn: ExternalType.TExternalTypeResolverFn | undefined,
+    templates: ILocalizationTemplates = DefaultTemplates,
 ): Result<Library.ILibrary, IncompleteLibrary> {
     const libraryDefinitionsResult: Result<
         ReadonlyMap<string, Library.TLibraryDefinition>,
         IncompleteLibraryDefinitions
-    > = createLibraryDefinitions(librarySymbols);
+    > = createLibraryDefinitions(librarySymbols, templates);
 
     let staticLibraryDefinitions: ReadonlyMap<string, Library.TLibraryDefinition>;
     let failedLibrarySymbolConversions: ReadonlyArray<FailedLibrarySymbolConversion>;
@@ -91,6 +94,7 @@ export function createLibrary(
 
 export function createLibraryDefinition(
     librarySymbol: LibrarySymbol,
+    templates: ILocalizationTemplates = DefaultTemplates,
 ): Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> {
     const primitiveType: Type.TPrimitiveType | undefined = stringToPrimitiveType(librarySymbol.type);
 
@@ -131,7 +135,7 @@ export function createLibraryDefinition(
 
         for (const [parameter, index] of ArrayUtils.enumerate(librarySymbol.functionParameters)) {
             const libraryParameter: Library.LibraryParameter | undefined =
-                librarySymbolFunctionParameterToLibraryParameter(parameter);
+                librarySymbolFunctionParameterToLibraryParameter(parameter, templates);
 
             if (libraryParameter === undefined) {
                 return failedParameterConversionError(librarySymbol, index);
@@ -161,13 +165,14 @@ export function createLibraryDefinition(
 
 export function createLibraryDefinitions(
     librarySymbols: ReadonlyArray<LibrarySymbol>,
+    templates: ILocalizationTemplates = DefaultTemplates,
 ): Result<ReadonlyMap<string, Library.TLibraryDefinition>, IncompleteLibraryDefinitions> {
     const libraryDefinitions: Map<string, Library.TLibraryDefinition> = new Map<string, Library.TLibraryDefinition>();
     const failedLibrarySymbolConversions: FailedLibrarySymbolConversion[] = [];
 
     for (const librarySymbol of librarySymbols) {
         const libraryDefinitionResult: Result<Library.TLibraryDefinition, FailedLibrarySymbolConversion> =
-            createLibraryDefinition(librarySymbol);
+            createLibraryDefinition(librarySymbol, templates);
 
         if (ResultUtils.isOk(libraryDefinitionResult)) {
             libraryDefinitions.set(librarySymbol.name, libraryDefinitionResult.value);
@@ -233,6 +238,7 @@ function librarySymbolFunctionParamatersToDefinedFunction(
 
 function librarySymbolFunctionParameterToLibraryParameter(
     parameter: LibrarySymbolFunctionParameter,
+    templates: ILocalizationTemplates,
 ): Library.LibraryParameter | undefined {
     const primitiveType: Type.TPrimitiveType | undefined = stringToPrimitiveType(parameter.type);
 
@@ -244,9 +250,54 @@ function librarySymbolFunctionParameterToLibraryParameter(
         isNullable: primitiveType.isNullable,
         isOptional: false,
         label: parameter.name,
-        documentation: parameter.description ?? undefined,
+        documentation: buildParameterDocumentation(parameter, templates),
         typeKind: primitiveType.kind,
     };
+}
+
+function buildParameterDocumentation(
+    parameter: LibrarySymbolFunctionParameter,
+    templates: ILocalizationTemplates,
+): string | undefined {
+    const parts: string[] = [];
+
+    if (parameter.caption) {
+        parts.push(`**${parameter.caption}**`);
+    }
+
+    if (parameter.description) {
+        parts.push(parameter.description);
+    }
+
+    if (parameter.defaultValue !== null && parameter.defaultValue !== undefined) {
+        parts.push(Localization.parameterDocumentation_default(templates, String(parameter.defaultValue)));
+    }
+
+    if (parameter.allowedValues && parameter.allowedValues.length > 0) {
+        parts.push(
+            Localization.parameterDocumentation_allowedValues(
+                templates,
+                parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", "),
+            ),
+        );
+    }
+
+    if (parameter.sampleValues && parameter.sampleValues.length > 0) {
+        parts.push(
+            Localization.parameterDocumentation_sampleValues(
+                templates,
+                parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", "),
+            ),
+        );
+    }
+
+    // Only include type info when there's other documentation content,
+    // since the type is already visible in the signature label.
+    if (parts.length > 0 && parameter.type) {
+        parts.push(Localization.parameterDocumentation_type(templates, parameter.type));
+    }
+
+    return parts.length > 0 ? parts.join("\n\n") : undefined;
 }
 
 function numberToCompletionItemKind(variant: number): CompletionItemKind | undefined {

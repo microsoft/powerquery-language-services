@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "Za funkcijo »{funcName}« je bil za argument »{argName}« pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Za argument »{argName}« je bil pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
   "error_validation_unknownIdentifier_noSuggestion": "Imena '{identifier}' ni mogoče najti.",
-  "error_validation_unknownIdentifier_suggestion": "Imena '{identifier}' ni mogoče najti. Ali ste mislili '{suggestion}'?"
+  "error_validation_unknownIdentifier_suggestion": "Imena '{identifier}' ni mogoče najti. Ali ste mislili '{suggestion}'?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

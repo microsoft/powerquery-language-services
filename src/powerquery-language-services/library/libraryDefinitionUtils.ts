@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CompletionItemKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+import {
+    CompletionItemKind,
+    MarkupKind,
+    ParameterInformation,
+    SignatureInformation,
+} from "vscode-languageserver-types";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ExternalTypeRequestKind, TExternalTypeRequest, TExternalTypeResolverFn } from "../externalType/externalType";
@@ -154,6 +159,8 @@ export function signatureInformation(libraryFunctionSignature: LibraryFunction):
 export function parameterInformation(libraryParameter: LibraryParameter): ParameterInformation {
     return {
         label: libraryParameter.label,
-        documentation: undefined,
+        documentation: libraryParameter.documentation
+            ? { kind: MarkupKind.Markdown, value: libraryParameter.documentation }
+            : undefined,
     };
 }

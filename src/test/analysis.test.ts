@@ -10,6 +10,7 @@ import {
     Result,
     ResultUtils,
 } from "@microsoft/powerquery-parser";
+import { CompletionItemKind } from "vscode-languageserver-types";
 import { expect } from "chai";
 
 import type {
@@ -41,7 +42,9 @@ describe(`Analysis`, () => {
 
             const autocompleteItem: AutocompleteItem = Assert.asDefined(
                 autocompleteItems.find(
-                    (item: AutocompleteItem) => item.label === TestConstants.TestLibraryName.SquareIfNumber,
+                    (item: AutocompleteItem) =>
+                        item.label === TestConstants.TestLibraryName.SquareIfNumber &&
+                        item.kind === CompletionItemKind.Variable,
                 ),
             );
 

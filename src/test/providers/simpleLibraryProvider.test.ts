@@ -116,7 +116,10 @@ describe(`SimpleLibraryProvider`, () => {
             label: "Test.SquareIfNumber",
             parameters: [
                 {
-                    documentation: undefined,
+                    documentation: {
+                        kind: "markdown",
+                        value: "If the argument is a number then multiply it by itself, otherwise return argument as-is.",
+                    },
                     label: "x",
                 },
             ],
