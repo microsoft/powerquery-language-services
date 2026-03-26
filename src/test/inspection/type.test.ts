@@ -887,10 +887,7 @@ describe(`Inspection - Type`, () => {
                     it(`optional item access is nullable`, async () =>
                         await assertEqualRootType({
                             text: `{1}{0}?`,
-                            expected: {
-                                ...TypeUtils.numberLiteral(false, `1`),
-                                isNullable: true,
-                            },
+                            expected: TypeUtils.numberLiteral(true, `1`),
                         }));
 
                     it(`out-of-bounds index returns none`, async () =>
