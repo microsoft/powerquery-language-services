@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} 預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
   "error_validation_invokeExpression_typeMismatch_unnamed": "預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "找不到名稱 '{identifier}'，您指的是 '{suggestion}' 嗎?"
+  "error_validation_unknownIdentifier_suggestion": "找不到名稱 '{identifier}'，您指的是 '{suggestion}' 嗎?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

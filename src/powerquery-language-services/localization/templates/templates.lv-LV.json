@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "Funkcijā {funcName} bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Nevar atrast nosaukumu \"{identifier}\". Vai domājāt \"{suggestion}\"?"
+  "error_validation_unknownIdentifier_suggestion": "Nevar atrast nosaukumu \"{identifier}\". Vai domājāt \"{suggestion}\"?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

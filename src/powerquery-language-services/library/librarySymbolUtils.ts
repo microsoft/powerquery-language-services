@@ -9,6 +9,8 @@ import { ExternalType, ExternalTypeUtils } from "../externalType";
 import { Library, LibraryDefinitionUtils } from "../library";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "./librarySymbol";
 import { CompletionItemKind } from "../commonTypes";
+import { Localization } from "../localization/localization";
+import { DefaultTemplates } from "../localization/templates";
 
 // Created when non-zero conversion errors occur.
 export interface IncompleteLibrary {
@@ -261,21 +263,21 @@ function buildParameterDocumentation(parameter: LibrarySymbolFunctionParameter):
     }
 
     if (parameter.defaultValue !== null && parameter.defaultValue !== undefined) {
-        parts.push(`Default: \`${parameter.defaultValue}\``);
+        parts.push(Localization.parameterDocumentation_default(DefaultTemplates, String(parameter.defaultValue)));
     }
 
     if (parameter.allowedValues && parameter.allowedValues.length > 0) {
-        parts.push(`Allowed values: ${parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", ")}`);
+        parts.push(Localization.parameterDocumentation_allowedValues(DefaultTemplates, parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", ")));
     }
 
     if (parameter.sampleValues && parameter.sampleValues.length > 0) {
-        parts.push(`Sample values: ${parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", ")}`);
+        parts.push(Localization.parameterDocumentation_sampleValues(DefaultTemplates, parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", ")));
     }
 
     // Only include type info when there's other documentation content,
     // since the type is already visible in the signature label.
     if (parts.length > 0 && parameter.type) {
-        parts.push(`Type: \`${parameter.type}\``);
+        parts.push(Localization.parameterDocumentation_type(DefaultTemplates, parameter.type));
     }
 
     return parts.length > 0 ? parts.join("\n\n") : undefined;
