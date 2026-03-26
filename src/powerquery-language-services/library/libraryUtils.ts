@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
+import { MarkupKind, ParameterInformation, SignatureInformation } from "vscode-languageserver-types";
 import { Assert } from "@microsoft/powerquery-parser";
 import { IdentifierExpressionUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -34,7 +34,9 @@ export function signatureInformation(libraryFunctionSignature: LibraryFunction):
 export function parameterInformation(libraryParameter: LibraryParameter): ParameterInformation {
     return {
         label: libraryParameter.label,
-        documentation: undefined,
+        documentation: libraryParameter.documentation
+            ? { kind: MarkupKind.Markdown, value: libraryParameter.documentation }
+            : undefined,
     };
 }
 

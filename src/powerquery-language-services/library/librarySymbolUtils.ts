@@ -244,9 +244,41 @@ function librarySymbolFunctionParameterToLibraryParameter(
         isNullable: primitiveType.isNullable,
         isOptional: false,
         label: parameter.name,
-        documentation: parameter.description ?? undefined,
+        documentation: buildParameterDocumentation(parameter),
         typeKind: primitiveType.kind,
     };
+}
+
+function buildParameterDocumentation(parameter: LibrarySymbolFunctionParameter): string | undefined {
+    const parts: string[] = [];
+
+    if (parameter.caption) {
+        parts.push(`**${parameter.caption}**`);
+    }
+
+    if (parameter.description) {
+        parts.push(parameter.description);
+    }
+
+    if (parameter.defaultValue !== null && parameter.defaultValue !== undefined) {
+        parts.push(`Default: \`${parameter.defaultValue}\``);
+    }
+
+    if (parameter.allowedValues && parameter.allowedValues.length > 0) {
+        parts.push(`Allowed values: ${parameter.allowedValues.map((v: string | number) => `\`${v}\``).join(", ")}`);
+    }
+
+    if (parameter.sampleValues && parameter.sampleValues.length > 0) {
+        parts.push(`Sample values: ${parameter.sampleValues.map((v: string | number) => `\`${v}\``).join(", ")}`);
+    }
+
+    // Only include type info when there's other documentation content,
+    // since the type is already visible in the signature label.
+    if (parts.length > 0 && parameter.type) {
+        parts.push(`Type: \`${parameter.type}\``);
+    }
+
+    return parts.length > 0 ? parts.join("\n\n") : undefined;
 }
 
 function numberToCompletionItemKind(variant: number): CompletionItemKind | undefined {
