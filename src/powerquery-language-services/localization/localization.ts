@@ -33,8 +33,11 @@ interface ILocalization {
     ) => string;
 
     parameterDocumentation_default: (templates: ILocalizationTemplates, value: string) => string;
+
     parameterDocumentation_allowedValues: (templates: ILocalizationTemplates, values: string) => string;
+
     parameterDocumentation_sampleValues: (templates: ILocalizationTemplates, values: string) => string;
+
     parameterDocumentation_type: (templates: ILocalizationTemplates, type: string) => string;
 }
 
@@ -132,26 +135,14 @@ export const Localization: ILocalization = {
     },
 
     parameterDocumentation_default: (templates: ILocalizationTemplates, value: string) =>
-        StringUtils.assertGetFormatted(
-            templates.parameterDocumentation_default,
-            new Map([["value", value]]),
-        ),
+        StringUtils.assertGetFormatted(templates.parameterDocumentation_default, new Map([["value", value]])),
 
     parameterDocumentation_allowedValues: (templates: ILocalizationTemplates, values: string) =>
-        StringUtils.assertGetFormatted(
-            templates.parameterDocumentation_allowedValues,
-            new Map([["values", values]]),
-        ),
+        StringUtils.assertGetFormatted(templates.parameterDocumentation_allowedValues, new Map([["values", values]])),
 
     parameterDocumentation_sampleValues: (templates: ILocalizationTemplates, values: string) =>
-        StringUtils.assertGetFormatted(
-            templates.parameterDocumentation_sampleValues,
-            new Map([["values", values]]),
-        ),
+        StringUtils.assertGetFormatted(templates.parameterDocumentation_sampleValues, new Map([["values", values]])),
 
     parameterDocumentation_type: (templates: ILocalizationTemplates, type: string) =>
-        StringUtils.assertGetFormatted(
-            templates.parameterDocumentation_type,
-            new Map([["type", type]]),
-        ),
+        StringUtils.assertGetFormatted(templates.parameterDocumentation_type, new Map([["type", type]])),
 };
