@@ -116,7 +116,7 @@ function getElementType(
 
         case Type.TypeKind.Table:
             if (collectionType.extendedKind === Type.ExtendedTypeKind.DefinedTable) {
-                return TypeUtils.definedRecord(false, new Map(collectionType.fields.entries()), collectionType.isOpen);
+                return TypeUtils.definedRecord(false, collectionType.fields, collectionType.isOpen);
             }
 
             return Type.RecordInstance;
