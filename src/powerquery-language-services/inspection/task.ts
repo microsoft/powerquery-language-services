@@ -12,11 +12,10 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import type { Position } from "vscode-languageserver-types";
 
 import { ActiveNodeUtils, TActiveNode } from "./activeNode";
-
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
+import { ScopeTypeByKey, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
-import { TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
@@ -215,7 +214,8 @@ export async function inspect(
             ),
         );
 
-        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(new Map()));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeTypeByKey.empty));
+
         triedExpectedType = PQP.ResultUtils.ok(undefined);
     }
 

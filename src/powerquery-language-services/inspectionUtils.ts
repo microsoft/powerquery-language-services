@@ -28,9 +28,9 @@ export function inspectionSettings(
     };
 }
 
-export function getAutocompleteItemsFromScope(
+export async function getAutocompleteItemsFromScope(
     context: AutocompleteItemProviderContext,
-): ReadonlyArray<Inspection.AutocompleteItem> {
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
     const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
     const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
 
@@ -39,15 +39,23 @@ export function getAutocompleteItemsFromScope(
     }
 
     const nodeScope: Inspection.NodeScope = triedNodeScope.value;
-    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(triedScopeType, new Map());
+
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(
+        triedScopeType,
+        Inspection.ScopeTypeByKey.empty,
+    );
 
     const result: Inspection.AutocompleteItem[] = [];
 
     for (const [label, scopeItem] of nodeScope.scopeItemByKey.entries()) {
+        // Resolve type lazily - only computes the type for this specific scope item
+        // eslint-disable-next-line no-await-in-loop
+        const scopeItemType: Type.TPowerQueryType = (await scopeTypeByKey.resolveType(label)) ?? Type.UnknownInstance;
+
         const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
             label,
             scopeItem,
-            scopeTypeByKey.get(label) ?? Type.UnknownInstance,
+            scopeItemType,
             context,
         );
 
@@ -65,7 +73,11 @@ export async function getIdentifierType(
 ): Promise<Type.TPowerQueryType | undefined> {
     const triedScopeType: Inspection.TriedScopeType = await inspected.triedScopeType;
 
-    return ResultUtils.isOk(triedScopeType) ? triedScopeType.value.get(identifier) : undefined;
+    if (ResultUtils.isOk(triedScopeType)) {
+        return triedScopeType.value.resolveType(identifier);
+    }
+
+    return undefined;
 }
 
 export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {

@@ -6,7 +6,54 @@ import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 // Keys are identifier literals.
-export type ScopeTypeByKey = Map<string, Type.TPowerQueryType>;
+// Base class provides empty/no-op behavior. Subclass LazyScopeTypeByKey adds deferred resolution.
+export class ScopeTypeByKey {
+    public static readonly empty: ScopeTypeByKey = Object.freeze(new ScopeTypeByKey());
+
+    /** Whether the key exists in scope (regardless of type resolution status). */
+    has(_key: string): boolean {
+        return false;
+    }
+
+    /** All keys in scope. */
+    keys(): IterableIterator<string> {
+        return new Map<string, never>().keys();
+    }
+
+    /** Total number of scope items. */
+    get size(): number {
+        return 0;
+    }
+
+    /** Lazily resolve the type for a specific key. Returns undefined if key not in scope. Caches the result. */
+    // eslint-disable-next-line require-await
+    async resolveType(_key: string): Promise<Type.TPowerQueryType | undefined> {
+        return undefined;
+    }
+
+    /** Eagerly resolve all scope item types. Returns a fully-populated read-only map. */
+    // eslint-disable-next-line require-await
+    async resolveAll(): Promise<ReadonlyMap<string, Type.TPowerQueryType>> {
+        return new Map<string, Type.TPowerQueryType>();
+    }
+
+    /** Resolves all types, then returns an iterator of [key, type] pairs. */
+    // eslint-disable-next-line require-await
+    async entries(): Promise<IterableIterator<[string, Type.TPowerQueryType]>> {
+        return new Map<string, Type.TPowerQueryType>().entries();
+    }
+
+    /** Resolves all types, then returns an iterator of types. */
+    // eslint-disable-next-line require-await
+    async values(): Promise<IterableIterator<Type.TPowerQueryType>> {
+        return new Map<string, Type.TPowerQueryType>().values();
+    }
+
+    /** Resolves all types, then calls the callback for each entry. */
+    async forEach(_callbackfn: (value: Type.TPowerQueryType, key: string) => void): Promise<void> {
+        /* no-op for empty scope */
+    }
+}
 
 export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 
