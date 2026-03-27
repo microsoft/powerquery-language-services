@@ -7,8 +7,12 @@ import { expect } from "chai";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { NodeScope, ScopeItemKind, TScopeItem } from "../../powerquery-language-services/inspection/scope/scope";
-import { LazyScopeTypeByKey } from "../../powerquery-language-services/inspection/scope/lazyScopeTypeByKey";
+import {
+    NodeScope,
+    ScopeItemKind,
+    ScopeTypeByKey,
+    TScopeItem,
+} from "../../powerquery-language-services/inspection/scope/scope";
 
 const mockXorNode: TXorNode = {} as TXorNode;
 
@@ -55,7 +59,7 @@ function createMockResolver(
     };
 }
 
-describe(`LazyScopeTypeByKey`, () => {
+describe(`ScopeTypeByKey`, () => {
     it(`size reflects full scope before resolution`, () => {
         const nodeScope: NodeScope = createMockScope([
             ["a", 1],
@@ -63,7 +67,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["c", 3],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(new Map()));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(new Map()));
         expect(lazy.resolvedSize).to.equal(0);
 
         expect(lazy.size).to.equal(3);
@@ -72,7 +76,7 @@ describe(`LazyScopeTypeByKey`, () => {
 
     it(`has() checks full scope`, () => {
         const nodeScope: NodeScope = createMockScope([["existing", 1]]);
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(new Map()));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(new Map()));
         expect(lazy.resolvedSize).to.equal(0);
 
         expect(lazy.has("existing")).to.equal(true);
@@ -87,7 +91,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["gamma", 3],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(new Map()));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(new Map()));
         expect(lazy.resolvedSize).to.equal(0);
 
         const keys: string[] = [...lazy.keys()];
@@ -98,7 +102,7 @@ describe(`LazyScopeTypeByKey`, () => {
     it(`resolveType() resolves and caches`, async () => {
         const typeMap: Map<number, Type.TPowerQueryType> = new Map([[1, Type.NumberInstance]]);
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap));
         expect(lazy.resolvedSize).to.equal(0);
 
         const result: Type.TPowerQueryType | undefined = await lazy.resolveType("key");
@@ -115,7 +119,7 @@ describe(`LazyScopeTypeByKey`, () => {
         const typeMap: Map<number, Type.TPowerQueryType> = new Map([[1, Type.NumberInstance]]);
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
         const tracker: CallTracker = createCallTracker();
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
         expect(lazy.resolvedSize).to.equal(0);
 
         await lazy.resolveType("key");
@@ -127,7 +131,7 @@ describe(`LazyScopeTypeByKey`, () => {
     it(`resolveType() for unknown key returns undefined without calling resolver`, async () => {
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
         const tracker: CallTracker = createCallTracker();
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(new Map(), tracker));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(new Map(), tracker));
         expect(lazy.resolvedSize).to.equal(0);
 
         const result: Type.TPowerQueryType | undefined = await lazy.resolveType("unknown");
@@ -149,7 +153,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["c", 3],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap));
         expect(lazy.resolvedSize).to.equal(0);
 
         const result: ReadonlyMap<string, Type.TPowerQueryType> = await lazy.resolveAll();
@@ -174,7 +178,7 @@ describe(`LazyScopeTypeByKey`, () => {
         ]);
 
         const tracker: CallTracker = createCallTracker();
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
         expect(lazy.resolvedSize).to.equal(0);
 
         await lazy.resolveType("a");
@@ -199,7 +203,7 @@ describe(`LazyScopeTypeByKey`, () => {
         ]);
 
         const tracker: CallTracker = createCallTracker();
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
         expect(lazy.resolvedSize).to.equal(0);
 
         await lazy.resolveType("x");
@@ -225,7 +229,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["c", 3],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap));
         expect(lazy.resolvedSize).to.equal(0);
 
         const entries: [string, Type.TPowerQueryType][] = [...(await lazy.entries())];
@@ -248,7 +252,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["y", 2],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap));
         expect(lazy.resolvedSize).to.equal(0);
 
         const values: Type.TPowerQueryType[] = [...(await lazy.values())];
@@ -270,7 +274,7 @@ describe(`LazyScopeTypeByKey`, () => {
             ["b", 2],
         ]);
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(typeMap));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(typeMap));
         expect(lazy.resolvedSize).to.equal(0);
 
         const collected: [string, Type.TPowerQueryType][] = [];
@@ -287,7 +291,7 @@ describe(`LazyScopeTypeByKey`, () => {
 
     it(`entries() on empty scope returns empty iterator`, async () => {
         const nodeScope: NodeScope = createMockScope([]);
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, createMockResolver(new Map()));
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, createMockResolver(new Map()));
         expect(lazy.resolvedSize).to.equal(0);
 
         const entries: [string, Type.TPowerQueryType][] = [...(await lazy.entries())];
@@ -311,7 +315,7 @@ describe(`LazyScopeTypeByKey`, () => {
             return Type.NumberInstance;
         };
 
-        const lazy: LazyScopeTypeByKey = new LazyScopeTypeByKey(nodeScope, throwingResolver);
+        const lazy: ScopeTypeByKey = new ScopeTypeByKey(nodeScope, throwingResolver);
         expect(lazy.resolvedSize).to.equal(0);
 
         // First call: resolver throws, error propagates

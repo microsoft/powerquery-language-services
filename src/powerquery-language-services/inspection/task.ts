@@ -214,7 +214,7 @@ export async function inspect(
             ),
         );
 
-        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeTypeByKey.empty));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeTypeByKey.empty()));
 
         triedExpectedType = PQP.ResultUtils.ok(undefined);
     }

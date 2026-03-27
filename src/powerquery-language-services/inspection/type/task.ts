@@ -10,7 +10,7 @@ import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/languag
 import { assertGetOrCreateNodeScope, getOrCreateScopeItemType, inspectXor } from "./inspectType";
 import { InspectionSettings, InspectionTraceConstant } from "../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectType/inspectTypeState";
-import { LazyScopeTypeByKey, NodeScope, ScopeTypeByKey, TScopeItem } from "../scope";
+import { NodeScope, ScopeTypeByKey, TScopeItem } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
@@ -90,9 +90,9 @@ async function inspectScopeType(
 
     const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, nodeId, trace.id);
 
-    // Create a lazy map that resolves types on-demand instead of eagerly.
+    // Resolve types on-demand instead of eagerly.
     // The resolver closure captures the state, preserving the typeById cache side-effect.
-    const result: ScopeTypeByKey = new LazyScopeTypeByKey(
+    const result: ScopeTypeByKey = new ScopeTypeByKey(
         nodeScope,
         async (scopeItem: TScopeItem): Promise<Type.TPowerQueryType> => {
             if (!state.typeById.has(scopeItem.nodeId)) {

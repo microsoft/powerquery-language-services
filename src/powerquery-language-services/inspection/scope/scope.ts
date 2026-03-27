@@ -5,53 +5,132 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
-// Keys are identifier literals.
-// Base class provides empty/no-op behavior. Subclass LazyScopeTypeByKey adds deferred resolution.
+// Type for the async resolver function that resolves a scope item to its type.
+type ScopeItemTypeResolver = (scopeItem: TScopeItem) => Promise<Type.TPowerQueryType>;
+
+/**
+ * Maps scope identifier keys to their resolved Power Query types.
+ *
+ * Types are resolved on-demand via the async `resolveType(key)` method.
+ * Call `resolveAll()` to eagerly resolve all types and get a ReadonlyMap.
+ */
 export class ScopeTypeByKey {
-    public static readonly empty: ScopeTypeByKey = Object.freeze(new ScopeTypeByKey());
+    private static readonly emptyNodeScope: NodeScope = {
+        createdForNodeId: undefined,
+        scopeItemByKey: new Map(),
+    };
 
-    /** Whether the key exists in scope (regardless of type resolution status). */
-    has(_key: string): boolean {
-        return false;
+    private static readonly noOpResolver: ScopeItemTypeResolver = (_scopeItem: TScopeItem) =>
+        Promise.resolve(Type.AnyInstance);
+
+    static empty(): ScopeTypeByKey {
+        return new ScopeTypeByKey(ScopeTypeByKey.emptyNodeScope, ScopeTypeByKey.noOpResolver);
     }
 
-    /** All keys in scope. */
+    private readonly resolved: Map<string, Type.TPowerQueryType> = new Map();
+    private readonly nodeScope: NodeScope;
+    private readonly resolver: ScopeItemTypeResolver;
+
+    constructor(nodeScope: NodeScope, resolver: ScopeItemTypeResolver) {
+        this.nodeScope = nodeScope;
+        this.resolver = resolver;
+    }
+
+    /** Returns true if the key exists in the scope (regardless of whether the type has been resolved). */
+    has(key: string): boolean {
+        return this.nodeScope.scopeItemByKey.has(key);
+    }
+
+    /** Returns the scope keys (all identifiers in scope, not just resolved). */
     keys(): IterableIterator<string> {
-        return new Map<string, never>().keys();
+        return this.nodeScope.scopeItemByKey.keys();
     }
 
-    /** Total number of scope items. */
+    /** Returns the total number of scope items (not just resolved ones). */
     get size(): number {
-        return 0;
+        return this.nodeScope.scopeItemByKey.size;
     }
 
-    /** Lazily resolve the type for a specific key. Returns undefined if key not in scope. Caches the result. */
-    // eslint-disable-next-line require-await
-    async resolveType(_key: string): Promise<Type.TPowerQueryType | undefined> {
-        return undefined;
+    /** Returns the number of scope items whose types have been resolved so far. */
+    get resolvedSize(): number {
+        return this.resolved.size;
     }
 
-    /** Eagerly resolve all scope item types. Returns a fully-populated read-only map. */
-    // eslint-disable-next-line require-await
+    /**
+     * Asynchronously resolves the type for a specific key. Returns undefined if key not in scope.
+     * Note: If the resolver throws, the error propagates to the caller uncaught.
+     * The failed key is not cached, so a subsequent call will retry resolution.
+     */
+    async resolveType(key: string): Promise<Type.TPowerQueryType | undefined> {
+        const cached: Type.TPowerQueryType | undefined = this.resolved.get(key);
+
+        if (cached !== undefined) {
+            return cached;
+        }
+
+        const scopeItem: TScopeItem | undefined = this.nodeScope.scopeItemByKey.get(key);
+
+        if (scopeItem === undefined) {
+            return undefined;
+        }
+
+        const type: Type.TPowerQueryType = await this.resolver(scopeItem);
+        this.resolved.set(key, type);
+
+        return type;
+    }
+
+    /** Resolves all scope item types. Returns a fully-populated read-only map. */
     async resolveAll(): Promise<ReadonlyMap<string, Type.TPowerQueryType>> {
-        return new Map<string, Type.TPowerQueryType>();
+        // Group unresolved keys by nodeId to avoid concurrent resolution of the same node.
+        // Multiple scope keys can map to the same nodeId (e.g., "foo" and '#"foo"').
+        // Resolving them concurrently triggers false cycle detection in getOrCreateScopeItemType,
+        // which uses a shared computingNodeIds set to break infinite recursion.
+        const keysByNodeId: Map<number, string[]> = new Map();
+        const firstScopeItemByNodeId: Map<number, TScopeItem> = new Map();
+
+        for (const [key, scopeItem] of this.nodeScope.scopeItemByKey.entries()) {
+            if (!this.resolved.has(key)) {
+                const existing: string[] | undefined = keysByNodeId.get(scopeItem.nodeId);
+
+                if (existing) {
+                    existing.push(key);
+                } else {
+                    keysByNodeId.set(scopeItem.nodeId, [key]);
+                    firstScopeItemByNodeId.set(scopeItem.nodeId, scopeItem);
+                }
+            }
+        }
+
+        // Resolve each unique nodeId once, then share the result across all keys for that nodeId.
+        const nodeIds: number[] = [...keysByNodeId.keys()];
+
+        const resolvedTypes: Type.TPowerQueryType[] = await Promise.all(
+            nodeIds.map((nodeId: number) => this.resolver(firstScopeItemByNodeId.get(nodeId)!)),
+        );
+
+        for (let index: number = 0; index < nodeIds.length; index += 1) {
+            for (const key of keysByNodeId.get(nodeIds[index])!) {
+                this.resolved.set(key, resolvedTypes[index]);
+            }
+        }
+
+        return this.resolved;
     }
 
     /** Resolves all types, then returns an iterator of [key, type] pairs. */
-    // eslint-disable-next-line require-await
     async entries(): Promise<IterableIterator<[string, Type.TPowerQueryType]>> {
-        return new Map<string, Type.TPowerQueryType>().entries();
+        return (await this.resolveAll()).entries();
     }
 
     /** Resolves all types, then returns an iterator of types. */
-    // eslint-disable-next-line require-await
     async values(): Promise<IterableIterator<Type.TPowerQueryType>> {
-        return new Map<string, Type.TPowerQueryType>().values();
+        return (await this.resolveAll()).values();
     }
 
     /** Resolves all types, then calls the callback for each entry. */
-    async forEach(_callbackfn: (value: Type.TPowerQueryType, key: string) => void): Promise<void> {
-        /* no-op for empty scope */
+    async forEach(callbackfn: (value: Type.TPowerQueryType, key: string) => void): Promise<void> {
+        return (await this.resolveAll()).forEach(callbackfn);
     }
 }
 
