@@ -46,7 +46,8 @@ export async function inspectTypeNullCoalescingExpression(
         } else if (!leftType.isNullable) {
             result = leftType;
         } else {
-            result = TypeUtils.anyUnion([leftType, rightType], state.traceManager, trace.id);
+            const nonNullableLeft: Type.TPowerQueryType = { ...leftType, isNullable: false };
+            result = TypeUtils.anyUnion([nonNullableLeft, rightType], state.traceManager, trace.id);
         }
     }
 
