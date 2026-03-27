@@ -296,9 +296,9 @@ export async function inspectXor(
             result = await inspectTypeRecord(state, xorNode, trace.id);
             break;
 
-        // TODO: how should error raising be typed?
+        // Error expressions never return a value — they always throw.
         case Ast.NodeKind.ErrorRaisingExpression:
-            result = Type.AnyInstance;
+            result = Type.NoneInstance;
             break;
 
         case Ast.NodeKind.Constant:

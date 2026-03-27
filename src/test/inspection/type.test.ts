@@ -269,7 +269,21 @@ describe(`Inspection - Type`, () => {
             it(`error 1`, async () =>
                 await assertEqualRootType({
                     text: `error 1`,
-                    expected: Type.AnyInstance,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`error expression returns none`, async () =>
+                await assertEqualRootType({
+                    text: `error "fail"`,
+                    expected: Type.NoneInstance,
+                }));
+        });
+
+        describe(`${Ast.NodeKind.RangeExpression}`, () => {
+            it(`nullable range operand returns list`, async () =>
+                await assertEqualRootType({
+                    text: `let x = 1 as nullable number in {x..5}`,
+                    expected: TypeUtils.definedList(false, [Type.ListInstance]),
                 }));
         });
 
@@ -720,6 +734,15 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({
                     text: `1 ?? (1 + "")`,
                     expected: Type.NoneInstance,
+                }));
+
+            it(`null coalescing strips nullability from left operand`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable number) ?? 0`,
+                    expected: anyUnion([
+                        TypeUtils.primitiveType(false, Type.TypeKind.Number),
+                        TypeUtils.numberLiteral(false, `0`),
+                    ]),
                 }));
         });
 
