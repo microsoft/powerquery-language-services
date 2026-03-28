@@ -9,7 +9,6 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 
 import {
     ExternalType,
-    Inspection,
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
@@ -54,9 +53,9 @@ describe(`Inspection - Type`, () => {
 
     async function assertEqualScopeType(params: {
         readonly textWithPipe: string;
-        readonly expected: Inspection.ScopeTypeByKey;
+        readonly expected: ReadonlyMap<string, Type.TPowerQueryType>;
     }): Promise<void> {
-        const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType({
+        const actual: ReadonlyMap<string, Type.TPowerQueryType> = await TestUtils.assertScopeType({
             textWithPipe: params.textWithPipe,
             inspectionSettings: ExtendedInspectionSettings,
         });

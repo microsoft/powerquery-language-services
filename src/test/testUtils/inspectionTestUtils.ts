@@ -98,7 +98,7 @@ export async function assertNodeScopeOrUndefined(params: {
 export async function assertScopeType(params: {
     readonly textWithPipe: string;
     readonly inspectionSettings: InspectionSettings;
-}): Promise<Inspection.ScopeTypeByKey> {
+}): Promise<ReadonlyMap<string, TPowerQueryType>> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
 
     const triedParse: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
@@ -120,5 +120,8 @@ export async function assertScopeType(params: {
 
     ResultUtils.assertIsOk(triedScopeType);
 
-    return triedScopeType.value;
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = triedScopeType.value;
+
+    // Eagerly resolve all types for test assertions
+    return await scopeTypeByKey.resolveAll();
 }

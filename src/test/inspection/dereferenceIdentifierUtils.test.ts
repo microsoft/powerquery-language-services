@@ -8,7 +8,6 @@ import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-par
 
 import { assertEqualRootType, assertScopeType } from "../testUtils";
 import { InspectionSettings } from "../../powerquery-language-services";
-import { ScopeTypeByKey } from "../../powerquery-language-services/inspection";
 import { TestConstants } from "..";
 import { TestLibraryName } from "../testConstants";
 
@@ -27,10 +26,10 @@ describe(`dereferenceIdentifierUtils`, () => {
 
     async function runScopeTypeTest(params: {
         readonly textWithPipe: string;
-        readonly expected: ScopeTypeByKey;
+        readonly expected: ReadonlyMap<string, Type.TPowerQueryType>;
         readonly inspectionSettings?: InspectionSettings;
     }): Promise<void> {
-        const scopeTypeByKey: ScopeTypeByKey = await assertScopeType({
+        const scopeTypeByKey: ReadonlyMap<string, Type.TPowerQueryType> = await assertScopeType({
             textWithPipe: params.textWithPipe,
             inspectionSettings: params.inspectionSettings ?? TestConstants.SimpleInspectionSettings,
         });

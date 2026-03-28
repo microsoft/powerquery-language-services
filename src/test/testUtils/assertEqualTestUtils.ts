@@ -15,12 +15,7 @@ import { expect } from "chai";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
 import { AbridgedAutocompleteItem, AbridgedDocumentSymbol, TAbridgedNodeScopeItem } from "./abridgedTestUtils";
-import {
-    AnalysisSettings,
-    Inspection,
-    InspectionSettings,
-    PartialSemanticToken,
-} from "../../powerquery-language-services";
+import { AnalysisSettings, InspectionSettings, PartialSemanticToken } from "../../powerquery-language-services";
 import { NodeScope } from "../../powerquery-language-services/inspection";
 import { TestUtils } from "..";
 import { TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
@@ -172,11 +167,11 @@ export async function assertEqualSignatureHelpAnalysis(params: {
 }
 
 export function assertEqualScopeType(params: {
-    readonly expected: Inspection.ScopeTypeByKey;
-    readonly actual: Inspection.ScopeTypeByKey;
+    readonly expected: ReadonlyMap<string, TPowerQueryType>;
+    readonly actual: ReadonlyMap<string, TPowerQueryType>;
 }): void {
-    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.expected);
-    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeByKeyToArray(params.actual);
+    const expectedArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeToArray(params.expected);
+    const actualArray: ReadonlyArray<[string, TPowerQueryType]> = convertScopeTypeToArray(params.actual);
 
     expect(actualArray).to.have.deep.members(expectedArray);
 }
@@ -210,10 +205,10 @@ function assertIsMarkupContent(value: Hover["contents"]): asserts value is Marku
     }
 }
 
-function convertScopeTypeByKeyToArray(
-    scopeTypeByKey: Inspection.ScopeTypeByKey,
+function convertScopeTypeToArray(
+    scopeType: ReadonlyMap<string, TPowerQueryType>,
 ): ReadonlyArray<[string, TPowerQueryType]> {
-    return Array.from(scopeTypeByKey.entries()).map(([key, value]: [string, TPowerQueryType]) => [key, value]);
+    return Array.from(scopeType.entries()).map(([key, value]: [string, TPowerQueryType]) => [key, value]);
 }
 
 function mapReplacer(_key: string, value: any): any {
