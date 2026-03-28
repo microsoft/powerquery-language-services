@@ -3,13 +3,27 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-
-import { Inspection, InspectionTraceConstant, TraceUtils } from "../../..";
+import {
+    Ast,
+    IdentifierExpressionUtils,
+    Type,
+    TypeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Inspection, InspectionSettings, InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
-import { NodeScope, ParameterScopeItem, ScopeItemKind, tryNodeScope, TScopeItem } from "../../scope";
+import { NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+
+import {
+    NodeScope,
+    ParameterScopeItem,
+    ScopeItemKind,
+    TKeyValuePairScopeItem,
+    tryNodeScope,
+    TScopeItem,
+} from "../../scope";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+
+import { ExternalTypeUtils } from "../../../externalType";
 import { inspectTypeConstant } from "./inspectTypeConstant";
 import { inspectTypeEachExpression } from "./inspectTypeEachExpression";
 import { inspectTypeErrorHandlingExpression } from "./inspectTypeErrorHandlingExpression";
@@ -36,7 +50,12 @@ import { inspectTypeRecursivePrimaryExpression } from "./inspectTypeRecursivePri
 import { inspectTypeTableType } from "./inspectTypeTableType";
 import { inspectTypeTBinOpExpression } from "./inspectTypeTBinOpExpression";
 import { inspectTypeUnaryExpression } from "./inspectTypeUnaryExpression";
+
 import { TDereferencedIdentifier } from "../../dereferencedIdentifier";
+
+import { TypeCacheUtils } from "../../typeCache";
+import { TypeStrategy } from "../../../inspectionSettings";
+
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 // Recursively flattens all AnyUnion.unionedTypePairs into a single array,
@@ -161,6 +180,16 @@ export async function inspectScopeItem(
 ): Promise<Type.TPowerQueryType> {
     state.cancellationToken?.throwIfCancelled();
 
+    const typeDirectiveType: Type.TPowerQueryType | undefined = await inspectScopeItemTypeDirective(
+        state,
+        scopeItem,
+        correlationId,
+    );
+
+    if (typeDirectiveType !== undefined) {
+        return typeDirectiveType;
+    }
+
     switch (scopeItem.kind) {
         case ScopeItemKind.LetVariable:
         case ScopeItemKind.RecordField:
@@ -181,6 +210,227 @@ export async function inspectScopeItem(
         default:
             throw Assert.isNever(scopeItem);
     }
+}
+
+async function inspectScopeItemTypeDirective(
+    state: InspectTypeState,
+    scopeItem: TScopeItem,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType | undefined> {
+    if (!state.isTypeDirectiveAllowed) {
+        return undefined;
+    }
+
+    switch (scopeItem.kind) {
+        case ScopeItemKind.Each:
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.Parameter:
+        case ScopeItemKind.RecordField:
+        case ScopeItemKind.SectionMember:
+        case ScopeItemKind.Undefined:
+            return scopeItem.kind === ScopeItemKind.LetVariable ||
+                scopeItem.kind === ScopeItemKind.RecordField ||
+                scopeItem.kind === ScopeItemKind.SectionMember
+                ? await inspectTypeDirective(state, scopeItem, correlationId)
+                : undefined;
+
+        default:
+            throw Assert.isNever(scopeItem);
+    }
+}
+
+async function inspectTypeDirective(
+    state: InspectTypeState,
+    scopeItem: TKeyValuePairScopeItem,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType | undefined> {
+    const payload: string | undefined = scopeItem.typeDirective?.value?.trim();
+
+    if (!payload) {
+        return undefined;
+    }
+
+    const inScopeType: Type.TPowerQueryType | undefined = await tryResolveTypeDirectiveFromScope(
+        state,
+        scopeItem,
+        payload,
+        correlationId,
+    );
+
+    if (inScopeType !== undefined) {
+        return inScopeType;
+    }
+
+    const externalType: Type.TPowerQueryType | undefined = tryResolveTypeDirectiveFromLibrary(state, payload);
+
+    if (externalType !== undefined) {
+        return externalType;
+    }
+
+    return await tryResolveTypeDirectiveFromStandaloneText(state, payload, correlationId);
+}
+
+async function tryResolveTypeDirectiveFromScope(
+    state: InspectTypeState,
+    scopeItem: TKeyValuePairScopeItem,
+    payload: string,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType | undefined> {
+    const scopeNodeId: number = scopeItem.value?.node.id ?? scopeItem.nodeId;
+    const nodeScope: NodeScope = await assertGetOrCreateNodeScope(state, scopeNodeId, correlationId);
+    const referencedScopeItem: TScopeItem | undefined = nodeScope.scopeItemByKey.get(payload);
+
+    if (referencedScopeItem === undefined) {
+        return undefined;
+    }
+
+    switch (referencedScopeItem.kind) {
+        case ScopeItemKind.Each:
+        case ScopeItemKind.LetVariable:
+        case ScopeItemKind.Parameter:
+        case ScopeItemKind.RecordField:
+        case ScopeItemKind.SectionMember:
+        case ScopeItemKind.Undefined:
+            if (
+                referencedScopeItem.kind === ScopeItemKind.LetVariable ||
+                referencedScopeItem.kind === ScopeItemKind.RecordField ||
+                referencedScopeItem.kind === ScopeItemKind.SectionMember
+            ) {
+                return referencedScopeItem.value === undefined
+                    ? undefined
+                    : await inspectDirectiveSourceWithExtendedTypeStrategy(
+                          state,
+                          referencedScopeItem.value,
+                          correlationId,
+                      );
+            }
+
+            return await getOrCreateScopeItemType(state, referencedScopeItem);
+
+        default:
+            throw Assert.isNever(referencedScopeItem);
+    }
+}
+
+function tryResolveTypeDirectiveFromLibrary(
+    state: InspectTypeState,
+    payload: string,
+): Type.TPowerQueryType | undefined {
+    try {
+        return state.library.externalTypeResolver(
+            ExternalTypeUtils.valueTypeRequest(IdentifierExpressionUtils.assertNormalizedIdentifierExpression(payload)),
+        );
+    } catch {
+        return undefined;
+    }
+}
+
+async function tryResolveTypeDirectiveFromStandaloneText(
+    state: InspectTypeState,
+    payload: string,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType | undefined> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectScopeItem,
+        tryResolveTypeDirectiveFromStandaloneText.name,
+        correlationId,
+    );
+
+    const settings: InspectionSettings = {
+        ...InspectTypeStateUtils.toInspectionSettings(state, trace),
+        isTypeDirectiveAllowed: false,
+        typeStrategy: TypeStrategy.Extended,
+    };
+
+    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
+        settings,
+        normalizeTypeDirectivePayload(payload),
+    );
+
+    if (PQP.TaskUtils.isLexStageError(triedLexParse) || PQP.TaskUtils.isParseStageError(triedLexParse)) {
+        trace.exit({ [TraceConstant.Result]: undefined });
+
+        return undefined;
+    }
+
+    if (PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
+        trace.exit({ [TraceConstant.Result]: undefined });
+
+        return undefined;
+    }
+
+    const standaloneState: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
+        settings,
+        triedLexParse.nodeIdMapCollection,
+        TypeCacheUtils.emptyCache(),
+        trace.id,
+    );
+
+    const result: Type.TPowerQueryType = await inspectXor(
+        standaloneState,
+        NodeIdMapUtils.assertXor(triedLexParse.nodeIdMapCollection, triedLexParse.ast.id),
+        trace.id,
+    );
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
+
+    return result;
+}
+
+async function inspectDirectiveSourceWithExtendedTypeStrategy(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType> {
+    const directiveState: InspectTypeState = {
+        ...state,
+        computingNodeIds: new Set(state.computingNodeIds),
+        typeById: TypeCacheUtils.emptyCache().typeById,
+        typeStrategy: TypeStrategy.Extended,
+    };
+
+    return await inspectXor(directiveState, xorNode, correlationId);
+}
+
+function normalizeTypeDirectivePayload(payload: string): string {
+    const trimmed: string = payload.trim();
+
+    if (trimmed.length === 0 || /^type\b/i.test(trimmed) || !shouldPrefixTypeKeyword(trimmed)) {
+        return trimmed;
+    }
+
+    return `type ${trimmed}`;
+}
+
+function shouldPrefixTypeKeyword(payload: string): boolean {
+    if (["[", "{"].includes(payload[0])) {
+        return true;
+    }
+
+    const leadingToken: string = payload.split(/\s|\(/, 1)[0].toLowerCase();
+
+    return [
+        "action",
+        "any",
+        "anynonnull",
+        "binary",
+        "date",
+        "datetime",
+        "datetimezone",
+        "duration",
+        "function",
+        "list",
+        "logical",
+        "none",
+        "null",
+        "number",
+        "record",
+        "table",
+        "text",
+        "time",
+        "type",
+        "nullable",
+    ].includes(leadingToken);
 }
 
 export async function inspectTypeFromChildAttributeIndex(

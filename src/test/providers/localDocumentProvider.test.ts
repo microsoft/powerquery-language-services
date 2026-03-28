@@ -15,6 +15,7 @@ import {
     PartialSemanticToken,
     Position,
     SignatureHelp,
+    TypeStrategy,
 } from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { AutocompleteItem } from "../../powerquery-language-services/inspection";
@@ -25,6 +26,15 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         ...TestConstants.SimpleLibraryAnalysisSettings,
         languageAutocompleteItemProviderFactory: () => NullSymbolProvider.singleton(),
         libraryProviderFactory: (_library: Library.ILibrary) => NullSymbolProvider.singleton(),
+    };
+
+    const DirectiveHoverAnalysisSettings: AnalysisSettings = {
+        ...IsolatedAnalysisSettings,
+        inspectionSettings: {
+            ...IsolatedAnalysisSettings.inspectionSettings,
+            isTypeDirectiveAllowed: true,
+            typeStrategy: TypeStrategy.Primitive,
+        },
     };
 
     async function runTest(params: {
@@ -47,6 +57,36 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             })),
             actual: (actual ?? []).map(TestUtils.abridgedAutocompleteItem),
         });
+    }
+
+    async function runDirectiveAutocompleteTest(params: {
+        readonly textWithPipe: string;
+        readonly expected: {
+            readonly labels: ReadonlyArray<string>;
+            readonly isTextEdit: boolean;
+        };
+        readonly unexpectedLabels?: ReadonlyArray<string>;
+        readonly cancellationToken?: ICancellationToken;
+    }): Promise<void> {
+        const actual: ReadonlyArray<AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis({
+            ...params,
+            analysisSettings: DirectiveHoverAnalysisSettings,
+        });
+
+        const abridgedAutocompleteItems: ReadonlyArray<ReturnType<typeof TestUtils.abridgedAutocompleteItem>> = (
+            actual ?? []
+        ).map(TestUtils.abridgedAutocompleteItem);
+
+        expect(abridgedAutocompleteItems).to.include.deep.members(
+            params.expected.labels.map((label: string) => ({
+                label,
+                isTextEdit: params.expected.isTextEdit,
+            })),
+        );
+
+        if (params.unexpectedLabels?.length) {
+            expect(abridgedAutocompleteItems.map(item => item.label)).not.to.include.members(params.unexpectedLabels);
+        }
     }
 
     describe(`getAutocompleteItems`, () => {
@@ -267,6 +307,84 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         },
                     }));
             });
+        });
+
+        describe(`directive record fields`, () => {
+            it(`let-variable record expression`, async () =>
+                await runDirectiveAutocompleteTest({
+                    textWithPipe: `let
+    /// @type [ Foo = text, Bar = number ]
+    value = [
+        |
+    ]
+in
+    value`,
+                    expected: {
+                        labels: [`Foo`, `Bar`],
+                        isTextEdit: false,
+                    },
+                }));
+
+            it(`section-member record expression`, async () =>
+                await runDirectiveAutocompleteTest({
+                    textWithPipe: `section foo;
+
+/// @type [ optional Beta = logical, optional Category = text, optional ButtonText = {text}, optional LearnMoreUrl = text ]
+OAuthError.Publish = [
+    |
+];`,
+                    expected: {
+                        labels: [`Beta`, `Category`, `ButtonText`, `LearnMoreUrl`],
+                        isTextEdit: false,
+                    },
+                }));
+
+            it(`section-member record expression after dangling comma`, async () =>
+                await runDirectiveAutocompleteTest({
+                    textWithPipe: `section foo;
+
+/// @type [ optional Beta = logical, optional Category = text, optional ButtonText = {text}, optional LearnMoreUrl = text ]
+OAuthError.Publish = [
+    Beta = false,
+    |
+];`,
+                    expected: {
+                        labels: [`Category`, `ButtonText`, `LearnMoreUrl`],
+                        isTextEdit: false,
+                    },
+                    unexpectedLabels: [`Beta`],
+                }));
+
+            it(`let-variable record expression excludes existing fields`, async () =>
+                await runDirectiveAutocompleteTest({
+                    textWithPipe: `let
+    /// @type [ Foo = text, Bar = number, Baz = logical ]
+    value = [
+        Foo = "x",
+        |
+    ]
+in
+    value`,
+                    expected: {
+                        labels: [`Bar`, `Baz`],
+                        isTextEdit: false,
+                    },
+                    unexpectedLabels: [`Foo`],
+                }));
+
+            it(`section-member field access`, async () =>
+                await runDirectiveAutocompleteTest({
+                    textWithPipe: `section foo;
+
+/// @type [ optional Beta = logical, optional Category = text, optional ButtonText = {text}, optional LearnMoreUrl = text ]
+OAuthError.Publish = [];
+
+other = OAuthError.Publish[|];`,
+                    expected: {
+                        labels: [`Beta`, `Category`, `ButtonText`, `LearnMoreUrl`],
+                        isTextEdit: false,
+                    },
+                }));
         });
     });
 
@@ -494,6 +612,43 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 await assertHover({
                     textWithPipe: `section; foo| = 1;`,
                     expected: `[section-member] foo: 1`,
+                }));
+        });
+
+        describe(`directive hover`, () => {
+            it(`let-variable`, async () =>
+                await TestUtils.assertEqualHoverAnalysis({
+                    analysisSettings: DirectiveHoverAnalysisSettings,
+                    textWithPipe: `let
+    /// @type [ Foo = text, Bar = number ]
+    value = []
+in
+    value|`,
+                    expected: `[let-variable] value: type [Foo: text, Bar: number] (via @type directive)`,
+                }));
+
+            it(`section-member`, async () =>
+                await TestUtils.assertEqualHoverAnalysis({
+                    analysisSettings: DirectiveHoverAnalysisSettings,
+                    textWithPipe: `section foo;
+
+/// @type [ optional Beta = logical, optional Category = text, optional ButtonText = {text}, optional LearnMoreUrl = text ]
+OAuthError.Publish| = [
+
+];`,
+                    expected: `[section-member] OAuthError.Publish: type [ optional Beta = logical, optional Category = text, optional ButtonText = {text}, optional LearnMoreUrl = text ] (via @type directive)`,
+                }));
+
+            it(`section-member reference`, async () =>
+                await TestUtils.assertEqualHoverAnalysis({
+                    analysisSettings: DirectiveHoverAnalysisSettings,
+                    textWithPipe: `section foo;
+
+/// @type [ optional Beta = logical ]
+OAuthError.Publish = [];
+
+other = OAuthError.Publish|;`,
+                    expected: `[section-member] OAuthError.Publish: type [Beta: logical] (via @type directive)`,
                 }));
         });
     });
@@ -1082,6 +1237,16 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             await TestUtils.assertEqualSignatureHelpAnalysis({ ...params, analysisSettings: IsolatedAnalysisSettings });
         }
 
+        async function assertDirectiveSignatureHelp(params: {
+            readonly textWithPipe: string;
+            readonly expected: SignatureHelp | undefined;
+        }): Promise<void> {
+            await TestUtils.assertEqualSignatureHelpAnalysis({
+                ...params,
+                analysisSettings: DirectiveHoverAnalysisSettings,
+            });
+        }
+
         it(`no closing bracket`, async () =>
             await assertSignatureHelp({
                 textWithPipe: `let fn = (x as number, y as number) => x + y in fn(1|`,
@@ -1119,6 +1284,32 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                                 },
                                 {
                                     label: `y`,
+                                },
+                            ],
+                        },
+                    ],
+                },
+            }));
+
+        it(`directive-backed function type`, async () =>
+            await assertDirectiveSignatureHelp({
+                textWithPipe: `let
+    /// @type type function (message as text, optional code as nullable number) as text
+    fn = (message as any, optional code as any) => message
+in
+    fn(|)`,
+                expected: {
+                    activeParameter: 0,
+                    activeSignature: 0,
+                    signatures: [
+                        {
+                            label: `fn(message: text, code: optional nullable number)`,
+                            parameters: [
+                                {
+                                    label: `message`,
+                                },
+                                {
+                                    label: `code`,
                                 },
                             ],
                         },

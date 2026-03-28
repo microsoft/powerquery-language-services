@@ -25,6 +25,7 @@ import {
     SectionMemberScopeItem,
     TriedNodeScope,
     TScopeItem,
+    TypeDirective,
 } from "./scope";
 import {
     PseduoFunctionExpressionType,
@@ -452,6 +453,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
 
     // Places the assignments from the 'let' into LetExpression.expression
     const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
+        state,
         keyValuePairs,
         -1,
         { allowRecursive: true },
@@ -535,6 +537,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
             kvp.value.node.id,
             getParentScope(state, kvp.value.node.id),
             scopeItemFactoryForKeyValuePairs(
+                state,
                 keyValuePairs,
                 kvp.key.id,
                 { allowRecursive: true },
@@ -556,7 +559,7 @@ function inspectKeyValuePairs<
     inheritedScope: NodeScope | undefined,
     keyValuePairs: ReadonlyArray<KVP>,
     getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
-    scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
+    scopeItemFactory: (state: ScopeInspectionState, keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
     const trace: Trace = state.traceManager.entry(
@@ -576,7 +579,13 @@ function inspectKeyValuePairs<
             state,
             kvp.value.node.id,
             inheritedScope,
-            scopeItemFactoryForKeyValuePairs(keyValuePairs, kvp.key.id, getAllowedIdentifiersOptions, scopeItemFactory),
+            scopeItemFactoryForKeyValuePairs(
+                state,
+                keyValuePairs,
+                kvp.key.id,
+                getAllowedIdentifiersOptions,
+                scopeItemFactory,
+            ),
             trace.id,
         );
     }
@@ -588,10 +597,11 @@ function scopeItemFactoryForKeyValuePairs<
     T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
     KVP extends NodeIdMapIterator.TKeyValuePair,
 >(
+    state: ScopeInspectionState,
     keyValuePairs: ReadonlyArray<KVP>,
     keyNodeId: number,
     getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
-    scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
+    scopeItemFactory: (state: ScopeInspectionState, keyValuePair: KVP, isRecursive: boolean) => T,
 ): ReadonlyArray<[string, T]> {
     const result: [string, T][] = [];
 
@@ -600,7 +610,7 @@ function scopeItemFactoryForKeyValuePairs<
 
         for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
             if (!isRecursive || key.includes("@")) {
-                result.push([key, scopeItemFactory(kvp, isRecursive)]);
+                result.push([key, scopeItemFactory(state, kvp, isRecursive)]);
             }
         }
     }
@@ -609,6 +619,7 @@ function scopeItemFactoryForKeyValuePairs<
 }
 
 function scopeItemFactoryForLetVariable(
+    state: ScopeInspectionState,
     keyValuePair: NodeIdMapIterator.LetKeyValuePair,
     isRecursive: boolean,
 ): LetVariableScopeItem {
@@ -617,6 +628,7 @@ function scopeItemFactoryForLetVariable(
         nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
+        typeDirective: findTypeDirective(state, keyValuePair.source.node.id),
         value: keyValuePair.value,
     };
 }
@@ -637,6 +649,7 @@ function scopeItemFactoryForParameter(
 }
 
 function scopeItemFactoryForRecordMember(
+    state: ScopeInspectionState,
     keyValuePair: NodeIdMapIterator.RecordKeyValuePair,
     isRecursive: boolean,
 ): RecordFieldScopeItem {
@@ -645,11 +658,13 @@ function scopeItemFactoryForRecordMember(
         nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
+        typeDirective: findTypeDirective(state, keyValuePair.source.node.id),
         value: keyValuePair.value,
     };
 }
 
 function scopeItemFactoryForSectionMember(
+    state: ScopeInspectionState,
     keyValuePair: NodeIdMapIterator.SectionKeyValuePair,
     isRecursive: boolean,
 ): SectionMemberScopeItem {
@@ -658,6 +673,17 @@ function scopeItemFactoryForSectionMember(
         nodeId: keyValuePair.source.node.id,
         isRecursive,
         key: keyValuePair.key,
+        typeDirective: findTypeDirective(state, keyValuePair.source.node.id),
         value: keyValuePair.value,
     };
+}
+
+function findTypeDirective(state: ScopeInspectionState, nodeId: number): TypeDirective | undefined {
+    const astNode: Ast.TNode | undefined = state.nodeIdMapCollection.astNodeById.get(nodeId);
+
+    const directives: ReadonlyArray<TypeDirective> | undefined = (
+        astNode as (Ast.TNode & { precedingDirectives?: ReadonlyArray<TypeDirective> }) | undefined
+    )?.precedingDirectives;
+
+    return directives?.find((directive: TypeDirective) => directive.kind === "Type");
 }
