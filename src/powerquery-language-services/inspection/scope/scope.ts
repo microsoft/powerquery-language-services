@@ -15,16 +15,14 @@ type ScopeItemTypeResolver = (scopeItem: TScopeItem) => Promise<Type.TPowerQuery
  * Call `resolveAll()` to eagerly resolve all types and get a ReadonlyMap.
  */
 export class ScopeTypeByKey {
-    private static readonly emptyNodeScope: NodeScope = {
-        createdForNodeId: undefined,
-        scopeItemByKey: new Map(),
-    };
-
-    private static readonly noOpResolver: ScopeItemTypeResolver = (_scopeItem: TScopeItem) =>
-        Promise.resolve(Type.AnyInstance);
-
     static empty(): ScopeTypeByKey {
-        return new ScopeTypeByKey(ScopeTypeByKey.emptyNodeScope, ScopeTypeByKey.noOpResolver);
+        return new ScopeTypeByKey(
+            {
+                createdForNodeId: undefined,
+                scopeItemByKey: new Map(),
+            },
+            (_scopeItem: TScopeItem) => Promise.resolve(Type.AnyInstance),
+        );
     }
 
     private readonly resolved: Map<string, Type.TPowerQueryType> = new Map();
