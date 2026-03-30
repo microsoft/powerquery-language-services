@@ -129,6 +129,14 @@ function findUnknownIdentifiers(
 
     const unknownIdentifiers: UnknownIdentifier[] = [];
 
+    // Compute library keys once for the entire validation run instead of per-unknown-identifier.
+    const libraryKeys: ReadonlyArray<string> = LibraryUtils.getDefinitionKeys(validationSettings.library);
+
+    // Cache the combined known-identifier list per NodeScope instance.
+    // Multiple identifiers in the same scope (e.g. bindings in a let) share the same list,
+    // avoiding repeated array allocation and spreading.
+    const knownIdentifiersByScope: Map<Inspection.NodeScope, ReadonlyArray<string>> = new Map();
+
     for (const identifierWithNodeScope of identifiersWithNodeScope) {
         if (ResultUtils.isError(identifierWithNodeScope.triedNodeScope)) {
             continue;
@@ -146,10 +154,12 @@ function findUnknownIdentifiers(
                 identifierLiteral: literal,
             })
         ) {
-            const knownIdentifiers: ReadonlyArray<string> = [
-                ...nodeScope.scopeItemByKey.keys(),
-                ...LibraryUtils.getDefinitionKeys(validationSettings.library),
-            ];
+            let knownIdentifiers: ReadonlyArray<string> | undefined = knownIdentifiersByScope.get(nodeScope);
+
+            if (knownIdentifiers === undefined) {
+                knownIdentifiers = [...nodeScope.scopeItemByKey.keys(), ...libraryKeys];
+                knownIdentifiersByScope.set(nodeScope, knownIdentifiers);
+            }
 
             const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(literal, knownIdentifiers);
 
