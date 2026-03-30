@@ -120,7 +120,7 @@ async function inspectInvokeExpression(
             numMinExpectedArguments,
             typeChecked: TypeUtils.typeCheckInvocation(
                 givenArgumentTypes,
-                functionType,
+                asDefinedFunction(functionType),
                 settings.traceManager,
                 trace.id,
             ),
@@ -145,6 +145,15 @@ async function inspectInvokeExpression(
     trace.exit();
 
     return result;
+}
+
+function asDefinedFunction(functionType: Type.FunctionSignature): Type.DefinedFunction {
+    return {
+        ...functionType,
+        kind: Type.TypeKind.Function,
+        extendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        isNullable: false,
+    };
 }
 
 async function getIsNameInLocalScope(
