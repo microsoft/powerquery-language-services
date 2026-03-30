@@ -314,6 +314,47 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         });
 
         describe(`directive record fields`, () => {
+            it(`inferred from ascribed record type when directives are disabled`, async () =>
+                await runTest({
+                    textWithPipe: `let
+    value = [
+        |
+    ] as type [ Foo = text, Bar = number ]
+in
+    value`,
+                    expected: {
+                        labels: [`Foo`, `Bar`],
+                        isTextEdit: false,
+                    },
+                }));
+
+            it(`inferred from ascribed record type excludes existing fields when directives are disabled`, async () => {
+                const actual: ReadonlyArray<AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis({
+                    textWithPipe: `let
+    value = [
+        Foo = "x",
+        |
+    ] as type [ Foo = text, Bar = number, Baz = logical ]
+in
+    value`,
+                    analysisSettings: IsolatedAnalysisSettings,
+                });
+
+                const abridgedAutocompleteItems: ReadonlyArray<ReturnType<typeof TestUtils.abridgedAutocompleteItem>> =
+                    (actual ?? []).map(TestUtils.abridgedAutocompleteItem);
+
+                expect(abridgedAutocompleteItems).to.include.deep.members([
+                    { label: `Bar`, isTextEdit: false },
+                    { label: `Baz`, isTextEdit: false },
+                ]);
+
+                expect(
+                    abridgedAutocompleteItems.map(
+                        (item: ReturnType<typeof TestUtils.abridgedAutocompleteItem>) => item.label,
+                    ),
+                ).not.to.include.members([`Foo`]);
+            });
+
             it(`feature disabled`, async () => {
                 const actual: ReadonlyArray<AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis({
                     textWithPipe: `let
