@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "Функција '{funcName}' очекује аргумент за '{argName}' који треба да буде '{expected}', али је уместо дога добијен '{actual}'.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Очекивани аргумент за '{argName}' који треба да буде '{expected}', али је уместо тога добијен '{actual}'.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Није могуће пронаћи име '{identifier}', да ли сте мислили на '{suggestion}'?"
+  "error_validation_unknownIdentifier_suggestion": "Није могуће пронаћи име '{identifier}', да ли сте мислили на '{suggestion}'?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

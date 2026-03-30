@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ hat erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, hat aber stattdessen „{actual}“ erhalten.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Es wurde erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, aber stattdessen wurde „{actual}“ erhalten.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Der Name „{identifier}“ kann nicht gefunden werden. Meinten Sie „{suggestion}“?"
+  "error_validation_unknownIdentifier_suggestion": "Der Name „{identifier}“ kann nicht gefunden werden. Meinten Sie „{suggestion}“?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

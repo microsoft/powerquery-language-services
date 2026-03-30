@@ -9,7 +9,6 @@ import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/power
 
 import {
     ExternalType,
-    Inspection,
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
@@ -54,9 +53,9 @@ describe(`Inspection - Type`, () => {
 
     async function assertEqualScopeType(params: {
         readonly textWithPipe: string;
-        readonly expected: Inspection.ScopeTypeByKey;
+        readonly expected: ReadonlyMap<string, Type.TPowerQueryType>;
     }): Promise<void> {
-        const actual: Inspection.ScopeTypeByKey = await TestUtils.assertScopeType({
+        const actual: ReadonlyMap<string, Type.TPowerQueryType> = await TestUtils.assertScopeType({
             textWithPipe: params.textWithPipe,
             inspectionSettings: ExtendedInspectionSettings,
         });
@@ -270,7 +269,21 @@ describe(`Inspection - Type`, () => {
             it(`error 1`, async () =>
                 await assertEqualRootType({
                     text: `error 1`,
-                    expected: Type.AnyInstance,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`error expression returns none`, async () =>
+                await assertEqualRootType({
+                    text: `error "fail"`,
+                    expected: Type.NoneInstance,
+                }));
+        });
+
+        describe(`${Ast.NodeKind.RangeExpression}`, () => {
+            it(`nullable range operand returns list`, async () =>
+                await assertEqualRootType({
+                    text: `let x = 1 as nullable number in {x..5}`,
+                    expected: TypeUtils.definedList(false, [Type.ListInstance]),
                 }));
         });
 
@@ -722,6 +735,15 @@ describe(`Inspection - Type`, () => {
                     text: `1 ?? (1 + "")`,
                     expected: Type.NoneInstance,
                 }));
+
+            it(`null coalescing strips nullability from left operand`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable number) ?? 0`,
+                    expected: anyUnion([
+                        TypeUtils.primitiveType(false, Type.TypeKind.Number),
+                        TypeUtils.numberLiteral(false, `0`),
+                    ]),
+                }));
         });
 
         describe(`${Ast.NodeKind.Parameter}`, () => {
@@ -865,6 +887,50 @@ describe(`Inspection - Type`, () => {
                         text: `let x = (_ as any) in x{0}`,
                         expected: Type.AnyInstance,
                     }));
+
+                describe(`${Ast.NodeKind.ItemAccessExpression} - element type inference`, () => {
+                    it(`list literal access with known index returns exact element type`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, 2, 3}{0}`,
+                            expected: TypeUtils.numberLiteral(false, `1`),
+                        }));
+
+                    it(`list literal access with second index`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, "hello"}{1}`,
+                            expected: TypeUtils.textLiteral(false, `"hello"`),
+                        }));
+
+                    it(`single-element list access`, async () =>
+                        await assertEqualRootType({
+                            text: `{1}{0}`,
+                            expected: TypeUtils.numberLiteral(false, `1`),
+                        }));
+
+                    it(`optional item access is nullable`, async () =>
+                        await assertEqualRootType({
+                            text: `{1}{0}?`,
+                            expected: TypeUtils.numberLiteral(true, `1`),
+                        }));
+
+                    it(`out-of-bounds index returns none`, async () =>
+                        await assertEqualRootType({
+                            text: `{1, "hello"}{8}`,
+                            expected: Type.NoneInstance,
+                        }));
+
+                    it(`empty list access returns none`, async () =>
+                        await assertEqualRootType({
+                            text: `{}{0}`,
+                            expected: Type.NoneInstance,
+                        }));
+
+                    it(`list access through let binding resolves element type`, async () =>
+                        await assertEqualRootType({
+                            text: `let x = {1, 2} in x{0}`,
+                            expected: TypeUtils.numberLiteral(false, `1`),
+                        }));
+                });
 
                 describe(`${Ast.NodeKind.FieldSelector}`, () => {
                     it(`[a = 1][a]`, async () =>

@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
   "error_validation_invokeExpression_typeMismatch_unnamed": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?"
+  "error_validation_unknownIdentifier_suggestion": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

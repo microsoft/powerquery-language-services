@@ -73,7 +73,6 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
     public getAutocompleteItems(
         context: AutocompleteItemProviderContext,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        // eslint-disable-next-line require-await
         return ResultUtils.ensureResultAsync(async () => {
             const trace: Trace = context.traceManager.entry(
                 ProviderTraceConstant.LocalDocumentSymbolProvider,
@@ -86,7 +85,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             const autocompleteItems: Inspection.AutocompleteItem[] = [
                 ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
                 ...(await this.getAutocompleteItemsFromCurrentRecord(context)),
-            ].concat(InspectionUtils.getAutocompleteItemsFromScope(context));
+            ].concat(await InspectionUtils.getAutocompleteItemsFromScope(context));
 
             trace.exit();
 
@@ -198,7 +197,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            hover = this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
+            hover = await this.getHoverForScopeItem(context, triedNodeScope.value, triedScopeType.value, trace.id);
 
             trace.exit();
 
@@ -404,7 +403,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             : undefined;
 
         const scopedType: Type.TPowerQueryType | undefined = ResultUtils.isOk(context.triedScopeType)
-            ? context.triedScopeType.value.get(context.identifier.literal)
+            ? await context.triedScopeType.value.resolveType(context.identifier.literal)
             : undefined;
 
         const sectionMember: TXorNode | undefined = AncestryUtils.nthChecked<Ast.SectionMember>(
@@ -451,12 +450,12 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         return result;
     }
 
-    protected getHoverForScopeItem(
+    protected async getHoverForScopeItem(
         context: HoverProviderContext,
         nodeScope: Inspection.NodeScope,
         scopeType: Inspection.ScopeTypeByKey,
         correlationId: number,
-    ): Hover | undefined {
+    ): Promise<Hover | undefined> {
         const identifierLiteral: string = context.identifier.literal;
         const scopeItem: Inspection.TScopeItem | undefined = nodeScope.scopeItemByKey.get(identifierLiteral);
 
@@ -466,7 +465,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(scopeItem.kind);
 
-        const scopeItemType: Type.TPowerQueryType | undefined = scopeType.get(identifierLiteral);
+        const scopeItemType: Type.TPowerQueryType | undefined = await scopeType.resolveType(identifierLiteral);
 
         const scopeItemTypeText: string =
             scopeItemType !== undefined
@@ -539,7 +538,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
         const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(context.triedScopeType)
             ? context.triedScopeType.value
-            : new Map();
+            : Inspection.ScopeTypeByKey.empty();
 
         const typeDirectiveValue: string | undefined = this.findCurrentRecordTypeDirective(context);
 
@@ -742,7 +741,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const scopeType: Type.TPowerQueryType | undefined = scopeTypeByKey.get(trimmedPayload);
+        const scopeType: Type.TPowerQueryType | undefined = await scopeTypeByKey.resolveType(trimmedPayload);
 
         if (scopeType !== undefined && this.fieldEntriesFromFieldType(scopeType).length > 0) {
             return scopeType;

@@ -462,7 +462,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
 
     const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, letExpr.node.id, 3);
 
-    if (expression !== undefined) {
+    if (expression !== undefined && !state.scopeById.has(expression.node.id)) {
         assignScopeForNodeId(state, expression.node.id, nodeScope, newEntries, trace.id);
     }
 
@@ -528,7 +528,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
     for (const kvp of keyValuePairs) {
         state.cancellationToken?.throwIfCancelled();
 
-        if (kvp.value === undefined) {
+        if (kvp.value === undefined || state.scopeById.has(kvp.value.node.id)) {
             continue;
         }
 
@@ -571,7 +571,7 @@ function inspectKeyValuePairs<
     for (const kvp of keyValuePairs) {
         state.cancellationToken?.throwIfCancelled();
 
-        if (kvp.value === undefined) {
+        if (kvp.value === undefined || state.scopeById.has(kvp.value.node.id)) {
             continue;
         }
 

@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "„{funcName}“ numatomas „{argName}“ argumentas turėtų būti „{expected}“, tačiau gautas „{actual}“.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Tikėtasi, kad argumentas, skirtas „{argName}“, bus „{expected}“, tačiau gautas „{actual}“.",
   "error_validation_unknownIdentifier_noSuggestion": "Nepavyksta rasti pavadinimo „{identifier}“.",
-  "error_validation_unknownIdentifier_suggestion": "Nepavyko rasti pavadinimo „{identifier}“. Ar turėjote omenyje „{suggestion}“?"
+  "error_validation_unknownIdentifier_suggestion": "Nepavyko rasti pavadinimo „{identifier}“. Ar turėjote omenyje „{suggestion}“?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

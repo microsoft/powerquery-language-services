@@ -4,9 +4,13 @@
 import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-
 import { Inspection, InspectionSettings, Library, TypeStrategy } from "../../powerquery-language-services";
+import { expect } from "chai";
+import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { ResultKind } from "@microsoft/powerquery-parser";
 import { TAbridgedNodeScopeItem } from "../testUtils";
+import { Task } from "@microsoft/powerquery-parser/lib/powerquery-parser/task";
 import { TestUtils } from "..";
 
 describe(`Inspection - Scope - Identifier`, () => {
@@ -2178,5 +2182,124 @@ describe(`Inspection - Scope - Identifier`, () => {
                     },
                 ],
             }));
+    });
+
+    describe("Cache and scaling", () => {
+        async function parseText(text: string): Promise<NodeIdMap.Collection> {
+            const triedLexParse: Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
+                { ...PQP.DefaultSettings, traceManager: NoOpTraceManagerInstance },
+                text,
+            );
+
+            if (triedLexParse.resultKind !== ResultKind.Ok) {
+                throw new Error("Parse failed");
+            }
+
+            return triedLexParse.nodeIdMapCollection;
+        }
+
+        function getValueIdentifiers(nodeIdMapCollection: NodeIdMap.Collection): Ast.Identifier[] {
+            const identifierIds: Set<number> | undefined = nodeIdMapCollection.idsByNodeKind.get(
+                Ast.NodeKind.Identifier,
+            );
+
+            if (!identifierIds) {
+                return [];
+            }
+
+            const result: Ast.Identifier[] = [];
+
+            for (const id of identifierIds.values()) {
+                const node: Ast.Identifier | undefined = nodeIdMapCollection.astNodeById.get(id) as
+                    | Ast.Identifier
+                    | undefined;
+
+                if (node?.identifierContextKind === Ast.IdentifierContextKind.Value) {
+                    result.push(node);
+                }
+            }
+
+            return result;
+        }
+
+        async function buildAllScopes(text: string): Promise<{
+            readonly scopeById: Inspection.ScopeById;
+            readonly identifiers: Ast.Identifier[];
+            readonly nodeIdMapCollection: NodeIdMap.Collection;
+        }> {
+            const nodeIdMapCollection: NodeIdMap.Collection = await parseText(text);
+            const identifiers: Ast.Identifier[] = getValueIdentifiers(nodeIdMapCollection);
+            const scopeById: Inspection.ScopeById = new Map();
+
+            for (const identifier of identifiers) {
+                // eslint-disable-next-line no-await-in-loop
+                await Inspection.tryNodeScope(
+                    DefaultSettings,
+                    nodeIdMapCollection,
+                    undefined,
+                    identifier.id,
+                    scopeById,
+                );
+            }
+
+            return { scopeById, identifiers, nodeIdMapCollection };
+        }
+
+        it("repeated tryNodeScope calls reuse cached scopes", async () => {
+            const text: string = `let a = 1, b = 2, c = 3, d = 4, e = 5 in a + b + c + d + e`;
+
+            const result: {
+                readonly scopeById: Inspection.ScopeById;
+                readonly identifiers: Ast.Identifier[];
+                readonly nodeIdMapCollection: NodeIdMap.Collection;
+            } = await buildAllScopes(text);
+
+            const scopeCountAfterFirstPass: number = result.scopeById.size;
+
+            for (const identifier of result.identifiers) {
+                // eslint-disable-next-line no-await-in-loop
+                await Inspection.tryNodeScope(
+                    DefaultSettings,
+                    result.nodeIdMapCollection,
+                    undefined,
+                    identifier.id,
+                    result.scopeById,
+                );
+            }
+
+            expect(result.scopeById.size).to.equal(scopeCountAfterFirstPass);
+        });
+
+        it("scope computation scales sub-cubically for large let expressions", async () => {
+            function generateLet(n: number): string {
+                const bindings: string[] = [];
+
+                for (let i: number = 0; i < n; i += 1) {
+                    bindings.push(`v${i} = ${i}`);
+                }
+
+                return `let ${bindings.join(", ")} in v0`;
+            }
+
+            const smallText: string = generateLet(20);
+            const largeText: string = generateLet(80);
+
+            async function timeScope(text: string): Promise<number> {
+                const start: number = Date.now();
+                await buildAllScopes(text);
+
+                return Date.now() - start;
+            }
+
+            const smallTime: number = await timeScope(smallText);
+            const largeTime: number = await timeScope(largeText);
+
+            // With 4x more bindings, pure O(n³) would give 64x slowdown.
+            // With the cached approach, expect much less.
+            // Use a generous threshold of 20x to avoid flaky tests.
+            const ratio: number = largeTime / Math.max(smallTime, 0.001);
+
+            expect(ratio).to.be.lessThan(20, `Expected sub-cubic scaling but got ${ratio.toFixed(1)}x for 4x input`);
+        });
     });
 });

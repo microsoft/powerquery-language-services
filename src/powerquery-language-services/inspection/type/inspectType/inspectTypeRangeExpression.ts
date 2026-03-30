@@ -47,12 +47,7 @@ export async function inspectTypeRangeExpression(
             if (leftType === undefined || rightType === undefined) {
                 result = Type.UnknownInstance;
             } else if (leftType.kind === Type.TypeKind.Number && rightType.kind === Type.TypeKind.Number) {
-                // TODO: handle isNullable better
-                if (leftType.isNullable === true || rightType.isNullable === true) {
-                    result = Type.NoneInstance;
-                } else {
-                    result = Type.ListInstance;
-                }
+                result = Type.ListInstance;
             } else if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
                 result = Type.NoneInstance;
             } else if (leftType.kind === Type.TypeKind.Unknown || rightType.kind === Type.TypeKind.Unknown) {

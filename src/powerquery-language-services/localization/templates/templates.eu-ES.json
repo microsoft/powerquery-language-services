@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
   "error_validation_invokeExpression_typeMismatch_unnamed": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
   "error_validation_unknownIdentifier_noSuggestion": "Cannot find the name '{identifier}'.",
-  "error_validation_unknownIdentifier_suggestion": "Ez da aurkitu '{identifier}' izena; '{suggestion}' esan nahi zenuen?"
+  "error_validation_unknownIdentifier_suggestion": "Ez da aurkitu '{identifier}' izena; '{suggestion}' esan nahi zenuen?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }

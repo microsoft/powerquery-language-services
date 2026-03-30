@@ -8,5 +8,9 @@
   "error_validation_invokeExpression_typeMismatch_named": "“{funcName}” 需要 “{argName}” 的参数为 “{expected}”，但实际获得的却是 “{actual}”。",
   "error_validation_invokeExpression_typeMismatch_unnamed": "\"{argName}\" 的参数应为 \"{expected}\"，但实际获得的却是 \"{actual}\"。",
   "error_validation_unknownIdentifier_noSuggestion": "找不到名称“{identifier}”。",
-  "error_validation_unknownIdentifier_suggestion": "找不到名称“{identifier}”，你是否指的是“{suggestion}”?"
+  "error_validation_unknownIdentifier_suggestion": "找不到名称“{identifier}”，你是否指的是“{suggestion}”?",
+  "parameterDocumentation_default": "Default: `{value}`",
+  "parameterDocumentation_allowedValues": "Allowed values: {values}",
+  "parameterDocumentation_sampleValues": "Sample values: {values}",
+  "parameterDocumentation_type": "Type: `{type}`"
 }
