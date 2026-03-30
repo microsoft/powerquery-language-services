@@ -5,11 +5,12 @@ import { Settings, Task, TaskUtils } from "@microsoft/powerquery-parser";
 import { Position } from "vscode-languageserver-types";
 
 import { ActiveNodeUtils, TActiveNode } from "../../powerquery-language-services/inspection";
+import { InspectionSettings, normalizeInspectionSettingsForParser } from "../../powerquery-language-services";
 import { TestUtils } from "..";
 
 export async function assertActiveNode(params: {
     readonly textWithPipe: string;
-    readonly settings: Settings;
+    readonly settings: Settings | InspectionSettings;
 }): Promise<TActiveNode> {
     const [text, position]: [string, Position] = TestUtils.extractPosition(params.textWithPipe);
 
@@ -23,9 +24,12 @@ export async function assertActiveNode(params: {
 
 export async function assertParse(params: {
     readonly text: string;
-    readonly settings: Settings;
+    readonly settings: Settings | InspectionSettings;
 }): Promise<Task.ParseTaskOk | Task.ParseTaskParseError> {
-    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(params.settings, params.text);
+    const triedLexParseTask: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
+        normalizeInspectionSettingsForParser(params.settings as InspectionSettings),
+        params.text,
+    );
 
     if (TaskUtils.isParseStageOk(triedLexParseTask) || TaskUtils.isParseStageParseError(triedLexParseTask)) {
         return triedLexParseTask;

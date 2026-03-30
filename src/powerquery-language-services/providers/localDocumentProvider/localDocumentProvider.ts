@@ -41,12 +41,12 @@ import {
     SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, PositionUtils } from "../..";
+import { InspectionSettings, normalizeInspectionSettingsForParser, TypeStrategy } from "../../inspectionSettings";
+import { calculateJaroWinkler } from "../../jaroWinkler";
 import { createFoldingRanges } from "./foldingRanges";
 import { createPartialSemanticTokens } from "./partialSemanticToken";
 import { ExternalTypeUtils } from "../../externalType";
 import { ILibrary } from "../../library/library";
-import { calculateJaroWinkler } from "../../jaroWinkler";
-import { InspectionSettings, TypeStrategy } from "../../inspectionSettings";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
 
@@ -439,7 +439,11 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                     scopeItemText,
                     context.identifier.literal,
                     nameOfExpressionType,
-                    this.hasTypeDirective(scopeItem, Boolean(sectionMemberNode?.precedingDirectives?.length)),
+                    this.hasTypeDirective(
+                        scopeItem,
+                        Boolean(sectionMemberNode?.precedingDirectives?.length),
+                        context.inspectionSettings.isTypeDirectiveAllowed,
+                    ),
                 ),
             },
             range: undefined,
@@ -480,7 +484,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                     scopeItemText,
                     identifierLiteral,
                     scopeItemTypeText,
-                    this.hasTypeDirective(scopeItem),
+                    this.hasTypeDirective(scopeItem, false, context.inspectionSettings.isTypeDirectiveAllowed),
                 ),
             },
             range: undefined,
@@ -501,7 +505,12 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
     private hasTypeDirective(
         scopeItem: Inspection.TScopeItem | undefined,
         hasDirectiveOnCurrentNode: boolean = false,
+        isTypeDirectiveAllowed: boolean = false,
     ): boolean {
+        if (!isTypeDirectiveAllowed) {
+            return false;
+        }
+
         if (
             !ScopeUtils.isLetVariable(scopeItem) &&
             !ScopeUtils.isRecordField(scopeItem) &&
@@ -532,7 +541,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
     private async getAutocompleteItemsFromCurrentRecord(
         context: AutocompleteItemProviderContext,
     ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
-        if (ResultUtils.isError(context.triedNodeScope)) {
+        if (!context.inspectionSettings.isTypeDirectiveAllowed || ResultUtils.isError(context.triedNodeScope)) {
             return [];
         }
 
@@ -595,6 +604,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         }
 
         const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
+
         const recordNodeIndex: number = ancestry.findIndex(
             (xorNode: TXorNode) =>
                 xorNode.node.kind === Ast.NodeKind.RecordExpression || xorNode.node.kind === Ast.NodeKind.RecordLiteral,
@@ -639,6 +649,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         context: AutocompleteItemProviderContext,
     ): Inspection.TKeyValuePairScopeItem | undefined {
         const declarationNodes: ReadonlyArray<TXorNode> = this.findCurrentRecordDeclarationNodes(context);
+
         const declarationNode: TXorNode | undefined = declarationNodes.find(
             (xorNode: TXorNode) => this.findTypeDirectiveOnNode(xorNode.node) !== undefined,
         );
@@ -717,16 +728,25 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             return undefined;
         }
 
-        const leadingComment = [...context.parseState.lexerSnapshot.comments]
-            .reverse()
-            .find(
-                (comment: { kind?: string; data?: string; positionEnd?: { lineNumber?: number } }) =>
-                    comment.kind === "Line" &&
-                    comment.positionEnd?.lineNumber === declarationLine - 1 &&
-                    comment.data?.startsWith("/// @type"),
-            );
+        const comments: ReadonlyArray<{
+            kind?: string;
+            data?: string;
+            positionEnd?: { lineNumber?: number };
+        }> = context.parseState.lexerSnapshot.comments;
 
-        return leadingComment?.data?.replace(/^\/\/\/\s*@type\s*/i, "").trim();
+        for (let index: number = comments.length - 1; index >= 0; index -= 1) {
+            const comment: (typeof comments)[number] = comments[index];
+
+            if (
+                comment.kind === "Line" &&
+                comment.positionEnd?.lineNumber === declarationLine - 1 &&
+                comment.data?.startsWith("/// @type")
+            ) {
+                return comment.data.replace(/^\/\/\/\s*@type\s*/i, "").trim();
+            }
+        }
+
+        return undefined;
     }
 
     private async resolveDirectiveType(
@@ -773,15 +793,22 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         inspectionSettings: InspectionSettings,
         correlationId: number | undefined,
     ): Promise<Type.TPowerQueryType | undefined> {
-        const settings: InspectionSettings = {
-            ...inspectionSettings,
-            initialCorrelationId: correlationId,
-            isTypeDirectiveAllowed: false,
-            typeStrategy: TypeStrategy.Extended,
-        };
+        const settings: InspectionSettings = InspectionUtils.inspectionSettings(
+            {
+                ...inspectionSettings,
+                initialCorrelationId: correlationId,
+                isTypeDirectiveAllowed: false,
+            },
+            {
+                isWorkspaceCacheAllowed: inspectionSettings.isWorkspaceCacheAllowed,
+                library: inspectionSettings.library,
+                eachScopeById: inspectionSettings.eachScopeById,
+                typeStrategy: TypeStrategy.Extended,
+            },
+        );
 
         const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
-            settings,
+            normalizeInspectionSettingsForParser(settings),
             this.normalizeTypeDirectivePayload(payload),
         );
 
@@ -834,6 +861,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             "none",
             "null",
             "number",
+            "nullable",
             "record",
             "table",
             "text",
@@ -843,6 +871,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
     }
 
     private fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
+        if (type.extendedKind === undefined) {
+            return [];
+        }
+
         switch (type.extendedKind) {
             case Type.ExtendedTypeKind.AnyUnion: {
                 let fields: [string, Type.TPowerQueryType][] = [];
@@ -864,6 +896,17 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             case Type.ExtendedTypeKind.RecordType:
                 return [...type.fields.entries()];
 
+            case Type.ExtendedTypeKind.DefinedFunction:
+            case Type.ExtendedTypeKind.DefinedList:
+            case Type.ExtendedTypeKind.DefinedListType:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.ListType:
+            case Type.ExtendedTypeKind.LogicalLiteral:
+            case Type.ExtendedTypeKind.NumberLiteral:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.TableType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            case Type.ExtendedTypeKind.TextLiteral:
             default:
                 return [];
         }

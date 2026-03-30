@@ -50,6 +50,7 @@ import {
 import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
+import { normalizeInspectionSettingsForParser } from "../inspectionSettings";
 import { ValidationTraceConstant } from "../trace";
 
 // Implementation of Analysis.
@@ -995,7 +996,7 @@ export class AnalysisBase implements Analysis {
         };
 
         const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
-            updatedSettings,
+            normalizeInspectionSettingsForParser(updatedSettings),
             this.textDocument.getText(),
         );
 

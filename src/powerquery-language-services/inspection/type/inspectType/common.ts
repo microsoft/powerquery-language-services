@@ -9,7 +9,13 @@ import {
     Type,
     TypeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { Inspection, InspectionSettings, InspectionTraceConstant, TraceUtils } from "../../..";
+import {
+    Inspection,
+    InspectionSettings,
+    InspectionTraceConstant,
+    normalizeInspectionSettingsForParser,
+    TraceUtils,
+} from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { NodeIdMapUtils, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
@@ -343,7 +349,7 @@ async function tryResolveTypeDirectiveFromStandaloneText(
     };
 
     const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
-        settings,
+        normalizeInspectionSettingsForParser(settings),
         normalizeTypeDirectivePayload(payload),
     );
 

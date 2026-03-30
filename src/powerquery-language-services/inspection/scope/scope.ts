@@ -7,7 +7,7 @@ import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/par
 
 export interface TypeDirective {
     readonly kind: "Type";
-    readonly value: string;
+    readonly value?: string;
 }
 
 // Type for the async resolver function that resolves a scope item to its type.

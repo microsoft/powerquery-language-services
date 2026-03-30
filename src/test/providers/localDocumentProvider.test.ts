@@ -85,7 +85,11 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         );
 
         if (params.unexpectedLabels?.length) {
-            expect(abridgedAutocompleteItems.map(item => item.label)).not.to.include.members(params.unexpectedLabels);
+            expect(
+                abridgedAutocompleteItems.map(
+                    (item: ReturnType<typeof TestUtils.abridgedAutocompleteItem>) => item.label,
+                ),
+            ).not.to.include.members(params.unexpectedLabels);
         }
     }
 
@@ -310,6 +314,24 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
         });
 
         describe(`directive record fields`, () => {
+            it(`feature disabled`, async () => {
+                const actual: ReadonlyArray<AutocompleteItem> | undefined = await TestUtils.assertAutocompleteAnalysis({
+                    textWithPipe: `let
+    /// @type [ Foo = text, Bar = number ]
+    value = [
+        |
+    ]
+in
+    value`,
+                    analysisSettings: IsolatedAnalysisSettings,
+                });
+
+                expect((actual ?? []).map((item: AutocompleteItem) => item.label)).not.to.include.members([
+                    `Foo`,
+                    `Bar`,
+                ]);
+            });
+
             it(`let-variable record expression`, async () =>
                 await runDirectiveAutocompleteTest({
                     textWithPipe: `let
@@ -616,6 +638,16 @@ other = OAuthError.Publish[|];`,
         });
 
         describe(`directive hover`, () => {
+            it(`disabled`, async () =>
+                await assertHover({
+                    textWithPipe: `let
+    /// @type [ Foo = text, Bar = number ]
+    value = []
+in
+    value|`,
+                    expected: `[let-variable] value: []`,
+                }));
+
             it(`let-variable`, async () =>
                 await TestUtils.assertEqualHoverAnalysis({
                     analysisSettings: DirectiveHoverAnalysisSettings,
