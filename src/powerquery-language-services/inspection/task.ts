@@ -14,13 +14,13 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
+import { InspectionSettings, normalizeInspectionSettingsForParser } from "../inspectionSettings";
 import { ScopeTypeByKey, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
 import { Inspected } from "./commonTypes";
-import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
 import { tryCurrentInvokeExpression } from "./invokeExpression/currentInvokeExpression";
 
@@ -254,7 +254,10 @@ export async function tryInspect(
         initialCorrelationId: trace.id,
     };
 
-    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(updatedSettings, text);
+    const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
+        normalizeInspectionSettingsForParser(updatedSettings),
+        text,
+    );
 
     let parseState: PQP.Parser.ParseState;
     let parseError: PQP.Parser.ParseError.ParseError | undefined;

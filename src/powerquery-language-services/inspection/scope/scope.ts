@@ -5,6 +5,11 @@ import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
+export interface TypeDirective {
+    readonly kind: "Type";
+    readonly value?: string;
+}
+
 // Type for the async resolver function that resolves a scope item to its type.
 type ScopeItemTypeResolver = (scopeItem: TScopeItem) => Promise<Type.TPowerQueryType>;
 
@@ -146,9 +151,6 @@ export interface NodeScope {
     readonly scopeItemByKey: ReadonlyMap<string, TScopeItem>;
 }
 
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
 export type TScopeItem =
     | EachScopeItem
     | LetVariableScopeItem
@@ -180,6 +182,7 @@ export interface IKeyValuePairScopeItem<
 > extends IScopeItem {
     readonly kind: Kind;
     readonly key: Key;
+    readonly typeDirective: TypeDirective | undefined;
     readonly value: TXorNode | undefined;
 }
 

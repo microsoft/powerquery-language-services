@@ -16,6 +16,7 @@ import { TestUtils } from "..";
 describe(`Inspection - Scope - Identifier`, () => {
     const DefaultSettings: InspectionSettings = {
         ...PQP.DefaultSettings,
+        isTypeDirectiveAllowed: false,
         isWorkspaceCacheAllowed: false,
         eachScopeById: undefined,
         library: Library.NoOpLibrary,

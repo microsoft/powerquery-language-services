@@ -95,7 +95,7 @@ async function inspectInvokeExpression(
 
     let invokeExpressionArgs: InvokeExpressionArguments | undefined;
 
-    if (TypeUtils.isDefinedFunction(functionType)) {
+    if (TypeUtils.isFunctionSignature(functionType)) {
         const iterableArguments: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
             nodeIdMapCollection,
             invokeExpressionXorNode,
@@ -120,7 +120,7 @@ async function inspectInvokeExpression(
             numMinExpectedArguments,
             typeChecked: TypeUtils.typeCheckInvocation(
                 givenArgumentTypes,
-                functionType,
+                asDefinedFunction(functionType),
                 settings.traceManager,
                 trace.id,
             ),
@@ -145,6 +145,15 @@ async function inspectInvokeExpression(
     trace.exit();
 
     return result;
+}
+
+function asDefinedFunction(functionType: Type.FunctionSignature): Type.DefinedFunction {
+    return {
+        ...functionType,
+        kind: Type.TypeKind.Function,
+        extendedKind: Type.ExtendedTypeKind.DefinedFunction,
+        isNullable: false,
+    };
 }
 
 async function getIsNameInLocalScope(
@@ -191,7 +200,7 @@ async function getIsNameInLocalScope(
     }
 }
 
-function getNumExpectedArguments(functionType: Type.DefinedFunction): [number, number] {
+function getNumExpectedArguments(functionType: Type.FunctionSignature): [number, number] {
     const nonOptionalArguments: ReadonlyArray<Type.FunctionParameter> = functionType.parameters.filter(
         (parameter: Type.FunctionParameter) => !parameter.isOptional,
     );

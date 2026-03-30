@@ -1,15 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as PQP from "@microsoft/powerquery-parser";
 import {
     AncestryUtils,
     NodeIdMap,
+    NodeIdMapIterator,
     NodeIdMapUtils,
     TXorNode,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    Ast,
+    IdentifierExpressionUtils,
+    IdentifierUtils,
+    Type,
+    TypeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { DocumentUri, FoldingRange, Hover, Location, MarkupKind, SignatureHelp } from "vscode-languageserver-types";
+import {
+    CompletionItemKind,
+    DocumentUri,
+    FoldingRange,
+    Hover,
+    Location,
+    MarkupKind,
+    SignatureHelp,
+    TextEdit,
+} from "vscode-languageserver-types";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import * as InspectionUtils from "../../inspectionUtils";
@@ -24,11 +41,23 @@ import {
     SignatureProviderContext,
 } from "../commonTypes";
 import { Inspection, PositionUtils } from "../..";
+import { InspectionSettings, normalizeInspectionSettingsForParser, TypeStrategy } from "../../inspectionSettings";
+import { calculateJaroWinkler } from "../../jaroWinkler";
 import { createFoldingRanges } from "./foldingRanges";
 import { createPartialSemanticTokens } from "./partialSemanticToken";
+import { ExternalTypeUtils } from "../../externalType";
 import { ILibrary } from "../../library/library";
 import { ProviderTraceConstant } from "../../trace";
 import { ScopeUtils } from "../../inspection";
+
+const AllowedExtendedTypeKindsForRecordFieldSuggestions: ReadonlyArray<Type.ExtendedTypeKind> = [
+    Type.ExtendedTypeKind.AnyUnion,
+    Type.ExtendedTypeKind.DefinedRecord,
+    Type.ExtendedTypeKind.DefinedTable,
+    Type.ExtendedTypeKind.RecordType,
+];
+
+type TDeclarationScopeItem = Inspection.TKeyValuePairScopeItem;
 
 export class LocalDocumentProvider implements ILocalDocumentProvider {
     private readonly uri: DocumentUri;
@@ -55,9 +84,18 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
             context.cancellationToken?.throwIfCancelled();
 
+            const fieldAccessItems: ReadonlyArray<Inspection.AutocompleteItem> =
+                this.getAutocompleteItemsFromFieldAccess(context.autocomplete);
+
+            const currentRecordItems: ReadonlyArray<Inspection.AutocompleteItem> =
+                await this.getAutocompleteItemsFromCurrentRecord(context);
+
             const autocompleteItems: Inspection.AutocompleteItem[] = [
-                ...this.getAutocompleteItemsFromFieldAccess(context.autocomplete),
-            ].concat(await InspectionUtils.getAutocompleteItemsFromScope(context));
+                ...fieldAccessItems,
+                ...currentRecordItems,
+            ].concat(
+                currentRecordItems.length === 0 ? await InspectionUtils.getAutocompleteItemsFromScope(context) : [],
+            );
 
             trace.exit();
 
@@ -239,7 +277,7 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
             const identifierLiteral: string | undefined = context.functionName;
 
-            if (identifierLiteral === undefined || !TypeUtils.isDefinedFunction(context.functionType)) {
+            if (identifierLiteral === undefined || !TypeUtils.isFunctionSignature(context.functionType)) {
                 return undefined;
             }
 
@@ -370,17 +408,53 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             scopeItemText = InspectionUtils.getScopeItemKindText(Inspection.ScopeItemKind.LetVariable);
         }
 
-        const nameOfExpressionType: string = TypeUtils.nameOf(
-            triedExpressionType.value,
-            context.traceManager,
-            trace.id,
+        const scopeItem: Inspection.TScopeItem | undefined = ResultUtils.isOk(context.triedNodeScope)
+            ? context.triedNodeScope.value.scopeItemByKey.get(context.identifier.literal)
+            : undefined;
+
+        const scopedType: Type.TPowerQueryType | undefined = ResultUtils.isOk(context.triedScopeType)
+            ? await context.triedScopeType.value.resolveType(context.identifier.literal)
+            : undefined;
+
+        const sectionMember: TXorNode | undefined = AncestryUtils.nthChecked<Ast.SectionMember>(
+            context.activeNode.ancestry,
+            2,
+            Ast.NodeKind.SectionMember,
         );
+
+        const sectionMemberNode: Ast.SectionMember | undefined =
+            sectionMember?.node.kind === Ast.NodeKind.SectionMember
+                ? (sectionMember.node as Ast.SectionMember)
+                : undefined;
+
+        const currentNodeTypeDirective: string | undefined = sectionMemberNode?.precedingDirectives
+            ?.find((directive: { kind: string }) => directive.kind === "Type")
+            ?.value?.trim();
+
+        let nameOfExpressionType: string;
+
+        if (scopedType !== undefined) {
+            nameOfExpressionType = TypeUtils.nameOf(scopedType, context.traceManager, trace.id);
+        } else if (currentNodeTypeDirective !== undefined) {
+            nameOfExpressionType = this.directiveHoverTypeText(currentNodeTypeDirective);
+        } else {
+            nameOfExpressionType = TypeUtils.nameOf(triedExpressionType.value, context.traceManager, trace.id);
+        }
 
         const result: Hover = {
             contents: {
                 kind: MarkupKind.PlainText,
                 language: "powerquery",
-                value: `[${scopeItemText}] ${context.identifier.literal}: ${nameOfExpressionType}`,
+                value: this.createScopeItemHoverValue(
+                    scopeItemText,
+                    context.identifier.literal,
+                    nameOfExpressionType,
+                    this.hasTypeDirective(
+                        scopeItem,
+                        Boolean(sectionMemberNode?.precedingDirectives?.length),
+                        context.inspectionSettings.isTypeDirectiveAllowed,
+                    ),
+                ),
             },
             range: undefined,
         };
@@ -416,10 +490,52 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
             contents: {
                 kind: MarkupKind.PlainText,
                 language: "powerquery",
-                value: `[${scopeItemText}] ${identifierLiteral}: ${scopeItemTypeText}`,
+                value: this.createScopeItemHoverValue(
+                    scopeItemText,
+                    identifierLiteral,
+                    scopeItemTypeText,
+                    this.hasTypeDirective(scopeItem, false, context.inspectionSettings.isTypeDirectiveAllowed),
+                ),
             },
             range: undefined,
         };
+    }
+
+    private createScopeItemHoverValue(
+        scopeItemText: string,
+        identifierLiteral: string,
+        scopeItemTypeText: string,
+        hasTypeDirective: boolean,
+    ): string {
+        return `[${scopeItemText}] ${identifierLiteral}: ${scopeItemTypeText}${
+            hasTypeDirective ? " (via @type directive)" : ""
+        }`;
+    }
+
+    private hasTypeDirective(
+        scopeItem: Inspection.TScopeItem | undefined,
+        hasDirectiveOnCurrentNode: boolean = false,
+        isTypeDirectiveAllowed: boolean = false,
+    ): boolean {
+        if (!isTypeDirectiveAllowed) {
+            return false;
+        }
+
+        if (
+            !ScopeUtils.isLetVariable(scopeItem) &&
+            !ScopeUtils.isRecordField(scopeItem) &&
+            !ScopeUtils.isSectionMember(scopeItem)
+        ) {
+            return hasDirectiveOnCurrentNode;
+        }
+
+        return hasDirectiveOnCurrentNode || Boolean(scopeItem.typeDirective?.value?.trim());
+    }
+
+    private directiveHoverTypeText(payload: string): string {
+        const trimmed: string = payload.trim();
+
+        return /^type\b/i.test(trimmed) ? trimmed : `type ${trimmed}`;
     }
 
     private getAutocompleteItemsFromFieldAccess(
@@ -430,5 +546,586 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         return ResultUtils.isOk(triedFieldAccess) && triedFieldAccess.value !== undefined
             ? triedFieldAccess.value.autocompleteItems
             : [];
+    }
+
+    private async getAutocompleteItemsFromCurrentRecord(
+        context: AutocompleteItemProviderContext,
+    ): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+        if (ResultUtils.isError(context.triedNodeScope)) {
+            return [];
+        }
+
+        const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(context.triedScopeType)
+            ? context.triedScopeType.value
+            : Inspection.ScopeTypeByKey.empty();
+
+        const currentDeclarationType: Type.TPowerQueryType | undefined = await this.findCurrentRecordType(
+            context,
+            scopeTypeByKey,
+        );
+
+        if (currentDeclarationType === undefined) {
+            return [];
+        }
+
+        const existingFieldLabels: ReadonlySet<string> = this.findCurrentRecordFieldLabels(context);
+
+        return this.fieldEntriesFromFieldType(currentDeclarationType)
+            .filter(([label]: [string, Type.TPowerQueryType]) => !existingFieldLabels.has(label))
+            .map(([label, powerQueryType]: [string, Type.TPowerQueryType]) =>
+                this.createRecordFieldAutocompleteItem(label, powerQueryType, context),
+            );
+    }
+
+    private async findCurrentRecordType(
+        context: AutocompleteItemProviderContext,
+        scopeTypeByKey: Inspection.ScopeTypeByKey,
+    ): Promise<Type.TPowerQueryType | undefined> {
+        const ascribedTypeText: string | undefined = this.findCurrentRecordAscribedTypeText(context);
+
+        if (ascribedTypeText !== undefined) {
+            const ascribedType: Type.TPowerQueryType | undefined = await this.resolveDirectiveType(
+                ascribedTypeText,
+                context.inspectionSettings,
+                scopeTypeByKey,
+                context.initialCorrelationId,
+            );
+
+            if (ascribedType !== undefined && this.fieldEntriesFromFieldType(ascribedType).length > 0) {
+                return ascribedType;
+            }
+        }
+
+        const declarationNode: TXorNode | undefined = this.findCurrentRecordDeclarationNode(context);
+
+        const declarationScopeItem: TDeclarationScopeItem | undefined =
+            this.findCurrentRecordDeclarationScopeItem(context);
+
+        if (!context.inspectionSettings.isTypeDirectiveAllowed) {
+            return undefined;
+        }
+
+        const typeDirectiveValue: string | undefined = this.findCurrentRecordTypeDirective(
+            context,
+            declarationNode,
+            declarationScopeItem,
+        );
+
+        if (typeDirectiveValue === undefined) {
+            const ancestorType: Type.TPowerQueryType | undefined = await this.inspectCurrentRecordAncestorType(context);
+
+            return ancestorType !== undefined && this.fieldEntriesFromFieldType(ancestorType).length > 0
+                ? ancestorType
+                : undefined;
+        }
+
+        return await this.resolveDirectiveType(
+            typeDirectiveValue,
+            context.inspectionSettings,
+            scopeTypeByKey,
+            context.initialCorrelationId,
+        );
+    }
+
+    private findCurrentRecordTypeDirective(
+        context: AutocompleteItemProviderContext,
+        declarationNode: TXorNode | undefined,
+        declarationScopeItem: TDeclarationScopeItem | undefined,
+    ): string | undefined {
+        const declarationTypeDirective: string | undefined = this.findTypeDirectiveOnNode(declarationNode?.node);
+
+        if (declarationTypeDirective !== undefined) {
+            return declarationTypeDirective;
+        }
+
+        const commentTypeDirective: string | undefined = this.findTypeDirectiveInLeadingComments(
+            context,
+            declarationNode,
+        );
+
+        if (commentTypeDirective !== undefined) {
+            return commentTypeDirective;
+        }
+
+        return declarationScopeItem?.typeDirective?.value;
+    }
+
+    private async inspectCurrentRecordAncestorType(
+        context: AutocompleteItemProviderContext,
+    ): Promise<Type.TPowerQueryType | undefined> {
+        if (!Inspection.ActiveNodeUtils.isPositionInBounds(context.activeNode)) {
+            return undefined;
+        }
+
+        const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
+
+        const recordNodeIndex: number = ancestry.findIndex(
+            (xorNode: TXorNode) =>
+                xorNode.node.kind === Ast.NodeKind.RecordExpression || xorNode.node.kind === Ast.NodeKind.RecordLiteral,
+        );
+
+        if (recordNodeIndex < 0) {
+            return undefined;
+        }
+
+        const declarationBoundaryIndex: number = ancestry
+            .slice(recordNodeIndex + 1)
+            .findIndex(
+                (xorNode: TXorNode) =>
+                    xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral ||
+                    xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifierPairedExpression ||
+                    xorNode.node.kind === Ast.NodeKind.IdentifierPairedExpression ||
+                    xorNode.node.kind === Ast.NodeKind.SectionMember,
+            );
+
+        const candidateAncestors: ReadonlyArray<TXorNode> = ancestry.slice(
+            recordNodeIndex + 1,
+            declarationBoundaryIndex < 0 ? undefined : recordNodeIndex + 1 + declarationBoundaryIndex,
+        );
+
+        const triedTypes: ReadonlyArray<Inspection.TriedType> = await Promise.all(
+            candidateAncestors.map((xorNode: TXorNode) =>
+                Inspection.tryType(
+                    {
+                        ...context.inspectionSettings,
+                        initialCorrelationId: context.initialCorrelationId,
+                    },
+                    context.parseState.contextState.nodeIdMapCollection,
+                    xorNode.node.id,
+                    this.typeCache,
+                ),
+            ),
+        );
+
+        for (const triedType of triedTypes) {
+            if (ResultUtils.isOk(triedType) && this.fieldEntriesFromFieldType(triedType.value).length > 0) {
+                return triedType.value;
+            }
+        }
+
+        return undefined;
+    }
+
+    private findCurrentRecordAscribedTypeText(context: AutocompleteItemProviderContext): string | undefined {
+        const recordNode: TXorNode | undefined = this.findCurrentRecordNode(context);
+
+        if (recordNode === undefined) {
+            return undefined;
+        }
+
+        const textAfterRecord: string | undefined = this.findTextAfterCurrentRecord(context, recordNode);
+
+        if (textAfterRecord === undefined) {
+            return undefined;
+        }
+
+        const ascribedTypeMatch: RegExpMatchArray | null = textAfterRecord.match(/^\s+as\s+(type\s+\[.*)$/s);
+
+        if (ascribedTypeMatch === null) {
+            return undefined;
+        }
+
+        const matchedTypeText: string | undefined = ascribedTypeMatch[1];
+
+        if (matchedTypeText === undefined) {
+            return undefined;
+        }
+
+        return this.readBracketedTypeText(matchedTypeText);
+    }
+
+    private findTextAfterCurrentRecord(
+        context: AutocompleteItemProviderContext,
+        recordNode: TXorNode,
+    ): string | undefined {
+        const recordNodeWithTokenIndex: {
+            tokenIndexStart?: number;
+            tokenRange?: { tokenIndexStart: number };
+        } = recordNode.node as {
+            tokenIndexStart?: number;
+            tokenRange?: { tokenIndexStart: number };
+        };
+
+        const tokenIndexStart: number | undefined =
+            recordNodeWithTokenIndex.tokenIndexStart ?? recordNodeWithTokenIndex.tokenRange?.tokenIndexStart;
+
+        if (tokenIndexStart === undefined) {
+            return undefined;
+        }
+
+        const tokens: ReadonlyArray<PQP.Language.Token.Token> = context.parseState.lexerSnapshot.tokens;
+        let bracketDepth: number = 0;
+
+        for (let index: number = tokenIndexStart; index < tokens.length; index += 1) {
+            const token: PQP.Language.Token.Token = tokens[index];
+
+            if (token.data === "[") {
+                bracketDepth += 1;
+            } else if (token.data === "]") {
+                bracketDepth -= 1;
+
+                if (bracketDepth === 0) {
+                    return context.parseState.lexerSnapshot.text.slice(token.positionEnd.codeUnit);
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    private readBracketedTypeText(text: string): string | undefined {
+        const trimmedText: string = text.trimStart();
+
+        if (!trimmedText.startsWith("type [")) {
+            return undefined;
+        }
+
+        let bracketDepth: number = 0;
+
+        for (let index: number = 0; index < trimmedText.length; index += 1) {
+            const currentCharacter: string = trimmedText[index];
+
+            if (currentCharacter === "[") {
+                bracketDepth += 1;
+            } else if (currentCharacter === "]") {
+                bracketDepth -= 1;
+
+                if (bracketDepth === 0) {
+                    return trimmedText.slice(0, index + 1);
+                }
+            }
+        }
+
+        return undefined;
+    }
+
+    private findCurrentRecordDeclarationNodes(context: AutocompleteItemProviderContext): ReadonlyArray<TXorNode> {
+        if (
+            !Inspection.ActiveNodeUtils.isPositionInBounds(context.activeNode) ||
+            ResultUtils.isError(context.triedNodeScope)
+        ) {
+            return [];
+        }
+
+        const ancestry: ReadonlyArray<TXorNode> = context.activeNode.ancestry;
+
+        const recordNodeIndex: number = ancestry.findIndex(
+            (xorNode: TXorNode) =>
+                xorNode.node.kind === Ast.NodeKind.RecordExpression || xorNode.node.kind === Ast.NodeKind.RecordLiteral,
+        );
+
+        if (recordNodeIndex < 0) {
+            return [];
+        }
+
+        const declarationNodes: ReadonlyArray<TXorNode> = ancestry
+            .slice(recordNodeIndex + 1)
+            .filter(
+                (xorNode: TXorNode) =>
+                    xorNode.node.kind === Ast.NodeKind.IdentifierPairedExpression ||
+                    xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifierPairedExpression ||
+                    xorNode.node.kind === Ast.NodeKind.GeneralizedIdentifierPairedAnyLiteral ||
+                    xorNode.node.kind === Ast.NodeKind.SectionMember,
+            );
+
+        return declarationNodes;
+    }
+
+    private findCurrentRecordDeclarationNode(context: AutocompleteItemProviderContext): TXorNode | undefined {
+        const declarationNodes: ReadonlyArray<TXorNode> = this.findCurrentRecordDeclarationNodes(context);
+
+        return (
+            declarationNodes.find((xorNode: TXorNode) => this.findTypeDirectiveOnNode(xorNode.node) !== undefined) ??
+            declarationNodes[declarationNodes.length - 1]
+        );
+    }
+
+    private findCurrentRecordDeclarationScopeItem(
+        context: AutocompleteItemProviderContext,
+    ): TDeclarationScopeItem | undefined {
+        if (
+            !Inspection.ActiveNodeUtils.isPositionInBounds(context.activeNode) ||
+            ResultUtils.isError(context.triedNodeScope)
+        ) {
+            return undefined;
+        }
+
+        const nodeScope: Inspection.NodeScope = context.triedNodeScope.value;
+
+        const ancestryIndexByNodeId: Map<number, number> = new Map(
+            context.activeNode.ancestry.map((xorNode: TXorNode, index: number) => [xorNode.node.id, index]),
+        );
+
+        let bestMatch: { index: number; scopeItem: TDeclarationScopeItem } | undefined;
+
+        for (const scopeItem of nodeScope.scopeItemByKey.values()) {
+            if (
+                (ScopeUtils.isLetVariable(scopeItem) ||
+                    ScopeUtils.isRecordField(scopeItem) ||
+                    ScopeUtils.isSectionMember(scopeItem)) &&
+                scopeItem.value !== undefined
+            ) {
+                const ancestryIndex: number | undefined = ancestryIndexByNodeId.get(scopeItem.value.node.id);
+
+                if (ancestryIndex === undefined) {
+                    continue;
+                }
+
+                if (scopeItem.typeDirective?.value !== undefined) {
+                    return scopeItem;
+                }
+
+                if (bestMatch === undefined || ancestryIndex < bestMatch.index) {
+                    bestMatch = { index: ancestryIndex, scopeItem };
+                }
+            }
+        }
+
+        return bestMatch?.scopeItem;
+    }
+
+    private findCurrentRecordFieldLabels(context: AutocompleteItemProviderContext): ReadonlySet<string> {
+        const recordNode: TXorNode | undefined = this.findCurrentRecordNode(context);
+
+        if (recordNode === undefined) {
+            return new Set();
+        }
+
+        return new Set(
+            NodeIdMapIterator.iterRecord(context.parseState.contextState.nodeIdMapCollection, recordNode).map(
+                (keyValuePair: NodeIdMapIterator.RecordKeyValuePair) => keyValuePair.normalizedKeyLiteral,
+            ),
+        );
+    }
+
+    private findCurrentRecordNode(context: AutocompleteItemProviderContext): TXorNode | undefined {
+        if (!Inspection.ActiveNodeUtils.isPositionInBounds(context.activeNode)) {
+            return undefined;
+        }
+
+        return context.activeNode.ancestry.find(
+            (xorNode: TXorNode) =>
+                xorNode.node.kind === Ast.NodeKind.RecordExpression || xorNode.node.kind === Ast.NodeKind.RecordLiteral,
+        );
+    }
+
+    private findTypeDirectiveOnNode(node: unknown): string | undefined {
+        return (
+            node as { precedingDirectives?: ReadonlyArray<{ kind: string; value?: string }> } | undefined
+        )?.precedingDirectives
+            ?.find((directive: { kind: string }) => directive.kind === "Type")
+            ?.value?.trim();
+    }
+
+    private findTypeDirectiveInLeadingComments(
+        context: AutocompleteItemProviderContext,
+        declarationNode: TXorNode | undefined,
+    ): string | undefined {
+        const declarationLine: number | undefined = (
+            declarationNode?.node as { tokenStart?: { positionStart?: { lineNumber?: number } } } | undefined
+        )?.tokenStart?.positionStart?.lineNumber;
+
+        if (declarationLine === undefined) {
+            return undefined;
+        }
+
+        const comments: ReadonlyArray<{
+            kind?: string;
+            data?: string;
+            positionEnd?: { lineNumber?: number };
+        }> = context.parseState.lexerSnapshot.comments;
+
+        for (let index: number = comments.length - 1; index >= 0; index -= 1) {
+            const comment: (typeof comments)[number] = comments[index];
+
+            if (
+                comment.kind === "Line" &&
+                comment.positionEnd?.lineNumber === declarationLine - 1 &&
+                /^\/\/\/?\s*@type\b/i.test(comment.data ?? "")
+            ) {
+                return comment.data?.replace(/^\/\/\/?\s*@type\s*/i, "").trim();
+            }
+        }
+
+        return undefined;
+    }
+
+    private async resolveDirectiveType(
+        payload: string,
+        inspectionSettings: InspectionSettings,
+        scopeTypeByKey: Inspection.ScopeTypeByKey,
+        correlationId: number | undefined,
+    ): Promise<Type.TPowerQueryType | undefined> {
+        const trimmedPayload: string = payload.trim();
+
+        if (trimmedPayload.length === 0) {
+            return undefined;
+        }
+
+        const scopeType: Type.TPowerQueryType | undefined = await scopeTypeByKey.resolveType(trimmedPayload);
+
+        if (scopeType !== undefined && this.fieldEntriesFromFieldType(scopeType).length > 0) {
+            return scopeType;
+        }
+
+        const externalType: Type.TPowerQueryType | undefined = this.tryResolveDirectiveTypeFromLibrary(trimmedPayload);
+
+        if (externalType !== undefined && this.fieldEntriesFromFieldType(externalType).length > 0) {
+            return externalType;
+        }
+
+        return await this.tryResolveDirectiveTypeFromStandaloneText(trimmedPayload, inspectionSettings, correlationId);
+    }
+
+    private tryResolveDirectiveTypeFromLibrary(payload: string): Type.TPowerQueryType | undefined {
+        try {
+            return this.library.externalTypeResolver(
+                ExternalTypeUtils.valueTypeRequest(
+                    IdentifierExpressionUtils.assertNormalizedIdentifierExpression(payload),
+                ),
+            );
+        } catch {
+            return undefined;
+        }
+    }
+
+    private async tryResolveDirectiveTypeFromStandaloneText(
+        payload: string,
+        inspectionSettings: InspectionSettings,
+        correlationId: number | undefined,
+    ): Promise<Type.TPowerQueryType | undefined> {
+        const settings: InspectionSettings = InspectionUtils.inspectionSettings(
+            {
+                ...inspectionSettings,
+                initialCorrelationId: correlationId,
+                isTypeDirectiveAllowed: false,
+            },
+            {
+                isWorkspaceCacheAllowed: inspectionSettings.isWorkspaceCacheAllowed,
+                library: inspectionSettings.library,
+                eachScopeById: inspectionSettings.eachScopeById,
+                typeStrategy: TypeStrategy.Extended,
+            },
+        );
+
+        const triedLexParse: PQP.Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
+            normalizeInspectionSettingsForParser(settings),
+            this.normalizeTypeDirectivePayload(payload),
+        );
+
+        if (
+            PQP.TaskUtils.isLexStageError(triedLexParse) ||
+            PQP.TaskUtils.isParseStageError(triedLexParse) ||
+            PQP.TaskUtils.isParseStageCommonError(triedLexParse)
+        ) {
+            return undefined;
+        }
+
+        const triedType: Inspection.TriedType = await Inspection.tryType(
+            settings,
+            triedLexParse.nodeIdMapCollection,
+            triedLexParse.ast.id,
+        );
+
+        return ResultUtils.isOk(triedType) ? triedType.value : undefined;
+    }
+
+    private normalizeTypeDirectivePayload(payload: string): string {
+        const trimmed: string = payload.trim();
+
+        if (trimmed.length === 0 || /^type\b/i.test(trimmed) || !this.shouldPrefixTypeKeyword(trimmed)) {
+            return trimmed;
+        }
+
+        return `type ${trimmed}`;
+    }
+
+    private shouldPrefixTypeKeyword(payload: string): boolean {
+        if (["[", "{"].includes(payload[0])) {
+            return true;
+        }
+
+        const leadingToken: string = payload.split(/\s|\(/, 1)[0].toLowerCase();
+
+        return [
+            "action",
+            "any",
+            "anynonnull",
+            "binary",
+            "date",
+            "datetime",
+            "datetimezone",
+            "duration",
+            "function",
+            "list",
+            "logical",
+            "none",
+            "null",
+            "number",
+            "nullable",
+            "record",
+            "table",
+            "text",
+            "time",
+            "type",
+        ].includes(leadingToken);
+    }
+
+    private fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
+        if (type.extendedKind === undefined) {
+            return [];
+        }
+
+        switch (type.extendedKind) {
+            case Type.ExtendedTypeKind.AnyUnion: {
+                let fields: [string, Type.TPowerQueryType][] = [];
+
+                for (const unionedType of type.unionedTypePairs) {
+                    if (
+                        unionedType.extendedKind !== undefined &&
+                        AllowedExtendedTypeKindsForRecordFieldSuggestions.includes(unionedType.extendedKind)
+                    ) {
+                        fields = fields.concat(this.fieldEntriesFromFieldType(unionedType));
+                    }
+                }
+
+                return fields;
+            }
+
+            case Type.ExtendedTypeKind.DefinedRecord:
+            case Type.ExtendedTypeKind.DefinedTable:
+            case Type.ExtendedTypeKind.RecordType:
+                return [...type.fields.entries()];
+
+            case Type.ExtendedTypeKind.DefinedFunction:
+            case Type.ExtendedTypeKind.DefinedList:
+            case Type.ExtendedTypeKind.DefinedListType:
+            case Type.ExtendedTypeKind.FunctionType:
+            case Type.ExtendedTypeKind.ListType:
+            case Type.ExtendedTypeKind.LogicalLiteral:
+            case Type.ExtendedTypeKind.NumberLiteral:
+            case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            case Type.ExtendedTypeKind.TableType:
+            case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            case Type.ExtendedTypeKind.TextLiteral:
+            default:
+                return [];
+        }
+    }
+
+    private createRecordFieldAutocompleteItem(
+        label: string,
+        powerQueryType: Type.TPowerQueryType,
+        context: AutocompleteItemProviderContext,
+    ): Inspection.AutocompleteItem {
+        const jaroWinklerScore: number = context.text ? calculateJaroWinkler(label, context.text) : 1;
+
+        return {
+            jaroWinklerScore,
+            kind: CompletionItemKind.Field,
+            label: IdentifierUtils.assertNormalizedIdentifier(label, { allowGeneralizedIdentifier: true }),
+            powerQueryType,
+            textEdit: context.range ? TextEdit.replace(context.range, label) : undefined,
+        };
     }
 }

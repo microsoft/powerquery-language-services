@@ -21,6 +21,7 @@ export function inspectionSettings(
 ): InspectionSettings {
     return {
         ...settings,
+        isTypeDirectiveAllowed: settings.isTypeDirectiveAllowed ?? false,
         isWorkspaceCacheAllowed: overrides?.isWorkspaceCacheAllowed ?? true,
         library: overrides?.library ?? Library.NoOpLibrary,
         typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,

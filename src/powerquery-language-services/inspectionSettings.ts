@@ -13,7 +13,8 @@ export enum TypeStrategy {
     Primitive = "Primitive",
 }
 
-export interface InspectionSettings extends PQP.Settings {
+export type InspectionSettings = Omit<PQP.Settings, "isTypeDirectiveAllowed"> & {
+    readonly isTypeDirectiveAllowed?: boolean;
     // Allows the caching of scope and Power Query type datastructures built during an inspection.
     readonly isWorkspaceCacheAllowed: boolean;
     readonly library: Library.ILibrary;
@@ -33,4 +34,11 @@ export interface InspectionSettings extends PQP.Settings {
     // While useful for in-depth analysis and/or Intellisense operations they can be costly in terms of time.
     // Changing the strategy determines how types are evaluated during inspections.
     readonly typeStrategy: TypeStrategy;
+};
+
+export function normalizeInspectionSettingsForParser(settings: InspectionSettings): PQP.Settings {
+    return {
+        ...settings,
+        isTypeDirectiveAllowed: settings.isTypeDirectiveAllowed ?? false,
+    };
 }
