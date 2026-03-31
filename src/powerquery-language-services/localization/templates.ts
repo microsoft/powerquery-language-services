@@ -90,7 +90,7 @@ export {
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [PQP.Locale.bg_BG.toLowerCase(), bg_BG],
-    [PQP.Locale.ca_EZ.toLowerCase(), ca_ES],
+    [PQP.Locale.ca_ES.toLowerCase(), ca_ES],
     [PQP.Locale.cs_CZ.toLowerCase(), cs_CZ],
     [PQP.Locale.da_DK.toLowerCase(), da_DK],
     [PQP.Locale.de_DE.toLowerCase(), de_DE],
