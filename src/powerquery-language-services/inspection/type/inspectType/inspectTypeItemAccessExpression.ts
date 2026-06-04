@@ -10,6 +10,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { fastAnyUnion } from "../typeIntern";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
@@ -109,7 +110,7 @@ function getElementType(
                     return Type.NoneInstance;
                 }
 
-                return TypeUtils.anyUnion(collectionType.elements, state.traceManager, correlationId);
+                return fastAnyUnion(collectionType.elements, state.traceManager, correlationId);
             }
 
             return Type.AnyInstance;
@@ -139,7 +140,7 @@ function getElementTypeFromAnyUnion(
         elementTypes.push(elementType);
     }
 
-    return TypeUtils.anyUnion(elementTypes, state.traceManager, correlationId);
+    return fastAnyUnion(elementTypes, state.traceManager, correlationId);
 }
 
 function tryExtractNumericLiteralIndex(indexXorNode: TXorNode | undefined): number | undefined {

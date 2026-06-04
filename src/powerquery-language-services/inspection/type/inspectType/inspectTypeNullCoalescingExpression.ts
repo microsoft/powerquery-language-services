@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { fastAnyUnion } from "../typeIntern";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
@@ -47,7 +48,7 @@ export async function inspectTypeNullCoalescingExpression(
             result = leftType;
         } else {
             const nonNullableLeft: Type.TPowerQueryType = { ...leftType, isNullable: false };
-            result = TypeUtils.anyUnion([nonNullableLeft, rightType], state.traceManager, trace.id);
+            result = fastAnyUnion([nonNullableLeft, rightType], state.traceManager, trace.id);
         }
     }
 

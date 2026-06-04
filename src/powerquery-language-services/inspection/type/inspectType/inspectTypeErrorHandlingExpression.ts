@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapUtils,
     TXorNode,
@@ -11,6 +11,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { fastAnyUnion } from "../typeIntern";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
@@ -70,7 +71,7 @@ export async function inspectTypeErrorHandlingExpression(
         throw new PQP.CommonError.InvariantError(`should never be reached`);
     }
 
-    const result: Type.TPowerQueryType = TypeUtils.anyUnion(
+    const result: Type.TPowerQueryType = fastAnyUnion(
         [await inspectTypeFromChildAttributeIndex(state, xorNode, 1, trace.id), errorHandlerResult],
         state.traceManager,
         trace.id,

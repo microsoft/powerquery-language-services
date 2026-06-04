@@ -7,6 +7,7 @@ import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import { fastAnyUnion } from "../typeIntern";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
@@ -86,7 +87,7 @@ export async function inspectTypeTBinOpExpression(
                 });
             }
 
-            result = TypeUtils.anyUnion(unionedTypePairs, state.traceManager, trace.id);
+            result = fastAnyUnion(unionedTypePairs, state.traceManager, trace.id);
         }
     }
     // '1 + 1'

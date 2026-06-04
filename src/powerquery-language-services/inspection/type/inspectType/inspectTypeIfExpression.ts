@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
+import { fastAnyUnion } from "../typeIntern";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 
@@ -69,7 +70,7 @@ async function createAnyUnion(
     const trueExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
     const falseExprType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
 
-    const result: Type.TPowerQueryType = TypeUtils.anyUnion(
+    const result: Type.TPowerQueryType = fastAnyUnion(
         [trueExprType, falseExprType],
         state.traceManager,
         trace.id,
