@@ -120,15 +120,19 @@ async function externalInvokeRequest(
         return undefined;
     }
 
-    const types: Type.TPowerQueryType[] = [];
+    const types: Type.TPowerQueryType[] = await Promise.all(
+        [...NodeIdMapIterator.iterInvokeExpression(
+            state.nodeIdMapCollection,
+            XorNodeUtils.assertAsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression),
+        )].map((argument: TXorNode) => {
+            const branchState: InspectTypeState = {
+                ...state,
+                computingNodeIds: new Set(state.computingNodeIds),
+            };
 
-    for (const argument of NodeIdMapIterator.iterInvokeExpression(
-        state.nodeIdMapCollection,
-        XorNodeUtils.assertAsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression),
-    )) {
-        // eslint-disable-next-line no-await-in-loop
-        types.push(await inspectXor(state, argument, trace.id));
-    }
+            return inspectXor(branchState, argument, trace.id);
+        }),
+    );
 
     const result: ExternalType.ExternalInvocationTypeRequest = ExternalTypeUtils.invocationTypeRequest(
         endOfPath.identifierLiteral,

@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { InspectionSettings } from "../../../../inspectionSettings";
 import { ScopeById } from "../../../scope";
@@ -11,7 +12,9 @@ export interface InspectTypeState extends InspectionSettings {
     readonly typeById: TypeById;
     readonly nodeIdMapCollection: NodeIdMap.Collection;
     readonly scopeById: ScopeById;
-    // Tracks node IDs currently being computed to break infinite cycles
-    // in recursive type analysis (e.g. `let f = (x) => @f(x) in @f(1)`).
+    // Tracks which nodes are being resolved in the current execution path.
+    // Used to break true recursion (e.g., `let x = x`).
     readonly computingNodeIds: Set<number>;
+    // Stores in-flight promises so parallel branches can await an already-started resolution.
+    readonly typePromiseById: Map<number, Promise<Type.TPowerQueryType>>;
 }

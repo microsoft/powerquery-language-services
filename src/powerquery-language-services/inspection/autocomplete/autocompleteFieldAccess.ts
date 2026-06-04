@@ -82,11 +82,11 @@ export async function tryAutocompleteFieldAccess(
     return result;
 }
 
-const AllowedExtendedTypeKindsForFieldEntries: ReadonlyArray<Type.ExtendedTypeKind> = [
+const AllowedExtendedTypeKindsForFieldEntries: ReadonlySet<Type.ExtendedTypeKind> = new Set([
     Type.ExtendedTypeKind.AnyUnion,
     Type.ExtendedTypeKind.DefinedRecord,
     Type.ExtendedTypeKind.DefinedTable,
-];
+]);
 
 async function autocompleteFieldAccess(
     settings: InspectionSettings,
@@ -183,11 +183,12 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
-            let fields: [string, Type.TPowerQueryType][] = [];
+            const fields: [string, Type.TPowerQueryType][] = [];
 
             for (const field of type.unionedTypePairs) {
-                if (field.extendedKind && AllowedExtendedTypeKindsForFieldEntries.includes(field.extendedKind)) {
-                    fields = fields.concat(fieldEntriesFromFieldType(field));
+                if (field.extendedKind && AllowedExtendedTypeKindsForFieldEntries.has(field.extendedKind)) {
+                    const childFields: ReadonlyArray<[string, Type.TPowerQueryType]> = fieldEntriesFromFieldType(field);
+                    fields.push(...childFields);
                 }
             }
 

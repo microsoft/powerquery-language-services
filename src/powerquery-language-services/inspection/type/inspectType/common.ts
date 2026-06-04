@@ -138,20 +138,37 @@ export async function getOrCreateScopeItemType(
         return type;
     }
 
-    // Break infinite cycles for recursive definitions (e.g. `let f = (x) => @f(x) in @f(1)`).
-    // If we're already computing this node's type, return Any to stop the recursion.
+    // True recursion (same execution path) — break the cycle.
     if (state.computingNodeIds.has(nodeId)) {
-        trace.exit({ cycleBroken: true });
+        trace.exit({ recursive: true });
 
         return Type.AnyInstance;
     }
 
-    state.computingNodeIds.add(nodeId);
-    const scopeType: Type.TPowerQueryType = await inspectScopeItem(state, scopeItem, trace.id);
-    state.computingNodeIds.delete(nodeId);
-    trace.exit();
+    // Another parallel branch is already computing this node — await its result.
+    const inFlight: Promise<Type.TPowerQueryType> | undefined = state.typePromiseById.get(nodeId);
 
-    return scopeType;
+    if (inFlight !== undefined) {
+        trace.exit({ alreadyComputing: true });
+
+        return inFlight;
+    }
+
+    // Mark as computing and start resolution.
+    state.computingNodeIds.add(nodeId);
+
+    const promise: Promise<Type.TPowerQueryType> = inspectScopeItem(state, scopeItem, trace.id);
+    state.typePromiseById.set(nodeId, promise);
+
+    try {
+        const scopeType: Type.TPowerQueryType = await promise;
+        trace.exit();
+
+        return scopeType;
+    } finally {
+        state.computingNodeIds.delete(nodeId);
+        state.typePromiseById.delete(nodeId);
+    }
 }
 
 export async function inspectScopeItem(

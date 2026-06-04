@@ -3,6 +3,7 @@
 
 import { NodeIdMap } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { InspectionSettings } from "../../../../inspectionSettings";
 import { InspectTypeState } from "./inspectTypeState";
@@ -34,7 +35,6 @@ export function fromInspectionSettings(
 ): InspectTypeState {
     return {
         cancellationToken: inspectionSettings.cancellationToken,
-        computingNodeIds: new Set<number>(),
         eachScopeById: inspectionSettings.eachScopeById,
         initialCorrelationId: correlationId,
         isTypeDirectiveAllowed: inspectionSettings.isTypeDirectiveAllowed,
@@ -47,6 +47,8 @@ export function fromInspectionSettings(
         scopeById: typeCache.scopeById,
         traceManager: inspectionSettings.traceManager,
         typeById: typeCache.typeById,
+        computingNodeIds: new Set<number>(),
+        typePromiseById: new Map<number, Promise<Type.TPowerQueryType>>(),
         typeStrategy: inspectionSettings.typeStrategy,
         newParseState: inspectionSettings.newParseState,
         parserEntryPoint: inspectionSettings.parserEntryPoint,

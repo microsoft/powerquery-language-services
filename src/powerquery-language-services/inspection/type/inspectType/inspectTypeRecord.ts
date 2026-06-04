@@ -29,22 +29,30 @@ export async function inspectTypeRecord(
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
-            const fields: Map<string, Type.TPowerQueryType> = new Map();
+            const keyValuePairs: ReadonlyArray<NodeIdMapIterator.RecordKeyValuePair> = [
+                ...NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode),
+            ];
 
-            for (const keyValuePair of NodeIdMapIterator.iterRecord(state.nodeIdMapCollection, xorNode)) {
-                const valueType: Type.TPowerQueryType = keyValuePair.value
-                    ? // eslint-disable-next-line no-await-in-loop
-                      await inspectXor(state, keyValuePair.value, trace.id)
-                    : Type.UnknownInstance;
+            const resolvedPairs: ReadonlyArray<readonly [string, Type.TPowerQueryType]> = await Promise.all(
+                keyValuePairs.map(async (keyValuePair) => {
+                    const branchState: InspectTypeState = {
+                        ...state,
+                        computingNodeIds: new Set(state.computingNodeIds),
+                    };
 
-                fields.set(keyValuePair.normalizedKeyLiteral, valueType);
-            }
+                    const valueType: Type.TPowerQueryType = keyValuePair.value
+                        ? await inspectXor(branchState, keyValuePair.value, trace.id)
+                        : Type.UnknownInstance;
+
+                    return [keyValuePair.normalizedKeyLiteral, valueType] as const;
+                }),
+            );
 
             result = {
                 kind: Type.TypeKind.Record,
                 extendedKind: Type.ExtendedTypeKind.DefinedRecord,
                 isNullable: false,
-                fields,
+                fields: new Map(resolvedPairs),
                 isOpen: false,
             };
 
