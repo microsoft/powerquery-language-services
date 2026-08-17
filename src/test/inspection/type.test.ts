@@ -231,6 +231,63 @@ describe(`Inspection - Type`, () => {
                 }));
         });
 
+        describe(`#table`, () => {
+            it(`recognizes the intrinsic without library metadata`, async () =>
+                await assertEqualRootType({
+                    text: `#table`,
+                    expected: Type.FunctionInstance,
+                }));
+
+            it(`infers columns from a literal list`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {}) in Source`,
+                    expected: TypeUtils.definedTable(
+                        false,
+                        new PQP.OrderedMap<string, Type.TPowerQueryType>([
+                            [`Name`, Type.AnyInstance],
+                            [`Score`, Type.AnyInstance],
+                        ]),
+                        false,
+                    ),
+                }));
+
+            it(`preserves an explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Name = text, Score = number], {})`,
+                    expected: TypeUtils.definedTable(
+                        false,
+                        new PQP.OrderedMap<string, Type.TPowerQueryType>([
+                            [`Name`, Type.TextInstance],
+                            [`Score`, Type.NumberInstance],
+                        ]),
+                        false,
+                    ),
+                }));
+
+            it(`unescapes literal column names`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Display ""Name"""}, {})`,
+                    expected: TypeUtils.definedTable(
+                        false,
+                        new PQP.OrderedMap<string, Type.TPowerQueryType>([[`Display "Name"`, Type.AnyInstance]]),
+                        false,
+                    ),
+                }));
+
+            it(`falls back to table for an unknown schema`, async () =>
+                await assertEqualRootType({
+                    text: `let columns = {} as list in #table(columns, {})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`uses the primitive table type with the primitive strategy`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name"}, {})`,
+                    expected: Type.TableInstance,
+                    settings: PrimitiveInspectionSettings,
+                }));
+        });
+
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try 1`, async () =>
                 await assertEqualRootType({

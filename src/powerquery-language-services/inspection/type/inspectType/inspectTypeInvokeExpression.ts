@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert, OrderedMap, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Keyword, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapIterator,
     NodeIdMapUtils,
@@ -19,6 +19,7 @@ import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
+import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -34,6 +35,18 @@ export async function inspectTypeInvokeExpression(
 
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
+
+    const intrinsicType: Type.TPowerQueryType | undefined = await inspectIntrinsicInvokeExpression(
+        state,
+        xorNode,
+        trace.id,
+    );
+
+    if (intrinsicType !== undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(intrinsicType) });
+
+        return intrinsicType;
+    }
 
     const request: ExternalType.ExternalInvocationTypeRequest | undefined = await externalInvokeRequest(
         state,
@@ -73,6 +86,75 @@ export async function inspectTypeInvokeExpression(
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+async function inspectIntrinsicInvokeExpression(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    correlationId: number | undefined,
+): Promise<Type.TPowerQueryType | undefined> {
+    const identifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
+        state.nodeIdMapCollection,
+        xorNode.node.id,
+    );
+
+    if (
+        identifier === undefined ||
+        XorNodeUtils.isContext(identifier) ||
+        identifier.node.identifier.literal !== Keyword.KeywordKind.HashTable
+    ) {
+        return undefined;
+    }
+
+    if (state.typeStrategy === TypeStrategy.Primitive) {
+        return Type.TableInstance;
+    }
+
+    const [columns]: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
+        state.nodeIdMapCollection,
+        XorNodeUtils.assertAsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression),
+    );
+
+    if (columns === undefined) {
+        return Type.TableInstance;
+    }
+
+    return definedTableFromColumnsType(await inspectXor(state, columns, correlationId));
+}
+
+function definedTableFromColumnsType(columnsType: Type.TPowerQueryType): Type.Table | Type.DefinedTable {
+    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
+    switch (columnsType.extendedKind) {
+        case Type.ExtendedTypeKind.TableType:
+            return TypeUtils.definedTable(
+                false,
+                new OrderedMap<string, Type.TPowerQueryType>(columnsType.fields),
+                columnsType.isOpen,
+            );
+
+        case Type.ExtendedTypeKind.DefinedList: {
+            const fields: Map<string, Type.TPowerQueryType> = new Map();
+
+            for (const element of columnsType.elements) {
+                if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
+                    return Type.TableInstance;
+                }
+
+                const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
+
+                if (fields.has(fieldName)) {
+                    return Type.TableInstance;
+                }
+
+                fields.set(fieldName, Type.AnyInstance);
+            }
+
+            return TypeUtils.definedTable(false, new OrderedMap(fields), false);
+        }
+
+        default:
+            return Type.TableInstance;
+    }
 }
 
 async function externalInvokeRequest(
