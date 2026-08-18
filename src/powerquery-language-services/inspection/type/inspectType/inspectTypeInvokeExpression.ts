@@ -21,6 +21,8 @@ import { inspectXor } from "./common";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 import { TypeStrategy } from "../../../inspectionSettings";
 
+const MaxDefinedTableRows: number = 100;
+
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
@@ -110,7 +112,7 @@ async function inspectIntrinsicInvokeExpression(
         return Type.TableInstance;
     }
 
-    const [columns]: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
+    const [columns, rows]: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterInvokeExpression(
         state.nodeIdMapCollection,
         XorNodeUtils.assertAsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression),
     );
@@ -119,42 +121,151 @@ async function inspectIntrinsicInvokeExpression(
         return Type.TableInstance;
     }
 
-    return definedTableFromColumnsType(await inspectXor(state, columns, correlationId));
+    const columnsType: Type.TPowerQueryType = await inspectXor(state, columns, correlationId);
+
+    const rowsType: Type.TPowerQueryType | undefined =
+        rows === undefined ? undefined : await inspectXor(state, rows, correlationId);
+
+    return definedTableFromConstructorTypes(state, columnsType, rowsType, correlationId);
 }
 
-function definedTableFromColumnsType(columnsType: Type.TPowerQueryType): Type.Table | Type.DefinedTable {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
-    switch (columnsType.extendedKind) {
-        case Type.ExtendedTypeKind.TableType:
-            return TypeUtils.definedTable(
-                false,
-                new OrderedMap<string, Type.TPowerQueryType>(columnsType.fields),
-                columnsType.isOpen,
-            );
+function definedTableFromConstructorTypes(
+    state: InspectTypeState,
+    columnsType: Type.TPowerQueryType,
+    rowsType: Type.TPowerQueryType | undefined,
+    correlationId: number | undefined,
+): Type.Table | Type.DefinedTable {
+    if (columnsType.extendedKind === Type.ExtendedTypeKind.TableType) {
+        const fields: Type.OrderedFields = new OrderedMap<string, Type.TPowerQueryType>(columnsType.fields);
+        const rows: ReadonlyArray<Type.DefinedRecord> | undefined = definedTableRows([...fields.keys()], rowsType);
 
-        case Type.ExtendedTypeKind.DefinedList: {
-            const fields: Map<string, Type.TPowerQueryType> = new Map();
+        return TypeUtils.definedTable(
+            false,
+            fields,
+            columnsType.isOpen,
+            retainedTableRows(state, rows, correlationId, fields),
+        );
+    }
 
-            for (const element of columnsType.elements) {
-                if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
-                    return Type.TableInstance;
-                }
+    if (columnsType.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+        return Type.TableInstance;
+    }
 
-                const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
+    const columnNames: string[] = [];
 
-                if (fields.has(fieldName)) {
-                    return Type.TableInstance;
-                }
-
-                fields.set(fieldName, Type.AnyInstance);
-            }
-
-            return TypeUtils.definedTable(false, new OrderedMap(fields), false);
+    for (const element of columnsType.elements) {
+        if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
+            return Type.TableInstance;
         }
 
-        default:
+        const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
+
+        if (columnNames.includes(fieldName)) {
             return Type.TableInstance;
+        }
+
+        columnNames.push(fieldName);
     }
+
+    const rows: ReadonlyArray<Type.DefinedRecord> | undefined = definedTableRows(columnNames, rowsType);
+    const fields: Type.OrderedFields = inferredTableFields(state, columnNames, rows, correlationId);
+
+    return TypeUtils.definedTable(false, fields, false, retainedTableRows(state, rows, correlationId));
+}
+
+function definedTableRows(
+    columnNames: ReadonlyArray<string>,
+    rowsType: Type.TPowerQueryType | undefined,
+): ReadonlyArray<Type.DefinedRecord> | undefined {
+    if (rowsType?.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+        return undefined;
+    }
+
+    const rows: Type.DefinedRecord[] = [];
+
+    for (const rowType of rowsType.elements) {
+        if (
+            rowType.extendedKind !== Type.ExtendedTypeKind.DefinedList ||
+            rowType.elements.length !== columnNames.length
+        ) {
+            return undefined;
+        }
+
+        const fields: Map<string, Type.TPowerQueryType> = new Map(
+            columnNames.map((columnName: string, index: number) => [
+                columnName,
+                Assert.asDefined(rowType.elements[index]),
+            ]),
+        );
+
+        rows.push(TypeUtils.definedRecord(false, fields, false));
+    }
+
+    return rows;
+}
+
+function inferredTableFields(
+    state: InspectTypeState,
+    columnNames: ReadonlyArray<string>,
+    rows: ReadonlyArray<Type.DefinedRecord> | undefined,
+    correlationId: number | undefined,
+): Type.OrderedFields {
+    const entries: ReadonlyArray<[string, Type.TPowerQueryType]> = columnNames.map((columnName: string) => {
+        const columnTypes: ReadonlyArray<Type.TPowerQueryType> | undefined = rows?.map((row: Type.DefinedRecord) =>
+            Assert.asDefined(row.fields.get(columnName)),
+        );
+
+        return [
+            columnName,
+            columnTypes === undefined || columnTypes.length === 0
+                ? Type.AnyInstance
+                : TypeUtils.anyUnion(columnTypes.map(widenLiteralType), state.traceManager, correlationId),
+        ];
+    });
+
+    return new OrderedMap(entries);
+}
+
+function widenLiteralType(type: Type.TPowerQueryType): Type.TPowerQueryType {
+    if (
+        type.extendedKind === Type.ExtendedTypeKind.LogicalLiteral ||
+        type.extendedKind === Type.ExtendedTypeKind.NumberLiteral ||
+        type.extendedKind === Type.ExtendedTypeKind.TextLiteral
+    ) {
+        return TypeUtils.primitiveType(type.isNullable, type.kind);
+    }
+
+    return type;
+}
+
+function retainedTableRows(
+    state: InspectTypeState,
+    rows: ReadonlyArray<Type.DefinedRecord> | undefined,
+    correlationId: number | undefined,
+    fields?: Type.OrderedFields,
+): ReadonlyArray<Type.DefinedRecord> | undefined {
+    if (rows === undefined || rows.length > MaxDefinedTableRows) {
+        return undefined;
+    }
+
+    if (fields !== undefined) {
+        for (const row of rows) {
+            for (const [fieldName, fieldType] of fields) {
+                if (
+                    TypeUtils.isCompatible(
+                        Assert.asDefined(row.fields.get(fieldName)),
+                        fieldType,
+                        state.traceManager,
+                        correlationId,
+                    ) !== true
+                ) {
+                    return undefined;
+                }
+            }
+        }
+    }
+
+    return rows;
 }
 
 async function externalInvokeRequest(

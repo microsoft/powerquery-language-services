@@ -140,6 +140,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         return {
             ...extendedKind,
             isOpen: true,
+            ...(TypeUtils.isDefinedTable(extendedKind) ? { rows: undefined } : {}),
         };
     }
     // '[foo=value] & [bar=value] or #table(...) & #table(...)'
@@ -184,6 +185,7 @@ function unionTableFields([leftType, rightType]: [Type.DefinedTable, Type.Define
         fields: combinedFields,
         isNullable: leftType.isNullable && rightType.isNullable,
         isOpen: leftType.isOpen || rightType.isOpen,
+        rows: undefined,
     };
 }
 

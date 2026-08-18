@@ -108,7 +108,25 @@ function inspectRecordOrTableProjection(
     if (TypeUtils.isDefinedRecord(fieldType)) {
         return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedRecordFields);
     } else if (TypeUtils.isDefinedTable(fieldType)) {
-        return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedTableFields);
+        const reduced: Type.DefinedTable | Type.None | Type.Null = reducedFieldsToKeys(
+            fieldType,
+            projectedFieldLiterals,
+            isOptional,
+            reducedTableFields,
+        );
+
+        if (!TypeUtils.isDefinedTable(reduced) || reduced.rows === undefined) {
+            return reduced;
+        }
+
+        return {
+            ...reduced,
+            rows: reduced.rows.map((row: Type.DefinedRecord) => ({
+                ...row,
+                fields: reducedRecordFields(row, projectedFieldLiterals),
+                isOpen: false,
+            })),
+        };
     } else {
         const newFields: Map<string, Type.TPowerQueryType> = new Map(
             projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
