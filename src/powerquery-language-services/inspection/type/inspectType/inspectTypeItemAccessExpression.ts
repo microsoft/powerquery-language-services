@@ -51,7 +51,7 @@ export async function inspectTypeItemAccessExpression(
         state.nodeIdMapCollection,
         xorNode.node.id,
     );
-    const collectionType: Type.TPowerQueryType = await inspectXor(state, previousSibling, trace.id);
+
     const collectionType: Type.TPowerQueryType = await inspectXor(state, previousSibling, trace.id);
 
     // Child index 1 is the content (index expression) of the brace-wrapped ItemAccessExpression.
@@ -78,8 +78,8 @@ export async function inspectTypeItemAccessExpression(
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
+
     return result;
-}
 }
 
 function getElementType(
