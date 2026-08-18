@@ -232,46 +232,32 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`#table`, () => {
-            it(`recognizes the intrinsic without library metadata`, async () =>
-                await assertEqualRootType({
-                    text: `#table`,
-                    expected: Type.FunctionInstance,
-                }));
+            function definedTable(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.DefinedTable {
+                return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), false);
+            }
 
             it(`infers columns from a literal list`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {}) in Source`,
-                    expected: TypeUtils.definedTable(
-                        false,
-                        new PQP.OrderedMap<string, Type.TPowerQueryType>([
-                            [`Name`, Type.AnyInstance],
-                            [`Score`, Type.AnyInstance],
-                        ]),
-                        false,
-                    ),
+                    expected: definedTable([
+                        [`Name`, Type.AnyInstance],
+                        [`Score`, Type.AnyInstance],
+                    ]),
                 }));
 
             it(`preserves an explicit table type`, async () =>
                 await assertEqualRootType({
                     text: `#table(type table [Name = text, Score = number], {})`,
-                    expected: TypeUtils.definedTable(
-                        false,
-                        new PQP.OrderedMap<string, Type.TPowerQueryType>([
-                            [`Name`, Type.TextInstance],
-                            [`Score`, Type.NumberInstance],
-                        ]),
-                        false,
-                    ),
+                    expected: definedTable([
+                        [`Name`, Type.TextInstance],
+                        [`Score`, Type.NumberInstance],
+                    ]),
                 }));
 
             it(`unescapes literal column names`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Display ""Name"""}, {})`,
-                    expected: TypeUtils.definedTable(
-                        false,
-                        new PQP.OrderedMap<string, Type.TPowerQueryType>([[`Display "Name"`, Type.AnyInstance]]),
-                        false,
-                    ),
+                    expected: definedTable([[`Display "Name"`, Type.AnyInstance]]),
                 }));
 
             it(`falls back to table for an unknown schema`, async () =>

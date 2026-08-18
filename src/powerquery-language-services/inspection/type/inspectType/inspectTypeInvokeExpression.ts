@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, OrderedMap, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Keyword, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapIterator,
@@ -123,38 +123,31 @@ async function inspectIntrinsicInvokeExpression(
 }
 
 function definedTableFromColumnsType(columnsType: Type.TPowerQueryType): Type.Table | Type.DefinedTable {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
-    switch (columnsType.extendedKind) {
-        case Type.ExtendedTypeKind.TableType:
-            return TypeUtils.definedTable(
-                false,
-                new OrderedMap<string, Type.TPowerQueryType>(columnsType.fields),
-                columnsType.isOpen,
-            );
+    if (columnsType.extendedKind === Type.ExtendedTypeKind.TableType) {
+        return TypeUtils.definedTable(false, new PQP.OrderedMap(columnsType.fields), columnsType.isOpen);
+    }
 
-        case Type.ExtendedTypeKind.DefinedList: {
-            const fields: Map<string, Type.TPowerQueryType> = new Map();
+    if (columnsType.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+        return Type.TableInstance;
+    }
 
-            for (const element of columnsType.elements) {
-                if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
-                    return Type.TableInstance;
-                }
+    const fields: Map<string, Type.TPowerQueryType> = new Map();
 
-                const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
-
-                if (fields.has(fieldName)) {
-                    return Type.TableInstance;
-                }
-
-                fields.set(fieldName, Type.AnyInstance);
-            }
-
-            return TypeUtils.definedTable(false, new OrderedMap(fields), false);
+    for (const element of columnsType.elements) {
+        if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
+            return Type.TableInstance;
         }
 
-        default:
+        const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
+
+        if (fields.has(fieldName)) {
             return Type.TableInstance;
+        }
+
+        fields.set(fieldName, Type.AnyInstance);
     }
+
+    return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), false);
 }
 
 async function externalInvokeRequest(
