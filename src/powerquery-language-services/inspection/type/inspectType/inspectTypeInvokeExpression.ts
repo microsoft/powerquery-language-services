@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, OrderedMap, ResultUtils } from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
 import { Ast, Keyword, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMapIterator,
@@ -136,7 +136,7 @@ function definedTableFromConstructorTypes(
     correlationId: number | undefined,
 ): Type.Table | Type.DefinedTable {
     if (columnsType.extendedKind === Type.ExtendedTypeKind.TableType) {
-        const fields: Type.OrderedFields = new OrderedMap<string, Type.TPowerQueryType>(columnsType.fields);
+        const fields: Type.OrderedFields = new PQP.OrderedMap(columnsType.fields);
         const rows: ReadonlyArray<Type.DefinedRecord> | undefined = definedTableRows([...fields.keys()], rowsType);
 
         return TypeUtils.definedTable(
@@ -223,7 +223,7 @@ function inferredTableFields(
         ];
     });
 
-    return new OrderedMap(entries);
+    return new PQP.OrderedMap(entries);
 }
 
 function widenLiteralType(type: Type.TPowerQueryType): Type.TPowerQueryType {

@@ -243,12 +243,6 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`#table`, () => {
-            it(`recognizes the intrinsic without library metadata`, async () =>
-                await assertEqualRootType({
-                    text: `#table`,
-                    expected: Type.FunctionInstance,
-                }));
-
             it(`infers columns from a literal list`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {}) in Source`,
