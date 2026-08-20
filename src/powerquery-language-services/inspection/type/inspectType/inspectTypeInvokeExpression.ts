@@ -19,7 +19,7 @@ import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
-import { tryInspectTypeHashTableInvokeExpression } from "./inspectTypeHashTableInvokeExpression";
+import { tryInspectTypeIntrinsicInvokeExpression } from "./inspectTypeIntrinsic";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -36,16 +36,16 @@ export async function inspectTypeInvokeExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
 
-    const hashTableType: Type.TPowerQueryType | undefined = await tryInspectTypeHashTableInvokeExpression(
+    const intrinsicType: Type.TPowerQueryType | undefined = await tryInspectTypeIntrinsicInvokeExpression(
         state,
         xorNode,
         trace.id,
     );
 
-    if (hashTableType !== undefined) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(hashTableType) });
+    if (intrinsicType !== undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(intrinsicType) });
 
-        return hashTableType;
+        return intrinsicType;
     }
 
     const request: ExternalType.ExternalInvocationTypeRequest | undefined = await externalInvokeRequest(

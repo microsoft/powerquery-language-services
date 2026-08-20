@@ -2,37 +2,18 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Ast, Keyword, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import {
-    NodeIdMapIterator,
-    NodeIdMapUtils,
-    TXorNode,
-    XorNode,
-    XorNodeUtils,
-} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Ast, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { TypeStrategy } from "../../../inspectionSettings";
 
-export async function tryInspectTypeHashTableInvokeExpression(
+export async function inspectTypeHashTableInvokeExpression(
     state: InspectTypeState,
     xorNode: TXorNode,
     correlationId: number | undefined,
-): Promise<Type.TPowerQueryType | undefined> {
-    const identifier: XorNode<Ast.IdentifierExpression> | undefined = NodeIdMapUtils.invokeExpressionIdentifier(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-    );
-
-    if (
-        identifier === undefined ||
-        XorNodeUtils.isContext(identifier) ||
-        identifier.node.identifier.literal !== Keyword.KeywordKind.HashTable
-    ) {
-        return undefined;
-    }
-
+): Promise<Type.TPowerQueryType> {
     if (state.typeStrategy === TypeStrategy.Primitive) {
         return Type.TableInstance;
     }
