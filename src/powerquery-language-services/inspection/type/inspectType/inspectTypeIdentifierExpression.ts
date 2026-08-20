@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Keyword, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { dereferencedIdentifierType } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
+import { intrinsicIdentifierType } from "./inspectTypeIntrinsic";
 
 export async function inspectTypeIdentifierExpression(
     state: InspectTypeState,
@@ -36,9 +37,8 @@ export async function inspectTypeIdentifierExpression(
         );
 
         result =
-            dereferencedType?.kind === Type.TypeKind.Unknown &&
-            xorNode.node.identifier.literal === Keyword.KeywordKind.HashTable
-                ? Type.FunctionInstance
+            dereferencedType?.kind === Type.TypeKind.Unknown
+                ? (intrinsicIdentifierType(xorNode.node.identifier.literal) ?? Type.UnknownInstance)
                 : (dereferencedType ?? Type.UnknownInstance);
     }
 

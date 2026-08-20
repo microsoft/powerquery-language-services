@@ -231,6 +231,26 @@ describe(`Inspection - Type`, () => {
                 }));
         });
 
+        describe(`intrinsic identifiers`, () => {
+            const functionIntrinsics: ReadonlyArray<string> = [
+                `#binary`,
+                `#date`,
+                `#datetime`,
+                `#datetimezone`,
+                `#duration`,
+                `#table`,
+                `#time`,
+            ];
+
+            for (const intrinsic of functionIntrinsics) {
+                it(`${intrinsic} is a function`, async () =>
+                    await assertEqualRootType({
+                        text: intrinsic,
+                        expected: Type.FunctionInstance,
+                    }));
+            }
+        });
+
         describe(`#table`, () => {
             function definedTable(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.DefinedTable {
                 return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), false);
