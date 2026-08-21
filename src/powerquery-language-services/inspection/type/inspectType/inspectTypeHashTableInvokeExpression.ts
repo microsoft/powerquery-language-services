@@ -46,6 +46,7 @@ function definedTableFromColumnsType(columnsType: Type.TPowerQueryType): Type.Ta
             return Type.TableInstance;
         }
 
+        // Convert the quoted M text literal to its unescaped column name.
         const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
 
         if (fields.has(fieldName)) {

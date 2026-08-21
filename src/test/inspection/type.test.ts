@@ -280,6 +280,30 @@ describe(`Inspection - Type`, () => {
                     expected: definedTable([[`Display "Name"`, Type.AnyInstance]]),
                 }));
 
+            it(`infers a column name from a quoted identifier`, async () =>
+                await assertEqualRootType({
+                    text: `let key = "foobar", tbl = #table({#"key"}, {}) in tbl`,
+                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                }));
+
+            it(`infers a column name from an identifier that requires quotes`, async () =>
+                await assertEqualRootType({
+                    text: `let #"column name" = "foobar", tbl = #table({#"column name"}, {}) in tbl`,
+                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                }));
+
+            it(`falls back to table for duplicate column names`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name", "Name"}, {})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`falls back to table for a non-text column name`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name", 1}, {})`,
+                    expected: Type.TableInstance,
+                }));
+
             it(`falls back to table for an unknown schema`, async () =>
                 await assertEqualRootType({
                     text: `let columns = {} as list in #table(columns, {})`,
