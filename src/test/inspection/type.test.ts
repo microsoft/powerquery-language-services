@@ -231,6 +231,93 @@ describe(`Inspection - Type`, () => {
                 }));
         });
 
+        describe(`intrinsic identifiers`, () => {
+            const functionIntrinsics: ReadonlyArray<string> = [
+                `#binary`,
+                `#date`,
+                `#datetime`,
+                `#datetimezone`,
+                `#duration`,
+                `#table`,
+                `#time`,
+            ];
+
+            for (const intrinsic of functionIntrinsics) {
+                it(`${intrinsic} is a function`, async () =>
+                    await assertEqualRootType({
+                        text: intrinsic,
+                        expected: Type.FunctionInstance,
+                    }));
+            }
+        });
+
+        describe(`#table`, () => {
+            function definedTable(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.DefinedTable {
+                return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), false);
+            }
+
+            it(`infers columns from a literal list`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {}) in Source`,
+                    expected: definedTable([
+                        [`Name`, Type.AnyInstance],
+                        [`Score`, Type.AnyInstance],
+                    ]),
+                }));
+
+            it(`preserves an explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Name = text, Score = number], {})`,
+                    expected: definedTable([
+                        [`Name`, Type.TextInstance],
+                        [`Score`, Type.NumberInstance],
+                    ]),
+                }));
+
+            it(`unescapes literal column names`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Display ""Name"""}, {})`,
+                    expected: definedTable([[`Display "Name"`, Type.AnyInstance]]),
+                }));
+
+            it(`infers a column name from a quoted identifier`, async () =>
+                await assertEqualRootType({
+                    text: `let key = "foobar", tbl = #table({#"key"}, {}) in tbl`,
+                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                }));
+
+            it(`infers a column name from an identifier that requires quotes`, async () =>
+                await assertEqualRootType({
+                    text: `let #"column name" = "foobar", tbl = #table({#"column name"}, {}) in tbl`,
+                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                }));
+
+            it(`falls back to table for duplicate column names`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name", "Name"}, {})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`falls back to table for a non-text column name`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name", 1}, {})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`falls back to table for an unknown schema`, async () =>
+                await assertEqualRootType({
+                    text: `let columns = {} as list in #table(columns, {})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`uses the primitive table type with the primitive strategy`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name"}, {})`,
+                    expected: Type.TableInstance,
+                    settings: PrimitiveInspectionSettings,
+                }));
+        });
+
         describe(`${Ast.NodeKind.ErrorHandlingExpression}`, () => {
             it(`try 1`, async () =>
                 await assertEqualRootType({
