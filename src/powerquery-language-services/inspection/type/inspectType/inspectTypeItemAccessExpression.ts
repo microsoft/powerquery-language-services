@@ -116,8 +116,10 @@ function getElementType(
 
         case Type.TypeKind.Table:
             if (collectionType.extendedKind === Type.ExtendedTypeKind.DefinedTable) {
-                if (collectionType.rows !== undefined && indexValue !== undefined) {
-                    return collectionType.rows[indexValue] ?? Type.NoneInstance;
+                if (indexValue !== undefined) {
+                    const row: Type.UnorderedFields | undefined = collectionType.rows[indexValue];
+
+                    return row === undefined ? Type.NoneInstance : TypeUtils.definedRecord(false, row, false);
                 }
 
                 return TypeUtils.definedRecord(false, collectionType.fields, collectionType.isOpen);

@@ -137,10 +137,13 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         const extendedKind: Type.DefinedRecord | Type.DefinedTable =
             leftType.extendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
 
+        if (TypeUtils.isDefinedTable(extendedKind)) {
+            return TypeUtils.primitiveType(extendedKind.isNullable, Type.TypeKind.Table);
+        }
+
         return {
             ...extendedKind,
             isOpen: true,
-            ...(TypeUtils.isDefinedTable(extendedKind) ? { rows: undefined } : {}),
         };
     }
     // '[foo=value] & [bar=value] or #table(...) & #table(...)'
@@ -151,7 +154,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         if (TypeUtils.isRecord(leftType)) {
             return unionRecordFields([leftType, rightType] as [Type.DefinedRecord, Type.DefinedRecord]);
         } else {
-            return unionTableFields([leftType, rightType] as [Type.DefinedTable, Type.DefinedTable]);
+            return TypeUtils.primitiveType(leftType.isNullable && rightType.isNullable, Type.TypeKind.Table);
         }
     } else {
         throw new CommonError.InvariantError(`this should never be reached`);
@@ -170,22 +173,6 @@ function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.Defi
         fields: combinedFields,
         isNullable: leftType.isNullable && rightType.isNullable,
         isOpen: leftType.isOpen || rightType.isOpen,
-    };
-}
-
-function unionTableFields([leftType, rightType]: [Type.DefinedTable, Type.DefinedTable]): Type.DefinedTable {
-    const combinedFields: Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
-
-    for (const [key, value] of rightType.fields.entries()) {
-        combinedFields.set(key, value);
-    }
-
-    return {
-        ...leftType,
-        fields: combinedFields,
-        isNullable: leftType.isNullable && rightType.isNullable,
-        isOpen: leftType.isOpen || rightType.isOpen,
-        rows: undefined,
     };
 }
 

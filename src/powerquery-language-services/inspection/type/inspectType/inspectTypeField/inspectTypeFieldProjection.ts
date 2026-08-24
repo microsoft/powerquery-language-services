@@ -67,11 +67,7 @@ export async function inspectTypeFieldProjection(
                         isOpen: false,
                     },
                     {
-                        kind: Type.TypeKind.Table,
-                        extendedKind: Type.ExtendedTypeKind.DefinedTable,
-                        isNullable: fieldType.isNullable,
-                        fields: new PQP.OrderedMap([...projectedFields]),
-                        isOpen: false,
+                        ...TypeUtils.primitiveType(fieldType.isNullable, Type.TypeKind.Table),
                     },
                 ],
             };
@@ -108,25 +104,25 @@ function inspectRecordOrTableProjection(
     if (TypeUtils.isDefinedRecord(fieldType)) {
         return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedRecordFields);
     } else if (TypeUtils.isDefinedTable(fieldType)) {
-        const reduced: Type.DefinedTable | Type.None | Type.Null = reducedFieldsToKeys(
-            fieldType,
-            projectedFieldLiterals,
-            isOptional,
-            reducedTableFields,
+        const hasUndeclaredField: boolean = projectedFieldLiterals.some(
+            (fieldName: string) => !fieldType.fields.has(fieldName),
         );
 
-        if (!TypeUtils.isDefinedTable(reduced) || reduced.rows === undefined) {
-            return reduced;
+        if (hasUndeclaredField) {
+            if (fieldType.isOpen) {
+                return TypeUtils.primitiveType(fieldType.isNullable, Type.TypeKind.Table);
+            }
+
+            return isOptional ? Type.NullInstance : Type.NoneInstance;
         }
 
-        return {
-            ...reduced,
-            rows: reduced.rows.map((row: Type.DefinedRecord) => ({
-                ...row,
-                fields: reducedRecordFields(row, projectedFieldLiterals),
-                isOpen: false,
-            })),
-        };
+        const fields: Type.OrderedFields = reducedTableFields(fieldType, projectedFieldLiterals);
+
+        const rows: ReadonlyArray<Type.UnorderedFields> = fieldType.rows.map((row: Type.UnorderedFields) =>
+            PQP.MapUtils.pick(row, projectedFieldLiterals),
+        );
+
+        return TypeUtils.definedTable(fieldType.isNullable, fields, rows);
     } else {
         const newFields: Map<string, Type.TPowerQueryType> = new Map(
             projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
@@ -134,7 +130,7 @@ function inspectRecordOrTableProjection(
 
         return fieldType.kind === Type.TypeKind.Record
             ? TypeUtils.definedRecord(false, newFields, false)
-            : TypeUtils.definedTable(false, new PQP.OrderedMap([...newFields]), false);
+            : TypeUtils.primitiveType(fieldType.isNullable, Type.TypeKind.Table);
     }
 }
 
