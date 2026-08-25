@@ -134,42 +134,42 @@ function inspectRecordOrTableUnion(
 
         throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
-    // '[] & []' or '#table() & #table()'
-    else if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
+
+    if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
         return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
-    // '[key=value] & []' or '#table(...) & #table()`
-    // '[] & [key=value]' or `#table() & #table(...)`
-    else if (
-        (leftType.extendedKind !== undefined && rightType.extendedKind === undefined) ||
-        (leftType.extendedKind === undefined && rightType.extendedKind !== undefined)
-    ) {
-        // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
-        const extendedKind: Type.DefinedRecord | Type.DefinedTable =
-            leftType.extendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
 
-        if (TypeUtils.isDefinedTable(extendedKind)) {
-            return TypeUtils.primitiveType(extendedKind.isNullable, Type.TypeKind.Table);
-        }
+    if (TypeUtils.isDefinedRecord(leftType) && TypeUtils.isDefinedRecord(rightType)) {
+        return unionRecordFields([leftType, rightType]);
+    }
 
+    if (TypeUtils.isDefinedTable(leftType) && TypeUtils.isDefinedTable(rightType)) {
+        return unionTables(state, leftType, rightType, correlationId);
+    }
+
+    if (TypeUtils.isDefinedTable(leftType)) {
+        return TypeUtils.primitiveType(leftType.isNullable, Type.TypeKind.Table);
+    }
+
+    if (TypeUtils.isDefinedTable(rightType)) {
+        return TypeUtils.primitiveType(rightType.isNullable, Type.TypeKind.Table);
+    }
+
+    if (TypeUtils.isDefinedRecord(leftType)) {
         return {
-            ...extendedKind,
+            ...leftType,
             isOpen: true,
         };
     }
-    // '[foo=value] & [bar=value] or #table(...) & #table(...)'
-    else if (leftType?.extendedKind === rightType?.extendedKind) {
-        // The cast should be safe since the first if statement tests their the same kind,
-        // and the above checks if they're the same extended kind.
 
-        if (TypeUtils.isRecord(leftType)) {
-            return unionRecordFields([leftType, rightType] as [Type.DefinedRecord, Type.DefinedRecord]);
-        } else {
-            return unionTables(state, leftType as Type.DefinedTable, rightType as Type.DefinedTable, correlationId);
-        }
-    } else {
-        throw new CommonError.InvariantError(`this should never be reached`);
+    if (TypeUtils.isDefinedRecord(rightType)) {
+        return {
+            ...rightType,
+            isOpen: true,
+        };
     }
+
+    throw new CommonError.InvariantError(`this should never be reached`);
 }
 
 function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.DefinedRecord]): Type.DefinedRecord {
@@ -215,27 +215,23 @@ function unionTableFields(
     correlationId: number,
 ): Type.OrderedFields {
     const fields: Type.OrderedFields = new PQP.OrderedMap();
+    const fieldNames: ReadonlySet<string> = new Set([...leftFields.keys(), ...rightFields.keys()]);
 
-    for (const [fieldName, leftFieldType] of leftFields) {
+    for (const fieldName of fieldNames) {
+        const leftFieldType: Type.TPowerQueryType | undefined = leftFields.get(fieldName);
         const rightFieldType: Type.TPowerQueryType | undefined = rightFields.get(fieldName);
 
         fields.set(
             fieldName,
             TypeUtils.anyUnion(
-                rightFieldType === undefined ? [leftFieldType, Type.NullInstance] : [leftFieldType, rightFieldType],
+                [
+                    Assert.asDefined(leftFieldType ?? rightFieldType),
+                    leftFieldType !== undefined && rightFieldType !== undefined ? rightFieldType : Type.NullInstance,
+                ],
                 state.traceManager,
                 correlationId,
             ),
         );
-    }
-
-    for (const [fieldName, rightFieldType] of rightFields) {
-        if (!fields.has(fieldName)) {
-            fields.set(
-                fieldName,
-                TypeUtils.anyUnion([rightFieldType, Type.NullInstance], state.traceManager, correlationId),
-            );
-        }
     }
 
     return fields;
