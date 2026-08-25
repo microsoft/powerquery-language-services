@@ -135,10 +135,12 @@ function inspectRecordOrTableUnion(
         throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
     }
 
+    // '[] & []' or '#table() & #table()'
     if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
         return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
     }
 
+    // '[foo=value] & [bar=value] or #table(...) & #table(...)'
     if (TypeUtils.isDefinedRecord(leftType) && TypeUtils.isDefinedRecord(rightType)) {
         return unionRecordFields([leftType, rightType]);
     }
@@ -147,6 +149,8 @@ function inspectRecordOrTableUnion(
         return unionTables(state, leftType, rightType, correlationId);
     }
 
+    // '[key=value] & []' or '#table(...) & #table()`
+    // '[] & [key=value]' or `#table() & #table(...)`
     if (TypeUtils.isDefinedTable(leftType)) {
         return TypeUtils.primitiveType(leftType.isNullable, Type.TypeKind.Table);
     }
