@@ -46,6 +46,20 @@ describe(`Inspection - Type`, () => {
         return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), rows);
     }
 
+    function openDefinedTable(
+        fields: ReadonlyArray<[string, Type.TPowerQueryType]>,
+        rows: ReadonlyArray<Type.UnorderedFields>,
+    ): Type.DefinedTable {
+        return {
+            kind: Type.TypeKind.Table,
+            extendedKind: Type.ExtendedTypeKind.DefinedTable,
+            isNullable: false,
+            fields: new PQP.OrderedMap(fields),
+            isOpen: true,
+            rows,
+        };
+    }
+
     function definedRow(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.UnorderedFields {
         return new Map(fields);
     }
@@ -563,14 +577,7 @@ describe(`Inspection - Type`, () => {
             it(`preserves exact rows when projecting declared fields from an open table`, async () => {
                 const row: Type.UnorderedFields = definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]]);
 
-                const eachScope: Type.DefinedTable = {
-                    kind: Type.TypeKind.Table,
-                    extendedKind: Type.ExtendedTypeKind.DefinedTable,
-                    isNullable: false,
-                    fields: new PQP.OrderedMap([[`Name`, Type.TextInstance]]),
-                    isOpen: true,
-                    rows: [row],
-                };
+                const eachScope: Type.DefinedTable = openDefinedTable([[`Name`, Type.TextInstance]], [row]);
 
                 await assertEqualRootType({
                     text: `(each [[Name]])([Name = "Betty"])`,
@@ -583,14 +590,10 @@ describe(`Inspection - Type`, () => {
             });
 
             it(`falls back to table when projecting undeclared fields from an open table`, async () => {
-                const eachScope: Type.DefinedTable = {
-                    kind: Type.TypeKind.Table,
-                    extendedKind: Type.ExtendedTypeKind.DefinedTable,
-                    isNullable: false,
-                    fields: new PQP.OrderedMap([[`Name`, Type.TextInstance]]),
-                    isOpen: true,
-                    rows: [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
-                };
+                const eachScope: Type.DefinedTable = openDefinedTable(
+                    [[`Name`, Type.TextInstance]],
+                    [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
+                );
 
                 await assertEqualRootType({
                     text: `(each [[Other]])([Name = "Betty"])`,

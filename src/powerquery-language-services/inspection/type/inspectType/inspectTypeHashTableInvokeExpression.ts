@@ -44,66 +44,62 @@ function definedTableFromConstructorTypes(
     rowsType: Type.TPowerQueryType | undefined,
     correlationId: number | undefined,
 ): Type.Table | Type.DefinedTable {
-    if (columnsType.extendedKind === Type.ExtendedTypeKind.TableType) {
-        if (columnsType.isOpen) {
-            return Type.TableInstance;
-        }
+    const fields: Type.OrderedFields | undefined = definedTableFields(columnsType);
 
-        const fields: Type.OrderedFields = new PQP.OrderedMap(columnsType.fields);
-
-        const rows: ReadonlyArray<Type.UnorderedFields> | undefined = retainedTableRows(
-            state,
-            definedTableRows([...fields.keys()], rowsType),
-            correlationId,
-            fields,
-        );
-
-        return rows === undefined ? Type.TableInstance : TypeUtils.definedTable(false, fields, rows);
-    }
-
-    if (columnsType.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+    if (fields === undefined) {
         return Type.TableInstance;
     }
 
-    const columnNames: string[] = [];
+    const rows: ReadonlyArray<Type.UnorderedFields> | undefined = definedTableRows([...fields.keys()], rowsType);
+
+    if (
+        rows === undefined ||
+        (columnsType.extendedKind === Type.ExtendedTypeKind.TableType &&
+            !areTableRowsCompatible(state, fields, rows, correlationId))
+    ) {
+        return Type.TableInstance;
+    }
+
+    return TypeUtils.definedTable(false, fields, rows);
+}
+
+function definedTableFields(columnsType: Type.TPowerQueryType): Type.OrderedFields | undefined {
+    if (columnsType.extendedKind === Type.ExtendedTypeKind.TableType) {
+        return columnsType.isOpen ? undefined : new PQP.OrderedMap(columnsType.fields);
+    }
+
+    if (columnsType.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+        return undefined;
+    }
+
+    const fields: Type.OrderedFields = new PQP.OrderedMap();
 
     for (const element of columnsType.elements) {
         if (element.extendedKind !== Type.ExtendedTypeKind.TextLiteral) {
-            return Type.TableInstance;
+            return undefined;
         }
 
         // Convert the quoted M text literal to its unescaped column name.
         const fieldName: string = TextUtils.unescape(element.literal.slice(1, -1));
 
-        if (columnNames.includes(fieldName)) {
-            return Type.TableInstance;
+        if (fields.has(fieldName)) {
+            return undefined;
         }
 
-        columnNames.push(fieldName);
+        fields.set(fieldName, Type.AnyInstance);
     }
 
-    const rows: ReadonlyArray<Type.UnorderedFields> | undefined = retainedTableRows(
-        state,
-        definedTableRows(columnNames, rowsType),
-        correlationId,
-    );
-
-    if (rows === undefined) {
-        return Type.TableInstance;
-    }
-
-    const fields: Type.OrderedFields = new PQP.OrderedMap(
-        columnNames.map((columnName: string): [string, Type.TPowerQueryType] => [columnName, Type.AnyInstance]),
-    );
-
-    return TypeUtils.definedTable(false, fields, rows);
+    return fields;
 }
 
 function definedTableRows(
     columnNames: ReadonlyArray<string>,
     rowsType: Type.TPowerQueryType | undefined,
 ): ReadonlyArray<Type.UnorderedFields> | undefined {
-    if (rowsType?.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
+    if (
+        rowsType?.extendedKind !== Type.ExtendedTypeKind.DefinedList ||
+        rowsType.elements.length > MaxDefinedTableRows
+    ) {
         return undefined;
     }
 
@@ -130,32 +126,26 @@ function definedTableRows(
     return rows;
 }
 
-function retainedTableRows(
+function areTableRowsCompatible(
     state: InspectTypeState,
-    rows: ReadonlyArray<Type.UnorderedFields> | undefined,
+    fields: Type.OrderedFields,
+    rows: ReadonlyArray<Type.UnorderedFields>,
     correlationId: number | undefined,
-    fields?: Type.OrderedFields,
-): ReadonlyArray<Type.UnorderedFields> | undefined {
-    if (rows === undefined || rows.length > MaxDefinedTableRows) {
-        return undefined;
-    }
-
-    if (fields !== undefined) {
-        for (const row of rows) {
-            for (const [fieldName, fieldType] of fields) {
-                if (
-                    TypeUtils.isCompatible(
-                        Assert.asDefined(row.get(fieldName)),
-                        fieldType,
-                        state.traceManager,
-                        correlationId,
-                    ) !== true
-                ) {
-                    return undefined;
-                }
+): boolean {
+    for (const row of rows) {
+        for (const [fieldName, fieldType] of fields) {
+            if (
+                TypeUtils.isCompatible(
+                    Assert.asDefined(row.get(fieldName)),
+                    fieldType,
+                    state.traceManager,
+                    correlationId,
+                ) !== true
+            ) {
+                return false;
             }
         }
     }
 
-    return rows;
+    return true;
 }

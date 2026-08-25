@@ -66,9 +66,7 @@ export async function inspectTypeFieldProjection(
                         fields: projectedFields,
                         isOpen: false,
                     },
-                    {
-                        ...TypeUtils.primitiveType(fieldType.isNullable, Type.TypeKind.Table),
-                    },
+                    TypeUtils.primitiveType(fieldType.isNullable, Type.TypeKind.Table),
                 ],
             };
 
