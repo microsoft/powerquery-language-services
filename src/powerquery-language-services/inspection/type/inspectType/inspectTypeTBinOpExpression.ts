@@ -10,6 +10,7 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
+import { MaxDefinedTableRows } from "./definedTableUtils";
 
 type TRecordOrTable = Type.TRecord | Type.TTable;
 
@@ -103,7 +104,12 @@ export async function inspectTypeTBinOpExpression(
             operatorKind === Constant.ArithmeticOperator.And &&
             (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
         ) {
-            result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+            result = inspectRecordOrTableUnion(
+                state,
+                leftType as TRecordOrTable,
+                rightType as TRecordOrTable,
+                trace.id,
+            );
         } else {
             result = TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
         }
@@ -114,7 +120,12 @@ export async function inspectTypeTBinOpExpression(
     return result;
 }
 
-function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TPowerQueryType {
+function inspectRecordOrTableUnion(
+    state: InspectTypeState,
+    leftType: TRecordOrTable,
+    rightType: TRecordOrTable,
+    correlationId: number,
+): Type.TPowerQueryType {
     if (leftType.kind !== rightType.kind) {
         const details: object = {
             leftTypeKind: leftType.kind,
@@ -154,7 +165,7 @@ function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordO
         if (TypeUtils.isRecord(leftType)) {
             return unionRecordFields([leftType, rightType] as [Type.DefinedRecord, Type.DefinedRecord]);
         } else {
-            return TypeUtils.primitiveType(leftType.isNullable && rightType.isNullable, Type.TypeKind.Table);
+            return unionTables(state, leftType as Type.DefinedTable, rightType as Type.DefinedTable, correlationId);
         }
     } else {
         throw new CommonError.InvariantError(`this should never be reached`);
@@ -174,6 +185,64 @@ function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.Defi
         isNullable: leftType.isNullable && rightType.isNullable,
         isOpen: leftType.isOpen || rightType.isOpen,
     };
+}
+
+function unionTables(
+    state: InspectTypeState,
+    leftType: Type.DefinedTable,
+    rightType: Type.DefinedTable,
+    correlationId: number,
+): Type.Table | Type.DefinedTable {
+    const isNullable: boolean = leftType.isNullable && rightType.isNullable;
+
+    if (leftType.isOpen || rightType.isOpen || leftType.rows.length + rightType.rows.length > MaxDefinedTableRows) {
+        return isNullable ? Type.NullableTableInstance : Type.TableInstance;
+    }
+
+    const fields: Type.OrderedFields = unionTableFields(state, leftType.fields, rightType.fields, correlationId);
+
+    const rows: ReadonlyArray<Type.UnorderedFields> = [...leftType.rows, ...rightType.rows].map(
+        (row: Type.UnorderedFields) => normalizeTableRow(row, fields),
+    );
+
+    return TypeUtils.definedTable(isNullable, fields, rows);
+}
+
+function unionTableFields(
+    state: InspectTypeState,
+    leftFields: Type.OrderedFields,
+    rightFields: Type.OrderedFields,
+    correlationId: number,
+): Type.OrderedFields {
+    const fields: Type.OrderedFields = new PQP.OrderedMap();
+
+    for (const [fieldName, leftFieldType] of leftFields) {
+        const rightFieldType: Type.TPowerQueryType | undefined = rightFields.get(fieldName);
+
+        fields.set(
+            fieldName,
+            TypeUtils.anyUnion(
+                rightFieldType === undefined ? [leftFieldType, Type.NullInstance] : [leftFieldType, rightFieldType],
+                state.traceManager,
+                correlationId,
+            ),
+        );
+    }
+
+    for (const [fieldName, rightFieldType] of rightFields) {
+        if (!fields.has(fieldName)) {
+            fields.set(
+                fieldName,
+                TypeUtils.anyUnion([rightFieldType, Type.NullInstance], state.traceManager, correlationId),
+            );
+        }
+    }
+
+    return fields;
+}
+
+function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields): Type.UnorderedFields {
+    return new Map([...fields.keys()].map((fieldName: string) => [fieldName, row.get(fieldName) ?? Type.NullInstance]));
 }
 
 // Keys: <first operand> <operator> <second operand>

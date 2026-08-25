@@ -8,9 +8,8 @@ import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
+import { MaxDefinedTableRows } from "./definedTableUtils";
 import { TypeStrategy } from "../../../inspectionSettings";
-
-const MaxDefinedTableRows: number = 100;
 
 export async function inspectTypeHashTableInvokeExpression(
     state: InspectTypeState,

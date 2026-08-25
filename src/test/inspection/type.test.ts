@@ -465,9 +465,76 @@ describe(`Inspection - Type`, () => {
                     expected: Type.TableInstance,
                 }));
 
-            it(`falls back to table when concatenating tables`, async () =>
+            it(`concatenates exact rows with the same schema`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Value"}, {{1}}) & #table({"Value"}, {{2}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 2)]]),
+                        ],
+                    ),
+                }));
+
+            it(`normalizes exact rows to the combined schema`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {{1}}) & #table(type table [B = text], {{"two"}})`,
+                    expected: definedTable(
+                        [
+                            [`A`, anyUnion([Type.NumberInstance, Type.NullInstance])],
+                            [`B`, anyUnion([Type.TextInstance, Type.NullInstance])],
+                        ],
+                        [
+                            definedRow([
+                                [`A`, TypeUtils.numberLiteral(false, 1)],
+                                [`B`, Type.NullInstance],
+                            ]),
+                            definedRow([
+                                [`A`, Type.NullInstance],
+                                [`B`, TypeUtils.textLiteral(false, `"two"`)],
+                            ]),
+                        ],
+                    ),
+                }));
+
+            it(`unions shared column types when concatenating exact tables`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Value = number], {{1}}) & #table(type table [Value = text], {{"two"}})`,
+                    expected: definedTable(
+                        [[`Value`, anyUnion([Type.NumberInstance, Type.TextInstance])]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.textLiteral(false, `"two"`)]]),
+                        ],
+                    ),
+                }));
+
+            it(`uses concatenated exact rows for item access`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Value"}, {{1}}) & #table({"Value"}, {{2}}) in Source{1}`,
+                    expected: definedRecord([[`Value`, TypeUtils.numberLiteral(false, 2)]]),
+                }));
+
+            it(`falls back to table when concatenated rows exceed the limit`, async () => {
+                const leftRows: string = Array.from({ length: 50 }, (_: unknown, index: number) => `{${index}}`).join(
+                    `, `,
+                );
+
+                const rightRows: string = Array.from(
+                    { length: 51 },
+                    (_: unknown, index: number) => `{${index + 50}}`,
+                ).join(`, `);
+
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {${leftRows}}) & #table({"Value"}, {${rightRows}})`,
+                    expected: Type.TableInstance,
+                });
+            });
+
+            it(`falls back to table when either concatenated operand has dynamic rows`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list in #table({"Value"}, {{1}}) & #table({"Value"}, rows)`,
                     expected: Type.TableInstance,
                 }));
 
