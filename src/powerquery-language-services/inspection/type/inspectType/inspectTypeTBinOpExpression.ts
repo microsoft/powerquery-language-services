@@ -2,17 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { MaxDefinedTableRows } from "./definedTableUtils";
-
-type TRecordOrTable = Type.TRecord | Type.TTable;
 
 export async function inspectTypeTBinOpExpression(
     state: InspectTypeState,
@@ -100,16 +98,10 @@ export async function inspectTypeTBinOpExpression(
 
         if (resultTypeKind === undefined) {
             result = Type.NoneInstance;
-        } else if (
-            operatorKind === Constant.ArithmeticOperator.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
-        ) {
-            result = inspectRecordOrTableUnion(
-                state,
-                leftType as TRecordOrTable,
-                rightType as TRecordOrTable,
-                trace.id,
-            );
+        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Record) {
+            result = inspectRecordUnion(leftType as Type.TRecord, rightType as Type.TRecord);
+        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Table) {
+            result = inspectTableUnion(state, leftType as Type.TTable, rightType as Type.TTable, trace.id);
         } else {
             result = TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
         }
@@ -120,45 +112,13 @@ export async function inspectTypeTBinOpExpression(
     return result;
 }
 
-function inspectRecordOrTableUnion(
-    state: InspectTypeState,
-    leftType: TRecordOrTable,
-    rightType: TRecordOrTable,
-    correlationId: number,
-): Type.TPowerQueryType {
-    if (leftType.kind !== rightType.kind) {
-        const details: object = {
-            leftTypeKind: leftType.kind,
-            rightTypeKind: rightType.kind,
-        };
-
-        throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
-    }
-
-    // '[] & []' or '#table() & #table()'
-    if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
-        return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
-    }
-
-    // '[foo=value] & [bar=value] or #table(...) & #table(...)'
+function inspectRecordUnion(leftType: Type.TRecord, rightType: Type.TRecord): Type.TRecord {
+    // '[foo=value] & [bar=value]'
     if (TypeUtils.isDefinedRecord(leftType) && TypeUtils.isDefinedRecord(rightType)) {
         return unionRecordFields([leftType, rightType]);
     }
 
-    if (TypeUtils.isDefinedTable(leftType) && TypeUtils.isDefinedTable(rightType)) {
-        return unionTables(state, leftType, rightType, correlationId);
-    }
-
-    // '[key=value] & []' or '#table(...) & #table()`
-    // '[] & [key=value]' or `#table() & #table(...)`
-    if (TypeUtils.isDefinedTable(leftType)) {
-        return TypeUtils.primitiveType(leftType.isNullable, Type.TypeKind.Table);
-    }
-
-    if (TypeUtils.isDefinedTable(rightType)) {
-        return TypeUtils.primitiveType(rightType.isNullable, Type.TypeKind.Table);
-    }
-
+    // '[key=value] & []'
     if (TypeUtils.isDefinedRecord(leftType)) {
         return {
             ...leftType,
@@ -166,6 +126,7 @@ function inspectRecordOrTableUnion(
         };
     }
 
+    // '[] & [key=value]'
     if (TypeUtils.isDefinedRecord(rightType)) {
         return {
             ...rightType,
@@ -173,7 +134,33 @@ function inspectRecordOrTableUnion(
         };
     }
 
-    throw new CommonError.InvariantError(`this should never be reached`);
+    // '[] & []'
+    return leftType.isNullable || rightType.isNullable ? Type.NullableRecordInstance : Type.RecordInstance;
+}
+
+function inspectTableUnion(
+    state: InspectTypeState,
+    leftType: Type.TTable,
+    rightType: Type.TTable,
+    correlationId: number,
+): Type.TTable {
+    // '#table(...) & #table(...)'
+    if (TypeUtils.isDefinedTable(leftType) && TypeUtils.isDefinedTable(rightType)) {
+        return unionTables(state, leftType, rightType, correlationId);
+    }
+
+    // '#table(...) & #table()'
+    if (TypeUtils.isDefinedTable(leftType)) {
+        return leftType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
+    }
+
+    // '#table() & #table(...)'
+    if (TypeUtils.isDefinedTable(rightType)) {
+        return rightType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
+    }
+
+    // '#table() & #table()'
+    return leftType.isNullable || rightType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
 }
 
 function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.DefinedRecord]): Type.DefinedRecord {
