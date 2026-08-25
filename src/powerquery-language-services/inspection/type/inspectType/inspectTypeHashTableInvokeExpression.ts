@@ -92,7 +92,9 @@ function definedTableFromConstructorTypes(
         return Type.TableInstance;
     }
 
-    const fields: Type.OrderedFields = inferredTableFields(state, columnNames, rows, correlationId);
+    const fields: Type.OrderedFields = new PQP.OrderedMap(
+        columnNames.map((columnName: string): [string, Type.TPowerQueryType] => [columnName, Type.AnyInstance]),
+    );
 
     return TypeUtils.definedTable(false, fields, rows);
 }
@@ -126,40 +128,6 @@ function definedTableRows(
     }
 
     return rows;
-}
-
-function inferredTableFields(
-    state: InspectTypeState,
-    columnNames: ReadonlyArray<string>,
-    rows: ReadonlyArray<Type.UnorderedFields>,
-    correlationId: number | undefined,
-): Type.OrderedFields {
-    return new PQP.OrderedMap(
-        columnNames.map((columnName: string): [string, Type.TPowerQueryType] => {
-            const columnTypes: ReadonlyArray<Type.TPowerQueryType> = rows.map((row: Type.UnorderedFields) =>
-                Assert.asDefined(row.get(columnName)),
-            );
-
-            return [
-                columnName,
-                columnTypes.length === 0
-                    ? Type.AnyInstance
-                    : TypeUtils.anyUnion(columnTypes.map(widenLiteralType), state.traceManager, correlationId),
-            ];
-        }),
-    );
-}
-
-function widenLiteralType(type: Type.TPowerQueryType): Type.TPowerQueryType {
-    if (
-        type.extendedKind === Type.ExtendedTypeKind.LogicalLiteral ||
-        type.extendedKind === Type.ExtendedTypeKind.NumberLiteral ||
-        type.extendedKind === Type.ExtendedTypeKind.TextLiteral
-    ) {
-        return TypeUtils.primitiveType(type.isNullable, type.kind);
-    }
-
-    return type;
 }
 
 function retainedTableRows(

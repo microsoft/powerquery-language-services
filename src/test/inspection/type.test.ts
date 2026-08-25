@@ -353,8 +353,8 @@ describe(`Inspection - Type`, () => {
                     text: `#table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}})`,
                     expected: definedTable(
                         [
-                            [`Name`, Type.TextInstance],
-                            [`Score`, Type.NumberInstance],
+                            [`Name`, Type.AnyInstance],
+                            [`Score`, Type.AnyInstance],
                         ],
                         [betty, alex],
                     ),
@@ -374,7 +374,7 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}}) in Source[[Name]]`,
                     expected: definedTable(
-                        [[`Name`, Type.TextInstance]],
+                        [[`Name`, Type.AnyInstance]],
                         [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
                     ),
                 }));
@@ -411,7 +411,7 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({
                     text: `#table({"Value"}, {${rowValues.map((value: number) => `{${value}}`).join(`, `)}})`,
                     expected: definedTable(
-                        [[`Value`, Type.NumberInstance]],
+                        [[`Value`, Type.AnyInstance]],
                         rowValues.map((value: number) =>
                             definedRow([[`Value`, TypeUtils.numberLiteral(false, value)]]),
                         ),
