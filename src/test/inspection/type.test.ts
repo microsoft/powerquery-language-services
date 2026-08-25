@@ -310,6 +310,15 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
+            it(`preserves null rows for a nullable explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Value = nullable number], {{null}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.NullableNumberInstance]],
+                        [definedRow([[`Value`, Type.NullInstance]])],
+                    ),
+                }));
+
             it(`falls back to table for rows that conflict with an explicit table type`, async () =>
                 await assertEqualRootType({
                     text: `#table(type table [Value = number], {{"x"}})`,
@@ -375,6 +384,33 @@ describe(`Inspection - Type`, () => {
                 });
             });
 
+            it(`retains generalized value types in exact rows`, async () =>
+                await assertEqualRootType({
+                    text: `let value = 1 as number in #table({"Value"}, {{value}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [definedRow([[`Value`, Type.NumberInstance]])],
+                    ),
+                }));
+
+            it(`retains heterogeneous row values without changing the column type`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {{1}, {"two"}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.textLiteral(false, `"two"`)]]),
+                        ],
+                    ),
+                }));
+
+            it(`retains a zero-column row`, async () =>
+                await assertEqualRootType({
+                    text: `#table({}, {{}})`,
+                    expected: definedTable([], [definedRow([])]),
+                }));
+
             it(`uses exact rows for item access`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}}) in Source{0}`,
@@ -382,6 +418,12 @@ describe(`Inspection - Type`, () => {
                         [`Name`, TypeUtils.textLiteral(false, `"Betty"`)],
                         [`Score`, TypeUtils.numberLiteral(false, 42)],
                     ]),
+                }));
+
+            it(`returns none for exact item access beyond the retained rows`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name"}, {{"Betty"}}) in Source{1}`,
+                    expected: Type.NoneInstance,
                 }));
 
             it(`projects exact rows`, async () =>
@@ -393,9 +435,33 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
+            it(`projects every exact row`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}}) in Source[[Name]]`,
+                    expected: definedTable(
+                        [[`Name`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]]),
+                            definedRow([[`Name`, TypeUtils.textLiteral(false, `"Alex"`)]]),
+                        ],
+                    ),
+                }));
+
             it(`falls back to table for malformed row widths`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Name", "Score"}, {{"Betty"}})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`falls back to table for rows with extra values`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name"}, {{"Betty", 42}})`,
+                    expected: Type.TableInstance,
+                }));
+
+            it(`falls back to table when a row is not a list`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {1})`,
                     expected: Type.TableInstance,
                 }));
 
