@@ -50,23 +50,18 @@ export async function inspectTypeFieldProjection(
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (fieldType.kind) {
         case Type.TypeKind.Any: {
-            const projectedFields: Type.UnorderedFields = new Map(
-                projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
-            );
+            const projectedFields: Type.UnorderedFields = anyFields(projectedFieldLiterals);
 
             result = {
                 kind: Type.TypeKind.Any,
                 extendedKind: Type.ExtendedTypeKind.AnyUnion,
                 isNullable: fieldType.isNullable,
                 unionedTypePairs: [
-                    {
-                        kind: Type.TypeKind.Record,
-                        extendedKind: Type.ExtendedTypeKind.DefinedRecord,
-                        isNullable: fieldType.isNullable,
-                        fields: projectedFields,
-                        isOpen: false,
-                    },
-                    TypeUtils.definedTable(fieldType.isNullable, new PQP.OrderedMap(projectedFields)),
+                    TypeUtils.definedRecord(fieldType.isNullable, projectedFields, false),
+                    TypeUtils.definedTable(
+                        fieldType.isNullable,
+                        projectedTableFields(undefined, projectedFieldLiterals),
+                    ),
                 ],
             };
 
@@ -74,8 +69,11 @@ export async function inspectTypeFieldProjection(
         }
 
         case Type.TypeKind.Record:
+            result = inspectRecordProjection(fieldType, projectedFieldLiterals, isOptional);
+            break;
+
         case Type.TypeKind.Table:
-            result = inspectRecordOrTableProjection(fieldType, projectedFieldLiterals, isOptional);
+            result = inspectTableProjection(fieldType, projectedFieldLiterals, isOptional);
             break;
 
         case Type.TypeKind.Unknown:
@@ -92,82 +90,67 @@ export async function inspectTypeFieldProjection(
     return result;
 }
 
-function inspectRecordOrTableProjection(
-    fieldType: Type.TRecord | Type.TTable,
+function inspectRecordProjection(
+    fieldType: Type.TRecord,
     projectedFieldLiterals: ReadonlyArray<string>,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    // All we know is fieldType was a Record/Table.
-    // Create a DefinedRecord/DefinedTable with the projected fields.
-    if (TypeUtils.isDefinedRecord(fieldType)) {
-        return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedRecordFields);
-    } else if (TypeUtils.isDefinedTable(fieldType)) {
-        const hasUndeclaredField: boolean = projectedFieldLiterals.some(
-            (fieldName: string) => !fieldType.fields.has(fieldName),
-        );
-
-        if (hasUndeclaredField) {
-            if (fieldType.isOpen) {
-                return TypeUtils.definedTable(
-                    fieldType.isNullable,
-                    new PQP.OrderedMap(
-                        projectedFieldLiterals.map((fieldName: string) => [
-                            fieldName,
-                            fieldType.fields.get(fieldName) ?? Type.AnyInstance,
-                        ]),
-                    ),
-                );
-            }
-
-            return isOptional ? Type.NullInstance : Type.NoneInstance;
-        }
-
-        const fields: Type.OrderedFields = reducedTableFields(fieldType, projectedFieldLiterals);
-
-        const rows: ReadonlyArray<Type.UnorderedFields> | undefined = fieldType.rows?.map((row: Type.UnorderedFields) =>
-            PQP.MapUtils.pick(row, projectedFieldLiterals),
-        );
-
-        return TypeUtils.definedTable(fieldType.isNullable, fields, rows);
-    } else {
-        const newFields: Map<string, Type.TPowerQueryType> = new Map(
-            projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
-        );
-
-        return fieldType.kind === Type.TypeKind.Record
-            ? TypeUtils.definedRecord(false, newFields, false)
-            : TypeUtils.definedTable(fieldType.isNullable, new PQP.OrderedMap(newFields));
+    // All we know is fieldType was a Record.
+    // Create a DefinedRecord with the projected fields.
+    if (!TypeUtils.isDefinedRecord(fieldType)) {
+        return TypeUtils.definedRecord(false, anyFields(projectedFieldLiterals), false);
     }
-}
 
-// Returns a subset of `current` using `keys`.
-// If a mismatch is found it either returns Null if isOptional, else None.
-function reducedFieldsToKeys<T extends Type.DefinedRecord | Type.DefinedTable>(
-    current: T,
-    keys: ReadonlyArray<string>,
-    isOptional: boolean,
-    fieldsFactory: (
-        current: T,
-        keys: ReadonlyArray<string>,
-    ) => T extends Type.DefinedRecord ? Type.UnorderedFields : Type.OrderedFields,
-): T | Type.None | Type.Null {
-    const currentFieldNames: ReadonlyArray<string> = [...current.fields.keys()];
-
-    if (!current.isOpen && !PQP.ArrayUtils.isSubset(currentFieldNames, keys)) {
+    // Returns a subset of fieldType using projectedFieldLiterals.
+    // If a mismatch is found it either returns Null if isOptional, else None.
+    if (!fieldType.isOpen && !PQP.ArrayUtils.isSubset([...fieldType.fields.keys()], projectedFieldLiterals)) {
         return isOptional ? Type.NullInstance : Type.NoneInstance;
     }
 
     return {
-        ...current,
-        fields: fieldsFactory(current, keys),
+        ...fieldType,
+        fields: PQP.MapUtils.pick(fieldType.fields, projectedFieldLiterals),
         isOpen: false,
     };
 }
 
-function reducedRecordFields(current: Type.DefinedRecord, keys: ReadonlyArray<string>): Type.UnorderedFields {
-    return PQP.MapUtils.pick(current.fields, keys);
+function inspectTableProjection(
+    fieldType: Type.TTable,
+    projectedFieldLiterals: ReadonlyArray<string>,
+    isOptional: boolean,
+): Type.TPowerQueryType {
+    // All we know is fieldType was a Table.
+    // Create a DefinedTable with the projected fields.
+    if (!TypeUtils.isDefinedTable(fieldType)) {
+        return TypeUtils.definedTable(fieldType.isNullable, projectedTableFields(undefined, projectedFieldLiterals));
+    }
+
+    const hasUndeclaredField: boolean = projectedFieldLiterals.some(
+        (fieldName: string) => !fieldType.fields.has(fieldName),
+    );
+
+    if (hasUndeclaredField && !fieldType.isOpen) {
+        return isOptional ? Type.NullInstance : Type.NoneInstance;
+    }
+
+    const fields: Type.OrderedFields = projectedTableFields(fieldType.fields, projectedFieldLiterals);
+
+    const rows: ReadonlyArray<Type.UnorderedFields> | undefined = hasUndeclaredField
+        ? undefined
+        : fieldType.rows?.map((row: Type.UnorderedFields) => PQP.MapUtils.pick(row, projectedFieldLiterals));
+
+    return TypeUtils.definedTable(fieldType.isNullable, fields, rows);
 }
 
-function reducedTableFields(current: Type.DefinedTable, keys: ReadonlyArray<string>): Type.OrderedFields {
-    return new PQP.OrderedMap([...PQP.MapUtils.pick(current.fields, keys).entries()]);
+function anyFields(fieldNames: ReadonlyArray<string>): Type.UnorderedFields {
+    return new Map(fieldNames.map((fieldName: string) => [fieldName, Type.AnyInstance]));
+}
+
+function projectedTableFields(
+    sourceFields: Type.OrderedFields | undefined,
+    fieldNames: ReadonlyArray<string>,
+): Type.OrderedFields {
+    return new PQP.OrderedMap(
+        fieldNames.map((fieldName: string) => [fieldName, sourceFields?.get(fieldName) ?? Type.AnyInstance]),
+    );
 }

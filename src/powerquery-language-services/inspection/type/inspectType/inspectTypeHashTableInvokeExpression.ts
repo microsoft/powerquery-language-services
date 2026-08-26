@@ -51,15 +51,12 @@ function definedTableFromConstructorTypes(
 
     const rows: ReadonlyArray<Type.UnorderedFields> | undefined = definedTableRows([...fields.keys()], rowsType);
 
-    if (
-        rows === undefined ||
-        (columnsType.extendedKind === Type.ExtendedTypeKind.TableType &&
-            !areTableRowsCompatible(state, fields, rows, correlationId))
-    ) {
-        return TypeUtils.definedTable(false, fields);
-    }
+    const canRetainRows: boolean =
+        rows !== undefined &&
+        (columnsType.extendedKind !== Type.ExtendedTypeKind.TableType ||
+            areTableRowsCompatible(state, fields, rows, correlationId));
 
-    return TypeUtils.definedTable(false, fields, rows);
+    return TypeUtils.definedTable(false, fields, canRetainRows ? rows : undefined);
 }
 
 function definedTableFields(columnsType: Type.TPowerQueryType): Type.OrderedFields | undefined {
