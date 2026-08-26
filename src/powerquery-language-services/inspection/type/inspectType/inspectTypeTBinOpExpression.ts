@@ -186,11 +186,19 @@ function unionTables(
 ): Type.Table | Type.DefinedTable {
     const isNullable: boolean = leftType.isNullable && rightType.isNullable;
 
-    if (leftType.isOpen || rightType.isOpen || leftType.rows.length + rightType.rows.length > MaxDefinedTableRows) {
+    if (leftType.isOpen || rightType.isOpen) {
         return isNullable ? Type.NullableTableInstance : Type.TableInstance;
     }
 
     const fields: Type.OrderedFields = unionTableFields(state, leftType.fields, rightType.fields, correlationId);
+
+    if (
+        leftType.rows === undefined ||
+        rightType.rows === undefined ||
+        leftType.rows.length + rightType.rows.length > MaxDefinedTableRows
+    ) {
+        return TypeUtils.definedTable(isNullable, fields);
+    }
 
     const rows: ReadonlyArray<Type.UnorderedFields> = [...leftType.rows, ...rightType.rows].map(
         (row: Type.UnorderedFields) => normalizeTableRow(row, fields),

@@ -56,7 +56,7 @@ function definedTableFromConstructorTypes(
         (columnsType.extendedKind === Type.ExtendedTypeKind.TableType &&
             !areTableRowsCompatible(state, fields, rows, correlationId))
     ) {
-        return Type.TableInstance;
+        return TypeUtils.definedTable(false, fields);
     }
 
     return TypeUtils.definedTable(false, fields, rows);

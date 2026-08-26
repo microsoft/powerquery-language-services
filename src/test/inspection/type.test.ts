@@ -41,7 +41,7 @@ describe(`Inspection - Type`, () => {
 
     function definedTable(
         fields: ReadonlyArray<[string, Type.TPowerQueryType]>,
-        rows: ReadonlyArray<Type.UnorderedFields>,
+        rows?: ReadonlyArray<Type.UnorderedFields>,
     ): Type.DefinedTable {
         return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), rows);
     }
@@ -319,16 +319,16 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
-            it(`falls back to table for rows that conflict with an explicit table type`, async () =>
+            it(`preserves the schema for rows that conflict with an explicit table type`, async () =>
                 await assertEqualRootType({
                     text: `#table(type table [Value = number], {{"x"}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.NumberInstance]]),
                 }));
 
-            it(`falls back to table for an open explicit table type`, async () =>
+            it(`preserves parsed fields for an incomplete explicit table type`, async () =>
                 await assertEqualRootType({
                     text: `#table(type table [Name = text, ...], {{"Betty"}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Name`, Type.TextInstance]]),
                 }));
 
             it(`unescapes literal column names`, async () =>
@@ -426,6 +426,12 @@ describe(`Inspection - Type`, () => {
                     expected: Type.NoneInstance,
                 }));
 
+            it(`uses the schema for item access when rows are unknown`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list, Source = #table(type table [Name = text], rows) in Source{0}`,
+                    expected: definedRecord([[`Name`, Type.TextInstance]]),
+                }));
+
             it(`projects exact rows`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}}) in Source[[Name]]`,
@@ -433,6 +439,12 @@ describe(`Inspection - Type`, () => {
                         [[`Name`, Type.AnyInstance]],
                         [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
                     ),
+                }));
+
+            it(`projects the schema when rows are unknown`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list, Source = #table(type table [Name = text, Score = number], rows) in Source[[Name]]`,
+                    expected: definedTable([[`Name`, Type.TextInstance]]),
                 }));
 
             it(`projects every exact row`, async () =>
@@ -447,22 +459,25 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
-            it(`falls back to table for malformed row widths`, async () =>
+            it(`preserves the schema for malformed row widths`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Name", "Score"}, {{"Betty"}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([
+                        [`Name`, Type.AnyInstance],
+                        [`Score`, Type.AnyInstance],
+                    ]),
                 }));
 
-            it(`falls back to table for rows with extra values`, async () =>
+            it(`preserves the schema for rows with extra values`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Name"}, {{"Betty", 42}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Name`, Type.AnyInstance]]),
                 }));
 
-            it(`falls back to table when a row is not a list`, async () =>
+            it(`preserves the schema when a row is not a list`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Value"}, {1})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 }));
 
             it(`concatenates exact rows with the same schema`, async () =>
@@ -516,7 +531,7 @@ describe(`Inspection - Type`, () => {
                     expected: definedRecord([[`Value`, TypeUtils.numberLiteral(false, 2)]]),
                 }));
 
-            it(`falls back to table when concatenated rows exceed the limit`, async () => {
+            it(`preserves the schema when concatenated rows exceed the limit`, async () => {
                 const leftRows: string = Array.from({ length: 50 }, (_: unknown, index: number) => `{${index}}`).join(
                     `, `,
                 );
@@ -528,14 +543,14 @@ describe(`Inspection - Type`, () => {
 
                 await assertEqualRootType({
                     text: `#table({"Value"}, {${leftRows}}) & #table({"Value"}, {${rightRows}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 });
             });
 
-            it(`falls back to table when either concatenated operand has dynamic rows`, async () =>
+            it(`preserves the schema when either concatenated operand has dynamic rows`, async () =>
                 await assertEqualRootType({
                     text: `let rows = {} as list in #table({"Value"}, {{1}}) & #table({"Value"}, rows)`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 }));
 
             it(`limits retained rows`, async () => {
@@ -545,7 +560,7 @@ describe(`Inspection - Type`, () => {
 
                 await assertEqualRootType({
                     text: `#table({"Value"}, {${rows}})`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 });
             });
 
@@ -566,10 +581,10 @@ describe(`Inspection - Type`, () => {
                 });
             });
 
-            it(`falls back to table for dynamic rows`, async () =>
+            it(`preserves the schema for dynamic rows`, async () =>
                 await assertEqualRootType({
                     text: `let rows = {} as list in #table({"Value"}, rows)`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 }));
 
             it(`falls back to table for an unknown schema`, async () =>
@@ -722,7 +737,7 @@ describe(`Inspection - Type`, () => {
                 });
             });
 
-            it(`falls back to table when projecting undeclared fields from an open table`, async () => {
+            it(`uses any for undeclared fields projected from an open table`, async () => {
                 const eachScope: Type.DefinedTable = openDefinedTable(
                     [[`Name`, Type.TextInstance]],
                     [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
@@ -730,7 +745,7 @@ describe(`Inspection - Type`, () => {
 
                 await assertEqualRootType({
                     text: `(each [[Other]])([Name = "Betty"])`,
-                    expected: Type.TableInstance,
+                    expected: definedTable([[`Other`, Type.AnyInstance]]),
                     settings: {
                         ...ExtendedInspectionSettings,
                         eachScopeById: new Map([[4, eachScope]]),
@@ -1342,8 +1357,14 @@ describe(`Inspection - Type`, () => {
                         text: `let x = (_ as any) in x[[foo]]`,
                         expected: anyUnion([
                             TypeUtils.definedRecord(false, new Map([[`foo`, Type.AnyInstance]]), false),
-                            Type.TableInstance,
+                            definedTable([[`foo`, Type.AnyInstance]]),
                         ]),
+                    }));
+
+                it(`${Ast.NodeKind.FieldProjection} on table`, async () =>
+                    await assertEqualRootType({
+                        text: `let x = (_ as table) in x[[foo]]`,
+                        expected: definedTable([[`foo`, Type.AnyInstance]]),
                     }));
 
                 it(`${Ast.NodeKind.FieldSelector}`, async () =>
