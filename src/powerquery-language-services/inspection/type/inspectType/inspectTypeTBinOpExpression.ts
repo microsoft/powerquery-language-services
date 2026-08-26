@@ -190,7 +190,7 @@ function unionTables(
         return isNullable ? Type.NullableTableInstance : Type.TableInstance;
     }
 
-    const fields: Type.OrderedFields = unionTableFields(state, leftType.fields, rightType.fields, correlationId);
+    const fields: Type.OrderedFields = unionTableFields(state, [leftType, rightType], correlationId);
 
     const rows: ReadonlyArray<Type.UnorderedFields> | undefined =
         leftType.rows !== undefined &&
@@ -204,31 +204,29 @@ function unionTables(
 
 function unionTableFields(
     state: InspectTypeState,
-    leftFields: Type.OrderedFields,
-    rightFields: Type.OrderedFields,
+    [leftType, rightType]: [Type.DefinedTable, Type.DefinedTable],
     correlationId: number,
 ): Type.OrderedFields {
-    const fields: Type.OrderedFields = new PQP.OrderedMap();
-    const fieldNames: ReadonlySet<string> = new Set([...leftFields.keys(), ...rightFields.keys()]);
+    const combinedFields: Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
 
-    for (const fieldName of fieldNames) {
-        const leftFieldType: Type.TPowerQueryType | undefined = leftFields.get(fieldName);
-        const rightFieldType: Type.TPowerQueryType | undefined = rightFields.get(fieldName);
-
-        fields.set(
-            fieldName,
+    for (const [key, value] of leftType.fields.entries()) {
+        combinedFields.set(
+            key,
             TypeUtils.anyUnion(
-                [
-                    Assert.asDefined(leftFieldType ?? rightFieldType),
-                    leftFieldType !== undefined && rightFieldType !== undefined ? rightFieldType : Type.NullInstance,
-                ],
+                [value, rightType.fields.get(key) ?? Type.NullInstance],
                 state.traceManager,
                 correlationId,
             ),
         );
     }
 
-    return fields;
+    for (const [key, value] of rightType.fields.entries()) {
+        if (!combinedFields.has(key)) {
+            combinedFields.set(key, TypeUtils.anyUnion([value, Type.NullInstance], state.traceManager, correlationId));
+        }
+    }
+
+    return combinedFields;
 }
 
 function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields): Type.UnorderedFields {
