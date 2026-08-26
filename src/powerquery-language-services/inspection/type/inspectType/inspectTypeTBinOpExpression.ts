@@ -192,12 +192,15 @@ function unionTables(
 
     const fields: Type.OrderedFields = unionTableFields(state, [leftType, rightType], correlationId);
 
-    const rows: ReadonlyArray<Type.UnorderedFields> | undefined =
+    let rows: ReadonlyArray<Type.UnorderedFields> | undefined;
+
+    if (
         leftType.rows !== undefined &&
         rightType.rows !== undefined &&
         leftType.rows.length + rightType.rows.length <= MaxDefinedTableRows
-            ? [...leftType.rows, ...rightType.rows].map((row: Type.UnorderedFields) => normalizeTableRow(row, fields))
-            : undefined;
+    ) {
+        rows = [...leftType.rows, ...rightType.rows].map((row: Type.UnorderedFields) => normalizeTableRow(row, fields));
+    }
 
     return TypeUtils.definedTable(isNullable, fields, rows);
 }
