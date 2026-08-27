@@ -4,8 +4,10 @@
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, TextUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
+import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { MaxDefinedTableRows } from "./definedTableUtils";
@@ -16,7 +18,18 @@ export async function inspectTypeHashTableInvokeExpression(
     xorNode: TXorNode,
     correlationId: number | undefined,
 ): Promise<Type.TPowerQueryType> {
+    const trace: Trace = state.traceManager.entry(
+        InspectionTraceConstant.InspectType,
+        inspectTypeHashTableInvokeExpression.name,
+        correlationId,
+        TraceUtils.xorNodeDetails(xorNode),
+    );
+
+    state.cancellationToken?.throwIfCancelled();
+
     if (state.typeStrategy === TypeStrategy.Primitive) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.TableInstance) });
+
         return Type.TableInstance;
     }
 
@@ -26,15 +39,21 @@ export async function inspectTypeHashTableInvokeExpression(
     );
 
     if (columns === undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.TableInstance) });
+
         return Type.TableInstance;
     }
 
-    const columnsType: Type.TPowerQueryType = await inspectXor(state, columns, correlationId);
+    const columnsType: Type.TPowerQueryType = await inspectXor(state, columns, trace.id);
 
     const rowsType: Type.TPowerQueryType | undefined =
-        rows === undefined ? undefined : await inspectXor(state, rows, correlationId);
+        rows === undefined ? undefined : await inspectXor(state, rows, trace.id);
 
-    return definedTableFromConstructorTypes(state, columnsType, rowsType, correlationId);
+    const result: Type.TPowerQueryType = definedTableFromConstructorTypes(state, columnsType, rowsType, trace.id);
+
+    trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
+
+    return result;
 }
 
 function definedTableFromConstructorTypes(
