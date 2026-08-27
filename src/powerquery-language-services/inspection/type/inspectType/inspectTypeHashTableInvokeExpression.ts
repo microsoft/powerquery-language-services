@@ -68,11 +68,14 @@ function definedTableFromConstructorTypes(
         return Type.TableInstance;
     }
 
+    // A table type declares column constraints, while a list declares only column names with Any types.
+    const validateRowTypes: boolean = columnsType.extendedKind === Type.ExtendedTypeKind.TableType;
+
     const rows: ReadonlyArray<Type.UnorderedFields> | undefined = definedTableRows(
         state,
         fields,
         rowsType,
-        columnsType.extendedKind === Type.ExtendedTypeKind.TableType,
+        validateRowTypes,
         correlationId,
     );
 
