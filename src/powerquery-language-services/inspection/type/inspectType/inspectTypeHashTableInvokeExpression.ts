@@ -39,7 +39,6 @@ export async function inspectTypeHashTableInvokeExpression(
     );
 
     if (columns === undefined) {
-        // '#table()'
         trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.TableInstance) });
 
         return Type.TableInstance;
@@ -91,7 +90,6 @@ function definedTableFields(columnsType: Type.TPowerQueryType): Type.OrderedFiel
         return undefined;
     }
 
-    // '#table({"Name"}, rows)'
     const fields: Type.OrderedFields = new PQP.OrderedMap();
 
     for (const element of columnsType.elements) {
