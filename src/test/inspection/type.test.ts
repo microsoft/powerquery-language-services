@@ -39,6 +39,35 @@ describe(`Inspection - Type`, () => {
         unionedTypePairs: ReadonlyArray<Type.TPowerQueryType>,
     ) => TypeUtils.anyUnion(unionedTypePairs, NoOpTraceManagerInstance, undefined);
 
+    function definedTable(
+        fields: ReadonlyArray<[string, Type.TPowerQueryType]>,
+        rows?: ReadonlyArray<Type.UnorderedFields>,
+    ): Type.DefinedTable {
+        return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), rows);
+    }
+
+    function openDefinedTable(
+        fields: ReadonlyArray<[string, Type.TPowerQueryType]>,
+        rows: ReadonlyArray<Type.UnorderedFields>,
+    ): Type.DefinedTable {
+        return {
+            kind: Type.TypeKind.Table,
+            extendedKind: Type.ExtendedTypeKind.DefinedTable,
+            isNullable: false,
+            fields: new PQP.OrderedMap(fields),
+            isOpen: true,
+            rows,
+        };
+    }
+
+    function definedRow(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.UnorderedFields {
+        return new Map(fields);
+    }
+
+    function definedRecord(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.DefinedRecord {
+        return TypeUtils.definedRecord(false, definedRow(fields), false);
+    }
+
     async function assertEqualRootType(params: {
         readonly text: string;
         readonly expected: Type.TPowerQueryType;
@@ -223,7 +252,7 @@ describe(`Inspection - Type`, () => {
                                 TypeUtils.definedTable(
                                     false,
                                     new PQP.OrderedMap([[`foo`, TypeUtils.numberLiteral(false, 1)]]),
-                                    false,
+                                    [definedRow([[`foo`, TypeUtils.numberLiteral(false, 1)]])],
                                 ),
                             ],
                         ]),
@@ -252,44 +281,72 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`#table`, () => {
-            function definedTable(fields: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.DefinedTable {
-                return TypeUtils.definedTable(false, new PQP.OrderedMap(fields), false);
-            }
-
             it(`infers columns from a literal list`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {}) in Source`,
-                    expected: definedTable([
-                        [`Name`, Type.AnyInstance],
-                        [`Score`, Type.AnyInstance],
-                    ]),
+                    expected: definedTable(
+                        [
+                            [`Name`, Type.AnyInstance],
+                            [`Score`, Type.AnyInstance],
+                        ],
+                        [],
+                    ),
                 }));
 
             it(`preserves an explicit table type`, async () =>
                 await assertEqualRootType({
-                    text: `#table(type table [Name = text, Score = number], {})`,
-                    expected: definedTable([
-                        [`Name`, Type.TextInstance],
-                        [`Score`, Type.NumberInstance],
-                    ]),
+                    text: `#table(type table [Name = text, Score = number], {{"Betty", 42}})`,
+                    expected: definedTable(
+                        [
+                            [`Name`, Type.TextInstance],
+                            [`Score`, Type.NumberInstance],
+                        ],
+                        [
+                            definedRow([
+                                [`Name`, TypeUtils.textLiteral(false, `"Betty"`)],
+                                [`Score`, TypeUtils.numberLiteral(false, 42)],
+                            ]),
+                        ],
+                    ),
+                }));
+
+            it(`preserves null rows for a nullable explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Value = nullable number], {{null}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.NullableNumberInstance]],
+                        [definedRow([[`Value`, Type.NullInstance]])],
+                    ),
+                }));
+
+            it(`preserves the schema for rows that conflict with an explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Value = number], {{"x"}})`,
+                    expected: definedTable([[`Value`, Type.NumberInstance]]),
+                }));
+
+            it(`preserves parsed fields for an incomplete explicit table type`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Name = text, ...], {{"Betty"}})`,
+                    expected: definedTable([[`Name`, Type.TextInstance]]),
                 }));
 
             it(`unescapes literal column names`, async () =>
                 await assertEqualRootType({
                     text: `#table({"Display ""Name"""}, {})`,
-                    expected: definedTable([[`Display "Name"`, Type.AnyInstance]]),
+                    expected: definedTable([[`Display "Name"`, Type.AnyInstance]], []),
                 }));
 
             it(`infers a column name from a quoted identifier`, async () =>
                 await assertEqualRootType({
                     text: `let key = "foobar", tbl = #table({#"key"}, {}) in tbl`,
-                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                    expected: definedTable([[`foobar`, Type.AnyInstance]], []),
                 }));
 
             it(`infers a column name from an identifier that requires quotes`, async () =>
                 await assertEqualRootType({
                     text: `let #"column name" = "foobar", tbl = #table({#"column name"}, {}) in tbl`,
-                    expected: definedTable([[`foobar`, Type.AnyInstance]]),
+                    expected: definedTable([[`foobar`, Type.AnyInstance]], []),
                 }));
 
             it(`falls back to table for duplicate column names`, async () =>
@@ -302,6 +359,232 @@ describe(`Inspection - Type`, () => {
                 await assertEqualRootType({
                     text: `#table({"Name", 1}, {})`,
                     expected: Type.TableInstance,
+                }));
+
+            it(`retains exact literal rows`, async () => {
+                const betty: Type.UnorderedFields = definedRow([
+                    [`Name`, TypeUtils.textLiteral(false, `"Betty"`)],
+                    [`Score`, TypeUtils.numberLiteral(false, 42)],
+                ]);
+
+                const alex: Type.UnorderedFields = definedRow([
+                    [`Name`, TypeUtils.textLiteral(false, `"Alex"`)],
+                    [`Score`, TypeUtils.numberLiteral(false, 17)],
+                ]);
+
+                await assertEqualRootType({
+                    text: `#table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}})`,
+                    expected: definedTable(
+                        [
+                            [`Name`, Type.AnyInstance],
+                            [`Score`, Type.AnyInstance],
+                        ],
+                        [betty, alex],
+                    ),
+                });
+            });
+
+            it(`retains generalized value types in exact rows`, async () =>
+                await assertEqualRootType({
+                    text: `let value = 1 as number in #table({"Value"}, {{value}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [definedRow([[`Value`, Type.NumberInstance]])],
+                    ),
+                }));
+
+            it(`retains heterogeneous row values without changing the column type`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {{1}, {"two"}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.textLiteral(false, `"two"`)]]),
+                        ],
+                    ),
+                }));
+
+            it(`retains a zero-column row`, async () =>
+                await assertEqualRootType({
+                    text: `#table({}, {{}})`,
+                    expected: definedTable([], [definedRow([])]),
+                }));
+
+            it(`uses exact rows for item access`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}}) in Source{0}`,
+                    expected: definedRecord([
+                        [`Name`, TypeUtils.textLiteral(false, `"Betty"`)],
+                        [`Score`, TypeUtils.numberLiteral(false, 42)],
+                    ]),
+                }));
+
+            it(`returns none for exact item access beyond the retained rows`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name"}, {{"Betty"}}) in Source{1}`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`uses the schema for item access when rows are unknown`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list, Source = #table(type table [Name = text], rows) in Source{0}`,
+                    expected: definedRecord([[`Name`, Type.TextInstance]]),
+                }));
+
+            it(`projects exact rows`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}}) in Source[[Name]]`,
+                    expected: definedTable(
+                        [[`Name`, Type.AnyInstance]],
+                        [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
+                    ),
+                }));
+
+            it(`projects the schema when rows are unknown`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list, Source = #table(type table [Name = text, Score = number], rows) in Source[[Name]]`,
+                    expected: definedTable([[`Name`, Type.TextInstance]]),
+                }));
+
+            it(`projects every exact row`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Name", "Score"}, {{"Betty", 42}, {"Alex", 17}}) in Source[[Name]]`,
+                    expected: definedTable(
+                        [[`Name`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]]),
+                            definedRow([[`Name`, TypeUtils.textLiteral(false, `"Alex"`)]]),
+                        ],
+                    ),
+                }));
+
+            it(`preserves the schema for malformed row widths`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name", "Score"}, {{"Betty"}})`,
+                    expected: definedTable([
+                        [`Name`, Type.AnyInstance],
+                        [`Score`, Type.AnyInstance],
+                    ]),
+                }));
+
+            it(`preserves the schema for rows with extra values`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Name"}, {{"Betty", 42}})`,
+                    expected: definedTable([[`Name`, Type.AnyInstance]]),
+                }));
+
+            it(`preserves the schema when a row is not a list`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {1})`,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
+                }));
+
+            it(`concatenates exact rows with the same schema`, async () =>
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {{1}}) & #table({"Value"}, {{2}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 2)]]),
+                        ],
+                    ),
+                }));
+
+            it(`normalizes exact rows to the combined schema`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {{1}}) & #table(type table [B = text], {{"two"}})`,
+                    expected: definedTable(
+                        [
+                            [`A`, anyUnion([Type.NumberInstance, Type.NullInstance])],
+                            [`B`, anyUnion([Type.TextInstance, Type.NullInstance])],
+                        ],
+                        [
+                            definedRow([
+                                [`A`, TypeUtils.numberLiteral(false, 1)],
+                                [`B`, Type.NullInstance],
+                            ]),
+                            definedRow([
+                                [`A`, Type.NullInstance],
+                                [`B`, TypeUtils.textLiteral(false, `"two"`)],
+                            ]),
+                        ],
+                    ),
+                }));
+
+            it(`unions shared column types when concatenating exact tables`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [Value = number], {{1}}) & #table(type table [Value = text], {{"two"}})`,
+                    expected: definedTable(
+                        [[`Value`, anyUnion([Type.NumberInstance, Type.TextInstance])]],
+                        [
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, 1)]]),
+                            definedRow([[`Value`, TypeUtils.textLiteral(false, `"two"`)]]),
+                        ],
+                    ),
+                }));
+
+            it(`uses concatenated exact rows for item access`, async () =>
+                await assertEqualRootType({
+                    text: `let Source = #table({"Value"}, {{1}}) & #table({"Value"}, {{2}}) in Source{1}`,
+                    expected: definedRecord([[`Value`, TypeUtils.numberLiteral(false, 2)]]),
+                }));
+
+            it(`preserves the schema when concatenated rows exceed the limit`, async () => {
+                const leftRows: string = Array.from({ length: 50 }, (_: unknown, index: number) => `{${index}}`).join(
+                    `, `,
+                );
+
+                const rightRows: string = Array.from(
+                    { length: 51 },
+                    (_: unknown, index: number) => `{${index + 50}}`,
+                ).join(`, `);
+
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {${leftRows}}) & #table({"Value"}, {${rightRows}})`,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
+                });
+            });
+
+            it(`preserves the schema when either concatenated operand has dynamic rows`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list in #table({"Value"}, {{1}}) & #table({"Value"}, rows)`,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
+                }));
+
+            it(`limits retained rows`, async () => {
+                const rows: string = Array.from({ length: 101 }, (_: unknown, index: number) => `{${index}}`).join(
+                    `, `,
+                );
+
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {${rows}})`,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
+                });
+            });
+
+            it(`retains rows at the limit`, async () => {
+                const rowValues: ReadonlyArray<number> = Array.from(
+                    { length: 100 },
+                    (_: unknown, index: number) => index,
+                );
+
+                await assertEqualRootType({
+                    text: `#table({"Value"}, {${rowValues.map((value: number) => `{${value}}`).join(`, `)}})`,
+                    expected: definedTable(
+                        [[`Value`, Type.AnyInstance]],
+                        rowValues.map((value: number) =>
+                            definedRow([[`Value`, TypeUtils.numberLiteral(false, value)]]),
+                        ),
+                    ),
+                });
+            });
+
+            it(`preserves the schema for dynamic rows`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list in #table({"Value"}, rows)`,
+                    expected: definedTable([[`Value`, Type.AnyInstance]]),
                 }));
 
             it(`falls back to table for an unknown schema`, async () =>
@@ -436,6 +719,37 @@ describe(`Inspection - Type`, () => {
                     text: expression,
                     expected: TypeUtils.definedRecord(false, expectedFields, false),
                     settings: testSettingsWithEachScope,
+                });
+            });
+
+            it(`preserves exact rows when projecting declared fields from an open table`, async () => {
+                const row: Type.UnorderedFields = definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]]);
+
+                const eachScope: Type.DefinedTable = openDefinedTable([[`Name`, Type.TextInstance]], [row]);
+
+                await assertEqualRootType({
+                    text: `(each [[Name]])([Name = "Betty"])`,
+                    expected: definedTable([[`Name`, Type.TextInstance]], [row]),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        eachScopeById: new Map([[4, eachScope]]),
+                    },
+                });
+            });
+
+            it(`uses any for undeclared fields projected from an open table`, async () => {
+                const eachScope: Type.DefinedTable = openDefinedTable(
+                    [[`Name`, Type.TextInstance]],
+                    [definedRow([[`Name`, TypeUtils.textLiteral(false, `"Betty"`)]])],
+                );
+
+                await assertEqualRootType({
+                    text: `(each [[Other]])([Name = "Betty"])`,
+                    expected: definedTable([[`Other`, Type.AnyInstance]]),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        eachScopeById: new Map([[4, eachScope]]),
+                    },
                 });
             });
         });
@@ -1043,8 +1357,14 @@ describe(`Inspection - Type`, () => {
                         text: `let x = (_ as any) in x[[foo]]`,
                         expected: anyUnion([
                             TypeUtils.definedRecord(false, new Map([[`foo`, Type.AnyInstance]]), false),
-                            TypeUtils.definedTable(false, new PQP.OrderedMap([[`foo`, Type.AnyInstance]]), false),
+                            definedTable([[`foo`, Type.AnyInstance]]),
                         ]),
+                    }));
+
+                it(`${Ast.NodeKind.FieldProjection} on table`, async () =>
+                    await assertEqualRootType({
+                        text: `let x = (_ as table) in x[[foo]]`,
+                        expected: definedTable([[`foo`, Type.AnyInstance]]),
                     }));
 
                 it(`${Ast.NodeKind.FieldSelector}`, async () =>
