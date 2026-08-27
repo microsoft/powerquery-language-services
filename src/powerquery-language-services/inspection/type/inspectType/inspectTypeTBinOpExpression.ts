@@ -205,6 +205,8 @@ function unionTables(
     return TypeUtils.definedTable(isNullable, fields, rows);
 }
 
+// '#table(type table [A = number], {{1}}) & #table(type table [B = text], {{"two"}})'
+// produces fields [A = nullable number, B = nullable text].
 function unionTableFields(
     state: InspectTypeState,
     [leftType, rightType]: [Type.DefinedTable, Type.DefinedTable],
@@ -232,6 +234,7 @@ function unionTableFields(
     return combinedFields;
 }
 
+// Against fields [A, B], row [A = 1] becomes [A = 1, B = null].
 function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields): Type.UnorderedFields {
     const normalizedRow: Type.UnorderedFields = new Map();
 
