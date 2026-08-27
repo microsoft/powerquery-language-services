@@ -233,7 +233,13 @@ function unionTableFields(
 }
 
 function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields): Type.UnorderedFields {
-    return new Map([...fields.keys()].map((fieldName: string) => [fieldName, row.get(fieldName) ?? Type.NullInstance]));
+    const normalizedRow: Type.UnorderedFields = new Map();
+
+    for (const fieldName of fields.keys()) {
+        normalizedRow.set(fieldName, row.get(fieldName) ?? Type.NullInstance);
+    }
+
+    return normalizedRow;
 }
 
 // Keys: <first operand> <operator> <second operand>
