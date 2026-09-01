@@ -310,6 +310,66 @@ describe(`Inspection - Type`, () => {
                     ),
                 }));
 
+            it(`retains navigation table rows when referenced tables resolve`, async () => {
+                const actual: Type.TPowerQueryType = await TestUtils.assertRootType({
+                    text: `let
+    SalesData = #table(
+        type table
+            [
+                Month = text,
+                Region = text,
+                ProductCategory = text,
+                Revenue = number,
+                Orders = number
+            ],
+        {
+            {"2026-01", "North America", "Hardware", 420000, 1280},
+            {"2026-01", "Europe", "Software", 280000, 910},
+            {"2026-02", "North America", "Services", 460000, 1335},
+            {"2026-02", "Asia Pacific", "Hardware", 250000, 770},
+            {"2026-03", "Europe", "Services", 310000, 980},
+            {"2026-03", "Asia Pacific", "Software", 295000, 860}
+        }
+    ),
+    NavType = type table [Name = nullable text, Parent = nullable text, PartType = nullable text, Properties = nullable record, Data = nullable any],
+    NavTable = #table(NavType, {
+        {"dashboard", null, "Container", [Direction = "column"], null},
+        {"dashboard-header", "dashboard", "Header", [Header = "Northwind Complete Dashboard", FarText = "Generated from mashup"], null},
+        {"dashboard-kpis", "dashboard", "Container", [Direction = "row"], null},
+        {"quarter-revenue", "dashboard-kpis", "KpiCard", [Value = "$3.4M", Label = "Quarter revenue", Sub = "+9.8% QoQ"], null},
+        {"gross-margin", "dashboard-kpis", "KpiCard", [Value = "38.5%", Label = "Gross margin", Sub = "+1.1 pts QoQ"], null},
+        {"enterprise-deals", "dashboard-kpis", "KpiCard", [Value = "74", Label = "Enterprise deals", Sub = "+6 vs last quarter"], null},
+        {"dashboard-revenue", "dashboard", "Container", [Direction = "row"], null},
+        {"revenue-by-region", "dashboard-revenue", "Card", [Title = "Revenue by region"], null},
+        {"revenue-by-region-chart", "revenue-by-region", "BarChart", [Category = "Region", Value = "Revenue"], SalesData},
+        {"revenue-mix", "dashboard-revenue", "Card", [Title = "Revenue mix"], null},
+        {"revenue-mix-chart", "revenue-mix", "DonutChart", [Category = "ProductCategory", Value = "Revenue"], SalesData},
+        {"monthly-trend", "dashboard", "Card", [Title = "Monthly trend"], null},
+        {"monthly-trend-chart", "monthly-trend", "LineChart", [XAxis = "Month", YAxis = "Revenue", Padding = 1, Time = #date(2020, 1, 1)], SalesData},
+        {"detailed-performance", "dashboard", "Card", [Title = "Detailed performance table"], null},
+        {"detailed-performance-table", "detailed-performance", "Table", [], SalesData}
+    })
+in
+    NavTable`,
+                    inspectionSettings: ExtendedInspectionSettings,
+                });
+
+                if (!TypeUtils.isDefinedTable(actual)) {
+                    throw new Error(`expected NavTable to resolve as a defined table`);
+                }
+
+                const navRows: ReadonlyArray<Type.UnorderedFields> = Assert.asDefined(actual.rows);
+                Assert.isTrue(navRows.length === 15);
+
+                const salesData: Type.TPowerQueryType = Assert.asDefined(Assert.asDefined(navRows[8]).get(`Data`));
+
+                if (!TypeUtils.isDefinedTable(salesData)) {
+                    throw new Error(`expected the Data value to resolve as a defined table`);
+                }
+
+                Assert.isTrue(Assert.asDefined(salesData.rows).length === 6);
+            });
+
             it(`preserves null rows for a nullable explicit table type`, async () =>
                 await assertEqualRootType({
                     text: `#table(type table [Value = nullable number], {{null}})`,
