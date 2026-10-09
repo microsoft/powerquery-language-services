@@ -143,6 +143,7 @@ export type ScopeById = Map<number, NodeScope>;
 export interface NodeScope {
     readonly createdForNodeId: number | undefined;
     // Mostly a tag for debugging.
+    // May be a structurally shared read-only view, rather than a native Map.
     readonly scopeItemByKey: ReadonlyMap<string, TScopeItem>;
 }
 

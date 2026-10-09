@@ -1,0 +1,56 @@
+{
+  "recordedAt": "2026-10-09T02:07:21.789Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "samples": 1,
+  "warmups": 0,
+  "offset": 4,
+  "timeoutMs": 20000,
+  "validationOnly": false,
+  "profilePhase": null,
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "Databricks.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Certified\\External\\Databricks\\Databricks.pq",
+      "bytes": 208494,
+      "sourceSha256": "8094f9760204f460f0dc673884c06648d4b042f989547677d257c1b567233eba",
+      "runs": [
+        {
+          "file": "Databricks.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Certified\\External\\Databricks\\Databricks.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 52.7211,
+            "parse": 285.6518,
+            "functionValidation": 2.9504,
+            "invokeValidation": 1881.512
+          },
+          "heapAfterBytes": {
+            "lex": 20456464,
+            "parse": 52591208,
+            "functionValidation": 53402008,
+            "invokeValidation": 178896536
+          },
+          "heapDeltaBytes": {
+            "lex": 8188536,
+            "parse": 32099360,
+            "functionValidation": 799808,
+            "invokeValidation": 125484392
+          },
+          "astNodes": 51790,
+          "succeeded": false,
+          "error": {
+            "name": "Error",
+            "message": "InvariantError: Expected value to be instanceof Error - {\n    \"typeof\": \"object\",\n    \"value\": {\n        \"kind\": \"Error\",\n        \"error\": {\n            \"innerError\": {\n                \"invariantBroken\": \"this should never be reached\",\n                \"details\": {\n                    \"nodeId\": 668,\n                    \"nodeKind\": \"ParenthesizedExpression\"\n                }\n            }\n        }\n    }\n}",
+            "stack": "Error: InvariantError: Expected value to be instanceof Error - {\n    \"typeof\": \"object\",\n    \"value\": {\n        \"kind\": \"Error\",\n        \"error\": {\n            \"innerError\": {\n                \"invariantBroken\": \"this should never be reached\",\n                \"details\": {\n                    \"nodeId\": 668,\n                    \"nodeKind\": \"ParenthesizedExpression\"\n                }\n            }\n        }\n    }\n}\n    at Object.isInstanceofError (Q:\\src\\powerquery-parser\\lib\\powerquery-parser\\common\\assert.js:37:15)\n    at Object.ensureResultAsync (Q:\\src\\powerquery-parser\\lib\\powerquery-parser\\common\\result\\resultUtils.js:64:20)\n    at async Promise.all (index 7)\n    at async validateInvokeExpression (Q:\\src\\powerquery-language-services\\lib\\powerquery-language-services\\validate\\validateInvokeExpression.js:31:25)\n    at async phase (Q:\\src\\powerquery-language-services\\benchmarks\\benchmarkServices.cjs:116:18)\n    at async iteration (Q:\\src\\powerquery-language-services\\benchmarks\\benchmarkServices.cjs:170:31)\n    at async main (Q:\\src\\powerquery-language-services\\benchmarks\\benchmarkServices.cjs:223:17)"
+          }
+        }
+      ]
+    }
+  ]
+}

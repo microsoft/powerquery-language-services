@@ -1,0 +1,906 @@
+{
+  "mode": "memo",
+  "cases": [
+    {
+      "text": "",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "3addd486f0ef6de7b05ce32ede2376589bdd1df5a62a474fa151c90f6870b147"
+    },
+    {
+      "text": "1",
+      "stage": "Parse",
+      "nodes": 1,
+      "hash": "edc28c905257b10c1f98c6095462dfee4b416afe664a48985c269b84cb5098f8"
+    },
+    {
+      "text": "x",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "85651a11b5943ceaf519635c8b47c5b3656052811e441e4caf02fb230c10d0e9"
+    },
+    {
+      "text": "each _",
+      "stage": "Parse",
+      "nodes": 4,
+      "hash": "4b9ae3da7ec79434bec35cec19cf91937413dfbe32079a06e9eda9d80747d2fa"
+    },
+    {
+      "text": "each [a]",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "659677448380fcbc74df66fa43298ef088c4ff4ecf5017123bd0f1ee4def758b"
+    },
+    {
+      "text": "let x = 1, y = x in y",
+      "stage": "Parse",
+      "nodes": 18,
+      "hash": "a06df54dd040bc04eaeb0f38539dd8a7af9b699a3e5cf253f2095e85d2624bc4"
+    },
+    {
+      "text": "let x = 1, f = (x) => x in f(x)",
+      "stage": "Parse",
+      "nodes": 36,
+      "hash": "aefcef0c6f9426d407af2e93b2ffd203d5cc8bc51805ef5cea0000eab1a5780f"
+    },
+    {
+      "text": "let f = (x) => @f(x) in f(1)",
+      "stage": "Parse",
+      "nodes": 39,
+      "hash": "fa05e5c6cd53e4fc048956866d39de794fe9fa42d70050775504546bec98e2c7"
+    },
+    {
+      "text": "let x = 1 in [x = x, y = @x]",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "4287cd4883a85a9954a5190c8f9a8c93fa92a0a86b1683ca2799b7e2b7560d17"
+    },
+    {
+      "text": "[#\"a b\" = 1, c = #\"a b\"]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "15e83461b15c7e233ec6326151f433ce182732d7e4aa4f791726f129697c7257"
+    },
+    {
+      "text": "[a = 1, a = a]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "68b6af9de0b3378e82e9b2c253e618bb04faa5b9be26a58aa1782c5c464dbb92"
+    },
+    {
+      "text": "let a = 1, #\"a\" = 2, b = a in b",
+      "stage": "Parse",
+      "nodes": 24,
+      "hash": "56299241e60bf6558963d0cba493bec66bdd619aff4ac050a90b8790081db5e6"
+    },
+    {
+      "text": "let #\"a@b\" = 1, c = #\"a@b\" in c",
+      "stage": "Parse",
+      "nodes": 18,
+      "hash": "830b68d28e4afbfddcf6432039544be8f3fe8950494398ecd6e371ce8d6c09f7"
+    },
+    {
+      "text": "[#\"if\" = 1, #\"and\" = #\"if\"]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "455bc3eb51a79612d2ffb0370b2845c46b22aa96fab1c8b75f7696590228e4f2"
+    },
+    {
+      "text": "section S; shared f = (x) => g(x); shared g = (y) => f(y);",
+      "stage": "Parse",
+      "nodes": 57,
+      "hash": "12e4a695ccd1d28e7a5febeed5ed2a0a0bc0e9af62b8df094de8fefd79d18c61"
+    },
+    {
+      "text": "let x = [a = 1] in each x[a]",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "17ec6b7a3fe814706021f62e16e7cb3189172d753dc95573abb9f60c12b8fbb4"
+    },
+    {
+      "text": "let x = 1 in each each _",
+      "stage": "Parse",
+      "nodes": 15,
+      "hash": "cf43ba4ba26f89c0b47fd60e16d995279dc9f8611779783f7218fc25a0f5425d"
+    },
+    {
+      "text": "type [a = number, b = text]",
+      "stage": "Parse",
+      "nodes": 20,
+      "hash": "dd8b96dd5b16c31229b3393fc3fed51bc6c880d5eb862a24710f1025d01c8ecb"
+    },
+    {
+      "text": "(x as number, optional y as text) => x",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "54e482d59886202d6d41b7cb29441e84d8daa0d06ff37c7fd033d793b2cf0c0e"
+    },
+    {
+      "text": "",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "3addd486f0ef6de7b05ce32ede2376589bdd1df5a62a474fa151c90f6870b147"
+    },
+    {
+      "text": "l",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "85651a11b5943ceaf519635c8b47c5b3656052811e441e4caf02fb230c10d0e9"
+    },
+    {
+      "text": "le",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "85651a11b5943ceaf519635c8b47c5b3656052811e441e4caf02fb230c10d0e9"
+    },
+    {
+      "text": "let",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "let ",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "let x",
+      "stage": "Parse",
+      "nodes": 7,
+      "hash": "f40b2b5782fd91cc17c1d74dbc8248b3b9756f1d317a3af4fb57f2b24b4b7ca9"
+    },
+    {
+      "text": "let x ",
+      "stage": "Parse",
+      "nodes": 7,
+      "hash": "f40b2b5782fd91cc17c1d74dbc8248b3b9756f1d317a3af4fb57f2b24b4b7ca9"
+    },
+    {
+      "text": "let x =",
+      "stage": "Parse",
+      "nodes": 9,
+      "hash": "d61168ef74034da9054934b12afe231a7219caa2044c55be02fef3c3d3dedadb"
+    },
+    {
+      "text": "let x = ",
+      "stage": "Parse",
+      "nodes": 9,
+      "hash": "d61168ef74034da9054934b12afe231a7219caa2044c55be02fef3c3d3dedadb"
+    },
+    {
+      "text": "let x = 1",
+      "stage": "Parse",
+      "nodes": 9,
+      "hash": "93c62fddc5b0d7bd315c782547c1a9980f9d0364e85d1a721773ce6363fed8ca"
+    },
+    {
+      "text": "let x = 1,",
+      "stage": "Parse",
+      "nodes": 12,
+      "hash": "d2bb66582f0c797eda822eabcbde02f24383a6a1b81f1560f0d0768d7780fc75"
+    },
+    {
+      "text": "let x = 1, ",
+      "stage": "Parse",
+      "nodes": 12,
+      "hash": "d2bb66582f0c797eda822eabcbde02f24383a6a1b81f1560f0d0768d7780fc75"
+    },
+    {
+      "text": "let x = 1, f",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "8a6312a0fb1b4d416026f4288db4b3fa9a7362bf84b311b202f0b15b42a60a03"
+    },
+    {
+      "text": "let x = 1, f ",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "8a6312a0fb1b4d416026f4288db4b3fa9a7362bf84b311b202f0b15b42a60a03"
+    },
+    {
+      "text": "let x = 1, f =",
+      "stage": "Parse",
+      "nodes": 15,
+      "hash": "a84b53fb590927187c95a8827f774dabbfc42cd952c1528481cc7da618ea0b58"
+    },
+    {
+      "text": "let x = 1, f = ",
+      "stage": "Parse",
+      "nodes": 15,
+      "hash": "a84b53fb590927187c95a8827f774dabbfc42cd952c1528481cc7da618ea0b58"
+    },
+    {
+      "text": "let x = 1, f = (",
+      "stage": "Parse",
+      "nodes": 20,
+      "hash": "1af75fd38de89e92a28f2423de8aa7905e3e63e367cab1e1a654fff9256560cb"
+    },
+    {
+      "text": "let x = 1, f = (x",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "5a2820842932282d5796415705c6a57b1bc36f12511838865ae7fdf974295e8a"
+    },
+    {
+      "text": "let x = 1, f = (x ",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "5a2820842932282d5796415705c6a57b1bc36f12511838865ae7fdf974295e8a"
+    },
+    {
+      "text": "let x = 1, f = (x a",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "5a2820842932282d5796415705c6a57b1bc36f12511838865ae7fdf974295e8a"
+    },
+    {
+      "text": "let x = 1, f = (x as",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as ",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as n",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as nu",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as num",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as numb",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as numbe",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "ce1bd5d25dd19e2d883b77b3e083ff653dc803d4901eb5263b080c5501332bc1"
+    },
+    {
+      "text": "let x = 1, f = (x as number",
+      "stage": "Parse",
+      "nodes": 24,
+      "hash": "d52608cb7c16b3ad47fe9117be4ab95f8b7968fffd70da68bd50d1dbeafb87df"
+    },
+    {
+      "text": "let x = 1, f = (x as number)",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "0366e0def7d92deda626f738a9d77c0b1bd9312722bb8fea4232452a838107d3"
+    },
+    {
+      "text": "let x = 1, f = (x as number) ",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "0366e0def7d92deda626f738a9d77c0b1bd9312722bb8fea4232452a838107d3"
+    },
+    {
+      "text": "let x = 1, f = (x as number) =",
+      "stage": "Parse",
+      "nodes": 25,
+      "hash": "a23eecaf6d482a779a145a02c574b3683a7fad2d0f665b6de48adcc62850d7eb"
+    },
+    {
+      "text": "let x = 1, f = (x as number) =>",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "064d3b8e2eda3300a8b8917664cb4d1c8881cf4f817f1dced2cda43f68c2fac0"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => ",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "064d3b8e2eda3300a8b8917664cb4d1c8881cf4f817f1dced2cda43f68c2fac0"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [",
+      "stage": "Parse",
+      "nodes": 32,
+      "hash": "887d4246f66df52c216b9b23b9f45b361f552b53fe51bfb18e8c550877ebb68f"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a",
+      "stage": "Parse",
+      "nodes": 33,
+      "hash": "4675395772f5e76bf1d6154b6972122d5858a969ecd32e54129198bb1c694a39"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a ",
+      "stage": "Parse",
+      "nodes": 33,
+      "hash": "4675395772f5e76bf1d6154b6972122d5858a969ecd32e54129198bb1c694a39"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a =",
+      "stage": "Parse",
+      "nodes": 35,
+      "hash": "a07245f81cecfe11be4a3c9ceb7f607a0cba7c6d854baef4f8049e4d0c47d230"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = ",
+      "stage": "Parse",
+      "nodes": 35,
+      "hash": "a07245f81cecfe11be4a3c9ceb7f607a0cba7c6d854baef4f8049e4d0c47d230"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x",
+      "stage": "Parse",
+      "nodes": 36,
+      "hash": "50f4855b99d916867c06c00997f750b8a867bd8e47f1c8fedcf5010eff60b844"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x,",
+      "stage": "Parse",
+      "nodes": 39,
+      "hash": "521c111780c80246c9752cafa4a2be2c4dac10aab440d9b638d7d0f7e03fd54f"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, ",
+      "stage": "Parse",
+      "nodes": 39,
+      "hash": "521c111780c80246c9752cafa4a2be2c4dac10aab440d9b638d7d0f7e03fd54f"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b",
+      "stage": "Parse",
+      "nodes": 40,
+      "hash": "fefe0339e31059246568013bbfe68f1867beaabd622f0f371b9d4a7e993aec42"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b ",
+      "stage": "Parse",
+      "nodes": 40,
+      "hash": "fefe0339e31059246568013bbfe68f1867beaabd622f0f371b9d4a7e993aec42"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b =",
+      "stage": "Parse",
+      "nodes": 42,
+      "hash": "c42d94a33ad24fdaa3f1d3cb565f49b3583b53f05f9dcfb825cb88866deedb5b"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = ",
+      "stage": "Parse",
+      "nodes": 42,
+      "hash": "c42d94a33ad24fdaa3f1d3cb565f49b3583b53f05f9dcfb825cb88866deedb5b"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "c1501f0b775929cc0988a2ebe8b9abf30572c606a32e2cf26b0988be1d715f78"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "be37438f23760bc7fd79c76df66bc7fec2848307157e2573b4348a7bfc62ac94"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a]",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "5284b61b3e84b9b44212dfdc9f9f2049adec94454fa8e52f56d1491c4a2731ca"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] ",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "5284b61b3e84b9b44212dfdc9f9f2049adec94454fa8e52f56d1491c4a2731ca"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] i",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "5284b61b3e84b9b44212dfdc9f9f2049adec94454fa8e52f56d1491c4a2731ca"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in",
+      "stage": "Parse",
+      "nodes": 46,
+      "hash": "1309184a26db9e711da335b3ff680b8446064dd3bbbfac6f3870f7289b1c0eba"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in ",
+      "stage": "Parse",
+      "nodes": 46,
+      "hash": "1309184a26db9e711da335b3ff680b8446064dd3bbbfac6f3870f7289b1c0eba"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f",
+      "stage": "Parse",
+      "nodes": 46,
+      "hash": "e7e554bbde2112b1401f2d46292dfcb0bf5cfe4b18950d359e878f50f6f1c9d2"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(",
+      "stage": "Parse",
+      "nodes": 55,
+      "hash": "3ce2dd8ec5ef068ee690a9857987bfffd523c901eeb1a5829fdc78671274bb27"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(x",
+      "stage": "Parse",
+      "nodes": 56,
+      "hash": "aeb73e3b34f32a9438e3a3c558c04f2e1b28314fe09d8b1aef7310b16ab21450"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(x)",
+      "stage": "Parse",
+      "nodes": 55,
+      "hash": "7b3fe3b4dcca20f7c4f2e726c2549d1c0eca339014b13f99c8d6afc6ea8c1e8f"
+    },
+    {
+      "text": "",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "1",
+      "stage": "Parse",
+      "nodes": 1,
+      "hash": "5ce17f24dc4c59c7c1e4ed44d1914157f02a5527447bfc3a46657d8bd3b73e31"
+    },
+    {
+      "text": "x",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "64cc41745ce339f13ba5c3a8daeb8326fe8c5a8ee67da6d97160f38f7efffa56"
+    },
+    {
+      "text": "each _",
+      "stage": "Parse",
+      "nodes": 4,
+      "hash": "35bdb59fc35ca542739b0b063f6388d739a0372feb92620a12bd5902bfe5d929"
+    },
+    {
+      "text": "each [a]",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "4edffd482211d94cd423a705e38eac67b63a5cf62fae311fa6c88868321204d8"
+    },
+    {
+      "text": "let x = 1, y = x in y",
+      "stage": "Parse",
+      "nodes": 18,
+      "hash": "4ae60bc396e72de942a3cd805b57235ea8f999beef6b4de3bfbb44820b5f6d0e"
+    },
+    {
+      "text": "let x = 1, f = (x) => x in f(x)",
+      "stage": "Parse",
+      "nodes": 36,
+      "hash": "5249b54c3920906527a352e48d99b3a99aff730e0bd80e214ea8550dadc9f0e8"
+    },
+    {
+      "text": "let f = (x) => @f(x) in f(1)",
+      "stage": "Parse",
+      "nodes": 39,
+      "hash": "7586975a7b69abfad2c558679229da93211d4864b0e107e726eb0a5b1251506f"
+    },
+    {
+      "text": "let x = 1 in [x = x, y = @x]",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "465c283d1be8c176431b8a05edafb912cb82d3e0fda43d7ec8de3a75c7c28d31"
+    },
+    {
+      "text": "[#\"a b\" = 1, c = #\"a b\"]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "f4affd54b08a992d6d8edea301f3df814b63cbd4ac60bd280ecae13b15fe344d"
+    },
+    {
+      "text": "[a = 1, a = a]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "9da0629cd459771e42b7d89b5b3fc393bea92a3d1c5c6e10789f5c8b8b324c95"
+    },
+    {
+      "text": "let a = 1, #\"a\" = 2, b = a in b",
+      "stage": "Parse",
+      "nodes": 24,
+      "hash": "300be7486597aa571da1f37f7ed6222c74a1c0ce77cbda88a41e9ed4bef1792c"
+    },
+    {
+      "text": "let #\"a@b\" = 1, c = #\"a@b\" in c",
+      "stage": "Parse",
+      "nodes": 18,
+      "hash": "a8c71cfb0b82efc1757b5c2634fc14f6a2b0fbd0bfee87954635a1c1977c5887"
+    },
+    {
+      "text": "[#\"if\" = 1, #\"and\" = #\"if\"]",
+      "stage": "Parse",
+      "nodes": 16,
+      "hash": "7d28dd932657a2a8f23c66e6c04f44f7b5df665c20de2e35014530df71ec808a"
+    },
+    {
+      "text": "section S; shared f = (x) => g(x); shared g = (y) => f(y);",
+      "stage": "Parse",
+      "nodes": 57,
+      "hash": "5c40bb724a2fe97cb794ccdde26d8091a77a69c57ef704d1752457ba68f9ac96"
+    },
+    {
+      "text": "let x = [a = 1] in each x[a]",
+      "stage": "Parse",
+      "nodes": 27,
+      "hash": "52462868dc3f10b7738e5d4e09a6e32196ffd667aa129e3f9e0f167b41d490ea"
+    },
+    {
+      "text": "let x = 1 in each each _",
+      "stage": "Parse",
+      "nodes": 15,
+      "hash": "e2eb75120f115b471c07a91c3b235e1b238df1a618ef6bb6b03b0d4abe783aa5"
+    },
+    {
+      "text": "type [a = number, b = text]",
+      "stage": "Parse",
+      "nodes": 20,
+      "hash": "880916bb0201d3f9538cfee812fad7d6d96f4f2c76ddf40b5daa3cdf50ce6fb0"
+    },
+    {
+      "text": "(x as number, optional y as text) => x",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "fe335b3d14d463f6d318e7f949043824afb3c40fdd63079c3707b4863062a9b2"
+    },
+    {
+      "text": "",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "l",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "64cc41745ce339f13ba5c3a8daeb8326fe8c5a8ee67da6d97160f38f7efffa56"
+    },
+    {
+      "text": "le",
+      "stage": "Parse",
+      "nodes": 2,
+      "hash": "64cc41745ce339f13ba5c3a8daeb8326fe8c5a8ee67da6d97160f38f7efffa56"
+    },
+    {
+      "text": "let",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "let ",
+      "stage": "Parse",
+      "nodes": 6,
+      "hash": "edf5e03b52651c5878d9354793d5d6269f7381685312eba89aafa88ad5e3fef5"
+    },
+    {
+      "text": "let x",
+      "stage": "Parse",
+      "nodes": 7,
+      "hash": "f40b2b5782fd91cc17c1d74dbc8248b3b9756f1d317a3af4fb57f2b24b4b7ca9"
+    },
+    {
+      "text": "let x ",
+      "stage": "Parse",
+      "nodes": 7,
+      "hash": "f40b2b5782fd91cc17c1d74dbc8248b3b9756f1d317a3af4fb57f2b24b4b7ca9"
+    },
+    {
+      "text": "let x =",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "02732645f79afd02cf3d0ea1a2bfa95bdbc34c6397cff1325bb4fff5ffd4d9b2"
+    },
+    {
+      "text": "let x = ",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "02732645f79afd02cf3d0ea1a2bfa95bdbc34c6397cff1325bb4fff5ffd4d9b2"
+    },
+    {
+      "text": "let x = 1",
+      "stage": "Parse",
+      "nodes": 9,
+      "hash": "0c884fe13ec2fb23cb1f07ff77f178e73206d6b9ef8dcdcb1aaaf999559cdfeb"
+    },
+    {
+      "text": "let x = 1,",
+      "stage": "Parse",
+      "nodes": 12,
+      "hash": "d6358637ce923371c85e51998f32627e1fc7bf309fb9257aca942fb6cc58cd73"
+    },
+    {
+      "text": "let x = 1, ",
+      "stage": "Parse",
+      "nodes": 12,
+      "hash": "d6358637ce923371c85e51998f32627e1fc7bf309fb9257aca942fb6cc58cd73"
+    },
+    {
+      "text": "let x = 1, f",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "f7a2b19ff336efb7bc29014e1d09db9955f17ad1a31ce0b0aa4e75928bf7dfbe"
+    },
+    {
+      "text": "let x = 1, f ",
+      "stage": "Parse",
+      "nodes": 13,
+      "hash": "f7a2b19ff336efb7bc29014e1d09db9955f17ad1a31ce0b0aa4e75928bf7dfbe"
+    },
+    {
+      "text": "let x = 1, f =",
+      "stage": "Parse",
+      "nodes": 19,
+      "hash": "977ef74e5f1ecf9aa7505fa739351e6b0c7f69746d6b6d81afb909cc14786c75"
+    },
+    {
+      "text": "let x = 1, f = ",
+      "stage": "Parse",
+      "nodes": 19,
+      "hash": "977ef74e5f1ecf9aa7505fa739351e6b0c7f69746d6b6d81afb909cc14786c75"
+    },
+    {
+      "text": "let x = 1, f = (",
+      "stage": "Parse",
+      "nodes": 20,
+      "hash": "75a62fc46909a028675eaf0e365275d0551ddb613686b37fe8725390420ea84a"
+    },
+    {
+      "text": "let x = 1, f = (x",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "2fd068046c9efff2b1ec43f4b0e98f87bdc4fd47af3662136202c9944b86e2df"
+    },
+    {
+      "text": "let x = 1, f = (x ",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "2fd068046c9efff2b1ec43f4b0e98f87bdc4fd47af3662136202c9944b86e2df"
+    },
+    {
+      "text": "let x = 1, f = (x a",
+      "stage": "Parse",
+      "nodes": 21,
+      "hash": "2fd068046c9efff2b1ec43f4b0e98f87bdc4fd47af3662136202c9944b86e2df"
+    },
+    {
+      "text": "let x = 1, f = (x as",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as ",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as n",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as nu",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as num",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as numb",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as numbe",
+      "stage": "Parse",
+      "nodes": 23,
+      "hash": "03facfcb4c9e75d918cc5cfffaa971badec4450fd4c29ede02d299d674c32f55"
+    },
+    {
+      "text": "let x = 1, f = (x as number",
+      "stage": "Parse",
+      "nodes": 24,
+      "hash": "0f5c6ec9e89348b2fdc7ac19e53ad05f27e1555ec596eb8f5c486765c9a69a6b"
+    },
+    {
+      "text": "let x = 1, f = (x as number)",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "d407008f1ba8547cb77bce8d0f689381847628f72641578180226ce6f17d97b5"
+    },
+    {
+      "text": "let x = 1, f = (x as number) ",
+      "stage": "Parse",
+      "nodes": 22,
+      "hash": "d407008f1ba8547cb77bce8d0f689381847628f72641578180226ce6f17d97b5"
+    },
+    {
+      "text": "let x = 1, f = (x as number) =",
+      "stage": "Parse",
+      "nodes": 29,
+      "hash": "518af28249c42d0efd362705e61a055e3dae959c6fc476453702459e85291bb8"
+    },
+    {
+      "text": "let x = 1, f = (x as number) =>",
+      "stage": "Parse",
+      "nodes": 31,
+      "hash": "ee7e7f12dd71561a92b8c8b6d31964a24f8c1eea84f264d2acfff6b600914f91"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => ",
+      "stage": "Parse",
+      "nodes": 31,
+      "hash": "ee7e7f12dd71561a92b8c8b6d31964a24f8c1eea84f264d2acfff6b600914f91"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [",
+      "stage": "Parse",
+      "nodes": 36,
+      "hash": "b75290477e62f37b6274f924aff6a4febd59240d8ef9eed25ad0218f440b75d7"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a",
+      "stage": "Parse",
+      "nodes": 34,
+      "hash": "b585c28e77d5fd957258356904338e1cf8c419f734e906a9dd3210316b8e26f0"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a ",
+      "stage": "Parse",
+      "nodes": 34,
+      "hash": "b585c28e77d5fd957258356904338e1cf8c419f734e906a9dd3210316b8e26f0"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a =",
+      "stage": "Parse",
+      "nodes": 43,
+      "hash": "e26d2b0acfefb37bc023a82779cfda92b0e4df430d32ee179fb93b7f65dfe981"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = ",
+      "stage": "Parse",
+      "nodes": 43,
+      "hash": "e26d2b0acfefb37bc023a82779cfda92b0e4df430d32ee179fb93b7f65dfe981"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x",
+      "stage": "Parse",
+      "nodes": 40,
+      "hash": "9a1819e456f99c434bfd28f1294f35882207b18fed5ffac1c83142f9a66251a2"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x,",
+      "stage": "Parse",
+      "nodes": 43,
+      "hash": "8cdb5da41aaa4c75afc5ed666eb4a5881a12110e37f8f11d3447676e89af9876"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, ",
+      "stage": "Parse",
+      "nodes": 43,
+      "hash": "8cdb5da41aaa4c75afc5ed666eb4a5881a12110e37f8f11d3447676e89af9876"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "9d6f5d8eb28f99758f82abdcc68dd13cdda9f5e43979273668cd7a92d4c43e53"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b ",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "9d6f5d8eb28f99758f82abdcc68dd13cdda9f5e43979273668cd7a92d4c43e53"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b =",
+      "stage": "Parse",
+      "nodes": 50,
+      "hash": "aa2da3ce73673819ebc3a6432b033f55e7dd6103c3ab72ea6c29ea0c17642de7"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = ",
+      "stage": "Parse",
+      "nodes": 50,
+      "hash": "aa2da3ce73673819ebc3a6432b033f55e7dd6103c3ab72ea6c29ea0c17642de7"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @",
+      "stage": "Parse",
+      "nodes": 52,
+      "hash": "0976b2227a7a0e518a2b4bd63e6f961005320dd4bdac431f2b352feca14e8f30"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a",
+      "stage": "Parse",
+      "nodes": 48,
+      "hash": "bc8a2ea01b215858b98c89a7d594d3cca977b34d7c67199fbed4137df3342ab5"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a]",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "65e242c561bb89cea20751eb0d9d2d36255df8321328ebcd64b0b72bcc533ecf"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] ",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "65e242c561bb89cea20751eb0d9d2d36255df8321328ebcd64b0b72bcc533ecf"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] i",
+      "stage": "Parse",
+      "nodes": 44,
+      "hash": "65e242c561bb89cea20751eb0d9d2d36255df8321328ebcd64b0b72bcc533ecf"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in",
+      "stage": "Parse",
+      "nodes": 50,
+      "hash": "0ccc6ee175801f7c3211b083cc78f84403e8396df7fe30077939e0219ccd8acf"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in ",
+      "stage": "Parse",
+      "nodes": 50,
+      "hash": "0ccc6ee175801f7c3211b083cc78f84403e8396df7fe30077939e0219ccd8acf"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f",
+      "stage": "Parse",
+      "nodes": 46,
+      "hash": "6682bad26e386a300c8d7593e18078e1b547dc407207fed7ada1705f73e9e364"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(",
+      "stage": "Parse",
+      "nodes": 63,
+      "hash": "aede44722655b566c3227538026cb01cbf9cf558f6f32ebb9bec4e3c2600338a"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(x",
+      "stage": "Parse",
+      "nodes": 60,
+      "hash": "e53c668ca38b9c382b2e52212085d27352a817d34c8df2467368a22f9df0aa1d"
+    },
+    {
+      "text": "let x = 1, f = (x as number) => [a = x, b = @a] in f(x)",
+      "stage": "Parse",
+      "nodes": 55,
+      "hash": "5d88dde46e8f9ba0575cbbba40fb0b3fb03a01ef48d07c6f04fdb95088d98923"
+    }
+  ],
+  "nodeScopesCompared": 3858
+}

@@ -1,0 +1,201 @@
+{
+  "recordedAt": "2026-10-09T02:40:12.949Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "compiledScopeHashes": {
+    "scopeInspection": "649541f73e6b412790ed23fd7a31f40549154ad62e4b2d6bce49b3775a834030",
+    "scopeBindings": "58d9ab36255a6ddff72c61cfba0c5d091c71fa65027999946601298724b776e1",
+    "scopeMap": "cf467ce08726108f94a795c59d8a7525da0bc8698746b61c88692f86b2495a27"
+  },
+  "samples": 1,
+  "warmups": 0,
+  "offset": 6,
+  "timeoutMs": 20000,
+  "validationOnly": false,
+  "scopeExperiment": null,
+  "profilePhase": null,
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "BQECore.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Certified\\External\\BQECore\\BQECore.pq",
+      "bytes": 189361,
+      "sourceSha256": "8c5fafa6fba39f8397174a72f9d3a54c6df3544a28e6d995f8e1eb33e815305a",
+      "runs": [
+        {
+          "file": "BQECore.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Certified\\External\\BQECore\\BQECore.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 42.7636,
+            "parse": 242.2846,
+            "functionValidation": 2.9895,
+            "invokeValidation": 971.8159,
+            "unknownValidation": 105.44,
+            "duplicateValidation": 4.4765,
+            "editorLexParse": 161.6363,
+            "documentSymbols": 3.4183,
+            "semanticTokens": 23.2477,
+            "autocomplete": 202.2419,
+            "hoverAfterAutocomplete": 1.0678
+          },
+          "heapAfterBytes": {
+            "lex": 17946296,
+            "parse": 49726648,
+            "functionValidation": 50519688,
+            "invokeValidation": 160808952,
+            "unknownValidation": 174828776,
+            "duplicateValidation": 176078960,
+            "editorLexParse": 199047048,
+            "documentSymbols": 200164800,
+            "semanticTokens": 205914024,
+            "autocomplete": 208403112,
+            "hoverAfterAutocomplete": 208452936
+          },
+          "heapDeltaBytes": {
+            "lex": 5655584,
+            "parse": 31769328,
+            "functionValidation": 780840,
+            "invokeValidation": 110278664,
+            "unknownValidation": 7124312,
+            "duplicateValidation": 1237160,
+            "editorLexParse": 22138064,
+            "documentSymbols": 479208,
+            "semanticTokens": 5705264,
+            "autocomplete": 2436008,
+            "hoverAfterAutocomplete": 30616
+          },
+          "astNodes": 52527,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 14641,
+            "uniqueScopes": 1985,
+            "uniqueMaps": 1896,
+            "totalMapEntries": 1253274,
+            "physicalMapEntries": 8168,
+            "hiddenKeys": 2180,
+            "maxScopeSize": 926,
+            "cachedTypes": 13825
+          },
+          "scopes": {
+            "cachedNodeScopes": 17824,
+            "uniqueScopes": 2002,
+            "uniqueMaps": 1913,
+            "totalMapEntries": 1267094,
+            "physicalMapEntries": 8270,
+            "hiddenKeys": 2214,
+            "maxScopeSize": 926,
+            "cachedTypes": 13825
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1070,
+            "unknown": 15,
+            "duplicates": 0,
+            "hash": "fadac705f206369e2e9df695f4bf0121dbb87d2cbea72c8e7392c94ac0a03a9b"
+          },
+          "editorPosition": {
+            "line": 1285,
+            "character": 65
+          },
+          "editor": {
+            "symbols": 197,
+            "semanticTokens": 15272,
+            "autocompleteItems": 1805,
+            "hash": "c5f35e073b10e88c49fb63e871994054b300b99a7de03aebd6f4d7da7dc0b50c"
+          },
+          "succeeded": true
+        }
+      ],
+      "phases": {
+        "lex": {
+          "samplesMs": [
+            42.7636
+          ],
+          "meanMs": 42.7636
+        },
+        "parse": {
+          "samplesMs": [
+            242.2846
+          ],
+          "meanMs": 242.2846
+        },
+        "functionValidation": {
+          "samplesMs": [
+            2.9895
+          ],
+          "meanMs": 2.9895
+        },
+        "invokeValidation": {
+          "samplesMs": [
+            971.8159
+          ],
+          "meanMs": 971.8159
+        },
+        "unknownValidation": {
+          "samplesMs": [
+            105.44
+          ],
+          "meanMs": 105.44
+        },
+        "duplicateValidation": {
+          "samplesMs": [
+            4.4765
+          ],
+          "meanMs": 4.4765
+        },
+        "editorLexParse": {
+          "samplesMs": [
+            161.6363
+          ],
+          "meanMs": 161.6363
+        },
+        "documentSymbols": {
+          "samplesMs": [
+            3.4183
+          ],
+          "meanMs": 3.4183
+        },
+        "semanticTokens": {
+          "samplesMs": [
+            23.2477
+          ],
+          "meanMs": 23.2477
+        },
+        "autocomplete": {
+          "samplesMs": [
+            202.2419
+          ],
+          "meanMs": 202.2419
+        },
+        "hoverAfterAutocomplete": {
+          "samplesMs": [
+            1.0678
+          ],
+          "meanMs": 1.0678
+        }
+      }
+    }
+  ],
+  "redirectedParserImports": [
+    "@microsoft/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/token",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/parser"
+  ],
+  "experimentStats": {
+    "aliasMisses": 0,
+    "aliasHits": 0,
+    "itemMisses": 0,
+    "itemHits": 0,
+    "inspectedHits": 0
+  }
+}

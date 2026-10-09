@@ -1,0 +1,310 @@
+{
+  "recordedAt": "2026-10-09T02:09:12.597Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "samples": 1,
+  "warmups": 0,
+  "offset": 2,
+  "timeoutMs": 20000,
+  "validationOnly": true,
+  "profilePhase": "unknownValidation",
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "CapacityMetricsCES.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+      "bytes": 378351,
+      "sourceSha256": "fe89765e3c9a989da6daa806e2808f66ed0120217d0860829f7479efd606f9c0",
+      "runs": [
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 64.5635,
+            "parse": 390.5722,
+            "functionValidation": 8.0005,
+            "invokeValidation": 11317.7472,
+            "unknownValidation": 8438.0358,
+            "duplicateValidation": 4.0538
+          },
+          "heapAfterBytes": {
+            "lex": 26037304,
+            "parse": 73306520,
+            "functionValidation": 75845736,
+            "invokeValidation": 885122120,
+            "unknownValidation": 747527744,
+            "duplicateValidation": 749149408
+          },
+          "heapDeltaBytes": {
+            "lex": 13431672,
+            "parse": 47259232,
+            "functionValidation": 2507664,
+            "invokeValidation": 809267080,
+            "unknownValidation": -140177640,
+            "duplicateValidation": 1133448
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "profile": {
+            "phase": "unknownValidation",
+            "samples": 5150,
+            "selfSamples": [
+              {
+                "frame": "regexMatchLength (stringUtils.js:79)",
+                "hits": 1963,
+                "percent": 38.116504854368934
+              },
+              {
+                "frame": "calculateJaroWinklers (jaroWinkler.js:37)",
+                "hits": 1099,
+                "percent": 21.339805825242717
+              },
+              {
+                "frame": "(garbage collector) (:0)",
+                "hits": 295,
+                "percent": 5.728155339805825
+              },
+              {
+                "frame": "iterSection (nodeIdMapIterator.js:229)",
+                "hits": 277,
+                "percent": 5.378640776699029
+              },
+              {
+                "frame": "isCancelled (cancellationToken.js:50)",
+                "hits": 262,
+                "percent": 5.087378640776699
+              },
+              {
+                "frame": "inspectNode (scopeInspection.js:191)",
+                "hits": 250,
+                "percent": 4.854368932038835
+              },
+              {
+                "frame": "getNormalized (jaroWinkler.js:98)",
+                "hits": 154,
+                "percent": 2.9902912621359223
+              },
+              {
+                "frame": "(anonymous) (nodeIdMapIterator.js:232)",
+                "hits": 134,
+                "percent": 2.6019417475728157
+              },
+              {
+                "frame": "getNormalizedIdentifier (identifierUtils.js:159)",
+                "hits": 124,
+                "percent": 2.407766990291262
+              },
+              {
+                "frame": "(program) (:0)",
+                "hits": 105,
+                "percent": 2.0388349514563107
+              },
+              {
+                "frame": "inspectScope (scopeInspection.js:160)",
+                "hits": 94,
+                "percent": 1.825242718446602
+              },
+              {
+                "frame": "getQuotedAndUnquoted (identifierUtils.js:220)",
+                "hits": 82,
+                "percent": 1.5922330097087378
+              },
+              {
+                "frame": "(anonymous) (scopeInspection.js:57)",
+                "hits": 47,
+                "percent": 0.912621359223301
+              },
+              {
+                "frame": "(anonymous) (validateUnknownIdentifiers.js:25)",
+                "hits": 45,
+                "percent": 0.8737864077669902
+              },
+              {
+                "frame": "assertAncestry (ancestryUtils.js:15)",
+                "hits": 38,
+                "percent": 0.7378640776699029
+              },
+              {
+                "frame": "inspectSection (scopeInspection.js:298)",
+                "hits": 28,
+                "percent": 0.5436893203883495
+              },
+              {
+                "frame": "findUnknownIdentifiers (validateUnknownIdentifiers.js:59)",
+                "hits": 18,
+                "percent": 0.34951456310679613
+              },
+              {
+                "frame": "assignScopeForNodeId (scopeInspection.js:101)",
+                "hits": 16,
+                "percent": 0.3106796116504854
+              },
+              {
+                "frame": "pseudoFunctionExpressionType (pseudoFunctionExpressionType.js:8)",
+                "hits": 14,
+                "percent": 0.27184466019417475
+              },
+              {
+                "frame": "inspectFunctionExpression (scopeInspection.js:244)",
+                "hits": 13,
+                "percent": 0.2524271844660194
+              },
+              {
+                "frame": "getIdentifierLength (identifierUtils.js:99)",
+                "hits": 10,
+                "percent": 0.1941747572815534
+              },
+              {
+                "frame": "get (index.js:8)",
+                "hits": 10,
+                "percent": 0.1941747572815534
+              },
+              {
+                "frame": "calculateJaroWinkler (jaroWinkler.js:18)",
+                "hits": 10,
+                "percent": 0.1941747572815534
+              },
+              {
+                "frame": "calculateJaroForNormalized (jaroWinkler.js:50)",
+                "hits": 8,
+                "percent": 0.1553398058252427
+              },
+              {
+                "frame": "getAllowedIdentifiers (identifierUtils.js:29)",
+                "hits": 6,
+                "percent": 0.11650485436893204
+              },
+              {
+                "frame": "inspectLetExpression (scopeInspection.js:269)",
+                "hits": 5,
+                "percent": 0.0970873786407767
+              },
+              {
+                "frame": "validateUnknownIdentifiers (validateUnknownIdentifiers.js:16)",
+                "hits": 4,
+                "percent": 0.07766990291262135
+              },
+              {
+                "frame": "tryNodeScope (scopeInspection.js:49)",
+                "hits": 4,
+                "percent": 0.07766990291262135
+              },
+              {
+                "frame": "nthChildAstChecked (childSelectors.js:97)",
+                "hits": 4,
+                "percent": 0.07766990291262135
+              },
+              {
+                "frame": "mapAsync (arrayUtils.js:88)",
+                "hits": 3,
+                "percent": 0.05825242718446602
+              },
+              {
+                "frame": "parentAstChecked (parentSelectors.js:65)",
+                "hits": 3,
+                "percent": 0.05825242718446602
+              },
+              {
+                "frame": "findIdentifierAsts (validateUnknownIdentifiers.js:44)",
+                "hits": 2,
+                "percent": 0.038834951456310676
+              },
+              {
+                "frame": "primitiveTypeConstantKindFromTypeKind (primitive.js:12)",
+                "hits": 2,
+                "percent": 0.038834951456310676
+              },
+              {
+                "frame": "iterKeyValuePairs (nodeIdMapIterator.js:273)",
+                "hits": 2,
+                "percent": 0.038834951456310676
+              },
+              {
+                "frame": "inspectKeyValuePairs (scopeInspection.js:312)",
+                "hits": 2,
+                "percent": 0.038834951456310676
+              }
+            ]
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "succeeded": true
+        }
+      ],
+      "phases": {
+        "lex": {
+          "samplesMs": [
+            64.5635
+          ],
+          "meanMs": 64.5635
+        },
+        "parse": {
+          "samplesMs": [
+            390.5722
+          ],
+          "meanMs": 390.5722
+        },
+        "functionValidation": {
+          "samplesMs": [
+            8.0005
+          ],
+          "meanMs": 8.0005
+        },
+        "invokeValidation": {
+          "samplesMs": [
+            11317.7472
+          ],
+          "meanMs": 11317.7472
+        },
+        "unknownValidation": {
+          "samplesMs": [
+            8438.0358
+          ],
+          "meanMs": 8438.0358
+        },
+        "duplicateValidation": {
+          "samplesMs": [
+            4.0538
+          ],
+          "meanMs": 4.0538
+        }
+      }
+    }
+  ],
+  "redirectedParserImports": [
+    "@microsoft/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/token",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/parser"
+  ]
+}

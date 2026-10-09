@@ -1,0 +1,322 @@
+{
+  "recordedAt": "2026-10-09T02:20:43.502Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "samples": 1,
+  "warmups": 0,
+  "offset": 2,
+  "timeoutMs": 20000,
+  "validationOnly": true,
+  "scopeExperiment": "overlay",
+  "profilePhase": "unknownValidation",
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "CapacityMetricsCES.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+      "bytes": 378351,
+      "sourceSha256": "fe89765e3c9a989da6daa806e2808f66ed0120217d0860829f7479efd606f9c0",
+      "runs": [
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 64.5151,
+            "parse": 390.5187,
+            "functionValidation": 8.293,
+            "invokeValidation": 1675.4912,
+            "unknownValidation": 2636.2008,
+            "duplicateValidation": 4.8261
+          },
+          "heapAfterBytes": {
+            "lex": 26865888,
+            "parse": 72404336,
+            "functionValidation": 74941976,
+            "invokeValidation": 230682152,
+            "unknownValidation": 132127720,
+            "duplicateValidation": 133582960
+          },
+          "heapDeltaBytes": {
+            "lex": 13514344,
+            "parse": 45527896,
+            "functionValidation": 2506216,
+            "invokeValidation": 155730752,
+            "unknownValidation": -109341728,
+            "duplicateValidation": 1245008
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1891,
+            "totalMapEntries": 3267349,
+            "physicalMapEntries": 12221,
+            "hiddenKeys": 2422,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "profile": {
+            "phase": "unknownValidation",
+            "samples": 1615,
+            "selfSamples": [
+              {
+                "frame": "calculateJaroWinklers (jaroWinkler.js:37)",
+                "hits": 1100,
+                "percent": 68.11145510835914
+              },
+              {
+                "frame": "getNormalized (jaroWinkler.js:98)",
+                "hits": 148,
+                "percent": 9.1640866873065
+              },
+              {
+                "frame": "(garbage collector) (:0)",
+                "hits": 62,
+                "percent": 3.8390092879256965
+              },
+              {
+                "frame": "inspectScope (scopeInspection.js:161)",
+                "hits": 53,
+                "percent": 3.281733746130031
+              },
+              {
+                "frame": "inspectNode (scopeInspection.js:192)",
+                "hits": 34,
+                "percent": 2.1052631578947367
+              },
+              {
+                "frame": "isCancelled (cancellationToken.js:50)",
+                "hits": 33,
+                "percent": 2.043343653250774
+              },
+              {
+                "frame": "(program) (:0)",
+                "hits": 25,
+                "percent": 1.5479876160990713
+              },
+              {
+                "frame": "(anonymous) (validateUnknownIdentifiers.js:25)",
+                "hits": 21,
+                "percent": 1.3003095975232197
+              },
+              {
+                "frame": "assertAncestry (ancestryUtils.js:15)",
+                "hits": 21,
+                "percent": 1.3003095975232197
+              },
+              {
+                "frame": "entries (scopeExperiment.cjs:95)",
+                "hits": 18,
+                "percent": 1.1145510835913313
+              },
+              {
+                "frame": "(anonymous) (scopeInspection.js:58)",
+                "hits": 17,
+                "percent": 1.0526315789473684
+              },
+              {
+                "frame": "findUnknownIdentifiers (validateUnknownIdentifiers.js:59)",
+                "hits": 16,
+                "percent": 0.9907120743034056
+              },
+              {
+                "frame": "calculateJaroWinkler (jaroWinkler.js:18)",
+                "hits": 13,
+                "percent": 0.804953560371517
+              },
+              {
+                "frame": "entries (scopeExperiment.cjs:76)",
+                "hits": 12,
+                "percent": 0.7430340557275542
+              },
+              {
+                "frame": "keys (scopeExperiment.cjs:99)",
+                "hits": 8,
+                "percent": 0.4953560371517028
+              },
+              {
+                "frame": "get (scopeExperiment.cjs:74)",
+                "hits": 7,
+                "percent": 0.43343653250773995
+              },
+              {
+                "frame": "calculateJaroForNormalized (jaroWinkler.js:50)",
+                "hits": 6,
+                "percent": 0.3715170278637771
+              },
+              {
+                "frame": "findIdentifierAsts (validateUnknownIdentifiers.js:44)",
+                "hits": 3,
+                "percent": 0.18575851393188855
+              },
+              {
+                "frame": "tryNodeScope (scopeInspection.js:50)",
+                "hits": 3,
+                "percent": 0.18575851393188855
+              },
+              {
+                "frame": "ensureResultAsync (resultUtils.js:59)",
+                "hits": 3,
+                "percent": 0.18575851393188855
+              },
+              {
+                "frame": "has (scopeExperiment.cjs:75)",
+                "hits": 3,
+                "percent": 0.18575851393188855
+              },
+              {
+                "frame": "alreadyInspected (scopeExperiment.cjs:49)",
+                "hits": 2,
+                "percent": 0.1238390092879257
+              },
+              {
+                "frame": "dispatch (:0)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "validateUnknownIdentifiers (validateUnknownIdentifiers.js:16)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "mapAsync (arrayUtils.js:88)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "parentAstChecked (parentSelectors.js:65)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "assignScopeForNodeId (scopeInspection.js:102)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "inspectKeyValuePairs (scopeInspection.js:315)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "getDefinition (libraryDefinitionUtils.js:92)",
+                "hits": 1,
+                "percent": 0.06191950464396285
+              },
+              {
+                "frame": "(root) (:0)",
+                "hits": 0,
+                "percent": 0
+              },
+              {
+                "frame": "phase (benchmarkServices.cjs:88)",
+                "hits": 0,
+                "percent": 0
+              },
+              {
+                "frame": "fn (util:460)",
+                "hits": 0,
+                "percent": 0
+              },
+              {
+                "frame": "(anonymous) (util:461)",
+                "hits": 0,
+                "percent": 0
+              },
+              {
+                "frame": "post (node:inspector:118)",
+                "hits": 0,
+                "percent": 0
+              },
+              {
+                "frame": "(anonymous) (benchmarkServices.cjs:178)",
+                "hits": 0,
+                "percent": 0
+              }
+            ]
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1939,
+            "totalMapEntries": 3354735,
+            "physicalMapEntries": 12497,
+            "hiddenKeys": 2506,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "succeeded": true
+        }
+      ],
+      "phases": {
+        "lex": {
+          "samplesMs": [
+            64.5151
+          ],
+          "meanMs": 64.5151
+        },
+        "parse": {
+          "samplesMs": [
+            390.5187
+          ],
+          "meanMs": 390.5187
+        },
+        "functionValidation": {
+          "samplesMs": [
+            8.293
+          ],
+          "meanMs": 8.293
+        },
+        "invokeValidation": {
+          "samplesMs": [
+            1675.4912
+          ],
+          "meanMs": 1675.4912
+        },
+        "unknownValidation": {
+          "samplesMs": [
+            2636.2008
+          ],
+          "meanMs": 2636.2008
+        },
+        "duplicateValidation": {
+          "samplesMs": [
+            4.8261
+          ],
+          "meanMs": 4.8261
+        }
+      }
+    }
+  ],
+  "redirectedParserImports": [
+    "@microsoft/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/token",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/parser"
+  ],
+  "experimentStats": {
+    "aliasMisses": 1257,
+    "aliasHits": 0,
+    "itemMisses": 2514,
+    "itemHits": 1249,
+    "inspectedHits": 1450517
+  }
+}

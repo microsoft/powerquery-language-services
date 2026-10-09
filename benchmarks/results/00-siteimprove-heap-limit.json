@@ -1,0 +1,14 @@
+{
+  "serviceRevision": "b794f45",
+  "parserRevision": "8d4976f",
+  "runtime": "v22.22.0",
+  "file": "Siteimprove.pq",
+  "bytes": 2006745,
+  "heapLimitMiB": 4096,
+  "completedPhases": ["lex", "parse", "functionValidation"],
+  "failedPhase": "invokeValidation",
+  "exitCode": 134,
+  "error": "FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory",
+  "lastGcElapsedMs": 73170,
+  "caveat": "Initial one-sample pilot terminated before results were flushed. GC timestamps are process elapsed time, not isolated phase timing. This failure is not a successful timing sample."
+}

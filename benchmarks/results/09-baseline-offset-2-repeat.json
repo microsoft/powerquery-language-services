@@ -1,0 +1,467 @@
+{
+  "recordedAt": "2026-10-09T02:15:47.146Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "samples": 3,
+  "warmups": 1,
+  "offset": 2,
+  "timeoutMs": 20000,
+  "validationOnly": false,
+  "scopeExperiment": null,
+  "profilePhase": null,
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "CapacityMetricsCES.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+      "bytes": 378351,
+      "sourceSha256": "fe89765e3c9a989da6daa806e2808f66ed0120217d0860829f7479efd606f9c0",
+      "runs": [
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": true,
+          "timings": {
+            "lex": 76.4607,
+            "parse": 421.2302,
+            "functionValidation": 8.2766,
+            "invokeValidation": 11856.3923,
+            "unknownValidation": 8223.4627,
+            "duplicateValidation": 4.2295,
+            "editorLexParse": 248.9003,
+            "documentSymbols": 5.1822,
+            "semanticTokens": 53.3522,
+            "autocomplete": 4039.0576,
+            "hoverAfterAutocomplete": 1.0228
+          },
+          "heapAfterBytes": {
+            "lex": 26103608,
+            "parse": 73780280,
+            "functionValidation": 76343192,
+            "invokeValidation": 897110680,
+            "unknownValidation": 755860240,
+            "duplicateValidation": 757012232,
+            "editorLexParse": 816973088,
+            "documentSymbols": 818852688,
+            "semanticTokens": 819486152,
+            "autocomplete": 702034560,
+            "hoverAfterAutocomplete": 702088648
+          },
+          "heapDeltaBytes": {
+            "lex": 13480392,
+            "parse": 47666632,
+            "functionValidation": 2532072,
+            "invokeValidation": 820758136,
+            "unknownValidation": -143152112,
+            "duplicateValidation": 1134360,
+            "editorLexParse": 54969104,
+            "documentSymbols": 730536,
+            "semanticTokens": 592440,
+            "autocomplete": -117493416,
+            "hoverAfterAutocomplete": 32280
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "physicalMapEntries": 3300927,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "physicalMapEntries": 3388313,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "editorPosition": {
+            "line": 1732,
+            "character": 94
+          },
+          "editor": {
+            "symbols": 434,
+            "semanticTokens": 33661,
+            "autocompleteItems": 2621,
+            "hash": "5ded5e639a997b6de037f69ea46eaf74807d1d07027456d9b6ad5e152b9c899e"
+          },
+          "succeeded": true
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 51.7266,
+            "parse": 247.2413,
+            "functionValidation": 6.1156,
+            "invokeValidation": 11198.9411,
+            "unknownValidation": 8085.954,
+            "duplicateValidation": 3.3629,
+            "editorLexParse": 238.7329,
+            "documentSymbols": 3.3395,
+            "semanticTokens": 48.9065,
+            "autocomplete": 4204.9618,
+            "hoverAfterAutocomplete": 0.1873
+          },
+          "heapAfterBytes": {
+            "lex": 33347784,
+            "parse": 84698000,
+            "functionValidation": 86912648,
+            "invokeValidation": 725451760,
+            "unknownValidation": 633186232,
+            "duplicateValidation": 634323296,
+            "editorLexParse": 680974800,
+            "documentSymbols": 682825120,
+            "semanticTokens": 687837640,
+            "autocomplete": 538478696,
+            "hoverAfterAutocomplete": 538527392
+          },
+          "heapDeltaBytes": {
+            "lex": 16457944,
+            "parse": 51328392,
+            "functionValidation": 2189536,
+            "invokeValidation": 638505376,
+            "unknownValidation": -94191784,
+            "duplicateValidation": 1111720,
+            "editorLexParse": 47662600,
+            "documentSymbols": 699640,
+            "semanticTokens": 4982720,
+            "autocomplete": -149389192,
+            "hoverAfterAutocomplete": 17768
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "physicalMapEntries": 3300927,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "physicalMapEntries": 3388313,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "editorPosition": {
+            "line": 1732,
+            "character": 94
+          },
+          "editor": {
+            "symbols": 434,
+            "semanticTokens": 33661,
+            "autocompleteItems": 2621,
+            "hash": "5ded5e639a997b6de037f69ea46eaf74807d1d07027456d9b6ad5e152b9c899e"
+          },
+          "succeeded": true
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 51.5309,
+            "parse": 271.1392,
+            "functionValidation": 6.609,
+            "invokeValidation": 11075.3892,
+            "unknownValidation": 8093.0732,
+            "duplicateValidation": 3.335,
+            "editorLexParse": 199.8035,
+            "documentSymbols": 3.2856,
+            "semanticTokens": 46.542,
+            "autocomplete": 4036.6981,
+            "hoverAfterAutocomplete": 0.2094
+          },
+          "heapAfterBytes": {
+            "lex": 32126616,
+            "parse": 84900192,
+            "functionValidation": 74067872,
+            "invokeValidation": 744213408,
+            "unknownValidation": 640467568,
+            "duplicateValidation": 641614088,
+            "editorLexParse": 701554512,
+            "documentSymbols": 703444240,
+            "semanticTokens": 704766352,
+            "autocomplete": 546887592,
+            "hoverAfterAutocomplete": 546949544
+          },
+          "heapDeltaBytes": {
+            "lex": 16487544,
+            "parse": 52738600,
+            "functionValidation": -10867848,
+            "invokeValidation": 670109800,
+            "unknownValidation": -105644528,
+            "duplicateValidation": 1108008,
+            "editorLexParse": 44771592,
+            "documentSymbols": 699064,
+            "semanticTokens": 1276456,
+            "autocomplete": -157934640,
+            "hoverAfterAutocomplete": 17872
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "physicalMapEntries": 3300927,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "physicalMapEntries": 3388313,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "editorPosition": {
+            "line": 1732,
+            "character": 94
+          },
+          "editor": {
+            "symbols": 434,
+            "semanticTokens": 33661,
+            "autocompleteItems": 2621,
+            "hash": "5ded5e639a997b6de037f69ea46eaf74807d1d07027456d9b6ad5e152b9c899e"
+          },
+          "succeeded": true
+        },
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 59.2824,
+            "parse": 247.6085,
+            "functionValidation": 5.616,
+            "invokeValidation": 10909.6583,
+            "unknownValidation": 8152.5959,
+            "duplicateValidation": 3.3326,
+            "editorLexParse": 209.749,
+            "documentSymbols": 3.1963,
+            "semanticTokens": 67.9165,
+            "autocomplete": 4089.6305,
+            "hoverAfterAutocomplete": 0.1716
+          },
+          "heapAfterBytes": {
+            "lex": 32413288,
+            "parse": 84921944,
+            "functionValidation": 74036976,
+            "invokeValidation": 735514984,
+            "unknownValidation": 645096000,
+            "duplicateValidation": 646255688,
+            "editorLexParse": 692665384,
+            "documentSymbols": 694559216,
+            "semanticTokens": 698734160,
+            "autocomplete": 547047512,
+            "hoverAfterAutocomplete": 547122656
+          },
+          "heapDeltaBytes": {
+            "lex": 16438872,
+            "parse": 52460528,
+            "functionValidation": -10933656,
+            "invokeValidation": 661429112,
+            "unknownValidation": -92323792,
+            "duplicateValidation": 1108024,
+            "editorLexParse": 47503200,
+            "documentSymbols": 705344,
+            "semanticTokens": 4114952,
+            "autocomplete": -151743200,
+            "hoverAfterAutocomplete": 17912
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "physicalMapEntries": 3300927,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "physicalMapEntries": 3388313,
+            "hiddenKeys": 0,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "editorPosition": {
+            "line": 1732,
+            "character": 94
+          },
+          "editor": {
+            "symbols": 434,
+            "semanticTokens": 33661,
+            "autocompleteItems": 2621,
+            "hash": "5ded5e639a997b6de037f69ea46eaf74807d1d07027456d9b6ad5e152b9c899e"
+          },
+          "succeeded": true
+        }
+      ],
+      "phases": {
+        "lex": {
+          "samplesMs": [
+            51.7266,
+            51.5309,
+            59.2824
+          ],
+          "meanMs": 54.179966666666665
+        },
+        "parse": {
+          "samplesMs": [
+            247.2413,
+            271.1392,
+            247.6085
+          ],
+          "meanMs": 255.32966666666667
+        },
+        "functionValidation": {
+          "samplesMs": [
+            6.1156,
+            6.609,
+            5.616
+          ],
+          "meanMs": 6.113533333333334
+        },
+        "invokeValidation": {
+          "samplesMs": [
+            11198.9411,
+            11075.3892,
+            10909.6583
+          ],
+          "meanMs": 11061.329533333332
+        },
+        "unknownValidation": {
+          "samplesMs": [
+            8085.954,
+            8093.0732,
+            8152.5959
+          ],
+          "meanMs": 8110.541033333334
+        },
+        "duplicateValidation": {
+          "samplesMs": [
+            3.3629,
+            3.335,
+            3.3326
+          ],
+          "meanMs": 3.3435
+        },
+        "editorLexParse": {
+          "samplesMs": [
+            238.7329,
+            199.8035,
+            209.749
+          ],
+          "meanMs": 216.09513333333334
+        },
+        "documentSymbols": {
+          "samplesMs": [
+            3.3395,
+            3.2856,
+            3.1963
+          ],
+          "meanMs": 3.2738
+        },
+        "semanticTokens": {
+          "samplesMs": [
+            48.9065,
+            46.542,
+            67.9165
+          ],
+          "meanMs": 54.455000000000005
+        },
+        "autocomplete": {
+          "samplesMs": [
+            4204.9618,
+            4036.6981,
+            4089.6305
+          ],
+          "meanMs": 4110.430133333334
+        },
+        "hoverAfterAutocomplete": {
+          "samplesMs": [
+            0.1873,
+            0.2094,
+            0.1716
+          ],
+          "meanMs": 0.18943333333333334
+        }
+      }
+    }
+  ],
+  "redirectedParserImports": [
+    "@microsoft/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/token",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/parser"
+  ],
+  "experimentStats": {
+    "aliasMisses": 0,
+    "aliasHits": 0,
+    "itemMisses": 0,
+    "itemHits": 0,
+    "inspectedHits": 0
+  }
+}

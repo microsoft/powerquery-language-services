@@ -1,0 +1,192 @@
+{
+  "recordedAt": "2026-10-09T02:10:41.468Z",
+  "runtime": "v22.22.0",
+  "cpu": "AMD EPYC 7763 64-Core Processor                ",
+  "parserRoot": "Q:\\src\\powerquery-parser",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "samples": 1,
+  "warmups": 0,
+  "offset": 2,
+  "timeoutMs": 20000,
+  "validationOnly": false,
+  "scopeExperiment": "intern",
+  "profilePhase": null,
+  "method": "Sequential cold per-document validation with shared invocation/identifier type cache, then separate editor analysis. Full GC before each iteration, excluded from timers; natural GC during phases included. Standard-library fixture, no host-specific external resolver. Editor parse excluded from service timers. Hashing/output accounting outside timers.",
+  "libraryDefinitions": 866,
+  "results": [
+    {
+      "file": "CapacityMetricsCES.pq",
+      "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+      "bytes": 378351,
+      "sourceSha256": "fe89765e3c9a989da6daa806e2808f66ed0120217d0860829f7479efd606f9c0",
+      "runs": [
+        {
+          "file": "CapacityMetricsCES.pq",
+          "filePath": "Q:\\src\\DataConnectors\\Extensions\\CapacityMetricsCES\\CapacityMetricsCES.pq",
+          "warmup": false,
+          "timings": {
+            "lex": 65.2328,
+            "parse": 380.0345,
+            "functionValidation": 8.3133,
+            "invokeValidation": 10661.6515,
+            "unknownValidation": 7651.4078,
+            "duplicateValidation": 4.1664,
+            "editorLexParse": 205.6457,
+            "documentSymbols": 4.2373,
+            "semanticTokens": 50.0546,
+            "autocomplete": 3554.9532,
+            "hoverAfterAutocomplete": 1.094
+          },
+          "heapAfterBytes": {
+            "lex": 26792624,
+            "parse": 72780992,
+            "functionValidation": 75320320,
+            "invokeValidation": 250471488,
+            "unknownValidation": 401915880,
+            "duplicateValidation": 403076520,
+            "editorLexParse": 464146152,
+            "documentSymbols": 466024416,
+            "semanticTokens": 467123056,
+            "autocomplete": 364149360,
+            "hoverAfterAutocomplete": 364202888
+          },
+          "heapDeltaBytes": {
+            "lex": 13473112,
+            "parse": 45978312,
+            "functionValidation": 2508056,
+            "invokeValidation": 175141800,
+            "unknownValidation": 149730864,
+            "duplicateValidation": 1143264,
+            "editorLexParse": 52948432,
+            "documentSymbols": 731192,
+            "semanticTokens": 1058168,
+            "autocomplete": -103015696,
+            "hoverAfterAutocomplete": 32280
+          },
+          "astNodes": 95023,
+          "scopeAfterInvokes": {
+            "cachedNodeScopes": 36550,
+            "uniqueScopes": 1910,
+            "uniqueMaps": 1910,
+            "totalMapEntries": 3300927,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "scopes": {
+            "cachedNodeScopes": 46301,
+            "uniqueScopes": 1958,
+            "uniqueMaps": 1958,
+            "totalMapEntries": 3388313,
+            "maxScopeSize": 1895,
+            "cachedTypes": 25954
+          },
+          "diagnostics": {
+            "functions": 0,
+            "invokes": 1650,
+            "unknown": 391,
+            "duplicates": 0,
+            "hash": "bea8504af689e632eece9be06c5ddc1eaf0efc1480cb8351d4d8582e1910efc1"
+          },
+          "editorPosition": {
+            "line": 1732,
+            "character": 94
+          },
+          "editor": {
+            "symbols": 434,
+            "semanticTokens": 33661,
+            "autocompleteItems": 2621,
+            "hash": "5ded5e639a997b6de037f69ea46eaf74807d1d07027456d9b6ad5e152b9c899e"
+          },
+          "succeeded": true
+        }
+      ],
+      "phases": {
+        "lex": {
+          "samplesMs": [
+            65.2328
+          ],
+          "meanMs": 65.2328
+        },
+        "parse": {
+          "samplesMs": [
+            380.0345
+          ],
+          "meanMs": 380.0345
+        },
+        "functionValidation": {
+          "samplesMs": [
+            8.3133
+          ],
+          "meanMs": 8.3133
+        },
+        "invokeValidation": {
+          "samplesMs": [
+            10661.6515
+          ],
+          "meanMs": 10661.6515
+        },
+        "unknownValidation": {
+          "samplesMs": [
+            7651.4078
+          ],
+          "meanMs": 7651.4078
+        },
+        "duplicateValidation": {
+          "samplesMs": [
+            4.1664
+          ],
+          "meanMs": 4.1664
+        },
+        "editorLexParse": {
+          "samplesMs": [
+            205.6457
+          ],
+          "meanMs": 205.6457
+        },
+        "documentSymbols": {
+          "samplesMs": [
+            4.2373
+          ],
+          "meanMs": 4.2373
+        },
+        "semanticTokens": {
+          "samplesMs": [
+            50.0546
+          ],
+          "meanMs": 50.0546
+        },
+        "autocomplete": {
+          "samplesMs": [
+            3554.9532
+          ],
+          "meanMs": 3554.9532
+        },
+        "hoverAfterAutocomplete": {
+          "samplesMs": [
+            1.094
+          ],
+          "meanMs": 1.094
+        }
+      }
+    }
+  ],
+  "redirectedParserImports": [
+    "@microsoft/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/ast/ast",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/keyword/keyword",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/language/token",
+    "@microsoft/powerquery-parser/lib/powerquery-parser/parser"
+  ],
+  "experimentStats": {
+    "aliasMisses": 2399,
+    "aliasHits": 561577,
+    "itemMisses": 4752,
+    "itemHits": 2246314,
+    "inspectedHits": 0
+  }
+}

@@ -1,0 +1,501 @@
+{
+  "recordedAt": "2026-10-09T02:40:15.092Z",
+  "status": "Shared scope storage and completed-node memoization are integrated into normal production TypeScript. Historical prototype evidence is retained. Dependency manifests and installed packages are unchanged.",
+  "serviceRevision": "b794f4546c830612831bfccf39e89e5551d5aeb1",
+  "parserRevision": "8d4976faf414c572c6b41c56961dbad04c03f9ca",
+  "bottleneck": "Language-service scope construction and repeated identifier normalization dominate validation. Parsing is a small fraction of the completed workloads.",
+  "methodology": {
+    "sources": "The same seven largest production .pq connectors used by the parser investigation; source SHA-256 verified.",
+    "dependencyWiring": "Node synchronous module hooks redirect all root/deep parser imports to local 8d4976f, including formatter imports. No npm link or dependency edits.",
+    "library": "866 definitions from this repository's standard-library fixture; no host-specific/SDK external resolver. Diagnostics and costs depend on this configuration.",
+    "repeats": "One warmup and three arithmetic-mean samples, candidate before baseline in separate processes; earlier pilots used the opposite order. This is not a statistical confidence interval.",
+    "gc": "Explicit full GC before each document iteration, outside phase timers. Natural GC inside each phase is included.",
+    "phases": "Validation functions follow the public validate pipeline on a successful parse, sharing its scope/type cache. Editor operations use a separate analysis; parse is awaited before timing them. Autocomplete uses the median value-identifier position; hover follows it and is warm.",
+    "limits": "4 GiB V8 old-space limit; validation stages have a 20-second cooperative cancellation token except the initial OOM pilot (120 seconds). Failures are never included as successful timing samples.",
+    "memory": "heapUsed at phase end is not peak or retained heap. Physical map-entry counts count shared native Map instances once, plus separately reported hidden-key sets; they are not byte estimates."
+  },
+  "comparison": [
+    {
+      "file": "CapacityMetricsCES.pq",
+      "beforeFile": "09-baseline-offset-2-repeat.json",
+      "afterFile": "09-overlay-offset-2-repeat.json",
+      "phases": {
+        "lex": {
+          "beforeMs": 54.179966666666665,
+          "afterMs": 53.11353333333333,
+          "reductionPercent": 1.9683167025450417
+        },
+        "parse": {
+          "beforeMs": 255.32966666666667,
+          "afterMs": 235.34740000000002,
+          "reductionPercent": 7.826065387361951
+        },
+        "functionValidation": {
+          "beforeMs": 6.113533333333334,
+          "afterMs": 7.427766666666667,
+          "reductionPercent": -21.49711568869066
+        },
+        "invokeValidation": {
+          "beforeMs": 11061.329533333332,
+          "afterMs": 1386.6745,
+          "reductionPercent": 87.4637628702657
+        },
+        "unknownValidation": {
+          "beforeMs": 8110.541033333334,
+          "afterMs": 2534.7307333333333,
+          "reductionPercent": 68.74769854543737
+        },
+        "duplicateValidation": {
+          "beforeMs": 3.3435,
+          "afterMs": 3.564133333333334,
+          "reductionPercent": -6.598873436020149
+        },
+        "editorLexParse": {
+          "beforeMs": 216.09513333333334,
+          "afterMs": 206.96693333333337,
+          "reductionPercent": 4.224158063716982
+        },
+        "documentSymbols": {
+          "beforeMs": 3.2738,
+          "afterMs": 5.015,
+          "reductionPercent": -53.18590017716414
+        },
+        "semanticTokens": {
+          "beforeMs": 54.455000000000005,
+          "afterMs": 45.50073333333333,
+          "reductionPercent": 16.44342423407708
+        },
+        "autocomplete": {
+          "beforeMs": 4110.430133333334,
+          "afterMs": 260.0958,
+          "reductionPercent": 93.67229726420197
+        },
+        "hoverAfterAutocomplete": {
+          "beforeMs": 0.18943333333333334,
+          "afterMs": 0.1936,
+          "reductionPercent": -2.1995424951609985
+        }
+      },
+      "validationBeforeMs": 19181.327599999997,
+      "validationAfterMs": 3932.3971333333334,
+      "validationReductionPercent": 79.498827112815,
+      "validationShareOfLexParseValidationPercent": 98.41202494470576,
+      "diagnosticsMatch": true,
+      "editorOutputsMatch": true,
+      "heapAfterInvocationBeforeMiB": 701.0078913370768,
+      "heapAfterInvocationAfterMiB": 224.1875991821289,
+      "scopeStorageBefore": {
+        "cachedNodeScopes": 46301,
+        "uniqueScopes": 1958,
+        "uniqueMaps": 1958,
+        "totalMapEntries": 3388313,
+        "physicalMapEntries": 3388313,
+        "hiddenKeys": 0,
+        "maxScopeSize": 1895,
+        "cachedTypes": 25954
+      },
+      "scopeStorageAfter": {
+        "cachedNodeScopes": 46301,
+        "uniqueScopes": 1958,
+        "uniqueMaps": 1939,
+        "totalMapEntries": 3354735,
+        "physicalMapEntries": 12497,
+        "hiddenKeys": 2506,
+        "maxScopeSize": 1895,
+        "cachedTypes": 25954
+      }
+    },
+    {
+      "file": "BQECore.pq",
+      "beforeFile": "09-baseline-offset-6-repeat.json",
+      "afterFile": "09-overlay-offset-6-repeat.json",
+      "phases": {
+        "lex": {
+          "beforeMs": 23.9138,
+          "afterMs": 28.21756666666667,
+          "reductionPercent": -17.997000337322685
+        },
+        "parse": {
+          "beforeMs": 155.7511,
+          "afterMs": 172.44836666666666,
+          "reductionPercent": -10.720480732827344
+        },
+        "functionValidation": {
+          "beforeMs": 1.5997666666666668,
+          "afterMs": 1.8604666666666667,
+          "reductionPercent": -16.296126518450603
+        },
+        "invokeValidation": {
+          "beforeMs": 2821.067233333333,
+          "afterMs": 826.3777,
+          "reductionPercent": 70.70691225520478
+        },
+        "unknownValidation": {
+          "beforeMs": 607.4780333333333,
+          "afterMs": 96.88786666666665,
+          "reductionPercent": 84.05080326361322
+        },
+        "duplicateValidation": {
+          "beforeMs": 2.911733333333333,
+          "afterMs": 3.2832666666666666,
+          "reductionPercent": -12.759868119791205
+        },
+        "editorLexParse": {
+          "beforeMs": 127.91206666666666,
+          "afterMs": 141.47306666666668,
+          "reductionPercent": -10.60181447567367
+        },
+        "documentSymbols": {
+          "beforeMs": 1.9702333333333335,
+          "afterMs": 3.285066666666667,
+          "reductionPercent": -66.73490449523744
+        },
+        "semanticTokens": {
+          "beforeMs": 18.601633333333336,
+          "afterMs": 24.054466666666666,
+          "reductionPercent": -29.313734098618564
+        },
+        "autocomplete": {
+          "beforeMs": 630.5835666666667,
+          "afterMs": 175.9787666666667,
+          "reductionPercent": 72.0927128505886
+        },
+        "hoverAfterAutocomplete": {
+          "beforeMs": 0.16256666666666666,
+          "afterMs": 0.2129,
+          "reductionPercent": -30.96165675620259
+        }
+      },
+      "validationBeforeMs": 3433.0567666666666,
+      "validationAfterMs": 928.4093,
+      "validationReductionPercent": 72.95677400343598,
+      "validationShareOfLexParseValidationPercent": 95.0268823181784,
+      "diagnosticsMatch": true,
+      "editorOutputsMatch": true,
+      "heapAfterInvocationBeforeMiB": 431.1731719970703,
+      "heapAfterInvocationAfterMiB": 146.22103118896484,
+      "scopeStorageBefore": {
+        "cachedNodeScopes": 17824,
+        "uniqueScopes": 2002,
+        "uniqueMaps": 2002,
+        "totalMapEntries": 1339136,
+        "physicalMapEntries": 1339136,
+        "hiddenKeys": 0,
+        "maxScopeSize": 926,
+        "cachedTypes": 13825
+      },
+      "scopeStorageAfter": {
+        "cachedNodeScopes": 17824,
+        "uniqueScopes": 2002,
+        "uniqueMaps": 1913,
+        "totalMapEntries": 1267094,
+        "physicalMapEntries": 8270,
+        "hiddenKeys": 2214,
+        "maxScopeSize": 926,
+        "cachedTypes": 13825
+      }
+    }
+  ],
+  "productionPort": {
+    "comparison": [
+      {
+        "file": "CapacityMetricsCES.pq",
+        "beforeFile": "09-baseline-offset-2-repeat.json",
+        "afterFile": "13-production-offset-2.json",
+        "phases": {
+          "lex": {
+            "beforeMs": 54.179966666666665,
+            "afterMs": 53.92066666666667,
+            "reductionPercent": 0.47859018001117776
+          },
+          "parse": {
+            "beforeMs": 255.32966666666667,
+            "afterMs": 254.38670000000002,
+            "reductionPercent": 0.3693133974508704
+          },
+          "functionValidation": {
+            "beforeMs": 6.113533333333334,
+            "afterMs": 5.433,
+            "reductionPercent": 11.13158784336391
+          },
+          "invokeValidation": {
+            "beforeMs": 11061.329533333332,
+            "afterMs": 1483.0061666666668,
+            "reductionPercent": 86.59287599924019
+          },
+          "unknownValidation": {
+            "beforeMs": 8110.541033333334,
+            "afterMs": 2585.3007,
+            "reductionPercent": 68.12418938052679
+          },
+          "duplicateValidation": {
+            "beforeMs": 3.3435,
+            "afterMs": 3.6068,
+            "reductionPercent": -7.874981307013597
+          },
+          "editorLexParse": {
+            "beforeMs": 216.09513333333334,
+            "afterMs": 214.6199,
+            "reductionPercent": 0.6826777218799014
+          },
+          "documentSymbols": {
+            "beforeMs": 3.2738,
+            "afterMs": 3.214133333333333,
+            "reductionPercent": 1.822550756511308
+          },
+          "semanticTokens": {
+            "beforeMs": 54.455000000000005,
+            "afterMs": 51.23693333333333,
+            "reductionPercent": 5.909588957242994
+          },
+          "autocomplete": {
+            "beforeMs": 4110.430133333334,
+            "afterMs": 257.52206666666666,
+            "reductionPercent": 93.73491196022762
+          },
+          "hoverAfterAutocomplete": {
+            "beforeMs": 0.18943333333333334,
+            "afterMs": 0.19976666666666665,
+            "reductionPercent": -5.4548653879992814
+          }
+        },
+        "validationBeforeMs": 19181.327599999997,
+        "validationAfterMs": 4077.346666666667,
+        "validationReductionPercent": 78.74314671177054,
+        "validationShareOfLexParseValidationPercent": 98.41202494470576,
+        "diagnosticsMatch": true,
+        "editorOutputsMatch": true,
+        "heapAfterInvocationBeforeMiB": 701.0078913370768,
+        "heapAfterInvocationAfterMiB": 213.35189056396484,
+        "scopeStorageBefore": {
+          "cachedNodeScopes": 46301,
+          "uniqueScopes": 1958,
+          "uniqueMaps": 1958,
+          "totalMapEntries": 3388313,
+          "physicalMapEntries": 3388313,
+          "hiddenKeys": 0,
+          "maxScopeSize": 1895,
+          "cachedTypes": 25954
+        },
+        "scopeStorageAfter": {
+          "cachedNodeScopes": 46301,
+          "uniqueScopes": 1958,
+          "uniqueMaps": 1939,
+          "totalMapEntries": 3354735,
+          "physicalMapEntries": 12497,
+          "hiddenKeys": 2506,
+          "maxScopeSize": 1895,
+          "cachedTypes": 25954
+        }
+      },
+      {
+        "file": "BQECore.pq",
+        "beforeFile": "09-baseline-offset-6-repeat.json",
+        "afterFile": "13-production-offset-6.json",
+        "phases": {
+          "lex": {
+            "beforeMs": 23.9138,
+            "afterMs": 25.668400000000002,
+            "reductionPercent": -7.337186059931938
+          },
+          "parse": {
+            "beforeMs": 155.7511,
+            "afterMs": 178.0094333333333,
+            "reductionPercent": -14.290963809137333
+          },
+          "functionValidation": {
+            "beforeMs": 1.5997666666666668,
+            "afterMs": 1.6608666666666665,
+            "reductionPercent": -3.819306982268229
+          },
+          "invokeValidation": {
+            "beforeMs": 2821.067233333333,
+            "afterMs": 844.9268999999999,
+            "reductionPercent": 70.04938804660652
+          },
+          "unknownValidation": {
+            "beforeMs": 607.4780333333333,
+            "afterMs": 96.23896666666667,
+            "reductionPercent": 84.15762194089761
+          },
+          "duplicateValidation": {
+            "beforeMs": 2.911733333333333,
+            "afterMs": 3.2977333333333334,
+            "reductionPercent": -13.256708489788464
+          },
+          "editorLexParse": {
+            "beforeMs": 127.91206666666666,
+            "afterMs": 148.8729,
+            "reductionPercent": -16.386908506416642
+          },
+          "documentSymbols": {
+            "beforeMs": 1.9702333333333335,
+            "afterMs": 5.754766666666666,
+            "reductionPercent": -192.08553978378188
+          },
+          "semanticTokens": {
+            "beforeMs": 18.601633333333336,
+            "afterMs": 20.2607,
+            "reductionPercent": -8.918930058113162
+          },
+          "autocomplete": {
+            "beforeMs": 630.5835666666667,
+            "afterMs": 162.4181,
+            "reductionPercent": 74.24320762772811
+          },
+          "hoverAfterAutocomplete": {
+            "beforeMs": 0.16256666666666666,
+            "afterMs": 0.19699999999999998,
+            "reductionPercent": -21.181053926594206
+          }
+        },
+        "validationBeforeMs": 3433.0567666666666,
+        "validationAfterMs": 946.1244666666666,
+        "validationReductionPercent": 72.44075670833406,
+        "validationShareOfLexParseValidationPercent": 95.0268823181784,
+        "diagnosticsMatch": true,
+        "editorOutputsMatch": true,
+        "heapAfterInvocationBeforeMiB": 431.1731719970703,
+        "heapAfterInvocationAfterMiB": 147.41192626953125,
+        "scopeStorageBefore": {
+          "cachedNodeScopes": 17824,
+          "uniqueScopes": 2002,
+          "uniqueMaps": 2002,
+          "totalMapEntries": 1339136,
+          "physicalMapEntries": 1339136,
+          "hiddenKeys": 0,
+          "maxScopeSize": 926,
+          "cachedTypes": 13825
+        },
+        "scopeStorageAfter": {
+          "cachedNodeScopes": 17824,
+          "uniqueScopes": 2002,
+          "uniqueMaps": 1913,
+          "totalMapEntries": 1267094,
+          "physicalMapEntries": 8270,
+          "hiddenKeys": 2214,
+          "maxScopeSize": 926,
+          "cachedTypes": 13825
+        }
+      }
+    ],
+    "compiledScopeHashes": {
+      "scopeInspection": "649541f73e6b412790ed23fd7a31f40549154ad62e4b2d6bce49b3775a834030",
+      "scopeBindings": "58d9ab36255a6ddff72c61cfba0c5d091c71fa65027999946601298724b776e1",
+      "scopeMap": "cf467ce08726108f94a795c59d8a7525da0bc8698746b61c88692f86b2495a27"
+    },
+    "implementation": "Per-owner ScopeBindings precomputes allowed aliases and shares immutable binding descriptors. BindingScopeMap masks nonrecursive self aliases; merged read-only maps share parent frames. Duplicate aliases retain materialized-map fallback. A WeakMap per scope cache tracks fully inspected AST/context objects with a WeakSet, invalidated when cache size shrinks.",
+    "differencesFromPrototype": "Per-owner precomputation replaces global interning caches. Completion uses AST/context identity instead of numeric node IDs. Parent-chain lookup and enumeration are iterative; merged enumeration materializes only on demand.",
+    "methodology": "Normal compiled implementation with SCOPE_EXPERIMENT unset, one warmup and three measured samples per connector. Compared with recorded pre-port baseline; not a contemporaneous paired comparison or statistical confidence interval. Compiled hashes identify the uncommitted implementation independently of git HEAD.",
+    "compatibility": "ReadonlyMap lookup, iteration order, recursive aliases and outer shadowing are preserved. Native Map identity is not guaranteed. Scope caches are document/settings-scoped and must be cleared before reuse; backing maps are immutable after publication.",
+    "verification": "All 150 cases / 3,858 scopes match the original baseline with both parsers. Diagnostics and editor outputs match baseline on every production confirmation iteration for the two successful connectors.",
+    "checks": {
+      "build": "npm run build passed.",
+      "lint": "npm run lint -- --quiet passed.",
+      "installedParser": "npm test: 743 passing.",
+      "localParser": "The source Mocha suite with a parser-only module preload: 743 passing.",
+      "initialCompiledSuiteAttempt": "737 passing, six failures because tsc does not copy .pq resource fixtures into lib/test/files. Re-ran the source suite with the same local-parser hook so original resource paths resolve; all 743 passed. No product changes were needed."
+    },
+    "limitations": "This port does not resolve the separately recorded inference/cancellation invariants. No successful full-corpus validation or largest-input end-to-end speedup is claimed."
+  },
+  "profiles": {
+    "invocationBefore": "01-cchtagetik-profile.json",
+    "invocationBeforeObservation": "Cancelled after about 20.6 seconds. regexMatchLength accounts for 44.6% of self-samples, GC 7.7%; key/value iteration and scope-item construction also prominent. Cancellation handling itself contributes samples near the end.",
+    "unknownBefore": "05-capacity-unknown-profile.json",
+    "unknownBeforeObservation": "regexMatchLength 38.1%, calculateJaroWinklers 21.3% of self-samples.",
+    "unknownAfter": "11-overlay-unknown-profile.json",
+    "unknownAfterObservation": "After the combined prototype, calculateJaroWinklers is 68.1% and case normalization 9.2% of unknown-identifier self-samples."
+  },
+  "experiments": [
+    {
+      "mode": "intern",
+      "structure": "WeakMap caches for allowed identifier spellings and immutable recursive/nonrecursive binding descriptors, keyed by AST identity.",
+      "result": "Capacity pilot: invocation 10.66s versus 10.84s baseline, no convincing isolated CPU improvement. Phase-end heap 239 MiB versus 852 MiB; useful allocation reduction, not a retained-heap or peak-memory measurement.",
+      "artifact": "06-capacity-intern-pilot.json"
+    },
+    {
+      "mode": "memo",
+      "structure": "Interning plus a WeakMap<scope-cache, Set<node-id>> of fully inspected nodes. Distinguishes an assigned scope from a node whose children have already been processed.",
+      "result": "Capacity pilot: invocation 1.94s, unknown identifiers 2.41s, autocomplete 0.67s. Avoids re-enumerating ancestor sections/let bindings for each identifier.",
+      "artifact": "06-capacity-memo-pilot.json"
+    },
+    {
+      "mode": "overlay",
+      "structure": "Memo prototype plus one shared sibling-binding table per scope owner, tiny self-binding masks/recursive overrides, and parent-linked ReadonlyMap views. Duplicate-alias groups fall back to materialized entries to preserve native Map iteration order.",
+      "result": "Confirmed on CapacityMetricsCES and BQECore; see comparison. Capacity stores 12,497 physical map entries instead of 3,388,313, with 2,506 additional hidden-key set entries.",
+      "limitation": "Historical prototype only; the productionPort section records the integrated implementation separately. Native Map identity changes and document-scoped cache assumptions still apply."
+    }
+  ],
+  "failures": [
+    {
+      "file": "Siteimprove.pq",
+      "baseline": "00-siteimprove-heap-limit.json",
+      "outcome": "Invocation validation exhausted the 4 GiB heap after about 73 seconds of process runtime; no complete timing sample."
+    },
+    {
+      "file": "CCHTagetik.pq",
+      "baseline": "01-cchtagetik-profile.json",
+      "outcome": "Invocation validation exceeded the 20-second deadline; cancellation surfaced as an invariant wrapping a Result object."
+    },
+    {
+      "file": "Kusto.pq",
+      "baseline": "02-smaller-connectors-pilot.json",
+      "outcome": "Invocation inference invariant at IdentifierExpression."
+    },
+    {
+      "file": "Databricks.pq",
+      "baseline": "03-remaining-connectors-pilot.json",
+      "outcome": "Invocation inference invariant at ParenthesizedExpression."
+    },
+    {
+      "file": "LakeHouse.pq",
+      "baseline": "04-offset-5-pilot.json",
+      "outcome": "Invocation inference invariant at IdentifierExpression."
+    }
+  ],
+  "largeInputPrototypeCaveat": "Memo still times out on Siteimprove. Overlay reaches invocation-inference invariants on Siteimprove and CCHTagetik instead of the earlier resource limit. These are NOT successful validations or proven end-to-end speedups; their equivalence to an unlimited baseline remains unresolved.",
+  "verification": {
+    "scopeCases": 150,
+    "nodeScopes": 3858,
+    "scopeResults": "All intern/memo/overlay scope values, key iteration order and errors match baseline across both built-in parsers, shadowing, recursion, quoted/generalized identifiers, duplicate aliases and incomplete prefixes.",
+    "existingScopeTests": "76 existing compiled scope/scope-type tests pass with overlay and the local parser.",
+    "realInputs": "Diagnostic and editor-output hashes match on all recorded confirmation samples for the two successful connectors."
+  },
+  "recommendations": [
+    "Review the integrated shared scope maps and completed-node index, especially ReadonlyMap compatibility and document-scoped cache lifetime.",
+    "After scope work, cache normalized suggestion candidates and repeated unknown-name comparisons per document/shared scope frame. Preserve the exact Jaro-Winkler scoring and tie order; do not assume a BK-tree is valid for this similarity function.",
+    "Investigate in-flight type-request deduplication and bounded invocation concurrency. Promise.all currently launches every invocation; any change must distinguish recursion from concurrent requests and avoid false cycle detection.",
+    "Resolve the observed inference/cancellation invariants before claiming complete validation coverage for all seven connectors."
+  ],
+  "artifacts": [
+    "00-siteimprove-heap-limit.json",
+    "01-cchtagetik-profile.json",
+    "02-smaller-connectors-pilot.json",
+    "03-remaining-connectors-pilot.json",
+    "04-offset-5-pilot.json",
+    "04-offset-6-pilot.json",
+    "05-capacity-unknown-profile.json",
+    "06-capacity-intern-pilot.json",
+    "06-capacity-memo-pilot.json",
+    "07-memo-offset-0.json",
+    "07-memo-offset-1.json",
+    "08-overlay-offset-0.json",
+    "08-overlay-offset-1.json",
+    "08-overlay-offset-2.json",
+    "08-overlay-offset-6.json",
+    "09-baseline-offset-2-repeat.json",
+    "09-baseline-offset-6-repeat.json",
+    "09-overlay-offset-2-repeat.json",
+    "09-overlay-offset-6-repeat.json",
+    "10-scopes-baseline.json",
+    "10-scopes-intern.json",
+    "10-scopes-memo.json",
+    "10-scopes-overlay.json",
+    "11-overlay-unknown-profile.json",
+    "12-final-harness-smoke.json",
+    "13-production-offset-2.json",
+    "13-production-offset-6.json",
+    "13-scopes-production.json",
+    "14-production-harness-smoke.json"
+  ]
+}
