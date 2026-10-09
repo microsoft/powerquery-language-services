@@ -8,6 +8,13 @@ import { NodeIdMapIterator } from "@microsoft/powerquery-parser/lib/powerquery-p
 import { BindingScopeMap } from "./scopeMap";
 import { TKeyValuePairScopeItem } from "./scope";
 
+// This module owns Power Query binding rules: which sibling names are visible and when a
+// self-reference is recursive. scopeMap.ts only provides the generic shared-map storage used to
+// represent those decisions without copying entries.
+
+// This stores the work shared by every scope derived from one key/value pair. `keys` contains all
+// valid spellings of the name, and `nonRecursive` is reused by sibling scopes. The recursive form
+// starts empty because only the binding's own value can need it.
 interface Binding<KVP, T> {
     readonly pair: KVP;
     readonly keys: ReadonlyArray<string>;
@@ -15,7 +22,15 @@ interface Binding<KVP, T> {
     recursive: T | undefined;
 }
 
-// One table per let/record/section, shared by all of its value scopes.
+// A let, record, or section gives each value access to almost the same set of sibling names.
+// Building a complete Map for every value repeats nearly all of the same entries and descriptors.
+//
+// ScopeBindings builds that common table once. forSelf then returns either the shared table or a
+// small view containing only the differences for the current binding. For example, while inspecting
+// `a` in `let a = @a, b = a in b`, ordinary `a` is hidden but recursive `@a` points back to `a`.
+//
+// Duplicate aliases are the exception. Removing one duplicate can change Map insertion order, so
+// those uncommon cases are rebuilt to preserve the behavior of the original materialized maps.
 export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extends TKeyValuePairScopeItem> {
     private readonly base: Map<string, T> = new Map();
     private readonly bindings: Binding<KVP, T>[] = [];
@@ -90,6 +105,7 @@ export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extend
         const hidden: Set<string> = new Set();
         const recursive: Map<string, T> = new Map();
 
+        // Ordinary self-references are hidden, while @ aliases must resolve recursively.
         for (const key of binding.keys) {
             if (key.includes("@")) {
                 recursive.set(key, this.recursiveItem(binding));
@@ -102,6 +118,7 @@ export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extend
     }
 
     private recursiveItem(binding: Binding<KVP, T>): T {
+        // Create one recursive descriptor only for bindings that reference themselves.
         if (binding.recursive === undefined) {
             binding.recursive = this.factory(binding.pair, true);
         }

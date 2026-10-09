@@ -11,6 +11,7 @@ import { BindingScopeMap, mergeScopeMaps } from "../../powerquery-language-servi
 import { Inspection } from "../../powerquery-language-services";
 import { ScopeBindings } from "../../powerquery-language-services/inspection/scope/scopeBindings";
 
+// Object values let these tests verify that shared maps preserve descriptor identity.
 interface Value {
     readonly id: number;
 }

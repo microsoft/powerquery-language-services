@@ -36,17 +36,22 @@ import { mergeScopeMaps } from "./scopeMap";
 import { ScopeBindings } from "./scopeBindings";
 import { TypeById } from "../typeCache";
 
+// scopeById can contain a scope that a parent assigned before the node's children were inspected.
+// This separate cache records only nodes whose complete inspection succeeded. AST object identity
+// keeps completion state tied to one parsed document, while scopeCount detects callers removing
+// cached scopes and requiring that work to run again.
 interface ScopeInspectionCache {
     readonly inspectedNodes: WeakSet<TXorNode["node"]>;
     scopeCount: number;
 }
 
+// Weak ownership lets completion state expire with its externally owned scope cache.
 const inspectionCacheByScope: WeakMap<ScopeById, ScopeInspectionCache> = new WeakMap();
 
 function inspectionCache(scopeById: ScopeById): ScopeInspectionCache {
     let cache: ScopeInspectionCache | undefined = inspectionCacheByScope.get(scopeById);
 
-    // Clearing/removing cached scopes invalidates completed-node work as well.
+    // A shrinking scope cache signals that callers need removed work to be recomputed.
     if (cache === undefined || scopeById.size < cache.scopeCount) {
         cache = { inspectedNodes: new WeakSet(), scopeCount: scopeById.size };
         inspectionCacheByScope.set(scopeById, cache);
@@ -311,7 +316,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
 
     const cache: ScopeInspectionCache = inspectionCache(state.scopeById);
 
-    // A scope assigned by a parent does not imply that this node's children were inspected.
+    // Scope assignment and completed child inspection are separate states.
     if (cache.inspectedNodes.has(xorNode.node)) {
         trace.exit({ [TraceConstant.Result]: "cache hit" });
 
@@ -351,6 +356,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
             );
     }
 
+    // Failed or cancelled inspection must remain retryable.
     cache.inspectedNodes.add(xorNode.node);
     cache.scopeCount = state.scopeById.size;
     trace.exit();

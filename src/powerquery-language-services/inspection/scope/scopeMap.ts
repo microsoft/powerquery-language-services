@@ -1,7 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// Backing maps are immutable after publication. Enumeration preserves Map insertion order.
+// This module owns generic scope storage and does not interpret parser nodes or scope-item kinds.
+// scopeBindings.ts decides which names should be visible; these maps store and combine those names
+// without repeatedly copying inherited or sibling entries.
+
+// These scope views are returned as ReadonlyMap values but are not native Map instances. The
+// backing maps never change after publication, which makes it safe for multiple scopes to share
+// them. This base class keeps the standard iteration methods consistent between the two views below.
 abstract class ReadonlyScopeMap<T extends object> implements ReadonlyMap<string, T> {
     public readonly [Symbol.toStringTag]: string = "Map";
 
@@ -33,6 +39,14 @@ abstract class ReadonlyScopeMap<T extends object> implements ReadonlyMap<string,
     }
 }
 
+// This is the small, binding-specific view produced by ScopeBindings.
+//
+// `base` contains all sibling names. `hidden` removes the current binding's ordinary aliases so
+// an outer binding with the same name can still be found. `recursive` replaces only the current
+// binding's @ aliases with descriptors marked as recursive.
+//
+// Keeping these differences separate is much cheaper than copying the full sibling Map for every
+// value in a large let, record, or section.
 export class BindingScopeMap<T extends object> extends ReadonlyScopeMap<T> {
     private readonly base: ReadonlyMap<string, T>;
     private readonly hidden: ReadonlySet<string>;
@@ -68,6 +82,13 @@ export class BindingScopeMap<T extends object> extends ReadonlyScopeMap<T> {
     }
 }
 
+// Most syntax nodes inherit a large parent scope and add only a few local names. Copying the parent
+// Map at every node causes the same entries to be stored thousands of times.
+//
+// MergedScopeMap keeps the parent and local Map as separate layers. A lookup checks local names
+// first and then walks outward through parent layers. Full materialization happens only when a
+// caller enumerates the complete scope, where native Map shadowing and insertion order must be
+// reproduced exactly.
 class MergedScopeMap<T extends object> extends ReadonlyScopeMap<T> {
     private readonly parent: ReadonlyMap<string, T>;
     private readonly own: ReadonlyMap<string, T>;
