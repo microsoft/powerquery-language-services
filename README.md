@@ -26,45 +26,6 @@ Test
 npm test
 ```
 
-## Performance investigation
-
-Recorded service benchmarks and data-structure experiments are in
-[benchmarks/results/index.json](benchmarks/results/index.json). They use the current local parser,
-the seven large connector sources from the parser benchmark manifest, and this repository's
-standard-library fixture. Host-specific external type resolution is not included.
-
-Build both repositories first. The harness requires Node 22.15+ for process-local module hooks
-and does not modify installed dependencies. For example, measure CapacityMetricsCES with one
-warmup and three samples:
-
-```powershell
-$env:BENCHMARK_OFFSET = "2"
-node --expose-gc --max-old-space-size=4096 benchmarks\benchmarkServices.cjs Q:\src\powerquery-parser Q:\src\powerquery-parser\benchmarks\parser\00-baseline.json benchmarks\results\local-production.json 3 1
-```
-
-Normal language-service calls now use shared sibling-binding tables, parent-linked read-only
-scope maps and a completed-node inspection cache. No environment toggle is required.
-`scopeItemByKey` retains its `ReadonlyMap` contract, including lookup and iteration order,
-but is not necessarily a native `Map`. Scope caches belong to one immutable parsed document
-and its inspection settings; clear them before reuse with another document.
-
-Leave `SCOPE_EXPERIMENT` unset when measuring this implementation. The retained `intern`,
-`memo` and `overlay` hooks are historical benchmark-only prototypes for the pre-port compiled
-scope module at `b794f45`; their source-pattern assertions intentionally reject the new module.
-The recorded pre-port results remain available for comparison.
-`BENCHMARK_OFFSET` selects the first manifest entry (default 0);
-the final two numeric arguments specify samples and file count. `VALIDATION_ONLY=1` skips editor
-operations, and `PHASE_TIMEOUT_MS` changes the default 20-second cooperative validation deadline.
-
-An optional final argument such as `invokeValidation` or `unknownValidation` profiles that phase.
-Profiled runs are separate from confirmation timings. Set `PROFILE_DIR` to retain raw CPU profiles;
-self-sample summaries are always saved in the result. Heap measurements are phase-end samples,
-not peak memory. Failures remain explicit and are excluded from successful timing comparisons.
-
-`benchmarks\checkScopes.cjs <parser root> production <output>` records current scope
-semantics for differential comparison. `node benchmarks\summarize.cjs` verifies the recorded
-confirmation output hashes and regenerates the investigation index.
-
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
