@@ -80,14 +80,14 @@ export async function tryNodeScope(
         initialCorrelationId: trace.id,
     };
 
-    const result: TriedNodeScope = await ResultUtils.ensureResultAsync(async () => {
+    const result: TriedNodeScope = ResultUtils.ensureResult(() => {
         const ancestry: ReadonlyArray<TXorNode> = AncestryUtils.assertAncestry(nodeIdMapCollection, nodeId);
 
         if (ancestry.length === 0) {
             throw new PQP.CommonError.InvariantError(`expected ancestry to have at least one node`, { nodeId });
         }
 
-        await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
+        inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
 
         const result: NodeScope = MapUtils.assertGet(scopeById, nodeId, `expected nodeId in scope result`, {
             nodeId,
@@ -253,7 +253,7 @@ function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope 
     return state.scopeById.get(parentNodeId);
 }
 
-async function inspectScope(
+function inspectScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     eachScopeById: TypeById | undefined,
@@ -261,7 +261,7 @@ async function inspectScope(
     // scopeById may get mutated by adding new entries.
     scopeById: ScopeById,
     correlationId: number,
-): Promise<void> {
+): void {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         inspectScope.name,
@@ -296,15 +296,13 @@ async function inspectScope(
         state.ancestryIndex = ancestryIndex;
         const xorNode: TXorNode = ancestry[ancestryIndex];
 
-        // eslint-disable-next-line no-await-in-loop
-        await inspectNode(state, xorNode, trace.id);
+        inspectNode(state, xorNode, trace.id);
     }
 
     trace.exit();
 }
 
-// eslint-disable-next-line require-await
-async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlationId: number): Promise<void> {
+function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlationId: number): void {
     const trace: Trace = state.traceManager.entry(
         InspectionTraceConstant.InspectScope,
         inspectNode.name,
