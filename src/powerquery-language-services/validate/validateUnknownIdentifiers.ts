@@ -8,8 +8,8 @@ import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
-    calculateJaroWinklers,
     calculateJaroWinklersWithPreparedOptions,
+    findJaroWinklerSuggestionWithBaseline,
     PreparedJaroWinklerOption,
     prepareJaroWinklerOptions,
 } from "../jaroWinkler";
@@ -141,7 +141,12 @@ function findUnknownIdentifiers(
     // Local names vary by scope, but the library is shared by every identifier in this validation.
     // Keeping them separate lets repeated misspellings reuse the expensive library-wide search.
     const libraryResultByLiteral: Map<string, [number, string]> = new Map();
-    const suggestionByScope: Map<Inspection.NodeScope, Map<string, string | undefined>> = new Map();
+    const normalizedLocalIdentifierByValue: Record<string, string> = Object.create(null);
+
+    const suggestionByScopeMap: WeakMap<
+        ReadonlyMap<string, Inspection.TScopeItem>,
+        Map<string, string | undefined>
+    > = new WeakMap();
 
     for (const identifierWithNodeScope of identifiersWithNodeScope) {
         if (ResultUtils.isError(identifierWithNodeScope.triedNodeScope)) {
@@ -160,11 +165,14 @@ function findUnknownIdentifiers(
                 identifierLiteral: literal,
             })
         ) {
-            let suggestionsByLiteral: Map<string, string | undefined> | undefined = suggestionByScope.get(nodeScope);
+            const scopeItemByKey: ReadonlyMap<string, Inspection.TScopeItem> = nodeScope.scopeItemByKey;
+
+            let suggestionsByLiteral: Map<string, string | undefined> | undefined =
+                suggestionByScopeMap.get(scopeItemByKey);
 
             if (suggestionsByLiteral === undefined) {
                 suggestionsByLiteral = new Map();
-                suggestionByScope.set(nodeScope, suggestionsByLiteral);
+                suggestionByScopeMap.set(scopeItemByKey, suggestionsByLiteral);
             }
 
             let suggestion: string | undefined = suggestionsByLiteral.get(literal);
@@ -178,15 +186,14 @@ function findUnknownIdentifiers(
                     libraryResultByLiteral.set(normalizedLiteral, libraryResult);
                 }
 
-                const localIdentifiers: ReadonlyArray<string> = Array.from(nodeScope.scopeItemByKey.keys());
+                suggestion = findJaroWinklerSuggestionWithBaseline(
+                    literal,
+                    scopeItemByKey.keys(),
+                    normalizedLocalIdentifierByValue,
+                    libraryResult,
+                    JaroWinklerSuggestionThreshold,
+                );
 
-                const localResult: [number, string] | undefined =
-                    localIdentifiers.length === 0 ? undefined : calculateJaroWinklers(literal, localIdentifiers);
-
-                const [jaroWinklerScore, bestSuggestion]: [number, string] =
-                    localResult !== undefined && localResult[0] >= libraryResult[0] ? localResult : libraryResult;
-
-                suggestion = jaroWinklerScore > JaroWinklerSuggestionThreshold ? bestSuggestion : undefined;
                 suggestionsByLiteral.set(literal, suggestion);
             }
 

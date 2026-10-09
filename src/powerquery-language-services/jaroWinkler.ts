@@ -72,6 +72,51 @@ export function calculateJaroWinklersWithPreparedOptions(
     return [bestScore, bestOption];
 }
 
+export function findJaroWinklerSuggestionWithBaseline(
+    source: string,
+    options: Iterable<string>,
+    normalizedByValue: Record<string, string>,
+    baseline: [number, string],
+    threshold: number,
+): string | undefined {
+    const normalizedSource: string = getOrCreateNormalized(source, normalizedByValue);
+    let shorterMatches: Uint8Array = new Uint8Array(normalizedSource.length);
+    let longerMatches: Uint8Array = new Uint8Array(normalizedSource.length);
+    let [bestScore, bestOption]: [number, string] = baseline;
+    let bestIsLocal: boolean = false;
+
+    for (const option of options) {
+        const normalizedOption: string = getOrCreateNormalized(option, normalizedByValue);
+        const maximumScore: number = maximumJaroWinklerScore(normalizedSource, normalizedOption);
+
+        if (bestScore > threshold ? maximumScore < bestScore : maximumScore <= threshold) {
+            continue;
+        }
+
+        const requiredLength: number = Math.max(normalizedSource.length, normalizedOption.length);
+
+        if (shorterMatches.length < requiredLength) {
+            shorterMatches = new Uint8Array(requiredLength);
+            longerMatches = new Uint8Array(requiredLength);
+        }
+
+        const currentScore: number = calculateJaroWinklerForNormalized(
+            normalizedSource,
+            normalizedOption,
+            shorterMatches,
+            longerMatches,
+        );
+
+        if (currentScore > bestScore || (!bestIsLocal && currentScore === bestScore)) {
+            bestScore = currentScore;
+            bestOption = option;
+            bestIsLocal = true;
+        }
+    }
+
+    return bestScore > threshold ? bestOption : undefined;
+}
+
 function calculateJaroWinklerForNormalized(
     normalizedLeft: string,
     normalizedRight: string,
@@ -207,4 +252,45 @@ function calculateJaroForNormalized(
     const mMinusT_over_m: number = (numMatches - numTranspositionsNeeded) / numMatches;
 
     return (m_over_s1 + m_over_s2 + mMinusT_over_m) / 3;
+}
+
+function getOrCreateNormalized(value: string, normalizedByValue: Record<string, string>): string {
+    let normalized: string | undefined = normalizedByValue[value];
+
+    if (normalized === undefined) {
+        normalized = value.toLowerCase();
+        normalizedByValue[value] = normalized;
+    }
+
+    return normalized;
+}
+
+function maximumJaroWinklerScore(normalizedLeft: string, normalizedRight: string): number {
+    const shorter: string = normalizedLeft.length < normalizedRight.length ? normalizedLeft : normalizedRight;
+    const longer: string = normalizedLeft.length < normalizedRight.length ? normalizedRight : normalizedLeft;
+
+    if (shorter.length === 0) {
+        return 0;
+    }
+
+    // No candidate can match more characters than the shorter string.
+    const maximumJaroScore: number = (2 + shorter.length / longer.length) / 3;
+
+    if (maximumJaroScore <= WinklerScoreThreshold) {
+        return maximumJaroScore;
+    }
+
+    const upperBound: number = Math.max(WinklerMaxCharacterAdjustment, shorter.length);
+    let startingCharIndex: number = 0;
+
+    while (shorter[startingCharIndex] === longer[startingCharIndex] && startingCharIndex < upperBound) {
+        startingCharIndex += 1;
+    }
+
+    const adjustment: number = startingCharIndex * WinklerAdjustment;
+
+    // Prefix adjustments above 1 make the score decrease as Jaro similarity rises.
+    return adjustment <= 1
+        ? maximumJaroScore + adjustment * (1 - maximumJaroScore)
+        : WinklerScoreThreshold + adjustment * (1 - WinklerScoreThreshold);
 }
