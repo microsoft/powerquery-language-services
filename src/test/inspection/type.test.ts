@@ -5,10 +5,12 @@ import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     ExternalType,
+    Inspection,
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
@@ -1626,6 +1628,45 @@ describe(`Inspection - Type`, () => {
                     text: expression2,
                     expected: expected2,
                 });
+            });
+
+            it(`shares concurrent requests for the same node`, async () => {
+                let invocationRequestCount: number = 0;
+
+                const settings: InspectionSettings = {
+                    ...ExtendedInspectionSettings,
+                    library: {
+                        ...ExtendedInspectionSettings.library,
+                        externalTypeResolver: (request: ExternalType.TExternalTypeRequest) => {
+                            if (request.kind === ExternalType.ExternalTypeRequestKind.Invocation) {
+                                invocationRequestCount += 1;
+                            }
+
+                            return ExternalTypeResolver(request);
+                        },
+                    },
+                };
+
+                const triedParse: PQP.Task.ParseTaskOk | PQP.Task.ParseTaskParseError = await TestUtils.assertParse({
+                    text: `foo()`,
+                    settings,
+                });
+
+                const invokeExpressionIds: Set<number> = Assert.asDefined(
+                    triedParse.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+                );
+
+                const invokeExpressionId: number = Assert.asDefined(Array.from(invokeExpressionIds)[0]);
+                const typeCache: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+
+                const [first, second]: [Inspection.TriedType, Inspection.TriedType] = await Promise.all([
+                    Inspection.tryType(settings, triedParse.nodeIdMapCollection, invokeExpressionId, typeCache),
+                    Inspection.tryType(settings, triedParse.nodeIdMapCollection, invokeExpressionId, typeCache),
+                ]);
+
+                expect(PQP.ResultUtils.assertOk(first)).to.equal(Type.TextInstance);
+                expect(PQP.ResultUtils.assertOk(second)).to.equal(Type.TextInstance);
+                expect(invocationRequestCount).to.equal(1);
             });
         });
     });
