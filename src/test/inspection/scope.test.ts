@@ -2268,6 +2268,5 @@ describe(`Inspection - Scope - Identifier`, () => {
 
             expect(result.scopeById.size).to.equal(scopeCountAfterFirstPass);
         });
-
     });
 });

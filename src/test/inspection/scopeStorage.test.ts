@@ -40,14 +40,17 @@ describe("Shared scope storage", () => {
         const first: Value = { id: 1 };
         const second: Value = { id: 2 };
         const third: Value = { id: 3 };
+
         const parent: Map<string, Value> = new Map([
             ["a", first],
             ["b", second],
         ]);
+
         const own: Map<string, Value> = new Map([
             ["b", third],
             ["c", first],
         ]);
+
         const actual: ReadonlyMap<string, Value> = mergeScopeMaps(parent, own);
         const expected: Map<string, Value> = new Map([...parent, ...own]);
 
@@ -62,6 +65,7 @@ describe("Shared scope storage", () => {
         expect(Object.prototype.toString.call(actual)).to.equal("[object Map]");
 
         const context: { seen: [string, Value][] } = { seen: [] };
+
         actual.forEach(function (
             this: typeof context,
             value: Value,
@@ -71,6 +75,7 @@ describe("Shared scope storage", () => {
             expect(map).to.equal(actual);
             this.seen.push([key, value]);
         }, context);
+
         expect(context.seen).to.deep.equal([...expected]);
     });
 
@@ -78,16 +83,19 @@ describe("Shared scope storage", () => {
         const outer: Value = { id: 1 };
         const inner: Value = { id: 2 };
         const recursive: Value = { id: 3 };
+
         const base: Map<string, Value> = new Map([
             ["a", inner],
             ["@a", inner],
             ["b", inner],
         ]);
+
         const own: BindingScopeMap<Value> = new BindingScopeMap(
             base,
             new Set(["a", "not-in-base"]),
             new Map([["@a", recursive]]),
         );
+
         const actual: ReadonlyMap<string, Value> = mergeScopeMaps(new Map([["a", outer]]), own);
 
         expect(own.size).to.equal(2);
@@ -114,6 +122,7 @@ describe("Shared scope storage", () => {
         expect(scope.get("base")).to.equal(baseValue);
         expect(scope.get("shared")).to.deep.equal({ id: 9999 });
         expect(scope.has("missing")).to.equal(false);
+
         expect([...scope]).to.deep.equal([
             ["base", baseValue],
             ["shared", { id: 9999 }],
@@ -147,11 +156,14 @@ describe("Shared sibling bindings", () => {
     ]) {
         it(`matches materialized scopes for ${text}`, async () => {
             const parsed: PQP.Task.ParseTaskOk = await parse(text);
+
             const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
                 parsed.nodeIdMapCollection,
                 XorNodeUtils.boxAst(parsed.ast),
             );
+
             const options: IdentifierUtils.GetAllowedIdentifiersOptions = { allowRecursive: true };
+
             const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
                 new ScopeBindings(pairs, options, scopeItem, undefined);
 
@@ -177,11 +189,14 @@ describe("Shared sibling bindings", () => {
 
     it("interns ordinary and recursive descriptors instead of recreating them for every sibling", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = 2, c = 3 in c");
+
         const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
             parsed.nodeIdMapCollection,
             XorNodeUtils.boxAst(parsed.ast),
         );
+
         let calls: number = 0;
+
         const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
             new ScopeBindings(
                 pairs,
@@ -193,6 +208,7 @@ describe("Shared sibling bindings", () => {
                 },
                 undefined,
             );
+
         const a: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.forSelf(pairs[0].key.id);
         const b: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.forSelf(pairs[1].key.id);
         expect(a.get("c")).to.equal(b.get("c"));
@@ -204,12 +220,15 @@ describe("Shared sibling bindings", () => {
 describe("Completed scope inspection cache", () => {
     it("does not mark partially cancelled inspection complete", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("section S; shared a = 1; shared b = a; shared c = b;");
+
         const pairs: ReadonlyArray<NodeIdMapIterator.SectionKeyValuePair> = NodeIdMapIterator.iterSection(
             parsed.nodeIdMapCollection,
             XorNodeUtils.boxAst(parsed.ast),
         );
+
         const scopes: Inspection.ScopeById = new Map();
         const target: number = PQP.Assert.asDefined(pairs[2].value).node.id;
+
         const cancellationToken: PQP.ICancellationToken = {
             ...PQP.NoOpCancellationToken,
             throwIfCancelled: () => {
@@ -218,6 +237,7 @@ describe("Completed scope inspection cache", () => {
                 }
             },
         };
+
         const cancelled: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
             { ...PQP.DefaultSettings, cancellationToken },
             parsed.nodeIdMapCollection,
@@ -225,12 +245,14 @@ describe("Completed scope inspection cache", () => {
             target,
             scopes,
         );
+
         expect(PQP.ResultUtils.isError(cancelled)).to.equal(true);
         expect(scopes.size).to.equal(1);
 
         const retried: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(PQP.DefaultSettings, parsed.nodeIdMapCollection, undefined, target, scopes),
         );
+
         const fresh: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(
                 PQP.DefaultSettings,
@@ -240,6 +262,7 @@ describe("Completed scope inspection cache", () => {
                 new Map(),
             ),
         );
+
         expect([...retried.scopeItemByKey]).to.deep.equal([...fresh.scopeItemByKey]);
         expect(retried.scopeItemByKey.has("b")).to.equal(true);
     });
@@ -247,10 +270,12 @@ describe("Completed scope inspection cache", () => {
     it("checks cancellation before reusing completed ancestor inspection", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = (x) => x in b");
         const scopes: Inspection.ScopeById = new Map();
+
         const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
             parsed.nodeIdMapCollection,
             XorNodeUtils.boxAst(parsed.ast),
         );
+
         PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(
                 PQP.DefaultSettings,
@@ -260,8 +285,10 @@ describe("Completed scope inspection cache", () => {
                 scopes,
             ),
         );
+
         const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
         expect(scopes.has(target)).to.equal(false);
+
         const cancelled: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
             { ...PQP.DefaultSettings, cancellationToken: PQP.ExpiredCancellationToken },
             parsed.nodeIdMapCollection,
@@ -269,6 +296,7 @@ describe("Completed scope inspection cache", () => {
             target,
             scopes,
         );
+
         expect(PQP.ResultUtils.isError(cancelled)).to.equal(true);
     });
 
@@ -277,10 +305,12 @@ describe("Completed scope inspection cache", () => {
         const maps: NodeIdMap.Collection = parsed.nodeIdMapCollection;
         const scopes: Inspection.ScopeById = new Map();
         const leafId: number = PQP.Assert.asDefined(maps.rightMostLeaf).id;
+
         const inspect: () => Promise<Inspection.NodeScope> = async () =>
             PQP.ResultUtils.assertOk(
                 await Inspection.tryNodeScope(PQP.DefaultSettings, maps, undefined, leafId, scopes),
             );
+
         const initial: Inspection.NodeScope = await inspect();
         scopes.delete(leafId);
         expect([...(await inspect()).scopeItemByKey]).to.deep.equal([...initial.scopeItemByKey]);
@@ -289,6 +319,7 @@ describe("Completed scope inspection cache", () => {
 
         const other: PQP.Task.ParseTaskOk = await parse("let different = 1 in different");
         scopes.clear();
+
         const otherScope: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(
                 PQP.DefaultSettings,
@@ -298,6 +329,7 @@ describe("Completed scope inspection cache", () => {
                 scopes,
             ),
         );
+
         expect(otherScope.scopeItemByKey.has("different")).to.equal(true);
         expect(otherScope.scopeItemByKey.has("a")).to.equal(false);
     });
