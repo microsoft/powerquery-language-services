@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver-types";
 import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { ResultUtils } from "@microsoft/powerquery-parser";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
@@ -42,11 +42,11 @@ export async function validateUnknownIdentifiers(
     // Grab all identifiers in the given context.
     const identifierValues: ReadonlyArray<Ast.Identifier> = findIdentifierAsts(nodeIdMapCollection);
 
-    // For each identifier create a Promise<TriedScope>, then await on all.
-    const identifiersWithNodeScope: ReadonlyArray<IdentifierWithNodeScope> = await ArrayUtils.mapAsync<
-        Ast.Identifier,
-        IdentifierWithNodeScope
-    >(identifierValues, async (identifier: Ast.Identifier) => {
+    const identifiersWithNodeScope: IdentifierWithNodeScope[] = [];
+
+    // Scope inspection mutates a shared cache. Source-order evaluation lets each identifier reuse
+    // completed ancestor work instead of racing other inspections over the same syntax tree.
+    for (const identifier of identifierValues) {
         validationSettings.cancellationToken?.throwIfCancelled();
 
         const identifierExpression: Ast.IdentifierExpression | undefined =
@@ -61,9 +61,10 @@ export async function validateUnknownIdentifiers(
                 ? `@${identifier.literal}`
                 : identifier.literal;
 
-        return {
+        identifiersWithNodeScope.push({
             identifier: identifierExpression ?? identifier,
             literal,
+            // eslint-disable-next-line no-await-in-loop
             triedNodeScope: await Inspection.tryNodeScope(
                 updatedSettings,
                 nodeIdMapCollection,
@@ -71,8 +72,8 @@ export async function validateUnknownIdentifiers(
                 identifier.id,
                 typeCache.scopeById,
             ),
-        };
-    });
+        });
+    }
 
     const unknownIdentifiers: ReadonlyArray<UnknownIdentifier> = findUnknownIdentifiers(
         validationSettings,
