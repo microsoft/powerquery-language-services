@@ -108,7 +108,7 @@ function inspectRecordOrTableProjection(
     if (TypeUtils.isDefinedRecord(fieldType)) {
         return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedRecordFields);
     } else if (TypeUtils.isDefinedTable(fieldType)) {
-        return reducedFieldsToKeys(fieldType, projectedFieldLiterals, isOptional, reducedTableFields);
+        return reducedTableToKeys(fieldType, projectedFieldLiterals, isOptional);
     } else {
         const newFields: Map<string, Type.TPowerQueryType> = new Map(
             projectedFieldLiterals.map((fieldName: string) => [fieldName, Type.AnyInstance]),
@@ -116,7 +116,7 @@ function inspectRecordOrTableProjection(
 
         return fieldType.kind === Type.TypeKind.Record
             ? TypeUtils.definedRecord(false, newFields, false)
-            : TypeUtils.definedTable(false, new PQP.OrderedMap([...newFields]), false);
+            : TypeUtils.definedTable(fieldType.isNullable, new PQP.OrderedMap([...newFields]));
     }
 }
 
@@ -148,6 +148,24 @@ function reducedRecordFields(current: Type.DefinedRecord, keys: ReadonlyArray<st
     return PQP.MapUtils.pick(current.fields, keys);
 }
 
-function reducedTableFields(current: Type.DefinedTable, keys: ReadonlyArray<string>): Type.OrderedFields {
-    return new PQP.OrderedMap([...PQP.MapUtils.pick(current.fields, keys).entries()]);
+function reducedTableToKeys(
+    current: Type.DefinedTable,
+    keys: ReadonlyArray<string>,
+    isOptional: boolean,
+): Type.DefinedTable | Type.None | Type.Null {
+    const hasUndeclaredField: boolean = keys.some((key: string) => !current.fields.has(key));
+
+    if (!current.isOpen && hasUndeclaredField) {
+        return isOptional ? Type.NullInstance : Type.NoneInstance;
+    }
+
+    const fields: Type.OrderedFields = new PQP.OrderedMap(
+        keys.map((key: string) => [key, current.fields.get(key) ?? Type.AnyInstance]),
+    );
+
+    const rows: ReadonlyArray<Type.UnorderedFields> | undefined = hasUndeclaredField
+        ? undefined
+        : current.rows?.map((row: Type.UnorderedFields) => PQP.MapUtils.pick(row, keys));
+
+    return TypeUtils.definedTable(current.isNullable, fields, rows);
 }

@@ -350,6 +350,15 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                     },
                 }));
 
+            it(`let Source = #table({"Name", "Score"}, {}) in Source[|`, async () =>
+                await expectFieldAccessSuggestions({
+                    textWithPipe: `let Source = #table({"Name", "Score"}, {}) in Source[|`,
+                    expected: {
+                        labels: [`Name`, `Score`],
+                        isTextEdit: false,
+                    },
+                }));
+
             it(`[car = 1, cat = 2][ |`, async () =>
                 await expectFieldAccessSuggestions({
                     textWithPipe: `[car = 1, cat = 2][ |`,

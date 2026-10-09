@@ -8,6 +8,7 @@ import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerqu
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { dereferencedIdentifierType } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
+import { intrinsicIdentifierType } from "./inspectTypeIntrinsic";
 
 export async function inspectTypeIdentifierExpression(
     state: InspectTypeState,
@@ -29,11 +30,16 @@ export async function inspectTypeIdentifierExpression(
     if (XorNodeUtils.isContext(xorNode)) {
         result = Type.UnknownInstance;
     } else {
-        const dereferencedType: Type.TPowerQueryType | undefined = await dereferencedIdentifierType(
+        let dereferencedType: Type.TPowerQueryType | undefined = await dereferencedIdentifierType(
             state,
             xorNode,
             trace.id,
         );
+
+        // If the dereferenced type is unknown, we will attempt to see if the identifier is an intrinsic function.
+        if (dereferencedType?.kind === Type.TypeKind.Unknown) {
+            dereferencedType = intrinsicIdentifierType(xorNode.node.identifier.literal);
+        }
 
         result = dereferencedType ?? Type.UnknownInstance;
     }
