@@ -1668,6 +1668,37 @@ describe(`Inspection - Type`, () => {
                 expect(PQP.ResultUtils.assertOk(second)).to.equal(Type.TextInstance);
                 expect(invocationRequestCount).to.equal(1);
             });
+
+            it(`shares concurrent scope type requests for the same node`, async () => {
+                const triedParse: PQP.Task.ParseTaskOk | PQP.Task.ParseTaskParseError = await TestUtils.assertParse({
+                    text: `foo()`,
+                    settings: ExtendedInspectionSettings,
+                });
+
+                const invokeExpressionIds: Set<number> = Assert.asDefined(
+                    triedParse.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+                );
+
+                const invokeExpressionId: number = Assert.asDefined(Array.from(invokeExpressionIds)[0]);
+                const typeCache: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+
+                const [first, second]: [Inspection.TriedScopeType, Inspection.TriedScopeType] = await Promise.all([
+                    Inspection.tryScopeType(
+                        ExtendedInspectionSettings,
+                        triedParse.nodeIdMapCollection,
+                        invokeExpressionId,
+                        typeCache,
+                    ),
+                    Inspection.tryScopeType(
+                        ExtendedInspectionSettings,
+                        triedParse.nodeIdMapCollection,
+                        invokeExpressionId,
+                        typeCache,
+                    ),
+                ]);
+
+                expect(PQP.ResultUtils.assertOk(first)).to.equal(PQP.ResultUtils.assertOk(second));
+            });
         });
     });
 

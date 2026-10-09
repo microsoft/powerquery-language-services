@@ -17,9 +17,12 @@ export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonEr
 
 export type TriedType = PQP.Result<Type.TPowerQueryType, PQP.CommonError.CommonError>;
 
-// Keep unfinished requests out of the public TypeCache shape so existing cache implementations remain compatible.
+type TriedScopeTypeTaskById = Map<number, Promise<TriedScopeType>>;
+type TriedTypeTaskById = Map<number, Promise<TriedType>>;
+
 // Only identical roots share work; merging different roots would need dependency tracking for mutual-recursion cycles.
-const triedTypeTaskByCache: WeakMap<TypeCache, Map<number, Promise<TriedType>>> = new WeakMap();
+const triedScopeTypeTaskByCache: WeakMap<TypeCache, TriedScopeTypeTaskById> = new WeakMap();
+const triedTypeTaskByCache: WeakMap<TypeCache, TriedTypeTaskById> = new WeakMap();
 
 export async function tryScopeType(
     settings: InspectionSettings,
@@ -35,21 +38,42 @@ export async function tryScopeType(
         settings.initialCorrelationId,
     );
 
-    const state: InspectTypeState = InspectTypeStateUtils.fromInspectionSettings(
-        settings,
-        nodeIdMapCollection,
-        typeCache,
-        trace.id,
-    );
+    settings.cancellationToken?.throwIfCancelled();
 
-    const result: TriedScopeType = await ResultUtils.ensureResultAsync(
-        () => inspectScopeType(state, nodeId, trace.id),
-        settings.locale,
-    );
+    let triedScopeTypeTaskById: TriedScopeTypeTaskById | undefined = triedScopeTypeTaskByCache.get(typeCache);
 
-    trace.exit();
+    if (triedScopeTypeTaskById === undefined) {
+        triedScopeTypeTaskById = new Map();
+        triedScopeTypeTaskByCache.set(typeCache, triedScopeTypeTaskById);
+    }
 
-    return result;
+    let resultTask: Promise<TriedScopeType> | undefined = triedScopeTypeTaskById.get(nodeId);
+    const ownsResultTask: boolean = resultTask === undefined;
+
+    if (resultTask === undefined) {
+        resultTask = ResultUtils.ensureResultAsync(
+            () =>
+                inspectScopeType(
+                    InspectTypeStateUtils.fromInspectionSettings(settings, nodeIdMapCollection, typeCache, trace.id),
+                    nodeId,
+                    trace.id,
+                ),
+            settings.locale,
+        );
+
+        triedScopeTypeTaskById.set(nodeId, resultTask);
+    }
+
+    try {
+        const result: TriedScopeType = await resultTask;
+        trace.exit({ [TraceConstant.IsError]: result.kind, cacheHit: !ownsResultTask });
+
+        return result;
+    } finally {
+        if (ownsResultTask && triedScopeTypeTaskById.get(nodeId) === resultTask) {
+            triedScopeTypeTaskById.delete(nodeId);
+        }
+    }
 }
 
 export async function tryType(
@@ -68,7 +92,7 @@ export async function tryType(
 
     settings.cancellationToken?.throwIfCancelled();
 
-    let triedTypeTaskById: Map<number, Promise<TriedType>> | undefined = triedTypeTaskByCache.get(typeCache);
+    let triedTypeTaskById: TriedTypeTaskById | undefined = triedTypeTaskByCache.get(typeCache);
 
     if (triedTypeTaskById === undefined) {
         triedTypeTaskById = new Map();
