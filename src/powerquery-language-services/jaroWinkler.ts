@@ -10,15 +10,77 @@ const WinklerAdjustment: number = 0.1;
 const WinklerMaxCharacterAdjustment: number = 4;
 const WinklerScoreThreshold: number = 0.7;
 
+// Unknown-identifier validation compares many misspellings against the same library names.
+// Keeping both forms lets it normalize each library name once without losing the spelling shown to users.
+export interface PreparedJaroWinklerOption {
+    readonly normalizedValue: string;
+    readonly value: string;
+}
+
 export function calculateJaro(left: string, right: string): number {
-    const [shorter, longer]: [string, string] = getNormalized(left, right);
+    const normalizedLeft: string = left.toLowerCase();
+    const normalizedRight: string = right.toLowerCase();
+    const shorter: string = normalizedLeft.length < normalizedRight.length ? normalizedLeft : normalizedRight;
+    const longer: string = normalizedLeft.length < normalizedRight.length ? normalizedRight : normalizedLeft;
 
     return calculateJaroForNormalized(shorter, longer);
 }
 
 export function calculateJaroWinkler(left: string, right: string): number {
-    const [shorter, longer]: [string, string] = getNormalized(left, right);
-    let jaroScore: number = calculateJaroForNormalized(shorter, longer);
+    return calculateJaroWinklerForNormalized(left.toLowerCase(), right.toLowerCase());
+}
+
+export function prepareJaroWinklerOptions(options: ReadonlyArray<string>): ReadonlyArray<PreparedJaroWinklerOption> {
+    return options.map((value: string) => ({
+        normalizedValue: value.toLowerCase(),
+        value,
+    }));
+}
+
+export function calculateJaroWinklersWithPreparedOptions(
+    source: string,
+    options: ReadonlyArray<PreparedJaroWinklerOption>,
+): [number, string] {
+    ArrayUtils.assertNonZeroLength(options);
+
+    const normalizedSource: string = source.toLowerCase();
+    let maximumLength: number = normalizedSource.length;
+
+    for (const option of options) {
+        maximumLength = Math.max(maximumLength, option.normalizedValue.length);
+    }
+
+    const shorterMatches: Uint8Array = new Uint8Array(maximumLength);
+    const longerMatches: Uint8Array = new Uint8Array(maximumLength);
+    let bestScore: number = -1;
+    let bestOption: string = "";
+
+    for (const option of options) {
+        const currentScore: number = calculateJaroWinklerForNormalized(
+            normalizedSource,
+            option.normalizedValue,
+            shorterMatches,
+            longerMatches,
+        );
+
+        if (currentScore > bestScore) {
+            bestScore = currentScore;
+            bestOption = option.value;
+        }
+    }
+
+    return [bestScore, bestOption];
+}
+
+function calculateJaroWinklerForNormalized(
+    normalizedLeft: string,
+    normalizedRight: string,
+    shorterMatches?: Uint8Array,
+    longerMatches?: Uint8Array,
+): number {
+    const shorter: string = normalizedLeft.length < normalizedRight.length ? normalizedLeft : normalizedRight;
+    const longer: string = normalizedLeft.length < normalizedRight.length ? normalizedRight : normalizedLeft;
+    let jaroScore: number = calculateJaroForNormalized(shorter, longer, shorterMatches, longerMatches);
 
     if (jaroScore <= WinklerScoreThreshold) {
         return jaroScore;
@@ -44,29 +106,54 @@ export function calculateJaroWinkler(left: string, right: string): number {
 export function calculateJaroWinklers(source: string, options: ReadonlyArray<string>): [number, string] {
     ArrayUtils.assertNonZeroLength(options);
 
+    const normalizedSource: string = source.toLowerCase();
+    const normalizedOptions: string[] = new Array(options.length);
+    let maximumLength: number = normalizedSource.length;
+
+    for (let index: number = 0; index < options.length; index += 1) {
+        const normalizedOption: string = options[index].toLowerCase();
+        normalizedOptions[index] = normalizedOption;
+        maximumLength = Math.max(maximumLength, normalizedOption.length);
+    }
+
+    const shorterMatches: Uint8Array = new Uint8Array(maximumLength);
+    const longerMatches: Uint8Array = new Uint8Array(maximumLength);
     let bestScore: number = -1;
     let bestOption: string = "";
 
-    for (const option of options) {
-        const currentScore: number = calculateJaroWinkler(source, option);
+    for (let index: number = 0; index < options.length; index += 1) {
+        const currentScore: number = calculateJaroWinklerForNormalized(
+            normalizedSource,
+            normalizedOptions[index],
+            shorterMatches,
+            longerMatches,
+        );
 
         if (currentScore > bestScore) {
             bestScore = currentScore;
-            bestOption = option;
+            bestOption = options[index];
         }
     }
 
     return [bestScore, bestOption];
 }
 
-function calculateJaroForNormalized(shorter: string, longer: string): number {
+function calculateJaroForNormalized(
+    shorter: string,
+    longer: string,
+    reusableShorterMatches?: Uint8Array,
+    reusableLongerMatches?: Uint8Array,
+): number {
     const shorterLength: number = shorter.length;
     const longerLength: number = longer.length;
     // When trying to find similar characters limit the search to a window based on longer's length.
     const matchingWindowSize: number = Math.floor(longerLength / 2) - 1;
 
-    const shorterMatches: boolean[] = new Array(shorterLength);
-    const longerMatches: boolean[] = new Array(longerLength);
+    const shorterMatches: Uint8Array = reusableShorterMatches ?? new Uint8Array(shorterLength);
+    const longerMatches: Uint8Array = reusableLongerMatches ?? new Uint8Array(longerLength);
+    // Bulk searches pass the same buffers to every comparison, so clear only the portions used by this pair.
+    shorterMatches.fill(0, 0, shorterLength);
+    longerMatches.fill(0, 0, longerLength);
     let numMatches: number = 0;
 
     for (let longerIndex: number = 0; longerIndex < longerLength; longerIndex += 1) {
@@ -79,8 +166,8 @@ function calculateJaroForNormalized(shorter: string, longer: string): number {
             const shorterChar: string = shorter[shorterIndex];
 
             if (longerChar === shorterChar && !shorterMatches[shorterIndex]) {
-                shorterMatches[shorterIndex] = true;
-                longerMatches[longerIndex] = true;
+                shorterMatches[shorterIndex] = 1;
+                longerMatches[longerIndex] = 1;
                 numMatches += 1;
                 break;
             }
@@ -120,11 +207,4 @@ function calculateJaroForNormalized(shorter: string, longer: string): number {
     const mMinusT_over_m: number = (numMatches - numTranspositionsNeeded) / numMatches;
 
     return (m_over_s1 + m_over_s2 + mMinusT_over_m) / 3;
-}
-
-function getNormalized(left: string, right: string): [string, string] {
-    left = left.toLowerCase();
-    right = right.toLowerCase();
-
-    return left.length < right.length ? [left, right] : [right, left];
 }
