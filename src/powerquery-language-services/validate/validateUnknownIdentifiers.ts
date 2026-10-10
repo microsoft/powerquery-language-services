@@ -10,6 +10,7 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 import {
     calculateJaroWinklersWithPreparedOptions,
     findJaroWinklerSuggestionWithBaseline,
+    JaroWinklerScoreCache,
     PreparedJaroWinklerOption,
     prepareJaroWinklerOptions,
 } from "../jaroWinkler";
@@ -142,6 +143,7 @@ function findUnknownIdentifiers(
     // Keeping them separate lets repeated misspellings reuse the expensive library-wide search.
     const libraryResultByLiteral: Map<string, [number, string]> = new Map();
     const normalizedLocalIdentifierByValue: Record<string, string> = Object.create(null);
+    const scoreCache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
 
     const suggestionByScopeMap: WeakMap<
         ReadonlyMap<string, Inspection.TScopeItem>,
@@ -192,6 +194,7 @@ function findUnknownIdentifiers(
                     normalizedLocalIdentifierByValue,
                     libraryResult,
                     JaroWinklerSuggestionThreshold,
+                    scoreCache,
                 );
 
                 suggestionsByLiteral.set(literal, suggestion);

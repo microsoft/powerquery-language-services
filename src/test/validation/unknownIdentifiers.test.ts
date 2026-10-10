@@ -133,6 +133,15 @@ describe("Validation - UnknownIdentifier", () => {
 
         it(`library`, async () =>
             await assertUnknownIdentifierSuggestions(`test.n`, new Map([["test.n", "Test.Number"]])));
+
+        it(`preserves local spelling for repeated normalized pairs in different scopes`, async () =>
+            await assertUnknownIdentifierSuggestions(
+                `{let Table.AddColumn = 1 in tabl.addcolumn, let TABLE.ADDCOLUMN = 2 in TABL.ADDCOLUMN}`,
+                new Map([
+                    ["tabl.addcolumn", "Table.AddColumn"],
+                    ["TABL.ADDCOLUMN", "TABLE.ADDCOLUMN"],
+                ]),
+            ));
     });
 
     it(`allow redundant recursive identifier`, async () => await assertNoUnknownIdentifiers(`let foo = 1 in @foo`));

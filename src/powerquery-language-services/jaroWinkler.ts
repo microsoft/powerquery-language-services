@@ -9,12 +9,44 @@ import { ArrayUtils } from "@microsoft/powerquery-parser";
 const WinklerAdjustment: number = 0.1;
 const WinklerMaxCharacterAdjustment: number = 4;
 const WinklerScoreThreshold: number = 0.7;
+const MaximumCachedScoreCount: number = 8192;
 
 // Unknown-identifier validation compares many misspellings against the same library names.
 // Keeping both forms lets it normalize each library name once without losing the spelling shown to users.
 export interface PreparedJaroWinklerOption {
     readonly normalizedValue: string;
     readonly value: string;
+}
+
+// Validation owns this cache of exact normalized pair scores, never threshold-dependent bounds.
+// The entry limit bounds pair count, not the byte size of arbitrarily long identifiers.
+export class JaroWinklerScoreCache {
+    private readonly scores: Map<string, Map<string, number>> = new Map();
+    private count: number = 0;
+
+    get(source: string, option: string): number | undefined {
+        return this.scores.get(source)?.get(option);
+    }
+
+    set(source: string, option: string, score: number): void {
+        if (this.count >= MaximumCachedScoreCount) {
+            this.scores.clear();
+            this.count = 0;
+        }
+
+        let row: Map<string, number> | undefined = this.scores.get(source);
+
+        if (row === undefined) {
+            row = new Map();
+            this.scores.set(source, row);
+        }
+
+        if (!row.has(option)) {
+            this.count += 1;
+        }
+
+        row.set(option, score);
+    }
 }
 
 export function calculateJaro(left: string, right: string): number {
@@ -78,6 +110,7 @@ export function findJaroWinklerSuggestionWithBaseline(
     normalizedByValue: Record<string, string>,
     baseline: [number, string],
     threshold: number,
+    scoreCache?: JaroWinklerScoreCache,
 ): string | undefined {
     const normalizedSource: string = getOrCreateNormalized(source, normalizedByValue);
     let shorterMatches: Uint8Array = new Uint8Array(normalizedSource.length);
@@ -87,25 +120,31 @@ export function findJaroWinklerSuggestionWithBaseline(
 
     for (const option of options) {
         const normalizedOption: string = getOrCreateNormalized(option, normalizedByValue);
-        const maximumScore: number = maximumJaroWinklerScore(normalizedSource, normalizedOption);
+        let currentScore: number | undefined = scoreCache?.get(normalizedSource, normalizedOption);
 
-        if (bestScore > threshold ? maximumScore < bestScore : maximumScore <= threshold) {
-            continue;
+        if (currentScore === undefined) {
+            const maximumScore: number = maximumJaroWinklerScore(normalizedSource, normalizedOption);
+
+            if (bestScore > threshold ? maximumScore < bestScore : maximumScore <= threshold) {
+                continue;
+            }
+
+            const requiredLength: number = Math.max(normalizedSource.length, normalizedOption.length);
+
+            if (shorterMatches.length < requiredLength) {
+                shorterMatches = new Uint8Array(requiredLength);
+                longerMatches = new Uint8Array(requiredLength);
+            }
+
+            currentScore = calculateJaroWinklerForNormalized(
+                normalizedSource,
+                normalizedOption,
+                shorterMatches,
+                longerMatches,
+            );
+
+            scoreCache?.set(normalizedSource, normalizedOption, currentScore);
         }
-
-        const requiredLength: number = Math.max(normalizedSource.length, normalizedOption.length);
-
-        if (shorterMatches.length < requiredLength) {
-            shorterMatches = new Uint8Array(requiredLength);
-            longerMatches = new Uint8Array(requiredLength);
-        }
-
-        const currentScore: number = calculateJaroWinklerForNormalized(
-            normalizedSource,
-            normalizedOption,
-            shorterMatches,
-            longerMatches,
-        );
 
         if (currentScore > bestScore || (!bestIsLocal && currentScore === bestScore)) {
             bestScore = currentScore;
