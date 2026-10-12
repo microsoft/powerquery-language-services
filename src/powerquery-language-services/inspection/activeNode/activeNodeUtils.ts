@@ -27,10 +27,7 @@ import { PositionUtils } from "../..";
 export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TActiveNode {
     const astSearched: SearchedLeafs = leafSearch(nodeIdMapCollection, position);
 
-    const { nodeClosestBeforePosition, nodeOnPosition, nodeClosestAfterPosition }: SearchedLeafs = leafSearch(
-        nodeIdMapCollection,
-        position,
-    );
+    const { nodeClosestBeforePosition, nodeOnPosition, nodeClosestAfterPosition }: SearchedLeafs = astSearched;
 
     const contextClosestOnOrAfterPosition: ParseContext.TNode | undefined = findContext(
         nodeIdMapCollection,
