@@ -180,26 +180,35 @@ function emptyInspectedFieldAccess(isAutocompleteAllowed: boolean): InspectedFie
 }
 
 function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[string, Type.TPowerQueryType]> {
+    const fields: [string, Type.TPowerQueryType][] = [];
+    appendFieldEntriesFromFieldType(type, fields);
+
+    return fields;
+}
+
+function appendFieldEntriesFromFieldType(type: Type.TPowerQueryType, fields: [string, Type.TPowerQueryType][]): void {
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
-            let fields: [string, Type.TPowerQueryType][] = [];
-
             for (const field of type.unionedTypePairs) {
                 if (field.extendedKind && AllowedExtendedTypeKindsForFieldEntries.includes(field.extendedKind)) {
-                    fields = fields.concat(fieldEntriesFromFieldType(field));
+                    appendFieldEntriesFromFieldType(field, fields);
                 }
             }
 
-            return fields;
+            break;
         }
 
         case Type.ExtendedTypeKind.DefinedRecord:
         case Type.ExtendedTypeKind.DefinedTable:
-            return [...type.fields.entries()];
+            for (const field of type.fields.entries()) {
+                fields.push(field);
+            }
+
+            break;
 
         default:
-            return [];
+            break;
     }
 }
 

@@ -52,6 +52,45 @@ describe(`Analysis`, () => {
             expect(autocompleteItem.label === TestConstants.TestLibraryName.SquareIfNumber);
             expect(autocompleteItem.documentation).to.equal(undefined, `local definition should have no documentation`);
         });
+
+        describe(`trailing period`, () => {
+            const testCases: ReadonlyArray<{
+                readonly textWithPipe: string;
+                readonly expectedLabel: string;
+            }> = [
+                {
+                    textWithPipe: `Table.|`,
+                    expectedLabel: `Table.AddColumn`,
+                },
+                {
+                    textWithPipe: `Table.Ad|`,
+                    expectedLabel: `Table.AddColumn`,
+                },
+                {
+                    textWithPipe: `List.|`,
+                    expectedLabel: `List.Transform`,
+                },
+                {
+                    textWithPipe: `Record.|`,
+                    expectedLabel: `Record.Field`,
+                },
+            ];
+
+            for (const testCase of testCases) {
+                it(testCase.textWithPipe, async () => {
+                    const autocompleteItems: Inspection.AutocompleteItem[] | undefined =
+                        await TestUtils.assertAutocompleteAnalysis({
+                            textWithPipe: testCase.textWithPipe,
+                            analysisSettings: TestConstants.StandardLibraryAnalysisSettings,
+                        });
+
+                    Assert.isDefined(autocompleteItems);
+
+                    expect(autocompleteItems.some((item: AutocompleteItem) => item.label === testCase.expectedLabel)).to
+                        .be.true;
+                });
+            }
+        });
     });
 
     describe(`getHoverItem`, () => {
