@@ -422,6 +422,7 @@ function findLeafIdentifier(
                 isRecursive: false,
                 normalizedLiteral: IdentifierUtils.assertNormalizedIdentifier(identifier.literal, {
                     allowGeneralizedIdentifier: identifier.kind === Ast.NodeKind.GeneralizedIdentifier,
+                    allowTrailingPeriod: true,
                 }),
                 normalizedRecursiveLiteral: undefined,
             };
@@ -431,7 +432,10 @@ function findLeafIdentifier(
         case Ast.NodeKind.IdentifierExpression: {
             const normalizedLiteral: string = IdentifierUtils.assertNormalizedIdentifier(
                 identifier.identifier.literal,
-                { allowGeneralizedIdentifier: false },
+                {
+                    allowGeneralizedIdentifier: false,
+                    allowTrailingPeriod: true,
+                },
             );
 
             result = {
