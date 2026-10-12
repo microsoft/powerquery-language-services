@@ -7,27 +7,32 @@ import { Autocomplete } from "./commonTypes";
 import { AutocompleteItem } from "./autocompleteItem";
 
 export function keys(autocomplete: Autocomplete): ReadonlyArray<string> {
-    let result: string[] = [];
+    const result: string[] = [];
 
     if (ResultUtils.isOk(autocomplete.triedFieldAccess) && autocomplete.triedFieldAccess.value !== undefined) {
-        result = result.concat(
-            autocomplete.triedFieldAccess.value.autocompleteItems.map(
-                (autocompleteItem: AutocompleteItem) => autocompleteItem.label,
-            ),
-        );
+        appendKeys(autocomplete.triedFieldAccess.value.autocompleteItems, result);
     }
 
     if (ResultUtils.isOk(autocomplete.triedKeyword)) {
-        result = result.concat(
-            autocomplete.triedKeyword.value.map((autocompleteItem: AutocompleteItem) => autocompleteItem.label),
-        );
+        appendKeys(autocomplete.triedKeyword.value, result);
     }
 
     if (ResultUtils.isOk(autocomplete.triedPrimitiveType) && autocomplete.triedPrimitiveType.value !== undefined) {
-        result = result.concat(
-            autocomplete.triedPrimitiveType.value.map((autocompleteItem: AutocompleteItem) => autocompleteItem.label),
-        );
+        appendKeys(autocomplete.triedPrimitiveType.value, result);
     }
 
     return result;
+}
+
+function appendKeys(autocompleteItems: ReadonlyArray<AutocompleteItem>, result: string[]): void {
+    // Preserve map's initial length and sparse slots if label getters mutate the input.
+    const length: number = autocompleteItems.length;
+
+    for (let index: number = 0; index < length; index += 1) {
+        if (index in autocompleteItems) {
+            result.push(autocompleteItems[index].label);
+        } else {
+            result.length += 1;
+        }
+    }
 }

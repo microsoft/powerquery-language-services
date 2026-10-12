@@ -20,20 +20,19 @@ export function createFoldingRanges(
         correlationId,
     );
 
-    let foldingRanges: FoldingRange[] = [];
+    const foldingRanges: FoldingRange[] = [];
 
-    foldingRanges = foldingRanges
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.FunctionExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.IfExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.InvokeExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.LetExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListLiteral, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.MetadataExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordExpression, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordLiteral, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.SectionMember, traceManager, trace.id))
-        .concat(getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.TypePrimaryType, traceManager, trace.id));
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.FunctionExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.IfExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.InvokeExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.LetExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.ListLiteral, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.MetadataExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordExpression, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.RecordLiteral, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.SectionMember, traceManager, trace.id, foldingRanges);
+    getFoldingRanges(nodeIdMapCollection, Ast.NodeKind.TypePrimaryType, traceManager, trace.id, foldingRanges);
 
     trace.exit();
 
@@ -45,15 +44,14 @@ function getFoldingRanges<T extends Ast.TNode>(
     nodeKind: T["kind"],
     traceManager: TraceManager,
     correlationId: number,
-): FoldingRange[] {
+    foldingRanges: FoldingRange[],
+): void {
     const trace: Trace = traceManager.entry(
         ProviderTraceConstant.LocalDocumentSymbolProvider,
         getFoldingRanges.name,
         correlationId,
         { nodeKind },
     );
-
-    const foldingRanges: FoldingRange[] = [];
 
     for (const nodeId of nodeIdMapCollection.idsByNodeKind.get(nodeKind) ?? []) {
         const node: T | undefined = NodeIdMapUtils.astChecked<T>(nodeIdMapCollection, nodeId, nodeKind);
@@ -70,8 +68,6 @@ function getFoldingRanges<T extends Ast.TNode>(
     }
 
     trace.exit();
-
-    return foldingRanges;
 }
 
 function asFoldingRange(tokenRange: TokenRange): FoldingRange {
