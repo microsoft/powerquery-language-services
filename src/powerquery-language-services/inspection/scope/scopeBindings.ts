@@ -23,7 +23,7 @@ interface Binding<KVP, T> {
 // A let, record, or section gives each value access to almost the same set of sibling names.
 // Building a complete Map for every value repeats nearly all of the same entries and descriptors.
 //
-// ScopeBindings builds that common table once. forSelf then returns either the shared table or a
+// ScopeBindings builds that common table once and exposes it through all. forSelf returns a
 // small view containing only the differences for the current binding. For example, while inspecting
 // `a` in `let a = @a, b = a in b`, ordinary `a` is hidden but recursive `@a` points back to `a`.
 //
@@ -71,6 +71,10 @@ export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extend
                 this.base.set(key, binding.nonRecursive);
             }
         }
+    }
+
+    public get all(): ReadonlyMap<string, T> {
+        return this.base;
     }
 
     public forSelf(keyNodeId: number): ReadonlyMap<string, T> {

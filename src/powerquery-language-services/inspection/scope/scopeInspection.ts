@@ -23,6 +23,7 @@ import {
     ScopeById,
     ScopeItemKind,
     SectionMemberScopeItem,
+    TKeyValuePairScopeItem,
     TriedNodeScope,
     TScopeItem,
 } from "./scope";
@@ -464,7 +465,7 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
     const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, letExpr.node.id, 3);
 
     if (expression !== undefined && !state.scopeById.has(expression.node.id)) {
-        assignScopeForNodeId(state, expression.node.id, nodeScope, bindings.forSelf(-1), trace.id);
+        assignScopeForNodeId(state, expression.node.id, nodeScope, bindings.all, trace.id);
     }
 
     trace.exit();
@@ -553,10 +554,7 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
 }
 
 // Expands the scope on the value part of the key value pair.
-function inspectKeyValuePairs<
-    T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
-    KVP extends NodeIdMapIterator.TKeyValuePair,
->(
+function inspectKeyValuePairs<T extends TKeyValuePairScopeItem, KVP extends NodeIdMapIterator.TKeyValuePair>(
     state: ScopeInspectionState,
     inheritedScope: NodeScope | undefined,
     keyValuePairs: ReadonlyArray<KVP>,

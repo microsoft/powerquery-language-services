@@ -176,7 +176,10 @@ describe("Shared sibling bindings", () => {
             const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
                 new ScopeBindings(pairs, options, scopeItem, undefined);
 
-            for (const ownId of [-1, ...pairs.map((pair: NodeIdMapIterator.LetKeyValuePair) => pair.key.id)]) {
+            const all: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.all;
+            const allEntries: [string, Inspection.LetVariableScopeItem][] = [...all];
+
+            for (const ownId of [undefined, ...pairs.map((pair: NodeIdMapIterator.LetKeyValuePair) => pair.key.id)]) {
                 const expected: Map<string, Inspection.LetVariableScopeItem> = new Map();
 
                 for (const pair of pairs) {
@@ -189,10 +192,15 @@ describe("Shared sibling bindings", () => {
                     }
                 }
 
-                const actual: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.forSelf(ownId);
+                const actual: ReadonlyMap<string, Inspection.LetVariableScopeItem> =
+                    ownId === undefined ? bindings.all : bindings.forSelf(ownId);
+
                 expect([...actual]).to.deep.equal([...expected]);
                 expect(actual.size).to.equal(expected.size);
             }
+
+            expect(bindings.all).to.equal(all);
+            expect([...bindings.all]).to.deep.equal(allEntries);
         });
     }
 
