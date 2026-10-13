@@ -42,15 +42,16 @@ export async function getAutocompleteItemsFromScope(
 
     const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(
         triedScopeType,
-        Inspection.ScopeTypeByKey.empty(),
+        Inspection.ScopeUtils.emptyScopeTypeByKey(),
     );
 
     const result: Inspection.AutocompleteItem[] = [];
 
-    for (const [label, scopeItem] of nodeScope.scopeItemByKey.entries()) {
-        // Resolve type lazily - only computes the type for this specific scope item
-        // eslint-disable-next-line no-await-in-loop
-        const scopeItemType: Type.TPowerQueryType = (await scopeTypeByKey.resolveType(label)) ?? Type.UnknownInstance;
+    for (const [label, scopeItem] of Inspection.ScopeBindingsUtils.scopeMapEntries(nodeScope.scopeItemByKey)) {
+        // Resolve sequentially because aliases share the type inspector's cycle-detection state.
+        const scopeItemType: Type.TPowerQueryType =
+            // eslint-disable-next-line no-await-in-loop
+            (await Inspection.ScopeUtils.resolveType(scopeTypeByKey, label)) ?? Type.UnknownInstance;
 
         const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
             label,
@@ -74,7 +75,7 @@ export async function getIdentifierType(
     const triedScopeType: Inspection.TriedScopeType = await inspected.triedScopeType;
 
     if (ResultUtils.isOk(triedScopeType)) {
-        return triedScopeType.value.resolveType(identifier);
+        return Inspection.ScopeUtils.resolveType(triedScopeType.value, identifier);
     }
 
     return undefined;

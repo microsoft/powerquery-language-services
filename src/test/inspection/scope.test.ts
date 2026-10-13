@@ -2228,7 +2228,7 @@ describe(`Inspection - Scope - Identifier`, () => {
         }> {
             const nodeIdMapCollection: NodeIdMap.Collection = await parseText(text);
             const identifiers: Ast.Identifier[] = getValueIdentifiers(nodeIdMapCollection);
-            const scopeById: Inspection.ScopeById = new Inspection.ScopeById();
+            const scopeById: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
 
             for (const identifier of identifiers) {
                 // eslint-disable-next-line no-await-in-loop
@@ -2253,7 +2253,7 @@ describe(`Inspection - Scope - Identifier`, () => {
                 readonly nodeIdMapCollection: NodeIdMap.Collection;
             } = await buildAllScopes(text);
 
-            const scopeCountAfterFirstPass: number = result.scopeById.size;
+            const scopeCountAfterFirstPass: number = result.scopeById.scopes.size;
 
             for (const identifier of result.identifiers) {
                 // eslint-disable-next-line no-await-in-loop
@@ -2266,7 +2266,7 @@ describe(`Inspection - Scope - Identifier`, () => {
                 );
             }
 
-            expect(result.scopeById.size).to.equal(scopeCountAfterFirstPass);
+            expect(result.scopeById.scopes.size).to.equal(scopeCountAfterFirstPass);
         });
     });
 });

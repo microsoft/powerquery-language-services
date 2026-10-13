@@ -13,11 +13,18 @@ import { expect } from "chai";
 import { IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
-    BindingScopeMap,
+    createBindingScopeMap,
+    createScopeBindings,
     mergeScopeMaps,
-    ScopeBindings,
-} from "../../powerquery-language-services/inspection/scope/scopeBindings";
+    scopeForSelf,
+    scopeMapEntries,
+    scopeMapGet,
+    scopeMapHas,
+    scopeMapKeys,
+    scopeMapSize,
+} from "../../powerquery-language-services/inspection/scope/scopeBindingsUtils";
 import { Inspection } from "../../powerquery-language-services";
+import { ScopeBindings } from "../../powerquery-language-services/inspection/scope/scopeBindings";
 
 // Object values let these tests verify that shared maps preserve descriptor identity.
 interface Value {
@@ -26,25 +33,21 @@ interface Value {
 
 describe("Shared scope storage", () => {
     it("does not enumerate inherited bindings when constructing or looking up an overlay", () => {
-        class LookupOnlyMap extends Map<string, Value> {
-            public override entries(): MapIterator<[string, Value]> {
-                throw new Error("Unexpected parent enumeration");
-            }
+        const parent: Map<string, Value> = new Map([["parent", { id: 1 }]]);
 
-            public override [Symbol.iterator](): MapIterator<[string, Value]> {
-                return this.entries();
-            }
-        }
+        parent.entries = (): MapIterator<[string, Value]> => {
+            throw new Error("Unexpected parent enumeration");
+        };
 
-        const parent: LookupOnlyMap = new LookupOnlyMap([["parent", { id: 1 }]]);
-        const scope: ReadonlyMap<string, Value> = mergeScopeMaps(parent, new Map([["own", { id: 2 }]]));
-        expect(scope.get("parent")).to.deep.equal({ id: 1 });
-        expect(scope.get("own")).to.deep.equal({ id: 2 });
-        expect(scope.has("missing")).to.equal(false);
-        expect(scope.size).to.equal(2);
+        parent[Symbol.iterator] = parent.entries;
+        const scope: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, new Map([["own", { id: 2 }]]));
+        expect(scopeMapGet(scope, "parent")).to.deep.equal({ id: 1 });
+        expect(scopeMapGet(scope, "own")).to.deep.equal({ id: 2 });
+        expect(scopeMapHas(scope, "missing")).to.equal(false);
+        expect(scopeMapSize(scope)).to.equal(2);
     });
 
-    it("preserves lookup, insertion order, size and callback semantics when shadowing", () => {
+    it("preserves lookup, insertion order and size when shadowing", () => {
         const first: Value = { id: 1 };
         const second: Value = { id: 2 };
         const third: Value = { id: 3 };
@@ -59,32 +62,16 @@ describe("Shared scope storage", () => {
             ["c", first],
         ]);
 
-        const actual: ReadonlyMap<string, Value> = mergeScopeMaps(parent, own);
+        const actual: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, own);
         const expected: Map<string, Value> = new Map([...parent, ...own]);
 
-        expect([...actual]).to.deep.equal([...expected]);
-        expect([...actual.keys()]).to.deep.equal([...expected.keys()]);
-        expect([...actual.values()]).to.deep.equal([...expected.values()]);
-        expect(actual.size).to.equal(expected.size);
-        expect(actual.get("b")).to.equal(third);
-        expect(actual.has("missing")).to.equal(false);
-        expect(actual.get("missing")).to.equal(undefined);
+        expect([...scopeMapEntries(actual)]).to.deep.equal([...expected]);
+        expect([...scopeMapKeys(actual)]).to.deep.equal([...expected.keys()]);
+        expect(scopeMapSize(actual)).to.equal(expected.size);
+        expect(scopeMapGet(actual, "b")).to.equal(third);
+        expect(scopeMapHas(actual, "missing")).to.equal(false);
+        expect(scopeMapGet(actual, "missing")).to.equal(undefined);
         expect(parent.get("b")).to.equal(second);
-        expect(Object.prototype.toString.call(actual)).to.equal("[object Map]");
-
-        const context: { seen: [string, Value][] } = { seen: [] };
-
-        actual.forEach(function (
-            this: typeof context,
-            value: Value,
-            key: string,
-            map: ReadonlyMap<string, Value>,
-        ): void {
-            expect(map).to.equal(actual);
-            this.seen.push([key, value]);
-        }, context);
-
-        expect(context.seen).to.deep.equal([...expected]);
     });
 
     it("exposes an outer binding when the current non-recursive binding is masked", () => {
@@ -98,20 +85,20 @@ describe("Shared scope storage", () => {
             ["b", inner],
         ]);
 
-        const own: BindingScopeMap<Value> = new BindingScopeMap(
+        const own: Inspection.ScopeMap<Value> = createBindingScopeMap(
             base,
             new Set(["a", "not-in-base"]),
             new Map([["@a", recursive]]),
         );
 
-        const actual: ReadonlyMap<string, Value> = mergeScopeMaps(new Map([["a", outer]]), own);
+        const actual: Inspection.ScopeMap<Value> = mergeScopeMaps(new Map([["a", outer]]), own);
 
-        expect(own.size).to.equal(2);
-        expect(own.get("a")).to.equal(undefined);
-        expect(own.has("a")).to.equal(false);
-        expect(actual.get("a")).to.equal(outer);
-        expect(actual.get("@a")).to.equal(recursive);
-        expect([...actual.keys()]).to.deep.equal(["a", "@a", "b"]);
+        expect(scopeMapSize(own)).to.equal(2);
+        expect(scopeMapGet(own, "a")).to.equal(undefined);
+        expect(scopeMapHas(own, "a")).to.equal(false);
+        expect(scopeMapGet(actual, "a")).to.equal(outer);
+        expect(scopeMapGet(actual, "@a")).to.equal(recursive);
+        expect([...scopeMapKeys(actual)]).to.deep.equal(["a", "@a", "b"]);
         expect(base.get("@a")).to.equal(inner);
     });
 
@@ -120,21 +107,45 @@ describe("Shared scope storage", () => {
         const base: Map<string, Value> = new Map([["base", baseValue]]);
         expect(mergeScopeMaps(base, new Map())).to.equal(base);
         expect(mergeScopeMaps(new Map(), base)).to.equal(base);
-        let scope: ReadonlyMap<string, Value> = base;
+        let scope: Inspection.ScopeMap<Value> = base;
 
         for (let index: number = 0; index < 10000; index += 1) {
             scope = mergeScopeMaps(scope, new Map([["shared", { id: index }]]));
         }
 
-        expect(scope.size).to.equal(2);
-        expect(scope.get("base")).to.equal(baseValue);
-        expect(scope.get("shared")).to.deep.equal({ id: 9999 });
-        expect(scope.has("missing")).to.equal(false);
+        expect(scopeMapSize(scope)).to.equal(2);
+        expect(scopeMapGet(scope, "base")).to.equal(baseValue);
+        expect(scopeMapGet(scope, "shared")).to.deep.equal({ id: 9999 });
+        expect(scopeMapHas(scope, "missing")).to.equal(false);
 
-        expect([...scope]).to.deep.equal([
+        expect([...scopeMapEntries(scope)]).to.deep.equal([
             ["base", baseValue],
             ["shared", { id: 9999 }],
         ]);
+    });
+
+    it("keeps overlay bindings and cached sizes in independent state records", () => {
+        const parent: Map<string, Value> = new Map([["parent", { id: 0 }]]);
+        const left: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, new Map([["left", { id: 1 }]]));
+
+        const right: Inspection.ScopeMap<Value> = mergeScopeMaps(
+            parent,
+            new Map([
+                ["right", { id: 2 }],
+                ["extra", { id: 3 }],
+            ]),
+        );
+
+        expect(left).to.have.property("cachedSize", undefined);
+        expect(scopeMapSize(left)).to.equal(2);
+        expect(left).to.have.property("cachedSize", 2);
+        expect(right).to.have.property("cachedSize", undefined);
+        expect(scopeMapSize(right)).to.equal(3);
+        expect(scopeMapSize(left)).to.equal(2);
+        expect(scopeMapGet(left, "right")).to.equal(undefined);
+        expect(scopeMapGet(right, "left")).to.equal(undefined);
+        expect([...scopeMapKeys(left)]).to.deep.equal(["parent", "left"]);
+        expect([...scopeMapKeys(right)]).to.deep.equal(["parent", "right", "extra"]);
     });
 });
 
@@ -174,10 +185,10 @@ describe("Shared sibling bindings", () => {
             const options: IdentifierUtils.GetAllowedIdentifiersOptions = { allowRecursive: true };
 
             const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
-                new ScopeBindings(pairs, options, scopeItem, undefined);
+                createScopeBindings(pairs, options, scopeItem, undefined);
 
-            const all: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.all;
-            const allEntries: [string, Inspection.LetVariableScopeItem][] = [...all];
+            const all: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = bindings.all;
+            const allEntries: [string, Inspection.LetVariableScopeItem][] = [...scopeMapEntries(all)];
 
             for (const ownId of [undefined, ...pairs.map((pair: NodeIdMapIterator.LetKeyValuePair) => pair.key.id)]) {
                 const expected: Map<string, Inspection.LetVariableScopeItem> = new Map();
@@ -192,15 +203,15 @@ describe("Shared sibling bindings", () => {
                     }
                 }
 
-                const actual: ReadonlyMap<string, Inspection.LetVariableScopeItem> =
-                    ownId === undefined ? bindings.all : bindings.forSelf(ownId);
+                const actual: Inspection.ScopeMap<Inspection.LetVariableScopeItem> =
+                    ownId === undefined ? bindings.all : scopeForSelf(bindings, ownId);
 
-                expect([...actual]).to.deep.equal([...expected]);
-                expect(actual.size).to.equal(expected.size);
+                expect([...scopeMapEntries(actual)]).to.deep.equal([...expected]);
+                expect(scopeMapSize(actual)).to.equal(expected.size);
             }
 
             expect(bindings.all).to.equal(all);
-            expect([...bindings.all]).to.deep.equal(allEntries);
+            expect([...scopeMapEntries(bindings.all)]).to.deep.equal(allEntries);
         });
     }
 
@@ -215,7 +226,7 @@ describe("Shared sibling bindings", () => {
         let calls: number = 0;
 
         const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
-            new ScopeBindings(
+            createScopeBindings(
                 pairs,
                 { allowRecursive: true },
                 (pair: NodeIdMapIterator.LetKeyValuePair, recursive: boolean) => {
@@ -226,10 +237,10 @@ describe("Shared sibling bindings", () => {
                 undefined,
             );
 
-        const a: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.forSelf(pairs[0].key.id);
-        const b: ReadonlyMap<string, Inspection.LetVariableScopeItem> = bindings.forSelf(pairs[1].key.id);
-        expect(a.get("c")).to.equal(b.get("c"));
-        expect(a.get("@a")).to.equal(bindings.forSelf(pairs[0].key.id).get("@a"));
+        const a: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = scopeForSelf(bindings, pairs[0].key.id);
+        const b: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = scopeForSelf(bindings, pairs[1].key.id);
+        expect(scopeMapGet(a, "c")).to.equal(scopeMapGet(b, "c"));
+        expect(scopeMapGet(a, "@a")).to.equal(scopeMapGet(scopeForSelf(bindings, pairs[0].key.id), "@a"));
         expect(calls).to.equal(5);
     });
 });
@@ -251,9 +262,9 @@ describe("Completed scope inspection cache", () => {
             ),
         );
 
-        expect(first.scopeById.isInspectionComplete(parsed.ast)).to.equal(true);
-        expect(second.scopeById.isInspectionComplete(parsed.ast)).to.equal(false);
-        expect(second.scopeById.size).to.equal(0);
+        expect(first.scopeById.inspectedNodes.has(parsed.ast)).to.equal(true);
+        expect(second.scopeById.inspectedNodes.has(parsed.ast)).to.equal(false);
+        expect(second.scopeById.scopes.size).to.equal(0);
 
         PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(
@@ -265,28 +276,28 @@ describe("Completed scope inspection cache", () => {
             ),
         );
 
-        first.scopeById.clear();
-        expect(first.scopeById.size).to.equal(0);
-        expect(first.scopeById.isInspectionComplete(parsed.ast)).to.equal(false);
-        expect(second.scopeById.isInspectionComplete(parsed.ast)).to.equal(true);
+        Inspection.ScopeUtils.clearScopeById(first.scopeById);
+        expect(first.scopeById.scopes.size).to.equal(0);
+        expect(first.scopeById.inspectedNodes.has(parsed.ast)).to.equal(false);
+        expect(second.scopeById.inspectedNodes.has(parsed.ast)).to.equal(true);
     });
 
     it("reuses completed ancestor inspection across requests for different nodes", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = (x) => x in b");
 
-        class CountingScopeById extends Inspection.ScopeById {
-            public rootInspections: number = 0;
+        const scopes: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
+        let rootInspections: number = 0;
 
-            public override markInspectionComplete(node: TXorNode["node"]): void {
-                if (node === parsed.ast) {
-                    this.rootInspections += 1;
-                }
+        const markInspectionComplete: (node: TXorNode["node"]) => WeakSet<TXorNode["node"]> =
+            scopes.inspectedNodes.add.bind(scopes.inspectedNodes);
 
-                super.markInspectionComplete(node);
+        scopes.inspectedNodes.add = (node: TXorNode["node"]): WeakSet<TXorNode["node"]> => {
+            if (node === parsed.ast) {
+                rootInspections += 1;
             }
-        }
 
-        const scopes: CountingScopeById = new CountingScopeById();
+            return markInspectionComplete(node);
+        };
 
         const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
             parsed.nodeIdMapCollection,
@@ -304,46 +315,46 @@ describe("Completed scope inspection cache", () => {
         );
 
         const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
-        expect(scopes.has(target)).to.equal(false);
-        expect(scopes.rootInspections).to.equal(1);
+        expect(scopes.scopes.has(target)).to.equal(false);
+        expect(rootInspections).to.equal(1);
 
         PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(PQP.DefaultSettings, parsed.nodeIdMapCollection, undefined, target, scopes),
         );
 
-        expect(scopes.has(target)).to.equal(true);
-        expect(scopes.rootInspections).to.equal(1);
+        expect(scopes.scopes.has(target)).to.equal(true);
+        expect(rootInspections).to.equal(1);
     });
 
     it("preserves completion on publication but invalidates replacement, deletion and clearing", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("1");
-        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
+        const scopes: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
 
         const scope: Inspection.NodeScope = {
             createdForNodeId: parsed.ast.id,
             scopeItemByKey: new Map(),
         };
 
-        scopes.set(parsed.ast.id, scope);
-        scopes.markInspectionComplete(parsed.ast);
-        scopes.set(-1, scope);
-        scopes.set(parsed.ast.id, scope);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
-        expect(scopes.delete(-2)).to.equal(false);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
+        Inspection.ScopeUtils.setScopeById(scopes, parsed.ast.id, scope);
+        scopes.inspectedNodes.add(parsed.ast);
+        Inspection.ScopeUtils.setScopeById(scopes, -1, scope);
+        Inspection.ScopeUtils.setScopeById(scopes, parsed.ast.id, scope);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(true);
+        expect(Inspection.ScopeUtils.deleteScopeById(scopes, -2)).to.equal(false);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(true);
 
-        scopes.set(parsed.ast.id, { ...scope });
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
-        scopes.markInspectionComplete(parsed.ast);
-        expect(scopes.delete(-1)).to.equal(true);
-        scopes.set(-1, scope);
-        expect(scopes.size).to.equal(2);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+        Inspection.ScopeUtils.setScopeById(scopes, parsed.ast.id, { ...scope });
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(false);
+        scopes.inspectedNodes.add(parsed.ast);
+        expect(Inspection.ScopeUtils.deleteScopeById(scopes, -1)).to.equal(true);
+        Inspection.ScopeUtils.setScopeById(scopes, -1, scope);
+        expect(scopes.scopes.size).to.equal(2);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(false);
 
-        scopes.markInspectionComplete(parsed.ast);
-        scopes.clear();
-        expect(scopes.size).to.equal(0);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+        scopes.inspectedNodes.add(parsed.ast);
+        Inspection.ScopeUtils.clearScopeById(scopes);
+        expect(scopes.scopes.size).to.equal(0);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(false);
     });
 
     it("does not mark partially cancelled inspection complete", async () => {
@@ -354,13 +365,13 @@ describe("Completed scope inspection cache", () => {
             XorNodeUtils.boxAst(parsed.ast),
         );
 
-        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
+        const scopes: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
         const target: number = PQP.Assert.asDefined(pairs[2].value).node.id;
 
         const cancellationToken: PQP.ICancellationToken = {
             ...PQP.NoOpCancellationToken,
             throwIfCancelled: () => {
-                if (scopes.size !== 0) {
+                if (scopes.scopes.size !== 0) {
                     throw new PQP.CommonError.CancellationError(cancellationToken, "First scope was published");
                 }
             },
@@ -375,8 +386,8 @@ describe("Completed scope inspection cache", () => {
         );
 
         expect(PQP.ResultUtils.isError(cancelled)).to.equal(true);
-        expect(scopes.size).to.equal(1);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+        expect(scopes.scopes.size).to.equal(1);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(false);
 
         const retried: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(PQP.DefaultSettings, parsed.nodeIdMapCollection, undefined, target, scopes),
@@ -388,18 +399,18 @@ describe("Completed scope inspection cache", () => {
                 parsed.nodeIdMapCollection,
                 undefined,
                 target,
-                new Inspection.ScopeById(),
+                Inspection.ScopeUtils.createScopeById(),
             ),
         );
 
-        expect([...retried.scopeItemByKey]).to.deep.equal([...fresh.scopeItemByKey]);
-        expect(retried.scopeItemByKey.has("b")).to.equal(true);
-        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
+        expect([...scopeMapEntries(retried.scopeItemByKey)]).to.deep.equal([...scopeMapEntries(fresh.scopeItemByKey)]);
+        expect(scopeMapHas(retried.scopeItemByKey, "b")).to.equal(true);
+        expect(scopes.inspectedNodes.has(parsed.ast)).to.equal(true);
     });
 
     it("checks cancellation before reusing completed ancestor inspection", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = (x) => x in b");
-        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
+        const scopes: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
 
         const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
             parsed.nodeIdMapCollection,
@@ -417,7 +428,7 @@ describe("Completed scope inspection cache", () => {
         );
 
         const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
-        expect(scopes.has(target)).to.equal(false);
+        expect(scopes.scopes.has(target)).to.equal(false);
 
         const cancelled: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
             { ...PQP.DefaultSettings, cancellationToken: PQP.ExpiredCancellationToken },
@@ -433,7 +444,7 @@ describe("Completed scope inspection cache", () => {
     it("rebuilds scopes after cache clearing, removal and reuse with another document", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("section S; shared a = 1; shared b = a;");
         const maps: NodeIdMap.Collection = parsed.nodeIdMapCollection;
-        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
+        const scopes: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
         const leafId: number = PQP.Assert.asDefined(maps.rightMostLeaf).id;
 
         const inspect: () => Promise<Inspection.NodeScope> = async () =>
@@ -442,16 +453,23 @@ describe("Completed scope inspection cache", () => {
             );
 
         const initial: Inspection.NodeScope = await inspect();
-        const originalSize: number = scopes.size;
-        scopes.delete(leafId);
-        scopes.set(-1, initial);
-        expect(scopes.size).to.equal(originalSize);
-        expect([...(await inspect()).scopeItemByKey]).to.deep.equal([...initial.scopeItemByKey]);
-        scopes.clear();
-        expect([...(await inspect()).scopeItemByKey]).to.deep.equal([...initial.scopeItemByKey]);
+        const originalSize: number = scopes.scopes.size;
+        Inspection.ScopeUtils.deleteScopeById(scopes, leafId);
+        Inspection.ScopeUtils.setScopeById(scopes, -1, initial);
+        expect(scopes.scopes.size).to.equal(originalSize);
+
+        expect([...scopeMapEntries((await inspect()).scopeItemByKey)]).to.deep.equal([
+            ...scopeMapEntries(initial.scopeItemByKey),
+        ]);
+
+        Inspection.ScopeUtils.clearScopeById(scopes);
+
+        expect([...scopeMapEntries((await inspect()).scopeItemByKey)]).to.deep.equal([
+            ...scopeMapEntries(initial.scopeItemByKey),
+        ]);
 
         const other: PQP.Task.ParseTaskOk = await parse("let different = 1 in different");
-        scopes.clear();
+        Inspection.ScopeUtils.clearScopeById(scopes);
 
         const otherScope: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(
@@ -463,7 +481,7 @@ describe("Completed scope inspection cache", () => {
             ),
         );
 
-        expect(otherScope.scopeItemByKey.has("different")).to.equal(true);
-        expect(otherScope.scopeItemByKey.has("a")).to.equal(false);
+        expect(scopeMapHas(otherScope.scopeItemByKey, "different")).to.equal(true);
+        expect(scopeMapHas(otherScope.scopeItemByKey, "a")).to.equal(false);
     });
 });

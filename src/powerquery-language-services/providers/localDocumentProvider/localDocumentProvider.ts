@@ -91,7 +91,8 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
                 return undefined;
             }
 
-            const scopeItem: Inspection.TScopeItem | undefined = triedNodeScope.value.scopeItemByKey.get(
+            const scopeItem: Inspection.TScopeItem | undefined = Inspection.ScopeUtils.findScopeItemByLiteral(
+                triedNodeScope.value,
                 context.identifier.literal,
             );
 
@@ -397,7 +398,11 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
         correlationId: number,
     ): Promise<Hover | undefined> {
         const identifierLiteral: string = context.identifier.literal;
-        const scopeItem: Inspection.TScopeItem | undefined = nodeScope.scopeItemByKey.get(identifierLiteral);
+
+        const scopeItem: Inspection.TScopeItem | undefined = Inspection.ScopeUtils.findScopeItemByLiteral(
+            nodeScope,
+            identifierLiteral,
+        );
 
         if (scopeItem === undefined || scopeItem.kind === Inspection.ScopeItemKind.Undefined) {
             return undefined;
@@ -405,7 +410,10 @@ export class LocalDocumentProvider implements ILocalDocumentProvider {
 
         const scopeItemText: string = InspectionUtils.getScopeItemKindText(scopeItem.kind);
 
-        const scopeItemType: Type.TPowerQueryType | undefined = await scopeType.resolveType(identifierLiteral);
+        const scopeItemType: Type.TPowerQueryType | undefined = await Inspection.ScopeUtils.resolveType(
+            scopeType,
+            identifierLiteral,
+        );
 
         const scopeItemTypeText: string =
             scopeItemType !== undefined

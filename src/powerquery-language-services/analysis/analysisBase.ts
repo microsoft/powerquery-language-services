@@ -503,7 +503,7 @@ export class AnalysisBase implements Analysis {
 
                     case Ast.IdentifierContextKind.Value: {
                         // it is the identifier referring the value
-                        let nodeScope: Inspection.NodeScope | undefined = scopeById.get(identifierExpression.id);
+                        let nodeScope: Inspection.NodeScope | undefined = scopeById.scopes.get(identifierExpression.id);
 
                         // there might be a chance that its scope did not get populated yet, do another try
                         if (!nodeScope) {
@@ -515,7 +515,7 @@ export class AnalysisBase implements Analysis {
                                 scopeById,
                             ));
 
-                            nodeScope = scopeById.get(identifierExpression.id);
+                            nodeScope = scopeById.scopes.get(identifierExpression.id);
                         }
 
                         const scopeItem: Inspection.TScopeItem | undefined = findScopeItemByLiteral(
@@ -585,7 +585,7 @@ export class AnalysisBase implements Analysis {
     }
 
     public dispose(): void {
-        this.typeCache.scopeById.clear();
+        Inspection.ScopeUtils.clearScopeById(this.typeCache.scopeById);
         this.typeCache.typeById.clear();
     }
 
@@ -936,7 +936,7 @@ export class AnalysisBase implements Analysis {
                     if (oneIdentifierNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
                         return oneIdentifierNode.id === valueCreator.id;
                     } else if (oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Value) {
-                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
+                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.scopes.get(
                             oneIdentifierNode.id,
                         );
 

@@ -29,20 +29,32 @@ npm test
 ## Scope cache ownership
 
 `Inspection.TypeCacheUtils.emptyCache()` creates document-local type and scope caches.
-`TypeCache.scopeById` owns a `ScopeById` instance, including completed scope-inspection metadata;
+`TypeCache.scopeById` owns a `ScopeById` state record, including completed scope-inspection metadata;
 there is no module-level completion cache. Short-lived inspection state borrows this same instance,
 so completed work is reused across requests within the document.
 
-Standalone scope-inspection callers construct `new Inspection.ScopeById()`.
-The `ScopeById` class exposes `get`, `has`, and `size`, controlled `set`, `delete`, and `clear`
-methods, and inspection-completion tracking. It is a cache, not an iterable map.
-Adding scopes preserves completion metadata, while deleting or replacing a scope invalidates it.
-`clear()` resets both scope entries and completion metadata.
+Standalone scope-inspection callers use `Inspection.ScopeUtils.createScopeById()`.
+The `ScopeById` interface exposes its `scopes` map and `inspectedNodes` weak set directly.
+Use `ScopeUtils.setScopeById(state, nodeId, scope)`, `deleteScopeById(state, nodeId)`, and
+`clearScopeById(state)` to mutate scope entries while maintaining completion metadata.
+Adding scopes or republishing the same scope preserves completion metadata; successful deletion
+or replacement invalidates it. Clearing resets both entries and completion metadata.
 
 Reuse a `TypeCache` only for the same immutable parsed document and inspection settings.
 Create a fresh cache when either changes, or clear both `scopeById` and `typeById` before reuse.
 Analysis disposal clears both caches. Existing `NodeScope.scopeItemByKey` values remain read-only
 shared views; callers must not mutate the scopes or their bindings.
+`ScopeMap` is a union of native read-only maps and plain binding/merged state records.
+Use the `Inspection.ScopeBindingsUtils.scopeMapGet`, `scopeMapHas`, `scopeMapSize`,
+`scopeMapKeys`, and `scopeMapEntries` functions with that state, rather than instance methods.
+Merged sizes and recursive binding descriptors are cached explicitly on their owning state.
+
+Scope contracts live in `scope.ts` and `scopeBindings.ts`; their factory and helper functions live
+in `scopeUtils.ts` and `scopeBindingsUtils.ts`. `ScopeTypeByKey` is a state record created with
+`Inspection.ScopeUtils.createScopeTypeByKey(scope, resolver)` or
+`Inspection.ScopeUtils.emptyScopeTypeByKey()` for an empty scope. It exposes `nodeScope`, `resolver`,
+and its document-local `resolved` map. `ScopeUtils.resolveType(state, key)` and
+`ScopeUtils.resolveAll(state)` populate that map lazily, leaving failed resolutions retryable.
 
 ## Contributing
 

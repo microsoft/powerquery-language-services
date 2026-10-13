@@ -98,7 +98,7 @@ export async function getOrCreateScope(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const nodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
+    const nodeScope: NodeScope | undefined = updatedState.scopeById.scopes.get(nodeId);
 
     if (nodeScope !== undefined) {
         trace.exit();
