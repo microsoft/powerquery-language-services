@@ -7,7 +7,7 @@ import { ScopeById } from "../scope";
 
 export type TypeById = Map<number, Type.TPowerQueryType>;
 
-// A cache that can be re-used for successive calls for the same document.
+// Owns scope storage, completed scope inspections, and types for one immutable document/settings.
 export interface TypeCache {
     readonly scopeById: ScopeById;
     readonly typeById: TypeById;

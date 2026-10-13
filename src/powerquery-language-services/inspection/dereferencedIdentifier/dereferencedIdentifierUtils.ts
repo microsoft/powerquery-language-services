@@ -52,9 +52,8 @@ export async function tryBuildDereferencedIdentifierPath(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-    // If a map is given, then it's mutated and returned.
-    // Else create a new Map instance and return that instead.
-    scopeById: ScopeById = new Map(),
+    // Reuse caller-owned scope state when provided; otherwise own it for this request.
+    scopeById: ScopeById = new ScopeById(),
 ): Promise<PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError>> {
     const trace: Trace = inspectionSettings.traceManager.entry(
         InspectionTraceConstant.InspectScope,

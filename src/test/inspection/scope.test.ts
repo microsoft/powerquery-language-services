@@ -2228,7 +2228,7 @@ describe(`Inspection - Scope - Identifier`, () => {
         }> {
             const nodeIdMapCollection: NodeIdMap.Collection = await parseText(text);
             const identifiers: Ast.Identifier[] = getValueIdentifiers(nodeIdMapCollection);
-            const scopeById: Inspection.ScopeById = new Map();
+            const scopeById: Inspection.ScopeById = new Inspection.ScopeById();
 
             for (const identifier of identifiers) {
                 // eslint-disable-next-line no-await-in-loop

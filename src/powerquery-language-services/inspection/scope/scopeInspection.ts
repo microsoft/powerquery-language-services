@@ -11,7 +11,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
+import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
 import { PrimitiveTypeConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
 import { Inspection, InspectionTraceConstant, TraceUtils } from "../..";
@@ -20,7 +20,6 @@ import {
     NodeScope,
     ParameterScopeItem,
     RecordFieldScopeItem,
-    ScopeById,
     ScopeItemKind,
     SectionMemberScopeItem,
     TriedNodeScope,
@@ -34,31 +33,8 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { mergeScopeMaps } from "./scopeMap";
 import { ScopeBindings } from "./scopeBindings";
+import { ScopeById } from "./scopeById";
 import { TypeById } from "../typeCache";
-
-// scopeById can contain a scope that a parent assigned before the node's children were inspected.
-// This separate cache records only nodes whose complete inspection succeeded. AST object identity
-// keeps completion state tied to one parsed document, while scopeCount detects callers removing
-// cached scopes and requiring that work to run again.
-interface ScopeInspectionCache {
-    readonly inspectedNodes: WeakSet<TXorNode["node"]>;
-    scopeCount: number;
-}
-
-// Weak ownership lets completion state expire with its externally owned scope cache.
-const inspectionCacheByScope: WeakMap<ScopeById, ScopeInspectionCache> = new WeakMap();
-
-function inspectionCache(scopeById: ScopeById): ScopeInspectionCache {
-    let cache: ScopeInspectionCache | undefined = inspectionCacheByScope.get(scopeById);
-
-    // A shrinking scope cache signals that callers need removed work to be recomputed.
-    if (cache === undefined || scopeById.size < cache.scopeCount) {
-        cache = { inspectedNodes: new WeakSet(), scopeCount: scopeById.size };
-        inspectionCacheByScope.set(scopeById, cache);
-    }
-
-    return cache;
-}
 
 // Builds a scope for the given node.
 export async function tryNodeScope(
@@ -89,7 +65,7 @@ export async function tryNodeScope(
 
         await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
 
-        const result: NodeScope = MapUtils.assertGet(scopeById, nodeId, `expected nodeId in scope result`, {
+        const result: NodeScope = PQP.Assert.asDefined(scopeById.get(nodeId), `expected nodeId in scope result`, {
             nodeId,
         });
 
@@ -314,10 +290,8 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
 
     state.cancellationToken?.throwIfCancelled();
 
-    const cache: ScopeInspectionCache = inspectionCache(state.scopeById);
-
     // Scope assignment and completed child inspection are separate states.
-    if (cache.inspectedNodes.has(xorNode.node)) {
+    if (state.scopeById.isInspectionComplete(xorNode.node)) {
         trace.exit({ [TraceConstant.Result]: "cache hit" });
 
         return;
@@ -357,8 +331,7 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
     }
 
     // Failed or cancelled inspection must remain retryable.
-    cache.inspectedNodes.add(xorNode.node);
-    cache.scopeCount = state.scopeById.size;
+    state.scopeById.markInspectionComplete(xorNode.node);
     trace.exit();
 }
 

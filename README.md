@@ -26,6 +26,24 @@ Test
 npm test
 ```
 
+## Scope cache ownership
+
+`Inspection.TypeCacheUtils.emptyCache()` creates document-local type and scope caches.
+`TypeCache.scopeById` owns a `ScopeById` instance, including completed scope-inspection metadata;
+there is no module-level completion cache. Short-lived inspection state borrows this same instance,
+so completed work is reused across requests within the document.
+
+Standalone scope-inspection callers construct `new Inspection.ScopeById()`.
+The `ScopeById` class exposes `get`, `has`, and `size`, controlled `set`, `delete`, and `clear`
+methods, and inspection-completion tracking. It is a cache, not an iterable map.
+Adding scopes preserves completion metadata, while deleting or replacing a scope invalidates it.
+`clear()` resets both scope entries and completion metadata.
+
+Reuse a `TypeCache` only for the same immutable parsed document and inspection settings.
+Create a fresh cache when either changes, or clear both `scopeById` and `typeById` before reuse.
+Analysis disposal clears both caches. Existing `NodeScope.scopeItemByKey` values remain read-only
+shared views; callers must not mutate the scopes or their bindings.
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a

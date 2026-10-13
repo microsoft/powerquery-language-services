@@ -3,7 +3,12 @@
 
 import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
-import { NodeIdMap, NodeIdMapIterator, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import {
+    NodeIdMap,
+    NodeIdMapIterator,
+    TXorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { expect } from "chai";
 import { IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -151,6 +156,7 @@ describe("Shared sibling bindings", () => {
     for (const text of [
         "let a = 1, b = a, c = b in c",
         'let a = 1, #"a" = 2, b = a in b',
+        'let a = 1, b = 2, #"a" = 3, c = a in c',
         'let #"a@b" = 1, c = #"a@b" in c',
         'let #"a b" = 1, #"if" = 2 in #"if"',
     ]) {
@@ -218,6 +224,117 @@ describe("Shared sibling bindings", () => {
 });
 
 describe("Completed scope inspection cache", () => {
+    it("keeps completion metadata with its document-owned cache", async () => {
+        const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1 in a");
+        const first: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+        const second: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+        const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
+
+        PQP.ResultUtils.assertOk(
+            await Inspection.tryNodeScope(
+                PQP.DefaultSettings,
+                parsed.nodeIdMapCollection,
+                undefined,
+                target,
+                first.scopeById,
+            ),
+        );
+
+        expect(first.scopeById.isInspectionComplete(parsed.ast)).to.equal(true);
+        expect(second.scopeById.isInspectionComplete(parsed.ast)).to.equal(false);
+        expect(second.scopeById.size).to.equal(0);
+
+        PQP.ResultUtils.assertOk(
+            await Inspection.tryNodeScope(
+                PQP.DefaultSettings,
+                parsed.nodeIdMapCollection,
+                undefined,
+                target,
+                second.scopeById,
+            ),
+        );
+
+        first.scopeById.clear();
+        expect(first.scopeById.size).to.equal(0);
+        expect(first.scopeById.isInspectionComplete(parsed.ast)).to.equal(false);
+        expect(second.scopeById.isInspectionComplete(parsed.ast)).to.equal(true);
+    });
+
+    it("reuses completed ancestor inspection across requests for different nodes", async () => {
+        const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = (x) => x in b");
+
+        class CountingScopeById extends Inspection.ScopeById {
+            public rootInspections: number = 0;
+
+            public override markInspectionComplete(node: TXorNode["node"]): void {
+                if (node === parsed.ast) {
+                    this.rootInspections += 1;
+                }
+
+                super.markInspectionComplete(node);
+            }
+        }
+
+        const scopes: CountingScopeById = new CountingScopeById();
+
+        const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
+            parsed.nodeIdMapCollection,
+            XorNodeUtils.boxAst(parsed.ast),
+        );
+
+        PQP.ResultUtils.assertOk(
+            await Inspection.tryNodeScope(
+                PQP.DefaultSettings,
+                parsed.nodeIdMapCollection,
+                undefined,
+                PQP.Assert.asDefined(pairs[0].value).node.id,
+                scopes,
+            ),
+        );
+
+        const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
+        expect(scopes.has(target)).to.equal(false);
+        expect(scopes.rootInspections).to.equal(1);
+
+        PQP.ResultUtils.assertOk(
+            await Inspection.tryNodeScope(PQP.DefaultSettings, parsed.nodeIdMapCollection, undefined, target, scopes),
+        );
+
+        expect(scopes.has(target)).to.equal(true);
+        expect(scopes.rootInspections).to.equal(1);
+    });
+
+    it("preserves completion on publication but invalidates replacement, deletion and clearing", async () => {
+        const parsed: PQP.Task.ParseTaskOk = await parse("1");
+        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
+
+        const scope: Inspection.NodeScope = {
+            createdForNodeId: parsed.ast.id,
+            scopeItemByKey: new Map(),
+        };
+
+        scopes.set(parsed.ast.id, scope);
+        scopes.markInspectionComplete(parsed.ast);
+        scopes.set(-1, scope);
+        scopes.set(parsed.ast.id, scope);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
+        expect(scopes.delete(-2)).to.equal(false);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
+
+        scopes.set(parsed.ast.id, { ...scope });
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+        scopes.markInspectionComplete(parsed.ast);
+        expect(scopes.delete(-1)).to.equal(true);
+        scopes.set(-1, scope);
+        expect(scopes.size).to.equal(2);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+
+        scopes.markInspectionComplete(parsed.ast);
+        scopes.clear();
+        expect(scopes.size).to.equal(0);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
+    });
+
     it("does not mark partially cancelled inspection complete", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("section S; shared a = 1; shared b = a; shared c = b;");
 
@@ -226,7 +343,7 @@ describe("Completed scope inspection cache", () => {
             XorNodeUtils.boxAst(parsed.ast),
         );
 
-        const scopes: Inspection.ScopeById = new Map();
+        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
         const target: number = PQP.Assert.asDefined(pairs[2].value).node.id;
 
         const cancellationToken: PQP.ICancellationToken = {
@@ -248,6 +365,7 @@ describe("Completed scope inspection cache", () => {
 
         expect(PQP.ResultUtils.isError(cancelled)).to.equal(true);
         expect(scopes.size).to.equal(1);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(false);
 
         const retried: Inspection.NodeScope = PQP.ResultUtils.assertOk(
             await Inspection.tryNodeScope(PQP.DefaultSettings, parsed.nodeIdMapCollection, undefined, target, scopes),
@@ -259,17 +377,18 @@ describe("Completed scope inspection cache", () => {
                 parsed.nodeIdMapCollection,
                 undefined,
                 target,
-                new Map(),
+                new Inspection.ScopeById(),
             ),
         );
 
         expect([...retried.scopeItemByKey]).to.deep.equal([...fresh.scopeItemByKey]);
         expect(retried.scopeItemByKey.has("b")).to.equal(true);
+        expect(scopes.isInspectionComplete(parsed.ast)).to.equal(true);
     });
 
     it("checks cancellation before reusing completed ancestor inspection", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("let a = 1, b = (x) => x in b");
-        const scopes: Inspection.ScopeById = new Map();
+        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
 
         const pairs: ReadonlyArray<NodeIdMapIterator.LetKeyValuePair> = NodeIdMapIterator.iterLetExpression(
             parsed.nodeIdMapCollection,
@@ -303,7 +422,7 @@ describe("Completed scope inspection cache", () => {
     it("rebuilds scopes after cache clearing, removal and reuse with another document", async () => {
         const parsed: PQP.Task.ParseTaskOk = await parse("section S; shared a = 1; shared b = a;");
         const maps: NodeIdMap.Collection = parsed.nodeIdMapCollection;
-        const scopes: Inspection.ScopeById = new Map();
+        const scopes: Inspection.ScopeById = new Inspection.ScopeById();
         const leafId: number = PQP.Assert.asDefined(maps.rightMostLeaf).id;
 
         const inspect: () => Promise<Inspection.NodeScope> = async () =>
@@ -312,7 +431,10 @@ describe("Completed scope inspection cache", () => {
             );
 
         const initial: Inspection.NodeScope = await inspect();
+        const originalSize: number = scopes.size;
         scopes.delete(leafId);
+        scopes.set(-1, initial);
+        expect(scopes.size).to.equal(originalSize);
         expect([...(await inspect()).scopeItemByKey]).to.deep.equal([...initial.scopeItemByKey]);
         scopes.clear();
         expect([...(await inspect()).scopeItemByKey]).to.deep.equal([...initial.scopeItemByKey]);

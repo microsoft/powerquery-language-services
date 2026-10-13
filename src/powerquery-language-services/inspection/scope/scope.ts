@@ -121,10 +121,6 @@ export class ScopeTypeByKey {
 
 export type TriedNodeScope = PQP.Result<NodeScope, PQP.CommonError.CommonError>;
 
-// Scopes for multiple nodes, where the keys are nodeIds.
-// Serves as a cache when building the scope for a specific node.
-export type ScopeById = Map<number, NodeScope>;
-
 // Scope that was generated for a specific nodeId.
 // Has the potential to be reused for its child nodes.
 export interface NodeScope {

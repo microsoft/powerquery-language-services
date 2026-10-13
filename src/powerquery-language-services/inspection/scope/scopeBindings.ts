@@ -33,7 +33,6 @@ interface Binding<KVP, T> {
 // those uncommon cases are rebuilt to preserve the behavior of the original materialized maps.
 export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extends TKeyValuePairScopeItem> {
     private readonly base: Map<string, T> = new Map();
-    private readonly bindings: Binding<KVP, T>[] = [];
     private readonly bindingByKeyId: Map<number, Binding<KVP, T>> = new Map();
     private readonly factory: (pair: KVP, recursive: boolean) => T;
     private readonly cancellationToken: ICancellationToken | undefined;
@@ -62,7 +61,6 @@ export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extend
                 recursive: undefined,
             };
 
-            this.bindings.push(binding);
             this.bindingByKeyId.set(pair.key.id, binding);
 
             for (const key of binding.keys) {
@@ -82,7 +80,7 @@ export class ScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extend
         if (this.hasDuplicateKeys) {
             const result: Map<string, T> = new Map();
 
-            for (const binding of this.bindings) {
+            for (const binding of this.bindingByKeyId.values()) {
                 this.cancellationToken?.throwIfCancelled();
                 const isRecursive: boolean = keyNodeId === binding.pair.key.id;
 

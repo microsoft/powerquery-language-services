@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { ScopeById } from "../scope";
 import { TypeCache } from "./typeCache";
 
 // A cache that can be re-used for successive calls under the same document.
 export function emptyCache(): TypeCache {
     return {
-        scopeById: new Map(),
+        scopeById: new ScopeById(),
         typeById: new Map(),
     };
 }

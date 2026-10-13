@@ -69,10 +69,7 @@ export class AnalysisBase implements Analysis {
     // A promise holding the lex and parse attempt on the TextDocument which is triggered on instantiation.
     protected triedLexParse: Promise<PQP.Task.TriedLexParseTask>;
     // Local type cache that is shared across provider actions.
-    protected typeCache: TypeCache = {
-        scopeById: new Map(),
-        typeById: new Map(),
-    };
+    protected typeCache: TypeCache = Inspection.TypeCacheUtils.emptyCache();
 
     constructor(
         protected textDocument: TextDocument,
