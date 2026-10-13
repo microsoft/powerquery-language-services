@@ -2,10 +2,18 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import * as JaroWinkler from "../../powerquery-language-services/jaroWinkler";
 import { Assert, MapUtils } from "@microsoft/powerquery-parser";
+import { Mock, mock } from "node:test";
 import { expect } from "chai";
 
-import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
+import {
+    Diagnostic,
+    DiagnosticErrorCode,
+    Library,
+    Position,
+    ValidationSettings,
+} from "../../powerquery-language-services";
 import { SimpleValidateNoneSettings, TestLibraryName } from "../testConstants";
 import { TestConstants, TestUtils } from "..";
 import { assertLessWhenSuppressed } from "../testUtils/validationTestUtils";
@@ -24,11 +32,18 @@ const UnknownIdentifierSettings: ValidationSettings = {
 
 async function assertUnknownIdentifierDiagnostics(
     text: string,
+    library: Library.ILibrary = TestConstants.SimpleLibrary,
 ): Promise<ReadonlyArray<AbridgedUnknownIdentifierDiagnostic>> {
     const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics({
         text,
-        analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
-        validationSettings: TestConstants.SimpleLibraryValidateAllSettings,
+        analysisSettings: {
+            ...TestConstants.SimpleLibraryAnalysisSettings,
+            inspectionSettings: {
+                ...TestConstants.SimpleLibraryAnalysisSettings.inspectionSettings,
+                library,
+            },
+        },
+        validationSettings: { ...TestConstants.SimpleLibraryValidateAllSettings, library },
     });
 
     return diagnostics
@@ -133,6 +148,95 @@ describe("Validation - UnknownIdentifier", () => {
 
         it(`library`, async () =>
             await assertUnknownIdentifierSuggestions(`test.n`, new Map([["test.n", "Test.Number"]])));
+
+        it(`preserves local spelling for repeated normalized pairs in different scopes`, async () =>
+            await assertUnknownIdentifierSuggestions(
+                `{let Table.AddColumn = 1 in tabl.addcolumn, let TABLE.ADDCOLUMN = 2 in TABL.ADDCOLUMN}`,
+                new Map([
+                    ["tabl.addcolumn", "Table.AddColumn"],
+                    ["TABL.ADDCOLUMN", "TABLE.ADDCOLUMN"],
+                ]),
+            ));
+
+        it("prefers the local spelling when a pruning bound rounds below an equal library score", async () => {
+            const library: Library.ILibrary = {
+                ...TestConstants.EmptyLibrary,
+                libraryDefinitions: {
+                    ...TestConstants.EmptyLibrary.libraryDefinitions,
+                    staticLibraryDefinitions: new Map([
+                        [
+                            "aaaaaaaaaaaa",
+                            MapUtils.assertGet(
+                                TestConstants.SimpleLibrary.libraryDefinitions.staticLibraryDefinitions,
+                                TestLibraryName.Number,
+                            ),
+                        ],
+                    ]),
+                },
+            };
+
+            const diagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+                await assertUnknownIdentifierDiagnostics("let AAAAAAAAAAAA = 1 in aaaaa", library);
+
+            expect(
+                diagnostics.map((diagnostic: AbridgedUnknownIdentifierDiagnostic) => diagnostic.message),
+            ).to.deep.equal(["Cannot find the name 'aaaaa', did you mean 'AAAAAAAAAAAA'?"]);
+        });
+    });
+
+    describe("lazy library preparation", () => {
+        for (const [text, expectedPreparations, expectedDiagnostics] of [
+            ["1", 0, 0],
+            ["let a = 1 in a", 0, 0],
+            [TestLibraryName.Number, 0, 0],
+            ["let apple = 1 in {appl, appl, applee}", 1, 3],
+        ] as const) {
+            it(text, async () => {
+                const preparation: Mock<typeof JaroWinkler.prepareJaroWinklerOptions> = mock.method(
+                    JaroWinkler,
+                    "prepareJaroWinklerOptions",
+                );
+
+                try {
+                    const diagnostics: ReadonlyArray<AbridgedUnknownIdentifierDiagnostic> =
+                        await assertUnknownIdentifierDiagnostics(text);
+
+                    expect(diagnostics.length).to.equal(expectedDiagnostics);
+                    expect(preparation.mock.callCount()).to.equal(expectedPreparations);
+                } finally {
+                    preparation.mock.restore();
+                }
+            });
+        }
+    });
+
+    describe("empty library", () => {
+        for (const [text, message] of [
+            [`let apple = 1 in appl`, `Cannot find the name 'appl', did you mean 'apple'?`],
+            [`let apple = 1 in zzzzzz`, `Cannot find the name 'zzzzzz'.`],
+            [`missing`, `Cannot find the name 'missing'.`],
+        ]) {
+            it(text, async () => {
+                const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics({
+                    text,
+                    analysisSettings: {
+                        ...TestConstants.SimpleLibraryAnalysisSettings,
+                        inspectionSettings: {
+                            ...TestConstants.SimpleLibraryAnalysisSettings.inspectionSettings,
+                            library: TestConstants.EmptyLibrary,
+                        },
+                    },
+                    validationSettings: {
+                        ...TestConstants.SimpleLibraryValidateAllSettings,
+                        library: TestConstants.EmptyLibrary,
+                    },
+                });
+
+                expect(
+                    diagnostics.map((diagnostic: Diagnostic) => [diagnostic.code, diagnostic.message]),
+                ).to.deep.equal([[DiagnosticErrorCode.UnknownIdentifier, message]]);
+            });
+        }
     });
 
     it(`allow redundant recursive identifier`, async () => await assertNoUnknownIdentifiers(`let foo = 1 in @foo`));
