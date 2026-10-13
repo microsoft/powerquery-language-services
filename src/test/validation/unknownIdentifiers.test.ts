@@ -133,6 +133,44 @@ describe("Validation - UnknownIdentifier", () => {
 
         it(`library`, async () =>
             await assertUnknownIdentifierSuggestions(`test.n`, new Map([["test.n", "Test.Number"]])));
+
+        it(`preserves local spelling for repeated normalized pairs in different scopes`, async () =>
+            await assertUnknownIdentifierSuggestions(
+                `{let Table.AddColumn = 1 in tabl.addcolumn, let TABLE.ADDCOLUMN = 2 in TABL.ADDCOLUMN}`,
+                new Map([
+                    ["tabl.addcolumn", "Table.AddColumn"],
+                    ["TABL.ADDCOLUMN", "TABLE.ADDCOLUMN"],
+                ]),
+            ));
+    });
+
+    describe("empty library", () => {
+        for (const [text, message] of [
+            [`let apple = 1 in appl`, `Cannot find the name 'appl', did you mean 'apple'?`],
+            [`let apple = 1 in zzzzzz`, `Cannot find the name 'zzzzzz'.`],
+            [`missing`, `Cannot find the name 'missing'.`],
+        ]) {
+            it(text, async () => {
+                const diagnostics: Diagnostic[] = await TestUtils.assertValidateDiagnostics({
+                    text,
+                    analysisSettings: {
+                        ...TestConstants.SimpleLibraryAnalysisSettings,
+                        inspectionSettings: {
+                            ...TestConstants.SimpleLibraryAnalysisSettings.inspectionSettings,
+                            library: TestConstants.EmptyLibrary,
+                        },
+                    },
+                    validationSettings: {
+                        ...TestConstants.SimpleLibraryValidateAllSettings,
+                        library: TestConstants.EmptyLibrary,
+                    },
+                });
+
+                expect(
+                    diagnostics.map((diagnostic: Diagnostic) => [diagnostic.code, diagnostic.message]),
+                ).to.deep.equal([[DiagnosticErrorCode.UnknownIdentifier, message]]);
+            });
+        }
     });
 
     it(`allow redundant recursive identifier`, async () => await assertNoUnknownIdentifiers(`let foo = 1 in @foo`));
