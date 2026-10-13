@@ -20,20 +20,19 @@ import {
     NodeScope,
     ParameterScopeItem,
     RecordFieldScopeItem,
+    ScopeById,
     ScopeItemKind,
     SectionMemberScopeItem,
     TriedNodeScope,
     TScopeItem,
 } from "./scope";
+import { mergeScopeMaps, ScopeBindings } from "./scopeBindings";
 import {
     PseduoFunctionExpressionType,
     pseudoFunctionExpressionType,
     PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { mergeScopeMaps } from "./scopeMap";
-import { ScopeBindings } from "./scopeBindings";
-import { ScopeById } from "./scopeById";
 import { TypeById } from "../typeCache";
 
 // Builds a scope for the given node.

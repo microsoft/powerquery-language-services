@@ -12,9 +12,12 @@ import {
 import { expect } from "chai";
 import { IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
-import { BindingScopeMap, mergeScopeMaps } from "../../powerquery-language-services/inspection/scope/scopeMap";
+import {
+    BindingScopeMap,
+    mergeScopeMaps,
+    ScopeBindings,
+} from "../../powerquery-language-services/inspection/scope/scopeBindings";
 import { Inspection } from "../../powerquery-language-services";
-import { ScopeBindings } from "../../powerquery-language-services/inspection/scope/scopeBindings";
 
 // Object values let these tests verify that shared maps preserve descriptor identity.
 interface Value {
