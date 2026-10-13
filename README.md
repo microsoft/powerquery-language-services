@@ -45,9 +45,10 @@ Create a fresh cache when either changes, or clear both `scopeById` and `typeByI
 Analysis disposal clears both caches. Existing `NodeScope.scopeItemByKey` values remain read-only
 shared views; callers must not mutate the scopes or their bindings.
 `ScopeMap` is a union of native read-only maps and plain binding/merged state records.
-Use the `Inspection.ScopeBindingsUtils.scopeMapGet`, `scopeMapHas`, `scopeMapSize`,
+Use the `Inspection.ScopeBindingsUtils.scopeMapGet`, `scopeMapHas`,
 `scopeMapKeys`, and `scopeMapEntries` functions with that state, rather than instance methods.
-Merged sizes and recursive binding descriptors are cached explicitly on their owning state.
+Merging checks only for empty layers rather than computing the size of the combined scope.
+Recursive binding descriptors are derived lazily from ordinary descriptors and cached on binding state.
 
 Scope contracts live in `scope.ts` and `scopeBindings.ts`; their factory and helper functions live
 in `scopeUtils.ts` and `scopeBindingsUtils.ts`. `ScopeTypeByKey` is a state record created with

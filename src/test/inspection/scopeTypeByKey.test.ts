@@ -67,7 +67,7 @@ describe(`ScopeTypeByKey`, () => {
         expect([...(await ScopeUtils.resolveAll(empty))]).to.deep.equal([]);
     });
 
-    it("keeps resolved types private to each factory-created object", async () => {
+    it("keeps resolved types independent for each state record", async () => {
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
         const firstTracker: CallTracker = createCallTracker();
         const secondTracker: CallTracker = createCallTracker();
@@ -197,6 +197,53 @@ describe(`ScopeTypeByKey`, () => {
             ScopeUtils.findScopeItemByLiteral(nodeScope, "x"),
             ScopeUtils.findScopeItemByLiteral(nodeScope, "y"),
         ]);
+    });
+
+    it("publishes no partial bulk results on failure and retries unresolved alias groups", async () => {
+        const nodeScope: NodeScope = createMockScope([
+            ["cached", 0],
+            ["a", 1],
+            ['#"a"', 1],
+            ["b", 2],
+        ]);
+
+        const failure: Error = new Error("bulk resolver failure");
+        const receivedIds: number[] = [];
+        let shouldFail: boolean = true;
+
+        const resolver: ScopeItemTypeResolver = (scopeItem: TScopeItem): Promise<Type.TPowerQueryType> => {
+            receivedIds.push(scopeItem.nodeId);
+
+            if (scopeItem.nodeId === 2 && shouldFail) {
+                return Promise.reject(failure);
+            }
+
+            return Promise.resolve(scopeItem.nodeId === 2 ? Type.TextInstance : Type.NumberInstance);
+        };
+
+        const state: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(nodeScope, resolver);
+        await ScopeUtils.resolveType(state, "cached");
+        let caught: unknown;
+
+        try {
+            await ScopeUtils.resolveAll(state);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).to.equal(failure);
+        expect([...state.resolved]).to.deep.equal([["cached", Type.NumberInstance]]);
+        expect(receivedIds).to.deep.equal([0, 1, 2]);
+        shouldFail = false;
+
+        expect([...(await ScopeUtils.resolveAll(state))]).to.deep.equal([
+            ["cached", Type.NumberInstance],
+            ["a", Type.NumberInstance],
+            ['#"a"', Type.NumberInstance],
+            ["b", Type.TextInstance],
+        ]);
+
+        expect(receivedIds).to.deep.equal([0, 1, 2, 1, 2]);
     });
 
     it("propagates resolver errors and retries without caching the failure", async () => {

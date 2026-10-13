@@ -24,6 +24,7 @@ import {
     RecordFieldScopeItem,
     ScopeById,
     ScopeItemKind,
+    ScopeItemTypeGroup,
     ScopeItemTypeResolver,
     ScopeTypeByKey,
     SectionMemberScopeItem,
@@ -102,31 +103,33 @@ export async function resolveType(state: ScopeTypeByKey, key: string): Promise<T
 export async function resolveAll(state: ScopeTypeByKey): Promise<ReadonlyMap<string, Type.TPowerQueryType>> {
     // Inspect each unresolved syntax node once: concurrent alias resolution can appear
     // recursive to the type inspector's cycle detector.
-    const keysByNodeId: Map<number, string[]> = new Map();
-    const firstScopeItemByNodeId: Map<number, TScopeItem> = new Map();
+    const groupsByNodeId: Map<number, ScopeItemTypeGroup> = new Map();
 
     for (const [key, scopeItem] of scopeMapEntries(state.nodeScope.scopeItemByKey)) {
         if (!state.resolved.has(key)) {
-            const existing: string[] | undefined = keysByNodeId.get(scopeItem.nodeId);
+            const existing: ScopeItemTypeGroup | undefined = groupsByNodeId.get(scopeItem.nodeId);
 
             if (existing) {
-                existing.push(key);
+                existing.keys.push(key);
             } else {
-                keysByNodeId.set(scopeItem.nodeId, [key]);
-                firstScopeItemByNodeId.set(scopeItem.nodeId, scopeItem);
+                groupsByNodeId.set(scopeItem.nodeId, { scopeItem, keys: [key] });
             }
         }
     }
 
-    const nodeIds: number[] = [...keysByNodeId.keys()];
-
-    const resolvedTypes: Type.TPowerQueryType[] = await Promise.all(
-        nodeIds.map((nodeId: number) => state.resolver(firstScopeItemByNodeId.get(nodeId)!)),
+    const resolvedGroups: [ScopeItemTypeGroup, Type.TPowerQueryType][] = await Promise.all(
+        Array.from(
+            groupsByNodeId.values(),
+            async (group: ScopeItemTypeGroup): Promise<[ScopeItemTypeGroup, Type.TPowerQueryType]> => [
+                group,
+                await state.resolver(group.scopeItem),
+            ],
+        ),
     );
 
-    for (let index: number = 0; index < nodeIds.length; index += 1) {
-        for (const key of keysByNodeId.get(nodeIds[index])!) {
-            state.resolved.set(key, resolvedTypes[index]);
+    for (const [group, type] of resolvedGroups) {
+        for (const key of group.keys) {
+            state.resolved.set(key, type);
         }
     }
 

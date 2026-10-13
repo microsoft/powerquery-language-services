@@ -9,6 +9,11 @@ import { BindingScopeMap, MergedScopeMap } from "./scopeBindings";
 
 export type ScopeItemTypeResolver = (scopeItem: TScopeItem) => Promise<Type.TPowerQueryType>;
 
+export interface ScopeItemTypeGroup {
+    readonly scopeItem: TScopeItem;
+    readonly keys: string[];
+}
+
 // State for lazy scope-item type resolution; successful results are cached by scopeUtils.
 export interface ScopeTypeByKey {
     readonly nodeScope: NodeScope;

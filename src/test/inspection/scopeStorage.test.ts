@@ -21,7 +21,6 @@ import {
     scopeMapGet,
     scopeMapHas,
     scopeMapKeys,
-    scopeMapSize,
 } from "../../powerquery-language-services/inspection/scope/scopeBindingsUtils";
 import { Inspection } from "../../powerquery-language-services";
 import { ScopeBindings } from "../../powerquery-language-services/inspection/scope/scopeBindings";
@@ -34,20 +33,26 @@ interface Value {
 describe("Shared scope storage", () => {
     it("does not enumerate inherited bindings when constructing or looking up an overlay", () => {
         const parent: Map<string, Value> = new Map([["parent", { id: 1 }]]);
+        const own: Map<string, Value> = new Map([["own", { id: 2 }]]);
 
         parent.entries = (): MapIterator<[string, Value]> => {
             throw new Error("Unexpected parent enumeration");
         };
 
         parent[Symbol.iterator] = parent.entries;
-        const scope: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, new Map([["own", { id: 2 }]]));
+        own.entries = parent.entries;
+        own[Symbol.iterator] = own.entries;
+        const scope: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, own);
         expect(scopeMapGet(scope, "parent")).to.deep.equal({ id: 1 });
         expect(scopeMapGet(scope, "own")).to.deep.equal({ id: 2 });
         expect(scopeMapHas(scope, "missing")).to.equal(false);
-        expect(scopeMapSize(scope)).to.equal(2);
+        const child: Inspection.ScopeMap<Value> = mergeScopeMaps(scope, new Map([["child", { id: 3 }]]));
+        expect(scopeMapGet(child, "parent")).to.deep.equal({ id: 1 });
+        expect(scopeMapGet(child, "own")).to.deep.equal({ id: 2 });
+        expect(scopeMapGet(child, "child")).to.deep.equal({ id: 3 });
     });
 
-    it("preserves lookup, insertion order and size when shadowing", () => {
+    it("preserves lookup and insertion order when shadowing", () => {
         const first: Value = { id: 1 };
         const second: Value = { id: 2 };
         const third: Value = { id: 3 };
@@ -67,7 +72,6 @@ describe("Shared scope storage", () => {
 
         expect([...scopeMapEntries(actual)]).to.deep.equal([...expected]);
         expect([...scopeMapKeys(actual)]).to.deep.equal([...expected.keys()]);
-        expect(scopeMapSize(actual)).to.equal(expected.size);
         expect(scopeMapGet(actual, "b")).to.equal(third);
         expect(scopeMapHas(actual, "missing")).to.equal(false);
         expect(scopeMapGet(actual, "missing")).to.equal(undefined);
@@ -93,11 +97,13 @@ describe("Shared scope storage", () => {
 
         const actual: Inspection.ScopeMap<Value> = mergeScopeMaps(new Map([["a", outer]]), own);
 
-        expect(scopeMapSize(own)).to.equal(2);
+        expect([...scopeMapKeys(own)]).to.deep.equal(["@a", "b"]);
         expect(scopeMapGet(own, "a")).to.equal(undefined);
         expect(scopeMapHas(own, "a")).to.equal(false);
         expect(scopeMapGet(actual, "a")).to.equal(outer);
         expect(scopeMapGet(actual, "@a")).to.equal(recursive);
+        expect(scopeMapHas(own, "@a")).to.equal(true);
+        expect(scopeMapHas(actual, "a")).to.equal(true);
         expect([...scopeMapKeys(actual)]).to.deep.equal(["a", "@a", "b"]);
         expect(base.get("@a")).to.equal(inner);
     });
@@ -113,7 +119,6 @@ describe("Shared scope storage", () => {
             scope = mergeScopeMaps(scope, new Map([["shared", { id: index }]]));
         }
 
-        expect(scopeMapSize(scope)).to.equal(2);
         expect(scopeMapGet(scope, "base")).to.equal(baseValue);
         expect(scopeMapGet(scope, "shared")).to.deep.equal({ id: 9999 });
         expect(scopeMapHas(scope, "missing")).to.equal(false);
@@ -124,7 +129,37 @@ describe("Shared scope storage", () => {
         ]);
     });
 
-    it("keeps overlay bindings and cached sizes in independent state records", () => {
+    it("reuses the nonempty side when merging masked binding scopes", () => {
+        const parent: Map<string, Value> = new Map([["parent", { id: 1 }]]);
+
+        const empty: Inspection.ScopeMap<Value> = createBindingScopeMap(
+            new Map([["a", { id: 2 }]]),
+            new Set(["a", "missing"]),
+            new Map(),
+        );
+
+        const recursive: Value = { id: 3 };
+
+        const nonempty: Inspection.ScopeMap<Value> = createBindingScopeMap(
+            new Map([
+                ["a", { id: 2 }],
+                ["@a", { id: 2 }],
+            ]),
+            new Set(["a"]),
+            new Map([["@a", recursive]]),
+        );
+
+        expect([...scopeMapEntries(empty)]).to.deep.equal([]);
+        expect(mergeScopeMaps(parent, empty)).to.equal(parent);
+        expect(mergeScopeMaps(empty, parent)).to.equal(parent);
+        expect(mergeScopeMaps(empty, nonempty)).to.equal(nonempty);
+        expect(mergeScopeMaps(nonempty, empty)).to.equal(nonempty);
+        expect(scopeMapGet(nonempty, "@a")).to.equal(recursive);
+        expect(scopeMapHas(nonempty, "@a")).to.equal(true);
+        expect(scopeMapHas(nonempty, "a")).to.equal(false);
+    });
+
+    it("keeps sibling overlay bindings independent while sharing their parent", () => {
         const parent: Map<string, Value> = new Map([["parent", { id: 0 }]]);
         const left: Inspection.ScopeMap<Value> = mergeScopeMaps(parent, new Map([["left", { id: 1 }]]));
 
@@ -136,12 +171,8 @@ describe("Shared scope storage", () => {
             ]),
         );
 
-        expect(left).to.have.property("cachedSize", undefined);
-        expect(scopeMapSize(left)).to.equal(2);
-        expect(left).to.have.property("cachedSize", 2);
-        expect(right).to.have.property("cachedSize", undefined);
-        expect(scopeMapSize(right)).to.equal(3);
-        expect(scopeMapSize(left)).to.equal(2);
+        expect(scopeMapGet(left, "parent")).to.equal(parent.get("parent"));
+        expect(scopeMapGet(right, "parent")).to.equal(parent.get("parent"));
         expect(scopeMapGet(left, "right")).to.equal(undefined);
         expect(scopeMapGet(right, "left")).to.equal(undefined);
         expect([...scopeMapKeys(left)]).to.deep.equal(["parent", "left"]);
@@ -156,7 +187,10 @@ async function parse(text: string): Promise<PQP.Task.ParseTaskOk> {
     return result;
 }
 
-function scopeItem(pair: NodeIdMapIterator.LetKeyValuePair, isRecursive: boolean): Inspection.LetVariableScopeItem {
+function scopeItem(
+    pair: NodeIdMapIterator.LetKeyValuePair,
+    isRecursive: boolean = false,
+): Inspection.LetVariableScopeItem {
     return {
         kind: Inspection.ScopeItemKind.LetVariable,
         nodeId: pair.source.node.id,
@@ -184,8 +218,12 @@ describe("Shared sibling bindings", () => {
 
             const options: IdentifierUtils.GetAllowedIdentifiersOptions = { allowRecursive: true };
 
-            const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
-                createScopeBindings(pairs, options, scopeItem, undefined);
+            const bindings: ScopeBindings<Inspection.LetVariableScopeItem> = createScopeBindings(
+                pairs,
+                options,
+                scopeItem,
+                undefined,
+            );
 
             const all: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = bindings.all;
             const allEntries: [string, Inspection.LetVariableScopeItem][] = [...scopeMapEntries(all)];
@@ -207,7 +245,6 @@ describe("Shared sibling bindings", () => {
                     ownId === undefined ? bindings.all : scopeForSelf(bindings, ownId);
 
                 expect([...scopeMapEntries(actual)]).to.deep.equal([...expected]);
-                expect(scopeMapSize(actual)).to.equal(expected.size);
             }
 
             expect(bindings.all).to.equal(all);
@@ -225,23 +262,30 @@ describe("Shared sibling bindings", () => {
 
         let calls: number = 0;
 
-        const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, Inspection.LetVariableScopeItem> =
-            createScopeBindings(
-                pairs,
-                { allowRecursive: true },
-                (pair: NodeIdMapIterator.LetKeyValuePair, recursive: boolean) => {
-                    calls += 1;
+        const bindings: ScopeBindings<Inspection.LetVariableScopeItem> = createScopeBindings(
+            pairs,
+            { allowRecursive: true },
+            (pair: NodeIdMapIterator.LetKeyValuePair) => {
+                calls += 1;
 
-                    return scopeItem(pair, recursive);
-                },
-                undefined,
-            );
+                return scopeItem(pair);
+            },
+            undefined,
+        );
 
+        expect(bindings.bindingByKeyId.get(pairs[0].key.id)?.recursive).to.equal(undefined);
+        const ordinary: Inspection.LetVariableScopeItem = PQP.Assert.asDefined(bindings.all.get("a"));
         const a: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = scopeForSelf(bindings, pairs[0].key.id);
         const b: Inspection.ScopeMap<Inspection.LetVariableScopeItem> = scopeForSelf(bindings, pairs[1].key.id);
         expect(scopeMapGet(a, "c")).to.equal(scopeMapGet(b, "c"));
         expect(scopeMapGet(a, "@a")).to.equal(scopeMapGet(scopeForSelf(bindings, pairs[0].key.id), "@a"));
-        expect(calls).to.equal(5);
+        expect(scopeMapGet(a, "@a")).to.deep.equal({ ...ordinary, isRecursive: true });
+        expect(scopeMapGet(a, "@a")).not.to.equal(ordinary);
+        expect(scopeMapGet(b, "a")).to.equal(ordinary);
+        expect(ordinary.isRecursive).to.equal(false);
+        expect(bindings.bindingByKeyId.get(pairs[0].key.id)?.recursive).to.equal(scopeMapGet(a, "@a"));
+        expect(bindings.bindingByKeyId.get(pairs[2].key.id)?.recursive).to.equal(undefined);
+        expect(calls).to.equal(3);
     });
 });
 

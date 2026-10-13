@@ -12,11 +12,11 @@ import { ScopeMap, TKeyValuePairScopeItem } from "./scope";
 export function createScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair, T extends TKeyValuePairScopeItem>(
     pairs: ReadonlyArray<KVP>,
     options: IdentifierUtils.GetAllowedIdentifiersOptions,
-    factory: (pair: KVP, recursive: boolean) => T,
+    factory: (pair: KVP) => T,
     cancellationToken: ICancellationToken | undefined,
-): ScopeBindings<KVP, T> {
+): ScopeBindings<T> {
     const all: Map<string, T> = new Map();
-    const bindingByKeyId: Map<number, Binding<KVP, T>> = new Map();
+    const bindingByKeyId: Map<number, Binding<T>> = new Map();
     let hasDuplicateKeys: boolean = false;
 
     for (const pair of pairs) {
@@ -26,10 +26,9 @@ export function createScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair,
             continue;
         }
 
-        const binding: Binding<KVP, T> = {
-            pair,
+        const binding: Binding<T> = {
             keys: IdentifierUtils.getAllowedIdentifiers(pair.key.literal, options),
-            nonRecursive: factory(pair, false),
+            nonRecursive: factory(pair),
             recursive: undefined,
         };
 
@@ -46,11 +45,11 @@ export function createScopeBindings<KVP extends NodeIdMapIterator.TKeyValuePair,
         }
     }
 
-    return { all, bindingByKeyId, hasDuplicateKeys, factory, cancellationToken };
+    return { all, bindingByKeyId, hasDuplicateKeys, cancellationToken };
 }
 
-export function scopeForSelf<KVP extends NodeIdMapIterator.TKeyValuePair, T extends TKeyValuePairScopeItem>(
-    state: ScopeBindings<KVP, T>,
+export function scopeForSelf<T extends TKeyValuePairScopeItem>(
+    state: ScopeBindings<T>,
     keyNodeId: number,
 ): ScopeMap<T> {
     // Excluding a duplicate's first occurrence can change insertion order, not just its value.
@@ -59,11 +58,11 @@ export function scopeForSelf<KVP extends NodeIdMapIterator.TKeyValuePair, T exte
 
         for (const binding of state.bindingByKeyId.values()) {
             state.cancellationToken?.throwIfCancelled();
-            const isRecursive: boolean = keyNodeId === binding.pair.key.id;
+            const isRecursive: boolean = keyNodeId === binding.nonRecursive.key.id;
 
             for (const key of binding.keys) {
                 if (!isRecursive || key.includes("@")) {
-                    result.set(key, isRecursive ? recursiveItem(binding, state.factory) : binding.nonRecursive);
+                    result.set(key, isRecursive ? recursiveItem(binding) : binding.nonRecursive);
                 }
             }
         }
@@ -71,7 +70,7 @@ export function scopeForSelf<KVP extends NodeIdMapIterator.TKeyValuePair, T exte
         return result;
     }
 
-    const binding: Binding<KVP, T> | undefined = state.bindingByKeyId.get(keyNodeId);
+    const binding: Binding<T> | undefined = state.bindingByKeyId.get(keyNodeId);
 
     if (binding === undefined) {
         return state.all;
@@ -83,7 +82,7 @@ export function scopeForSelf<KVP extends NodeIdMapIterator.TKeyValuePair, T exte
     // Ordinary self-references are hidden, while @ aliases must resolve recursively.
     for (const key of binding.keys) {
         if (key.includes("@")) {
-            recursive.set(key, recursiveItem(binding, state.factory));
+            recursive.set(key, recursiveItem(binding));
         } else {
             hidden.add(key);
         }
@@ -92,16 +91,16 @@ export function scopeForSelf<KVP extends NodeIdMapIterator.TKeyValuePair, T exte
     return createBindingScopeMap(state.all, hidden, recursive);
 }
 
-function recursiveItem<KVP, T>(binding: Binding<KVP, T>, factory: (pair: KVP, recursive: boolean) => T): T {
+function recursiveItem<T extends TKeyValuePairScopeItem>(binding: Binding<T>): T {
     if (binding.recursive === undefined) {
-        binding.recursive = factory(binding.pair, true);
+        binding.recursive = { ...binding.nonRecursive, isRecursive: true };
     }
 
     return binding.recursive;
 }
 
 export function createBindingScopeMap<T extends object>(
-    base: ScopeMap<T>,
+    base: ReadonlyMap<string, T>,
     hidden: ReadonlySet<string>,
     recursive: ReadonlyMap<string, T>,
 ): BindingScopeMap<T> {
@@ -110,38 +109,18 @@ export function createBindingScopeMap<T extends object>(
         base,
         hidden,
         recursive,
-        size: scopeMapSize(base) - [...hidden].filter((key: string) => scopeMapHas(base, key)).length,
+        size: base.size - [...hidden].filter((key: string) => base.has(key)).length,
     };
 }
 
 export function mergeScopeMaps<T extends object>(parent: ScopeMap<T>, own: ScopeMap<T>): ScopeMap<T> {
-    if (scopeMapSize(own) === 0) {
+    if (isEmptyScopeMap(own)) {
         return parent;
-    } else if (scopeMapSize(parent) === 0) {
+    } else if (isEmptyScopeMap(parent)) {
         return own;
     }
 
-    return { kind: ScopeMapKind.Merged, parent, own, cachedSize: undefined };
-}
-
-export function scopeMapSize<T extends object>(scope: ScopeMap<T>): number {
-    if (!isMergedScopeMap(scope)) {
-        return scope.size;
-    }
-
-    if (scope.cachedSize === undefined) {
-        let size: number = scopeMapSize(scope.parent);
-
-        for (const key of scopeMapKeys(scope.own)) {
-            if (!scopeMapHas(scope.parent, key)) {
-                size += 1;
-            }
-        }
-
-        scope.cachedSize = size;
-    }
-
-    return scope.cachedSize;
+    return { kind: ScopeMapKind.Merged, parent, own };
 }
 
 export function scopeMapGet<T extends object>(scope: ScopeMap<T>, key: string): T | undefined {
@@ -156,20 +135,14 @@ export function scopeMapGet<T extends object>(scope: ScopeMap<T>, key: string): 
     }
 
     if (isBindingScopeMap(scope)) {
-        return scope.hidden.has(key) ? undefined : (scope.recursive.get(key) ?? scopeMapGet(scope.base, key));
+        return scope.hidden.has(key) ? undefined : (scope.recursive.get(key) ?? scope.base.get(key));
     }
 
     return scope.get(key);
 }
 
 export function scopeMapHas<T extends object>(scope: ScopeMap<T>, key: string): boolean {
-    if (isBindingScopeMap(scope)) {
-        return !scope.hidden.has(key) && scopeMapHas(scope.base, key);
-    } else if (isMergedScopeMap(scope)) {
-        return scopeMapGet(scope, key) !== undefined;
-    }
-
-    return scope.has(key);
+    return scopeMapGet(scope, key) !== undefined;
 }
 
 export function* scopeMapKeys<T extends object>(scope: ScopeMap<T>): MapIterator<string> {
@@ -180,7 +153,7 @@ export function* scopeMapKeys<T extends object>(scope: ScopeMap<T>): MapIterator
 
 export function* scopeMapEntries<T extends object>(scope: ScopeMap<T>): MapIterator<[string, T]> {
     if (isBindingScopeMap(scope)) {
-        for (const [key, value] of scopeMapEntries(scope.base)) {
+        for (const [key, value] of scope.base) {
             if (!scope.hidden.has(key)) {
                 yield [key, scope.recursive.get(key) ?? value];
             }
@@ -218,4 +191,9 @@ function isBindingScopeMap<T extends object>(scope: ScopeMap<T>): scope is Bindi
 
 function isMergedScopeMap<T extends object>(scope: ScopeMap<T>): scope is MergedScopeMap<T> {
     return "kind" in scope && scope.kind === ScopeMapKind.Merged;
+}
+
+function isEmptyScopeMap<T extends object>(scope: ScopeMap<T>): boolean {
+    // Merged scopes are only created from nonempty layers.
+    return !isMergedScopeMap(scope) && scope.size === 0;
 }
