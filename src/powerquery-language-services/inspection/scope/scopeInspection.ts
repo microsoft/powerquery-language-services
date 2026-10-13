@@ -11,7 +11,7 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { ICancellationToken, ResultUtils } from "@microsoft/powerquery-parser";
+import { ICancellationToken, MapUtils, ResultUtils } from "@microsoft/powerquery-parser";
 import { PrimitiveTypeConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/constant/constant";
 
 import { createScopeBindings, mergeScopeMaps, scopeForSelf, scopeMapEntries } from "./scopeBindingsUtils";
@@ -67,15 +67,7 @@ export async function tryNodeScope(
 
         await inspectScope(updatedSettings, nodeIdMapCollection, eachScopeById, ancestry, scopeById, trace.id);
 
-        const result: NodeScope = PQP.Assert.asDefined(
-            scopeById.scopes.get(nodeId),
-            `expected nodeId in scope result`,
-            {
-                nodeId,
-            },
-        );
-
-        return result;
+        return MapUtils.assertGet(scopeById.scopes, nodeId, `expected nodeId in scope result`, { nodeId });
     }, updatedSettings.locale);
 
     trace.exit();

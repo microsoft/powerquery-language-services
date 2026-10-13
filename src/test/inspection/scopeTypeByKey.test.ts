@@ -37,24 +37,12 @@ function createMockScope(entries: ReadonlyArray<[string, number]>): NodeScope {
     return { createdForNodeId: 0, scopeItemByKey };
 }
 
-interface CallTracker {
-    count: number;
-    readonly receivedItems: TScopeItem[];
-}
-
-function createCallTracker(): CallTracker {
-    return { count: 0, receivedItems: [] };
-}
-
 function createMockResolver(
     typeMap: ReadonlyMap<number, Type.TPowerQueryType>,
-    callTracker?: CallTracker,
+    receivedItems: TScopeItem[],
 ): ScopeItemTypeResolver {
     return (scopeItem: TScopeItem): Promise<Type.TPowerQueryType> => {
-        if (callTracker) {
-            callTracker.count += 1;
-            callTracker.receivedItems.push(scopeItem);
-        }
+        receivedItems.push(scopeItem);
 
         return Promise.resolve(typeMap.get(scopeItem.nodeId) ?? Type.UnknownInstance);
     };
@@ -69,29 +57,29 @@ describe(`ScopeTypeByKey`, () => {
 
     it("keeps resolved types independent for each state record", async () => {
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
-        const firstTracker: CallTracker = createCallTracker();
-        const secondTracker: CallTracker = createCallTracker();
+        const firstReceivedItems: TScopeItem[] = [];
+        const secondReceivedItems: TScopeItem[] = [];
 
         const first: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
             nodeScope,
-            createMockResolver(new Map([[1, Type.NumberInstance]]), firstTracker),
+            createMockResolver(new Map([[1, Type.NumberInstance]]), firstReceivedItems),
         );
 
         const second: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
             nodeScope,
-            createMockResolver(new Map([[1, Type.TextInstance]]), secondTracker),
+            createMockResolver(new Map([[1, Type.TextInstance]]), secondReceivedItems),
         );
 
-        expect(firstTracker.count).to.equal(0);
-        expect(secondTracker.count).to.equal(0);
+        expect(firstReceivedItems.length).to.equal(0);
+        expect(secondReceivedItems.length).to.equal(0);
         expect(await ScopeUtils.resolveType(first, "key")).to.equal(Type.NumberInstance);
         expect(first.resolved.get("key")).to.equal(Type.NumberInstance);
         expect(second.resolved.size).to.equal(0);
-        expect(secondTracker.count).to.equal(0);
+        expect(secondReceivedItems.length).to.equal(0);
         expect(await ScopeUtils.resolveType(second, "key")).to.equal(Type.TextInstance);
         expect(await ScopeUtils.resolveType(first, "key")).to.equal(Type.NumberInstance);
-        expect(firstTracker.count).to.equal(1);
-        expect(secondTracker.count).to.equal(1);
+        expect(firstReceivedItems.length).to.equal(1);
+        expect(secondReceivedItems.length).to.equal(1);
     });
 
     it("resolves aliases of the same syntax node only once in resolveAll", async () => {
@@ -101,7 +89,7 @@ describe(`ScopeTypeByKey`, () => {
             ["other", 2],
         ]);
 
-        const tracker: CallTracker = createCallTracker();
+        const receivedItems: TScopeItem[] = [];
 
         const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
             nodeScope,
@@ -110,20 +98,20 @@ describe(`ScopeTypeByKey`, () => {
                     [1, Type.NumberInstance],
                     [2, Type.TextInstance],
                 ]),
-                tracker,
+                receivedItems,
             ),
         );
 
-        expect(tracker.count).to.equal(0);
+        expect(receivedItems.length).to.equal(0);
         const resolved: ReadonlyMap<string, Type.TPowerQueryType> = await ScopeUtils.resolveAll(lazy);
         expect(resolved).to.equal(lazy.resolved);
-        expect(tracker.count).to.equal(2);
+        expect(receivedItems.length).to.equal(2);
         expect(resolved.size).to.equal(3);
         expect(resolved.get("foo")).to.equal(Type.NumberInstance);
         expect(resolved.get('#"foo"')).to.equal(resolved.get("foo"));
         expect(resolved.get("other")).to.equal(Type.TextInstance);
         await ScopeUtils.resolveAll(lazy);
-        expect(tracker.count).to.equal(2);
+        expect(receivedItems.length).to.equal(2);
     });
 
     it("resolves requested types lazily and caches successful results", async () => {
@@ -134,23 +122,32 @@ describe(`ScopeTypeByKey`, () => {
             ["unused", 2],
         ]);
 
-        const tracker: CallTracker = createCallTracker();
-        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
-        expect(tracker.count).to.equal(0);
+        const receivedItems: TScopeItem[] = [];
+
+        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
+            nodeScope,
+            createMockResolver(typeMap, receivedItems),
+        );
+
+        expect(receivedItems.length).to.equal(0);
 
         expect(await ScopeUtils.resolveType(lazy, "key")).to.equal(Type.NumberInstance);
         expect(await ScopeUtils.resolveType(lazy, "key")).to.equal(Type.NumberInstance);
-        expect(tracker.count).to.equal(1);
-        expect(tracker.receivedItems.map((item: TScopeItem) => item.nodeId)).to.deep.equal([1]);
+        expect(receivedItems.length).to.equal(1);
+        expect(receivedItems.map((item: TScopeItem) => item.nodeId)).to.deep.equal([1]);
     });
 
     it("returns undefined for an unknown key without calling the resolver", async () => {
         const nodeScope: NodeScope = createMockScope([["key", 1]]);
-        const tracker: CallTracker = createCallTracker();
-        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(nodeScope, createMockResolver(new Map(), tracker));
+        const receivedItems: TScopeItem[] = [];
+
+        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
+            nodeScope,
+            createMockResolver(new Map(), receivedItems),
+        );
 
         expect(await ScopeUtils.resolveType(lazy, "unknown")).to.equal(undefined);
-        expect(tracker.count).to.equal(0);
+        expect(receivedItems.length).to.equal(0);
     });
 
     it("resolveAll resolves all items and skips already-resolved items", async () => {
@@ -166,14 +163,18 @@ describe(`ScopeTypeByKey`, () => {
             ["c", 3],
         ]);
 
-        const tracker: CallTracker = createCallTracker();
-        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(nodeScope, createMockResolver(typeMap, tracker));
+        const receivedItems: TScopeItem[] = [];
+
+        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
+            nodeScope,
+            createMockResolver(typeMap, receivedItems),
+        );
 
         await ScopeUtils.resolveType(lazy, "a");
-        expect(tracker.count).to.equal(1);
+        expect(receivedItems.length).to.equal(1);
 
         const resolved: ReadonlyMap<string, Type.TPowerQueryType> = await ScopeUtils.resolveAll(lazy);
-        expect(tracker.count).to.equal(3);
+        expect(receivedItems.length).to.equal(3);
 
         expect([...resolved]).to.deep.equal([
             ["a", Type.NumberInstance],
@@ -188,12 +189,17 @@ describe(`ScopeTypeByKey`, () => {
             ["y", 20],
         ]);
 
-        const tracker: CallTracker = createCallTracker();
-        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(nodeScope, createMockResolver(new Map(), tracker));
+        const receivedItems: TScopeItem[] = [];
+
+        const lazy: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
+            nodeScope,
+            createMockResolver(new Map(), receivedItems),
+        );
+
         await ScopeUtils.resolveType(lazy, "x");
         await ScopeUtils.resolveType(lazy, "y");
 
-        expect(tracker.receivedItems).to.deep.equal([
+        expect(receivedItems).to.deep.equal([
             ScopeUtils.findScopeItemByLiteral(nodeScope, "x"),
             ScopeUtils.findScopeItemByLiteral(nodeScope, "y"),
         ]);
