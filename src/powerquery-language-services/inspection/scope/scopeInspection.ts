@@ -138,15 +138,7 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
     ancestryIndex: number;
 }
 
-// The only function that should directly mutate `ScopeInspectionState.scopeById`.
-// It attempts to reuse the inherited scope instance whenever:
-//  1. there's no `newEntries`,
-//  2. the node is not a FieldSelector or FieldProjection (which have special scoping rules)
-//
-// For scenario (1) we share the parent's scope and overlay the new entries.
-// This means the `newEntries` take precedence over the inherited scope.
-//
-// For scenario (2) we only inherit `EachScopeItem`s from the parent scope.
+// Reuse inherited scopes or overlay new entries; field access inherits only EachScopeItems.
 function assignScopeForNodeId(
     state: ScopeInspectionState,
     nodeId: number,
@@ -172,60 +164,50 @@ function assignScopeForNodeId(
         return existingNodeScope;
     }
 
-    // Unique case for root node.
+    let nodeScope: NodeScope;
+    let traceResult: string;
+
     if (inheritedScope === undefined) {
-        const nodeScope: NodeScope = {
+        nodeScope = {
             createdForNodeId: nodeId,
             scopeItemByKey: newEntries ?? new Map(),
         };
 
-        Inspection.ScopeUtils.setScopeById(state.scopeById, nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "new root scope" });
+        traceResult = "new root scope";
+    } else {
+        const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
 
-        return nodeScope;
+        if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
+            const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
+                ...scopeMapEntries(inheritedScope.scopeItemByKey),
+            ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
+
+            nodeScope = {
+                createdForNodeId: nodeId,
+                scopeItemByKey: new Map([
+                    ...inheritedEachScopeItemEntries,
+                    ...(newEntries === undefined ? [] : scopeMapEntries(newEntries)),
+                ]),
+            };
+
+            traceResult = "inherited filtered scope";
+        } else if (newEntries === undefined) {
+            nodeScope = inheritedScope;
+            traceResult = "inherited scope";
+        } else {
+            nodeScope = {
+                createdForNodeId: nodeId,
+                scopeItemByKey: mergeScopeMaps(inheritedScope.scopeItemByKey, newEntries),
+            };
+
+            traceResult = "created new scope";
+        }
     }
 
-    const xorNode: TXorNode = NodeIdMapUtils.assertXor(state.nodeIdMapCollection, nodeId);
+    Inspection.ScopeUtils.setScopeById(state.scopeById, nodeId, nodeScope);
+    trace.exit({ [TraceConstant.Result]: traceResult });
 
-    // We can't actually inherit everything if node is a FieldSelector or FieldProjection,
-    // so we create a new scope that only includes allowed items.
-    if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
-            ...scopeMapEntries(inheritedScope.scopeItemByKey),
-        ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
-
-        const nodeScope: NodeScope = {
-            createdForNodeId: nodeId,
-            scopeItemByKey: new Map([
-                ...inheritedEachScopeItemEntries,
-                ...(newEntries === undefined ? [] : scopeMapEntries(newEntries)),
-            ]),
-        };
-
-        Inspection.ScopeUtils.setScopeById(state.scopeById, nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "inherited filtered scope" });
-
-        return nodeScope;
-    }
-    // Else if there are no new entries we can simply inherit the scope.
-    else if (!newEntries) {
-        Inspection.ScopeUtils.setScopeById(state.scopeById, nodeId, inheritedScope);
-        trace.exit({ [TraceConstant.Result]: "inherited scope" });
-
-        return inheritedScope;
-    }
-    // Else there are new entries so we create a new scope that merges the inherited scope with the new entries.
-    else {
-        const nodeScope: NodeScope = {
-            createdForNodeId: nodeId,
-            scopeItemByKey: mergeScopeMaps(inheritedScope.scopeItemByKey, newEntries),
-        };
-
-        Inspection.ScopeUtils.setScopeById(state.scopeById, nodeId, nodeScope);
-        trace.exit({ [TraceConstant.Result]: "created new scope" });
-
-        return nodeScope;
-    }
+    return nodeScope;
 }
 
 function getParentScope(state: ScopeInspectionState, nodeId: number): NodeScope | undefined {
@@ -408,8 +390,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
         trace.id,
     );
 
-    // Build up a list of new scope items derived from the function's parameters.
-    const newEntries: [string, ParameterScopeItem][] = [];
+    const newEntries: Map<string, ParameterScopeItem> = new Map();
     const pseudoType: PseduoFunctionExpressionType = pseudoFunctionExpressionType(state.nodeIdMapCollection, fnExpr);
 
     for (const parameter of pseudoType.parameters) {
@@ -420,7 +401,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
         const parameterScopeItem: ParameterScopeItem = scopeItemFactoryForParameter(parameter, type);
 
         for (const scopeKey of IdentifierUtils.getAllowedIdentifiers(parameter.name.literal)) {
-            newEntries.push([scopeKey, parameterScopeItem]);
+            newEntries.set(scopeKey, parameterScopeItem);
         }
     }
 
@@ -432,7 +413,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     );
 
     if (functionExpressionBody !== undefined) {
-        assignScopeForNodeId(state, functionExpressionBody.node.id, nodeScope, new Map(newEntries), trace.id);
+        assignScopeForNodeId(state, functionExpressionBody.node.id, nodeScope, newEntries, trace.id);
     }
 
     trace.exit();

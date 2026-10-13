@@ -3,6 +3,7 @@
 
 import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
+import { Constant, IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -10,7 +11,6 @@ import {
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { expect } from "chai";
-import { IdentifierUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import {
     createBindingScopeMap,
@@ -177,6 +177,32 @@ describe("Shared scope storage", () => {
         expect(scopeMapGet(right, "left")).to.equal(undefined);
         expect([...scopeMapKeys(left)]).to.deep.equal(["parent", "left"]);
         expect([...scopeMapKeys(right)]).to.deep.equal(["parent", "right", "extra"]);
+    });
+
+    it("preserves parameter alias order while later duplicate parameters replace earlier ones", async () => {
+        const parsed: PQP.Task.ParseTaskOk = await parse('(a as number, b, #"a" as text) => a');
+        const target: number = PQP.Assert.asDefined(parsed.nodeIdMapCollection.rightMostLeaf).id;
+
+        const scope: Inspection.NodeScope = PQP.ResultUtils.assertOk(
+            await Inspection.tryNodeScope(
+                PQP.DefaultSettings,
+                parsed.nodeIdMapCollection,
+                undefined,
+                target,
+                Inspection.ScopeUtils.createScopeById(),
+            ),
+        );
+
+        const parameter: Inspection.ParameterScopeItem =
+            Inspection.ScopeUtils.assertGetScopeItemChecked<Inspection.ParameterScopeItem>(
+                scope,
+                "a",
+                Inspection.ScopeItemKind.Parameter,
+            );
+
+        expect([...scopeMapKeys(scope.scopeItemByKey)]).to.deep.equal(["a", '#"a"', "b", '#"b"']);
+        expect(parameter.type).to.equal(Constant.PrimitiveTypeConstant.Text);
+        expect(scopeMapGet(scope.scopeItemByKey, '#"a"')).to.equal(parameter);
     });
 });
 

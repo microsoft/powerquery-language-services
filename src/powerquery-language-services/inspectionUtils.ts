@@ -40,10 +40,9 @@ export async function getAutocompleteItemsFromScope(
 
     const nodeScope: Inspection.NodeScope = triedNodeScope.value;
 
-    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.okOrDefault(
-        triedScopeType,
-        Inspection.ScopeUtils.emptyScopeTypeByKey(),
-    );
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(triedScopeType)
+        ? triedScopeType.value
+        : Inspection.ScopeUtils.emptyScopeTypeByKey();
 
     const result: Inspection.AutocompleteItem[] = [];
 
