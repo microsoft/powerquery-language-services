@@ -2,8 +2,10 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import * as FieldInspection from "../../powerquery-language-services/inspection/type/inspectType/inspectTypeFieldSpecification";
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Mock, mock } from "node:test";
 import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
@@ -1249,6 +1251,43 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.RecordType}`, () => {
+            it("finishes each field inspection before starting the next", async () => {
+                const events: string[] = [];
+
+                const original: typeof FieldInspection.inspectTypeFieldSpecification =
+                    FieldInspection.inspectTypeFieldSpecification;
+
+                const inspection: Mock<typeof original> = mock.method(
+                    FieldInspection,
+                    "inspectTypeFieldSpecification",
+                    async (...args: Parameters<typeof original>): ReturnType<typeof original> => {
+                        events.push("start");
+                        const result: Type.TPowerQueryType = await original(...args);
+                        events.push("end");
+
+                        return result;
+                    },
+                );
+
+                try {
+                    await assertEqualRootType({
+                        text: "type [first = number, second = nullable text]",
+                        expected: TypeUtils.recordType(
+                            false,
+                            new Map<string, Type.TPowerQueryType>([
+                                ["first", Type.NumberInstance],
+                                ["second", Type.NullableTextInstance],
+                            ]),
+                            false,
+                        ),
+                    });
+
+                    expect(events).to.deep.equal(["start", "end", "start", "end"]);
+                } finally {
+                    inspection.mock.restore();
+                }
+            });
+
             it(`type [foo]`, async () =>
                 await assertEqualRootType({
                     text: `type [foo]`,

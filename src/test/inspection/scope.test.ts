@@ -2244,6 +2244,38 @@ describe(`Inspection - Scope - Identifier`, () => {
             return { scopeById, identifiers, nodeIdMapCollection };
         }
 
+        it("finishes scope inspection synchronously while returning a Promise", async () => {
+            const nodeIdMapCollection: NodeIdMap.Collection = await parseText("let a = 1 in a + a");
+            const identifier: Ast.Identifier = PQP.Assert.asDefined(getValueIdentifiers(nodeIdMapCollection)[0]);
+            const scopeById: Inspection.ScopeById = new Map();
+
+            const pendingScope: Promise<Inspection.TriedNodeScope> = Inspection.tryNodeScope(
+                DefaultSettings,
+                nodeIdMapCollection,
+                undefined,
+                identifier.id,
+                scopeById,
+            );
+
+            expect(pendingScope).to.be.instanceOf(Promise);
+            expect(scopeById.has(identifier.id)).to.equal(true);
+            expect(PQP.ResultUtils.assertOk(await pendingScope)).to.equal(scopeById.get(identifier.id));
+        });
+
+        it("returns inspection failures as an error result through the async API", async () => {
+            const nodeIdMapCollection: NodeIdMap.Collection = await parseText("1");
+
+            const result: Inspection.TriedNodeScope = await Inspection.tryNodeScope(
+                DefaultSettings,
+                nodeIdMapCollection,
+                undefined,
+                -1,
+                new Map(),
+            );
+
+            expect(PQP.ResultUtils.isError(result)).to.equal(true);
+        });
+
         it("repeated tryNodeScope calls reuse cached scopes", async () => {
             const text: string = `let a = 1, b = 2, c = 3, d = 4, e = 5 in a + b + c + d + e`;
 
@@ -2269,5 +2301,36 @@ describe(`Inspection - Scope - Identifier`, () => {
             expect(result.scopeById.size).to.equal(scopeCountAfterFirstPass);
         });
 
+        it("scope computation scales sub-cubically for large let expressions", async () => {
+            function generateLet(n: number): string {
+                const bindings: string[] = [];
+
+                for (let i: number = 0; i < n; i += 1) {
+                    bindings.push(`v${i} = ${i}`);
+                }
+
+                return `let ${bindings.join(", ")} in v0`;
+            }
+
+            const smallText: string = generateLet(20);
+            const largeText: string = generateLet(80);
+
+            async function timeScope(text: string): Promise<number> {
+                const start: number = Date.now();
+                await buildAllScopes(text);
+
+                return Date.now() - start;
+            }
+
+            const smallTime: number = await timeScope(smallText);
+            const largeTime: number = await timeScope(largeText);
+
+            // With 4x more bindings, pure O(n³) would give 64x slowdown.
+            // With the cached approach, expect much less.
+            // Use a generous threshold of 20x to avoid flaky tests.
+            const ratio: number = largeTime / Math.max(smallTime, 0.001);
+
+            expect(ratio).to.be.lessThan(20, `Expected sub-cubic scaling but got ${ratio.toFixed(1)}x for 4x input`);
+        });
     });
 });

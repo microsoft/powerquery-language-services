@@ -32,35 +32,10 @@ import {
     PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { mergeScopeMaps } from "./scopeMap";
-import { ScopeBindings } from "./scopeBindings";
 import { TypeById } from "../typeCache";
 
-// scopeById can contain a scope that a parent assigned before the node's children were inspected.
-// This separate cache records only nodes whose complete inspection succeeded. AST object identity
-// keeps completion state tied to one parsed document, while scopeCount detects callers removing
-// cached scopes and requiring that work to run again.
-interface ScopeInspectionCache {
-    readonly inspectedNodes: WeakSet<TXorNode["node"]>;
-    scopeCount: number;
-}
-
-// Weak ownership lets completion state expire with its externally owned scope cache.
-const inspectionCacheByScope: WeakMap<ScopeById, ScopeInspectionCache> = new WeakMap();
-
-function inspectionCache(scopeById: ScopeById): ScopeInspectionCache {
-    let cache: ScopeInspectionCache | undefined = inspectionCacheByScope.get(scopeById);
-
-    // A shrinking scope cache signals that callers need removed work to be recomputed.
-    if (cache === undefined || scopeById.size < cache.scopeCount) {
-        cache = { inspectedNodes: new WeakSet(), scopeCount: scopeById.size };
-        inspectionCacheByScope.set(scopeById, cache);
-    }
-
-    return cache;
-}
-
-// Builds a scope for the given node.
+// Keep the public async API while building the scope synchronously.
+// eslint-disable-next-line require-await
 export async function tryNodeScope(
     settings: PQP.CommonSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
@@ -161,7 +136,7 @@ interface ScopeInspectionState extends Pick<PQP.CommonSettings, "traceManager"> 
 //  1. there's no `newEntries`,
 //  2. the node is not a FieldSelector or FieldProjection (which have special scoping rules)
 //
-// For scenario (1) we share the parent's scope and overlay the new entries.
+// For scenario (1) we take a shallow copy of the parent's scope, then merge in the new entries.
 // This means the `newEntries` take precedence over the inherited scope.
 //
 // For scenario (2) we only inherit `EachScopeItem`s from the parent scope.
@@ -169,7 +144,7 @@ function assignScopeForNodeId(
     state: ScopeInspectionState,
     nodeId: number,
     inheritedScope: NodeScope | undefined,
-    newEntries: ReadonlyMap<string, TScopeItem> | undefined,
+    newEntries: ReadonlyArray<[string, TScopeItem]> | undefined,
     correlationId: number,
 ): NodeScope {
     const trace: Trace = state.traceManager.entry(
@@ -194,7 +169,7 @@ function assignScopeForNodeId(
     if (inheritedScope === undefined) {
         const nodeScope: NodeScope = {
             createdForNodeId: nodeId,
-            scopeItemByKey: newEntries ?? new Map(),
+            scopeItemByKey: new Map(newEntries ?? []),
         };
 
         state.scopeById.set(nodeId, nodeScope);
@@ -233,7 +208,7 @@ function assignScopeForNodeId(
     else {
         const nodeScope: NodeScope = {
             createdForNodeId: nodeId,
-            scopeItemByKey: mergeScopeMaps(inheritedScope.scopeItemByKey, newEntries),
+            scopeItemByKey: new Map([...inheritedScope.scopeItemByKey.entries(), ...newEntries]),
         };
 
         state.scopeById.set(nodeId, nodeScope);
@@ -312,15 +287,6 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlation
 
     state.cancellationToken?.throwIfCancelled();
 
-    const cache: ScopeInspectionCache = inspectionCache(state.scopeById);
-
-    // Scope assignment and completed child inspection are separate states.
-    if (cache.inspectedNodes.has(xorNode.node)) {
-        trace.exit({ [TraceConstant.Result]: "cache hit" });
-
-        return;
-    }
-
     // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
@@ -354,9 +320,6 @@ function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, correlation
             );
     }
 
-    // Failed or cancelled inspection must remain retryable.
-    cache.inspectedNodes.add(xorNode.node);
-    cache.scopeCount = state.scopeById.size;
     trace.exit();
 }
 
@@ -387,7 +350,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
             expression.node.id,
             nodeScope,
             // Append the implicit "_" parameter for the 'each' expression.
-            new Map<string, TScopeItem>([
+            [
                 [
                     "_",
                     {
@@ -398,7 +361,7 @@ function inspectEachExpression(state: ScopeInspectionState, eachExpr: TXorNode, 
                         implicitParameterType: state.eachScopeById?.get(eachExpr.node.id) ?? Type.UnknownInstance,
                     },
                 ],
-            ]),
+            ],
             trace.id,
         );
     }
@@ -448,7 +411,7 @@ function inspectFunctionExpression(state: ScopeInspectionState, fnExpr: TXorNode
     );
 
     if (functionExpressionBody !== undefined) {
-        assignScopeForNodeId(state, functionExpressionBody.node.id, nodeScope, new Map(newEntries), trace.id);
+        assignScopeForNodeId(state, functionExpressionBody.node.id, nodeScope, newEntries, trace.id);
     }
 
     trace.exit();
@@ -477,20 +440,27 @@ function inspectLetExpression(state: ScopeInspectionState, letExpr: TXorNode, co
         letExpr,
     );
 
-    const bindings: ScopeBindings<NodeIdMapIterator.LetKeyValuePair, LetVariableScopeItem> = new ScopeBindings(
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
         keyValuePairs,
         { allowRecursive: true },
         scopeItemFactoryForLetVariable,
-        state.cancellationToken,
+        trace.id,
     );
 
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, bindings, trace.id);
-
     // Places the assignments from the 'let' into LetExpression.expression
+    const newEntries: ReadonlyArray<[string, LetVariableScopeItem]> = scopeItemFactoryForKeyValuePairs(
+        keyValuePairs,
+        -1,
+        { allowRecursive: true },
+        scopeItemFactoryForLetVariable,
+    );
+
     const expression: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, letExpr.node.id, 3);
 
     if (expression !== undefined && !state.scopeById.has(expression.node.id)) {
-        assignScopeForNodeId(state, expression.node.id, nodeScope, bindings.forSelf(-1), trace.id);
+        assignScopeForNodeId(state, expression.node.id, nodeScope, newEntries, trace.id);
     }
 
     trace.exit();
@@ -523,17 +493,17 @@ function inspectRecordExpressionOrRecordLiteral(
         record,
     );
 
-    const bindings: ScopeBindings<NodeIdMapIterator.RecordKeyValuePair, RecordFieldScopeItem> = new ScopeBindings(
+    inspectKeyValuePairs(
+        state,
+        nodeScope,
         keyValuePairs,
         {
             allowGeneralizedIdentifier: true,
             allowRecursive: true,
         },
         scopeItemFactoryForRecordMember,
-        state.cancellationToken,
+        trace.id,
     );
-
-    inspectKeyValuePairs(state, nodeScope, keyValuePairs, bindings, trace.id);
 
     trace.exit();
 }
@@ -552,13 +522,6 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
         section,
     );
 
-    const bindings: ScopeBindings<NodeIdMapIterator.SectionKeyValuePair, SectionMemberScopeItem> = new ScopeBindings(
-        keyValuePairs,
-        { allowRecursive: true },
-        scopeItemFactoryForSectionMember,
-        state.cancellationToken,
-    );
-
     for (const kvp of keyValuePairs) {
         state.cancellationToken?.throwIfCancelled();
 
@@ -570,7 +533,12 @@ function inspectSection(state: ScopeInspectionState, section: TXorNode, correlat
             state,
             kvp.value.node.id,
             getParentScope(state, kvp.value.node.id),
-            bindings.forSelf(kvp.key.id),
+            scopeItemFactoryForKeyValuePairs(
+                keyValuePairs,
+                kvp.key.id,
+                { allowRecursive: true },
+                scopeItemFactoryForSectionMember,
+            ),
             trace.id,
         );
     }
@@ -586,7 +554,8 @@ function inspectKeyValuePairs<
     state: ScopeInspectionState,
     inheritedScope: NodeScope | undefined,
     keyValuePairs: ReadonlyArray<KVP>,
-    bindings: ScopeBindings<KVP, T>,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
+    scopeItemFactory: (keyValuePair: KVP, recursive: boolean) => T,
     correlationId: number,
 ): void {
     const trace: Trace = state.traceManager.entry(
@@ -602,10 +571,40 @@ function inspectKeyValuePairs<
             continue;
         }
 
-        assignScopeForNodeId(state, kvp.value.node.id, inheritedScope, bindings.forSelf(kvp.key.id), trace.id);
+        assignScopeForNodeId(
+            state,
+            kvp.value.node.id,
+            inheritedScope,
+            scopeItemFactoryForKeyValuePairs(keyValuePairs, kvp.key.id, getAllowedIdentifiersOptions, scopeItemFactory),
+            trace.id,
+        );
     }
 
     trace.exit();
+}
+
+function scopeItemFactoryForKeyValuePairs<
+    T extends Extract<TScopeItem, LetVariableScopeItem | RecordFieldScopeItem | SectionMemberScopeItem>,
+    KVP extends NodeIdMapIterator.TKeyValuePair,
+>(
+    keyValuePairs: ReadonlyArray<KVP>,
+    keyNodeId: number,
+    getAllowedIdentifiersOptions: IdentifierUtils.GetAllowedIdentifiersOptions,
+    scopeItemFactory: (keyValuePair: KVP, isRecursive: boolean) => T,
+): ReadonlyArray<[string, T]> {
+    const result: [string, T][] = [];
+
+    for (const kvp of keyValuePairs.filter((keyValuePair: KVP) => keyValuePair.value !== undefined)) {
+        const isRecursive: boolean = keyNodeId === kvp.key.id;
+
+        for (const key of IdentifierUtils.getAllowedIdentifiers(kvp.key.literal, getAllowedIdentifiersOptions)) {
+            if (!isRecursive || key.includes("@")) {
+                result.push([key, scopeItemFactory(kvp, isRecursive)]);
+            }
+        }
+    }
+
+    return result;
 }
 
 function scopeItemFactoryForLetVariable(
