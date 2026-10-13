@@ -191,6 +191,7 @@ function findUnknownIdentifiers(
                         libraryOptions.length === 0
                             ? [0, ""]
                             : calculateJaroWinklersWithPreparedOptions(literal, libraryOptions);
+
                     libraryResultByLiteral.set(normalizedLiteral, libraryResult);
                 }
 
