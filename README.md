@@ -57,6 +57,89 @@ in `scopeUtils.ts` and `scopeBindingsUtils.ts`. `ScopeTypeByKey` is a state reco
 and its document-local `resolved` map. `ScopeUtils.resolveType(state, key)` and
 `ScopeUtils.resolveAll(state)` populate that map lazily, leaving failed resolutions retryable.
 
+## Benchmarking
+
+For agent-guided runs and comparisons, use the `benchmark-language-services` skill in
+`.github\skills\benchmark-language-services\SKILL.md`.
+
+Run a JSON payload against local Power Query files:
+
+```powershell
+npm run --silent benchmark -- .\benchmark-input.json > .\benchmark-results.json
+```
+
+Example payload:
+
+```json
+{
+    "lexParse": true,
+    "library": "standard",
+    "files": [
+        {
+            "path": ".\\queries\\example.pq",
+            "operations": [
+                { "kind": "validateAll" },
+                { "kind": "validateUnknownIdentifiers" },
+                { "kind": "getDocumentSymbols" },
+                { "kind": "getHover", "position": { "line": 0, "character": 10 } },
+                { "kind": "getAutocompleteItems", "position": { "line": 0, "character": 10 } }
+            ]
+        }
+    ]
+}
+```
+
+Paths are relative to the payload file, or absolute. To read JSON from stdin instead, pass `-`;
+paths then resolve from the current working directory. Positions use zero-based lines and UTF-16
+character offsets, as in LSP. Files and payloads use UTF-8; a leading BOM is removed before parsing,
+and positions refer to source text without the BOM. Invalid payloads, unknown properties, and
+out-of-range positions are rejected.
+
+`lexParse` defaults to `false`; enabling it adds a separate combined lexer/parser benchmark for each file.
+Each file must select at least one operation unless `lexParse` is enabled. `library` defaults to `standard`,
+using the repository's English standard-library symbol fixture; set it to `none` for local-only measurements.
+Library construction and file I/O are not timed.
+
+| Operation                                                               | Additional fields                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| `getAutocompleteItems`, `getDefinition`, `getHover`, `getSignatureHelp` | `position`                                              |
+| `getRenameEdits`                                                        | `position`, `newName` (edits are computed, not applied) |
+| `getDocumentSymbols`, `getFoldingRanges`, `getPartialSemanticTokens`    | None                                                    |
+| `validateAll`                                                           | None; runs the full validation pipeline                 |
+| `validateDuplicateIdentifiers`                                          | None; duplicate bindings and fields                     |
+| `validateParse`                                                         | None; diagnostics from an existing parse error          |
+| `validateFunctionExpression`                                            | None; duplicate function parameters                     |
+| `validateInvokeExpression`                                              | None; invocation argument checks                        |
+| `validateUnknownIdentifiers`                                            | None; runs only unknown-identifier validation           |
+
+`validateAll` replaces the former `validate` benchmark command. It invokes the actual combined pipeline,
+including shared caches, rather than summing isolated measurements. Each individual validation command
+runs only its named validator on fresh analysis. `validateParse` measures diagnostic generation, not
+parsing; it returns no diagnostics for valid input. Use `lexParse` to measure lexing and parsing.
+
+Every file/operation command runs **one unmeasured warmup followed by exactly ten measured runs**.
+Runs are sequential. Language-service runs each receive fresh analysis, with lexing and parsing completed
+before timing starts; they do not measure repeated requests against warm analysis caches. Full validation
+reuses that sample's prepared analysis via the workspace cache, with a new document version for every run.
+The workspace cache can retain the latest validation analysis per file. Analysis disposal is outside timing.
+
+The JSON report includes environment information, per-operation average/minimum/maximum wall-clock and CPU
+times in milliseconds, and all ten raw samples. Each sample includes process-memory snapshots before and
+after the operation, byte deltas for RSS, heap used/total, external memory, and array buffers, plus a result
+kind and array count where applicable. Memory deltas also have average/minimum/maximum summaries.
+An `undefined` result is recorded explicitly rather than treated as an error.
+
+**Memory deltas are not allocation counts or peak-memory measurements.** They are process-wide snapshots,
+can be negative due to garbage collection, and include runtime noise. The npm command enables explicit GC
+before each warmup/sample, after preparation and outside timing; the report records whether GC was available.
+CPU measurements are also process-wide. Compare runs on an otherwise idle machine using the same Node version.
+
+Operation failures are recorded with `status: "error"` and a message; other commands continue, and the CLI
+exits nonzero after emitting the report. Failed commands do not receive a misleading ten-run average.
+Lex/parse benchmarks require syntactically valid input. Language-service operations can run on partial parse
+states, with `hasSyntaxError` recorded for each sample; lexical failures prevent operation preparation.
+Payload and file-loading failures are printed to stderr and exit nonzero without a benchmark report.
+
 ## Contributing
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
