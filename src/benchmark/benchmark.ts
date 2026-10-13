@@ -2,10 +2,10 @@
 // Licensed under the MIT license.
 
 import { DefaultSettings, ResultUtils, Task, TaskUtils } from "@microsoft/powerquery-parser";
+import { ParseError, ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Buffer } from "node:buffer";
 import { cpus } from "node:os";
 import { inspect } from "node:util";
-import { ParseState } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { pathToFileURL } from "node:url";
 import { performance } from "node:perf_hooks";
 import process from "node:process";
@@ -26,6 +26,10 @@ import {
 } from "../powerquery-language-services";
 import { BenchmarkConfig, BenchmarkOperation } from "./config";
 import StandardLibrarySymbols from "../test/standard-library-symbols-en-us.json";
+import { validateDuplicateIdentifiers } from "../powerquery-language-services/validate/validateDuplicateIdentifiers";
+import { validateFunctionExpression } from "../powerquery-language-services/validate/validateFunctionExpression";
+import { validateInvokeExpression } from "../powerquery-language-services/validate/validateInvokeExpression";
+import { validateParse } from "../powerquery-language-services/validate/validateParse";
 import { validateUnknownIdentifiers } from "../powerquery-language-services/validate/validateUnknownIdentifiers";
 
 const Iterations: number = 10;
@@ -306,7 +310,7 @@ async function prepareOperation(
     const analysisSettings: AnalysisSettings = {
         inspectionSettings,
         // validate() obtains its own analysis. Reuse only this sample's already-parsed instance.
-        isWorkspaceCacheAllowed: operation.kind === "validate",
+        isWorkspaceCacheAllowed: operation.kind === "validateAll",
         initialCorrelationId: inspectionSettings.initialCorrelationId,
         traceManager: inspectionSettings.traceManager,
     };
@@ -320,10 +324,10 @@ async function prepareOperation(
             throw new Error(`${path}: lexing did not produce a parse state`);
         }
 
-        const hasSyntaxError: boolean = ResultUtils.assertOk(await analysis.getParseError()) !== undefined;
+        const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 
         return {
-            hasSyntaxError,
+            hasSyntaxError: parseError !== undefined,
             dispose: (): void => analysis.dispose(),
             run: async (): Promise<unknown> => {
                 switch (operation.kind) {
@@ -345,9 +349,29 @@ async function prepareOperation(
                         return ResultUtils.assertOk(await analysis.getFoldingRanges());
                     case "getPartialSemanticTokens":
                         return ResultUtils.assertOk(await analysis.getPartialSemanticTokens());
-                    case "validate":
+                    case "validateAll":
                         return ResultUtils.assertOk(await validate(document, analysisSettings, validationSettings))
                             ?.diagnostics;
+                    case "validateDuplicateIdentifiers":
+                        return validateDuplicateIdentifiers(
+                            document,
+                            parseState.contextState.nodeIdMapCollection,
+                            validationSettings,
+                            validationSettings.cancellationToken,
+                        );
+                    case "validateParse":
+                        return validateParse(parseError, validationSettings);
+                    case "validateFunctionExpression":
+                        return validateFunctionExpression(
+                            validationSettings,
+                            parseState.contextState.nodeIdMapCollection,
+                        );
+                    case "validateInvokeExpression":
+                        return validateInvokeExpression(
+                            validationSettings,
+                            parseState.contextState.nodeIdMapCollection,
+                            analysis.getTypeCache(),
+                        );
                     case "validateUnknownIdentifiers":
                         return validateUnknownIdentifiers(
                             validationSettings,

@@ -24,8 +24,12 @@ not evidence about large-document performance.
 - Set `lexParse: true` to add a separate combined lexer/parser benchmark for every file.
 - Choose `library: "standard"` for the repository's English standard-library fixture, or
   `"none"` to isolate local names. Keep the library choice fixed across comparisons.
-- Select `validate` for all validation checks, or `validateUnknownIdentifiers` to isolate
-  unknown-identifier validation.
+- Select `validateAll` for the actual combined validation pipeline, or isolate a validator with
+  `validateDuplicateIdentifiers`, `validateParse`, `validateFunctionExpression`,
+  `validateInvokeExpression`, or `validateUnknownIdentifiers`. The former `validate` benchmark
+  command has been replaced by `validateAll`.
+- `validateParse` measures diagnostic generation from an existing parse error, not parsing itself.
+  It returns no diagnostics for valid input. Use `lexParse` to measure lexing and parsing.
 - Position-based operations are `getAutocompleteItems`, `getDefinition`, `getHover`,
   `getSignatureHelp`, and `getRenameEdits`. Rename also requires `newName`; it does not edit files.
 - Document-wide operations are `getDocumentSymbols`, `getFoldingRanges`, and
@@ -99,6 +103,7 @@ has fresh analysis, and lexing/parsing finishes before its timed interval. The s
 File loading, library construction, preparation, explicit GC, and disposal are outside timing.
 Full validation reuses only its sample's prepared analysis through a new document version;
 the workspace cache can retain the latest validation analysis per file.
+`validateAll` measures the real pipeline with its shared caches, not a sum of isolated validator timings.
 
 Report duration from `measurement.durationMs` and CPU time from `cpuUserMs`/`cpuSystemMs`
 in milliseconds. Include the average and minimum/maximum rather than selecting the fastest sample.

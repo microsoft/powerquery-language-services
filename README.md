@@ -47,7 +47,7 @@ Example payload:
         {
             "path": ".\\queries\\example.pq",
             "operations": [
-                { "kind": "validate" },
+                { "kind": "validateAll" },
                 { "kind": "validateUnknownIdentifiers" },
                 { "kind": "getDocumentSymbols" },
                 { "kind": "getHover", "position": { "line": 0, "character": 10 } },
@@ -74,8 +74,17 @@ Library construction and file I/O are not timed.
 | `getAutocompleteItems`, `getDefinition`, `getHover`, `getSignatureHelp` | `position`                                              |
 | `getRenameEdits`                                                        | `position`, `newName` (edits are computed, not applied) |
 | `getDocumentSymbols`, `getFoldingRanges`, `getPartialSemanticTokens`    | None                                                    |
-| `validate`                                                              | None; enables all validation checks                     |
+| `validateAll`                                                           | None; runs the full validation pipeline                 |
+| `validateDuplicateIdentifiers`                                          | None; duplicate bindings and fields                     |
+| `validateParse`                                                         | None; diagnostics from an existing parse error          |
+| `validateFunctionExpression`                                            | None; duplicate function parameters                     |
+| `validateInvokeExpression`                                              | None; invocation argument checks                        |
 | `validateUnknownIdentifiers`                                            | None; runs only unknown-identifier validation           |
+
+`validateAll` replaces the former `validate` benchmark command. It invokes the actual combined pipeline,
+including shared caches, rather than summing isolated measurements. Each individual validation command
+runs only its named validator on fresh analysis. `validateParse` measures diagnostic generation, not
+parsing; it returns no diagnostics for valid input. Use `lexParse` to measure lexing and parsing.
 
 Every file/operation command runs **one unmeasured warmup followed by exactly ten measured runs**.
 Runs are sequential. Language-service runs each receive fresh analysis, with lexing and parsing completed

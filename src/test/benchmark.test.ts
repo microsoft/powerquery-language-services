@@ -61,7 +61,8 @@ describe("Benchmark", () => {
             { kind: "getHover", position: { line: 0, character: 1, typo: 0 } },
             { kind: "getRenameEdits", position: { line: 0, character: 0 } },
             { kind: "getRenameEdits", position: { line: 0, character: 0 }, newName: "" },
-            { kind: "validate", position: { line: 0, character: 0 } },
+            { kind: "validate" },
+            { kind: "validateAll", position: { line: 0, character: 0 } },
         ]) {
             it(`rejects invalid operation ${JSON.stringify(operation)}`, () => {
                 expect(() => parseConfig({ files: [{ path: "query.pq", operations: [operation] }] })).to.throw();
@@ -222,7 +223,11 @@ describe("Benchmark", () => {
                                     { kind: "getDocumentSymbols" },
                                     { kind: "getFoldingRanges" },
                                     { kind: "getPartialSemanticTokens" },
-                                    { kind: "validate" },
+                                    { kind: "validateAll" },
+                                    { kind: "validateDuplicateIdentifiers" },
+                                    { kind: "validateParse" },
+                                    { kind: "validateFunctionExpression" },
+                                    { kind: "validateInvokeExpression" },
                                     { kind: "validateUnknownIdentifiers" },
                                 ],
                             },
@@ -231,8 +236,8 @@ describe("Benchmark", () => {
                     directory,
                 );
 
-                expect(report.results.length).to.equal(11);
-                expect(parser.mock.callCount()).to.equal(11 * 11);
+                expect(report.results.length).to.equal(15);
+                expect(parser.mock.callCount()).to.equal(15 * 11);
                 expect(report.operationTiming).to.equal("fresh-analysis-excluding-lex-parse");
 
                 for (const result of report.results) {
@@ -253,7 +258,7 @@ describe("Benchmark", () => {
                     files: [
                         {
                             path: "query.pq",
-                            operations: [{ kind: "validateUnknownIdentifiers" }, { kind: "validate" }],
+                            operations: [{ kind: "validateUnknownIdentifiers" }, { kind: "validateAll" }],
                         },
                     ],
                 }),
@@ -265,6 +270,53 @@ describe("Benchmark", () => {
                 expect(result.measurement?.samples.every((sample: Sample) => sample.result.count === 1)).to.equal(true);
             }
         }).timeout(30000);
+
+        for (const [text, expectedCounts, hasSyntaxError] of [
+            ["let apple = 1, apple = 2 in apple", [2, 0, 0, 0, 0, 2], false],
+            ["(x as number, x as number) => x", [0, 0, 2, 0, 0, 2], false],
+            ["Text.Length()", [0, 0, 0, 1, 0, 1], false],
+            ["let apple = 1 in appl", [0, 0, 0, 0, 1, 1], false],
+            ["let apple = 1 in", [0, 1, 0, 0, 0, 1], true],
+        ] as const) {
+            it(`isolates each validator and runs the combined pipeline for ${text}`, async () => {
+                await writeFile(join(directory, "query.pq"), text, "utf8");
+
+                const report: BenchmarkReport = await runBenchmarks(
+                    parseConfig({
+                        files: [
+                            {
+                                path: "query.pq",
+                                operations: [
+                                    { kind: "validateDuplicateIdentifiers" },
+                                    { kind: "validateParse" },
+                                    { kind: "validateFunctionExpression" },
+                                    { kind: "validateInvokeExpression" },
+                                    { kind: "validateUnknownIdentifiers" },
+                                    { kind: "validateAll" },
+                                ],
+                            },
+                        ],
+                    }),
+                    directory,
+                );
+
+                expect(report.results.length).to.equal(expectedCounts.length);
+
+                for (const [index, result] of report.results.entries()) {
+                    expect(result.status, result.error).to.equal("ok");
+                    expect(result.measurement?.samples.length).to.equal(10);
+
+                    for (const sample of result.measurement?.samples ?? []) {
+                        expect(sample.result, result.operation.kind).to.deep.equal({
+                            kind: "array",
+                            count: expectedCounts[index],
+                        });
+
+                        expect(sample.hasSyntaxError).to.equal(hasSyntaxError);
+                    }
+                }
+            }).timeout(30000);
+        }
 
         it("reports failed lexing explicitly and continues to the next file", async () => {
             await writeFile(join(directory, "invalid.pq"), '"unterminated', "utf8");

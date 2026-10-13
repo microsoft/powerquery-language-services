@@ -14,7 +14,11 @@ export type BenchmarkOperation =
               | "getDocumentSymbols"
               | "getFoldingRanges"
               | "getPartialSemanticTokens"
-              | "validate"
+              | "validateAll"
+              | "validateDuplicateIdentifiers"
+              | "validateParse"
+              | "validateFunctionExpression"
+              | "validateInvokeExpression"
               | "validateUnknownIdentifiers";
       };
 
@@ -103,7 +107,11 @@ function parseOperation(value: unknown, label: string): BenchmarkOperation {
         case "getDocumentSymbols":
         case "getFoldingRanges":
         case "getPartialSemanticTokens":
-        case "validate":
+        case "validateAll":
+        case "validateDuplicateIdentifiers":
+        case "validateParse":
+        case "validateFunctionExpression":
+        case "validateInvokeExpression":
         case "validateUnknownIdentifiers":
             checkKeys(operation, ["kind"], label);
 
