@@ -107,7 +107,7 @@ export function calculateJaroWinklersWithPreparedOptions(
 export function findJaroWinklerSuggestionWithBaseline(
     source: string,
     options: Iterable<string>,
-    normalizedByValue: Record<string, string>,
+    normalizedByValue: Map<string, string>,
     baseline: [number, string],
     threshold: number,
     scoreCache?: JaroWinklerScoreCache,
@@ -293,12 +293,12 @@ function calculateJaroForNormalized(
     return (m_over_s1 + m_over_s2 + mMinusT_over_m) / 3;
 }
 
-function getOrCreateNormalized(value: string, normalizedByValue: Record<string, string>): string {
-    let normalized: string | undefined = normalizedByValue[value];
+function getOrCreateNormalized(value: string, normalizedByValue: Map<string, string>): string {
+    let normalized: string | undefined = normalizedByValue.get(value);
 
     if (normalized === undefined) {
         normalized = value.toLowerCase();
-        normalizedByValue[value] = normalized;
+        normalizedByValue.set(value, normalized);
     }
 
     return normalized;
@@ -312,8 +312,8 @@ function maximumJaroWinklerScore(normalizedLeft: string, normalizedRight: string
         return 0;
     }
 
-    // No candidate can match more characters than the shorter string.
-    const maximumJaroScore: number = (2 + shorter.length / longer.length) / 3;
+    // Use the scorer's addition order so rounding cannot lower this bound.
+    const maximumJaroScore: number = (shorter.length / longer.length + 1 + 1) / 3;
 
     if (maximumJaroScore <= WinklerScoreThreshold) {
         return maximumJaroScore;
@@ -329,7 +329,12 @@ function maximumJaroWinklerScore(normalizedLeft: string, normalizedRight: string
     const adjustment: number = startingCharIndex * WinklerAdjustment;
 
     // Prefix adjustments above 1 make the score decrease as Jaro similarity rises.
-    return adjustment <= 1
-        ? maximumJaroScore + adjustment * (1 - maximumJaroScore)
-        : WinklerScoreThreshold + adjustment * (1 - WinklerScoreThreshold);
+    const maximumScore: number =
+        adjustment <= 1
+            ? maximumJaroScore + adjustment * (1 - maximumJaroScore)
+            : WinklerScoreThreshold + adjustment * (1 - WinklerScoreThreshold);
+
+    // Four epsilons at this scale cover both evaluations' multiply/add rounding and the padded addition.
+    // Scale with the adjustment because legacy long-prefix scores can exceed 1.
+    return maximumScore + 4 * Number.EPSILON * Math.max(1, adjustment);
 }

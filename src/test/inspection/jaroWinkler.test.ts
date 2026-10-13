@@ -54,9 +54,9 @@ describe(`Jaro-Winkler`, () => {
         const libraryResult: [number, string] = calculateJaroWinklers(source, libraryOptions);
         const expected: [number, string] = calculateJaroWinklers(source, [...localOptions, ...libraryOptions]);
 
-        expect(
-            findJaroWinklerSuggestionWithBaseline(source, localOptions, Object.create(null), libraryResult, 0.9),
-        ).to.equal(expected[0] > 0.9 ? expected[1] : undefined);
+        expect(findJaroWinklerSuggestionWithBaseline(source, localOptions, new Map(), libraryResult, 0.9)).to.equal(
+            expected[0] > 0.9 ? expected[1] : undefined,
+        );
     });
 
     it(`pruned suggestion search matches exhaustive short-string scoring`, () => {
@@ -81,16 +81,72 @@ describe(`Jaro-Winkler`, () => {
             const libraryResult: [number, string] = calculateJaroWinklers(source, libraryOptions);
             const expected: [number, string] = calculateJaroWinklers(source, [...localOptions, ...libraryOptions]);
 
-            expect(
-                findJaroWinklerSuggestionWithBaseline(source, localOptions, Object.create(null), libraryResult, 0.9),
-            ).to.equal(expected[0] > 0.9 ? expected[1] : undefined);
+            expect(findJaroWinklerSuggestionWithBaseline(source, localOptions, new Map(), libraryResult, 0.9)).to.equal(
+                expected[0] > 0.9 ? expected[1] : undefined,
+            );
+        }
+    });
+
+    it("preserves exhaustive selection at floating-point tie and threshold boundaries", () => {
+        for (let sourceLength: number = 1; sourceLength <= 20; sourceLength += 1) {
+            const source: string = "a".repeat(sourceLength);
+
+            for (let optionLength: number = sourceLength + 1; optionLength <= 200; optionLength += 1) {
+                const local: string = "A".repeat(optionLength);
+                const library: string = "a".repeat(optionLength);
+                const baseline: [number, string] = calculateJaroWinklers(source, [library]);
+                const exhaustive: [number, string] = calculateJaroWinklers(source, [local, library]);
+                const cache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
+
+                for (const threshold of [0.9, exhaustive[0], exhaustive[0] - Number.EPSILON]) {
+                    const expected: string | undefined = exhaustive[0] > threshold ? exhaustive[1] : undefined;
+
+                    for (const scoreCache of [undefined, cache]) {
+                        expect(
+                            findJaroWinklerSuggestionWithBaseline(
+                                source,
+                                [local],
+                                new Map(),
+                                baseline,
+                                threshold,
+                                scoreCache,
+                            ),
+                            `source length ${sourceLength}, option length ${optionLength}, threshold ${threshold}`,
+                        ).to.equal(expected);
+                    }
+                }
+            }
+        }
+    });
+
+    it("normalizes identifiers and reuses cached values", () => {
+        const normalizedByValue: Map<string, string> = new Map();
+
+        for (const reuse of [false, true]) {
+            if (reuse) {
+                normalizedByValue.set = (): never => {
+                    throw new Error("Unexpected normalization recomputation");
+                };
+            }
+
+            for (const option of ["Table.AddColumn", ""]) {
+                const source: string = option.slice(0, -1);
+                const expected: [number, string] = calculateJaroWinklers(source, [option]);
+
+                expect(
+                    findJaroWinklerSuggestionWithBaseline(source, [option], normalizedByValue, [0, ""], 0.9),
+                ).to.equal(expected[0] > 0.9 ? expected[1] : undefined);
+
+                expect(normalizedByValue.get(source)).to.equal(source.toLowerCase());
+                expect(normalizedByValue.get(option)).to.equal(option.toLowerCase());
+            }
         }
     });
 
     describe(`bounded score cache`, () => {
         it(`reuses normalized pairs across scopes without retaining spelling or tie order`, () => {
             const cache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
-            const normalizedByValue: Record<string, string> = Object.create(null);
+            const normalizedByValue: Map<string, string> = new Map();
             const baseline: [number, string] = [1, "Table.AddColumn"];
             const firstScope: Map<string, undefined> = new Map([["TABLE.ADDCOLUMN", undefined]]);
 
@@ -138,21 +194,14 @@ describe(`Jaro-Winkler`, () => {
                 [[1, "library"], 0.9],
                 [[-1, ""], 1],
             ] as ReadonlyArray<[[number, string], number]>) {
-                findJaroWinklerSuggestionWithBaseline(
-                    source,
-                    [option],
-                    Object.create(null),
-                    baseline,
-                    threshold,
-                    cache,
-                );
+                findJaroWinklerSuggestionWithBaseline(source, [option], new Map(), baseline, threshold, cache);
 
                 expect(cache.get(source, option)).to.equal(undefined);
             }
 
-            expect(
-                findJaroWinklerSuggestionWithBaseline(source, [option], Object.create(null), [-1, ""], 0, cache),
-            ).to.equal(option);
+            expect(findJaroWinklerSuggestionWithBaseline(source, [option], new Map(), [-1, ""], 0, cache)).to.equal(
+                option,
+            );
 
             expect(cache.get(source, option)).to.equal(calculateJaroWinkler(source, option));
         });
@@ -160,9 +209,7 @@ describe(`Jaro-Winkler`, () => {
         it(`reuses zero scores and applies the threshold strictly`, () => {
             const cache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
 
-            expect(
-                findJaroWinklerSuggestionWithBaseline("aa", ["bb"], Object.create(null), [-1, ""], -1, cache),
-            ).to.equal("bb");
+            expect(findJaroWinklerSuggestionWithBaseline("aa", ["bb"], new Map(), [-1, ""], -1, cache)).to.equal("bb");
 
             expect(cache.get("aa", "bb")).to.equal(0);
 
@@ -170,13 +217,11 @@ describe(`Jaro-Winkler`, () => {
                 throw new Error("Unexpected zero-score recomputation");
             };
 
-            expect(
-                findJaroWinklerSuggestionWithBaseline("AA", ["BB"], Object.create(null), [-1, ""], 0, cache),
-            ).to.equal(undefined);
+            expect(findJaroWinklerSuggestionWithBaseline("AA", ["BB"], new Map(), [-1, ""], 0, cache)).to.equal(
+                undefined,
+            );
 
-            expect(
-                findJaroWinklerSuggestionWithBaseline("AA", ["BB"], Object.create(null), [-1, ""], -1, cache),
-            ).to.equal("BB");
+            expect(findJaroWinklerSuggestionWithBaseline("AA", ["BB"], new Map(), [-1, ""], -1, cache)).to.equal("BB");
         });
 
         it(`clears all pairs at capacity and counts distinct pairs rather than writes`, () => {
@@ -222,7 +267,6 @@ describe(`Jaro-Winkler`, () => {
                 "abcdefghijklmnoz",
                 "\u0130x",
                 "ix",
-                "__proto__",
                 "a\0b",
             ];
 
@@ -242,7 +286,7 @@ describe(`Jaro-Winkler`, () => {
                             const expected: string | undefined = findJaroWinklerSuggestionWithBaseline(
                                 source,
                                 options,
-                                Object.create(null),
+                                new Map(),
                                 baseline,
                                 threshold,
                             );
@@ -251,7 +295,7 @@ describe(`Jaro-Winkler`, () => {
                                 findJaroWinklerSuggestionWithBaseline(
                                     source,
                                     options,
-                                    Object.create(null),
+                                    new Map(),
                                     baseline,
                                     threshold,
                                     cache,

@@ -135,14 +135,14 @@ function findUnknownIdentifiers(
 
     const unknownIdentifiers: UnknownIdentifier[] = [];
 
-    // Compute library keys once for the entire validation run instead of per-unknown-identifier.
+    // Snapshot keys once, but normalize candidates only when a suggestion is needed.
     const libraryKeys: ReadonlyArray<string> = LibraryUtils.getDefinitionKeys(validationSettings.library);
-    const libraryOptions: ReadonlyArray<PreparedJaroWinklerOption> = prepareJaroWinklerOptions(libraryKeys);
+    let libraryOptions: ReadonlyArray<PreparedJaroWinklerOption> | undefined;
 
     // Local names vary by scope, but the library is shared by every identifier in this validation.
     // Keeping them separate lets repeated misspellings reuse the expensive library-wide search.
     const libraryResultByLiteral: Map<string, [number, string]> = new Map();
-    const normalizedLocalIdentifierByValue: Record<string, string> = Object.create(null);
+    const normalizedLocalIdentifierByValue: Map<string, string> = new Map();
     const scoreCache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
 
     const suggestionByScopeMap: WeakMap<
@@ -184,6 +184,8 @@ function findUnknownIdentifiers(
                 let libraryResult: [number, string] | undefined = libraryResultByLiteral.get(normalizedLiteral);
 
                 if (libraryResult === undefined) {
+                    libraryOptions ??= prepareJaroWinklerOptions(libraryKeys);
+
                     // An empty library contributes no candidate, but local names can still provide a suggestion.
                     libraryResult =
                         libraryOptions.length === 0
