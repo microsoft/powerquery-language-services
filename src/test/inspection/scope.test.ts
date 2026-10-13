@@ -126,6 +126,115 @@ describe(`Inspection - Scope - Identifier`, () => {
                 }));
         });
 
+        for (const [nodeKind, fieldAccess] of [
+            [Ast.NodeKind.FieldSelector, "[field|]"],
+            [Ast.NodeKind.FieldProjection, "[[field|]]"],
+        ] as const) {
+            describe(`${nodeKind} implicit each scope`, () => {
+                for (const textWithPipe of [`each ${fieldAccess}`, `each ${fieldAccess.replaceAll("]", "")}`]) {
+                    it(`retains the implicit parameter in ${textWithPipe}`, async () =>
+                        await runTest({
+                            textWithPipe,
+                            expected: [
+                                {
+                                    identifier: "_",
+                                    isRecursive: false,
+                                    kind: Inspection.ScopeItemKind.Each,
+                                    eachExpressionNodeId: 1,
+                                },
+                            ],
+                        }));
+                }
+
+                it("retains the innermost each parameter", async () =>
+                    await runTest({
+                        textWithPipe: `each each ${fieldAccess}`,
+                        expected: [
+                            {
+                                identifier: "_",
+                                isRecursive: false,
+                                kind: Inspection.ScopeItemKind.Each,
+                                eachExpressionNodeId: 3,
+                            },
+                        ],
+                    }));
+
+                for (const textWithPipe of [
+                    `let unrelated = 1 in unrelated${fieldAccess}`,
+                    `(_) => _${fieldAccess}`,
+                    `each let _ = 1 in _${fieldAccess}`,
+                ]) {
+                    it(`does not retain non-each bindings in ${textWithPipe}`, async () =>
+                        await runTest({
+                            textWithPipe,
+                            expected: [],
+                        }));
+                }
+
+                it("looks up only the implicit parameter without enumerating inherited bindings", async () => {
+                    const triedLexParse: Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
+                        PQP.DefaultSettings,
+                        `each let unrelated = 1 in unrelated${fieldAccess.replace("|", "")}`,
+                    );
+
+                    PQP.TaskUtils.assertIsParseStageOk(triedLexParse);
+
+                    const nodeIdMapCollection: NodeIdMap.Collection = triedLexParse.nodeIdMapCollection;
+                    const nodeIds: Set<number> = PQP.MapUtils.assertGet(nodeIdMapCollection.idsByNodeKind, nodeKind);
+                    const nodeId: number = PQP.Assert.asDefined(nodeIds.values().next().value);
+                    const parentId: number = PQP.MapUtils.assertGet(nodeIdMapCollection.parentIdById, nodeId);
+                    const scopeById: Inspection.ScopeById = new Map();
+
+                    const parentScope: Inspection.NodeScope = PQP.ResultUtils.assertOk(
+                        await Inspection.tryNodeScope(
+                            DefaultSettings,
+                            nodeIdMapCollection,
+                            undefined,
+                            parentId,
+                            scopeById,
+                        ),
+                    );
+
+                    const bindings: Map<string, Inspection.TScopeItem> = new Map(parentScope.scopeItemByKey);
+                    const eachScopeItem: Inspection.TScopeItem = PQP.MapUtils.assertGet(bindings, "_");
+
+                    expect(eachScopeItem.kind).to.equal(Inspection.ScopeItemKind.Each);
+                    expect(bindings.has("unrelated")).to.equal(true);
+
+                    let lookupCount: number = 0;
+                    const get: (key: string) => Inspection.TScopeItem | undefined = bindings.get.bind(bindings);
+
+                    bindings.get = (key: string): Inspection.TScopeItem | undefined => {
+                        expect(key).to.equal("_");
+                        lookupCount += 1;
+
+                        return get(key);
+                    };
+
+                    bindings.entries = (): never => {
+                        throw new Error("Field scope must not enumerate inherited bindings");
+                    };
+
+                    scopeById.set(parentId, { ...parentScope, scopeItemByKey: bindings });
+                    scopeById.delete(nodeId);
+
+                    const fieldScope: Inspection.NodeScope = PQP.ResultUtils.assertOk(
+                        await Inspection.tryNodeScope(
+                            DefaultSettings,
+                            nodeIdMapCollection,
+                            undefined,
+                            nodeId,
+                            scopeById,
+                        ),
+                    );
+
+                    expect([...fieldScope.scopeItemByKey.keys()]).to.deep.equal(["_"]);
+                    expect(fieldScope.scopeItemByKey.get("_")).to.equal(eachScopeItem);
+                    expect(lookupCount).to.equal(1);
+                });
+            });
+        }
+
         describe(`${Ast.NodeKind.FunctionExpression} (Ast)`, () => {
             it(`|(x) => z`, async () =>
                 await runTest({

@@ -182,9 +182,10 @@ function assignScopeForNodeId(
     // We can't actually inherit everything if node is a FieldSelector or FieldProjection,
     // so we create a new scope that only includes allowed items.
     if ([Ast.NodeKind.FieldProjection, Ast.NodeKind.FieldSelector].includes(xorNode.node.kind)) {
-        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> = [
-            ...inheritedScope.scopeItemByKey.entries(),
-        ].filter(([_key, scopeItem]: [string, Inspection.TScopeItem]) => scopeItem.kind === ScopeItemKind.Each);
+        const inheritedEachScopeItem: TScopeItem | undefined = inheritedScope.scopeItemByKey.get("_");
+
+        const inheritedEachScopeItemEntries: ReadonlyArray<[string, TScopeItem]> =
+            inheritedEachScopeItem?.kind === ScopeItemKind.Each ? [["_", inheritedEachScopeItem]] : [];
 
         const nodeScope: NodeScope = {
             createdForNodeId: nodeId,
