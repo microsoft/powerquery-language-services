@@ -7,9 +7,15 @@ import { NodeIdMap, NodeIdMapUtils } from "@microsoft/powerquery-parser/lib/powe
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
+import {
+    calculateJaroWinklersWithPreparedOptions,
+    findJaroWinklerSuggestionWithBaseline,
+    JaroWinklerScoreCache,
+    PreparedJaroWinklerOption,
+    prepareJaroWinklerOptions,
+} from "../jaroWinkler";
 import { Inspection, LibraryUtils, PositionUtils } from "..";
 import { Localization, LocalizationUtils } from "../localization";
-import { calculateJaroWinklers } from "../jaroWinkler";
 import { DiagnosticErrorCode } from "../diagnosticErrorCode";
 import { ExternalTypeRequestKind } from "../externalType/externalType";
 import { ILocalizationTemplates } from "../localization/templates";
@@ -129,13 +135,20 @@ function findUnknownIdentifiers(
 
     const unknownIdentifiers: UnknownIdentifier[] = [];
 
-    // Compute library keys once for the entire validation run instead of per-unknown-identifier.
+    // Snapshot keys once, but normalize candidates only when a suggestion is needed.
     const libraryKeys: ReadonlyArray<string> = LibraryUtils.getDefinitionKeys(validationSettings.library);
+    let libraryOptions: ReadonlyArray<PreparedJaroWinklerOption> | undefined;
 
-    // Cache the combined known-identifier list per NodeScope instance.
-    // Multiple identifiers in the same scope (e.g. bindings in a let) share the same list,
-    // avoiding repeated array allocation and spreading.
-    const knownIdentifiersByScope: Map<Inspection.NodeScope, ReadonlyArray<string>> = new Map();
+    // Local names vary by scope, but the library is shared by every identifier in this validation.
+    // Keeping them separate lets repeated misspellings reuse the expensive library-wide search.
+    const libraryResultByLiteral: Map<string, [number, string]> = new Map();
+    const normalizedLocalIdentifierByValue: Map<string, string> = new Map();
+    const scoreCache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
+
+    const suggestionByScopeMap: WeakMap<
+        ReadonlyMap<string, Inspection.TScopeItem>,
+        Map<string, string | undefined>
+    > = new WeakMap();
 
     for (const identifierWithNodeScope of identifiersWithNodeScope) {
         if (ResultUtils.isError(identifierWithNodeScope.triedNodeScope)) {
@@ -154,19 +167,50 @@ function findUnknownIdentifiers(
                 identifierLiteral: literal,
             })
         ) {
-            let knownIdentifiers: ReadonlyArray<string> | undefined = knownIdentifiersByScope.get(nodeScope);
+            const scopeItemByKey: ReadonlyMap<string, Inspection.TScopeItem> = nodeScope.scopeItemByKey;
 
-            if (knownIdentifiers === undefined) {
-                knownIdentifiers = [...nodeScope.scopeItemByKey.keys(), ...libraryKeys];
-                knownIdentifiersByScope.set(nodeScope, knownIdentifiers);
+            let suggestionsByLiteral: Map<string, string | undefined> | undefined =
+                suggestionByScopeMap.get(scopeItemByKey);
+
+            if (suggestionsByLiteral === undefined) {
+                suggestionsByLiteral = new Map();
+                suggestionByScopeMap.set(scopeItemByKey, suggestionsByLiteral);
             }
 
-            const [jaroWinklerScore, suggestion]: [number, string] = calculateJaroWinklers(literal, knownIdentifiers);
+            let suggestion: string | undefined = suggestionsByLiteral.get(literal);
+
+            if (!suggestionsByLiteral.has(literal)) {
+                const normalizedLiteral: string = literal.toLowerCase();
+                let libraryResult: [number, string] | undefined = libraryResultByLiteral.get(normalizedLiteral);
+
+                if (libraryResult === undefined) {
+                    libraryOptions ??= prepareJaroWinklerOptions(libraryKeys);
+
+                    // An empty library contributes no candidate, but local names can still provide a suggestion.
+                    libraryResult =
+                        libraryOptions.length === 0
+                            ? [0, ""]
+                            : calculateJaroWinklersWithPreparedOptions(literal, libraryOptions);
+
+                    libraryResultByLiteral.set(normalizedLiteral, libraryResult);
+                }
+
+                suggestion = findJaroWinklerSuggestionWithBaseline(
+                    literal,
+                    scopeItemByKey.keys(),
+                    normalizedLocalIdentifierByValue,
+                    libraryResult,
+                    JaroWinklerSuggestionThreshold,
+                    scoreCache,
+                );
+
+                suggestionsByLiteral.set(literal, suggestion);
+            }
 
             unknownIdentifiers.push({
                 identifier,
                 literal,
-                suggestion: jaroWinklerScore > JaroWinklerSuggestionThreshold ? suggestion : undefined,
+                suggestion,
             });
         }
     }
