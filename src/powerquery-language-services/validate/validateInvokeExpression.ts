@@ -41,15 +41,17 @@ export async function validateInvokeExpression(
         return [];
     }
 
-    const inspectionTasks: Promise<Inspection.TriedInvokeExpression>[] = [];
+    const inspections: Inspection.TriedInvokeExpression[] = [];
 
     for (const nodeId of invokeExpressionIds) {
         validationSettings.cancellationToken?.throwIfCancelled();
 
-        inspectionTasks.push(Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
+        // Type inspection mutates a shared cache and uses the current evaluation path to break recursive cycles.
+        // Running every invocation at once lets unfinished computations race, so both diagnostics and cached types
+        // depend on scheduling. Source-order evaluation lets each invocation reuse completed work deterministically.
+        // eslint-disable-next-line no-await-in-loop
+        inspections.push(await Inspection.tryInvokeExpression(updatedSettings, nodeIdMapCollection, nodeId, typeCache));
     }
-
-    const inspections: ReadonlyArray<Inspection.TriedInvokeExpression> = await Promise.all(inspectionTasks);
 
     const diagnosticTasks: Promise<ReadonlyArray<Diagnostic>>[] = [];
 

@@ -81,7 +81,7 @@ export class InspectionInstance implements Inspected {
 
             const current: Ast.TNode = entry;
             const idsByTiers: number[][] = [];
-            let currentTier: number[] = (childIdsById.get(current.id) ?? []).slice();
+            let currentTier: ReadonlyArray<number> = childIdsById.get(current.id) ?? [];
 
             while (currentTier.length) {
                 const toBePushed: number[] = currentTier.filter(
@@ -89,13 +89,14 @@ export class InspectionInstance implements Inspected {
                 );
 
                 toBePushed.length && idsByTiers.push(toBePushed);
-                currentTier = currentTier.slice();
-                let nextTier: number[] = [];
+                const nextTier: number[] = [];
 
-                while (currentTier.length) {
-                    const oneNode: number = currentTier.shift() ?? -1;
-                    const childrenOfTheNode: number[] = (childIdsById.get(oneNode) ?? []).slice();
-                    nextTier = nextTier.concat(childrenOfTheNode);
+                for (let index: number = 0; index < currentTier.length; index += 1) {
+                    const childrenOfTheNode: ReadonlyArray<number> = childIdsById.get(currentTier[index]) ?? [];
+
+                    for (const childId of childrenOfTheNode) {
+                        nextTier.push(childId);
+                    }
                 }
 
                 currentTier = nextTier;
