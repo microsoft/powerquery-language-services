@@ -123,5 +123,5 @@ export async function assertScopeType(params: {
     const scopeTypeByKey: Inspection.ScopeTypeByKey = triedScopeType.value;
 
     // Eagerly resolve all types for test assertions
-    return await scopeTypeByKey.resolveAll();
+    return await Inspection.ScopeUtils.resolveAll(scopeTypeByKey);
 }

@@ -14,7 +14,7 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
-import { ScopeTypeByKey, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
+import { ScopeUtils, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
@@ -131,7 +131,7 @@ export class InspectionInstance implements Inspected {
                     if (oneIdentifierNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
                         return oneIdentifierNode.id === valueCreator.id;
                     } else if (oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Value) {
-                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
+                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.scopes.get(
                             oneIdentifierNode.id,
                         );
 
@@ -215,7 +215,7 @@ export async function inspect(
             ),
         );
 
-        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeTypeByKey.empty()));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeUtils.emptyScopeTypeByKey()));
 
         triedExpectedType = PQP.ResultUtils.ok(undefined);
     }

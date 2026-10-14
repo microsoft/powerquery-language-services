@@ -146,7 +146,7 @@ function findUnknownIdentifiers(
     const scoreCache: JaroWinklerScoreCache = new JaroWinklerScoreCache();
 
     const suggestionByScopeMap: WeakMap<
-        ReadonlyMap<string, Inspection.TScopeItem>,
+        Inspection.ScopeMap<Inspection.TScopeItem>,
         Map<string, string | undefined>
     > = new WeakMap();
 
@@ -160,14 +160,14 @@ function findUnknownIdentifiers(
         const literal: string = identifierWithNodeScope.literal;
 
         if (
-            !nodeScope.scopeItemByKey.has(literal) &&
+            !Inspection.ScopeBindingsUtils.scopeMapHas(nodeScope.scopeItemByKey, literal) &&
             !LibraryUtils.hasDefinition(validationSettings.library, literal) &&
             !validationSettings.library.externalTypeResolver({
                 kind: ExternalTypeRequestKind.Value,
                 identifierLiteral: literal,
             })
         ) {
-            const scopeItemByKey: ReadonlyMap<string, Inspection.TScopeItem> = nodeScope.scopeItemByKey;
+            const scopeItemByKey: Inspection.ScopeMap<Inspection.TScopeItem> = nodeScope.scopeItemByKey;
 
             let suggestionsByLiteral: Map<string, string | undefined> | undefined =
                 suggestionByScopeMap.get(scopeItemByKey);
@@ -197,7 +197,7 @@ function findUnknownIdentifiers(
 
                 suggestion = findJaroWinklerSuggestionWithBaseline(
                     literal,
-                    scopeItemByKey.keys(),
+                    Inspection.ScopeBindingsUtils.scopeMapKeys(scopeItemByKey),
                     normalizedLocalIdentifierByValue,
                     libraryResult,
                     JaroWinklerSuggestionThreshold,

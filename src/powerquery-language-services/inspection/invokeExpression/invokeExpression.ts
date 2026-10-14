@@ -13,7 +13,7 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, TScopeItem } from "../scope";
+import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, ScopeUtils, TScopeItem } from "../scope";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
@@ -179,7 +179,7 @@ async function getIsNameInLocalScope(
             ),
         );
 
-        const nameScopeItem: TScopeItem | undefined = scope.scopeItemByKey.get(name);
+        const nameScopeItem: TScopeItem | undefined = ScopeUtils.findScopeItemByLiteral(scope, name);
 
         trace.exit();
 

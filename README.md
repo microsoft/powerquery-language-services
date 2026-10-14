@@ -26,6 +26,37 @@ Test
 npm test
 ```
 
+## Scope cache ownership
+
+`Inspection.TypeCacheUtils.emptyCache()` creates document-local type and scope caches.
+`TypeCache.scopeById` owns a `ScopeById` state record, including completed scope-inspection metadata;
+there is no module-level completion cache. Short-lived inspection state borrows this same instance,
+so completed work is reused across requests within the document.
+
+Standalone scope-inspection callers use `Inspection.ScopeUtils.createScopeById()`.
+The `ScopeById` interface exposes its `scopes` map and `inspectedNodes` weak set directly.
+Use `ScopeUtils.setScopeById(state, nodeId, scope)`, `deleteScopeById(state, nodeId)`, and
+`clearScopeById(state)` to mutate scope entries while maintaining completion metadata.
+Adding scopes or republishing the same scope preserves completion metadata; successful deletion
+or replacement invalidates it. Clearing resets both entries and completion metadata.
+
+Reuse a `TypeCache` only for the same immutable parsed document and inspection settings.
+Create a fresh cache when either changes, or clear both `scopeById` and `typeById` before reuse.
+Analysis disposal clears both caches. Existing `NodeScope.scopeItemByKey` values remain read-only
+shared views; callers must not mutate the scopes or their bindings.
+`ScopeMap` is a union of native read-only maps and plain binding/merged state records.
+Use the `Inspection.ScopeBindingsUtils.scopeMapGet`, `scopeMapHas`,
+`scopeMapKeys`, and `scopeMapEntries` functions with that state, rather than instance methods.
+Merging checks only for empty layers rather than computing the size of the combined scope.
+Recursive binding descriptors are derived lazily from ordinary descriptors and cached on binding state.
+
+Scope contracts live in `scope.ts` and `scopeBindings.ts`; their factory and helper functions live
+in `scopeUtils.ts` and `scopeBindingsUtils.ts`. `ScopeTypeByKey` is a state record created with
+`Inspection.ScopeUtils.createScopeTypeByKey(scope, resolver)` or
+`Inspection.ScopeUtils.emptyScopeTypeByKey()` for an empty scope. It exposes `nodeScope`, `resolver`,
+and its document-local `resolved` map. `ScopeUtils.resolveType(state, key)` and
+`ScopeUtils.resolveAll(state)` populate that map lazily, leaving failed resolutions retryable.
+
 ## Benchmarking
 
 For agent-guided runs and comparisons, use the `benchmark-language-services` skill in
