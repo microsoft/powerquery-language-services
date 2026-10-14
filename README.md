@@ -34,8 +34,16 @@ For agent-guided runs and comparisons, use the `benchmark-language-services` ski
 Run a JSON payload against local Power Query files:
 
 ```powershell
-npm run --silent benchmark -- .\benchmark-input.json > .\benchmark-results.json
+npm run --silent benchmark -- .\benchmark-input.json
 ```
+
+Each invocation also saves its JSON report to
+`benchmark-results\<UTC-timestamp>-<unique-suffix>\report.json` under the working directory.
+This directory is gitignored, and each run gets a new folder so previous reports are not overwritten.
+The folder path is printed to stderr; stdout remains the JSON report and can still be redirected.
+`errors.log` records operation failures or fatal CLI errors and is empty on success.
+Fatal errors before a report is produced leave no `report.json`. Log writes occur outside measured
+intervals; failures to create or write logs are reported on stderr and cause a nonzero exit.
 
 Example payload:
 

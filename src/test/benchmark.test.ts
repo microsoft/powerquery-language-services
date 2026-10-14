@@ -3,7 +3,7 @@
 
 import "mocha";
 import { join, resolve } from "node:path";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { Mock, mock } from "node:test";
 import { spawnSync, SpawnSyncReturns } from "node:child_process";
 import { createRequire } from "node:module";
@@ -363,24 +363,35 @@ describe("Benchmark", () => {
             );
         });
 
-        it("accepts a payload file or stdin and exits nonzero on command errors", async () => {
+        it("saves distinct reports and error logs for payload files, stdin, and failures", async () => {
             const config: unknown = { lexParse: true, library: "none", files: [{ path: "query.pq" }] };
             await writeFile(join(directory, "payload.json"), `\uFEFF${JSON.stringify(config)}`, "utf8");
             await writeFile(join(directory, "query.pq"), "\uFEFFlet apple = 1 in apple", "utf8");
             const cli: string = resolve(__dirname, "..", "benchmark", "cli.ts");
             const args: string[] = [createRequire(__filename).resolve("ts-node/dist/bin"), cli];
+            const workingDirectory: string = join(directory, "working");
+            await mkdir(workingDirectory);
 
             const fromFile: SpawnSyncReturns<string> = spawnSync(
                 process.execPath,
                 [...args, join(directory, "payload.json")],
                 {
                     encoding: "utf8",
+                    cwd: workingDirectory,
                     timeout: 30000,
                 },
             );
 
             expect(fromFile.status, fromFile.stderr).to.equal(0);
             expect(JSON.parse(fromFile.stdout).results[0].measurement.measuredRuns).to.equal(10);
+
+            const fileLogsRoot: string = join(workingDirectory, "benchmark-results");
+            const fileRuns: string[] = await readdir(fileLogsRoot);
+            expect(fileRuns).to.have.length(1);
+            const fileLogs: string = join(fileLogsRoot, fileRuns[0]);
+            expect(fromFile.stderr).to.include(`Benchmark logs: ${fileLogs}`);
+            expect(await readFile(join(fileLogs, "report.json"), "utf8")).to.equal(fromFile.stdout);
+            expect(await readFile(join(fileLogs, "errors.log"), "utf8")).to.equal("");
 
             const fromStdin: SpawnSyncReturns<string> = spawnSync(process.execPath, [...args, "-"], {
                 input: `\uFEFF${JSON.stringify(config)}`,
@@ -391,6 +402,13 @@ describe("Benchmark", () => {
 
             expect(fromStdin.status, fromStdin.stderr).to.equal(0);
             expect(JSON.parse(fromStdin.stdout).results[0].status).to.equal("ok");
+
+            const logsRoot: string = join(directory, "benchmark-results");
+            const successfulRuns: string[] = await readdir(logsRoot);
+            expect(successfulRuns).to.have.length(1);
+            const successfulLogs: string = join(logsRoot, successfulRuns[0]);
+            expect(await readFile(join(successfulLogs, "report.json"), "utf8")).to.equal(fromStdin.stdout);
+
             await writeFile(join(directory, "query.pq"), '"unterminated', "utf8");
 
             const failure: SpawnSyncReturns<string> = spawnSync(process.execPath, [...args, "-"], {
@@ -402,7 +420,71 @@ describe("Benchmark", () => {
 
             expect(failure.status, failure.stderr).to.equal(1);
             expect(JSON.parse(failure.stdout).results[0].status).to.equal("error");
+
+            const runsAfterFailure: string[] = await readdir(logsRoot);
+            expect(runsAfterFailure).to.have.length(2);
+
+            const failedLogs: string = join(
+                logsRoot,
+                runsAfterFailure.filter((name: string) => !successfulRuns.includes(name))[0],
+            );
+
+            expect(await readFile(join(failedLogs, "report.json"), "utf8")).to.equal(failure.stdout);
+
+            expect(await readFile(join(failedLogs, "errors.log"), "utf8")).to.include(
+                JSON.parse(failure.stdout).results[0].error,
+            );
+
+            expect(await readFile(join(successfulLogs, "report.json"), "utf8")).to.equal(fromStdin.stdout);
+
+            const invalid: SpawnSyncReturns<string> = spawnSync(process.execPath, [...args, "-"], {
+                input: "{",
+                encoding: "utf8",
+                cwd: directory,
+                timeout: 30000,
+            });
+
+            expect(invalid.status, invalid.stderr).to.equal(1);
+            expect(invalid.stdout).to.equal("");
+            const runsAfterInvalid: string[] = await readdir(logsRoot);
+            expect(runsAfterInvalid).to.have.length(3);
+
+            const invalidLogs: string = join(
+                logsRoot,
+                runsAfterInvalid.filter((name: string) => !runsAfterFailure.includes(name))[0],
+            );
+
+            const errorLog: string = await readFile(join(invalidLogs, "errors.log"), "utf8");
+            expect(errorLog).to.include("Benchmark failed:");
+            expect(invalid.stderr).to.include(errorLog);
+            expect(await readdir(invalidLogs)).to.deep.equal(["errors.log"]);
         }).timeout(90000);
+
+        it("reports a logging setup failure without overwriting an existing file", async () => {
+            const logsRoot: string = join(directory, "benchmark-results");
+            await writeFile(logsRoot, "existing file", "utf8");
+
+            const failure: SpawnSyncReturns<string> = spawnSync(
+                process.execPath,
+                [
+                    createRequire(__filename).resolve("ts-node/dist/bin"),
+                    resolve(__dirname, "..", "benchmark", "cli.ts"),
+                    "-",
+                ],
+                {
+                    input: JSON.stringify({ lexParse: true, files: [{ path: "query.pq" }] }),
+                    encoding: "utf8",
+                    cwd: directory,
+                    timeout: 30000,
+                },
+            );
+
+            expect(failure.status, failure.stderr).to.equal(1);
+            expect(failure.stdout).to.equal("");
+            expect(failure.stderr).to.include("Benchmark failed:");
+            expect(failure.stderr).to.include("benchmark-results");
+            expect(await readFile(logsRoot, "utf8")).to.equal("existing file");
+        }).timeout(45000);
     });
 });
 
