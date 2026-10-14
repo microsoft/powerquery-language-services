@@ -1,14 +1,32 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { dirname, resolve } from "node:path";
+import { appendFile, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { dirname, join, resolve } from "node:path";
 import process from "node:process";
-import { readFile } from "node:fs/promises";
 
 import { BenchmarkConfig, parseConfig } from "./config";
 import { BenchmarkReport, CommandReport, formatError, runBenchmarks } from "./benchmark";
 
 async function main(): Promise<void> {
+    const logsRoot: string = resolve("benchmark-results");
+    await mkdir(logsRoot, { recursive: true });
+
+    const timestamp: string = new Date().toISOString().replace(/[:.]/g, "-");
+    const logsDirectory: string = await mkdtemp(join(logsRoot, `${timestamp}-`));
+    process.stderr.write(`Benchmark logs: ${logsDirectory}\n`);
+
+    try {
+        await run(logsDirectory);
+    } catch (error: unknown) {
+        const message: string = `Benchmark failed: ${formatError(error)}\n`;
+        process.stderr.write(message);
+        process.exitCode = 1;
+        await appendFile(join(logsDirectory, "errors.log"), message, "utf8");
+    }
+}
+
+async function run(logsDirectory: string): Promise<void> {
     const args: string[] = process.argv.slice(2);
 
     if (args.length !== 1) {
@@ -36,11 +54,25 @@ async function main(): Promise<void> {
         input === "-" ? process.cwd() : dirname(resolve(input)),
     );
 
-    process.stdout.write(`${JSON.stringify(report, undefined, 2)}\n`);
+    const output: string = `${JSON.stringify(report, undefined, 2)}\n`;
 
-    if (report.results.some((result: CommandReport) => result.status === "error")) {
+    const errors: ReadonlyArray<CommandReport> = report.results.filter(
+        (result: CommandReport) => result.status === "error",
+    );
+
+    process.stdout.write(output);
+
+    if (errors.length !== 0) {
         process.exitCode = 1;
     }
+
+    await writeFile(join(logsDirectory, "report.json"), output, "utf8");
+
+    await writeFile(
+        join(logsDirectory, "errors.log"),
+        errors.map((result: CommandReport) => `${result.path} (${result.operation.kind}): ${result.error}\n`).join(""),
+        "utf8",
+    );
 }
 
 main().catch((error: unknown) => {

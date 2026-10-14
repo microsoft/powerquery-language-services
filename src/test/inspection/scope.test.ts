@@ -2183,7 +2183,7 @@ describe(`Inspection - Scope - Identifier`, () => {
             }));
     });
 
-    describe("Cache and scaling", () => {
+    describe("Cache", () => {
         async function parseText(text: string): Promise<NodeIdMap.Collection> {
             const triedLexParse: Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
                 { ...PQP.DefaultSettings, traceManager: NoOpTraceManagerInstance },

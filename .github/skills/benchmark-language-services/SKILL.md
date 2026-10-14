@@ -59,10 +59,17 @@ This smoke payload works from the repository root when supplied on stdin:
 }
 ```
 
-For real workloads, put the JSON payload and results in a user-selected directory or the session's
+Every invocation automatically saves `report.json` and `errors.log` in a unique
+`benchmark-results\<UTC-timestamp>-<unique-suffix>` folder under the working directory.
+The directory is gitignored and its path is printed to stderr. Stdout remains the JSON report,
+so redirecting it to an additional user-selected or session artifact file is still supported.
+Fatal CLI errors are saved in `errors.log`; if no report was produced, there is no `report.json`.
+Completed reports remain available on stdout if a log write fails, but the CLI still exits nonzero.
+
+For real workloads, put the JSON payload in a user-selected directory or the session's
 artifact directory, not among tracked source files. Use absolute source paths when the payload
 is stored outside the repository: relative paths resolve from the payload file's directory.
-Use distinct output filenames so existing measurements are not overwritten.
+Use distinct filenames for any additional redirected results so existing measurements are not overwritten.
 
 ```powershell
 npm run --silent benchmark -- <payload-path.json> > <results-path.json>
