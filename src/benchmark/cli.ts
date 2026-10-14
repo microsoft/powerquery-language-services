@@ -60,6 +60,12 @@ async function run(logsDirectory: string): Promise<void> {
         (result: CommandReport) => result.status === "error",
     );
 
+    process.stdout.write(output);
+
+    if (errors.length !== 0) {
+        process.exitCode = 1;
+    }
+
     await writeFile(join(logsDirectory, "report.json"), output, "utf8");
 
     await writeFile(
@@ -67,12 +73,6 @@ async function run(logsDirectory: string): Promise<void> {
         errors.map((result: CommandReport) => `${result.path} (${result.operation.kind}): ${result.error}\n`).join(""),
         "utf8",
     );
-
-    process.stdout.write(output);
-
-    if (errors.length !== 0) {
-        process.exitCode = 1;
-    }
 }
 
 main().catch((error: unknown) => {

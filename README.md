@@ -44,6 +44,7 @@ The folder path is printed to stderr; stdout remains the JSON report and can sti
 `errors.log` records operation failures or fatal CLI errors and is empty on success.
 Fatal errors before a report is produced leave no `report.json`. Log writes occur outside measured
 intervals; failures to create or write logs are reported on stderr and cause a nonzero exit.
+Completed reports are emitted to stdout before log writes, so persistence failures do not hide measurements.
 
 Example payload:
 

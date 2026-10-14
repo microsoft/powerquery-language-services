@@ -460,6 +460,56 @@ describe("Benchmark", () => {
             expect(await readdir(invalidLogs)).to.deep.equal(["errors.log"]);
         }).timeout(90000);
 
+        for (const filename of ["report.json", "errors.log"]) {
+            it(`preserves completed stdout when writing ${filename} fails`, async () => {
+                const cli: string = resolve(__dirname, "..", "benchmark", "cli.ts");
+                const register: string = createRequire(__filename).resolve("ts-node/register");
+                const message: string = `Injected write failure for ${filename}`;
+
+                const script: string = `
+                    const fs = require("node:fs/promises");
+                    const original = fs.writeFile;
+                    require("node:test").mock.method(fs, "writeFile", async (file, ...args) => {
+                        if (require("node:path").basename(file) === ${JSON.stringify(filename)}) {
+                            throw new Error(${JSON.stringify(message)});
+                        }
+                        return original(file, ...args);
+                    });
+                    process.argv = [process.execPath, ${JSON.stringify(cli)}, "-"];
+                    require(${JSON.stringify(cli)});
+                `;
+
+                const failure: SpawnSyncReturns<string> = spawnSync(
+                    process.execPath,
+                    ["--require", register, "--eval", script],
+                    {
+                        input: JSON.stringify({ lexParse: true, library: "none", files: [{ path: "query.pq" }] }),
+                        encoding: "utf8",
+                        cwd: directory,
+                        env: { ...process.env, TS_NODE_PROJECT: resolve(__dirname, "..", "..", "tsconfig.json") },
+                        timeout: 30000,
+                    },
+                );
+
+                expect(failure.status, failure.stderr).to.equal(1);
+                expect(failure.stderr).to.include(`Benchmark failed: ${message}`);
+                expect(failure.stdout).not.to.equal("");
+                const report: BenchmarkReport = JSON.parse(failure.stdout);
+                expect(report.results[0].status).to.equal("ok");
+                expect(report.results[0].measurement?.samples).to.have.length(10);
+
+                const logsRoot: string = join(directory, "benchmark-results");
+                const runs: string[] = await readdir(logsRoot);
+                expect(runs).to.have.length(1);
+                const logsDirectory: string = join(logsRoot, runs[0]);
+                expect(await readFile(join(logsDirectory, "errors.log"), "utf8")).to.include(message);
+
+                if (filename === "errors.log") {
+                    expect(await readFile(join(logsDirectory, "report.json"), "utf8")).to.equal(failure.stdout);
+                }
+            }).timeout(45000);
+        }
+
         it("reports a logging setup failure without overwriting an existing file", async () => {
             const logsRoot: string = join(directory, "benchmark-results");
             await writeFile(logsRoot, "existing file", "utf8");
