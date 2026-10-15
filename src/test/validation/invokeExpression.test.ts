@@ -2,13 +2,24 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert } from "@microsoft/powerquery-parser";
+import { Assert, CommonError, Result, ResultUtils, Task } from "@microsoft/powerquery-parser";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { expect } from "chai";
 
-import { Diagnostic, DiagnosticErrorCode, Position, ValidationSettings } from "../../powerquery-language-services";
+import {
+    AnalysisSettings,
+    Diagnostic,
+    DiagnosticErrorCode,
+    Inspection,
+    Position,
+    validate,
+    ValidateOk,
+    ValidationSettings,
+} from "../../powerquery-language-services";
 import { TestConstants, TestUtils } from "..";
 import { assertLessWhenSuppressed } from "../testUtils/validationTestUtils";
 import { SimpleLibraryValidateAllSettings } from "../testConstants";
+import { validateInvokeExpression } from "../../powerquery-language-services/validate/validateInvokeExpression";
 
 interface AbridgedInvocationDiagnostic {
     readonly message: string;
@@ -94,6 +105,110 @@ function expectInvocationDiagnosticPositions(
 }
 
 describe("Validation - InvokeExpression", () => {
+    describe("function-type arguments", () => {
+        for (const annotation of ["T", "nullable T", "(type text)"]) {
+            const text: string = `let T = type text, f = (x) => x in f(type function (x as ${annotation}) as any)`;
+
+            it(`validates ${annotation} through full validation`, async () => {
+                expect(
+                    await TestUtils.assertValidateDiagnostics({
+                        text,
+                        analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
+                        validationSettings: SimpleLibraryValidateAllSettings,
+                    }),
+                ).to.deep.equal([]);
+            });
+
+            it(`validates ${annotation} through isolated invocation validation`, async () => {
+                const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+                    settings: TestConstants.SimpleInspectionSettings,
+                    text,
+                });
+
+                expect(
+                    await validateInvokeExpression(
+                        SimpleLibraryValidateAllSettings,
+                        parsed.nodeIdMapCollection,
+                        Inspection.TypeCacheUtils.emptyCache(),
+                    ),
+                ).to.deep.equal([]);
+            });
+        }
+    });
+
+    describe("inspection errors", () => {
+        const originalError: CommonError.CommonError = new CommonError.CommonError(
+            new CommonError.InvariantError("type resolver failed"),
+        );
+
+        const validationSettings: ValidationSettings = {
+            ...SimpleLibraryValidateAllSettings,
+            library: {
+                ...TestConstants.SimpleLibrary,
+                externalTypeResolver: () => {
+                    throw originalError;
+                },
+            },
+        };
+
+        const text: string = "let f = (x) => x in f(Broken)";
+
+        it("preserves argument inspection errors through invocation inspection", async () => {
+            const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+                settings: validationSettings,
+                text,
+            });
+
+            const invokeExpressionId: number = Assert.asDefined(
+                parsed.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression)?.values().next().value,
+            );
+
+            const result: Inspection.TriedInvokeExpression = await Inspection.tryInvokeExpression(
+                validationSettings,
+                parsed.nodeIdMapCollection,
+                invokeExpressionId,
+            );
+
+            expect(ResultUtils.assertError(result)).to.equal(originalError);
+        });
+
+        it("throws the contained error through isolated invocation validation", async () => {
+            const parsed: Task.ParseTaskOk | Task.ParseTaskParseError = await TestUtils.assertParse({
+                settings: validationSettings,
+                text,
+            });
+
+            let caught: unknown;
+
+            try {
+                await validateInvokeExpression(
+                    validationSettings,
+                    parsed.nodeIdMapCollection,
+                    Inspection.TypeCacheUtils.emptyCache(),
+                );
+            } catch (error: unknown) {
+                caught = error;
+            }
+
+            expect(caught).to.equal(originalError);
+        });
+
+        it("returns the contained error through full validation", async () => {
+            const analysisSettings: AnalysisSettings = {
+                ...TestConstants.SimpleLibraryAnalysisSettings,
+                inspectionSettings: validationSettings,
+            };
+
+            const result: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
+                TestUtils.mockDocument(text),
+                analysisSettings,
+                validationSettings,
+            );
+
+            expect(ResultUtils.assertError(result)).to.equal(originalError);
+        });
+    });
+
     describe(`checkInvokeExpressions = false`, () => {
         it(`argument count suppressed`, async () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;

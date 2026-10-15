@@ -65,7 +65,7 @@ export async function validateInvokeExpression(
         } else {
             trace.exit({ [TraceConstant.IsThrowing]: true });
 
-            throw triedInvokeExpression;
+            throw triedInvokeExpression.error;
         }
     }
 

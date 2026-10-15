@@ -905,6 +905,59 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionType}`, () => {
+            for (const [annotation, kind, isNullable] of [
+                [`T`, Type.TypeKind.Text, false],
+                [`nullable T`, Type.TypeKind.Text, true],
+                [`(type text)`, Type.TypeKind.Text, false],
+                [`(if true then T else type text)`, Type.TypeKind.Text, false],
+                [`[Value = text]`, Type.TypeKind.Record, false],
+                [`{text}`, Type.TypeKind.List, false],
+                [`table [Value = text]`, Type.TypeKind.Table, false],
+                [`function () as text`, Type.TypeKind.Function, false],
+            ] as const) {
+                it(`resolves parameter type ${annotation}`, async () =>
+                    await assertEqualRootType({
+                        text: `let T = type text in type function (x as ${annotation}, optional y as ${annotation}) as any`,
+                        expected: TypeUtils.functionType(
+                            false,
+                            [
+                                { nameLiteral: "x", isOptional: false, isNullable, type: kind },
+                                { nameLiteral: "y", isOptional: true, isNullable, type: kind },
+                            ],
+                            Type.AnyInstance,
+                        ),
+                    }));
+            }
+
+            for (const [aliasType, kind] of [
+                [`[Value = text]`, Type.TypeKind.Record],
+                [`{text}`, Type.TypeKind.List],
+                [`table [Value = text]`, Type.TypeKind.Table],
+                [`function () as text`, Type.TypeKind.Function],
+            ] as const) {
+                it(`resolves nullable named ${aliasType} parameters`, async () =>
+                    await assertEqualRootType({
+                        text: `let T = type ${aliasType} in type function (x as nullable T) as any`,
+                        expected: TypeUtils.functionType(
+                            false,
+                            [{ nameLiteral: "x", isOptional: false, isNullable: true, type: kind }],
+                            Type.AnyInstance,
+                        ),
+                    }));
+            }
+
+            for (const text of ["type function (x", "type function (x as"]) {
+                it(`preserves incomplete parameters in ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.functionType(
+                            false,
+                            [{ nameLiteral: "x", isOptional: false, isNullable: true, type: undefined }],
+                            Type.UnknownInstance,
+                        ),
+                    }));
+            }
+
             it(`type function`, async () =>
                 await assertEqualRootType({
                     text: `type function`,

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
@@ -62,17 +61,21 @@ export async function inspectTypeFunctionType(
                 return Type.UnknownInstance;
             }
 
-            const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
-                state.nodeIdMapCollection,
-                arrayWrapper,
-            )
-                .map((parameter: TXorNode) =>
-                    TypeUtils.inspectParameter(
-                        state.nodeIdMapCollection,
-                        XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
-                    ),
-                )
-                .filter(PQP.TypeScriptUtils.isDefined);
+            const parameterTypes: Type.FunctionParameter[] = [];
+
+            for (const parameter of NodeIdMapIterator.iterArrayWrapper(state.nodeIdMapCollection, arrayWrapper)) {
+                // Parameters share cycle-detection state, so inspect them sequentially.
+                // eslint-disable-next-line no-await-in-loop
+                const parameterType: Type.FunctionParameter | undefined = await inspectFunctionTypeParameter(
+                    state,
+                    parameter,
+                    trace.id,
+                );
+
+                if (parameterType !== undefined) {
+                    parameterTypes.push(parameterType);
+                }
+            }
 
             const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
                 state,
@@ -103,4 +106,77 @@ export async function inspectTypeFunctionType(
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+async function inspectFunctionTypeParameter(
+    state: InspectTypeState,
+    xorNode: TXorNode,
+    correlationId: number,
+): Promise<Type.FunctionParameter | undefined> {
+    const parameter: XorNode<Ast.TParameter> = XorNodeUtils.assertAsNodeKind<Ast.TParameter>(
+        xorNode,
+        Ast.NodeKind.Parameter,
+    );
+
+    if (
+        XorNodeUtils.isContext(parameter) ||
+        parameter.node.parameterType === undefined ||
+        parameter.node.parameterType.kind === Ast.NodeKind.AsNullablePrimitiveType
+    ) {
+        return TypeUtils.inspectParameter(state.nodeIdMapCollection, parameter);
+    }
+
+    const parameterType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
+        state,
+        parameter,
+        2,
+        correlationId,
+    );
+
+    let type: Type.TypeKind = parameterType.kind;
+    let isNullable: boolean = parameterType.isNullable;
+
+    // Structured type expressions describe values, not parameters of kind Type.
+    switch (parameterType.extendedKind) {
+        case Type.ExtendedTypeKind.FunctionType:
+            type = Type.TypeKind.Function;
+            break;
+
+        case Type.ExtendedTypeKind.DefinedListType:
+        case Type.ExtendedTypeKind.ListType:
+            type = Type.TypeKind.List;
+            break;
+
+        case Type.ExtendedTypeKind.RecordType:
+            type = Type.TypeKind.Record;
+            break;
+
+        case Type.ExtendedTypeKind.TableType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            type = Type.TypeKind.Table;
+            break;
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            type = parameterType.primitiveType.kind;
+            isNullable = isNullable || parameterType.primitiveType.isNullable;
+            break;
+
+        case undefined:
+        case Type.ExtendedTypeKind.AnyUnion:
+        case Type.ExtendedTypeKind.DefinedFunction:
+        case Type.ExtendedTypeKind.DefinedList:
+        case Type.ExtendedTypeKind.DefinedRecord:
+        case Type.ExtendedTypeKind.DefinedTable:
+        case Type.ExtendedTypeKind.LogicalLiteral:
+        case Type.ExtendedTypeKind.NumberLiteral:
+        case Type.ExtendedTypeKind.TextLiteral:
+            break;
+    }
+
+    return {
+        nameLiteral: parameter.node.name.literal,
+        isOptional: parameter.node.optionalConstant !== undefined,
+        isNullable,
+        type,
+    };
 }

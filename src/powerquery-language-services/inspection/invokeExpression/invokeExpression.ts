@@ -215,7 +215,7 @@ async function getArgumentTypes(
         const triedArgType: TriedType = await tryType(settings, nodeIdMapCollection, xorNode.node.id, typeCache);
 
         if (ResultUtils.isError(triedArgType)) {
-            throw triedArgType;
+            throw triedArgType.error;
         }
 
         const argType: Type.TPowerQueryType = triedArgType.value;
