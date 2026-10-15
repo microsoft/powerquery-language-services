@@ -40,11 +40,11 @@ DocumentAnalysis <-----------------------+                           |
 MemoizedAnalysis                                                     |
   |                                                                  |
 AnalysisBase                                                         |
-  +-- parser lex/parse task                                            |
-  +-- Inspection: cursor context, scopes, types, calls, autocomplete    |
-  +-- language / library / local-document providers                    |
+  +-- parser lex/parse task                                          |
+  +-- Inspection: cursor context, scopes, types, calls, autocomplete |
+  +-- language / library / local-document providers                  |
                                                                      |
-                                              powerquery-formatter <--+
+                                             powerquery-formatter <--+
 
 Shared contracts: parser Result/types/tracing + LSP value objects
 ```
