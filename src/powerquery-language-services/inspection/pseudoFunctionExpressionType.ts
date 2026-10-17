@@ -45,12 +45,12 @@ export function pseudoFunctionExpressionType(
             break;
         }
 
-        const examinable: Type.FunctionParameter | undefined = TypeUtils.inspectParameter(
+        const examinable: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
             nodeIdMapCollection,
             XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
         );
 
-        if (examinable !== undefined) {
+        if (examinable.kind === TypeUtils.InspectedParameterKind.Resolved) {
             examinedParameters.push({
                 id: parameter.node.id,
                 isNullable: examinable.isNullable,

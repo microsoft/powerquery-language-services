@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
@@ -72,7 +71,16 @@ export async function inspectTypeFunctionType(
                         XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
                     ),
                 )
-                .filter(PQP.TypeScriptUtils.isDefined);
+                .filter(
+                    (parameter: TypeUtils.InspectedParameter): parameter is TypeUtils.ResolvedParameter =>
+                        parameter.kind === TypeUtils.InspectedParameterKind.Resolved,
+                )
+                .map((parameter: TypeUtils.ResolvedParameter) => ({
+                    nameLiteral: parameter.nameLiteral,
+                    isNullable: parameter.isNullable,
+                    isOptional: parameter.isOptional,
+                    type: parameter.type,
+                }));
 
             const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
                 state,
