@@ -308,6 +308,14 @@ Inspectors cover constants and literals, identifiers, lists, records, tables, fu
 field/item access, operators, conditionals, null coalescing, ranges, and error handling. They use
 parser `Type` and `TypeUtils` contracts rather than evaluating M expressions.
 
+Parameter annotations marked `RequiresResolution` by the parser are retained rather than omitted
+from signatures. Type inspection resolves these annotations through the same dispatcher, including
+lexical type-alias dereferencing for function types. Incomplete or unknown annotations retain their
+parameter position and optionality with an `Unknown` type. Function-expression parameter scopes
+carry deferred annotations so scope construction does not eagerly perform type inspection.
+Structured type aliases are reduced to their parameter kinds (`Record`, `Table`, `List`, or
+`Function`) rather than the `Type` kind of the type value itself.
+
 The type system distinguishes unknown/incomplete information (`Unknown`), unconstrained information
 (`Any`), incompatible expressions (`None`), and nodes to which typing does not apply
 (`NotApplicable`). Do not collapse these into a single missing-value case.
