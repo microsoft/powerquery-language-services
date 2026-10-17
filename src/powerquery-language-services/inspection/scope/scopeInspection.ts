@@ -584,6 +584,7 @@ function scopeItemFactoryForParameter(
         isOptional: parameter.isOptional,
         isNullable: parameter.isNullable,
         type,
+        annotation: parameter.annotation,
     };
 }
 

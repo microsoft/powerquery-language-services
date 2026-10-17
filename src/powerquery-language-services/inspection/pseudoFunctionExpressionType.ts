@@ -21,6 +21,7 @@ export interface PseduoFunctionExpressionType {
 export interface PseudoFunctionParameterType extends Omit<Type.FunctionParameter, "nameLiteral"> {
     readonly id: number;
     readonly name: Ast.Identifier;
+    readonly annotation?: XorNode<Ast.AsType | Ast.AsNullablePrimitiveType>;
 }
 
 export function pseudoFunctionExpressionType(
@@ -57,6 +58,15 @@ export function pseudoFunctionExpressionType(
                 isOptional: examinable.isOptional,
                 type: examinable.type,
                 name,
+            });
+        } else if (examinable.kind === TypeUtils.InspectedParameterKind.RequiresResolution) {
+            examinedParameters.push({
+                id: parameter.node.id,
+                isNullable: true,
+                isOptional: examinable.isOptional,
+                type: undefined,
+                name,
+                annotation: examinable.annotation,
             });
         }
     }
