@@ -3,7 +3,7 @@
 
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Constant, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import { TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { TXorNode, XorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { BindingScopeMap, MergedScopeMap } from "./scopeBindings";
 
@@ -94,6 +94,7 @@ export interface ParameterScopeItem extends IScopeItem {
     readonly isOptional: boolean;
     readonly isNullable: boolean;
     readonly type: Constant.PrimitiveTypeConstant | undefined;
+    readonly annotation?: XorNode<Ast.AsType | Ast.AsNullablePrimitiveType>;
 }
 
 export type RecordFieldScopeItem = IKeyValuePairScopeItem<Ast.GeneralizedIdentifier, ScopeItemKind.RecordField>;
