@@ -2,7 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    ICancellationToken,
+    Result,
+    ResultUtils,
+    StringUtils,
+} from "@microsoft/powerquery-parser";
+import { Ast, IdentifierUtils, Keyword, TextUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AstNodeById,
     ChildIdsById,
@@ -27,7 +35,6 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument";
 import { Trace, TraceConstant, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ActiveNodeUtils, TActiveLeafIdentifier, TActiveNode, TypeCache } from "../inspection";
 import type {
@@ -573,9 +580,25 @@ export class AnalysisBase implements Analysis {
                 );
             }
 
+            const identifierKind: IdentifierUtils.IdentifierKind = IdentifierUtils.getIdentifierKind(newName);
+
+            const isQuoted: boolean =
+                (identifierKind === IdentifierUtils.IdentifierKind.RegularWithQuotes ||
+                    identifierKind === IdentifierUtils.IdentifierKind.RegularWithRequiredQuotes) &&
+                newName.startsWith('#"') &&
+                StringUtils.findQuotes(newName, 1)?.indexEnd === newName.length;
+
+            const isReservedName: boolean =
+                newName === "null" || Keyword.KeywordKinds.some((keyword: Keyword.KeywordKind) => keyword === newName);
+
+            const replacementText: string =
+                (identifierKind === IdentifierUtils.IdentifierKind.Regular && !isReservedName) || isQuoted
+                    ? newName
+                    : `#"${TextUtils.escape(newName)}"`;
+
             const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
                 range: PositionUtils.rangeFromTokenRange(one.tokenRange),
-                newText: newName,
+                newText: replacementText,
             }));
 
             trace.exit();
