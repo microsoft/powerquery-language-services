@@ -6,13 +6,9 @@ import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquer
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert } from "@microsoft/powerquery-parser";
 
-import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
+import { allForAnyUnion, inspectParameterAnnotation, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
-import {
-    PseduoFunctionExpressionType,
-    pseudoFunctionExpressionType,
-    PseudoFunctionParameterType,
-} from "../../pseudoFunctionExpressionType";
+import { PseduoFunctionExpressionType, pseudoFunctionExpressionType } from "../../pseudoFunctionExpressionType";
 import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
@@ -83,16 +79,28 @@ export async function inspectTypeFunctionExpression(
                 returnType = expressionType;
             }
 
+            const parameters: Type.FunctionParameter[] = [];
+
+            for (const pseudoParameter of pseudoType.parameters) {
+                const annotationType: Type.TPrimitiveType | undefined =
+                    pseudoParameter.annotation === undefined
+                        ? undefined
+                        : // eslint-disable-next-line no-await-in-loop
+                          await inspectParameterAnnotation(state, pseudoParameter.annotation, trace.id);
+
+                parameters.push({
+                    nameLiteral: pseudoParameter.name.literal,
+                    isNullable: annotationType?.isNullable ?? pseudoParameter.isNullable,
+                    isOptional: pseudoParameter.isOptional,
+                    type: annotationType?.kind ?? pseudoParameter.type,
+                });
+            }
+
             result = {
                 kind: Type.TypeKind.Function,
                 extendedKind: Type.ExtendedTypeKind.DefinedFunction,
                 isNullable: false,
-                parameters: pseudoType.parameters.map((pseudoParameter: PseudoFunctionParameterType) => ({
-                    nameLiteral: pseudoParameter.name.literal,
-                    isNullable: pseudoParameter.isNullable,
-                    isOptional: pseudoParameter.isOptional,
-                    type: pseudoParameter.type,
-                })),
+                parameters,
                 returnType,
             };
 

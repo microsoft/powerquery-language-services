@@ -19,6 +19,7 @@ import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectTypeState";
 import { inspectXor } from "./common";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
+import { tryInspectTypeIntrinsicInvokeExpression } from "./inspectTypeIntrinsic";
 
 export async function inspectTypeInvokeExpression(
     state: InspectTypeState,
@@ -34,6 +35,18 @@ export async function inspectTypeInvokeExpression(
 
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.InvokeExpression>(xorNode, Ast.NodeKind.InvokeExpression);
+
+    const intrinsicType: Type.TPowerQueryType | undefined = await tryInspectTypeIntrinsicInvokeExpression(
+        state,
+        xorNode,
+        trace.id,
+    );
+
+    if (intrinsicType !== undefined) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(intrinsicType) });
+
+        return intrinsicType;
+    }
 
     const request: ExternalType.ExternalInvocationTypeRequest | undefined = await externalInvokeRequest(
         state,

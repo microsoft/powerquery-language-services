@@ -2,16 +2,15 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Assert, CommonError } from "@microsoft/powerquery-parser";
 import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Assert } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
-
-type TRecordOrTable = Type.TRecord | Type.TTable;
+import { MaxDefinedTableRows } from "./definedTableUtils";
 
 export async function inspectTypeTBinOpExpression(
     state: InspectTypeState,
@@ -99,11 +98,10 @@ export async function inspectTypeTBinOpExpression(
 
         if (resultTypeKind === undefined) {
             result = Type.NoneInstance;
-        } else if (
-            operatorKind === Constant.ArithmeticOperator.And &&
-            (resultTypeKind === Type.TypeKind.Record || resultTypeKind === Type.TypeKind.Table)
-        ) {
-            result = inspectRecordOrTableUnion(leftType as TRecordOrTable, rightType as TRecordOrTable);
+        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Record) {
+            result = inspectRecordUnion(leftType as Type.TRecord, rightType as Type.TRecord);
+        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Table) {
+            result = inspectTableUnion(state, leftType as Type.TTable, rightType as Type.TTable, trace.id);
         } else {
             result = TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
         }
@@ -114,47 +112,55 @@ export async function inspectTypeTBinOpExpression(
     return result;
 }
 
-function inspectRecordOrTableUnion(leftType: TRecordOrTable, rightType: TRecordOrTable): Type.TPowerQueryType {
-    if (leftType.kind !== rightType.kind) {
-        const details: object = {
-            leftTypeKind: leftType.kind,
-            rightTypeKind: rightType.kind,
-        };
-
-        throw new PQP.CommonError.InvariantError(`leftType.kind !== rightType.kind`, details);
+function inspectRecordUnion(leftType: Type.TRecord, rightType: Type.TRecord): Type.TRecord {
+    // '[foo=value] & [bar=value]'
+    if (TypeUtils.isDefinedRecord(leftType) && TypeUtils.isDefinedRecord(rightType)) {
+        return unionRecordFields([leftType, rightType]);
     }
-    // '[] & []' or '#table() & #table()'
-    else if (leftType.extendedKind === undefined && rightType.extendedKind === undefined) {
-        return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, leftType.kind);
-    }
-    // '[key=value] & []' or '#table(...) & #table()`
-    // '[] & [key=value]' or `#table() & #table(...)`
-    else if (
-        (leftType.extendedKind !== undefined && rightType.extendedKind === undefined) ||
-        (leftType.extendedKind === undefined && rightType.extendedKind !== undefined)
-    ) {
-        // The 'rightType as (...)' isn't needed, except TypeScript's checker isn't smart enough to know it.
-        const extendedKind: Type.DefinedRecord | Type.DefinedTable =
-            leftType.extendedKind !== undefined ? leftType : (rightType as Type.DefinedRecord | Type.DefinedTable);
 
+    // '[key=value] & []'
+    if (TypeUtils.isDefinedRecord(leftType)) {
         return {
-            ...extendedKind,
+            ...leftType,
             isOpen: true,
         };
     }
-    // '[foo=value] & [bar=value] or #table(...) & #table(...)'
-    else if (leftType?.extendedKind === rightType?.extendedKind) {
-        // The cast should be safe since the first if statement tests their the same kind,
-        // and the above checks if they're the same extended kind.
 
-        if (TypeUtils.isRecord(leftType)) {
-            return unionRecordFields([leftType, rightType] as [Type.DefinedRecord, Type.DefinedRecord]);
-        } else {
-            return unionTableFields([leftType, rightType] as [Type.DefinedTable, Type.DefinedTable]);
-        }
-    } else {
-        throw new CommonError.InvariantError(`this should never be reached`);
+    // '[] & [key=value]'
+    if (TypeUtils.isDefinedRecord(rightType)) {
+        return {
+            ...rightType,
+            isOpen: true,
+        };
     }
+
+    // '[] & []'
+    return leftType.isNullable || rightType.isNullable ? Type.NullableRecordInstance : Type.RecordInstance;
+}
+
+function inspectTableUnion(
+    state: InspectTypeState,
+    leftType: Type.TTable,
+    rightType: Type.TTable,
+    correlationId: number,
+): Type.TTable {
+    // '#table(...) & #table(...)'
+    if (TypeUtils.isDefinedTable(leftType) && TypeUtils.isDefinedTable(rightType)) {
+        return unionTables(state, leftType, rightType, correlationId);
+    }
+
+    // '#table(...) & #table()'
+    if (TypeUtils.isDefinedTable(leftType)) {
+        return leftType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
+    }
+
+    // '#table() & #table(...)'
+    if (TypeUtils.isDefinedTable(rightType)) {
+        return rightType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
+    }
+
+    // '#table() & #table()'
+    return leftType.isNullable || rightType.isNullable ? Type.NullableTableInstance : Type.TableInstance;
 }
 
 function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.DefinedRecord]): Type.DefinedRecord {
@@ -172,19 +178,71 @@ function unionRecordFields([leftType, rightType]: [Type.DefinedRecord, Type.Defi
     };
 }
 
-function unionTableFields([leftType, rightType]: [Type.DefinedTable, Type.DefinedTable]): Type.DefinedTable {
-    const combinedFields: Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
+function unionTables(
+    state: InspectTypeState,
+    leftType: Type.DefinedTable,
+    rightType: Type.DefinedTable,
+    correlationId: number,
+): Type.Table | Type.DefinedTable {
+    const isNullable: boolean = leftType.isNullable && rightType.isNullable;
 
-    for (const [key, value] of rightType.fields.entries()) {
-        combinedFields.set(key, value);
+    if (leftType.isOpen || rightType.isOpen) {
+        return isNullable ? Type.NullableTableInstance : Type.TableInstance;
     }
 
-    return {
-        ...leftType,
-        fields: combinedFields,
-        isNullable: leftType.isNullable && rightType.isNullable,
-        isOpen: leftType.isOpen || rightType.isOpen,
-    };
+    const fields: Type.OrderedFields = unionTableFields(state, [leftType, rightType], correlationId);
+
+    let rows: ReadonlyArray<Type.UnorderedFields> | undefined;
+
+    if (
+        leftType.rows !== undefined &&
+        rightType.rows !== undefined &&
+        leftType.rows.length + rightType.rows.length <= MaxDefinedTableRows
+    ) {
+        rows = [...leftType.rows, ...rightType.rows].map((row: Type.UnorderedFields) => normalizeTableRow(row, fields));
+    }
+
+    return TypeUtils.definedTable(isNullable, fields, rows);
+}
+
+// '#table(type table [A = number], {{1}}) & #table(type table [B = text], {{"two"}})'
+// produces fields [A = nullable number, B = nullable text].
+function unionTableFields(
+    state: InspectTypeState,
+    [leftType, rightType]: [Type.DefinedTable, Type.DefinedTable],
+    correlationId: number,
+): Type.OrderedFields {
+    const combinedFields: Type.OrderedFields = new PQP.OrderedMap([...leftType.fields]);
+
+    for (const [key, value] of leftType.fields.entries()) {
+        combinedFields.set(
+            key,
+            TypeUtils.anyUnion(
+                [value, rightType.fields.get(key) ?? Type.NullInstance],
+                state.traceManager,
+                correlationId,
+            ),
+        );
+    }
+
+    for (const [key, value] of rightType.fields.entries()) {
+        if (!combinedFields.has(key)) {
+            combinedFields.set(key, TypeUtils.anyUnion([value, Type.NullInstance], state.traceManager, correlationId));
+        }
+    }
+
+    return combinedFields;
+}
+
+// Against fields [A, B], row [A = 1] becomes [A = 1, B = null].
+function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields): Type.UnorderedFields {
+    const normalizedRow: Type.UnorderedFields = new Map();
+
+    for (const fieldName of fields.keys()) {
+        normalizedRow.set(fieldName, row.get(fieldName) ?? Type.NullInstance);
+    }
+
+    return normalizedRow;
 }
 
 // Keys: <first operand> <operator> <second operand>

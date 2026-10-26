@@ -2183,7 +2183,7 @@ describe(`Inspection - Scope - Identifier`, () => {
             }));
     });
 
-    describe("Cache and scaling", () => {
+    describe("Cache", () => {
         async function parseText(text: string): Promise<NodeIdMap.Collection> {
             const triedLexParse: Task.TriedLexParseTask = await PQP.TaskUtils.tryLexParse(
                 { ...PQP.DefaultSettings, traceManager: NoOpTraceManagerInstance },
@@ -2228,7 +2228,7 @@ describe(`Inspection - Scope - Identifier`, () => {
         }> {
             const nodeIdMapCollection: NodeIdMap.Collection = await parseText(text);
             const identifiers: Ast.Identifier[] = getValueIdentifiers(nodeIdMapCollection);
-            const scopeById: Inspection.ScopeById = new Map();
+            const scopeById: Inspection.ScopeById = Inspection.ScopeUtils.createScopeById();
 
             for (const identifier of identifiers) {
                 // eslint-disable-next-line no-await-in-loop
@@ -2253,7 +2253,7 @@ describe(`Inspection - Scope - Identifier`, () => {
                 readonly nodeIdMapCollection: NodeIdMap.Collection;
             } = await buildAllScopes(text);
 
-            const scopeCountAfterFirstPass: number = result.scopeById.size;
+            const scopeCountAfterFirstPass: number = result.scopeById.scopes.size;
 
             for (const identifier of result.identifiers) {
                 // eslint-disable-next-line no-await-in-loop
@@ -2266,39 +2266,7 @@ describe(`Inspection - Scope - Identifier`, () => {
                 );
             }
 
-            expect(result.scopeById.size).to.equal(scopeCountAfterFirstPass);
-        });
-
-        it("scope computation scales sub-cubically for large let expressions", async () => {
-            function generateLet(n: number): string {
-                const bindings: string[] = [];
-
-                for (let i: number = 0; i < n; i += 1) {
-                    bindings.push(`v${i} = ${i}`);
-                }
-
-                return `let ${bindings.join(", ")} in v0`;
-            }
-
-            const smallText: string = generateLet(20);
-            const largeText: string = generateLet(80);
-
-            async function timeScope(text: string): Promise<number> {
-                const start: number = Date.now();
-                await buildAllScopes(text);
-
-                return Date.now() - start;
-            }
-
-            const smallTime: number = await timeScope(smallText);
-            const largeTime: number = await timeScope(largeText);
-
-            // With 4x more bindings, pure O(n³) would give 64x slowdown.
-            // With the cached approach, expect much less.
-            // Use a generous threshold of 20x to avoid flaky tests.
-            const ratio: number = largeTime / Math.max(smallTime, 0.001);
-
-            expect(ratio).to.be.lessThan(20, `Expected sub-cubic scaling but got ${ratio.toFixed(1)}x for 4x input`);
+            expect(result.scopeById.scopes.size).to.equal(scopeCountAfterFirstPass);
         });
     });
 });

@@ -27,10 +27,7 @@ import { PositionUtils } from "../..";
 export function activeNode(nodeIdMapCollection: NodeIdMap.Collection, position: Position): TActiveNode {
     const astSearched: SearchedLeafs = leafSearch(nodeIdMapCollection, position);
 
-    const { nodeClosestBeforePosition, nodeOnPosition, nodeClosestAfterPosition }: SearchedLeafs = leafSearch(
-        nodeIdMapCollection,
-        position,
-    );
+    const { nodeClosestBeforePosition, nodeOnPosition, nodeClosestAfterPosition }: SearchedLeafs = astSearched;
 
     const contextClosestOnOrAfterPosition: ParseContext.TNode | undefined = findContext(
         nodeIdMapCollection,
@@ -425,6 +422,7 @@ function findLeafIdentifier(
                 isRecursive: false,
                 normalizedLiteral: IdentifierUtils.assertNormalizedIdentifier(identifier.literal, {
                     allowGeneralizedIdentifier: identifier.kind === Ast.NodeKind.GeneralizedIdentifier,
+                    allowTrailingPeriod: true,
                 }),
                 normalizedRecursiveLiteral: undefined,
             };
@@ -434,7 +432,10 @@ function findLeafIdentifier(
         case Ast.NodeKind.IdentifierExpression: {
             const normalizedLiteral: string = IdentifierUtils.assertNormalizedIdentifier(
                 identifier.identifier.literal,
-                { allowGeneralizedIdentifier: false },
+                {
+                    allowGeneralizedIdentifier: false,
+                    allowTrailingPeriod: true,
+                },
             );
 
             result = {

@@ -7,7 +7,7 @@ import {
     ParameterInformation,
     SignatureInformation,
 } from "vscode-languageserver-types";
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ExternalTypeRequestKind, TExternalTypeRequest, TExternalTypeResolverFn } from "../externalType/externalType";
 import {
@@ -119,10 +119,31 @@ export function getDefinition(
     libraryDefinitions: LibraryDefinitions,
     identifierLiteral: string,
 ): TLibraryDefinition | undefined {
-    return (
-        libraryDefinitions.staticLibraryDefinitions.get(identifierLiteral) ??
-        libraryDefinitions.dynamicLibraryDefinitions().get(identifierLiteral)
-    );
+    const identifiers: ReadonlySet<string> = new Set([
+        identifierLiteral,
+        ...IdentifierUtils.getAllowedIdentifiers(identifierLiteral),
+    ]);
+
+    // Resolve aliases within each library so static definitions retain precedence.
+    for (const identifier of identifiers) {
+        const definition: TLibraryDefinition | undefined = libraryDefinitions.staticLibraryDefinitions.get(identifier);
+
+        if (definition !== undefined) {
+            return definition;
+        }
+    }
+
+    const dynamicDefinitions: ReadonlyMap<string, TLibraryDefinition> = libraryDefinitions.dynamicLibraryDefinitions();
+
+    for (const identifier of identifiers) {
+        const definition: TLibraryDefinition | undefined = dynamicDefinitions.get(identifier);
+
+        if (definition !== undefined) {
+            return definition;
+        }
+    }
+
+    return undefined;
 }
 
 export function getKeys(libraryDefinitions: LibraryDefinitions): ReadonlyArray<string> {

@@ -11,6 +11,22 @@ import { expect } from "chai";
 import { inspectFieldAccess } from "../../../powerquery-language-services/inspection/autocomplete/autocompleteFieldAccess";
 
 describe(`Inspection - Autocomplete - FieldAccess`, () => {
+    it("preserves field order and duplicate labels across union members", async () => {
+        const autocomplete: Inspection.Autocomplete = await TestUtils.expectAutocomplete(
+            "let foo = () => if true then [shared = 1, first = 2] else [shared = 3, second = 4] in foo()[|",
+        );
+
+        const items: ReadonlyArray<Inspection.AutocompleteItem> =
+            ResultUtils.assertOk(autocomplete.triedFieldAccess)?.autocompleteItems ?? [];
+
+        expect(items.map((item: Inspection.AutocompleteItem) => item.label)).to.deep.equal([
+            "shared",
+            "first",
+            "shared",
+            "second",
+        ]);
+    });
+
     function fieldAccessAutocompleteItemSelector(
         autocomplete: Inspection.Autocomplete,
     ): ReadonlyArray<Inspection.AutocompleteItem> {
@@ -346,6 +362,15 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                     textWithPipe: `[car = 1, cat = 2][|`,
                     expected: {
                         labels: [`car`, `cat`],
+                        isTextEdit: false,
+                    },
+                }));
+
+            it(`let Source = #table({"Name", "Score"}, {}) in Source[|`, async () =>
+                await expectFieldAccessSuggestions({
+                    textWithPipe: `let Source = #table({"Name", "Score"}, {}) in Source[|`,
+                    expected: {
+                        labels: [`Name`, `Score`],
                         isTextEdit: false,
                     },
                 }));
