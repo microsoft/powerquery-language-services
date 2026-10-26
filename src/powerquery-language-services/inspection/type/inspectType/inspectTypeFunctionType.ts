@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import {
@@ -14,7 +13,7 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
 
-import { inspectTypeFromChildAttributeIndex } from "./common";
+import { inspectParameterAnnotation, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
 
@@ -62,17 +61,52 @@ export async function inspectTypeFunctionType(
                 return Type.UnknownInstance;
             }
 
-            const parameterTypes: ReadonlyArray<Type.FunctionParameter> = NodeIdMapIterator.iterArrayWrapper(
-                state.nodeIdMapCollection,
-                arrayWrapper,
-            )
-                .map((parameter: TXorNode) =>
-                    TypeUtils.inspectParameter(
-                        state.nodeIdMapCollection,
-                        XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
-                    ),
-                )
-                .filter(PQP.TypeScriptUtils.isDefined);
+            const parameterTypes: Type.FunctionParameter[] = [];
+
+            for (const parameter of NodeIdMapIterator.iterArrayWrapper(state.nodeIdMapCollection, arrayWrapper)) {
+                const inspectedParameter: TypeUtils.InspectedParameter = TypeUtils.inspectParameter(
+                    state.nodeIdMapCollection,
+                    XorNodeUtils.assertAsNodeKind<Ast.TParameter>(parameter, Ast.NodeKind.Parameter),
+                );
+
+                switch (inspectedParameter.kind) {
+                    case TypeUtils.InspectedParameterKind.Resolved:
+                        parameterTypes.push({
+                            nameLiteral: inspectedParameter.nameLiteral,
+                            isNullable: inspectedParameter.isNullable,
+                            isOptional: inspectedParameter.isOptional,
+                            type: inspectedParameter.type,
+                        });
+
+                        break;
+
+                    case TypeUtils.InspectedParameterKind.RequiresResolution: {
+                        // Inspect sequentially: aliases share recursion-tracking state.
+                        // eslint-disable-next-line no-await-in-loop
+                        const annotationType: Type.TPrimitiveType = await inspectParameterAnnotation(
+                            state,
+                            inspectedParameter.annotation,
+                            trace.id,
+                        );
+
+                        parameterTypes.push({
+                            nameLiteral: inspectedParameter.nameLiteral,
+                            isNullable: annotationType.isNullable,
+                            isOptional: inspectedParameter.isOptional,
+                            type: annotationType.kind,
+                        });
+
+                        break;
+                    }
+
+                    case TypeUtils.InspectedParameterKind.MissingName:
+                    case TypeUtils.InspectedParameterKind.NotType:
+                        break;
+
+                    default:
+                        throw Assert.isNever(inspectedParameter);
+                }
+            }
 
             const returnType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(
                 state,

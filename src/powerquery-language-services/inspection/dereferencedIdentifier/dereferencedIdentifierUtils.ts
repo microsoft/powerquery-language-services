@@ -14,7 +14,7 @@ import {
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TPowerQueryType } from "@microsoft/powerquery-parser/lib/powerquery-parser/language/type/type";
 
-import { assertGetOrCreateNodeScope, ScopeById, ScopeItemKind, TScopeItem } from "../scope";
+import { assertGetOrCreateNodeScope, ScopeById, ScopeItemKind, ScopeUtils, TScopeItem } from "../scope";
 import {
     DereferencedIdentifierExternal,
     DereferencedIdentifierKind,
@@ -52,9 +52,8 @@ export async function tryBuildDereferencedIdentifierPath(
     inspectionSettings: InspectionSettings,
     nodeIdMapCollection: NodeIdMap.Collection,
     xorNode: TXorNode,
-    // If a map is given, then it's mutated and returned.
-    // Else create a new Map instance and return that instead.
-    scopeById: ScopeById = new Map(),
+    // Reuse caller-owned scope state when provided; otherwise own it for this request.
+    scopeById: ScopeById = ScopeUtils.createScopeById(),
 ): Promise<PQP.Result<ReadonlyArray<TDereferencedIdentifier>, PQP.CommonError.CommonError>> {
     const trace: Trace = inspectionSettings.traceManager.entry(
         InspectionTraceConstant.InspectScope,
@@ -129,7 +128,8 @@ async function dereferenceScopeItem(
         return initialTriedNodeScope;
     }
 
-    let currentScopeItem: TScopeItem | undefined = initialTriedNodeScope.value.scopeItemByKey.get(
+    let currentScopeItem: TScopeItem | undefined = ScopeUtils.findScopeItemByLiteral(
+        initialTriedNodeScope.value,
         AstUtils.getIdentifierLiteral(initialIdentifierXorNode.node),
     );
 
@@ -205,8 +205,10 @@ async function dereferenceScopeItem(
                                 return triedNodeScope;
                             }
 
-                            const nextScopeItem: TScopeItem | undefined =
-                                triedNodeScope.value.scopeItemByKey.get(currentIdentifierLiteral);
+                            const nextScopeItem: TScopeItem | undefined = ScopeUtils.findScopeItemByLiteral(
+                                triedNodeScope.value,
+                                currentIdentifierLiteral,
+                            );
 
                             if (nextScopeItem === undefined) {
                                 return onIdentifierNotInScope(
@@ -305,7 +307,10 @@ function findNonRecursiveScopeItemInAncestors(
     let currentNodeId: number | undefined = nodeIdMapCollection.parentIdById.get(initialNodeId);
 
     while (currentNodeId) {
-        const scopeItem: TScopeItem | undefined = scopeById.get(currentNodeId)?.scopeItemByKey.get(identifierLiteral);
+        const scopeItem: TScopeItem | undefined = ScopeUtils.findScopeItemByLiteral(
+            scopeById.scopes.get(currentNodeId),
+            identifierLiteral,
+        );
 
         if (scopeItem && !scopeItem.isRecursive) {
             return scopeItem;

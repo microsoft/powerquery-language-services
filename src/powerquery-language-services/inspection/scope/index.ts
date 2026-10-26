@@ -4,3 +4,4 @@
 export * from "./scope";
 export * from "./scopeInspection";
 export * as ScopeUtils from "./scopeUtils";
+export * as ScopeBindingsUtils from "./scopeBindingsUtils";

@@ -98,7 +98,7 @@ export async function getOrCreateScope(
 
     state.cancellationToken?.throwIfCancelled();
 
-    const nodeScope: NodeScope | undefined = updatedState.scopeById.get(nodeId);
+    const nodeScope: NodeScope | undefined = updatedState.scopeById.scopes.get(nodeId);
 
     if (nodeScope !== undefined) {
         trace.exit();
@@ -172,8 +172,22 @@ export async function inspectScopeItem(
         case ScopeItemKind.Each:
             return await inspectXor(state, scopeItem.eachExpression, correlationId);
 
-        case ScopeItemKind.Parameter:
-            return createParameterType(scopeItem);
+        case ScopeItemKind.Parameter: {
+            if (scopeItem.annotation === undefined) {
+                return createParameterType(scopeItem);
+            }
+
+            const parameterType: Type.TPrimitiveType = await inspectParameterAnnotation(
+                state,
+                scopeItem.annotation,
+                correlationId,
+            );
+
+            return {
+                ...parameterType,
+                isNullable: parameterType.isNullable || scopeItem.isOptional,
+            };
+        }
 
         case ScopeItemKind.Undefined:
             return Type.AnyInstance;
@@ -514,4 +528,56 @@ export function createParameterType(parameter: ParameterScopeItem): Type.TPrimit
         extendedKind: undefined,
         isNullable: parameter.isNullable || parameter.isOptional,
     };
+}
+
+export async function inspectParameterAnnotation(
+    state: InspectTypeState,
+    annotation: TXorNode,
+    correlationId: number | undefined,
+): Promise<Type.TPrimitiveType> {
+    const annotationType: Type.TPowerQueryType = await inspectXor(state, annotation, correlationId);
+    let kind: Type.TypeKind;
+
+    switch (annotationType.extendedKind) {
+        case Type.ExtendedTypeKind.FunctionType:
+            kind = Type.TypeKind.Function;
+            break;
+
+        case Type.ExtendedTypeKind.DefinedListType:
+        case Type.ExtendedTypeKind.ListType:
+            kind = Type.TypeKind.List;
+            break;
+
+        case Type.ExtendedTypeKind.RecordType:
+            kind = Type.TypeKind.Record;
+            break;
+
+        case Type.ExtendedTypeKind.TableType:
+        case Type.ExtendedTypeKind.TableTypePrimaryExpression:
+            kind = Type.TypeKind.Table;
+            break;
+
+        case Type.ExtendedTypeKind.PrimaryPrimitiveType:
+            return TypeUtils.primitiveType(
+                annotationType.isNullable || annotationType.primitiveType.isNullable,
+                annotationType.primitiveType.kind,
+            );
+
+        case undefined:
+        case Type.ExtendedTypeKind.AnyUnion:
+        case Type.ExtendedTypeKind.DefinedFunction:
+        case Type.ExtendedTypeKind.DefinedList:
+        case Type.ExtendedTypeKind.DefinedRecord:
+        case Type.ExtendedTypeKind.DefinedTable:
+        case Type.ExtendedTypeKind.LogicalLiteral:
+        case Type.ExtendedTypeKind.NumberLiteral:
+        case Type.ExtendedTypeKind.TextLiteral:
+            kind = annotationType.kind;
+            break;
+
+        default:
+            throw Assert.isNever(annotationType);
+    }
+
+    return TypeUtils.primitiveType(annotationType.isNullable, kind);
 }

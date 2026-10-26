@@ -5,10 +5,12 @@ import "mocha";
 import * as PQP from "@microsoft/powerquery-parser";
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Assert } from "@microsoft/powerquery-parser";
+import { expect } from "chai";
 import { NoOpTraceManagerInstance } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import {
     ExternalType,
+    Inspection,
     InspectionSettings,
     Library,
     LibraryDefinitionUtils,
@@ -817,6 +819,40 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+            it(`retains a parameter with an incomplete annotation`, async () =>
+                await assertEqualRootType({
+                    text: `(x as`,
+                    expected: TypeUtils.definedFunction(
+                        false,
+                        [
+                            {
+                                nameLiteral: `x`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Unknown,
+                            },
+                        ],
+                        Type.UnknownInstance,
+                    ),
+                }));
+
+            it(`retains optionality and nullability for an incomplete nullable annotation`, async () =>
+                await assertEqualRootType({
+                    text: `(optional x as nullable`,
+                    expected: TypeUtils.definedFunction(
+                        false,
+                        [
+                            {
+                                nameLiteral: `x`,
+                                isNullable: true,
+                                isOptional: true,
+                                type: Type.TypeKind.Unknown,
+                            },
+                        ],
+                        Type.UnknownInstance,
+                    ),
+                }));
+
             it(`(optional x as text) => if x <> null then 1 else 2`, async () =>
                 await assertEqualRootType({
                     text: `(optional x as text) => if x <> null then 1 else 2`,
@@ -903,6 +939,151 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionType}`, () => {
+            it(`dereferences parameter type aliases without dropping or reordering parameters`, async () =>
+                await assertEqualRootType({
+                    text: `let Base = type nullable number, Alias = Base in
+                        type function (first as text, value as Alias, optional last as Alias) as text`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `first`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Text,
+                            },
+                            {
+                                nameLiteral: `value`,
+                                isNullable: true,
+                                isOptional: false,
+                                type: Type.TypeKind.Number,
+                            },
+                            {
+                                nameLiteral: `last`,
+                                isNullable: true,
+                                isOptional: true,
+                                type: Type.TypeKind.Number,
+                            },
+                        ],
+                        Type.TextInstance,
+                    ),
+                }));
+
+            it(`resolves a parameter annotation in the nearest lexical scope`, async () =>
+                await assertEqualRootType({
+                    text: `let T = type text in let T = type number in type function (value as T) as number`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `value`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Number,
+                            },
+                        ],
+                        Type.NumberInstance,
+                    ),
+                }));
+
+            for (const [annotation, typeKind] of [
+                [`type [id = number]`, Type.TypeKind.Record],
+                [`type table [id = number]`, Type.TypeKind.Table],
+                [`type {number}`, Type.TypeKind.List],
+                [`type function () as number`, Type.TypeKind.Function],
+            ] as const) {
+                it(`dereferences a ${typeKind} type alias to its parameter kind`, async () =>
+                    await assertEqualRootType({
+                        text: `let T = ${annotation} in type function (value as T) as number`,
+                        expected: TypeUtils.functionType(
+                            false,
+                            [
+                                {
+                                    nameLiteral: `value`,
+                                    isNullable: false,
+                                    isOptional: false,
+                                    type: typeKind,
+                                },
+                            ],
+                            Type.NumberInstance,
+                        ),
+                    }));
+            }
+
+            it(`preserves nullability around a dereferenced structured type`, async () =>
+                await assertEqualRootType({
+                    text: `let T = type [id = number] in type function (value as nullable T) as number`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `value`,
+                                isNullable: true,
+                                isOptional: false,
+                                type: Type.TypeKind.Record,
+                            },
+                        ],
+                        Type.NumberInstance,
+                    ),
+                }));
+
+            it(`terminates when parameter type aliases form a cycle`, async () =>
+                await assertEqualRootType({
+                    text: `let A = B, B = A in type function (value as A) as number`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `value`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Any,
+                            },
+                        ],
+                        Type.NumberInstance,
+                    ),
+                }));
+
+            it(`retains a parameter whose type alias is unknown`, async () =>
+                await assertEqualRootType({
+                    text: `type function (value as Missing, optional tail as text) as number`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `value`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Unknown,
+                            },
+                            {
+                                nameLiteral: `tail`,
+                                isNullable: false,
+                                isOptional: true,
+                                type: Type.TypeKind.Text,
+                            },
+                        ],
+                        Type.NumberInstance,
+                    ),
+                }));
+
+            it(`retains a parameter with an incomplete nullable annotation`, async () =>
+                await assertEqualRootType({
+                    text: `type function (value as nullable`,
+                    expected: TypeUtils.functionType(
+                        false,
+                        [
+                            {
+                                nameLiteral: `value`,
+                                isNullable: true,
+                                isOptional: false,
+                                type: Type.TypeKind.Unknown,
+                            },
+                        ],
+                        Type.UnknownInstance,
+                    ),
+                }));
+
             it(`type function`, async () =>
                 await assertEqualRootType({
                     text: `type function`,
@@ -1626,6 +1807,76 @@ describe(`Inspection - Type`, () => {
                     text: expression2,
                     expected: expected2,
                 });
+            });
+
+            it(`shares concurrent requests for the same node`, async () => {
+                let invocationRequestCount: number = 0;
+
+                const settings: InspectionSettings = {
+                    ...ExtendedInspectionSettings,
+                    library: {
+                        ...ExtendedInspectionSettings.library,
+                        externalTypeResolver: (request: ExternalType.TExternalTypeRequest) => {
+                            if (request.kind === ExternalType.ExternalTypeRequestKind.Invocation) {
+                                invocationRequestCount += 1;
+                            }
+
+                            return ExternalTypeResolver(request);
+                        },
+                    },
+                };
+
+                const triedParse: PQP.Task.ParseTaskOk | PQP.Task.ParseTaskParseError = await TestUtils.assertParse({
+                    text: `foo()`,
+                    settings,
+                });
+
+                const invokeExpressionIds: Set<number> = Assert.asDefined(
+                    triedParse.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+                );
+
+                const invokeExpressionId: number = Assert.asDefined(Array.from(invokeExpressionIds)[0]);
+                const typeCache: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+
+                const [first, second]: [Inspection.TriedType, Inspection.TriedType] = await Promise.all([
+                    Inspection.tryType(settings, triedParse.nodeIdMapCollection, invokeExpressionId, typeCache),
+                    Inspection.tryType(settings, triedParse.nodeIdMapCollection, invokeExpressionId, typeCache),
+                ]);
+
+                expect(PQP.ResultUtils.assertOk(first)).to.equal(Type.TextInstance);
+                expect(PQP.ResultUtils.assertOk(second)).to.equal(Type.TextInstance);
+                expect(invocationRequestCount).to.equal(1);
+            });
+
+            it(`shares concurrent scope type requests for the same node`, async () => {
+                const triedParse: PQP.Task.ParseTaskOk | PQP.Task.ParseTaskParseError = await TestUtils.assertParse({
+                    text: `foo()`,
+                    settings: ExtendedInspectionSettings,
+                });
+
+                const invokeExpressionIds: Set<number> = Assert.asDefined(
+                    triedParse.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
+                );
+
+                const invokeExpressionId: number = Assert.asDefined(Array.from(invokeExpressionIds)[0]);
+                const typeCache: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
+
+                const [first, second]: [Inspection.TriedScopeType, Inspection.TriedScopeType] = await Promise.all([
+                    Inspection.tryScopeType(
+                        ExtendedInspectionSettings,
+                        triedParse.nodeIdMapCollection,
+                        invokeExpressionId,
+                        typeCache,
+                    ),
+                    Inspection.tryScopeType(
+                        ExtendedInspectionSettings,
+                        triedParse.nodeIdMapCollection,
+                        invokeExpressionId,
+                        typeCache,
+                    ),
+                ]);
+
+                expect(PQP.ResultUtils.assertOk(first)).to.equal(PQP.ResultUtils.assertOk(second));
             });
         });
     });

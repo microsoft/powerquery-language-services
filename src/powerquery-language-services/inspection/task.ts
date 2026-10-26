@@ -14,7 +14,7 @@ import type { Position } from "vscode-languageserver-types";
 import { ActiveNodeUtils, TActiveNode } from "./activeNode";
 import { findDirectUpperScopeExpression, findScopeItemByLiteral, scopeCreatorIdentifier } from "./scope/scopeUtils";
 import { Inspection, InspectionTraceConstant } from "..";
-import { ScopeTypeByKey, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
+import { ScopeUtils, TriedNodeScope, tryNodeScope, TScopeItem } from "./scope";
 import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
@@ -81,7 +81,7 @@ export class InspectionInstance implements Inspected {
 
             const current: Ast.TNode = entry;
             const idsByTiers: number[][] = [];
-            let currentTier: number[] = (childIdsById.get(current.id) ?? []).slice();
+            let currentTier: ReadonlyArray<number> = childIdsById.get(current.id) ?? [];
 
             while (currentTier.length) {
                 const toBePushed: number[] = currentTier.filter(
@@ -89,13 +89,14 @@ export class InspectionInstance implements Inspected {
                 );
 
                 toBePushed.length && idsByTiers.push(toBePushed);
-                currentTier = currentTier.slice();
-                let nextTier: number[] = [];
+                const nextTier: number[] = [];
 
-                while (currentTier.length) {
-                    const oneNode: number = currentTier.shift() ?? -1;
-                    const childrenOfTheNode: number[] = (childIdsById.get(oneNode) ?? []).slice();
-                    nextTier = nextTier.concat(childrenOfTheNode);
+                for (let index: number = 0; index < currentTier.length; index += 1) {
+                    const childrenOfTheNode: ReadonlyArray<number> = childIdsById.get(currentTier[index]) ?? [];
+
+                    for (const childId of childrenOfTheNode) {
+                        nextTier.push(childId);
+                    }
                 }
 
                 currentTier = nextTier;
@@ -130,7 +131,7 @@ export class InspectionInstance implements Inspected {
                     if (oneIdentifierNode.kind === Ast.NodeKind.GeneralizedIdentifier) {
                         return oneIdentifierNode.id === valueCreator.id;
                     } else if (oneIdentifierNode.identifierContextKind === Ast.IdentifierContextKind.Value) {
-                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.get(
+                        const theScope: Inspection.NodeScope | undefined = this.typeCache.scopeById.scopes.get(
                             oneIdentifierNode.id,
                         );
 
@@ -214,7 +215,7 @@ export async function inspect(
             ),
         );
 
-        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeTypeByKey.empty()));
+        triedScopeType = Promise.resolve(PQP.ResultUtils.ok(ScopeUtils.emptyScopeTypeByKey()));
 
         triedExpectedType = PQP.ResultUtils.ok(undefined);
     }
