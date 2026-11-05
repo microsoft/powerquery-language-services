@@ -49,7 +49,7 @@ This smoke payload works from the repository root when supplied on stdin:
     "library": "standard",
     "files": [
         {
-            "path": ".\\src\\test\\files\\HelloWorldWithDocs.pq",
+            "path": ".\\test\\files\\HelloWorldWithDocs.pq",
             "operations": [
                 { "kind": "validateUnknownIdentifiers" },
                 { "kind": "getDocumentSymbols" }
