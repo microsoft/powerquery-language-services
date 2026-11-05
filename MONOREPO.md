@@ -107,6 +107,9 @@ workspace protocols, path dependencies, or external registry fallback are permit
 The command updates the root lock with lifecycle scripts disabled and validates the release set.
 It must fail if lock regeneration fails. Review the resulting manifest/lock diff normally.
 It does not create commits, tags, pushes, or publications.
+`npm run version:patch` applies SemVer's patch increment to the current shared version through
+the same transactional preparation and lockfile refresh. It does not commit or publish either.
+For a prerelease, SemVer patch preparation promotes the existing patch to its stable version.
 
 Stable versions use `publishConfig.tag: latest`; prereleases use `next`. Maintainers must verify
 public registry version absence and current published baselines again before releasing: the
@@ -169,9 +172,8 @@ from the existing validation step. These are the three actual npm tarballs (`.tg
 All `.github` configuration and issue templates are consolidated at the root. Package-specific
 bug and feature forms preserve the shared intake questions and apply static labels matching
 the package names, with no labeling workflow. The labels `powerquery-parser`,
-`powerquery-formatter`, and `powerquery-language-services` did not exist during inspection;
-repository owners must create them for GitHub's native automatic labeling to work. No live
-labels were created by this migration.
+`powerquery-formatter`, and `powerquery-language-services` exist in the repository and match the
+forms' declarations, enabling GitHub's native automatic labeling.
 Dependabot now uses the root npm lockfile and the root GitHub Actions configuration.
 
 All public Azure DevOps pipeline definitions were confirmed dead code by the maintainer and

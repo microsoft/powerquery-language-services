@@ -9,15 +9,11 @@ This monorepo develops three TypeScript libraries for the Power Query / M langua
 - [Language services](packages/powerquery-language-services/README.md): IntelliSense, diagnostics,
   navigation, renaming, symbols, and formatting for editors.
 
-These are libraries, not a query execution engine or standalone language server. Their existing
-`@microsoft/powerquery-*` npm names, CommonJS entry points, declaration paths, and deep imports are preserved.
-Consumers require Node.js 22 or later. See each package's README for installation and API examples.
+See each package's README for installation and API examples.
 
 ## Develop
 
-Use a supported Node.js version matching `engines.node` in the root `package.json` (currently
-**>=22**) and its bundled npm from the repository root. GitHub Actions reads that same Node
-range from `package.json` and uses `windows-latest`, matching the existing upstream runner:
+From the repository root:
 
 ```powershell
 npm ci --ignore-scripts
@@ -55,12 +51,21 @@ includes the canonical root LICENSE in every tarball while preserving `lib/<name
 
 ## Release preparation
 
-All three packages share a version, with exact internal dependencies. The initial group version is
-**5.0.0**, derived from the frozen upstream versions, not the historical proposal's 3.0.0.
-Version changes are normal reviewed source changes:
+All three packages share a version, with exact internal dependencies. Set a specific version:
 
 ```powershell
-npm run version:set -- 5.0.0
+npm run version:set -- <version>
+```
+
+Or increment the shared patch version:
+
+```powershell
+npm run version:patch
+```
+
+Review the package manifest and lockfile changes, then build and validate the release:
+
+```powershell
 npm ci --ignore-scripts
 npm run clean
 npm run build
@@ -75,9 +80,7 @@ The three tarballs and `dist/release-manifest.json` form one release set. The va
 packs and installs all three tarballs together in an isolated consumer outside the workspaces.
 CI artifacts are diagnostic only; there is no public npm publishing workflow.
 
-See [Contributing and release contract](MONOREPO.md) for prerequisites, provenance, manifest paths,
-validation boundaries, and retired public automation.
-Existing translations are preserved; replacement localization automation is separate work.
+See [Contributing and release contract](MONOREPO.md) for the contributor workflow and artifact format.
 
 ## Related projects
 

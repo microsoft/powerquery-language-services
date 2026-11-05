@@ -218,14 +218,24 @@ function setVersion(version, root = ROOT, refresh = () => npm(
     }
 }
 
+function bumpPatch(root = ROOT, refresh) {
+    const { version } = loadRelease(root, { resolution: false });
+    const next = semver.inc(version, "patch");
+    check(next !== null, `Cannot increment patch version: ${version}`);
+    setVersion(next, root, refresh);
+    return next;
+}
+
 async function main(args) {
     const [command, ...rest] = args;
-    check(["version", "pack", "validate"].includes(command) &&
+    check(["version", "patch", "pack", "validate"].includes(command) &&
         (command === "version" ? rest.length === 1 : rest.length === 0),
-    "Usage: node scripts/release.cjs version <SemVer> | pack | validate");
+    "Usage: node scripts/release.cjs version <SemVer> | patch | pack | validate");
     if (command === "version") {
         setVersion(rest[0]);
         console.log(`Set the public release group to ${rest[0]}`);
+    } else if (command === "patch") {
+        console.log(`Set the public release group to ${bumpPatch()}`);
     } else {
         const artifacts = require("./release-artifacts.cjs");
         const manifest = await artifacts.packRelease(ROOT);
@@ -235,7 +245,7 @@ async function main(args) {
 }
 
 module.exports = { ROOT, PACKAGES, check, readJson, writeJson, same, versionTag, internalDependencies,
-    validatePackage, validateLock, loadRelease, run, findNpmCli, npm, setVersion, main };
+    validatePackage, validateLock, loadRelease, run, findNpmCli, npm, setVersion, bumpPatch, main };
 
 if (require.main === module) main(process.argv.slice(2)).catch((error) => {
     console.error(`Release failed: ${error.message}`);

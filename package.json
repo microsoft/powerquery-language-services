@@ -21,6 +21,7 @@
         "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
         "test:release": "node --test scripts/test/release*.cjs",
         "version:set": "node scripts/release.cjs version",
+        "version:patch": "node scripts/release.cjs patch",
         "validate:release": "node scripts/release.cjs validate",
         "pack:release": "node scripts/release.cjs pack"
     },

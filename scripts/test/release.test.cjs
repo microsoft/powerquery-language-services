@@ -6,7 +6,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const zlib = require("node:zlib");
 const tar = require("tar");
-const { PACKAGES, versionTag, validatePackage, validateLock, setVersion, writeJson, loadRelease, findNpmCli } = require("../release.cjs");
+const { PACKAGES, versionTag, validatePackage, validateLock, setVersion, bumpPatch, writeJson, loadRelease, findNpmCli } = require("../release.cjs");
 const { safeRelative, inside, integrity, allowedFile, requireOutputs, requireBuiltOutputs, inspectTarball,
     validateManifest, verifyManifest } = require("../release-artifacts.cjs");
 const { cleanEnvironment } = require("../release-consumer.cjs");
@@ -208,6 +208,39 @@ test("version updates all three versions/edges/tags and refreshes the lock once"
     const release = loadRelease(directory, { resolution: false });
     assert.equal(release.version, "5.1.0-rc.1+build.4");
     for (const item of release.metadata) assert.equal(item.publishConfig.tag, "next");
+});
+
+test("patch increments the shared version and exact edges through reviewed preparation", (context) => {
+    const directory = fixture(context);
+    const data = createRepository(directory);
+    let calls = 0;
+    const next = bumpPatch(directory, () => {
+        calls++;
+        for (const entry of PACKAGES) {
+            data.lock.packages[entry.workspace] = JSON.parse(fs.readFileSync(path.join(directory, entry.workspace, "package.json")));
+        }
+        writeJson(path.join(directory, "package-lock.json"), data.lock);
+    });
+    assert.equal(next, "5.0.1");
+    assert.equal(calls, 1);
+    const release = loadRelease(directory, { resolution: false });
+    assert.equal(release.version, next);
+    for (const [index, metadata] of release.metadata.entries()) {
+        assert.equal(metadata.publishConfig.tag, "latest");
+        for (const name of PACKAGES[index].dependencies) assert.equal(metadata.dependencies[name], next);
+    }
+});
+
+test("patch rejects inconsistent versions without changing manifests", (context) => {
+    const directory = fixture(context);
+    createRepository(directory);
+    const file = path.join(directory, PACKAGES[1].workspace, "package.json");
+    const metadata = JSON.parse(fs.readFileSync(file));
+    metadata.version = "6.0.0";
+    writeJson(file, metadata);
+    const before = fs.readFileSync(file);
+    assert.throws(() => bumpPatch(directory, () => { throw new Error("Must not refresh"); }), /release version/);
+    assert.deepEqual(fs.readFileSync(file), before);
 });
 
 test("failed lock refresh or stale successful lock rolls back original bytes", (context) => {
