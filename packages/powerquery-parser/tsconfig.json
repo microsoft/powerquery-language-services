@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "downlevelIteration": true,
+        "incremental": true,
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "outDir": "lib",
+        "resolveJsonModule": true,
+        "rootDir": "src",
+        "sourceMap": true,
+        "strict": true,
+        "target": "es2022",
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true
+    },
+    "include": ["src/**/*.ts", "src/powerquery-parser/localization/templates/*.json"],
+    "exclude": ["node_modules"],
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs"
+        }
+    }
+}
