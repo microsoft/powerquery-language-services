@@ -34,7 +34,7 @@
             "Remove mocha-junit-reporter, mocha-multi-reporters, obsolete reporter JSON, and serialize-javascript override",
             "Regenerate the root workspace lockfile for merged upstream audit remediation",
             "Account for parser #439 Node 22 CI correction through the Windows monorepo workflow and root Node >=22 support range",
-            "Incorporate merged services #305 checkout/setup-node upgrades; the replaced dorny reporter is not reintroduced",
+            "Incorporate merged services #305 checkout/setup-node and dorny/test-reporter upgrades; summarize wildcard XUnit reports in the Actions Summary",
             "Retain four distinct report paths, exact 5.0.0 internal edges, and existing runtime source/resource trees"
         ],
         "auditObservation": {

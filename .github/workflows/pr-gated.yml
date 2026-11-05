@@ -27,6 +27,20 @@ jobs:
             - run: npm test
             - name: Validate standalone release consumers
               run: npm run validate:release
+            - name: Summarize test results
+              if: ${{ !cancelled() }}
+              uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
+              with:
+                  name: Mocha Tests
+                  path: packages/**/test-results*.xml
+                  reporter: java-junit
+                  use-actions-summary: true
+                  report-title: Power Query tests
+                  list-files: all
+                  list-tests: failed
+                  max-annotations: 0
+                  fail-on-error: true
+                  fail-on-empty: true
             - name: Collect JUnit results
               if: ${{ !cancelled() }}
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

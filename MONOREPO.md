@@ -38,9 +38,8 @@ The final parser follow-up
 corrects its GitHub job to Node 22; the monorepo Windows job selects Node from the root manifest's
 supported `engines.node` range.
 That commit is also retained in the merged upstream history.
-The later services #305 Actions update is retained as well: checkout v7.0.1 and setup-node
-v7.1.0 are used by the monorepo workflow. Its dorny reporter upgrade has no retained caller
-because the monorepo collects wildcard XML artifacts instead.
+The later services #305 Actions update is retained as well: checkout v7.0.1, setup-node
+v7.1.0, and dorny/test-reporter v3.2.0 are used by the monorepo workflow.
 
 The post-integration npm audit reports eight moderate development-dependency findings rooted
 in [minimatch globparts amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249);
@@ -76,6 +75,14 @@ JUnit-compatible report paths; parser resources still have their distinct output
 Actions collects reports using `packages/**/test-results*.xml`, including both parser suites,
 and fails the upload if no reports match. Test failures still fail `npm test`; there is no
 separate exact-path/count check. Report collection runs after test failures as well.
+The existing dorny/test-reporter action also renders these Mocha XUnit files with its
+`java-junit` parser in the Actions Summary. File-labelled sections distinguish packages and
+the parser resource suite even though the XML suite titles are identical. Failed test details
+are included, and empty or failed reports fail the reporter through its native options.
+`use-actions-summary: true` and `max-annotations: 0` keep reporting local to the job, with no
+check-run writes or API-based annotation lookup. This mode works with read-only fork tokens;
+there is no privileged follow-up workflow or `pull_request_target` execution. The formatted
+summary appears on the Actions run, not as a separate PR check with inline code annotations.
 Workspace tests run with their
 package as the working directory so existing fixture-relative paths keep working. Root VS Code
 tasks/debug configurations select that same directory and use the root tools. ESLint projects
