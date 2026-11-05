@@ -293,7 +293,7 @@ test("output paths reject directory symlinks/junctions", (context) => {
 
 test("runtime allowlist excludes sources, tests, build metadata and npm auth", () => {
     const entry = PACKAGES[0];
-    for (const file of [entry.main, entry.types, `${entry.main}.map`, "README.md", "LICENSE", "NOTICE.txt",
+    for (const file of [entry.main, entry.types, `${entry.main}.map`, "README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt",
         `lib/${entry.slug}/localization/templates/template.fr-FR.json`]) assert.equal(allowedFile(file, entry), true, file);
     for (const file of [".npmrc", "package-lock.json", "tsconfig.tsbuildinfo", "src/index.ts", "ARCHITECTURE.md",
         `lib/${entry.slug}/test/a.js`, "lib/test/a.js", `lib/${entry.slug}/benchmark/a.js`,

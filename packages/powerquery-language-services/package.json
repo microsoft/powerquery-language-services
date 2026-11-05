@@ -37,6 +37,7 @@
     "files": [
         "lib/powerquery-language-services/**/*",
         "README.md",
+        "CHANGELOG.md",
         "LICENSE",
         "ARCHITECTURE.md"
     ],

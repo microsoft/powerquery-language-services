@@ -45,7 +45,7 @@ function walk(root, prefix = "") {
 
 function allowedFile(relative, entry) {
     safeRelative(relative);
-    if (/^(package\.json|README(?:\.md)?|LICENSE(?:\.txt|\.md)?|NOTICE(?:\.txt|\.md)?|specification\.md|style\.md)$/i.test(relative)) return true;
+    if (/^(package\.json|README(?:\.md)?|CHANGELOG\.md|LICENSE(?:\.txt|\.md)?|NOTICE(?:\.txt|\.md)?|specification\.md|style\.md)$/i.test(relative)) return true;
     if (relative === "ARCHITECTURE.md" && entry.slug !== "powerquery-parser") return true;
     if (!relative.startsWith(`lib/${entry.slug}/`)) return false;
     if (relative.split("/").some((part) => /^(?:test|tests|__tests__|benchmark|benchmarks|scripts|node_modules|coverage|\..*)$/i.test(part))) return false;
@@ -154,7 +154,7 @@ async function inspectTarball(filename, entry, version, root) {
             same(JSON.parse(files.get(relative).toString("utf8")), readJson(source),
                 `${entry.name} localization content differs from source: ${relative}`);
         }
-        for (const legal of ["README.md", "LICENSE", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
+        for (const legal of ["README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
             const source = legal === "LICENSE" ? path.join(root, legal) : path.join(workspace, legal);
             if (fs.existsSync(source)) {
                 check(files.has(legal) && files.get(legal).equals(fs.readFileSync(source)),
@@ -252,7 +252,7 @@ async function packRelease(root) {
                     fs.mkdirSync(path.dirname(destination), { recursive: true });
                     fs.copyFileSync(path.join(workspace, file), destination);
                 }
-                for (const file of ["package.json", "README.md", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
+                for (const file of ["package.json", "README.md", "CHANGELOG.md", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
                     if (fs.existsSync(path.join(workspace, file))) {
                         fs.copyFileSync(path.join(workspace, file), path.join(staging, file));
                     }

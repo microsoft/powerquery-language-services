@@ -64,7 +64,8 @@ Or increment the shared patch version:
 npm run version:patch
 ```
 
-Review the package manifest and lockfile changes, then build and validate the release:
+Update each package's `CHANGELOG.md` for the new version and review the manifest and lockfile
+changes. Then build and validate the release:
 
 ```powershell
 npm ci --ignore-scripts
@@ -73,10 +74,10 @@ npm run build
 npm run lint
 npm test
 npm run validate:release
-npm run pack:release
 ```
 
 Packaging requires existing build outputs and never builds, commits, tags, pushes, or publishes.
+`validate:release` packs and validates the release; use `pack:release` when only packaging is needed.
 Use the configured npm registry for the root restore and isolated consumer install.
 The three tarballs and `dist/release-manifest.json` form one release set. The validation command
 packs and installs all three tarballs together in an isolated consumer outside the workspaces.

@@ -62,6 +62,7 @@
     "files": [
         "lib/powerquery-parser/**/*",
         "README.md",
+        "CHANGELOG.md",
         "LICENSE",
         "NOTICE.txt",
         "specification.md",

@@ -38,6 +38,7 @@
     "files": [
         "lib/powerquery-formatter/**/*",
         "README.md",
+        "CHANGELOG.md",
         "LICENSE",
         "ARCHITECTURE.md"
     ],
