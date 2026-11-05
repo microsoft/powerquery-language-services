@@ -9,12 +9,7 @@ permissions:
     contents: read
 jobs:
     build-and-test:
-        name: build-and-test (${{ matrix.os }})
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [windows-latest, ubuntu-latest]
-        runs-on: ${{ matrix.os }}
+        runs-on: windows-latest
         steps:
             - name: Checkout
               uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -41,7 +36,7 @@ jobs:
               if: ${{ !cancelled() }}
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
-                  name: test-results-${{ matrix.os }}
+                  name: test-results
                   path: |
                       packages/powerquery-parser/test-results.xml
                       packages/powerquery-parser/test-results-resources.xml
@@ -51,6 +46,6 @@ jobs:
             - name: Collect diagnostic release artifacts
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
-                  name: diagnostic-packages-${{ matrix.os }}
+                  name: diagnostic-packages
                   path: dist/
                   if-no-files-found: error

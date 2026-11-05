@@ -108,24 +108,19 @@ lockfile, preserving package versions/integrities without committing private fee
 For authoritative release evidence, run against a clean committed checkout; a local dirty run
 still records HEAD and cannot attest uncommitted changes.
 
-## CI and owner-managed transition
+## CI and retired automation
 
 GitHub Actions runs the locked restore, lint, two clean builds, all tests, report validation, and
-packed-consumer checks on Windows and Linux with read-only repository permissions. It retains
+packed-consumer checks on `windows-latest`, matching all three frozen upstream GitHub workflows,
+with read-only repository permissions. The existing `build-and-test` job identity is retained;
+there is no additional operating-system matrix or acceptance gate. It retains
 package/test artifacts for diagnostics only and contains no publishing credentials or publisher.
 Dependabot now uses the root npm lockfile and the root GitHub Actions configuration.
 
-The old public Azure DevOps YAML is retired with maintainer authorization. Its build, tests,
-JUnit collection, and package artifact responsibilities are replaced by the GitHub job.
-PoliCheck and its logs are **not** reproduced by a generic npm check; owners must explicitly retire
-or separately replace that legacy requirement. Required compliance scans remain an owner-managed
-release responsibility, not a claim made by this workflow.
-
-Before merging, repository owners must update branch protection/rulesets to require the active
-`build-and-test (windows-latest)` and `build-and-test (ubuntu-latest)` jobs, and retire/remap
-the old `build-and-test`, `Mocha Tests`, and Azure DevOps statuses as applicable. Deleting YAML
-does not change live check policies, registered pipeline definitions, or queued jobs; no live
-policy was changed by this migration.
+All public Azure DevOps pipeline definitions were confirmed dead code by the maintainer and
+removed, including the imported parser/formatter definitions and broken localization pipelines.
+Their historical checks and artifact tasks are not migration prerequisites. Normal active
+validation is provided by GitHub Actions; no live policy or pipeline configuration is changed.
 
 The broken localization pipelines are retired, but all checked-in translations/runtime JSON are
 preserved. Localization automation replacement, source-repository relocation notices/archival,

@@ -15,7 +15,8 @@ Consumers require Node.js 22 or later. See each package's README for installatio
 
 ## Develop
 
-Use Node.js **22.15.0** and npm **11.5.2** from the repository root on Windows or Linux:
+Use Node.js **22.15.0** and npm **11.5.2** from the repository root.
+GitHub Actions uses `windows-latest`, matching the existing upstream workflows:
 
 ```powershell
 npm ci --ignore-scripts
@@ -71,7 +72,7 @@ packs and installs all three tarballs together in an isolated consumer outside t
 CI artifacts are diagnostic only; there is no public npm publishing workflow.
 
 See [Contributing and release contract](MONOREPO.md) for prerequisites, provenance, manifest paths,
-validation boundaries, and the owner-managed check-policy transition.
+validation boundaries, and retired public automation.
 Existing translations are preserved; replacement localization automation is separate work.
 
 ## Related projects
