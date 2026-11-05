@@ -4,13 +4,13 @@
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "build": "tsc --project tsconfig.json",
+        "build": "node ../../scripts/build-package.cjs powerquery-formatter",
         "clean": "node ../../scripts/workspace.cjs clean powerquery-formatter",
-        "benchmark": "node --expose-gc --require ts-node/register src/benchmark/cli.ts",
-        "watch": "tsc --project tsconfig.json --watch",
-        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml --spec src/test/**/*.ts",
-        "script:recursiveDirectoryFormat": "npx ts-node src/scripts/recursiveDirectoryFormat.ts",
-        "lint": "eslint src --ext ts"
+        "benchmark": "node --expose-gc --require ts-node/register benchmark/cli.ts",
+        "watch": "node ../../scripts/build-package.cjs powerquery-formatter --watch",
+        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml --spec test/**/*.ts",
+        "script:recursiveDirectoryFormat": "npx ts-node scripts/recursiveDirectoryFormat.ts",
+        "lint": "eslint src test benchmark scripts *.ts --ext ts"
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-formatter#readme",
     "repository": {

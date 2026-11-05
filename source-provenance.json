@@ -4,6 +4,17 @@
     "initialReleaseVersion": "5.0.0",
     "historyImport": "unsquashed-subtree",
     "structuralImportCommit": "6efdceeeabad7ca0ed1b03d5ebcfeb033672827a",
+    "sourceLayout": {
+        "production": "packages/<name>/src (original src/<name> tree moved without functional edits)",
+        "preservedProductionTrees": {
+            "powerquery-parser": "3daf4f7d0fd9017e2d7e3ca4769a1e7f8328a96a",
+            "powerquery-formatter": "0eb5bdc9bb8153507d047f5283876fca98b3fd15",
+            "powerquery-language-services": "3c46364c9781c417103c002c6aa6eca574a55a66"
+        },
+        "toolsAndTests": "Original src siblings moved to package root with relative imports and fixture paths rebased",
+        "publishedOutput": "lib/<name> preserved by build-output relocation",
+        "sharedPolicies": "Root LICENSE, SECURITY.md, CODE_OF_CONDUCT.md; canonical root LICENSE staged into all tarballs"
+    },
     "upstreamIntegration": {
         "date": "2026-11-05",
         "method": "Preserve upstream commits as merge parents; apply reviewed deltas to workspace paths without replacing monorepo tooling",

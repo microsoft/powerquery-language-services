@@ -18,20 +18,20 @@ parameters, inline-length estimates, and output construction. The library itself
 
 | Location | Responsibility |
 | --- | --- |
-| `src\powerquery-formatter\format.ts` | Public formatting entry points and pass orchestration. |
-| `src\powerquery-formatter\serialize.ts` | Layout decisions, whitespace handling, and output state. |
-| `src\powerquery-formatter\passes\comment.ts` | Attach lexer comments to AST leaves and containers. |
-| `src\powerquery-formatter\passes\serializeParameter.ts` | Resolve a formatting parameter object for each node. |
-| `src\powerquery-formatter\passes\preProcessParameter.ts` | Apply source-sensitive record overrides. |
-| `src\powerquery-formatter\passes\utils\linearLength.ts` | Active cached inline-length estimator. |
-| `src\powerquery-formatter\passes\commonTypes.ts` | Shared pass maps, state types, and parameter vocabulary. |
-| `src\powerquery-formatter\themes` | Default rules, scope naming, selector matching, trie, and caches. |
-| `src\powerquery-formatter\trace.ts` | Formatter trace phase names. |
-| `src\benchmark` | JSON configuration, measurement engine, phase diagnostics, and CLI reports. |
-| `src\scripts\recursiveDirectoryFormat.ts` | Recursive, in-place file formatting utility. |
-| `src\test` | Formatting examples, tracing regressions, and benchmark tests. |
+| `src\format.ts` | Public formatting entry points and pass orchestration. |
+| `src\serialize.ts` | Layout decisions, whitespace handling, and output state. |
+| `src\passes\comment.ts` | Attach lexer comments to AST leaves and containers. |
+| `src\passes\serializeParameter.ts` | Resolve a formatting parameter object for each node. |
+| `src\passes\preProcessParameter.ts` | Apply source-sensitive record overrides. |
+| `src\passes\utils\linearLength.ts` | Active cached inline-length estimator. |
+| `src\passes\commonTypes.ts` | Shared pass maps, state types, and parameter vocabulary. |
+| `src\themes` | Default rules, scope naming, selector matching, trie, and caches. |
+| `src\trace.ts` | Formatter trace phase names. |
+| `benchmark` | JSON configuration, measurement engine, phase diagnostics, and CLI reports. |
+| `scripts\recursiveDirectoryFormat.ts` | Recursive, in-place file formatting utility. |
+| `test` | Formatting examples, tracing regressions, and benchmark tests. |
 
-`src\powerquery-formatter\index.ts` re-exports `format.ts` and `serialize.ts`; `src\index.ts`
+`src\index.ts` re-exports `format.ts` and `serialize.ts`; root `index.ts`
 re-exports that library barrel for repository consumers. Theme and pass internals are not re-exported
 through the main library barrel.
 
@@ -354,7 +354,7 @@ for CPU profiling and uninstrumented timing comparisons.
 
 ## Benchmarking
 
-Sources: `src\benchmark\config.ts`, `benchmark.ts`, and `cli.ts`.
+Sources: `benchmark\config.ts`, `benchmark.ts`, and `cli.ts`.
 
 The benchmark CLI follows the PQLS JSON-payload/report approach. It is a developer tool, not part of
 the main library exports. [README.md](README.md#benchmark) shows a minimal invocation.
@@ -437,7 +437,7 @@ is emitted to stdout before attempting to persist it.
 
 ## Tests and extension guidance
 
-Source: `src\test` and the build/test configuration.
+Source: `test` and the build/test configuration.
 
 `simple.ts`, `comments.ts`, `section.ts`, and `smallPrograms.ts` cover syntax and formatting examples.
 `common.ts`'s `expectFormat` formats twice and compares the results for stability. Its comparison trims

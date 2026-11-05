@@ -49,6 +49,9 @@ Benchmark commands and methodology are documented in the
 [formatter](packages/powerquery-formatter/README.md#benchmark) and
 [services](packages/powerquery-language-services/README.md#benchmarking) READMEs.
 Open the repository root in VS Code for package-aware build/debug tasks.
+Production source is `packages/<name>/src`; tests and developer tools are package-root siblings.
+Shared license, security, conduct policy, and issue forms live at the repository root. Packaging
+includes the canonical root LICENSE in every tarball while preserving `lib/<name>` deep imports.
 
 ## Release preparation
 

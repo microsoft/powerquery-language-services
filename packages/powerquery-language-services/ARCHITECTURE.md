@@ -66,25 +66,25 @@ parser submodules directly, so parser upgrades affect more than the top-level le
 
 The package's runtime and declaration entry points are
 `lib\powerquery-language-services\index.js` and `lib\powerquery-language-services\index.d.ts`.
-The corresponding [source barrel](src/powerquery-language-services/index.ts) exports analysis,
+The corresponding [source barrel](index.ts) exports analysis,
 providers, libraries, validation, formatting, document symbols, settings, and supporting utilities.
-[src\index.ts](src/index.ts) re-exports that barrel for the source tree.
+[index.ts](index.ts) re-exports that barrel for the source tree.
 
 | Area | Principal source | Role |
 | --- | --- | --- |
-| Analysis | [analysis\analysisBase.ts](src/powerquery-language-services/analysis/analysisBase.ts) | Owns one document's parse task, provider instances, and shared type cache; orchestrates editor requests. |
-| Memoization | [analysis\memoizedAnalysis.ts](src/powerquery-language-services/analysis/memoizedAnalysis.ts) | Reuses intermediate inspection promises across requests. |
-| Inspection | [inspection\task.ts](src/powerquery-language-services/inspection/task.ts) | Lower-level inspection facade over parse state and cursor position. |
-| Scope | [inspection\scope\scopeInspection.ts](src/powerquery-language-services/inspection/scope/scopeInspection.ts) | Builds lexical environments for node IDs. |
-| Types | [inspection\type\task.ts](src/powerquery-language-services/inspection/type/task.ts) | Entry points for expression and scope type inference. |
-| Providers | [providers\commonTypes.ts](src/powerquery-language-services/providers/commonTypes.ts) | Feature interfaces and request-context contracts. |
-| Libraries | [library\library.ts](src/powerquery-language-services/library/library.ts) | Host-supplied symbol metadata and external type resolution. |
-| Validation | [validate\validate.ts](src/powerquery-language-services/validate/validate.ts) | Collects syntax and semantic diagnostics using analysis state. |
-| Formatting | [formatter.ts](src/powerquery-language-services/formatter.ts) | Adapts formatter output to a full-document edit. |
-| Localization | [localization\templates.ts](src/powerquery-language-services/localization/templates.ts) | Localized message templates and locale mapping. |
+| Analysis | [analysis\analysisBase.ts](src/analysis/analysisBase.ts) | Owns one document's parse task, provider instances, and shared type cache; orchestrates editor requests. |
+| Memoization | [analysis\memoizedAnalysis.ts](src/analysis/memoizedAnalysis.ts) | Reuses intermediate inspection promises across requests. |
+| Inspection | [inspection\task.ts](src/inspection/task.ts) | Lower-level inspection facade over parse state and cursor position. |
+| Scope | [inspection\scope\scopeInspection.ts](src/inspection/scope/scopeInspection.ts) | Builds lexical environments for node IDs. |
+| Types | [inspection\type\task.ts](src/inspection/type/task.ts) | Entry points for expression and scope type inference. |
+| Providers | [providers\commonTypes.ts](src/providers/commonTypes.ts) | Feature interfaces and request-context contracts. |
+| Libraries | [library\library.ts](src/library/library.ts) | Host-supplied symbol metadata and external type resolution. |
+| Validation | [validate\validate.ts](src/validate/validate.ts) | Collects syntax and semantic diagnostics using analysis state. |
+| Formatting | [formatter.ts](src/formatter.ts) | Adapts formatter output to a full-document edit. |
+| Localization | [localization\templates.ts](src/localization/templates.ts) | Localized message templates and locale mapping. |
 
 `textDocument(id, version, content)` creates a `TextDocument` with language ID `"powerquery"`.
-The [common types barrel](src/powerquery-language-services/commonTypes.ts) also re-exports commonly
+The [common types barrel](src/commonTypes.ts) also re-exports commonly
 used LSP types. These are data contracts, not a dependency on a running VS Code process.
 
 ## Analysis lifecycle and result contracts
@@ -94,7 +94,7 @@ used LSP types. These are data contracts, not a dependency on a running VS Code 
 The class chain is `DocumentAnalysis extends MemoizedAnalysis extends AnalysisBase`.
 `DocumentAnalysis` adds a protected `getText(range?)` wrapper; it is not a document manager.
 
-[AnalysisUtils.analysis(document, settings)](src/powerquery-language-services/analysis/analysisUtils.ts)
+[AnalysisUtils.analysis(document, settings)](src/analysis/analysisUtils.ts)
 is the normal factory. It either returns a cached analysis for a matching URI/version or constructs
 a new `DocumentAnalysis`.
 
@@ -111,7 +111,7 @@ snapshot; do not mutate the supplied document and expect its parse state to upda
 
 ### Results are not just values or failures
 
-The feature methods in the [Analysis interface](src/powerquery-language-services/analysis/analysis.ts)
+The feature methods in the [Analysis interface](src/analysis/analysis.ts)
 return `Promise<Result<T | undefined, CommonError>>`:
 
 | Result | Meaning |
@@ -166,27 +166,27 @@ Autocomplete aggregation does not globally sort or deduplicate the returned item
 
 ### Built-in provider responsibilities
 
-[LanguageAutocompleteItemProvider](src/powerquery-language-services/providers/languageCompletionItemProvider.ts)
+[LanguageAutocompleteItemProvider](src/providers/languageCompletionItemProvider.ts)
 turns inspected keywords, language constants, and primitive types into completion items. It excludes
 hash-prefixed constructor keywords such as `#table` from its keyword results so they can be supplied
 as library symbols. It also adds snippet items when relevant keywords are available.
 
-[LibraryProvider](src/powerquery-language-services/providers/libraryProvider.ts) supplies completion,
+[LibraryProvider](src/providers/libraryProvider.ts) supplies completion,
 hover, and signature help from host library definitions. Library completion requires identifier text
 and a replacement range in its context. Signatures are cached by label inside the provider.
 
-[LocalDocumentProvider](src/powerquery-language-services/providers/localDocumentProvider/localDocumentProvider.ts)
+[LocalDocumentProvider](src/providers/localDocumentProvider/localDocumentProvider.ts)
 supplies field and scope completion, local definitions, local hover and signatures, folding, and
 semantic tokens. Local definitions point to the creator's range in the same document URI. There is no
 cross-document definition resolver in the built-in provider.
 
 `ILibraryProvider` combines completion, hover, and signature interfaces. `ILocalDocumentProvider`
 combines those with definition, folding, and semantic-token interfaces.
-[NullSymbolProvider](src/powerquery-language-services/providers/nullSymbolProvider.ts) is a reusable
+[NullSymbolProvider](src/providers/nullSymbolProvider.ts) is a reusable
 no-op implementation for disabling provider features or building test setups.
 
 The optional factories on
-[AnalysisSettings](src/powerquery-language-services/analysis/analysisSettings.ts) replace these
+[AnalysisSettings](src/analysis/analysisSettings.ts) replace these
 providers at construction time:
 
 | Factory | Inputs |
@@ -201,9 +201,9 @@ symbol-extraction or rename implementations.
 
 ### Completion-specific data
 
-An [AutocompleteItem](src/powerquery-language-services/inspection/autocomplete/autocompleteItem/autocompleteItem.ts)
+An [AutocompleteItem](src/inspection/autocomplete/autocompleteItem/autocompleteItem.ts)
 extends an LSP `CompletionItem` with `powerQueryType` and `jaroWinklerScore`.
-[AutocompleteItemUtils](src/powerquery-language-services/inspection/autocomplete/autocompleteItem/autocompleteItemUtils.ts)
+[AutocompleteItemUtils](src/inspection/autocomplete/autocompleteItem/autocompleteItemUtils.ts)
 constructs items, replacement edits, commit characters, and snippets. Its `comparer` orders by
 descending similarity score and then by label, but callers must opt into sorting.
 
@@ -221,7 +221,7 @@ must handle both instead of assuming an error-free AST.
 
 ### Cursor interpretation
 
-[ActiveNodeUtils.activeNode](src/powerquery-language-services/inspection/activeNode/activeNodeUtils.ts)
+[ActiveNodeUtils.activeNode](src/inspection/activeNode/activeNodeUtils.ts)
 searches leaves before, on, and after the cursor, considers unfinished parse contexts, and selects the
 node matching the expected editing context. Operators and delimiters influence which adjacent node
 is selected. The result is a discriminated union:
@@ -231,7 +231,7 @@ is selected. The result is a discriminated union:
 | `ActiveNode` | Leaf-to-root ancestry, leaf relationship to the cursor, binding-key context, and identifiers under the cursor. |
 | `OutOfBoundPosition` | Cursor position without a selected AST/context ancestry, including empty-document cases. |
 
-The [active-node types](src/powerquery-language-services/inspection/activeNode/activeNode.ts) distinguish
+The [active-node types](src/inspection/activeNode/activeNode.ts) distinguish
 inclusive identifier bounds `[start, end]` from exclusive-start bounds `(start, end]`.
 Completion and rename use inclusive identifiers; hover and definition use exclusive identifiers and
 exclude parameter-declaration hover contexts. These boundaries explain why moving one character can
@@ -239,7 +239,7 @@ change feature availability.
 
 ### Inspection facade versus high-level analysis
 
-[Inspection.inspect](src/powerquery-language-services/inspection/task.ts) accepts existing parse state,
+[Inspection.inspect](src/inspection/task.ts) accepts existing parse state,
 an optional parse error, a position, and an optional reusable `TypeCache`. It creates an
 `InspectionInstance` containing autocomplete, invocation/scope/type promises, expected-type
 information, and helpers for scope lookup and identifier collection.
@@ -251,22 +251,22 @@ information, and helpers for scope lookup and identifier collection.
 `AnalysisBase` calls individual inspection operations as needed; it does not create a full
 `InspectionInstance` for every request.
 
-[Autocomplete inspection](src/powerquery-language-services/inspection/autocomplete/task.ts) combines
+[Autocomplete inspection](src/inspection/autocomplete/task.ts) combines
 field-access, keyword, language-constant, and primitive-type strategies. It awaits field-access
 inspection and then keyword inspection; the remaining strategies are synchronous. This is distinct
 from the parallel provider fan-out. A parse-error token can become a trailing-token hint for
 completion in incomplete or invalid text.
 
-[Expected-type inspection](src/powerquery-language-services/inspection/expectedType.ts) walks ancestry
+[Expected-type inspection](src/inspection/expectedType.ts) walks ancestry
 and child attribute positions to infer what kind of expression is expected. That information is
 available on `InspectionInstance`, but `AnalysisBase` does not currently use it to filter or rank the
 combined completion results.
 
 ## Scope construction and identifier resolution
 
-[Scope inspection](src/powerquery-language-services/inspection/scope/scopeInspection.ts) builds scopes
+[Scope inspection](src/inspection/scope/scopeInspection.ts) builds scopes
 top-down along a node's ancestry, reusing entries from `scopeById` when available.
-A [NodeScope](src/powerquery-language-services/inspection/scope/scope.ts) maps identifier spellings to
+A [NodeScope](src/inspection/scope/scope.ts) maps identifier spellings to
 scope items, not directly to types.
 
 Scope items represent let variables, record fields, section members, function parameters, the
@@ -285,7 +285,7 @@ Key rules implemented here:
 - Field selectors and projections inherit only `Each` items from their parent scope, not all lexical
   bindings. Their field names are not ordinary variable references.
 
-[Identifier dereferencing](src/powerquery-language-services/inspection/dereferencedIdentifier/dereferencedIdentifierUtils.ts)
+[Identifier dereferencing](src/inspection/dereferencedIdentifier/dereferencedIdentifierUtils.ts)
 follows aliases until it reaches a value, parameter, external identifier, recursive reference, or
 undefined endpoint. It tracks visited node IDs to stop mutual-recursion cycles and preserves the
 distinction between `name` and `@name` when resolving shadowed bindings.
@@ -299,9 +299,9 @@ the supplied `newName`, so the API is not a complete rename-validation service.
 
 ## Type inference and lazy scope types
 
-[tryType](src/powerquery-language-services/inspection/type/task.ts) creates an `InspectTypeState` from
+[tryType](src/inspection/type/task.ts) creates an `InspectTypeState` from
 inspection settings, the parser indexes, and a `TypeCache`, then calls
-[`inspectXor`](src/powerquery-language-services/inspection/type/inspectType/common.ts).
+[`inspectXor`](src/inspection/type/inspectType/common.ts).
 The dispatcher selects an expression-specific inspector and caches computed types by node ID.
 
 Inspectors cover constants and literals, identifiers, lists, records, tables, functions, invocation,
@@ -328,7 +328,7 @@ in the relevant inspectors; it is not a final global conversion pass. For exampl
 returns a primitive list without inspecting every element, while function-expression handling has
 its own strategy-specific behavior.
 
-The helpers in [InspectionUtils](src/powerquery-language-services/inspectionUtils.ts) build inspection
+The helpers in [InspectionUtils](src/inspectionUtils.ts) build inspection
 settings from parser settings, defaulting to an empty library, extended inference, and workspace-cache
 permission. `eachScopeById` lets a host supply the implicit row/parameter type for individual `each`
 nodes when local syntax alone cannot determine it.
@@ -359,17 +359,17 @@ completion currently loops through the visible scope and resolves each candidate
 
 ### Function calls
 
-[Invocation inspection](src/powerquery-language-services/inspection/invokeExpression/invokeExpression.ts)
+[Invocation inspection](src/inspection/invokeExpression/invokeExpression.ts)
 infers the callable's type, identifies whether the name is local, and, for a `DefinedFunction`, collects
 argument nodes/types, expected argument counts, and type-check results.
 An empty trailing parse-context argument is not counted as a supplied argument.
 
-[Current-invocation inspection](src/powerquery-language-services/inspection/invokeExpression/currentInvokeExpression.ts)
+[Current-invocation inspection](src/inspection/invokeExpression/currentInvokeExpression.ts)
 adds the cursor's argument ordinal for the innermost containing call. Signature-help context requires
 a function name and argument ordinal; not every callable expression yields signature help.
 
 Return-type inference is separate from argument validation:
-[inspectTypeInvokeExpression](src/powerquery-language-services/inspection/type/inspectType/inspectTypeInvokeExpression.ts)
+[inspectTypeInvokeExpression](src/inspection/type/inspectType/inspectTypeInvokeExpression.ts)
 first tries an external invocation resolver when appropriate, then falls back to the callable's type
 and a defined function's return type.
 
@@ -389,22 +389,22 @@ entries. Key enumeration and completion enumerate both collections, so duplicate
 automatically deduplicated. The callback may run repeatedly; avoid expensive recomputation if the
 host can provide a stable snapshot.
 
-[External type requests](src/powerquery-language-services/externalType/externalType.ts) distinguish:
+[External type requests](src/externalType/externalType.ts) distinguish:
 
 - `Value`: the type of the external identifier itself, such as a function signature.
 - `Invocation`: the result type of calling that identifier, with inferred argument types supplied.
 
 `ILibrary.externalTypeResolver` is synchronous. Although asynchronous resolver type aliases also
 exist, they are not the function contract stored on `ILibrary`.
-[Resolver composition](src/powerquery-language-services/externalType/externalTypeUtils.ts) uses the
+[Resolver composition](src/externalType/externalTypeUtils.ts) uses the
 first resolver that returns a defined type.
 
-[LibraryDefinitionUtils.externalTypeResolver](src/powerquery-language-services/library/libraryDefinitionUtils.ts)
+[LibraryDefinitionUtils.externalTypeResolver](src/library/libraryDefinitionUtils.ts)
 adapts definition metadata: value requests receive `asPowerQueryType`; invocation requests receive a
 defined function's return type, or `Any` when a known definition has no defined-function return type.
 A custom resolver can model transformations such as adding a column to the type of a table argument.
 
-[LibrarySymbolUtils.createLibrary](src/powerquery-language-services/library/librarySymbolUtils.ts)
+[LibrarySymbolUtils.createLibrary](src/library/librarySymbolUtils.ts)
 converts serialized `LibrarySymbol` metadata into definitions and composes a custom resolver before
 the metadata-derived fallback. Conversion can partially succeed: an error result includes the usable
 library and `failedLibrarySymbolConversions`, not just an exception. Consumers must inspect that
@@ -415,7 +415,7 @@ it should not expect runtime-library completion or externally resolved types.
 
 ## Validation pipeline
 
-[`validate(document, analysisSettings, validationSettings)`](src/powerquery-language-services/validate/validate.ts)
+[`validate(document, analysisSettings, validationSettings)`](src/validate/validate.ts)
 returns `Promise<Result<ValidateOk | undefined, CommonError>>`, where `ValidateOk` contains
 `diagnostics` and `hasSyntaxError`.
 
@@ -437,9 +437,9 @@ The top-level validators do not run as a four-way `Promise.all`. Invocation vali
 individual invocation inspections and diagnostic conversion with `Promise.all`. Type and scope state
 are reused through the acquired analysis's `TypeCache`.
 
-[ValidationSettings](src/powerquery-language-services/validate/validationSettings/validationSettings.ts)
+[ValidationSettings](src/validate/validationSettings/validationSettings.ts)
 extends `InspectionSettings`. The
-[settings factory](src/powerquery-language-services/validate/validationSettings/validationSettingsUtils.ts)
+[settings factory](src/validate/validationSettings/validationSettingsUtils.ts)
 enables all four checks below by default and uses `"Unknown Source"` unless overridden.
 
 | Setting | Current effect |
@@ -457,7 +457,7 @@ Unknown-name diagnostics can suggest a nearby local/library name using Jaro-Wink
 The current suggestion threshold is strictly greater than `0.9`; library keys are collected once per
 validation run and candidate lists are reused per `NodeScope` object.
 
-[Parse diagnostics](src/powerquery-language-services/validate/validateParse.ts) use the parser message
+[Parse diagnostics](src/validate/validateParse.ts) use the parser message
 and offending-token range, or a rightmost parsed leaf when no error token exists. If no usable range
 exists, that conversion can produce no diagnostic even though `hasSyntaxError` is true.
 `DiagnosticErrorCode` includes a lex-error code, but this pipeline does not convert lexer-stage
@@ -518,7 +518,7 @@ terminal-state or document-close protocol enforced by this library.
 
 ## Formatting and editor-facing structures
 
-[tryFormat](src/powerquery-language-services/formatter.ts) is independent of analysis and its caches.
+[tryFormat](src/formatter.ts) is independent of analysis and its caches.
 It merges formatter defaults with supplied settings and formats the complete document. Success
 returns one full-document replacement edit, not a minimal edit set or range-formatting operation.
 Formatter lexer/parser failures produce `Ok(undefined)`; common errors go through the outer result
@@ -526,15 +526,15 @@ wrapper.
 
 Document symbols are generated from completed identifier-paired expressions and records using parent
 node IDs to build hierarchy. Symbol extraction is present both in `AnalysisBase.getDocumentSymbols`
-and the exported [documentSymbols.ts](src/powerquery-language-services/documentSymbols.ts) helper;
+and the exported [documentSymbols.ts](src/documentSymbols.ts) helper;
 changes to symbol behavior should account for both paths.
 
-[Folding ranges](src/powerquery-language-services/providers/localDocumentProvider/foldingRanges.ts)
+[Folding ranges](src/providers/localDocumentProvider/foldingRanges.ts)
 come from multi-line completed AST nodes of selected kinds, including functions, conditionals, calls,
 lets, lists, records, section members, metadata, and type-primary expressions. This is AST-based
 folding, not a general comment-region scanner.
 
-[Partial semantic tokens](src/powerquery-language-services/providers/localDocumentProvider/partialSemanticToken.ts)
+[Partial semantic tokens](src/providers/localDocumentProvider/partialSemanticToken.ts)
 are gathered in a deliberate priority order, with identifier-expression classification last.
 Each output contains an absolute `Range`, a `SemanticTokenTypes` value, and modifiers. The host must
 adapt these partial tokens to its protocol, including any sorting, overlap resolution, legend lookup,
@@ -567,14 +567,14 @@ must become a top-level cancellation error.
 
 Operations commonly use the parser's `TraceManager.entry(category, operation, correlationId)`,
 pass the resulting `trace.id` to nested work, and call `trace.exit(details)`.
-[Trace categories](src/powerquery-language-services/trace.ts) separate analysis/validation, providers,
-autocomplete, and inspection. [TraceUtils](src/powerquery-language-services/traceUtils.ts) adds compact
+[Trace categories](src/trace.ts) separate analysis/validation, providers,
+autocomplete, and inspection. [TraceUtils](src/traceUtils.ts) adds compact
 node/type metadata. This instrumentation helps distinguish parsing, scope construction, type
 inference, and provider latency; it is not a performance benchmark.
 
 ### Localization
 
-[Localization templates](src/powerquery-language-services/localization/templates.ts) are backed by
+[Localization templates](src/localization/templates.ts) are backed by
 JSON resources. Locale lookup lowercases the requested locale and falls back to the default English
 templates. Validation helpers construct localized messages; parse diagnostics reuse the parser's
 message. Library-symbol conversion also uses templates for parameter documentation.
@@ -582,24 +582,24 @@ message. Library-symbol conversion also uses templates for parameter documentati
 ## Tests and development infrastructure
 
 Tests use Mocha, Chai, and TypeScript through `ts-node/register`.
-[.mocharc.json](.mocharc.json) discovers `src\test\**\*.test.ts`; the
+[.mocharc.json](.mocharc.json) discovers `test\**\*.test.ts`; the
 [composite reporter](mochaReporter.js) emits readable console and XUnit results to
 `test-results.xml`. The build is not
 required merely to discover the source tests, though CI builds before running them.
 
 | Test area | Architectural contract exercised |
 | --- | --- |
-| [analysis.test.ts](src/test/analysis.test.ts) | High-level provider composition and local/library precedence, including delayed providers. |
-| [externalConsumption.test.ts](src/test/externalConsumption.test.ts) | Consumption through the public source barrel and re-exported contracts. |
-| [inspection tests](src/test/inspection) | Cursor boundaries, incomplete syntax, scope/alias behavior, expression types, invocation context, completion strategies, and rename edits. |
-| [scopeTypeByKey.test.ts](src/test/inspection/scopeTypeByKey.test.ts) | Lazy resolution, caching, missing keys, bulk enumeration, and resolver failure/retry behavior. |
-| [provider tests](src/test/providers) | Local and library feature behavior and multi-provider contexts. |
-| [validation tests](src/test/validation) | Duplicate bindings/parameters, argument mismatches, unknown names, and semantic checks on parse errors. |
-| [library tests](src/test/library.test.ts) and [documentation tests](src/test/library/buildParameterDocumentation.test.ts) | Symbol conversion, external resolution, and parameter documentation. |
-| [documentSymbols.test.ts](src/test/documentSymbols.test.ts) | Symbol extraction and nesting. |
+| [analysis.test.ts](test/analysis.test.ts) | High-level provider composition and local/library precedence, including delayed providers. |
+| [externalConsumption.test.ts](test/externalConsumption.test.ts) | Consumption through the public source barrel and re-exported contracts. |
+| [inspection tests](test/inspection) | Cursor boundaries, incomplete syntax, scope/alias behavior, expression types, invocation context, completion strategies, and rename edits. |
+| [scopeTypeByKey.test.ts](test/inspection/scopeTypeByKey.test.ts) | Lazy resolution, caching, missing keys, bulk enumeration, and resolver failure/retry behavior. |
+| [provider tests](test/providers) | Local and library feature behavior and multi-provider contexts. |
+| [validation tests](test/validation) | Duplicate bindings/parameters, argument mismatches, unknown names, and semantic checks on parse errors. |
+| [library tests](test/library.test.ts) and [documentation tests](test/library/buildParameterDocumentation.test.ts) | Symbol conversion, external resolution, and parameter documentation. |
+| [documentSymbols.test.ts](test/documentSymbols.test.ts) | Symbol extraction and nesting. |
 
-[TestConstants](src/test/testConstants.ts) supplies small mock libraries and inspection/analysis
-settings, plus a standard-library JSON fixture. [TestUtils](src/test/testUtils) provides parse,
+[TestConstants](test/testConstants.ts) supplies small mock libraries and inspection/analysis
+settings, plus a standard-library JSON fixture. [TestUtils](test/testUtils) provides parse,
 inspection, analysis, and validation assertions. Cursor-oriented cases commonly use `|` in source
 text to mark a position; test helpers remove the marker before analysis.
 

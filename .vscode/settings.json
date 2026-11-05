@@ -22,7 +22,7 @@
         "./packages/powerquery-language-services"
     ],
     "mochaExplorer.cwd": "${workspaceFolder}/packages/powerquery-language-services",
-    "mochaExplorer.files": ["src/test/**/*.test.ts"],
+    "mochaExplorer.files": ["test/**/*.test.ts"],
     "mochaExplorer.require": ["ts-node/register"],
     "mochaExplorer.env": {
         "NODE_ENV": "test"

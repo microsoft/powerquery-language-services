@@ -14,7 +14,7 @@ The script runs TypeScript directly; a build is not required.
 ## Choose the workload
 
 Read the Benchmarking section of `packages\powerquery-language-services\README.md`. If the interface has changed, consult
-`packages\powerquery-language-services\src\benchmark\config.ts`, `packages\powerquery-language-services\src\benchmark\benchmark.ts`, and `packages\powerquery-language-services\src\benchmark\cli.ts`
+`packages\powerquery-language-services\benchmark\config.ts`, `packages\powerquery-language-services\benchmark\benchmark.ts`, and `packages\powerquery-language-services\benchmark\cli.ts`
 before constructing the payload.
 
 Use the files and operations requested by the user. If they are unspecified, clarify the workload

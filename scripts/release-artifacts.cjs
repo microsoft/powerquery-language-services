@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const os = require("node:os");
 const tar = require("tar");
 const { PACKAGES, check, readJson, writeJson, same, versionTag, internalDependencies,
     validatePackage, loadRelease, run, npm } = require("./release.cjs");
@@ -53,7 +54,7 @@ function allowedFile(relative, entry) {
 }
 
 function localizationFiles(root, entry) {
-    const source = path.join(root, entry.workspace, "src", entry.slug, "localization", "templates");
+    const source = path.join(root, entry.workspace, "src", "localization", "templates");
     const files = walk(source).filter((file) => file.endsWith(".json"));
     if (entry.slug !== "powerquery-formatter") {
         check(files.length > 1 && files.some((file) => /templates?\.json$/.test(file)) &&
@@ -74,7 +75,7 @@ function requireOutputs(files, entry) {
 
 function requireBuiltOutputs(root, entry) {
     const workspace = path.join(root, entry.workspace);
-    const source = path.join(workspace, "src", entry.slug);
+    const source = path.join(workspace, "src");
     const modules = walk(source).filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
     check(modules.length > 0, `${entry.name} has no production TypeScript sources`);
     for (const file of modules) {
@@ -154,7 +155,7 @@ async function inspectTarball(filename, entry, version, root) {
                 `${entry.name} localization content differs from source: ${relative}`);
         }
         for (const legal of ["README.md", "LICENSE", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
-            const source = path.join(workspace, legal);
+            const source = legal === "LICENSE" ? path.join(root, legal) : path.join(workspace, legal);
             if (fs.existsSync(source)) {
                 check(files.has(legal) && files.get(legal).equals(fs.readFileSync(source)),
                     `${entry.name} missing or changed legal/documentation output ${legal}`);
@@ -224,10 +225,11 @@ async function packRelease(root) {
         packages: [],
     };
     try {
+        check(fs.existsSync(path.join(root, "LICENSE")), "Repository LICENSE is missing");
         for (const entry of PACKAGES) {
             const workspace = path.join(root, entry.workspace);
             requireBuiltOutputs(root, entry);
-            for (const required of [entry.main, entry.types, "README.md", "LICENSE"]) {
+            for (const required of [entry.main, entry.types, "README.md"]) {
                 check(fs.existsSync(path.join(workspace, required)), `${entry.name} missing build output ${required}; build first`);
             }
             for (const { relative, source } of localizationFiles(root, entry)) {
@@ -240,7 +242,26 @@ async function packRelease(root) {
             const output = inside(dist, `npm/${entry.slug}`);
             fs.rmSync(output, { force: true, recursive: true });
             fs.mkdirSync(output, { recursive: true });
-            const result = JSON.parse(npm(["pack", workspace, "--ignore-scripts", "--json", "--pack-destination", output], { cwd: root }));
+            const staging = fs.mkdtempSync(path.join(os.tmpdir(), "powerquery-package-"));
+            let result;
+            try {
+                const production = `lib/${entry.slug}`;
+                for (const file of walk(path.join(workspace, production), production)) {
+                    check(allowedFile(file, entry), `${entry.name} contains unexpected built file: ${file}`);
+                    const destination = path.join(staging, file);
+                    fs.mkdirSync(path.dirname(destination), { recursive: true });
+                    fs.copyFileSync(path.join(workspace, file), destination);
+                }
+                for (const file of ["package.json", "README.md", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
+                    if (fs.existsSync(path.join(workspace, file))) {
+                        fs.copyFileSync(path.join(workspace, file), path.join(staging, file));
+                    }
+                }
+                fs.copyFileSync(path.join(root, "LICENSE"), path.join(staging, "LICENSE"));
+                result = JSON.parse(npm(["pack", staging, "--ignore-scripts", "--json", "--pack-destination", output], { cwd: root }));
+            } finally {
+                fs.rmSync(staging, { recursive: true, force: true });
+            }
             check(Array.isArray(result) && result.length === 1 && typeof result[0].filename === "string", "npm pack returned unexpected JSON");
             const actual = safeRelative(result[0].filename);
             check(!actual.includes("/") && actual.endsWith(".tgz"), "npm pack returned an unsafe filename");

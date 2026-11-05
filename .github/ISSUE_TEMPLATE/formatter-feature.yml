@@ -1,0 +1,27 @@
+name: Formatter feature
+description: Suggest a feature for powerquery-formatter.
+title: "[Formatter enhancement] "
+labels: ["enhancement", "powerquery-formatter"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Explain what you are trying to accomplish with powerquery-formatter.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Include Power Query examples or relevant API settings when helpful.

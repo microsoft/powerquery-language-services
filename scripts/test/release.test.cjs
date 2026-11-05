@@ -50,6 +50,7 @@ function createRepository(directory) {
     const data = repository();
     writeJson(path.join(directory, "package.json"), data.root);
     writeJson(path.join(directory, "package-lock.json"), data.lock);
+    fs.writeFileSync(path.join(directory, "LICENSE"), "MIT");
     PACKAGES.forEach((entry, index) => {
         fs.mkdirSync(path.join(directory, entry.workspace), { recursive: true });
         writeJson(path.join(directory, entry.workspace, "package.json"), data.metadata[index]);
@@ -272,7 +273,7 @@ test("pack requires every production module's JavaScript and declaration output"
     const directory = fixture(context);
     const entry = PACKAGES[0];
     const workspace = path.join(directory, entry.workspace);
-    const source = path.join(workspace, "src", entry.slug, "deep");
+    const source = path.join(workspace, "src", "deep");
     const output = path.join(workspace, "lib", entry.slug, "deep");
     fs.mkdirSync(source, { recursive: true });
     fs.mkdirSync(output, { recursive: true });
@@ -392,7 +393,7 @@ for (const [label, files, expected] of [
     test(`tar rejects ${label} runtime localizations against baseline source content`, async (context) => {
         const directory = fixture(context);
         createRepository(directory);
-        const source = path.join(directory, PACKAGES[0].workspace, "src", PACKAGES[0].slug, "localization", "templates");
+        const source = path.join(directory, PACKAGES[0].workspace, "src", "localization", "templates");
         fs.mkdirSync(source, { recursive: true });
         fs.writeFileSync(path.join(source, "template.json"), '{"message":"English"}');
         fs.writeFileSync(path.join(source, "template.fr-FR.json"), '{"message":"French"}');

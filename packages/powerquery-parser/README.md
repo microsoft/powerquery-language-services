@@ -8,7 +8,7 @@ A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) 
 
 Requires Node.js 22 or later. Install with `npm install @microsoft/powerquery-parser`.
 
-The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](src/example.ts).
+The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](example.ts).
 
 ### Lexing
 

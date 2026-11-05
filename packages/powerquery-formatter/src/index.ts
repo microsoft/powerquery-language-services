@@ -1,4 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export * from "./powerquery-formatter";
+export * from "./format";
+export * from "./serialize";

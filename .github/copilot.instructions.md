@@ -21,14 +21,14 @@ Language services provides intellisense functionality for the Power Query / M la
 
 ### Validation System
 
-- Main validation logic in `packages\powerquery-language-services\src\powerquery-language-services\validate\validate.ts`
+- Main validation logic in `packages\powerquery-language-services\src\validate\validate.ts`
 - ValidationSettings includes cancellationToken support
 - Current implementation has synchronous bottlenecks preventing effective cancellation
 - Performance degrades significantly with large files (30+ seconds for complex documents)
 
 ### Testing Patterns
 
-- Each package's test files are in its own `src\test` directory; services fixtures are in `packages\powerquery-language-services\src\test\files\`
+- Each package's test files are in its own `test` directory; services fixtures are in `packages\powerquery-language-services\test\files\`
 - Follow existing mocha patterns and style conventions
 
 ## Development Guidelines

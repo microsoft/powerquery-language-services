@@ -7,7 +7,11 @@
 `packages/powerquery-parser`, `packages/powerquery-formatter`, and
 `packages/powerquery-language-services` are the explicit release allowlist, in dependency order.
 The private repository root is orchestration only. Each public package retains its own runtime
-dependencies, compiler safety options, README, and license. Parser specification/style documents
+dependencies, compiler safety options, and README. `LICENSE`, `SECURITY.md`, and `CODE_OF_CONDUCT.md`
+are canonical at the repository root. The MIT license retains the complete Microsoft attribution;
+the newer imported security policy supplies the shared reporting guidance. The pack helper stages
+that root LICENSE into every tarball without restoring redundant package source copies.
+Parser specification/style documents
 and its NOTICE are retained. Package `files` allowlists exclude tests, samples, and benchmarks.
 
 Parser and formatter were imported with unsquashed Git subtree merges. Language services was moved
@@ -18,8 +22,13 @@ No POC branch or pending Dependabot commit is an import source.
 
 The initial version is `(highest frozen source major + 1).0.0`, hence 5.0.0 for parser 4.0.1,
 formatter 1.1.0, and services 1.3.0. The migration introduces no functional runtime changes.
-The formatter's benchmark test resolves `ts-node/register` through Node instead of assuming a
-package-local install; this is the sole intentional source-tree adjustment for workspace hoisting.
+Production code now lives at `packages/<name>/src`, with `test`, `benchmark`, and developer `scripts`
+as package-root siblings where present. Original production trees are moved without functional
+edits; test/tool imports and repository-relative paths are rebased. The formatter benchmark test
+also resolves `ts-node/register` through Node instead of assuming a package-local install.
+The build helper relocates TypeScript's `lib/src` output to `lib/<name>` and rebases emitted
+relative imports, preserving package main/types and supported deep import paths. Watch builds
+use the same output relocation, and clean removes the entire owned output/cache.
 
 Pending dependency PRs stay separate from the migration. Dependency resolutions required by the
 single new lockfile are reviewed here, not cherry-picked wholesale from pending PRs. Formatting
@@ -156,6 +165,13 @@ package/test artifacts for diagnostics only and contains no publishing credentia
 The `diagnostic-packages` artifact includes `dist/npm/**/*.tgz` and `dist/release-manifest.json`
 from the existing validation step. These are the three actual npm tarballs (`.tgz`, not renamed
 `.tar` files); no extra build or packaging pass is introduced.
+
+All `.github` configuration and issue templates are consolidated at the root. Package-specific
+bug and feature forms preserve the shared intake questions and apply static labels matching
+the package names, with no labeling workflow. The labels `powerquery-parser`,
+`powerquery-formatter`, and `powerquery-language-services` did not exist during inspection;
+repository owners must create them for GitHub's native automatic labeling to work. No live
+labels were created by this migration.
 Dependabot now uses the root npm lockfile and the root GitHub Actions configuration.
 
 All public Azure DevOps pipeline definitions were confirmed dead code by the maintainer and
