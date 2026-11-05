@@ -27,9 +27,6 @@
         "validate:release": "node scripts/release.cjs validate",
         "pack:release": "node scripts/release.cjs pack"
     },
-    "overrides": {
-        "serialize-javascript": "7.0.4"
-    },
     "devDependencies": {
         "@eslint/js": "^9.35.0",
         "prettier": "2.5.1",

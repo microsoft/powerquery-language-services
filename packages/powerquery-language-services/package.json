@@ -9,7 +9,7 @@
         "benchmark": "node --expose-gc --require ts-node/register src/benchmark/cli.ts",
         "watch": "tsc --project tsconfig.json --watch",
         "lint": "eslint src --ext ts",
-        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json"
+        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml"
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-language-services#readme",
     "repository": {
@@ -53,9 +53,7 @@
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-promise": "^7.2.1",
         "eslint-plugin-security": "^3.0.1",
-        "mocha": "^11.3.0",
-        "mocha-junit-reporter": "^2.2.1",
-        "mocha-multi-reporters": "^1.5.1",
+        "mocha": "^12.0.3",
         "prettier": "3.6.2",
         "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",

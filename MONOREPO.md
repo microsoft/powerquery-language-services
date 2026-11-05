@@ -24,8 +24,21 @@ package-local install; this is the sole intentional source-tree adjustment for w
 Pending dependency PRs stay separate from the migration. Dependency resolutions required by the
 single new lockfile are reviewed here, not cherry-picked wholesale from pending PRs. Formatting
 tool versions are pinned to each frozen lockfile to prevent unrelated source reformatting;
-formatter retains its legacy ESLint/Prettier stack. The parser's `serialize-javascript` override
-is enforced at the only effective override scope: the root manifest.
+formatter retains its legacy ESLint/Prettier stack. The merged upstream audit remediation
+([microsoft/powerquery-parser#438](https://github.com/microsoft/powerquery-parser/pull/438),
+[microsoft/powerquery-formatter#101](https://github.com/microsoft/powerquery-formatter/pull/101),
+and #312) is incorporated
+as a separately recorded history-preserving integration after the original freeze.
+It upgrades Mocha to 12.0.3 or later, replaces the obsolete third-party reporting packages
+with each upstream's composite built-in Spec/XUnit reporter, and removes the obsolete
+`serialize-javascript` override so the remediated dependency graph resolves normally.
+The package source majors did not change, so the initial shared version remains 5.0.0.
+
+The post-integration npm audit reports eight moderate development-dependency findings rooted
+in [minimatch globparts amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249);
+there are no high or critical findings. The same affected minimatch 10.2.6 dependency paths
+remain in the merged upstream remediation. A breaking dependency override or Mocha downgrade
+is not part of this migration; this residual finding needs a separately reviewed tooling fix.
 
 ## Builds, tests, and editors
 
@@ -38,7 +51,8 @@ and runtime JSON assets. TypeScript normalizes JSON whitespace on emission; vali
 localized message to source and requires tarball bytes to match the emitted runtime assets.
 
 `npm test` runs the three unit suites, parser resources, and release helper regression tests.
-The four package JUnit reports are:
+Mocha's composite Spec/XUnit reporters retain readable console output and the same four
+JUnit-compatible report paths; parser resources still have their distinct output:
 
 - `packages/powerquery-parser/test-results.xml`
 - `packages/powerquery-parser/test-results-resources.xml`

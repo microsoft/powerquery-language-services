@@ -583,7 +583,8 @@ message. Library-symbol conversion also uses templates for parameter documentati
 
 Tests use Mocha, Chai, and TypeScript through `ts-node/register`.
 [.mocharc.json](.mocharc.json) discovers `src\test\**\*.test.ts`; the
-[reporter configuration](mochaReporterConfig.json) emits console and JUnit results. The build is not
+[composite reporter](mochaReporter.js) emits readable console and XUnit results to
+`test-results.xml`. The build is not
 required merely to discover the source tests, though CI builds before running them.
 
 | Test area | Architectural contract exercised |

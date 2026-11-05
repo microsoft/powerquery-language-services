@@ -1,7 +1,0 @@
-{
-    "reporterEnabled": "spec, mocha-junit-reporter",
-    "mochaJunitReporterReporterOptions": {
-        "mochaFile": "test-results-resources.xml",
-        "testsuitesTitle": "Parser resource tests"
-    }
-}
