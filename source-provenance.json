@@ -10,9 +10,10 @@
         "sources": [
             {
                 "repository": "https://github.com/microsoft/powerquery-parser",
-                "commit": "1cb6649d1d186bba019092f6ada4d225775b2a9e",
+                "commit": "37e5cec3ba65d74b79ad3817e1534f1977f9d3de",
                 "version": "4.0.1",
-                "pullRequest": 438
+                "pullRequests": [438, 439],
+                "dependencyRemediationCommit": "1cb6649d1d186bba019092f6ada4d225775b2a9e"
             },
             {
                 "repository": "https://github.com/microsoft/powerquery-formatter",
@@ -31,6 +32,7 @@
             "Upgrade Mocha to ^12.0.3 and use upstream built-in Spec/XUnit composite reporters",
             "Remove mocha-junit-reporter, mocha-multi-reporters, obsolete reporter JSON, and serialize-javascript override",
             "Regenerate the root workspace lockfile for merged upstream audit remediation",
+            "Account for parser #439 Node 22 CI correction through the existing Windows Node 22.15.0 monorepo workflow",
             "Retain four distinct report paths, exact 5.0.0 internal edges, and existing runtime source/resource trees"
         ],
         "auditObservation": {

@@ -33,6 +33,10 @@ It upgrades Mocha to 12.0.3 or later, replaces the obsolete third-party reportin
 with each upstream's composite built-in Spec/XUnit reporter, and removes the obsolete
 `serialize-javascript` override so the remediated dependency graph resolves normally.
 The package source majors did not change, so the initial shared version remains 5.0.0.
+The final parser follow-up
+[microsoft/powerquery-parser#439](https://github.com/microsoft/powerquery-parser/pull/439)
+corrects its GitHub job to Node 22; the existing monorepo Windows job already uses Node 22.15.0.
+That commit is also retained in the merged upstream history.
 
 The post-integration npm audit reports eight moderate development-dependency findings rooted
 in [minimatch globparts amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249);
