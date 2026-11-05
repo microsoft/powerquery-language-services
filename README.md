@@ -15,8 +15,9 @@ Consumers require Node.js 22 or later. See each package's README for installatio
 
 ## Develop
 
-Use Node.js **22.15.0** and npm **11.5.2** from the repository root.
-GitHub Actions uses `windows-latest`, matching the existing upstream workflows:
+Use a supported Node.js version matching `engines.node` in the root `package.json` (currently
+**>=22**) and its bundled npm from the repository root. GitHub Actions reads that same Node
+range from `package.json` and uses `windows-latest`, matching the existing upstream runner:
 
 ```powershell
 npm ci --ignore-scripts

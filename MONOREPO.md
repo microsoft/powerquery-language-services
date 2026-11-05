@@ -35,7 +35,8 @@ with each upstream's composite built-in Spec/XUnit reporter, and removes the obs
 The package source majors did not change, so the initial shared version remains 5.0.0.
 The final parser follow-up
 [microsoft/powerquery-parser#439](https://github.com/microsoft/powerquery-parser/pull/439)
-corrects its GitHub job to Node 22; the existing monorepo Windows job already uses Node 22.15.0.
+corrects its GitHub job to Node 22; the monorepo Windows job selects Node from the root manifest's
+supported `engines.node` range.
 That commit is also retained in the merged upstream history.
 
 The post-integration npm audit reports eight moderate development-dependency findings rooted
@@ -46,7 +47,13 @@ is not part of this migration; this residual finding needs a separately reviewed
 
 ## Builds, tests, and editors
 
-Use Node 22.15.0 and npm 11.5.2; package consumers continue to require only Node >=22.
+Use Node matching the root `engines.node` range (currently >=22) and its bundled npm.
+GitHub Actions uses `node-version-file: package.json`, so the selected version follows that range,
+not an exact patch or a separate hardcoded CI major. `>=22` also permits later supported majors;
+it is not equivalent to `22.x`. Package consumers retain the same Node >=22 floor.
+The initial lockfile was generated with npm 11.5.2, but no feature requires that exact version.
+Locked restores and reviewed lockfile diffs provide dependency reproducibility without enforcing
+an unrelated Node patch or npm version in release helpers.
 Run `npm ci --ignore-scripts` at the root. No lifecycle hook is required for the documented
 commands. `npm run build` builds dependencies explicitly before dependents. `clean` removes only
 owned package `lib` directories, buildinfo files, and test reports, never contributor source or
@@ -63,7 +70,10 @@ JUnit-compatible report paths; parser resources still have their distinct output
 - `packages/powerquery-formatter/test-results.xml`
 - `packages/powerquery-language-services/test-results.xml`
 
-`npm run test:reports` rejects missing, empty, or failed reports. Workspace tests run with their
+Actions collects reports using `packages/**/test-results*.xml`, including both parser suites,
+and fails the upload if no reports match. Test failures still fail `npm test`; there is no
+separate exact-path/count check. Report collection runs after test failures as well.
+Workspace tests run with their
 package as the working directory so existing fixture-relative paths keep working. Root VS Code
 tasks/debug configurations select that same directory and use the root tools. ESLint projects
 are anchored to their configuration directories; do not prepend workspace paths twice.
@@ -128,11 +138,14 @@ still records HEAD and cannot attest uncommitted changes.
 
 ## CI and retired automation
 
-GitHub Actions runs the locked restore, lint, two clean builds, all tests, report validation, and
+GitHub Actions runs the locked restore, lint, two clean builds, all tests, report collection, and
 packed-consumer checks on `windows-latest`, matching all three frozen upstream GitHub workflows,
 with read-only repository permissions. The existing `build-and-test` job identity is retained;
 there is no additional operating-system matrix or acceptance gate. It retains
 package/test artifacts for diagnostics only and contains no publishing credentials or publisher.
+The `diagnostic-packages` artifact includes `dist/npm/**/*.tgz` and `dist/release-manifest.json`
+from the existing validation step. These are the three actual npm tarballs (`.tgz`, not renamed
+`.tar` files); no extra build or packaging pass is introduced.
 Dependabot now uses the root npm lockfile and the root GitHub Actions configuration.
 
 All public Azure DevOps pipeline definitions were confirmed dead code by the maintainer and

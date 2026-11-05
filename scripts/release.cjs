@@ -124,7 +124,6 @@ function loadRelease(root = ROOT, { lock = true, resolution = true } = {}) {
     const rootMetadata = readJson(path.join(root, "package.json"));
     check(rootMetadata.private === true, "Repository root must be private");
     same(rootMetadata.workspaces, PACKAGES.map((entry) => entry.workspace), "Expected only the three ordered public workspaces");
-    check(rootMetadata.packageManager === "npm@11.5.2", "Root packageManager must be npm@11.5.2");
     const metadata = PACKAGES.map((entry) => readJson(path.join(root, entry.workspace, "package.json")));
     const version = metadata[0].version;
     metadata.forEach((item, index) => validatePackage(item, PACKAGES[index], version));
@@ -160,7 +159,7 @@ function findNpmCli(env = process.env, execPath = process.execPath) {
     if (env.npm_execpath && /npm-cli\.js$/i.test(env.npm_execpath) && fs.existsSync(env.npm_execpath)) {
         return env.npm_execpath;
     }
-    // A global pinned npm may precede Node's older bundled npm on PATH.
+    // Honor the invoking npm or the executable selected on PATH.
     const search = (env.PATH ?? env.Path ?? "").split(path.delimiter).filter(Boolean);
     search.push(path.dirname(execPath));
     for (const directory of search) {
@@ -180,11 +179,6 @@ function findNpmCli(env = process.env, execPath = process.execPath) {
 
 function npm(args, options) {
     return run(process.execPath, [findNpmCli(), ...args], options);
-}
-
-function assertToolchain() {
-    check(process.versions.node === "22.15.0", `Release tooling requires Node 22.15.0, found ${process.versions.node}`);
-    check(npm(["--version"]) === "11.5.2", "Release tooling requires npm 11.5.2");
 }
 
 function setVersion(version, root = ROOT, refresh = () => npm(
@@ -229,7 +223,6 @@ async function main(args) {
     check(["version", "pack", "validate"].includes(command) &&
         (command === "version" ? rest.length === 1 : rest.length === 0),
     "Usage: node scripts/release.cjs version <SemVer> | pack | validate");
-    assertToolchain();
     if (command === "version") {
         setVersion(rest[0]);
         console.log(`Set the public release group to ${rest[0]}`);

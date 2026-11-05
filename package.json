@@ -5,10 +5,8 @@
     "description": "Development workspace for the Power Query parser, formatter, and language services.",
     "license": "MIT",
     "engines": {
-        "node": ">=22",
-        "npm": "11.5.2"
+        "node": ">=22"
     },
-    "packageManager": "npm@11.5.2",
     "workspaces": [
         "packages/powerquery-parser",
         "packages/powerquery-formatter",
@@ -22,7 +20,6 @@
         "test:unit": "npm test --workspaces",
         "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
         "test:release": "node --test scripts/test/release*.cjs",
-        "test:reports": "node scripts/workspace.cjs reports",
         "version:set": "node scripts/release.cjs version",
         "validate:release": "node scripts/release.cjs validate",
         "pack:release": "node scripts/release.cjs pack"

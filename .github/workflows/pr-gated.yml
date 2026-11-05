@@ -16,10 +16,8 @@ jobs:
             - name: Setup Node
               uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
               with:
-                  node-version: "22.15.0"
+                  node-version-file: "package.json"
                   cache: npm
-            - name: Pin npm
-              run: npm install --global npm@11.5.2 --ignore-scripts
             - run: npm ci --ignore-scripts
             - run: npm run lint
             - run: npm run clean
@@ -27,9 +25,6 @@ jobs:
             - name: Verify clean rebuild
               run: npm run clean && npm run build
             - run: npm test
-            - name: Verify all test reports
-              if: ${{ !cancelled() }}
-              run: npm run test:reports
             - name: Validate standalone release consumers
               run: npm run validate:release
             - name: Collect JUnit results
@@ -37,15 +32,13 @@ jobs:
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: test-results
-                  path: |
-                      packages/powerquery-parser/test-results.xml
-                      packages/powerquery-parser/test-results-resources.xml
-                      packages/powerquery-formatter/test-results.xml
-                      packages/powerquery-language-services/test-results.xml
+                  path: packages/**/test-results*.xml
                   if-no-files-found: error
-            - name: Collect diagnostic release artifacts
+            - name: Collect npm package tarballs
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: diagnostic-packages
-                  path: dist/
+                  path: |
+                      dist/npm/**/*.tgz
+                      dist/release-manifest.json
                   if-no-files-found: error

@@ -25,7 +25,7 @@ function packageMetadata(entry, version = VERSION) {
 function repository() {
     const root = {
         name: "powerquery-workspace", version: "1.0.0", private: true,
-        packageManager: "npm@11.5.2", workspaces: PACKAGES.map((entry) => entry.workspace),
+        workspaces: PACKAGES.map((entry) => entry.workspace),
         devDependencies: { typescript: "^5.9.2" },
     };
     const metadata = PACKAGES.map((entry) => packageMetadata(entry));
