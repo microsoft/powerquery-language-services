@@ -23,16 +23,18 @@
             },
             {
                 "repository": "https://github.com/microsoft/powerquery-language-services",
-                "commit": "3932cb07ff94c8bb9f3818101f6cd093baad34c8",
+                "commit": "834b14f660fad67b3cb71a9bff639e5245e377c1",
                 "version": "1.3.0",
-                "pullRequest": 312
+                "pullRequests": [312, 305],
+                "dependencyRemediationCommit": "3932cb07ff94c8bb9f3818101f6cd093baad34c8"
             }
         ],
         "changes": [
             "Upgrade Mocha to ^12.0.3 and use upstream built-in Spec/XUnit composite reporters",
             "Remove mocha-junit-reporter, mocha-multi-reporters, obsolete reporter JSON, and serialize-javascript override",
             "Regenerate the root workspace lockfile for merged upstream audit remediation",
-            "Account for parser #439 Node 22 CI correction through the existing Windows Node 22.15.0 monorepo workflow",
+            "Account for parser #439 Node 22 CI correction through the Windows monorepo workflow and root Node >=22 support range",
+            "Incorporate merged services #305 checkout/setup-node upgrades; the replaced dorny reporter is not reintroduced",
             "Retain four distinct report paths, exact 5.0.0 internal edges, and existing runtime source/resource trees"
         ],
         "auditObservation": {

@@ -38,6 +38,9 @@ The final parser follow-up
 corrects its GitHub job to Node 22; the monorepo Windows job selects Node from the root manifest's
 supported `engines.node` range.
 That commit is also retained in the merged upstream history.
+The later services #305 Actions update is retained as well: checkout v7.0.1 and setup-node
+v7.1.0 are used by the monorepo workflow. Its dorny reporter upgrade has no retained caller
+because the monorepo collects wildcard XML artifacts instead.
 
 The post-integration npm audit reports eight moderate development-dependency findings rooted
 in [minimatch globparts amplification](https://github.com/advisories/GHSA-g3hv-75wg-m249);
