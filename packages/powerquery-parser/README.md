@@ -14,11 +14,11 @@ The most common way to consume the project is to interact with the helper functi
 
 `Lexer.tryLex(settings, text)` lexes the complete document and returns `Result<LexerSnapshot, LexError.TLexError>`. It stops at the first lexical error, including unterminated text, quoted identifiers, and multiline comments. Errors contain one localized diagnostic, not a map of line errors. Diagnostic positions include the absolute UTF-16 offset, zero-based line offset, and grapheme column.
 
-The lexer retains its function-based token readers. Tokens and comments are emitted directly; line information is used only for source positions and type directives. `TaskUtils.tryLex` and `TaskUtils.tryLexParse` use the same lexer, and parser inputs remain `LexerSnapshot` values.
+The lexer uses function-based token readers. Tokens and comments are emitted directly; line information is used only for source positions and type directives. `TaskUtils.tryLex` and `TaskUtils.tryLexParse` use the same lexer, and parser inputs are `LexerSnapshot` values.
 
-**Breaking change:** the incremental APIs (`tryAppendLine`, `tryUpdateLine`, `tryUpdateRange`, `tryDeleteLine`), editable `State`/line/range types, line-token kinds, line-error maps and predicates, and `trySnapshot` are removed. Apply edits to the document text and call `Lexer.tryLex` again. There is no intermediate line state or separate snapshot-validation step.
+Apply edits to the document text and call `Lexer.tryLex` again. There is no intermediate line state or separate snapshot-validation step.
 
-Snapshots derive directive associations from their comments; the constructor no longer accepts a separate directive map. Grapheme-position queries index and cache the token's starting line, including for multiline tokens.
+Snapshots derive directive associations from their comments. Grapheme-position queries index and cache the token's starting line, including for multiline tokens.
 
 ```typescript
 import { DefaultSettings, Lexer, ResultUtils } from "@microsoft/powerquery-parser";
@@ -32,7 +32,7 @@ if (ResultUtils.isOk(result)) {
 }
 ```
 
-Cancellation still returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning, rather than at incremental update or snapshot stages.
+Cancellation returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning.
 
 ## Related projects
 
@@ -45,7 +45,9 @@ Cancellation still returns a `CommonError` wrapping `CancellationError`; polling
 
 ### Parser
 
-The parser started off as a naive recursive descent parser with limited backtracking. It mostly followed the [official specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification) released in October 2016. Deviations from the specification should be marked down in [specification.md](specification.md). A combinatorial parser has since been added which uses the naive parser as its base.
+The parser implements recursive-descent and combinatorial parsing strategies for the
+[Power Query M language specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification).
+Document deviations from the language specification in [specification.md](specification.md).
 
 ### Style
 
@@ -60,7 +62,7 @@ Use `npm run watch --workspace @microsoft/powerquery-parser` for incremental dev
 
 From the root, run `npm test --workspace @microsoft/powerquery-parser` for library tests and
 `npm run test:parser:resources` for the separate resource suite. Root `npm test` includes both.
-`script:benchmark` and `script:nodeDump` remain available as workspace scripts.
+`script:benchmark` and `script:nodeDump` are available as workspace scripts.
 
 Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` for readable
 console output and CI results. Library tests write `test-results.xml`; resource tests write

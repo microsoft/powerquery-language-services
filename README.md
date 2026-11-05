@@ -47,7 +47,8 @@ Benchmark commands and methodology are documented in the
 Open the repository root in VS Code for package-aware build/debug tasks.
 Production source is `packages/<name>/src`; tests and developer tools are package-root siblings.
 Shared license, security, conduct policy, and issue forms live at the repository root. Packaging
-includes the canonical root LICENSE in every tarball while preserving `lib/<name>` deep imports.
+includes the canonical root LICENSE in every tarball. Published entry points and deep imports are
+under `lib/<name>`.
 
 ## Release preparation
 
@@ -76,11 +77,16 @@ npm run pack:release
 ```
 
 Packaging requires existing build outputs and never builds, commits, tags, pushes, or publishes.
+Use the configured npm registry for the root restore and isolated consumer install.
 The three tarballs and `dist/release-manifest.json` form one release set. The validation command
 packs and installs all three tarballs together in an isolated consumer outside the workspaces.
-CI artifacts are diagnostic only; there is no public npm publishing workflow.
+Tarballs are written to `dist/npm/<package-name>/*.tgz`. The schema-v1 manifest records the shared
+version, source commit, package metadata, and SHA-512 integrity. Its `workspace` paths are relative
+to the repository root; `tarball` paths are relative to `dist`.
 
-See [Contributing and release contract](MONOREPO.md) for the contributor workflow and artifact format.
+Version preparation updates all manifests and exact internal dependencies together and refreshes
+the lockfile. Stable versions use the `latest` tag; prereleases use `next`. `version:patch` follows
+SemVer rules, including promoting a prerelease patch to its stable version.
 
 ## Related projects
 

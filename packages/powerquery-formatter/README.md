@@ -77,7 +77,6 @@ npm run lint --workspace @microsoft/powerquery-formatter
 npm test --workspace @microsoft/powerquery-formatter
 ```
 
-CI uses `windows-latest`, matching the upstream GitHub workflow.
 `npm run watch --workspace @microsoft/powerquery-formatter` recompiles on changes.
 Build output goes to `lib`; published library entry points and source organization are described in
 the [architecture guide](ARCHITECTURE.md#source-layout-and-packaging).

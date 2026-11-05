@@ -175,7 +175,7 @@ Library construction and file I/O are not timed.
 | `validateInvokeExpression`                                              | None; invocation argument checks                        |
 | `validateUnknownIdentifiers`                                            | None; runs only unknown-identifier validation           |
 
-`validateAll` replaces the former `validate` benchmark command. It invokes the actual combined pipeline,
+`validateAll` invokes the combined validation pipeline,
 including shared caches, rather than summing isolated measurements. Each individual validation command
 runs only its named validator on fresh analysis. `validateParse` measures diagnostic generation, not
 parsing; it returns no diagnostics for valid input. Use `lexParse` to measure lexing and parsing.
