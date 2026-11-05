@@ -7,14 +7,14 @@ description: Run and interpret the repository's JSON-driven Power Query benchmar
 
 # Benchmark Power Query language services
 
-Use the existing `npm run benchmark` command rather than writing another timing harness.
-Run it from the repository root on Windows with Node.js 22 or newer.
+Use `npm run benchmark --workspace @microsoft/powerquery-language-services` rather than another timing harness.
+Run it from the monorepo root with Node.js 22 or newer; npm runs the script in the package directory.
 The script runs TypeScript directly; a build is not required.
 
 ## Choose the workload
 
-Read the Benchmarking section of `README.md`. If the interface has changed, consult
-`src\benchmark\config.ts`, `src\benchmark\benchmark.ts`, and `src\benchmark\cli.ts`
+Read the Benchmarking section of `packages\powerquery-language-services\README.md`. If the interface has changed, consult
+`packages\powerquery-language-services\src\benchmark\config.ts`, `packages\powerquery-language-services\src\benchmark\benchmark.ts`, and `packages\powerquery-language-services\src\benchmark\cli.ts`
 before constructing the payload.
 
 Use the files and operations requested by the user. If they are unspecified, clarify the workload
@@ -72,13 +72,13 @@ is stored outside the repository: relative paths resolve from the payload file's
 Use distinct filenames for any additional redirected results so existing measurements are not overwritten.
 
 ```powershell
-npm run --silent benchmark -- <payload-path.json> > <results-path.json>
+npm run --silent benchmark --workspace @microsoft/powerquery-language-services -- <payload-path.json> > <results-path.json>
 ```
 
 Replace the placeholders with actual paths, quoting paths containing spaces. `--silent` prevents
 npm's banner from contaminating the JSON report. Do not merge stderr into stdout.
-Alternatively, pipe the JSON text to `npm run --silent benchmark -- -`; relative source paths
-then resolve from the working directory.
+Alternatively, pipe JSON to `npm run --silent benchmark --workspace @microsoft/powerquery-language-services -- -`;
+relative source paths then resolve from the package directory.
 
 Run benchmarks sequentially on an otherwise idle machine. Do not run builds, tests, other
 benchmarks, or background agents concurrently with a measurement. Attempt the command before

@@ -1,10 +1,12 @@
 # powerquery-parser
 
-[![Build Status](https://dev.azure.com/ms/powerquery-parser/_apis/build/status/microsoft.powerquery-parser?branchName=master)](https://dev.azure.com/ms/powerquery-parser/_build/latest?definitionId=134&branchName=master)
+Developed in the [Power Query monorepo](../../README.md).
 
 A parser for the [Power Query/M](https://docs.microsoft.com/en-us/power-query/) language, written in TypeScript. Designed to be consumed by other projects.
 
 ## How to use
+
+Requires Node.js 22 or later. Install with `npm install @microsoft/powerquery-parser`.
 
 The most common way to consume the project is to interact with the helper functions found in [taskUtils.ts](src/powerquery-parser/task/taskUtils.ts). There are all-in-one functions, such as `tryLexParse`, which does a full pass on a given document. There are also separate lexing and parsing steps, `tryLex` and `tryParse`. Minimal code samples can be found in [example.ts](src/example.ts).
 
@@ -34,7 +36,7 @@ Cancellation still returns a `CommonError` wrapping `CancellationError`; polling
 
 ## Related projects
 
-- [powerquery-formatter](https://github.com/microsoft/powerquery-formatter): A code formatter for Power Query which is bundled in the VSCode extension.
+- [powerquery-formatter](../powerquery-formatter/README.md): A code formatter for Power Query which is bundled in the VSCode extension.
 - [powerquery-language-services](https://github.com/microsoft/powerquery-language-services): A high level library that wraps the parser for external projects, such as the VSCode extension. Includes features such as Intellisense.
 - [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): The VSCode extension for Power Query language support.
 - [vscode-powerquery-sdk](https://github.com/microsoft/vscode-powerquery-sdk): The VSCode extension for Power Query connector SDK.
@@ -51,15 +53,14 @@ This project uses [prettier](https://github.com/prettier/prettier) as the primar
 
 ## How to build
 
-- Install NodeJS
-- `npm install`
-- `npm run-script build`
+From the monorepo root, run `npm ci --ignore-scripts` and `npm run build`.
+Use `npm run watch --workspace @microsoft/powerquery-parser` for incremental development.
 
 ## How to run tests
 
-- Install NodeJS
-- `npm install`
-- `npm test`
+From the root, run `npm test --workspace @microsoft/powerquery-parser` for library tests and
+`npm run test:parser:resources` for the separate resource suite. Root `npm test` includes both.
+`script:benchmark` and `script:nodeDump` remain available as workspace scripts.
 
 ## Contributing
 

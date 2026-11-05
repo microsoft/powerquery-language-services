@@ -1,0 +1,51 @@
+{
+    "schemaVersion": 1,
+    "frozenAt": "2026-11-05",
+    "initialReleaseVersion": "5.0.0",
+    "historyImport": "unsquashed-subtree",
+    "structuralImportCommit": "6efdceeeabad7ca0ed1b03d5ebcfeb033672827a",
+    "sources": [
+        {
+            "repository": "https://github.com/microsoft/powerquery-parser",
+            "branch": "master",
+            "commit": "6316752ef34866e219eaeb4b506ae12f65091733",
+            "version": "4.0.1",
+            "workspace": "packages/powerquery-parser",
+            "sourceTree": "2886e4664ac8248a27ca48cac605e28dfe2f5d86",
+            "pendingDependencyPullRequests": [436, 435, 433, 434]
+        },
+        {
+            "repository": "https://github.com/microsoft/powerquery-formatter",
+            "branch": "master",
+            "commit": "5fd6b65b9ea3e1bb1a9856074011ed4b293c9d74",
+            "version": "1.1.0",
+            "workspace": "packages/powerquery-formatter",
+            "sourceTree": "aa35718bfed34cdec7348dcfe5f09d7bf0f4ffdd",
+            "pendingDependencyPullRequests": [103, 102, 100, 99, 98, 97, 85]
+        },
+        {
+            "repository": "https://github.com/microsoft/powerquery-language-services",
+            "branch": "master",
+            "commit": "d74cece9240956ec5ae4ed3cd4aba87491e27a2c",
+            "version": "1.3.0",
+            "workspace": "packages/powerquery-language-services",
+            "sourceTree": "a672d1bc70716933140909b2d216505cc3aaa1a8",
+            "pendingDependencyPullRequests": [305]
+        }
+    ],
+    "registryObservation": {
+        "source": "Existing configured npm registry/proxy; no private registry address recorded",
+        "date": "2026-11-05",
+        "latest": {
+            "@microsoft/powerquery-parser": "4.0.1",
+            "@microsoft/powerquery-formatter": "1.1.0",
+            "@microsoft/powerquery-language-services": "1.3.0"
+        },
+        "targetVersion": "5.0.0",
+        "targetAbsentInProxyVisibleVersions": true,
+        "proxyVisibleVersionsNewerThanFrozenSources": false,
+        "freshCacheProxyPreflightVerified": true,
+        "authoritativePublicPreflightVerified": false,
+        "note": "Read-only fresh-cache queries used the user-configured npm proxy. Proxy visibility does not reserve a version or attest authoritative public publication state; recheck through the approved release process."
+    }
+}

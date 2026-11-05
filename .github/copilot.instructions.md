@@ -2,7 +2,11 @@
 
 ## Project Overview
 
-This package provides intellisense functionality for the Power Query / M language. It is consumed through:
+This monorepo contains the Power Query parser, formatter, and language services in `packages`.
+Use root `npm ci --ignore-scripts`, dependency-ordered `npm run build`, `npm run lint`, and `npm test`.
+The root test command includes parser resources. Use `npm run validate:release` after building for
+standalone packed-consumer validation. Never use per-package installs or `npm link`.
+Language services provides intellisense functionality for the Power Query / M language. It is consumed through:
 
 - Applications using `monaco-editor`
 - VS Code Language Server Protocol extension
@@ -17,14 +21,14 @@ This package provides intellisense functionality for the Power Query / M languag
 
 ### Validation System
 
-- Main validation logic in `src\powerquery-language-services\validate\validate.ts`
+- Main validation logic in `packages\powerquery-language-services\src\powerquery-language-services\validate\validate.ts`
 - ValidationSettings includes cancellationToken support
 - Current implementation has synchronous bottlenecks preventing effective cancellation
 - Performance degrades significantly with large files (30+ seconds for complex documents)
 
 ### Testing Patterns
 
-- Test files in `src\test\files\`
+- Each package's test files are in its own `src\test` directory; services fixtures are in `packages\powerquery-language-services\src\test\files\`
 - Follow existing mocha patterns and style conventions
 
 ## Development Guidelines
@@ -32,7 +36,7 @@ This package provides intellisense functionality for the Power Query / M languag
 - Try to maintain backwards compatibility for library consumers
     - If an important improvement will break backwards compatibility, notify the user before making this change
 - Follow existing code patterns and style
-- Use .copilot-journal.md for task-specific tracking
+- Do not add task-specific journals to the repository
 - When generating markdown file, include `<!-- markdownlint-disable -->` at the top of the file to avoid markdown linting issues
 
 ## 🔧 Code Quality Requirements

@@ -244,7 +244,7 @@ describe("formatter benchmark", () => {
                 [
                     "--expose-gc",
                     "--require",
-                    join(repository, "node_modules", "ts-node", "register"),
+                    require.resolve("ts-node/register"),
                     join(repository, "src", "benchmark", "cli.ts"),
                     ...args,
                 ],

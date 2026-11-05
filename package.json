@@ -1,0 +1,41 @@
+{
+    "name": "powerquery-monorepo",
+    "private": true,
+    "version": "0.0.0",
+    "description": "Development workspace for the Power Query parser, formatter, and language services.",
+    "license": "MIT",
+    "engines": {
+        "node": ">=22",
+        "npm": "11.5.2"
+    },
+    "packageManager": "npm@11.5.2",
+    "workspaces": [
+        "packages/powerquery-parser",
+        "packages/powerquery-formatter",
+        "packages/powerquery-language-services"
+    ],
+    "scripts": {
+        "clean": "node scripts/workspace.cjs clean",
+        "build": "npm run build --workspace @microsoft/powerquery-parser && npm run build --workspace @microsoft/powerquery-formatter && npm run build --workspace @microsoft/powerquery-language-services",
+        "lint": "npm run lint --workspaces",
+        "test": "npm run test:unit && npm run test:parser:resources && npm run test:release",
+        "test:unit": "npm test --workspaces",
+        "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
+        "test:release": "node --test scripts/test/release*.cjs",
+        "test:reports": "node scripts/workspace.cjs reports",
+        "version:set": "node scripts/release.cjs version",
+        "validate:release": "node scripts/release.cjs validate",
+        "pack:release": "node scripts/release.cjs pack"
+    },
+    "overrides": {
+        "serialize-javascript": "7.0.4"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.35.0",
+        "prettier": "2.5.1",
+        "semver": "^7.7.2",
+        "tar": "^7.5.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.2"
+    }
+}

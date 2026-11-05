@@ -1,0 +1,12 @@
+{
+    "folders": [
+        { "name": "monorepo", "path": "." }
+    ],
+    "settings": {
+        "eslint.workingDirectories": [
+            "./packages/powerquery-parser",
+            "./packages/powerquery-formatter",
+            "./packages/powerquery-language-services"
+        ]
+    }
+}

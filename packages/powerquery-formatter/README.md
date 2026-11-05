@@ -1,6 +1,6 @@
 # powerquery-formatter
 
-[![Build Status](https://dev.azure.com/ms/powerquery-formatter/_apis/build/status/Microsoft.powerquery-formatter?branchName=master)](https://dev.azure.com/ms/powerquery-formatter/_build/latest?definitionId=343&branchName=master)
+Developed in the [Power Query monorepo](../../README.md).
 
 A TypeScript library for formatting Power Query / M expressions and section documents. It uses
 `@microsoft/powerquery-parser` to understand syntax, applies formatting rules, and returns the complete
@@ -68,16 +68,16 @@ The APIs are asynchronous and return parser-library `Result` values. See
 
 ## Develop
 
-From a checkout:
+From the monorepo root:
 
 ```powershell
-npm ci
+npm ci --ignore-scripts
 npm run build
-npm run lint
-npm test
+npm run lint --workspace @microsoft/powerquery-formatter
+npm test --workspace @microsoft/powerquery-formatter
 ```
 
-The repository's build scripts and CI are Windows-oriented. `npm run watch` recompiles on changes.
+Builds and CI support Windows and Linux. `npm run watch --workspace @microsoft/powerquery-formatter` recompiles on changes.
 Build output goes to `lib`; published library entry points and source organization are described in
 the [architecture guide](ARCHITECTURE.md#source-layout-and-packaging).
 
@@ -86,7 +86,7 @@ the [architecture guide](ARCHITECTURE.md#source-layout-and-packaging).
 The checkout includes a recursive formatting script:
 
 ```powershell
-npm run script:recursiveDirectoryFormat -- .\queries ".pq,.mout"
+npm run script:recursiveDirectoryFormat --workspace @microsoft/powerquery-formatter -- .\queries ".pq,.mout"
 ```
 
 **This overwrites successfully formatted files.** Review or back up the target directory first.
@@ -109,7 +109,7 @@ Create a payload such as `benchmark-input.json`:
 Then run:
 
 ```powershell
-npm run --silent benchmark -- .\benchmark-input.json
+npm run --silent benchmark --workspace @microsoft/powerquery-formatter -- .\benchmark-input.json
 ```
 
 Source files are read-only. Paths resolve relative to the payload file; pass `-` for JSON on stdin,
@@ -126,7 +126,7 @@ semantics, and interpretation. For embedded tracing, see [performance tracing](A
 
 ## Related projects
 
-- [powerquery-parser](https://github.com/microsoft/powerquery-parser): Lexer, parser, AST, and shared utilities.
+- [powerquery-parser](../powerquery-parser/README.md): Lexer, parser, AST, and shared utilities.
 - [powerquery-language-services](https://github.com/microsoft/powerquery-language-services): Language tooling such as IntelliSense.
 - [vscode-powerquery](https://github.com/microsoft/vscode-powerquery): Power Query language support for VS Code.
 - [vscode-powerquery-sdk](https://github.com/microsoft/vscode-powerquery-sdk): Power Query connector SDK for VS Code.

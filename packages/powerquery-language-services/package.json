@@ -1,25 +1,28 @@
 {
     "name": "@microsoft/powerquery-language-services",
-    "version": "1.3.0",
+    "version": "5.0.0",
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "prepublishOnly": "git clean -xdf && npm install-clean && npm run lint && npm run build && npm run test",
-        "build": ".\\node_modules\\.bin\\tsc",
-        "benchmark": "node --expose-gc node_modules\\ts-node\\dist\\bin.js src\\benchmark\\cli.ts",
-        "watch": ".\\node_modules\\.bin\\tsc -b -watch",
-        "link:start": "npm link && npm uninstall @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm link @microsoft/powerquery-parser @microsoft/powerquery-formatter",
-        "link:stop": "npm unlink @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm install @microsoft/powerquery-parser@latest @microsoft/powerquery-formatter@latest --save-exact",
+        "build": "tsc --project tsconfig.json",
+        "clean": "node ../../scripts/workspace.cjs clean powerquery-language-services",
+        "benchmark": "node --expose-gc --require ts-node/register src/benchmark/cli.ts",
+        "watch": "tsc --project tsconfig.json --watch",
         "lint": "eslint src --ext ts",
         "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json"
     },
-    "homepage": "https://github.com/microsoft/powerquery-language-services#readme",
+    "homepage": "https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-language-services#readme",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/microsoft/powerquery-language-services.git"
+        "url": "git+https://github.com/microsoft/powerquery-language-services.git",
+        "directory": "packages/powerquery-language-services"
     },
-    "issues": {
+    "bugs": {
         "url": "https://github.com/microsoft/powerquery-language-services/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "tag": "latest"
     },
     "description": "Language services for the Power Query/M formula language.",
     "main": "lib/powerquery-language-services/index.js",
@@ -32,7 +35,10 @@
         "power bi"
     ],
     "files": [
-        "lib/powerquery-language-services/**/*"
+        "lib/powerquery-language-services/**/*",
+        "README.md",
+        "LICENSE",
+        "ARCHITECTURE.md"
     ],
     "devDependencies": {
         "@types/chai": "^4.3.20",
@@ -50,15 +56,15 @@
         "mocha": "^11.3.0",
         "mocha-junit-reporter": "^2.2.1",
         "mocha-multi-reporters": "^1.5.1",
-        "prettier": "^3.3.3",
+        "prettier": "3.6.2",
         "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.2",
         "webpack": "^5.105.1"
     },
     "dependencies": {
-        "@microsoft/powerquery-formatter": "1.1.0",
-        "@microsoft/powerquery-parser": "4.0.0",
+        "@microsoft/powerquery-formatter": "5.0.0",
+        "@microsoft/powerquery-parser": "5.0.0",
         "vscode-languageserver-textdocument": "1.0.12",
         "vscode-languageserver-types": "3.17.5"
     }

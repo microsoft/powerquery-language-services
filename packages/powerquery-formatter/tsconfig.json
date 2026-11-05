@@ -1,32 +1,16 @@
 {
+    "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "downlevelIteration": true,
-        "esModuleInterop": true,
-        "incremental": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "noEmitOnError": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitOverride": true,
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
         "outDir": "lib",
-        "resolveJsonModule": true,
         "rootDir": "src",
-        "sourceMap": true,
-        "strict": true,
-        "target": "es2022",
         "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
     },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"],
     "ts-node": {
         "compilerOptions": {
             "module": "commonjs",
             "target": "es2022"
         }
-    },
-    "exclude": ["node_modules"],
-    "include": ["src/**/*.ts"]
+    }
 }

@@ -3,34 +3,54 @@ on:
     workflow_dispatch:
     pull_request:
         branches: [master]
+    push:
+        branches: [master]
+permissions:
+    contents: read
 jobs:
     build-and-test:
-        runs-on: windows-latest
-        permissions:
-            contents: read
-            actions: read
-            checks: write
+        name: build-and-test (${{ matrix.os }})
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [windows-latest, ubuntu-latest]
+        runs-on: ${{ matrix.os }}
         steps:
-            - name: checkout
+            - name: Checkout
               uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-            - name: setup node
+            - name: Setup Node
               uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
               with:
-                  node-version-file: "package.json"
-            - run: node -v
-            - run: npm ci
-            - name: Run npm audit
-              continue-on-error: true
-              run: npm audit
+                  node-version: "22.15.0"
+                  cache: npm
+            - name: Pin npm
+              run: npm install --global npm@11.5.2 --ignore-scripts
+            - run: npm ci --ignore-scripts
             - run: npm run lint
+            - run: npm run clean
             - run: npm run build
-            - name: Run tests
-              run: npm run test
-            - name: Publish test results
-              uses: dorny/test-reporter@dc3a92680fcc15842eef52e8c4606ea7ce6bd3f3 # v2.1.1
-              if: success() || failure()
+            - name: Verify clean rebuild
+              run: npm run clean && npm run build
+            - run: npm test
+            - name: Verify all test reports
+              if: ${{ !cancelled() }}
+              run: npm run test:reports
+            - name: Validate standalone release consumers
+              run: npm run validate:release
+            - name: Collect JUnit results
+              if: ${{ !cancelled() }}
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
-                  name: Mocha Tests
-                  path: test-results.xml
-                  reporter: java-junit
-                  fail-on-error: true
+                  name: test-results-${{ matrix.os }}
+                  path: |
+                      packages/powerquery-parser/test-results.xml
+                      packages/powerquery-parser/test-results-resources.xml
+                      packages/powerquery-formatter/test-results.xml
+                      packages/powerquery-language-services/test-results.xml
+                  if-no-files-found: error
+            - name: Collect diagnostic release artifacts
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: diagnostic-packages-${{ matrix.os }}
+                  path: dist/
+                  if-no-files-found: error

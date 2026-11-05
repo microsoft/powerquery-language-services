@@ -14,6 +14,7 @@ module.exports = [
             parser: tsparser,
             parserOptions: {
                 project: "./tsconfig.json",
+                tsconfigRootDir: __dirname,
             },
             globals: {
                 // Mocha globals for test files

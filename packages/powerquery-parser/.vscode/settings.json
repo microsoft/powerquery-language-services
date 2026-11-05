@@ -1,8 +1,0 @@
-{
-    "typescript.tsdk": "node_modules\\typescript\\lib",
-    "files.exclude": {
-        "src/**/*.js": true
-    },
-    "editor.formatOnSave": true,
-    "sarif-viewer.connectToGithubCodeScanning": "off"
-}
