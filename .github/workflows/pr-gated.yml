@@ -3,34 +3,54 @@ on:
     workflow_dispatch:
     pull_request:
         branches: [master]
+    push:
+        branches: [master]
+permissions:
+    contents: read
 jobs:
     build-and-test:
         runs-on: windows-latest
-        permissions:
-            contents: read
-            actions: read
-            checks: write
         steps:
-            - name: checkout
+            - name: Checkout
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-            - name: setup node
+            - name: Setup Node
               uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: "package.json"
-            - run: node -v
-            - run: npm ci
-            - name: Run npm audit
-              continue-on-error: true
-              run: npm audit
+                  cache: npm
+            - run: npm ci --ignore-scripts
             - run: npm run lint
+            - run: npm run clean
             - run: npm run build
-            - name: Run tests
-              run: npm run test
-            - name: Publish test results
+            - run: npm test
+            - name: Validate standalone release consumers
+              run: npm run validate:release
+            - name: Summarize test results
+              if: ${{ !cancelled() }}
               uses: dorny/test-reporter@d1b5dff021aa968b288b02285a8bf47471c5928a # v3.2.0
-              if: success() || failure()
               with:
                   name: Mocha Tests
-                  path: test-results.xml
+                  path: packages/**/test-results*.xml
                   reporter: java-junit
+                  use-actions-summary: true
+                  report-title: Power Query tests
+                  list-files: all
+                  list-tests: failed
+                  max-annotations: 0
                   fail-on-error: true
+                  fail-on-empty: true
+            - name: Collect JUnit results
+              if: ${{ !cancelled() }}
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: test-results
+                  path: packages/**/test-results*.xml
+                  if-no-files-found: error
+            - name: Collect npm package tarballs
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: diagnostic-packages
+                  path: |
+                      dist/npm/**/*.tgz
+                      dist/release-manifest.json
+                  if-no-files-found: error

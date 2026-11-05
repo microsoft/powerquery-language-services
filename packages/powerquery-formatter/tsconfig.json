@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "lib",
+        "rootDir": ".",
+        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+    },
+    "include": ["src/**/*.ts", "test/**/*.ts", "benchmark/**/*.ts", "scripts/**/*.ts", "*.ts"],
+    "exclude": ["node_modules"],
+    "ts-node": {
+        "compilerOptions": {
+            "module": "commonjs",
+            "target": "es2022"
+        }
+    }
+}

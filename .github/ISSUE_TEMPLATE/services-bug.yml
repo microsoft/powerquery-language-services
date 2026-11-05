@@ -1,0 +1,42 @@
+name: Language services bug
+description: Report a problem with powerquery-language-services.
+title: "[Language services bug] "
+labels: ["bug", "powerquery-language-services"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue applies to powerquery-language-services. Report security vulnerabilities using the root SECURITY.md policy, not public issues.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the package version, errors, and relevant output.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Power Query script and reproduction steps
+      description: Include a minimal script, the document position if relevant, and the API call that triggers the problem.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: API settings
+      description: Include non-default settings, or state that all settings are defaults.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

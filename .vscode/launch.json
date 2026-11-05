@@ -1,22 +1,97 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
             "type": "node",
             "request": "launch",
-            "name": "Run unit tests (npm test)",
+            "name": "Parser library tests",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "args": ["--colors", "--no-package", "--reporter", "spec"],
-            "cwd": "${workspaceFolder}",
-            "internalConsoleOptions": "openOnSessionStart",
-            "skipFiles": ["<node_internals>/**"],
-            "env": {
-                "NODE_ENV": "test"
-            },
-            "runtimeArgs": ["--no-warnings"]
+            "args": ["--no-package", "--reporter", "spec", "--timeout", "60000", "test/libraryTest/**/*.ts"],
+            "cwd": "${workspaceFolder}/packages/powerquery-parser",
+            "preLaunchTask": "build",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Parser resource tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": ["--no-package", "--reporter", "spec", "--timeout", "60000", "test/resourceTest/**/*.ts"],
+            "cwd": "${workspaceFolder}/packages/powerquery-parser",
+            "preLaunchTask": "build",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Formatter tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": ["--no-package", "--reporter", "spec", "--timeout", "60000", "test/**/*.ts"],
+            "cwd": "${workspaceFolder}/packages/powerquery-formatter",
+            "preLaunchTask": "build",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Language services tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": ["--no-package", "--reporter", "spec", "--timeout", "60000"],
+            "cwd": "${workspaceFolder}/packages/powerquery-language-services",
+            "preLaunchTask": "build",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Parser example",
+            "program": "${workspaceFolder}/packages/powerquery-parser/lib/example.js",
+            "cwd": "${workspaceFolder}/packages/powerquery-parser",
+            "preLaunchTask": "build",
+            "outFiles": ["${workspaceFolder}/packages/powerquery-parser/lib/**/*.js"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Parser node dump",
+            "program": "${workspaceFolder}/packages/powerquery-parser/lib/test/scripts/createNodeDump.js",
+            "cwd": "${workspaceFolder}/packages/powerquery-parser",
+            "preLaunchTask": "build",
+            "outFiles": ["${workspaceFolder}/packages/powerquery-parser/lib/**/*.js"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Parser benchmark",
+            "program": "${workspaceFolder}/packages/powerquery-parser/lib/test/scripts/createBenchmark.js",
+            "cwd": "${workspaceFolder}/packages/powerquery-parser",
+            "preLaunchTask": "build",
+            "outFiles": ["${workspaceFolder}/packages/powerquery-parser/lib/**/*.js"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Formatter benchmark",
+            "program": "${workspaceFolder}/packages/powerquery-formatter/lib/benchmark/cli.js",
+            "args": ["${input:benchmarkPayload}"],
+            "runtimeArgs": ["--expose-gc"],
+            "cwd": "${workspaceFolder}/packages/powerquery-formatter",
+            "preLaunchTask": "build",
+            "outFiles": ["${workspaceFolder}/packages/powerquery-formatter/lib/**/*.js"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Language services benchmark",
+            "program": "${workspaceFolder}/packages/powerquery-language-services/lib/benchmark/cli.js",
+            "args": ["${input:benchmarkPayload}"],
+            "runtimeArgs": ["--expose-gc"],
+            "cwd": "${workspaceFolder}/packages/powerquery-language-services",
+            "preLaunchTask": "build",
+            "outFiles": ["${workspaceFolder}/packages/powerquery-language-services/lib/**/*.js"]
         }
+    ],
+    "inputs": [
+        { "id": "benchmarkPayload", "type": "promptString", "description": "Absolute path to benchmark JSON payload" }
     ]
 }
