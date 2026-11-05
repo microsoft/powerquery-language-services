@@ -77,6 +77,9 @@ Test
 npm test
 ```
 
+Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` to produce readable
+console output and `test-results.xml` for CI.
+
 ## Scope cache ownership
 
 `Inspection.TypeCacheUtils.emptyCache()` creates document-local type and scope caches.
