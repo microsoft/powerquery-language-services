@@ -46,7 +46,9 @@ invariant errors retain their default-English behavior.
 
 Messages come from `@vscode/l10n` bundles. No VS Code host or call to `l10n.config` is required.
 `LocalizationUtils.getLocalizationTemplates(locale)`, `Templates` exports, custom template objects,
-and the existing published ID-keyed JSON paths remain supported. See the monorepo
+and their TypeScript interfaces remain supported. Per-locale ID-keyed JSON deep imports are removed;
+use these APIs or the published `localization/bundles` JSON. The English key catalog is still required
+by the runtime adapter and types. See the monorepo
 [localization instructions](../../README.md#localization) for bundle maintenance and formatting semantics.
 
 ## Related projects

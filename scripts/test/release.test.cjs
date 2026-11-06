@@ -7,10 +7,9 @@ const path = require("node:path");
 const zlib = require("node:zlib");
 const tar = require("tar");
 const { PACKAGES, versionTag, validatePackage, validateLock, setVersion, bumpPatch, writeJson, loadRelease, findNpmCli } = require("../release.cjs");
-const { safeRelative, inside, integrity, allowedFile, requireOutputs, requireBuiltOutputs, inspectTarball,
+const { safeRelative, inside, integrity, allowedFile, localizationFiles, requireOutputs, requireBuiltOutputs, inspectTarball,
     validateManifest, verifyManifest } = require("../release-artifacts.cjs");
 const { cleanEnvironment } = require("../release-consumer.cjs");
-const { localizationFiles } = require("../localization.cjs");
 
 const VERSION = "5.0.0";
 const clone = (value) => structuredClone(value);
@@ -295,12 +294,14 @@ test("output paths reject directory symlinks/junctions", (context) => {
 test("runtime allowlist excludes sources, tests, build metadata and npm auth", () => {
     const entry = PACKAGES[0];
     for (const file of [entry.main, entry.types, `${entry.main}.map`, "README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt",
-        `lib/${entry.slug}/localization/templates/template.fr-FR.json`,
+        `lib/${entry.slug}/localization/templates/template.json`,
         `lib/${entry.slug}/localization/bundles/bundle.l10n.json`,
         `lib/${entry.slug}/localization/bundles/bundle.l10n.fr-FR.json`]) assert.equal(allowedFile(file, entry), true, file);
     for (const file of [".npmrc", "package-lock.json", "tsconfig.tsbuildinfo", "src/index.ts", "ARCHITECTURE.md",
         `lib/${entry.slug}/test/a.js`, "lib/test/a.js", `lib/${entry.slug}/benchmark/a.js`,
         `lib/${entry.slug}/localization/LocProject.json`, `lib/${entry.slug}/private.json`,
+        `lib/${entry.slug}/localization/templates/template.fr-FR.json`,
+        `lib/${entry.slug}/localization/templates/template.en-US.json`,
         `lib/${entry.slug}/index.ts`]) assert.equal(allowedFile(file, entry), false, file);
     for (const documented of PACKAGES.slice(1)) assert.equal(allowedFile("ARCHITECTURE.md", documented), true);
 });
@@ -315,11 +316,13 @@ test("every supported locale preserves message coverage, comments and placeholde
         .map((match) => match[1]))].sort();
     for (const entry of PACKAGES.filter((item) => item.slug !== "powerquery-formatter")) {
         const workspace = path.join(root, entry.workspace);
-        const files = localizationFiles(workspace, entry.slug);
-        const bundleFiles = files.filter((file) => file.relative.startsWith("localization/bundles/"));
+        const files = localizationFiles(root, entry);
+        const bundleFiles = files.filter((file) => file.relative.startsWith(`lib/${entry.slug}/localization/bundles/`));
         assert.deepEqual(bundleFiles.map((file) => file.relative).sort(), locales.map((locale) =>
-            `localization/bundles/bundle.l10n${locale === "en-US" ? "" : `.${locale}`}.json`).sort());
+            `lib/${entry.slug}/localization/bundles/bundle.l10n${locale === "en-US" ? "" : `.${locale}`}.json`).sort());
         const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
+        assert.deepEqual(fs.readdirSync(path.join(workspace, "src", "localization", "templates"))
+            .filter((file) => file.endsWith(".json")), [`${stem}.json`]);
         const defaults = JSON.parse(fs.readFileSync(path.join(workspace, "src", "localization",
             "templates", `${stem}.json`), "utf8"));
         const ids = Object.keys(defaults).filter((key) => !key.startsWith("_"));
@@ -342,30 +345,6 @@ test("every supported locale preserves message coverage, comments and placeholde
                     assert.ok(["da-DK", "nb-NO", "nl-NL"].some((locale) =>
                         file.relative.endsWith(`.${locale}.json`)), file.relative);
                 }
-            }
-        }
-    }
-});
-
-test("active legacy localization targets match the l10n bundles and placeholders", () => {
-    const root = path.resolve(__dirname, "..", "..");
-    const placeholders = (message) => [...new Set([...message.matchAll(/\{([^}]+)\}/g)]
-        .map((match) => match[1]))].sort();
-    for (const entry of PACKAGES.filter((item) => item.slug !== "powerquery-formatter")) {
-        const localization = path.join(root, entry.workspace, "src", "localization");
-        const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
-        for (const locale of fs.readdirSync(path.join(localization, "loc"))) {
-            const bundle = JSON.parse(fs.readFileSync(path.join(localization, "bundles",
-                `bundle.l10n.${locale}.json`), "utf8"));
-            const xml = fs.readFileSync(path.join(localization, "loc", locale, "templates", `${stem}.json.lcl`), "utf8");
-            // LCX uses CDATA; compare active Val/Tgt pairs, not historical Prev values.
-            const values = [...xml.matchAll(
-                /<Str\b[^>]*>\s*<Val><!\[CDATA\[([\s\S]*?)\]\]><\/Val>\s*<Tgt\b[^>]*>\s*<Val><!\[CDATA\[([\s\S]*?)\]\]><\/Val>/g)];
-            assert.ok(values.length > 0, `${entry.slug}/${locale}`);
-            for (const [, source, target] of values) {
-                if (!Object.hasOwn(bundle, source)) continue;
-                assert.equal(bundle[source], target, `${entry.slug}/${locale}: ${source}`);
-                assert.deepEqual(placeholders(target), placeholders(source), `${entry.slug}/${locale}: ${source}`);
             }
         }
     }
@@ -461,6 +440,9 @@ for (const [label, options, expected] of [
     ["missing declarations", { omit: PACKAGES[0].types }, /missing required output/],
     ["private npm config", { files: { ".npmrc": "//registry.invalid/:_authToken=SECRET" } }, /development\/private file/],
     ["development tests", { files: { [`lib/${PACKAGES[0].slug}/test/private.js`]: "bad" } }, /unexpected directory|development\/private file/],
+    ["obsolete localized template JSON", { files: {
+        [`lib/${PACKAGES[0].slug}/localization/templates/template.fr-FR.json`]: "{}",
+    } }, /development\/private file/],
     ["incorrect tar version", { metadata: packageMetadata(PACKAGES[0], "4.0.0") }, /release version/],
     ["lifecycle hook", { metadata: { ...packageMetadata(PACKAGES[0]), scripts: { prepublishOnly: "exit 1" } } }, /lifecycle scripts/],
 ]) {

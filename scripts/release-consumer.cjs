@@ -20,8 +20,6 @@ import * as serviceTemplates from "@microsoft/powerquery-language-services/lib/p
 import { Localization as serviceLocalization } from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization";
 import parserFrench from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/bundles/bundle.l10n.fr-FR.json";
 import serviceFrench from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization/bundles/bundle.l10n.fr-FR.json";
-import legacyParserFrench from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templates/template.fr-FR.json";
-import legacyServiceFrench from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization/templates/templates.fr-FR.json";
 
 function expect(condition: unknown, message: string): asserts condition {
     if (!condition) throw new Error(message);
@@ -34,14 +32,11 @@ async function main(): Promise<void> {
     expect(parserTemplates.fr_FR && serviceTemplates.fr_FR, "Localized runtime imports failed");
     expect(parserFrench["Expected a hex literal"] === parserTemplates.fr_FR.error_lex_expectedKind_1_hex,
         "Parser bundle content differs from exported templates");
-    expect(legacyParserFrench.error_lex_expectedKind_1_hex === parserTemplates.fr_FR.error_lex_expectedKind_1_hex &&
-        legacyServiceFrench.error_validation_duplicate_identifier === serviceTemplates.fr_FR.error_validation_duplicate_identifier,
-        "Legacy localization JSON imports changed");
     expect(serviceFrench["Duplicate identifier '{identifier}'"] === serviceTemplates.fr_FR.error_validation_duplicate_identifier,
         "Services bundle content differs from exported templates");
     expect(serviceFrench["Cannot find the name '{identifier}'."] !== "Cannot find the name '{identifier}'." &&
-        legacyServiceFrench.error_validation_unknownIdentifier_noSuggestion === serviceFrench["Cannot find the name '{identifier}'."],
-        "Packed unknown-name translation or legacy synchronization failed");
+        serviceTemplates.fr_FR.error_validation_unknownIdentifier_noSuggestion === serviceFrench["Cannot find the name '{identifier}'."],
+        "Packed unknown-name translation or template API mismatch");
     l10n.config({ contents: { "Host {value}": "Host translation {value}",
         "Duplicate identifier '{identifier}'": "Host duplicate {identifier}" } });
     await Promise.all(["fr-FR", "de-DE", "ja-JP", "en-US"].map(async (locale) => {

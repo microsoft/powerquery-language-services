@@ -68,19 +68,18 @@ comments as `{ "message": "...", "comment": ["..."] }` values; translated bundle
 Keep placeholder names unchanged in translations.
 
 The English JSON in `src/localization/templates` maps the existing public template IDs to
-English messages. When adding or changing a message, update this compatibility catalog, the
-English bundle, and the corresponding English keys in translated bundles. Missing translations
+English bundle keys and supplies their TypeScript shape and English fallback. It is required by
+the runtime adapter, not a second source of locale translations. When adding or changing a message,
+update this key catalog, the English bundle, and the corresponding English keys in translated bundles. Missing translations
 fall back to the catalog's English message. Existing locale exports, `ILocalizationTemplates`,
 `Localization` builders, and `getLocalizationTemplates(locale)` remain available.
-Builds generate the published ID-keyed `localization/templates/*.json` compatibility views from
-the bundles; do not edit those generated files. Translation-service assets under `loc` and
-`LocProject.json` are not inputs to the runtime build.
+Per-locale ID-keyed template JSON is no longer generated or published. Use the template APIs or
+the `localization/bundles` JSON instead of the removed locale JSON deep imports.
+Historical translation-service assets under `loc` and `LocProject.json` are not inputs to the
+runtime build; bundles are the sole source for current translations.
 
-When changing an existing translation, also update its matching active `Tgt` value under `loc`
-if present; leave English source and historical `Prev` values unchanged. Do not translate code
-snippets, placeholders, API identifiers, or intentional native words merely because they match
-English. Resource tests verify active legacy targets and generated compatibility views against
-the bundles, including placeholder names.
+Do not translate code snippets, placeholders, API identifiers, or intentional native words merely because they match
+English. Resource tests verify bundle coverage, English keys, translator comments and placeholder names.
 
 These are standalone libraries; no VS Code host is needed. Locale selection remains per request,
 using case-insensitive exact locale tags and English fallback for unsupported tags. The formatter
@@ -98,8 +97,8 @@ longer uses it. Dynamic locale-selected messages are maintained in the bundles d
 `l10n-dev` extraction on these adapters will not reconstruct the catalogs.
 
 Run root `npm run lint`, `npm run build`, `npm test`, and `npm run validate:release` after changes.
-The last command checks both bundle and legacy JSON assets and exercises localized messages in an
-isolated tarball consumer.
+The last command checks required bundles and the English key catalog, rejects obsolete locale JSON,
+and exercises localized messages in an isolated tarball consumer.
 
 ## Release preparation
 

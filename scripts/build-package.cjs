@@ -1,7 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
-const { localizationFiles } = require("./localization.cjs");
 
 const root = path.resolve(__dirname, "..");
 const [slug, mode] = process.argv.slice(2);
@@ -40,10 +39,12 @@ function publishOutput() {
         fs.cpSync(sourceOutput, publishedOutput, { recursive: true });
         fs.rmSync(sourceOutput, { recursive: true });
     }
-    for (const { relative, contents } of localizationFiles(workspace, slug)) {
-        const destination = path.join(publishedOutput, relative);
-        fs.mkdirSync(path.dirname(destination), { recursive: true });
-        fs.writeFileSync(destination, JSON.stringify(contents, undefined, 4) + "\n");
+    const templates = path.join(publishedOutput, "localization", "templates");
+    if (fs.existsSync(templates)) {
+        // Remove obsolete locale JSON left by earlier builds, keeping the English key catalog.
+        for (const file of fs.readdirSync(templates)) {
+            if (/^templates?\.[A-Za-z-]+\.json$/.test(file)) fs.rmSync(path.join(templates, file));
+        }
     }
 }
 if (mode === "--watch") {

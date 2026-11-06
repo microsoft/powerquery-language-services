@@ -5,7 +5,6 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const os = require("node:os");
 const tar = require("tar");
-const { localizationFiles: sourceLocalizations } = require("./localization.cjs");
 const { PACKAGES, check, readJson, writeJson, same, versionTag, internalDependencies,
     validatePackage, loadRelease, run, npm } = require("./release.cjs");
 
@@ -51,13 +50,22 @@ function allowedFile(relative, entry) {
     if (!relative.startsWith(`lib/${entry.slug}/`)) return false;
     if (relative.split("/").some((part) => /^(?:test|tests|__tests__|benchmark|benchmarks|scripts|node_modules|coverage|\..*)$/i.test(part))) return false;
     if (/\.(?:js|d\.ts)(?:\.map)?$/.test(relative)) return true;
-    return new RegExp(`^lib/${entry.slug}/localization/(?:templates/templates?|bundles/bundle\\.l10n)(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
+    if (entry.slug === "powerquery-formatter") return false;
+    const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
+    return relative === `lib/${entry.slug}/localization/templates/${stem}.json` ||
+        new RegExp(`^lib/${entry.slug}/localization/bundles/bundle\\.l10n(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
 }
 
 function localizationFiles(root, entry) {
-    return sourceLocalizations(path.join(root, entry.workspace), entry.slug).map((file) => ({
-        ...file,
-        relative: `lib/${entry.slug}/${file.relative}`,
+    if (entry.slug === "powerquery-formatter") return [];
+    const source = path.join(root, entry.workspace, "src", "localization");
+    const bundles = walk(path.join(source, "bundles")).filter((file) => file.endsWith(".json"));
+    check(bundles.length > 1 && bundles.includes("bundle.l10n.json") &&
+        bundles.includes("bundle.l10n.fr-FR.json"), `${entry.name} lacks baseline source localizations`);
+    const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
+    return [...bundles.map((file) => `bundles/${file}`), `templates/${stem}.json`].map((file) => ({
+        relative: `lib/${entry.slug}/localization/${file}`,
+        contents: readJson(path.join(source, file)),
     }));
 }
 
@@ -282,5 +290,5 @@ async function packRelease(root) {
     }
 }
 
-module.exports = { safeRelative, inside, integrity, allowedFile, requireOutputs, requireBuiltOutputs, inspectTarball,
+module.exports = { safeRelative, inside, integrity, allowedFile, localizationFiles, requireOutputs, requireBuiltOutputs, inspectTarball,
     validateManifest, verifyManifest, packRelease };

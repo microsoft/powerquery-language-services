@@ -71,6 +71,10 @@ These APIs read `@vscode/l10n` bundles without configuring global locale state o
 VS Code host. See the monorepo [localization instructions](../../README.md#localization) for
 bundle maintenance, host-bundle namespaces, and placeholder semantics.
 
+Per-locale ID-keyed JSON deep imports are removed; use the template APIs or
+`localization/bundles` JSON. The English template/key catalog remains a runtime and type input,
+not a duplicate set of locale translations.
+
 ## Related projects
 
 - [powerquery-parser](../powerquery-parser/README.md): A lexer + parser for Power Query. Also contains features such as type validation.
