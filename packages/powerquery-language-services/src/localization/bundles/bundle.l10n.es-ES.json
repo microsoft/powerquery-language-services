@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Identificador duplicado \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Nombre de parámetro duplicado '{identifier}'",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Se espera entre los argumentos {numMin}-{numMax}, pero se proporcionaron {numGiven}.",
+        "comment": [
+            "Se produjo un error cuando se proporcionó una llamada de función a muy pocos argumentos o demasiados argumentos. Se espera que esté destinado al usuario."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Falta un argumento en \"{funcName}\" para el parámetro no opcional \"{argName}\".",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Falta un argumento para el parámetro no opcional \"{argName}\".",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{funcName} esperaba que el argumento \"{argName}\" fuera \"{expected}\", pero en su lugar obtuvo \"{actual}\".",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Se esperaba que el argumento de \"{argName}\" fuera \"{expected}\", pero en su lugar se obtuvo \"{actual}\".",
+    "Cannot find the name '{identifier}'.": "No se encuentra el nombre “{identifier}”.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "No se encuentra el nombre \"{identifier}\". ¿Quería decir \"{suggestion}\"?",
+    "Default: `{value}`": "Valor predeterminado: `{value}`",
+    "Allowed values: {values}": "Valores permitidos: {values}",
+    "Sample values: {values}": "Valores de ejemplo: {values}",
+    "Type: `{type}`": "Tipo: `{type}`"
+}

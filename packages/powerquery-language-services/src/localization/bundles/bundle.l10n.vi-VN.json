@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Mã định danh trùng lặp '{identifier}'",
+    "Duplicate parameter name '{identifier}'": "Nhân đôi tên tham số “{identifier}”",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Dự kiến giữa {numMin}-{numMax} tham đối, nhưng thực tế được cung cấp {numGiven} tham đối.",
+        "comment": [
+            "Lỗi khi một lệnh gọi hàm được cung cấp quá ít hoặc quá nhiều tham đối. Dự kiến người dùng phải đối mặt."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' thiếu tham đối cho tham số không tối ưu '{argName}'.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Thiếu tham đối cho tham số không tối ưu '{argName}'.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” dự kiến đối số cho “{argName}” sẽ là “{expected}” nhưng thay vào đó lại là “{actual}”.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Dự kiến tham đối cho '{argName}' sẽ là '{expected}' nhưng thay vào đó lại là '{actual}'.",
+    "Cannot find the name '{identifier}'.": "Không thể tìm thấy tên '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Không thể tìm thấy tên '{identifier}', ý bạn là '{suggestion}' phải không?",
+    "Default: `{value}`": "Giá trị mặc định: `{value}`",
+    "Allowed values: {values}": "Giá trị được phép: {values}",
+    "Sample values: {values}": "Giá trị ví dụ: {values}",
+    "Type: `{type}`": "Kiểu: `{type}`"
+}

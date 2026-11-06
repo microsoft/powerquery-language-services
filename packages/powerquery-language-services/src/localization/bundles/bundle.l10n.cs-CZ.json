@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Duplicitní identifikátor {identifier}",
+    "Duplicate parameter name '{identifier}'": "Duplicitní název parametru {identifier}",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Očekával se rozsah {numMin}–{numMax} argumentů, ale zadal se pouze následující počet: {numGiven}",
+        "comment": [
+            "Při volání funkce došlo k chybě. Zadalo se příliš málo nebo příliš mnoho argumentů. Očekávalo se, že se bude zobrazovat uživatelům."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Funkci {funcName} chybí argument pro povinný parametr {argName}.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Chybí argument pro povinný parametr {argName}.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Funkce {funcName} očekávala, že argument pro {argName} bude {expected}, ale místo něj obdržela argument {actual}.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Očekávalo se, že argument pro {argName} bude {expected}, ale místo něj byl obdržen argument {actual}.",
+    "Cannot find the name '{identifier}'.": "Nelze najít název {identifier}.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nepovedlo se najít název {identifier}, měli jste na mysli {suggestion}?",
+    "Default: `{value}`": "Výchozí hodnota: `{value}`",
+    "Allowed values: {values}": "Povolené hodnoty: {values}",
+    "Sample values: {values}": "Ukázkové hodnoty: {values}",
+    "Type: `{type}`": "Typ: `{type}`"
+}

@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, StringUtils } from "../common";
+import * as l10n from "@vscode/l10n";
+
 import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
+import { Assert } from "../common";
 import { ILocalizationTemplates } from "./templates";
 import { LexError } from "../lexer";
 import { ParseError } from "../parser";
@@ -189,7 +191,7 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
 
 export const Localization: ILocalization = {
     error_common_cancellationError: (templates: ILocalizationTemplates, reason: string) =>
-        StringUtils.assertGetFormatted(templates.error_common_cancellationError, new Map([["reason", reason]])),
+        format(templates.error_common_cancellationError, { reason }),
 
     error_common_invariantError: (
         templates: ILocalizationTemplates,
@@ -197,23 +199,17 @@ export const Localization: ILocalization = {
         jsonDetails: object | undefined,
     ) => {
         if (jsonDetails !== undefined) {
-            return StringUtils.assertGetFormatted(
-                templates.error_common_invariantError_1_details,
-                new Map([
-                    ["invariantBroken", invariantBroken],
-                    ["details", JSON.stringify(jsonDetails, undefined, 4)],
-                ]),
-            );
+            return format(templates.error_common_invariantError_1_details, {
+                invariantBroken,
+                details: JSON.stringify(jsonDetails, undefined, 4),
+            });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_common_invariantError_2_noDetails,
-                new Map([["invariantBroken", invariantBroken]]),
-            );
+            return format(templates.error_common_invariantError_2_noDetails, { invariantBroken });
         }
     },
 
     error_common_unknown: (templates: ILocalizationTemplates, innerError: string) =>
-        StringUtils.assertGetFormatted(templates.error_common_unknown, new Map([["innerError", innerError]])),
+        format(templates.error_common_unknown, { innerError }),
 
     error_lex_endOfStreamPartwayRead: (templates: ILocalizationTemplates) => templates.error_lex_endOfStreamPartwayRead,
 
@@ -277,29 +273,22 @@ export const Localization: ILocalization = {
             .join(", ");
 
         if (foundToken !== undefined) {
-            return StringUtils.assertGetFormatted(
-                templates.error_parse_expectAnyTokenKind_1_other,
-                new Map([
-                    ["foundTokenKind", localizeTokenKind(templates, foundToken.token.kind)],
-                    ["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds],
-                ]),
-            );
+            return format(templates.error_parse_expectAnyTokenKind_1_other, {
+                foundTokenKind: localizeTokenKind(templates, foundToken.token.kind),
+                expectedAnyTokenKinds: localizedExpectedAnyTokenKinds,
+            });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_parse_expectAnyTokenKind_2_endOfStream,
-                new Map([["expectedAnyTokenKinds", localizedExpectedAnyTokenKinds]]),
-            );
+            return format(templates.error_parse_expectAnyTokenKind_2_endOfStream, {
+                expectedAnyTokenKinds: localizedExpectedAnyTokenKinds,
+            });
         }
     },
 
     error_parse_expectCommaOrKind: (templates: ILocalizationTemplates, expectedTokenKind: Token.TokenKind) =>
-        StringUtils.assertGetFormatted(
-            templates.error_parse_expectedCommaOrTokenKind,
-            new Map([
-                ["localizedComma", localizeTokenKind(templates, Token.TokenKind.Comma)],
-                ["localizedAlternative", localizeTokenKind(templates, expectedTokenKind)],
-            ]),
-        ),
+        format(templates.error_parse_expectedCommaOrTokenKind, {
+            localizedComma: localizeTokenKind(templates, Token.TokenKind.Comma),
+            localizedAlternative: localizeTokenKind(templates, expectedTokenKind),
+        }),
 
     error_parse_expectGeneralizedIdentifier: (
         templates: ILocalizationTemplates,
@@ -320,28 +309,23 @@ export const Localization: ILocalization = {
         const localizedExpectedTokenKind: string = localizeTokenKind(templates, expectedTokenKind);
 
         if (foundToken !== undefined) {
-            return StringUtils.assertGetFormatted(
-                templates.error_parse_expectTokenKind_1_other,
-                new Map([
-                    ["expectedTokenKind", localizedExpectedTokenKind],
-                    ["foundTokenKind", localizeTokenKind(templates, foundToken.token.kind)],
-                ]),
-            );
+            return format(templates.error_parse_expectTokenKind_1_other, {
+                expectedTokenKind: localizedExpectedTokenKind,
+                foundTokenKind: localizeTokenKind(templates, foundToken.token.kind),
+            });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_parse_expectTokenKind_2_endOfStream,
-                new Map([["expectedTokenKind", localizedExpectedTokenKind]]),
-            );
+            return format(templates.error_parse_expectTokenKind_2_endOfStream, {
+                expectedTokenKind: localizedExpectedTokenKind,
+            });
         }
     },
 
     error_parse_invalidCatchFunction: (templates: ILocalizationTemplates) => templates.error_parse_invalidCatchFunction,
 
     error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) =>
-        StringUtils.assertGetFormatted(
-            templates.error_parse_invalidPrimitiveType,
-            new Map([["foundTokenKind", localizeTokenKind(templates, token.kind)]]),
-        ),
+        format(templates.error_parse_invalidPrimitiveType, {
+            foundTokenKind: localizeTokenKind(templates, token.kind),
+        }),
 
     error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) =>
         templates.error_parse_requiredParameterAfterOptional,
@@ -361,3 +345,8 @@ export const Localization: ILocalization = {
 
     error_parse_unusedTokens: (templates: ILocalizationTemplates) => templates.error_parse_unusedTokens,
 };
+
+function format(message: string, args: Record<string, l10n.L10nReplacement>): string {
+    // Locale selection is request-scoped; never configure l10n's shared singleton.
+    return l10n.t({ message, args, comment: "@microsoft/powerquery-parser" });
+}

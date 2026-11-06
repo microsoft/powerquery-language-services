@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Zduplikowany identyfikator „{identifier}”",
+    "Duplicate parameter name '{identifier}'": "Zduplikowana nazwa parametru \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Oczekiwano liczbę argumentów od {numMin}-{numMax}, ale podano {numGiven}.",
+        "comment": [
+            "Błąd, gdy wywołanie funkcji otrzymało zbyt mało lub zbyt wiele argumentów. Oczekuje się, że będzie dostępny dla użytkownika."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Element „{funcName}” nie ma argumentu dla parametru nieopcjonalnego „{argName}”.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Brak argumentu dla parametru nieopcjonalnego „{argName}”.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Element „{funcName}” oczekiwał, że argument „{argName}” będzie miał wartość „{expected}”, ale zamiast tego uzyskano wartość „{actual}”.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Oczekiwano argumentu „{argName}” na „{expected}”, ale zamiast tego otrzymano „{actual}”.",
+    "Cannot find the name '{identifier}'.": "Nie można odnaleźć nazwy „{identifier}”.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nie można odnaleźć nazwy „{identifier}“. Czy chodziło Ci o „{suggestion}“?",
+    "Default: `{value}`": "Wartość domyślna: `{value}`",
+    "Allowed values: {values}": "Dozwolone wartości: {values}",
+    "Sample values: {values}": "Przykładowe wartości: {values}",
+    "Type: `{type}`": "Typ: `{type}`"
+}

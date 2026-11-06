@@ -1,94 +1,329 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as bg_BG from "./templates/template.bg-BG.json";
-import * as ca_ES from "./templates/template.ca-ES.json";
-import * as cs_CZ from "./templates/template.cs-CZ.json";
-import * as da_DK from "./templates/template.da-DK.json";
-import * as de_DE from "./templates/template.de-DE.json";
-import * as el_GR from "./templates/template.el-GR.json";
-import * as en_US from "./templates/template.json";
-import * as es_ES from "./templates/template.es-ES.json";
-import * as et_EE from "./templates/template.et-EE.json";
-import * as eu_ES from "./templates/template.eu-ES.json";
-import * as fi_FI from "./templates/template.fi-FI.json";
-import * as fr_FR from "./templates/template.fr-FR.json";
-import * as gl_ES from "./templates/template.gl-ES.json";
-import * as hi_IN from "./templates/template.hi-IN.json";
-import * as hr_HR from "./templates/template.hr-HR.json";
-import * as hu_HU from "./templates/template.hu-HU.json";
-import * as id_ID from "./templates/template.id-ID.json";
-import * as it_IT from "./templates/template.it-IT.json";
-import * as ja_JP from "./templates/template.ja-JP.json";
-import * as kk_KZ from "./templates/template.kk-KZ.json";
-import * as ko_KR from "./templates/template.ko-KR.json";
-import * as lt_LT from "./templates/template.lt-LT.json";
-import * as lv_LV from "./templates/template.lv-LV.json";
-import * as ms_MY from "./templates/template.ms-MY.json";
-import * as nb_NO from "./templates/template.nb-NO.json";
-import * as nl_NL from "./templates/template.nl-NL.json";
-import * as pl_PL from "./templates/template.pl-PL.json";
-import * as pt_BR from "./templates/template.pt-BR.json";
-import * as pt_PT from "./templates/template.pt-PT.json";
-import * as ro_RO from "./templates/template.ro-RO.json";
-import * as ru_RU from "./templates/template.ru-RU.json";
-import * as sk_SK from "./templates/template.sk-SK.json";
-import * as sl_SI from "./templates/template.sl-SI.json";
-import * as sr_Cyrl_RS from "./templates/template.sr-Cyrl-RS.json";
-import * as sr_Latn_RS from "./templates/template.sr-Latn-RS.json";
-import * as sv_SE from "./templates/template.sv-SE.json";
-import * as th_TH from "./templates/template.th-TH.json";
-import * as tr_TR from "./templates/template.tr-TR.json";
-import * as uk_UA from "./templates/template.uk-UA.json";
-import * as vi_VN from "./templates/template.vi-VN.json";
-import * as zh_CN from "./templates/template.zh-CN.json";
-import * as zh_TW from "./templates/template.zh-TW.json";
+import bg_BGBundle from "./bundles/bundle.l10n.bg-BG.json";
+import ca_ESBundle from "./bundles/bundle.l10n.ca-ES.json";
+import cs_CZBundle from "./bundles/bundle.l10n.cs-CZ.json";
+import da_DKBundle from "./bundles/bundle.l10n.da-DK.json";
+import de_DEBundle from "./bundles/bundle.l10n.de-DE.json";
+import defaultBundle from "./bundles/bundle.l10n.json";
+import el_GRBundle from "./bundles/bundle.l10n.el-GR.json";
+import es_ESBundle from "./bundles/bundle.l10n.es-ES.json";
+import et_EEBundle from "./bundles/bundle.l10n.et-EE.json";
+import eu_ESBundle from "./bundles/bundle.l10n.eu-ES.json";
+import fi_FIBundle from "./bundles/bundle.l10n.fi-FI.json";
+import fr_FRBundle from "./bundles/bundle.l10n.fr-FR.json";
+import gl_ESBundle from "./bundles/bundle.l10n.gl-ES.json";
+import hi_INBundle from "./bundles/bundle.l10n.hi-IN.json";
+import hr_HRBundle from "./bundles/bundle.l10n.hr-HR.json";
+import hu_HUBundle from "./bundles/bundle.l10n.hu-HU.json";
+import id_IDBundle from "./bundles/bundle.l10n.id-ID.json";
+import it_ITBundle from "./bundles/bundle.l10n.it-IT.json";
+import ja_JPBundle from "./bundles/bundle.l10n.ja-JP.json";
+import kk_KZBundle from "./bundles/bundle.l10n.kk-KZ.json";
+import ko_KRBundle from "./bundles/bundle.l10n.ko-KR.json";
+import lt_LTBundle from "./bundles/bundle.l10n.lt-LT.json";
+import lv_LVBundle from "./bundles/bundle.l10n.lv-LV.json";
+import ms_MYBundle from "./bundles/bundle.l10n.ms-MY.json";
+import nb_NOBundle from "./bundles/bundle.l10n.nb-NO.json";
+import nl_NLBundle from "./bundles/bundle.l10n.nl-NL.json";
+import pl_PLBundle from "./bundles/bundle.l10n.pl-PL.json";
+import pt_BRBundle from "./bundles/bundle.l10n.pt-BR.json";
+import pt_PTBundle from "./bundles/bundle.l10n.pt-PT.json";
+import ro_ROBundle from "./bundles/bundle.l10n.ro-RO.json";
+import ru_RUBundle from "./bundles/bundle.l10n.ru-RU.json";
+import sk_SKBundle from "./bundles/bundle.l10n.sk-SK.json";
+import sl_SIBundle from "./bundles/bundle.l10n.sl-SI.json";
+import sr_Cyrl_RSBundle from "./bundles/bundle.l10n.sr-Cyrl-RS.json";
+import sr_Latn_RSBundle from "./bundles/bundle.l10n.sr-Latn-RS.json";
+import sv_SEBundle from "./bundles/bundle.l10n.sv-SE.json";
+import th_THBundle from "./bundles/bundle.l10n.th-TH.json";
+import tr_TRBundle from "./bundles/bundle.l10n.tr-TR.json";
+import uk_UABundle from "./bundles/bundle.l10n.uk-UA.json";
+import vi_VNBundle from "./bundles/bundle.l10n.vi-VN.json";
+import zh_CNBundle from "./bundles/bundle.l10n.zh-CN.json";
+import zh_TWBundle from "./bundles/bundle.l10n.zh-TW.json";
+
+import { createTemplates } from "./templateUtils";
 import { Locale } from "./locale";
 
-export {
-    bg_BG,
-    ca_ES,
-    cs_CZ,
-    da_DK,
-    de_DE,
-    el_GR,
-    en_US,
-    es_ES,
-    et_EE,
-    eu_ES,
-    fi_FI,
-    fr_FR,
-    gl_ES,
-    hi_IN,
-    hr_HR,
-    hu_HU,
-    id_ID,
-    it_IT,
-    ja_JP,
-    kk_KZ,
-    ko_KR,
-    lt_LT,
-    lv_LV,
-    ms_MY,
-    nb_NO,
-    nl_NL,
-    pl_PL,
-    pt_BR,
-    pt_PT,
-    ro_RO,
-    ru_RU,
-    sk_SK,
-    sl_SI,
-    sr_Cyrl_RS,
-    sr_Latn_RS,
-    sv_SE,
-    th_TH,
-    tr_TR,
-    uk_UA,
-    vi_VN,
-    zh_CN,
-    zh_TW,
+type TemplateMessageKey = keyof ILocalizationTemplates;
+type DefaultTemplateKey = TemplateMessageKey | `_${TemplateMessageKey}.comment`;
+type DefaultTemplateShape = { [K in DefaultTemplateKey]: string };
+
+const defaultTemplates: DefaultTemplateShape = {
+    error_common_cancellationError: defaultBundle["CancellationError: {reason}"].message,
+    "_error_common_cancellationError.comment": defaultBundle["CancellationError: {reason}"].comment.join(""),
+    error_common_invariantError_1_details: defaultBundle["InvariantError: {invariantBroken} - {details}"].message,
+    "_error_common_invariantError_1_details.comment":
+        defaultBundle["InvariantError: {invariantBroken} - {details}"].comment.join(""),
+    error_common_invariantError_2_noDetails: defaultBundle["InvariantError: {invariantBroken}"].message,
+    "_error_common_invariantError_2_noDetails.comment":
+        defaultBundle["InvariantError: {invariantBroken}"].comment.join(""),
+    error_common_unknown: defaultBundle["An unknown error was encountered, innerError: {innerError}"].message,
+    "_error_common_unknown.comment":
+        defaultBundle["An unknown error was encountered, innerError: {innerError}"].comment.join(""),
+    error_lex_endOfStreamPartwayRead:
+        defaultBundle["While attempting to read a token the document stream ended part way through"].message,
+    "_error_lex_endOfStreamPartwayRead.comment":
+        defaultBundle["While attempting to read a token the document stream ended part way through"].comment.join(""),
+    error_lex_expectedKind_1_hex: defaultBundle["Expected a hex literal"].message,
+    "_error_lex_expectedKind_1_hex.comment": defaultBundle["Expected a hex literal"].comment.join(""),
+    error_lex_expectedKind_2_keywordOrIdentifier: defaultBundle["Expected a keyword or identifier"].message,
+    "_error_lex_expectedKind_2_keywordOrIdentifier.comment":
+        defaultBundle["Expected a keyword or identifier"].comment.join(""),
+    error_lex_expectedKind_3_numeric: defaultBundle["Expected a numeric literal"].message,
+    "_error_lex_expectedKind_3_numeric.comment": defaultBundle["Expected a numeric literal"].comment.join(""),
+    error_lex_unexpectedRead: defaultBundle["Unexpected read during tokenization"].message,
+    "_error_lex_unexpectedRead.comment": defaultBundle["Unexpected read during tokenization"].comment.join(""),
+    error_lex_unterminatedMultilineToken_1_comment: defaultBundle["Unterminated multiline comment"].message,
+    "_error_lex_unterminatedMultilineToken_1_comment.comment":
+        defaultBundle["Unterminated multiline comment"].comment.join(""),
+    error_lex_unterminatedMultilineToken_2_quotedIdentifier: defaultBundle["Unterminated quoted identifier"].message,
+    "_error_lex_unterminatedMultilineToken_2_quotedIdentifier.comment":
+        defaultBundle["Unterminated quoted identifier"].comment.join(""),
+    error_lex_unterminatedMultilineToken_3_string: defaultBundle["Unterminated string"].message,
+    "_error_lex_unterminatedMultilineToken_3_string.comment": defaultBundle["Unterminated string"].comment.join(""),
+    error_parse_csvContinuation_1_danglingComma: defaultBundle["Did you leave a dangling comma?"].message,
+    "_error_parse_csvContinuation_1_danglingComma.comment":
+        defaultBundle["Did you leave a dangling comma?"].comment.join(""),
+    error_parse_csvContinuation_2_letExpression: defaultBundle["A comma cannot proceed an 'in'"].message,
+    "_error_parse_csvContinuation_2_letExpression.comment":
+        defaultBundle["A comma cannot proceed an 'in'"].comment.join(""),
+    error_parse_expectAnyTokenKind_1_other:
+        defaultBundle[
+            "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}"
+        ].message,
+    "_error_parse_expectAnyTokenKind_1_other.comment":
+        defaultBundle[
+            "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}"
+        ].comment.join(""),
+    error_parse_expectAnyTokenKind_2_endOfStream:
+        defaultBundle[
+            "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}"
+        ].message,
+    "_error_parse_expectAnyTokenKind_2_endOfStream.comment":
+        defaultBundle[
+            "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}"
+        ].comment.join(""),
+    error_parse_expectedCommaOrTokenKind:
+        defaultBundle["Expected to find either a {localizedComma} or {localizedAlternative}."].message,
+    "_error_parse_expectedCommaOrTokenKind.comment":
+        defaultBundle["Expected to find either a {localizedComma} or {localizedAlternative}."].comment.join(""),
+    error_parse_expectGeneralizedIdentifier_1_other: defaultBundle["Expected to find a generalized identifier"].message,
+    "_error_parse_expectGeneralizedIdentifier_1_other.comment":
+        defaultBundle["Expected to find a generalized identifier"].comment.join(""),
+    error_parse_expectGeneralizedIdentifier_2_endOfStream:
+        defaultBundle["Expected to find a generalized identifier but the end-of-stream was reached first"].message,
+    "_error_parse_expectGeneralizedIdentifier_2_endOfStream.comment":
+        defaultBundle["Expected to find a generalized identifier but the end-of-stream was reached first"].comment.join(
+            "",
+        ),
+    error_parse_expectTokenKind_1_other:
+        defaultBundle["Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead"].message,
+    "_error_parse_expectTokenKind_1_other.comment":
+        defaultBundle["Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead"].comment.join(
+            "",
+        ),
+    error_parse_expectTokenKind_2_endOfStream:
+        defaultBundle["Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead"].message,
+    "_error_parse_expectTokenKind_2_endOfStream.comment":
+        defaultBundle["Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead"].comment.join(
+            "",
+        ),
+    error_parse_invalidCatchFunction:
+        defaultBundle[
+            "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints"
+        ].message,
+    "_error_parse_invalidCatchFunction.comment":
+        defaultBundle[
+            "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints"
+        ].comment.join(""),
+    error_parse_invalidPrimitiveType:
+        defaultBundle["Expected to find a primitive literal, but a {foundTokenKind} was found instead"].message,
+    "_error_parse_invalidPrimitiveType.comment":
+        defaultBundle["Expected to find a primitive literal, but a {foundTokenKind} was found instead"].comment.join(
+            "",
+        ),
+    error_parse_requiredParameterAfterOptional:
+        defaultBundle["You cannot have a non-optional parameter after an optional parameter"].message,
+    "_error_parse_requiredParameterAfterOptional.comment":
+        defaultBundle["You cannot have a non-optional parameter after an optional parameter"].comment.join(""),
+    error_parse_unterminated_sequence_bracket: defaultBundle["Unterminated bracket"].message,
+    "_error_parse_unterminated_sequence_bracket.comment": defaultBundle["Unterminated bracket"].comment.join(""),
+    error_parse_unterminated_sequence_parenthesis: defaultBundle["Unterminated parenthesis"].message,
+    "_error_parse_unterminated_sequence_parenthesis.comment":
+        defaultBundle["Unterminated parenthesis"].comment.join(""),
+    error_parse_unusedTokens: defaultBundle["Finished parsing but more tokens remain"].message,
+    "_error_parse_unusedTokens.comment": defaultBundle["Finished parsing but more tokens remain"].comment.join(""),
+    tokenKind_ampersand: defaultBundle["ampersand <'&'>"].message,
+    "_tokenKind_ampersand.comment": defaultBundle["ampersand <'&'>"].comment.join(""),
+    tokenKind_asterisk: defaultBundle["asterisk <'*'>"].message,
+    "_tokenKind_asterisk.comment": defaultBundle["asterisk <'*'>"].comment.join(""),
+    tokenKind_atSign: defaultBundle["at sign <'@'>"].message,
+    "_tokenKind_atSign.comment": defaultBundle["at sign <'@'>"].comment.join(""),
+    tokenKind_bang: defaultBundle["exclamation mark <'!'>"].message,
+    "_tokenKind_bang.comment": defaultBundle["exclamation mark <'!'>"].comment.join(""),
+    tokenKind_comma: defaultBundle["comma <','>"].message,
+    "_tokenKind_comma.comment": defaultBundle["comma <','>"].comment.join(""),
+    tokenKind_division: defaultBundle["division operator <'/'>"].message,
+    "_tokenKind_division.comment": defaultBundle["division operator <'/'>"].comment.join(""),
+    tokenKind_dotDot: defaultBundle["dot dot <'..'>"].message,
+    "_tokenKind_dotDot.comment": defaultBundle["dot dot <'..'>"].comment.join(""),
+    tokenKind_ellipsis: defaultBundle["ellipsis <'...'>"].message,
+    "_tokenKind_ellipsis.comment": defaultBundle["ellipsis <'...'>"].comment.join(""),
+    tokenKind_equal: defaultBundle["equal operator <'='>"].message,
+    "_tokenKind_equal.comment": defaultBundle["equal operator <'='>"].comment.join(""),
+    tokenKind_fatArrow: defaultBundle["goes to ('=>')"].message,
+    "_tokenKind_fatArrow.comment": defaultBundle["goes to ('=>')"].comment.join(""),
+    tokenKind_greaterThan: defaultBundle["greater than operator ('>')"].message,
+    "_tokenKind_greaterThan.comment": defaultBundle["greater than operator ('>')"].comment.join(""),
+    tokenKind_greaterThanEqualTo: defaultBundle["greater than or equal to operator ('>=')"].message,
+    "_tokenKind_greaterThanEqualTo.comment": defaultBundle["greater than or equal to operator ('>=')"].comment.join(""),
+    tokenKind_hexLiteral: defaultBundle["hex literal"].message,
+    "_tokenKind_hexLiteral.comment": defaultBundle["hex literal"].comment.join(""),
+    tokenKind_identifier: defaultBundle["identifier"].message,
+    "_tokenKind_identifier.comment": defaultBundle["identifier"].comment.join(""),
+    tokenKind_keywordAnd: defaultBundle["keyword <'and'>"].message,
+    "_tokenKind_keywordAnd.comment": defaultBundle["keyword <'and'>"].comment.join(""),
+    tokenKind_keywordAs: defaultBundle["keyword <'as'>"].message,
+    "_tokenKind_keywordAs.comment": defaultBundle["keyword <'as'>"].comment.join(""),
+    tokenKind_keywordEach: defaultBundle["keyword <'each'>"].message,
+    "_tokenKind_keywordEach.comment": defaultBundle["keyword <'each'>"].comment.join(""),
+    tokenKind_keywordElse: defaultBundle["keyword <'else'>"].message,
+    "_tokenKind_keywordElse.comment": defaultBundle["keyword <'else'>"].comment.join(""),
+    tokenKind_keywordError: defaultBundle["keyword <'error'>"].message,
+    "_tokenKind_keywordError.comment": defaultBundle["keyword <'error'>"].comment.join(""),
+    tokenKind_keywordFalse: defaultBundle["keyword <'false'>"].message,
+    "_tokenKind_keywordFalse.comment": defaultBundle["keyword <'false'>"].comment.join(""),
+    tokenKind_keywordHashBinary: defaultBundle["keyword <'#binary'>"].message,
+    "_tokenKind_keywordHashBinary.comment": defaultBundle["keyword <'#binary'>"].comment.join(""),
+    tokenKind_keywordHashDate: defaultBundle["keyword <'#date'>"].message,
+    "_tokenKind_keywordHashDate.comment": defaultBundle["keyword <'#date'>"].comment.join(""),
+    tokenKind_keywordHashDateTime: defaultBundle["keyword <'#datetime'>"].message,
+    "_tokenKind_keywordHashDateTime.comment": defaultBundle["keyword <'#datetime'>"].comment.join(""),
+    tokenKind_keywordHashDateTimeZone: defaultBundle["keyword <'#datetimezone'>"].message,
+    "_tokenKind_keywordHashDateTimeZone.comment": defaultBundle["keyword <'#datetimezone'>"].comment.join(""),
+    tokenKind_keywordHashDuration: defaultBundle["keyword <'#duration'>"].message,
+    "_tokenKind_keywordHashDuration.comment": defaultBundle["keyword <'#duration'>"].comment.join(""),
+    tokenKind_keywordHashInfinity: defaultBundle["keyword <'#infinity'>"].message,
+    "_tokenKind_keywordHashInfinity.comment": defaultBundle["keyword <'#infinity'>"].comment.join(""),
+    tokenKind_keywordHashNan: defaultBundle["keyword <'#nan'>"].message,
+    "_tokenKind_keywordHashNan.comment": defaultBundle["keyword <'#nan'>"].comment.join(""),
+    tokenKind_keywordHashSections: defaultBundle["keyword <'#sections'>"].message,
+    "_tokenKind_keywordHashSections.comment": defaultBundle["keyword <'#sections'>"].comment.join(""),
+    tokenKind_keywordHashShared: defaultBundle["keyword <'#shared'>"].message,
+    "_tokenKind_keywordHashShared.comment": defaultBundle["keyword <'#shared'>"].comment.join(""),
+    tokenKind_keywordHashTable: defaultBundle["keyword <'#table'>"].message,
+    "_tokenKind_keywordHashTable.comment": defaultBundle["keyword <'#table'>"].comment.join(""),
+    tokenKind_keywordHashTime: defaultBundle["keyword <'#time'>"].message,
+    "_tokenKind_keywordHashTime.comment": defaultBundle["keyword <'#time'>"].comment.join(""),
+    tokenKind_keywordIf: defaultBundle["keyword <'if'>"].message,
+    "_tokenKind_keywordIf.comment": defaultBundle["keyword <'if'>"].comment.join(""),
+    tokenKind_keywordIn: defaultBundle["keyword <'in'>"].message,
+    "_tokenKind_keywordIn.comment": defaultBundle["keyword <'in'>"].comment.join(""),
+    tokenKind_keywordIs: defaultBundle["keyword <'is'>"].message,
+    "_tokenKind_keywordIs.comment": defaultBundle["keyword <'is'>"].comment.join(""),
+    tokenKind_keywordLet: defaultBundle["keyword <'let'>"].message,
+    "_tokenKind_keywordLet.comment": defaultBundle["keyword <'let'>"].comment.join(""),
+    tokenKind_keywordMeta: defaultBundle["keyword <'meta'>"].message,
+    "_tokenKind_keywordMeta.comment": defaultBundle["keyword <'meta'>"].comment.join(""),
+    tokenKind_keywordNot: defaultBundle["keyword <'not'>"].message,
+    "_tokenKind_keywordNot.comment": defaultBundle["keyword <'not'>"].comment.join(""),
+    tokenKind_keywordOr: defaultBundle["keyword <'or'>"].message,
+    "_tokenKind_keywordOr.comment": defaultBundle["keyword <'or'>"].comment.join(""),
+    tokenKind_keywordOtherwise: defaultBundle["keyword <'otherwise'>"].message,
+    "_tokenKind_keywordOtherwise.comment": defaultBundle["keyword <'otherwise'>"].comment.join(""),
+    tokenKind_keywordSection: defaultBundle["keyword <'section'>"].message,
+    "_tokenKind_keywordSection.comment": defaultBundle["keyword <'section'>"].comment.join(""),
+    tokenKind_keywordShared: defaultBundle["keyword <'shared'>"].message,
+    "_tokenKind_keywordShared.comment": defaultBundle["keyword <'shared'>"].comment.join(""),
+    tokenKind_keywordThen: defaultBundle["keyword <'then'>"].message,
+    "_tokenKind_keywordThen.comment": defaultBundle["keyword <'then'>"].comment.join(""),
+    tokenKind_keywordTrue: defaultBundle["keyword <'true'>"].message,
+    "_tokenKind_keywordTrue.comment": defaultBundle["keyword <'true'>"].comment.join(""),
+    tokenKind_keywordTry: defaultBundle["keyword <'try'>"].message,
+    "_tokenKind_keywordTry.comment": defaultBundle["keyword <'try'>"].comment.join(""),
+    tokenKind_keywordType: defaultBundle["keyword <'type'>"].message,
+    "_tokenKind_keywordType.comment": defaultBundle["keyword <'type'>"].comment.join(""),
+    tokenKind_leftBrace: defaultBundle["left brace <'{'>"].message,
+    "_tokenKind_leftBrace.comment": defaultBundle["left brace <'{'>"].comment.join(""),
+    tokenKind_leftBracket: defaultBundle["left bracket <'['>"].message,
+    "_tokenKind_leftBracket.comment": defaultBundle["left bracket <'['>"].comment.join(""),
+    tokenKind_leftParenthesis: defaultBundle["left parenthesis <'('>"].message,
+    "_tokenKind_leftParenthesis.comment": defaultBundle["left parenthesis <'('>"].comment.join(""),
+    tokenKind_lessThan: defaultBundle["less than operator ('<')"].message,
+    "_tokenKind_lessThan.comment": defaultBundle["less than operator ('<')"].comment.join(""),
+    tokenKind_lessThanEqualTo: defaultBundle["less than or equal to operator ('<=')"].message,
+    "_tokenKind_lessThanEqualTo.comment": defaultBundle["less than or equal to operator ('<=')"].comment.join(""),
+    tokenKind_minus: defaultBundle["minus <'-'>"].message,
+    "_tokenKind_minus.comment": defaultBundle["minus <'-'>"].comment.join(""),
+    tokenKind_notEqual: defaultBundle["not equal to operator ('<>')"].message,
+    "_tokenKind_notEqual.comment": defaultBundle["not equal to operator ('<>')"].comment.join(""),
+    tokenKind_nullCoalescingOperator: defaultBundle["null coalescing operator <'??'>"].message,
+    "_tokenKind_nullCoalescingOperator.comment": defaultBundle["null coalescing operator <'??'>"].comment.join(""),
+    tokenKind_nullLiteral: defaultBundle["<'null'>"].message,
+    "_tokenKind_nullLiteral.comment": defaultBundle["<'null'>"].comment.join(""),
+    tokenKind_numericLiteral: defaultBundle["numeric literal"].message,
+    "_tokenKind_numericLiteral.comment": defaultBundle["numeric literal"].comment.join(""),
+    tokenKind_plus: defaultBundle["addition operator <'+'>"].message,
+    "_tokenKind_plus.comment": defaultBundle["addition operator <'+'>"].comment.join(""),
+    tokenKind_questionMark: defaultBundle["question mark <'?'>"].message,
+    "_tokenKind_questionMark.comment": defaultBundle["question mark <'?'>"].comment.join(""),
+    tokenKind_rightBrace: defaultBundle["right brace <'}'>"].message,
+    "_tokenKind_rightBrace.comment": defaultBundle["right brace <'}'>"].comment.join(""),
+    tokenKind_rightBracket: defaultBundle["right bracket <']'>"].message,
+    "_tokenKind_rightBracket.comment": defaultBundle["right bracket <']'>"].comment.join(""),
+    tokenKind_rightParenthesis: defaultBundle["right parenthesis <')'>"].message,
+    "_tokenKind_rightParenthesis.comment": defaultBundle["right parenthesis <')'>"].comment.join(""),
+    tokenKind_semicolon: defaultBundle["semicolon <';'>"].message,
+    "_tokenKind_semicolon.comment": defaultBundle["semicolon <';'>"].comment.join(""),
+    tokenKind_textLiteral: defaultBundle["text"].message,
+    "_tokenKind_textLiteral.comment": defaultBundle["text"].comment.join(""),
 };
+
+export const en_US: typeof defaultTemplates = createTemplates(defaultTemplates, defaultBundle);
+export const bg_BG: typeof defaultTemplates = createTemplates(defaultTemplates, bg_BGBundle);
+export const ca_ES: typeof defaultTemplates = createTemplates(defaultTemplates, ca_ESBundle);
+export const cs_CZ: typeof defaultTemplates = createTemplates(defaultTemplates, cs_CZBundle);
+export const da_DK: typeof defaultTemplates = createTemplates(defaultTemplates, da_DKBundle);
+export const de_DE: typeof defaultTemplates = createTemplates(defaultTemplates, de_DEBundle);
+export const el_GR: typeof defaultTemplates = createTemplates(defaultTemplates, el_GRBundle);
+export const es_ES: typeof defaultTemplates = createTemplates(defaultTemplates, es_ESBundle);
+export const et_EE: typeof defaultTemplates = createTemplates(defaultTemplates, et_EEBundle);
+export const eu_ES: typeof defaultTemplates = createTemplates(defaultTemplates, eu_ESBundle);
+export const fi_FI: typeof defaultTemplates = createTemplates(defaultTemplates, fi_FIBundle);
+export const fr_FR: typeof defaultTemplates = createTemplates(defaultTemplates, fr_FRBundle);
+export const gl_ES: typeof defaultTemplates = createTemplates(defaultTemplates, gl_ESBundle);
+export const hi_IN: typeof defaultTemplates = createTemplates(defaultTemplates, hi_INBundle);
+export const hr_HR: typeof defaultTemplates = createTemplates(defaultTemplates, hr_HRBundle);
+export const hu_HU: typeof defaultTemplates = createTemplates(defaultTemplates, hu_HUBundle);
+export const id_ID: typeof defaultTemplates = createTemplates(defaultTemplates, id_IDBundle);
+export const it_IT: typeof defaultTemplates = createTemplates(defaultTemplates, it_ITBundle);
+export const ja_JP: typeof defaultTemplates = createTemplates(defaultTemplates, ja_JPBundle);
+export const kk_KZ: typeof defaultTemplates = createTemplates(defaultTemplates, kk_KZBundle);
+export const ko_KR: typeof defaultTemplates = createTemplates(defaultTemplates, ko_KRBundle);
+export const lt_LT: typeof defaultTemplates = createTemplates(defaultTemplates, lt_LTBundle);
+export const lv_LV: typeof defaultTemplates = createTemplates(defaultTemplates, lv_LVBundle);
+export const ms_MY: typeof defaultTemplates = createTemplates(defaultTemplates, ms_MYBundle);
+export const nb_NO: typeof defaultTemplates = createTemplates(defaultTemplates, nb_NOBundle);
+export const nl_NL: typeof defaultTemplates = createTemplates(defaultTemplates, nl_NLBundle);
+export const pl_PL: typeof defaultTemplates = createTemplates(defaultTemplates, pl_PLBundle);
+export const pt_BR: typeof defaultTemplates = createTemplates(defaultTemplates, pt_BRBundle);
+export const pt_PT: typeof defaultTemplates = createTemplates(defaultTemplates, pt_PTBundle);
+export const ro_RO: typeof defaultTemplates = createTemplates(defaultTemplates, ro_ROBundle);
+export const ru_RU: typeof defaultTemplates = createTemplates(defaultTemplates, ru_RUBundle);
+export const sk_SK: typeof defaultTemplates = createTemplates(defaultTemplates, sk_SKBundle);
+export const sl_SI: typeof defaultTemplates = createTemplates(defaultTemplates, sl_SIBundle);
+export const sr_Cyrl_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Cyrl_RSBundle);
+export const sr_Latn_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Latn_RSBundle);
+export const sv_SE: typeof defaultTemplates = createTemplates(defaultTemplates, sv_SEBundle);
+export const th_TH: typeof defaultTemplates = createTemplates(defaultTemplates, th_THBundle);
+export const tr_TR: typeof defaultTemplates = createTemplates(defaultTemplates, tr_TRBundle);
+export const uk_UA: typeof defaultTemplates = createTemplates(defaultTemplates, uk_UABundle);
+export const vi_VN: typeof defaultTemplates = createTemplates(defaultTemplates, vi_VNBundle);
+export const zh_CN: typeof defaultTemplates = createTemplates(defaultTemplates, zh_CNBundle);
+export const zh_TW: typeof defaultTemplates = createTemplates(defaultTemplates, zh_TWBundle);
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [Locale.bg_BG.toLowerCase(), bg_BG],

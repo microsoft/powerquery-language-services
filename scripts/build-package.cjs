@@ -39,6 +39,10 @@ function publishOutput() {
         fs.cpSync(sourceOutput, publishedOutput, { recursive: true });
         fs.rmSync(sourceOutput, { recursive: true });
     }
+    // These resource paths are obsolete; the sibling templates.js API module remains.
+    for (const resource of ["loc", "templates", "LocProject.json"]) {
+        fs.rmSync(path.join(publishedOutput, "localization", resource), { recursive: true, force: true });
+    }
 }
 if (mode === "--watch") {
     const ts = require("typescript");

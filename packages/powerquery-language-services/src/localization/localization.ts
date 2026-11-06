@@ -1,4 +1,4 @@
-import { StringUtils } from "@microsoft/powerquery-parser";
+import * as l10n from "@vscode/l10n";
 
 import { ILocalizationTemplates } from "./templates";
 
@@ -43,10 +43,7 @@ interface ILocalization {
 
 export const Localization: ILocalization = {
     error_validation_duplicate_identifier: (templates: ILocalizationTemplates, identifier: string) =>
-        StringUtils.assertGetFormatted(
-            templates.error_validation_duplicate_identifier,
-            new Map([["identifier", identifier]]),
-        ),
+        format(templates.error_validation_duplicate_identifier, { identifier }),
 
     error_validation_invokeExpression_missingMandatory: (
         templates: ILocalizationTemplates,
@@ -54,18 +51,12 @@ export const Localization: ILocalization = {
         argName: string,
     ) => {
         if (functionName) {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_missingMandatory_named,
-                new Map([
-                    ["funcName", functionName],
-                    ["argName", argName],
-                ]),
-            );
+            return format(templates.error_validation_invokeExpression_missingMandatory_named, {
+                funcName: functionName,
+                argName,
+            });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_missingMandatory_unnamed,
-                new Map([["argName", argName]]),
-            );
+            return format(templates.error_validation_invokeExpression_missingMandatory_unnamed, { argName });
         }
     },
 
@@ -74,15 +65,7 @@ export const Localization: ILocalization = {
         numMin: number,
         numMax: number,
         numGiven: number,
-    ) =>
-        StringUtils.assertGetFormatted(
-            templates.error_validation_invokeExpression_numArgs,
-            new Map([
-                ["numMin", numMin.toString()],
-                ["numMax", numMax.toString()],
-                ["numGiven", numGiven.toString()],
-            ]),
-        ),
+    ) => format(templates.error_validation_invokeExpression_numArgs, { numMin, numMax, numGiven }),
 
     error_validation_invokeExpression_typeMismatch: (
         templates: ILocalizationTemplates,
@@ -92,24 +75,18 @@ export const Localization: ILocalization = {
         actual: string,
     ) => {
         if (functionName) {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_typeMismatch_named,
-                new Map([
-                    ["funcName", functionName],
-                    ["argName", argName],
-                    ["expected", expected],
-                    ["actual", actual],
-                ]),
-            );
+            return format(templates.error_validation_invokeExpression_typeMismatch_named, {
+                funcName: functionName,
+                argName,
+                expected,
+                actual,
+            });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_invokeExpression_typeMismatch_unnamed,
-                new Map([
-                    ["argName", argName],
-                    ["expected", expected],
-                    ["actual", actual],
-                ]),
-            );
+            return format(templates.error_validation_invokeExpression_typeMismatch_unnamed, {
+                argName,
+                expected,
+                actual,
+            });
         }
     },
 
@@ -119,30 +96,26 @@ export const Localization: ILocalization = {
         suggestion: string | undefined,
     ) => {
         if (suggestion === undefined) {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_unknownIdentifier_noSuggestion,
-                new Map([["identifier", identifier]]),
-            );
+            return format(templates.error_validation_unknownIdentifier_noSuggestion, { identifier });
         } else {
-            return StringUtils.assertGetFormatted(
-                templates.error_validation_unknownIdentifier_suggestion,
-                new Map([
-                    ["identifier", identifier],
-                    ["suggestion", suggestion],
-                ]),
-            );
+            return format(templates.error_validation_unknownIdentifier_suggestion, { identifier, suggestion });
         }
     },
 
     parameterDocumentation_default: (templates: ILocalizationTemplates, value: string) =>
-        StringUtils.assertGetFormatted(templates.parameterDocumentation_default, new Map([["value", value]])),
+        format(templates.parameterDocumentation_default, { value }),
 
     parameterDocumentation_allowedValues: (templates: ILocalizationTemplates, values: string) =>
-        StringUtils.assertGetFormatted(templates.parameterDocumentation_allowedValues, new Map([["values", values]])),
+        format(templates.parameterDocumentation_allowedValues, { values }),
 
     parameterDocumentation_sampleValues: (templates: ILocalizationTemplates, values: string) =>
-        StringUtils.assertGetFormatted(templates.parameterDocumentation_sampleValues, new Map([["values", values]])),
+        format(templates.parameterDocumentation_sampleValues, { values }),
 
     parameterDocumentation_type: (templates: ILocalizationTemplates, type: string) =>
-        StringUtils.assertGetFormatted(templates.parameterDocumentation_type, new Map([["type", type]])),
+        format(templates.parameterDocumentation_type, { type }),
 };
+
+function format(message: string, args: Record<string, l10n.L10nReplacement>): string {
+    // The namespace prevents ordinary host bundles from translating locale-resolved text again.
+    return l10n.t({ message, args, comment: "@microsoft/powerquery-language-services" });
+}

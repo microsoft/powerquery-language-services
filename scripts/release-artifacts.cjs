@@ -50,19 +50,19 @@ function allowedFile(relative, entry) {
     if (!relative.startsWith(`lib/${entry.slug}/`)) return false;
     if (relative.split("/").some((part) => /^(?:test|tests|__tests__|benchmark|benchmarks|scripts|node_modules|coverage|\..*)$/i.test(part))) return false;
     if (/\.(?:js|d\.ts)(?:\.map)?$/.test(relative)) return true;
-    return new RegExp(`^lib/${entry.slug}/localization/templates/templates?(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
+    if (entry.slug === "powerquery-formatter") return false;
+    return new RegExp(`^lib/${entry.slug}/localization/bundles/bundle\\.l10n(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
 }
 
 function localizationFiles(root, entry) {
-    const source = path.join(root, entry.workspace, "src", "localization", "templates");
-    const files = walk(source).filter((file) => file.endsWith(".json"));
-    if (entry.slug !== "powerquery-formatter") {
-        check(files.length > 1 && files.some((file) => /templates?\.json$/.test(file)) &&
-            files.some((file) => /\.fr-FR\.json$/.test(file)), `${entry.name} lacks baseline source localizations`);
-    }
-    return files.map((file) => ({
-        relative: `lib/${entry.slug}/localization/templates/${file}`,
-        source: path.join(source, file),
+    if (entry.slug === "powerquery-formatter") return [];
+    const source = path.join(root, entry.workspace, "src", "localization");
+    const bundles = walk(path.join(source, "bundles")).filter((file) => file.endsWith(".json"));
+    check(bundles.length > 1 && bundles.includes("bundle.l10n.json") &&
+        bundles.includes("bundle.l10n.fr-FR.json"), `${entry.name} lacks baseline source localizations`);
+    return bundles.map((file) => ({
+        relative: `lib/${entry.slug}/localization/bundles/${file}`,
+        contents: readJson(path.join(source, "bundles", file)),
     }));
 }
 
@@ -149,9 +149,9 @@ async function inspectTarball(filename, entry, version, root) {
             check(files.get(relative).equals(fs.readFileSync(path.join(workspace, relative))),
                 `${entry.name} tarball differs from built runtime file ${relative}`);
         }
-        for (const { relative, source } of localizationFiles(root, entry)) {
+        for (const { relative, contents } of localizationFiles(root, entry)) {
             check(files.has(relative), `${entry.name} tarball omits localization ${relative}`);
-            same(JSON.parse(files.get(relative).toString("utf8")), readJson(source),
+            same(JSON.parse(files.get(relative).toString("utf8")), contents,
                 `${entry.name} localization content differs from source: ${relative}`);
         }
         for (const legal of ["README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt", "specification.md", "style.md", "ARCHITECTURE.md"]) {
@@ -232,11 +232,11 @@ async function packRelease(root) {
             for (const required of [entry.main, entry.types, "README.md"]) {
                 check(fs.existsSync(path.join(workspace, required)), `${entry.name} missing build output ${required}; build first`);
             }
-            for (const { relative, source } of localizationFiles(root, entry)) {
+            for (const { relative, contents } of localizationFiles(root, entry)) {
                 const built = path.join(workspace, relative);
                 check(fs.existsSync(built),
                     `${entry.name} missing built localization ${relative}; build first`);
-                same(readJson(built), readJson(source),
+                same(readJson(built), contents,
                     `${entry.name} stale built localization ${relative}; build first`);
             }
             const output = inside(dist, `npm/${entry.slug}`);
@@ -287,5 +287,5 @@ async function packRelease(root) {
     }
 }
 
-module.exports = { safeRelative, inside, integrity, allowedFile, requireOutputs, requireBuiltOutputs, inspectTarball,
+module.exports = { safeRelative, inside, integrity, allowedFile, localizationFiles, requireOutputs, requireBuiltOutputs, inspectTarball,
     validateManifest, verifyManifest, packRelease };

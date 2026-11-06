@@ -1,3 +1,5 @@
+<!-- markdownlint-disable -->
+
 # powerquery-parser
 
 Developed in the [Power Query monorepo](../../README.md).
@@ -33,6 +35,22 @@ if (ResultUtils.isOk(result)) {
 ```
 
 Cancellation returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning.
+
+### Localized errors
+
+Set `locale` on each settings object, for example
+`Lexer.tryLex({ ...DefaultSettings, locale: "fr-FR" }, text)`.
+Locale tags are matched exactly, ignoring case; unsupported tags (including language-only `"fr"`)
+fall back to English. Requests using different locales can run concurrently. Cancellation and
+invariant errors retain their default-English behavior.
+
+Messages come from `@vscode/l10n` bundles. No VS Code host or call to `l10n.config` is required.
+`LocalizationUtils.getLocalizationTemplates(locale)`, `Templates` exports, custom template objects,
+and their TypeScript interfaces remain supported. ID-keyed template JSON deep imports are removed;
+use these APIs or the published `localization/bundles` JSON. The required English-key mapping
+lives as code-defined lookups in the exported `templates.ts` API module, not a separate resource file.
+See the monorepo
+[localization instructions](../../README.md#localization) for bundle maintenance and formatting semantics.
 
 ## Related projects
 

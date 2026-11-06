@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "标识符“{identifier}”重复",
+    "Duplicate parameter name '{identifier}'": "参数名称“{identifier}”重复",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "应介于 {numMin}-{numMax} 参数之间，但提供了 {numGiven}。",
+        "comment": [
+            "提供给函数调用的参数太少或过多时出错。应为面向用户。"
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "\"{funcName}\" 缺少非可选参数 \"{argName}\" 的参数。",
+    "Missing an argument for the non-optional parameter '{argName}'.": "缺少非可选参数 \"{argName}\" 的参数。",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” 需要 “{argName}” 的参数为 “{expected}”，但实际获得的却是 “{actual}”。",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{argName}\" 的参数应为 \"{expected}\"，但实际获得的却是 \"{actual}\"。",
+    "Cannot find the name '{identifier}'.": "找不到名称“{identifier}”。",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "找不到名称“{identifier}”，你是否指的是“{suggestion}”?",
+    "Default: `{value}`": "默认值: `{value}`",
+    "Allowed values: {values}": "允许的值: {values}",
+    "Sample values: {values}": "示例值: {values}",
+    "Type: `{type}`": "类型: `{type}`"
+}
