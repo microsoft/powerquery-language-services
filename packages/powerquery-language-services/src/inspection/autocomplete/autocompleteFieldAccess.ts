@@ -187,7 +187,6 @@ function fieldEntriesFromFieldType(type: Type.TPowerQueryType): ReadonlyArray<[s
 }
 
 function appendFieldEntriesFromFieldType(type: Type.TPowerQueryType, fields: [string, Type.TPowerQueryType][]): void {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (type.extendedKind) {
         case Type.ExtendedTypeKind.AnyUnion: {
             for (const field of type.unionedTypePairs) {

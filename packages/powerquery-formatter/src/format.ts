@@ -137,7 +137,7 @@ export async function tryFormatParsed(
                 const parentContainerId: number = parentContainerIdOfNodeId.get(nodeId) ?? 0;
 
                 const currentChildIds: ReadonlyArray<number> = parentContainerId
-                    ? nodeIdMapCollection.childIdsById.get(parentContainerId) ?? []
+                    ? (nodeIdMapCollection.childIdsById.get(parentContainerId) ?? [])
                     : [];
 
                 // if the last comment contained a new line, we definitely gonna append a new line after it

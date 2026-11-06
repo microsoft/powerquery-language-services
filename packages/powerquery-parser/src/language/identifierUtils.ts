@@ -289,7 +289,6 @@ function getGeneralizedIdentifierLength(text: string, index: number): number | u
             index += 1;
         } else if (currentChr === ".") {
             if (text[index - 1] === ".") {
-                continueMatching = false;
                 break;
             }
 
@@ -302,7 +301,6 @@ function getGeneralizedIdentifierLength(text: string, index: number): number | u
             );
 
             if (matchLength === undefined) {
-                continueMatching = false;
                 break;
             }
 
