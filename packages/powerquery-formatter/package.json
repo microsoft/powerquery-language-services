@@ -42,10 +42,6 @@
         "LICENSE",
         "ARCHITECTURE.md"
     ],
-    "devDependencies": {
-        "@types/mocha": "^9.0.0",
-        "tslint": "^6.1.3"
-    },
     "dependencies": {
         "@microsoft/powerquery-parser": "5.0.0"
     }

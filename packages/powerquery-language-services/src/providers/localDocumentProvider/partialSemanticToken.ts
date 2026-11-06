@@ -434,7 +434,6 @@ function getLiteralTokens(
 
         let tokenType: SemanticTokenTypes | undefined;
 
-        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (literal?.literalKind) {
             case Ast.LiteralKind.Numeric:
                 tokenType = SemanticTokenTypes.number;

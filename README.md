@@ -29,13 +29,13 @@ per-package installs, or external source checkouts are needed. `npm test` includ
 the parser resource suite, and release-helper tests. `npm run test:unit` and
 `npm run test:parser:resources` are focused alternatives.
 
-Shared development tools are declared in the private root manifest. Package-local development
-dependencies contain tooling that needs a different version, including the formatter's legacy
-lint rules and each package's formatting integration. Runtime dependencies remain in each
+Shared development tools, including ESLint and Prettier, are declared in the private root manifest.
+Use a Node version satisfying the root manifest's development requirement; publishable packages
+declare their own consumer requirement. Runtime dependencies remain in each
 publishable package so tarballs can be installed independently of the workspace.
 Common compiler settings live in `tsconfig.base.json`, with package-specific inputs and safety
-options in each package's config. Root ESLint configurations retain the separate legacy and
-modern rule sets. Mocha's shared config and composite reporter are configured once at the root;
+options in each package's config. All packages use the same root ESLint rule set.
+Mocha's shared config and composite reporter are configured once at the root;
 package configs select their suites and the parser resource command selects its own XML output.
 
 Use workspace commands after building prerequisites:

@@ -107,7 +107,8 @@ export interface SignatureProviderContext extends ProviderContext {
 export interface ILibraryProvider extends IAutocompleteItemProvider, IHoverProvider, ISignatureHelpProvider {}
 
 export interface ILocalDocumentProvider
-    extends IAutocompleteItemProvider,
+    extends
+        IAutocompleteItemProvider,
         IDefinitionProvider,
         IHoverProvider,
         IFoldingRangeProvider,

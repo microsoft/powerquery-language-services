@@ -131,7 +131,6 @@ function resolveParsedThemeRules<T extends IParameters = IParameters>(
     // pop up any rules of empty scope names and apply them together
     while (parsedThemeRules.length >= 1 && parsedThemeRules[0].scope === "") {
         // parsedThemeRules must be non-empty thus it should shift over here
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const incomingDefaults: ParsedThemeRule = parsedThemeRules.shift()!;
 
         // no harm to be cautious, do not trust ts types as one this theme would be injected from clients
@@ -250,9 +249,7 @@ export class ThemeTrieElement<T extends IParameters = IParameters> {
             if (aParentScopesLen === bParentScopesLen) {
                 for (let i: number = 0; i < aParentScopesLen; i += 1) {
                     // aParentScopes and bParentScopes cannot be empty as aParentScopesLen is larger than 0
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     const aLen: number = aParentScopes![i].length;
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                     const bLen: number = bParentScopes![i].length;
 
                     if (aLen !== bLen) {

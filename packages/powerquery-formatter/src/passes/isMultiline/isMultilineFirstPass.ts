@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser";
-import { Ast, AstUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { FormatTraceConstant } from "../../trace";
 
 import {
@@ -406,13 +406,6 @@ async function visitBinOpExpression(
 
     let isMultiline: boolean;
 
-    if (
-        (AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
-        (AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
-    ) {
-        isMultiline = true;
-    }
-
     const linearLength: number = await getLinearLength(
         state.nodeIdMapCollection,
         state.linearLengthMap,
@@ -513,19 +506,4 @@ function containsNewline(text: string): boolean {
     }
 
     return false;
-}
-
-function containsLogicalExpression(node: Ast.TBinOpExpression): boolean {
-    if (!AstUtils.isTBinOpExpression(node)) {
-        return false;
-    }
-
-    const left: Ast.TNode = node.left;
-    const right: Ast.TNode = node.right;
-
-    return (
-        node.kind === Ast.NodeKind.LogicalExpression ||
-        (AstUtils.isTBinOpExpression(left) && containsLogicalExpression(left)) ||
-        (AstUtils.isTBinOpExpression(right) && containsLogicalExpression(right))
-    );
 }

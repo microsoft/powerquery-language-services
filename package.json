@@ -5,7 +5,7 @@
     "description": "Development workspace for the Power Query parser, formatter, and language services.",
     "license": "MIT",
     "engines": {
-        "node": ">=22"
+        "node": "^22.13.0 || >=24"
     },
     "workspaces": [
         "packages/powerquery-parser",
@@ -25,21 +25,25 @@
         "validate:release": "node scripts/release.cjs validate",
         "pack:release": "node scripts/release.cjs pack"
     },
+    "overrides": {
+        "glob": "^14.0.3",
+        "minimatch": "^11.0.3"
+    },
     "devDependencies": {
-        "@eslint/js": "^9.35.0",
+        "@eslint/js": "^10.0.1",
         "@types/chai": "^4.3.20",
         "@types/mocha": "^10.0.8",
         "@types/node": "^22.7.3",
-        "@typescript-eslint/eslint-plugin": "5.8.1",
-        "@typescript-eslint/parser": "5.8.1",
+        "@typescript-eslint/eslint-plugin": "^8.72.1",
+        "@typescript-eslint/parser": "^8.72.1",
         "chai": "^4.5.0",
-        "eslint": "8.5.0",
-        "eslint-config-prettier": "8.3.0",
-        "eslint-plugin-prettier": "4.0.0",
-        "eslint-plugin-promise": "6.0.0",
-        "eslint-plugin-security": "1.4.0",
+        "eslint": "^10.13.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.7",
+        "eslint-plugin-promise": "^7.3.0",
+        "eslint-plugin-security": "^4.2.0",
         "mocha": "^12.0.3",
-        "prettier": "2.5.1",
+        "prettier": "^3.8.1",
         "semver": "^7.7.2",
         "tar": "^7.5.1",
         "ts-loader": "^9.5.4",

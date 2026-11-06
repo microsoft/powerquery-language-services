@@ -40,16 +40,6 @@
         "grapheme-splitter": "^1.0.4",
         "performance-now": "^2.1.0"
     },
-    "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^8.43.0",
-        "@typescript-eslint/parser": "^8.43.0",
-        "eslint": "^9.35.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-promise": "^7.2.1",
-        "eslint-plugin-security": "^3.0.1",
-        "prettier": "3.8.1"
-    },
     "files": [
         "lib/powerquery-parser/**/*",
         "README.md",

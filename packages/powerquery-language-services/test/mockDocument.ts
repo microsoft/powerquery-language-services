@@ -121,7 +121,6 @@ export class MockDocument implements TextDocument {
             for (let i: number = 0; i < text.length; i += 1) {
                 if (isLineStart) {
                     lineOffsets.push(i);
-                    isLineStart = false;
                 }
 
                 const ch: string = text.charAt(i);

@@ -616,8 +616,8 @@ the test subtree.
 
 The [GitHub gated-PR workflow](../../.github/workflows/pr-gated.yml) runs the root restore, lint,
 build, test, and packed-consumer commands and collects package test reports and tarballs.
-Shared tooling is declared in the private root manifest; package-local dependencies retain
-the scoped modern ESLint/Prettier integration. Compiler defaults come from the
+Shared tooling and the ESLint/Prettier integration are declared in the private root manifest.
+Compiler defaults come from the
 [root TypeScript configuration](../../tsconfig.base.json).
 
 Some package scripts (`prepublishOnly` and local linking helpers) invoke `git clean -xdf`.
