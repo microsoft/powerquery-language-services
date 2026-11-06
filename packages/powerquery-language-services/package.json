@@ -41,9 +41,6 @@
         "LICENSE",
         "ARCHITECTURE.md"
     ],
-    "devDependencies": {
-        "cross-env": "^10.1.0"
-    },
     "dependencies": {
         "@microsoft/powerquery-formatter": "5.0.0",
         "@microsoft/powerquery-parser": "5.0.0",
