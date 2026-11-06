@@ -60,9 +60,10 @@ Start with `DefaultSettings` and override the fields you need:
 See [error and cancellation behavior](ARCHITECTURE.md#errors-and-cancellation) before relying on cancellation.
 
 Set `locale`, for example `"fr-FR"`, on each `FormatSettings` object to select parser error
-translations. Different requests may use different locales concurrently. The formatter has no
-independent localized strings or bundles; it uses the parser's `@vscode/l10n` localization
-adapter without adding another runtime dependency. See the shared
+translations. `tryFormat` forwards this setting to the parser and returns its lexical and parse
+errors unchanged. Different calls may use different locales concurrently. The formatter has no
+translated message catalog of its own; no VS Code host or global localization setup is required.
+See the shared
 [localization instructions](../../README.md#localization).
 
 | API | Use |
