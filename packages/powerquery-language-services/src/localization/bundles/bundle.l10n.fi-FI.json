@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Tunnuksen kaksoiskappale {identifier}",
     "Duplicate parameter name '{identifier}'": "Parametrin nimen {identifier} kaksoiskappale",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Odotettiin {numMin}–{numMax} argumenttia, mutta {numGiven} annettiin.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Odotettiin {numMin}–{numMax} argumenttia, mutta {numGiven} annettiin.",
+        "comment": [
+            "Virhe, kun funktiokutsulle annettiin joko liian vähän tai liian paljon argumentteja. Odotettiin olevan käyttäjälle suunnattu."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "{funcName} puuttuu määrite ei-valinnaiselle parametrille {argName}.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Ei-valinnaiselle parametrille {argName} puuttuu määrite.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "{funcName} odotti, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan argumentin {actual}.",

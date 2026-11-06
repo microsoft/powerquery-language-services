@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "'{identifier}' 식별자가 중복됨",
     "Duplicate parameter name '{identifier}'": "중복 매개 변수 이름 '{identifier}'",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}~{numMax}개의 인수가 필요하지만 {numGiven}개의 인수가 제공되었습니다.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin}~{numMax}개의 인수가 필요하지만 {numGiven}개의 인수가 제공되었습니다.",
+        "comment": [
+            "함수 호출 시 인수가 너무 적거나 너무 많을 때 나타나는 오류입니다. 사용자를 대상으로 해야합니다."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}'에 비선택적 매개 변수 '{argName}'에 대한 인수가 없습니다.",
     "Missing an argument for the non-optional parameter '{argName}'.": "비선택적 매개 변수 '{argName}'에 대한 인수가 없습니다.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}'에서는 '{argName}'에 대한 인수를 '{expected}'(으)로 예상했지만 대신 '{actual}'을(를) 받았습니다.",

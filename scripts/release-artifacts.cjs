@@ -51,9 +51,7 @@ function allowedFile(relative, entry) {
     if (relative.split("/").some((part) => /^(?:test|tests|__tests__|benchmark|benchmarks|scripts|node_modules|coverage|\..*)$/i.test(part))) return false;
     if (/\.(?:js|d\.ts)(?:\.map)?$/.test(relative)) return true;
     if (entry.slug === "powerquery-formatter") return false;
-    const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
-    return relative === `lib/${entry.slug}/localization/templates/${stem}.json` ||
-        new RegExp(`^lib/${entry.slug}/localization/bundles/bundle\\.l10n(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
+    return new RegExp(`^lib/${entry.slug}/localization/bundles/bundle\\.l10n(?:\\.[A-Za-z-]+)?\\.json$`).test(relative);
 }
 
 function localizationFiles(root, entry) {
@@ -62,10 +60,9 @@ function localizationFiles(root, entry) {
     const bundles = walk(path.join(source, "bundles")).filter((file) => file.endsWith(".json"));
     check(bundles.length > 1 && bundles.includes("bundle.l10n.json") &&
         bundles.includes("bundle.l10n.fr-FR.json"), `${entry.name} lacks baseline source localizations`);
-    const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
-    return [...bundles.map((file) => `bundles/${file}`), `templates/${stem}.json`].map((file) => ({
-        relative: `lib/${entry.slug}/localization/${file}`,
-        contents: readJson(path.join(source, file)),
+    return bundles.map((file) => ({
+        relative: `lib/${entry.slug}/localization/bundles/${file}`,
+        contents: readJson(path.join(source, "bundles", file)),
     }));
 }
 

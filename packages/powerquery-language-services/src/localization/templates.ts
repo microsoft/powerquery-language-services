@@ -7,7 +7,6 @@ import cs_CZBundle from "./bundles/bundle.l10n.cs-CZ.json";
 import da_DKBundle from "./bundles/bundle.l10n.da-DK.json";
 import de_DEBundle from "./bundles/bundle.l10n.de-DE.json";
 import defaultBundle from "./bundles/bundle.l10n.json";
-import defaultTemplates from "./templates/templates.json";
 import el_GRBundle from "./bundles/bundle.l10n.el-GR.json";
 import es_ESBundle from "./bundles/bundle.l10n.es-ES.json";
 import et_EEBundle from "./bundles/bundle.l10n.et-EE.json";
@@ -44,6 +43,65 @@ import uk_UABundle from "./bundles/bundle.l10n.uk-UA.json";
 import vi_VNBundle from "./bundles/bundle.l10n.vi-VN.json";
 import zh_CNBundle from "./bundles/bundle.l10n.zh-CN.json";
 import zh_TWBundle from "./bundles/bundle.l10n.zh-TW.json";
+
+type TemplateMessageKey = keyof ILocalizationTemplates | "error_validation_duplicate_parameter_name";
+type DefaultTemplateKey =
+    | TemplateMessageKey
+    | `_${Exclude<TemplateMessageKey, "error_validation_invokeExpression_numArgs">}.comment`
+    | "_error_validation_invokeExpression_numArgs";
+type DefaultTemplateShape = { [K in DefaultTemplateKey]: string };
+
+const defaultTemplates: DefaultTemplateShape = {
+    error_validation_duplicate_identifier: defaultBundle["Duplicate identifier '{identifier}'"].message,
+    "_error_validation_duplicate_identifier.comment":
+        defaultBundle["Duplicate identifier '{identifier}'"].comment.join(""),
+    error_validation_duplicate_parameter_name: defaultBundle["Duplicate parameter name '{identifier}'"].message,
+    "_error_validation_duplicate_parameter_name.comment":
+        defaultBundle["Duplicate parameter name '{identifier}'"].comment.join(""),
+    error_validation_invokeExpression_numArgs:
+        defaultBundle["Expected between {numMin}-{numMax} arguments, but {numGiven} were given."].message,
+    _error_validation_invokeExpression_numArgs:
+        defaultBundle["Expected between {numMin}-{numMax} arguments, but {numGiven} were given."].comment.join(""),
+    error_validation_invokeExpression_missingMandatory_named:
+        defaultBundle["'{funcName}' is missing an argument for the non-optional parameter '{argName}'."].message,
+    "_error_validation_invokeExpression_missingMandatory_named.comment":
+        defaultBundle["'{funcName}' is missing an argument for the non-optional parameter '{argName}'."].comment.join(
+            "",
+        ),
+    error_validation_invokeExpression_missingMandatory_unnamed:
+        defaultBundle["Missing an argument for the non-optional parameter '{argName}'."].message,
+    "_error_validation_invokeExpression_missingMandatory_unnamed.comment":
+        defaultBundle["Missing an argument for the non-optional parameter '{argName}'."].comment.join(""),
+    error_validation_invokeExpression_typeMismatch_named:
+        defaultBundle[
+            "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].message,
+    "_error_validation_invokeExpression_typeMismatch_named.comment":
+        defaultBundle[
+            "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].comment.join(""),
+    error_validation_invokeExpression_typeMismatch_unnamed:
+        defaultBundle["Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."].message,
+    "_error_validation_invokeExpression_typeMismatch_unnamed.comment":
+        defaultBundle[
+            "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].comment.join(""),
+    error_validation_unknownIdentifier_noSuggestion: defaultBundle["Cannot find the name '{identifier}'."].message,
+    "_error_validation_unknownIdentifier_noSuggestion.comment":
+        defaultBundle["Cannot find the name '{identifier}'."].comment.join(""),
+    error_validation_unknownIdentifier_suggestion:
+        defaultBundle["Cannot find the name '{identifier}', did you mean '{suggestion}'?"].message,
+    "_error_validation_unknownIdentifier_suggestion.comment":
+        defaultBundle["Cannot find the name '{identifier}', did you mean '{suggestion}'?"].comment.join(""),
+    parameterDocumentation_default: defaultBundle["Default: `{value}`"].message,
+    "_parameterDocumentation_default.comment": defaultBundle["Default: `{value}`"].comment.join(""),
+    parameterDocumentation_allowedValues: defaultBundle["Allowed values: {values}"].message,
+    "_parameterDocumentation_allowedValues.comment": defaultBundle["Allowed values: {values}"].comment.join(""),
+    parameterDocumentation_sampleValues: defaultBundle["Sample values: {values}"].message,
+    "_parameterDocumentation_sampleValues.comment": defaultBundle["Sample values: {values}"].comment.join(""),
+    parameterDocumentation_type: defaultBundle["Type: `{type}`"].message,
+    "_parameterDocumentation_type.comment": defaultBundle["Type: `{type}`"].comment.join(""),
+};
 
 export const en_US: typeof defaultTemplates = createTemplates(defaultTemplates, defaultBundle);
 export const bg_BG: typeof defaultTemplates = createTemplates(defaultTemplates, bg_BGBundle);

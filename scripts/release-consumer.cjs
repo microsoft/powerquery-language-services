@@ -34,6 +34,10 @@ async function main(): Promise<void> {
         "Parser bundle content differs from exported templates");
     expect(serviceFrench["Duplicate identifier '{identifier}'"] === serviceTemplates.fr_FR.error_validation_duplicate_identifier,
         "Services bundle content differs from exported templates");
+    const argumentCountKey = "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.";
+    expect(serviceFrench[argumentCountKey].message === serviceTemplates.fr_FR.error_validation_invokeExpression_numArgs &&
+        serviceFrench[argumentCountKey].comment.length > 0,
+        "Localized message/context bundle objects failed");
     expect(serviceFrench["Cannot find the name '{identifier}'."] !== "Cannot find the name '{identifier}'." &&
         serviceTemplates.fr_FR.error_validation_unknownIdentifier_noSuggestion === serviceFrench["Cannot find the name '{identifier}'."],
         "Packed unknown-name translation or template API mismatch");

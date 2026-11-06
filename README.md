@@ -64,19 +64,20 @@ under `lib/<name>`.
 Parser and language-service messages use `@vscode/l10n` bundles in each package's
 `src/localization/bundles/bundle.l10n[.<locale>].json`. Keys are the English messages,
 including named placeholders such as `{identifier}`. The English bundle retains translator
-comments as `{ "message": "...", "comment": ["..."] }` values; translated bundles contain strings.
+comments as `{ "message": "...", "comment": ["..."] }` values. Translated bundles use strings or
+the same message/comment object form when retaining localized context.
 Keep placeholder names unchanged in translations.
 
-The English JSON in `src/localization/templates` maps the existing public template IDs to
-English bundle keys and supplies their TypeScript shape and English fallback. It is required by
-the runtime adapter, not a second source of locale translations. When adding or changing a message,
-update this key catalog, the English bundle, and the corresponding English keys in translated bundles. Missing translations
-fall back to the catalog's English message. Existing locale exports, `ILocalizationTemplates`,
-`Localization` builders, and `getLocalizationTemplates(locale)` remain available.
-Per-locale ID-keyed template JSON is no longer generated or published. Use the template APIs or
-the `localization/bundles` JSON instead of the removed locale JSON deep imports.
-Historical translation-service assets under `loc` and `LocProject.json` are not inputs to the
-runtime build; bundles are the sole source for current translations.
+Code-defined lookups in `src/localization/templates.ts` map existing public message IDs to
+English bundle keys. English values and translator-comment metadata are read from the English
+bundle, not copied into a second catalog. When adding or changing a message, update the code
+lookup, the English bundle, and the corresponding keys in translated bundles. Missing translations
+fall back to English. Existing locale exports, `ILocalizationTemplates`, `Localization` builders,
+and `getLocalizationTemplates(locale)` remain available.
+
+Bundles are the only localization resource files. The exported `templates.ts` module is an API,
+not a template resource directory; its stable ID lookups preserve the existing TypeScript shape.
+Use these APIs or `localization/bundles` JSON rather than the removed template JSON deep imports.
 
 Do not translate code snippets, placeholders, API identifiers, or intentional native words merely because they match
 English. Resource tests verify bundle coverage, English keys, translator comments and placeholder names.
@@ -97,7 +98,7 @@ longer uses it. Dynamic locale-selected messages are maintained in the bundles d
 `l10n-dev` extraction on these adapters will not reconstruct the catalogs.
 
 Run root `npm run lint`, `npm run build`, `npm test`, and `npm run validate:release` after changes.
-The last command checks required bundles and the English key catalog, rejects obsolete locale JSON,
+The last command checks required bundles and template APIs, rejects obsolete template resources,
 and exercises localized messages in an isolated tarball consumer.
 
 ## Release preparation

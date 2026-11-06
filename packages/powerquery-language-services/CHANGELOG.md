@@ -8,8 +8,9 @@
   from existing locale resources, retaining intentional technical terms.
 - Use `@vscode/l10n` bundles and formatting for validation and parameter documentation while
   retaining per-request locales, translations, and existing TypeScript template APIs.
-- Remove per-locale ID-keyed JSON deep imports and their build generation; l10n bundles are the
-  translation source. Keep only the English key catalog required by the runtime adapter and types.
+- Remove obsolete template JSON/LCX resources, localization manifests and their build generation;
+  l10n bundles are the only translation resources. Preserve template APIs through code-defined
+  bundle-key lookups without a separate English JSON catalog.
 - Correct malformed placeholder names in Galician, Portuguese (Portugal), and Serbian (Cyrillic)
   diagnostic translations so all arguments are substituted.
 - Replace repeated placeholders and treat replacement text literally.

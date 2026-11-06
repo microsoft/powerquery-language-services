@@ -71,9 +71,9 @@ These APIs read `@vscode/l10n` bundles without configuring global locale state o
 VS Code host. See the monorepo [localization instructions](../../README.md#localization) for
 bundle maintenance, host-bundle namespaces, and placeholder semantics.
 
-Per-locale ID-keyed JSON deep imports are removed; use the template APIs or
-`localization/bundles` JSON. The English template/key catalog remains a runtime and type input,
-not a duplicate set of locale translations.
+ID-keyed template JSON deep imports are removed; use the template APIs or
+`localization/bundles` JSON. The exported `templates.ts` module preserves existing IDs and types
+with code-defined English bundle-key lookups, not another translation resource catalog.
 
 ## Related projects
 

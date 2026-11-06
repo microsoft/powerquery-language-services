@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Pengidentifikasi duplikat '{identifier}'",
     "Duplicate parameter name '{identifier}'": "Nama parameter duplikat '{identifier}'",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Diharapkan antara {numMin}-{numMax} argumen, tetapi diberi {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Diharapkan antara {numMin}-{numMax} argumen, tetapi diberi {numGiven}.",
+        "comment": [
+            "Terjadi kesalahan ketika pemanggilan fungsi diberi terlalu sedikit atau terlalu banyak argumen. Diharapkan untuk digunakan oleh pengguna."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' tidak memiliki argumen untuk parameter non-opsional '{argName}'.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Tidak ada argumen untuk parameter non-opsional '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' mengharapkan argumen untuk '{argName}' adalah '{expected}', namun mendapatkan '{actual}' sebagai gantinya.",

@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Bikoiztu \"{identifier}\" identifikatzailea",
     "Duplicate parameter name '{identifier}'": "Parametro-izen bikoiztua: \"{identifier}\"",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
+        "comment": [
+            "Errore bat gertatuko da funtzio-dei batek argumentu gutxiegi edo gehiegi ematen dituenean. Erabiltzaileak kudeatuko ditu balio horiek."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",

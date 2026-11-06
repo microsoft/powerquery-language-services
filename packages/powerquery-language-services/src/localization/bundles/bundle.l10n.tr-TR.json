@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Yinelenen '{identifier}' tanımlayıcısı",
     "Duplicate parameter name '{identifier}'": "'{identifier}' yinelenen parametre adı",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} bağımsız değişken arasında bekleniyor, ancak {numGiven} bağımsız değişken verildi.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin}-{numMax} bağımsız değişken arasında bekleniyor, ancak {numGiven} bağımsız değişken verildi.",
+        "comment": [
+            "Bir işlev çağrısına çok az veya çok fazla bağımsız değişken verildiğinde oluşan bir hata. Kullanıcıya yönelik olması bekleniyor."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.",
     "Missing an argument for the non-optional parameter '{argName}'.": "İsteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişken eksik.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}, '{argName}' bağımsız değişkeninin '{expected}' olmasını bekliyordu, ancak bunun yerine '{actual}' alındı.",

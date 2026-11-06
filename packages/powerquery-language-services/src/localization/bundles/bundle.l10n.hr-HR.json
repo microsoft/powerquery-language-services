@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Duplikat identifikatora \"{identifier}\"",
     "Duplicate parameter name '{identifier}'": "Duplicirani naziv parametra '{identifier}'",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Očekivano je između {numMin} do {numMax} argumenata, ali je navedeno {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Očekivano je između {numMin} do {numMax} argumenata, ali je navedeno {numGiven}.",
+        "comment": [
+            "Došlo je do pogreške prilikom pozivanja funkcije zbog premalo ili previše argumenata. Očekuje se da će biti upućena korisniku."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Nema argumenta u '{funcName}' za neobavezni parametar '{argName}'.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Nema argumenta za neobavezni parametar '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' je očekivao da će argument za '{argName}' biti '{expected}', ali je umjesto toga dobio '{actual}'.",

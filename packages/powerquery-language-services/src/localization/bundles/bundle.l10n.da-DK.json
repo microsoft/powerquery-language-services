@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Duplikeret identifikator '{identifier}'",
     "Duplicate parameter name '{identifier}'": "Duplikér parameternavn '{identifier}' ",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Forventet mellem {numMin} {numMax} argumenter, men {numGiven} blev angivet.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Forventet mellem {numMin} {numMax} argumenter, men {numGiven} blev angivet.",
+        "comment": [
+            "En fejl, når et funktionsopkald blev givet for få eller for mange argumenter. Forventes at være brugerrettet."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}'mangler et argument for den ikke-valgfrie parameter '{argName}'.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Der mangler et argument for den ikke-valgfrie parameter '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",

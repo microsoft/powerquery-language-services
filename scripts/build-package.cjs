@@ -39,12 +39,9 @@ function publishOutput() {
         fs.cpSync(sourceOutput, publishedOutput, { recursive: true });
         fs.rmSync(sourceOutput, { recursive: true });
     }
-    const templates = path.join(publishedOutput, "localization", "templates");
-    if (fs.existsSync(templates)) {
-        // Remove obsolete locale JSON left by earlier builds, keeping the English key catalog.
-        for (const file of fs.readdirSync(templates)) {
-            if (/^templates?\.[A-Za-z-]+\.json$/.test(file)) fs.rmSync(path.join(templates, file));
-        }
+    // These resource paths are obsolete; the sibling templates.js API module remains.
+    for (const resource of ["loc", "templates", "LocProject.json"]) {
+        fs.rmSync(path.join(publishedOutput, "localization", resource), { recursive: true, force: true });
     }
 }
 if (mode === "--watch") {

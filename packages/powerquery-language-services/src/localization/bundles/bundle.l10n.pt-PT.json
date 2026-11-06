@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Identificador \"{identifier}\" duplicado",
     "Duplicate parameter name '{identifier}'": "Nome de parâmetro duplicado \"{identifier}\"",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Esperava-se entre {numMin}-{numMax} argumentos, mas foram dados {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Esperava-se entre {numMin}-{numMax} argumentos, mas foram dados {numGiven}.",
+        "comment": [
+            "Um erro quando uma chamada de função foi dada ou demasiado poucos ou demasiados argumentos. Espera-se que seja voltada para o utilizador."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Falta um argumento para o parâmetro não-opcional '{argName}' de '{funcName}'.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Falta um argumento para o parâmetro não-opcional '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Esperava-se que o argumento de \"{funcName}\" \"{argName}\" fosse \"{expected}\", mas foi \"{actual}\".",

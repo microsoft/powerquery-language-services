@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Повторюваний ідентифікатор \"{identifier}\"",
     "Duplicate parameter name '{identifier}'": "Повторюване ім’я параметра \"{identifier}\"",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Має бути стільки аргументів: {numMin}–{numMax}. Задано: {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Має бути стільки аргументів: {numMin}–{numMax}. Задано: {numGiven}.",
+        "comment": [
+            "Сталася помилка під час виклику функції через зависоку або занизьку кількість аргументів у ньому. Очікувалось отримання користувачем."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "У функції \"{funcName}\" відсутній аргумент для обов’язкового параметра \"{argName}\".",
     "Missing an argument for the non-optional parameter '{argName}'.": "Відсутній аргумент для обов’язкового параметра \"{argName}\".",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Функція «{funcName}» очікувала, що аргумент для «{argName}» матиме значення «{expected}», але натомість він має значення «{actual}».",

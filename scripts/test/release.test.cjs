@@ -294,12 +294,13 @@ test("output paths reject directory symlinks/junctions", (context) => {
 test("runtime allowlist excludes sources, tests, build metadata and npm auth", () => {
     const entry = PACKAGES[0];
     for (const file of [entry.main, entry.types, `${entry.main}.map`, "README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt",
-        `lib/${entry.slug}/localization/templates/template.json`,
+        `lib/${entry.slug}/localization/templates.js`,
         `lib/${entry.slug}/localization/bundles/bundle.l10n.json`,
         `lib/${entry.slug}/localization/bundles/bundle.l10n.fr-FR.json`]) assert.equal(allowedFile(file, entry), true, file);
     for (const file of [".npmrc", "package-lock.json", "tsconfig.tsbuildinfo", "src/index.ts", "ARCHITECTURE.md",
         `lib/${entry.slug}/test/a.js`, "lib/test/a.js", `lib/${entry.slug}/benchmark/a.js`,
         `lib/${entry.slug}/localization/LocProject.json`, `lib/${entry.slug}/private.json`,
+        `lib/${entry.slug}/localization/templates/template.json`,
         `lib/${entry.slug}/localization/templates/template.fr-FR.json`,
         `lib/${entry.slug}/localization/templates/template.en-US.json`,
         `lib/${entry.slug}/index.ts`]) assert.equal(allowedFile(file, entry), false, file);
@@ -320,23 +321,28 @@ test("every supported locale preserves message coverage, comments and placeholde
         const bundleFiles = files.filter((file) => file.relative.startsWith(`lib/${entry.slug}/localization/bundles/`));
         assert.deepEqual(bundleFiles.map((file) => file.relative).sort(), locales.map((locale) =>
             `lib/${entry.slug}/localization/bundles/bundle.l10n${locale === "en-US" ? "" : `.${locale}`}.json`).sort());
-        const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
-        assert.deepEqual(fs.readdirSync(path.join(workspace, "src", "localization", "templates"))
-            .filter((file) => file.endsWith(".json")), [`${stem}.json`]);
-        const defaults = JSON.parse(fs.readFileSync(path.join(workspace, "src", "localization",
-            "templates", `${stem}.json`), "utf8"));
+        for (const resource of ["loc", "templates", "LocProject.json"]) {
+            assert.equal(fs.existsSync(path.join(workspace, "src", "localization", resource)), false);
+            assert.equal(fs.existsSync(path.join(workspace, "lib", entry.slug, "localization", resource)), false);
+        }
+        const defaults = require(path.join(workspace, "lib", entry.slug, "localization", "templates.js")).en_US;
         const ids = Object.keys(defaults).filter((key) => !key.startsWith("_"));
         const messages = ids.map((key) => defaults[key]).sort();
         const english = bundleFiles.find((file) => file.relative.endsWith("/bundle.l10n.json")).contents;
         for (const id of ids) {
             assert.equal(english[defaults[id]].message, defaults[id]);
-            assert.deepEqual(english[defaults[id]].comment, [defaults[`_${id}.comment`] ?? defaults[`_${id}`]]);
+            assert.ok(english[defaults[id]].comment.length > 0);
+            assert.equal(english[defaults[id]].comment.join(""), defaults[`_${id}.comment`] ?? defaults[`_${id}`]);
         }
         for (const file of bundleFiles) {
             assert.deepEqual(Object.keys(file.contents).sort(), messages, file.relative);
             for (const [message, translation] of Object.entries(file.contents)) {
                 const text = typeof translation === "string" ? translation : translation.message;
                 assert.equal(typeof text, "string", file.relative);
+                if (typeof translation !== "string") {
+                    assert.ok(Array.isArray(translation.comment) && translation.comment.length > 0, file.relative);
+                    assert.ok(translation.comment.every((comment) => typeof comment === "string"), file.relative);
+                }
                 assert.deepEqual(placeholders(text), placeholders(message), `${file.relative}: ${message}`);
                 if (entry.slug === "powerquery-language-services" &&
                     !file.relative.endsWith("/bundle.l10n.json") && text === message) {
@@ -477,11 +483,8 @@ for (const [label, files, expected] of [
     test(`tar rejects ${label} runtime localizations against baseline source content`, async (context) => {
         const directory = fixture(context);
         createRepository(directory);
-        const source = path.join(directory, PACKAGES[0].workspace, "src", "localization", "templates");
-        fs.mkdirSync(source, { recursive: true });
-        fs.writeFileSync(path.join(source, "template.json"), '{"message":"English"}');
-        const bundles = path.join(path.dirname(source), "bundles");
-        fs.mkdirSync(bundles);
+        const bundles = path.join(directory, PACKAGES[0].workspace, "src", "localization", "bundles");
+        fs.mkdirSync(bundles, { recursive: true });
         fs.writeFileSync(path.join(bundles, "bundle.l10n.json"), '{"English":"English"}');
         fs.writeFileSync(path.join(bundles, "bundle.l10n.fr-FR.json"), '{"English":"French"}');
         const filename = await createTar(directory, PACKAGES[0], { files });

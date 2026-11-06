@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Identificador duplicat \"{identifier}\"",
     "Duplicate parameter name '{identifier}'": "El nom del paràmetre \"{identifier}\" està duplicat.",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "S’esperaven entre {numMin}-{numMax} arguments, però s’han proporcionat {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "S’esperaven entre {numMin}-{numMax} arguments, però s’han proporcionat {numGiven}.",
+        "comment": [
+            "S'ha produït un error en cridar una funció perquè s'ha proporcionat un nombre insuficient o excessiu d’arguments. S'esperava que estigués dirigit a l'usuari."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Falta un argument a \"{funcName}\" per al paràmetre \"{argName}\" no opcional.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Falta un argument per al paràmetre \"{argName}\" no opcional.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{funcName}\" esperava que l'argument \"{argName}\" fos \"{expected}\", però va ser \"{actual}\".",

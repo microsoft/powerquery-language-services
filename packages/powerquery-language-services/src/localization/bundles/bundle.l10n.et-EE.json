@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "Dubleeritud identifikaator \"{identifier}\"",
     "Duplicate parameter name '{identifier}'": "Parameetrinimi „{identifier}“ on dubleeritud",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Eeldati {numMin}–{numMax} argumenti, kuid edastati {numGiven}.",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Eeldati {numMin}–{numMax} argumenti, kuid edastati {numGiven}.",
+        "comment": [
+            "Tõrge, mis ilmneb siis, kui funktsioonikutsele edastati liiga vähe või liiga palju argumente. Eeldatavasti kasutajale suunatud."
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Funktsioonil „{funcName}“ puudub mittevalikulise parameetri argument „{argName}“.",
     "Missing an argument for the non-optional parameter '{argName}'.": "Puudub mittevalikulise parameetri argument „{argName}“.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' eeldas, et argument '{argName}' jaoks on '{expected}', kuid sai selle asemel '{actual}'.",

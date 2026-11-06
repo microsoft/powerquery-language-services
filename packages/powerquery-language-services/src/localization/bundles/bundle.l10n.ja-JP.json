@@ -1,7 +1,12 @@
 {
     "Duplicate identifier '{identifier}'": "識別子 '{identifier}' が重複しています",
     "Duplicate parameter name '{identifier}'": "パラメーター名 '{identifier}' が重複しています",
-    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
+        "comment": [
+            "関数呼び出しの指定の引数の数が少なすぎるか、多すぎる場合のエラーです。ユーザー向けである必要があります。"
+        ]
+    },
     "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
     "Missing an argument for the non-optional parameter '{argName}'.": "オプションではないパラメーター '{argName}' の引数がありません。",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
