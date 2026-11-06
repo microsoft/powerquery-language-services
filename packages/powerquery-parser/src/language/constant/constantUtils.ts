@@ -3,7 +3,6 @@ import { Constant } from ".";
 import { TokenKind } from "../token";
 
 export function unaryOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.UnaryOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Plus:
             return Constant.UnaryOperator.Positive;
@@ -20,7 +19,6 @@ export function unaryOperatorKindFrom(tokenKind: TokenKind | undefined): Constan
 }
 
 export function arithmeticOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.ArithmeticOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Asterisk:
             return Constant.ArithmeticOperator.Multiplication;
@@ -43,7 +41,6 @@ export function arithmeticOperatorKindFrom(tokenKind: TokenKind | undefined): Co
 }
 
 export function equalityOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.EqualityOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.Equal:
             return Constant.EqualityOperator.EqualTo;
@@ -57,7 +54,6 @@ export function equalityOperatorKindFrom(tokenKind: TokenKind | undefined): Cons
 }
 
 export function logicalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.LogicalOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.KeywordAnd:
             return Constant.LogicalOperator.And;
@@ -71,7 +67,6 @@ export function logicalOperatorKindFrom(tokenKind: TokenKind | undefined): Const
 }
 
 export function relationalOperatorKindFrom(tokenKind: TokenKind | undefined): Constant.RelationalOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         case TokenKind.LessThan:
             return Constant.RelationalOperator.LessThan;
@@ -93,7 +88,6 @@ export function relationalOperatorKindFrom(tokenKind: TokenKind | undefined): Co
 export function binOpExpressionOperatorKindFrom(
     tokenKind: TokenKind | undefined,
 ): Constant.TBinOpExpressionOperator | undefined {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (tokenKind) {
         // ArithmeticOperator
         case TokenKind.Asterisk:

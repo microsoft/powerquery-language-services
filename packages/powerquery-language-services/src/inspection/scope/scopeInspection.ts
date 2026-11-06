@@ -280,7 +280,6 @@ async function inspectNode(state: ScopeInspectionState, xorNode: TXorNode, corre
         return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (xorNode.node.kind) {
         case Ast.NodeKind.EachExpression:
             inspectEachExpression(state, xorNode, trace.id);

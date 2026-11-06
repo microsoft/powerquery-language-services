@@ -79,7 +79,7 @@ From the root, run `npm test --workspace @microsoft/powerquery-parser` for libra
 `npm run test:parser:resources` for the separate resource suite. Root `npm test` includes both.
 `script:benchmark` and `script:nodeDump` are available as workspace scripts.
 
-Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` for readable
+Tests use Mocha's built-in Spec and XUnit reporters through the root shared reporter for readable
 console output and CI results. Library tests write `test-results.xml`; resource tests write
 `test-results-resources.xml` so both reports are preserved.
 

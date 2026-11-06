@@ -120,7 +120,6 @@ async function traverseAncestors(state: InspectAutocompleteKeywordState): Promis
         state.parent = ancestry[ancestryIndex];
         state.child = ancestry[ancestryIndex - 1];
 
-        // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
         switch (state.parent.node.kind) {
             case Ast.NodeKind.ErrorHandlingExpression:
                 inspected = autocompleteKeywordErrorHandlingExpression(state);

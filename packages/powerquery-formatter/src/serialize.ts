@@ -130,7 +130,6 @@ async function serialize(settings: SerializeSettings): Promise<string> {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/await-thenable
     await serializeNode(state, state.node, { isParentInline: isRootInline });
     visitComments(state, settings.passthroughMaps.eofCommentCollection);
 

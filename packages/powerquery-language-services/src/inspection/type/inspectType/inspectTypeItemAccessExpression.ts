@@ -88,7 +88,6 @@ function getElementType(
     indexValue: number | undefined,
     correlationId: number,
 ): Type.TPowerQueryType {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (collectionType.kind) {
         case Type.TypeKind.Any:
             if (collectionType.extendedKind === Type.ExtendedTypeKind.AnyUnion) {

@@ -89,7 +89,7 @@ npm test --workspace @microsoft/powerquery-formatter
 Build output goes to `lib`; published library entry points and source organization are described in
 the [architecture guide](ARCHITECTURE.md#source-layout-and-packaging).
 
-Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` to produce readable
+Tests use Mocha's built-in Spec and XUnit reporters through the root shared reporter to produce readable
 console output and `test-results.xml` for CI.
 
 ### Format files in place

@@ -93,7 +93,7 @@ Test
 npm test --workspace @microsoft/powerquery-language-services
 ```
 
-Tests use Mocha's built-in Spec and XUnit reporters through `mochaReporter.js` to produce readable
+Tests use Mocha's built-in Spec and XUnit reporters through the root shared reporter to produce readable
 console output and `test-results.xml` for CI.
 
 ## Scope cache ownership

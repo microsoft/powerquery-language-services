@@ -12,8 +12,8 @@
         "build": "node ../../scripts/build-package.cjs powerquery-parser",
         "clean": "node ../../scripts/workspace.cjs clean powerquery-parser",
         "watch": "node ../../scripts/build-package.cjs powerquery-parser --watch",
-        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml --spec test/libraryTest/**/*.ts",
-        "test:resources": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results-resources.xml --spec test/resourceTest/**/*.ts",
+        "test": "mocha --no-package",
+        "test:resources": "mocha --no-package --config .mocharc.resources.cjs",
         "script:benchmark": "npx ts-node test/scripts/createBenchmark.ts",
         "script:nodeDump": "npx ts-node test/scripts/createNodeDump.ts",
         "lint": "eslint src test *.ts --ext ts"
@@ -40,25 +40,6 @@
         "@vscode/l10n": "^0.0.18",
         "grapheme-splitter": "^1.0.4",
         "performance-now": "^2.1.0"
-    },
-    "devDependencies": {
-        "@types/chai": "^4.3.20",
-        "@types/mocha": "^10.0.8",
-        "@types/node": "^22.7.3",
-        "@typescript-eslint/eslint-plugin": "^8.15.0",
-        "@typescript-eslint/parser": "^8.15.0",
-        "chai": "^4.5.0",
-        "eslint": "^9.35.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-promise": "^7.2.1",
-        "eslint-plugin-security": "^3.0.1",
-        "mocha": "^12.0.3",
-        "prettier": "3.8.1",
-        "ts-loader": "^9.5.4",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.9.2",
-        "webpack": "^5.105.1"
     },
     "files": [
         "lib/powerquery-parser/**/*",

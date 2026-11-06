@@ -73,7 +73,6 @@ function getFieldSelectorType(
     fieldName: string,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
     switch (fieldType.kind) {
         case Type.TypeKind.Any:
             return Type.AnyInstance;

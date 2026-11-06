@@ -301,7 +301,7 @@ describe("formatter benchmark", () => {
                     formatter.mock.calls
                         .slice(0, 3)
                         .every(
-                            (call: typeof formatter.mock.calls[number]) =>
+                            (call: (typeof formatter.mock.calls)[number]) =>
                                 call.arguments[0].traceManager === Formatter.DefaultSettings.traceManager,
                         ),
                 ).to.equal(true);
