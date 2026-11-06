@@ -9,7 +9,7 @@
         "benchmark": "node --expose-gc --require ts-node/register benchmark/cli.ts",
         "watch": "node ../../scripts/build-package.cjs powerquery-language-services --watch",
         "lint": "eslint src test benchmark *.ts --ext ts",
-        "test": "mocha --no-package --reporter ./mochaReporter.js --reporter-option output=test-results.xml"
+        "test": "mocha --no-package"
     },
     "homepage": "https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-language-services#readme",
     "repository": {
@@ -42,24 +42,15 @@
         "ARCHITECTURE.md"
     ],
     "devDependencies": {
-        "@types/chai": "^4.3.20",
-        "@types/mocha": "^10.0.8",
-        "@types/node": "^22.7.3",
         "@typescript-eslint/eslint-plugin": "^8.43.0",
         "@typescript-eslint/parser": "^8.43.0",
-        "chai": "^4.5.0",
         "cross-env": "^7.0.3",
         "eslint": "^9.35.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-promise": "^7.2.1",
         "eslint-plugin-security": "^3.0.1",
-        "mocha": "^12.0.3",
-        "prettier": "3.6.2",
-        "ts-loader": "^9.5.4",
-        "ts-node": "^10.9.2",
-        "typescript": "^5.9.2",
-        "webpack": "^5.105.1"
+        "prettier": "3.6.2"
     },
     "dependencies": {
         "@microsoft/powerquery-formatter": "5.0.0",

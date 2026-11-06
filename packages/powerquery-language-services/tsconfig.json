@@ -1,15 +1,4 @@
 {
     "extends": "../../tsconfig.base.json",
-    "compilerOptions": {
-        "outDir": "lib",
-        "rootDir": ".",
-        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
-    },
-    "include": ["src/**/*.ts", "test/**/*.ts", "benchmark/**/*.ts", "*.ts"],
-    "exclude": ["node_modules"],
-    "ts-node": {
-        "compilerOptions": {
-            "module": "commonjs"
-        }
-    }
+    "include": ["src/**/*.ts", "test/**/*.ts", "benchmark/**/*.ts", "*.ts"]
 }

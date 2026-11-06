@@ -582,8 +582,8 @@ message. Library-symbol conversion also uses templates for parameter documentati
 ## Tests and development infrastructure
 
 Tests use Mocha, Chai, and TypeScript through `ts-node/register`.
-[.mocharc.json](.mocharc.json) discovers `test\**\*.test.ts`; the
-[composite reporter](mochaReporter.js) emits readable console and XUnit results to
+[.mocharc.cjs](.mocharc.cjs) discovers `test\**\*.test.ts`; the
+[composite reporter](../../scripts/mochaReporter.cjs) emits readable console and XUnit results to
 `test-results.xml`. The build is not
 required merely to discover the source tests, though CI builds before running them.
 
@@ -614,10 +614,11 @@ source maps under `lib`. It enables incremental builds and writes `tsconfig.tsbu
 The npm package's `files` selection includes the compiled language-services subtree rather than
 the test subtree.
 
-The [GitHub gated-PR workflow](.github/workflows/pr-gated.yml) runs on Windows, selects Node from
-`package.json`, installs with `npm ci`, then lints, builds, tests, and publishes JUnit results. The
-[Azure PR pipeline](.pipelines/pr-pipeline.yml) is a separate Windows definition and still specifies
-Node 16, unlike the package's Node 22-or-later requirement; do not assume the configurations match.
+The [GitHub gated-PR workflow](../../.github/workflows/pr-gated.yml) runs the root restore, lint,
+build, test, and packed-consumer commands and collects package test reports and tarballs.
+Shared tooling is declared in the private root manifest; package-local dependencies retain
+the scoped modern ESLint/Prettier integration. Compiler defaults come from the
+[root TypeScript configuration](../../tsconfig.base.json).
 
 Some package scripts (`prepublishOnly` and local linking helpers) invoke `git clean -xdf`.
 They are destructive packaging/development helpers, not substitutes for ordinary build/test commands.

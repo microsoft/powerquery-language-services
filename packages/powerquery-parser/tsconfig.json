@@ -1,16 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "noUncheckedIndexedAccess": true,
-        "outDir": "lib",
-        "rootDir": ".",
-        "tsBuildInfoFile": "./tsconfig.tsbuildinfo"
+        "noUncheckedIndexedAccess": true
     },
-    "include": ["src/**/*.ts", "src/localization/templates/*.json", "test/**/*.ts", "*.ts"],
-    "exclude": ["node_modules"],
-    "ts-node": {
-        "compilerOptions": {
-            "module": "commonjs"
-        }
-    }
+    "include": ["src/**/*.ts", "src/localization/templates/*.json", "test/**/*.ts", "*.ts"]
 }
