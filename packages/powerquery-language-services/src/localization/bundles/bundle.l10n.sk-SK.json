@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Očakávalo sa, že argument '{argName}' bude '{expected}', ale namiesto toho sa vrátila hodnota '{actual}'.",
     "Cannot find the name '{identifier}'.": "Nepodarilo sa nájsť názov {identifier}.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nepodarilo sa nájsť názov {identifier}, mali ste na mysli {suggestion}?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Predvolená hodnota: `{value}`",
+    "Allowed values: {values}": "Povolené hodnoty: {values}",
+    "Sample values: {values}": "Príklady hodnôt: {values}",
+    "Type: `{type}`": "Typ: `{type}`"
 }

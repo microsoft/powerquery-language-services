@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Falta un argument per al paràmetre \"{argName}\" no opcional.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{funcName}\" esperava que l'argument \"{argName}\" fos \"{expected}\", però va ser \"{actual}\".",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "S’esperava que l’argument per a \"{argName}\" fos \"{expected}\", però va ser \"{actual}\".",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "No es troba el nom '{identifier}'.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "No es troba el nom ”{identifier}”, volíeu dir ”{suggestion}”?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Per defecte: `{value}`",
+    "Allowed values: {values}": "Valors permesos: {values}",
+    "Sample values: {values}": "Valors d'exemple: {values}",
+    "Type: `{type}`": "Tipus: `{type}`"
 }

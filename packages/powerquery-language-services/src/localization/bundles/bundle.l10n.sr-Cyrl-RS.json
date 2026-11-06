@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Недостаје аргумент за неопционални параметар '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Функција '{funcName}' очекује аргумент за '{argName}' који треба да буде '{expected}', али је уместо дога добијен '{actual}'.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Очекивани аргумент за '{argName}' који треба да буде '{expected}', али је уместо тога добијен '{actual}'.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Није могуће пронаћи име „{identifier}“.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Није могуће пронаћи име '{identifier}', да ли сте мислили на '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Подразумевана вредност: `{value}`",
+    "Allowed values: {values}": "Дозвољене вредности: {values}",
+    "Sample values: {values}": "Примери вредности: {values}",
+    "Type: `{type}`": "Тип: `{type}`"
 }

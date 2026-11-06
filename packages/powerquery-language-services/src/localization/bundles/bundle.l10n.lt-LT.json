@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Tikėtasi, kad argumentas, skirtas „{argName}“, bus „{expected}“, tačiau gautas „{actual}“.",
     "Cannot find the name '{identifier}'.": "Nepavyksta rasti pavadinimo „{identifier}“.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nepavyko rasti pavadinimo „{identifier}“. Ar turėjote omenyje „{suggestion}“?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Numatytoji reikšmė: `{value}`",
+    "Allowed values: {values}": "Leistinos reikšmės: {values}",
+    "Sample values: {values}": "Reikšmių pavyzdžiai: {values}",
+    "Type: `{type}`": "Tipas: `{type}`"
 }

@@ -76,6 +76,12 @@ Builds generate the published ID-keyed `localization/templates/*.json` compatibi
 the bundles; do not edit those generated files. Translation-service assets under `loc` and
 `LocProject.json` are not inputs to the runtime build.
 
+When changing an existing translation, also update its matching active `Tgt` value under `loc`
+if present; leave English source and historical `Prev` values unchanged. Do not translate code
+snippets, placeholders, API identifiers, or intentional native words merely because they match
+English. Resource tests verify active legacy targets and generated compatibility views against
+the bundles, including placeholder names.
+
 These are standalone libraries; no VS Code host is needed. Locale selection remains per request,
 using case-insensitive exact locale tags and English fallback for unsupported tags. The formatter
 has no separate messages and uses the parser's localized errors. The compatibility adapter selects

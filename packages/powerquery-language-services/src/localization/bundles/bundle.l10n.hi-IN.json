@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "ग़ैर-वैकल्पिक पैरामीटर '{argName}' के लिए तर्क अनुपलब्ध है.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' ने '{argName}' के लिए '{expected}' तर्क की अपेक्षा की थी, लेकिन उसकी बजाय '{actual}' मिला.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "{argName} के लिए {expected} तर्क की अपेक्षा थी, लेकिन उसके बजाय {actual} मिला.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "'{identifier}' नाम नहीं ढूँढा जा सकता.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "'{identifier}' नाम नहीं मिला, क्या आपका मतलब '{suggestion}' था?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "डिफ़ॉल्ट मान: `{value}`",
+    "Allowed values: {values}": "अनुमत मान: {values}",
+    "Sample values: {values}": "उदाहरण मान: {values}",
+    "Type: `{type}`": "प्रकार: `{type}`"
 }

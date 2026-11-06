@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Thiếu tham đối cho tham số không tối ưu '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” dự kiến đối số cho “{argName}” sẽ là “{expected}” nhưng thay vào đó lại là “{actual}”.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Dự kiến tham đối cho '{argName}' sẽ là '{expected}' nhưng thay vào đó lại là '{actual}'.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Không thể tìm thấy tên '{identifier}'.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Không thể tìm thấy tên '{identifier}', ý bạn là '{suggestion}' phải không?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Giá trị mặc định: `{value}`",
+    "Allowed values: {values}": "Giá trị được phép: {values}",
+    "Sample values: {values}": "Giá trị ví dụ: {values}",
+    "Type: `{type}`": "Kiểu: `{type}`"
 }

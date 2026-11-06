@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Forventet at argumentet {argName} skulle være {expected}, men fikk {actual} i stedet.",
     "Cannot find the name '{identifier}'.": "Finner ikke navnet {identifier}.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Finner ikke navnet '{identifier}'. Mente du '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
+    "Default: `{value}`": "Standardverdi: `{value}`",
+    "Allowed values: {values}": "Tillatte verdier: {values}",
+    "Sample values: {values}": "Eksempelverdier: {values}",
     "Type: `{type}`": "Type: `{type}`"
 }

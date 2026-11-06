@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Trūkst argumenta obligātajam parametram {argName}.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Funkcijā {funcName} bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Nevar atrast nosaukumu {identifier}.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nevar atrast nosaukumu \"{identifier}\". Vai domājāt \"{suggestion}\"?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Noklusējuma vērtība: `{value}`",
+    "Allowed values: {values}": "Atļautās vērtības: {values}",
+    "Sample values: {values}": "Vērtību piemēri: {values}",
+    "Type: `{type}`": "Tips: `{type}`"
 }

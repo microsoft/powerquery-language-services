@@ -41,7 +41,7 @@
         <Str Cat="Text">
           <Val><![CDATA['{funcName}' is missing an argument for the non-optional parameter '{argName}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Falta um argumento para o parâmetro não-opcional '{funcName}'.]]></Val>
+            <Val><![CDATA[Falta um argumento para o parâmetro não-opcional '{argName}' de '{funcName}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -80,7 +80,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Esperava que o argumento para '{argName}' fosse '{expectativo}', mas em vez disso obteve '{actual}'.]]></Val>
+            <Val><![CDATA[Esperava que o argumento para '{argName}' fosse '{expected}', mas em vez disso obteve '{actual}'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -89,7 +89,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Cannot find the name '{identifier}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Não é possível encontrar o nome \"{identifier}\".]]></Val>
+            <Val><![CDATA[Não é possível encontrar o nome "{identifier}".]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

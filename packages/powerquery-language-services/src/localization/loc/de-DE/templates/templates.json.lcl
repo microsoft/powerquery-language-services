@@ -89,7 +89,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Cannot find the name '{identifier}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Der Name 2{identifier}“ wurde nicht gefunden.]]></Val>
+            <Val><![CDATA[Der Name „{identifier}“ wurde nicht gefunden.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

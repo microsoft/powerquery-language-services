@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Menjangkakan argumen untuk '{argName}' ialah '{expected}', tetapi sebaliknya mendapat '{actual}'.",
     "Cannot find the name '{identifier}'.": "Tidak menemui nama '{identifier}'.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Tidak menemui nama '{identifier}', adakah anda maksudkan '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Nilai lalai: `{value}`",
+    "Allowed values: {values}": "Nilai yang dibenarkan: {values}",
+    "Sample values: {values}": "Contoh nilai: {values}",
+    "Type: `{type}`": "Jenis: `{type}`"
 }

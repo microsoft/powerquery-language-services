@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Требуется аргумент для обязательного параметра \"{argName}\".",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Для функции \"{funcName}' ожидалось значение \"{expected}\" аргумента \"{argName}\", но было получено значение \"{actual}\".",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Ожидалось, что аргументом для \"{argName}\" будет \"{expected}\", однако вместо этого получен аргумент \"{actual}\".",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Не удается найти имя \"{identifier}\".",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Не удается найти имя \"{identifier}\". Вы имели в виду \"{suggestion}\"?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Значение по умолчанию: `{value}`",
+    "Allowed values: {values}": "Допустимые значения: {values}",
+    "Sample values: {values}": "Примеры значений: {values}",
+    "Type: `{type}`": "Тип: `{type}`"
 }

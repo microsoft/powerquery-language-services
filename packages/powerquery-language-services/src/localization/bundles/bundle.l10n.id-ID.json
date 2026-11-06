@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Tidak ada argumen untuk parameter non-opsional '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' mengharapkan argumen untuk '{argName}' adalah '{expected}', namun mendapatkan '{actual}' sebagai gantinya.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Argumen yang diharapkan untuk '{argName}' adalah '{expected}', namun yang didapatkan adalah '{actual}'.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Tidak dapat menemukan nama '{identifier}'.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Tidak dapat menemukan nama '{identifier}', apakah maksud Anda '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Nilai bawaan: `{value}`",
+    "Allowed values: {values}": "Nilai yang diizinkan: {values}",
+    "Sample values: {values}": "Contoh nilai: {values}",
+    "Type: `{type}`": "Tipe: `{type}`"
 }

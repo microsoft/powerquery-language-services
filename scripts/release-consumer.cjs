@@ -39,6 +39,9 @@ async function main(): Promise<void> {
         "Legacy localization JSON imports changed");
     expect(serviceFrench["Duplicate identifier '{identifier}'"] === serviceTemplates.fr_FR.error_validation_duplicate_identifier,
         "Services bundle content differs from exported templates");
+    expect(serviceFrench["Cannot find the name '{identifier}'."] !== "Cannot find the name '{identifier}'." &&
+        legacyServiceFrench.error_validation_unknownIdentifier_noSuggestion === serviceFrench["Cannot find the name '{identifier}'."],
+        "Packed unknown-name translation or legacy synchronization failed");
     l10n.config({ contents: { "Host {value}": "Host translation {value}",
         "Duplicate identifier '{identifier}'": "Host duplicate {identifier}" } });
     await Promise.all(["fr-FR", "de-DE", "ja-JP", "en-US"].map(async (locale) => {
@@ -56,6 +59,16 @@ async function main(): Promise<void> {
         expect(serviceLocalization.error_validation_duplicate_identifier(templatesForLocale, "$&") ===
             templatesForLocale.error_validation_duplicate_identifier.replace("{identifier}", () => "$&"),
             "Packed services placeholder or locale isolation failed");
+        expect(serviceLocalization.parameterDocumentation_default(templatesForLocale, "$&") ===
+            templatesForLocale.parameterDocumentation_default.replace("{value}", () => "$&"),
+            "Packed documentation translation substitution failed");
+        if (locale !== "en-US") {
+            expect(templatesForLocale.parameterDocumentation_default !== serviceTemplates.DefaultTemplates.parameterDocumentation_default,
+                "Packed documentation heading remained in English");
+            expect(templatesForLocale.error_validation_unknownIdentifier_noSuggestion !==
+                serviceTemplates.DefaultTemplates.error_validation_unknownIdentifier_noSuggestion,
+                "Packed unknown-name diagnostic remained in English");
+        }
     }));
     expect(parser.LocalizationUtils.getLocalizationTemplates("unsupported") === parserTemplates.DefaultTemplates,
         "Packed English fallback failed");

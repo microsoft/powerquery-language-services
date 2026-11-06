@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "L'argomento per ' {argName}' prevedeva che fosse ' {expected}', ma è stato ottenuto ' {actual}'.",
     "Cannot find the name '{identifier}'.": "Impossibile trovare il nome '{identifier}'.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Il nome '{identifier}' non è stato trovato. Si intendeva '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Valore predefinito: `{value}`",
+    "Allowed values: {values}": "Valori consentiti: {values}",
+    "Sample values: {values}": "Valori di esempio: {values}",
+    "Type: `{type}`": "Tipo: `{type}`"
 }

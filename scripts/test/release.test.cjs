@@ -335,6 +335,37 @@ test("every supported locale preserves message coverage, comments and placeholde
                 const text = typeof translation === "string" ? translation : translation.message;
                 assert.equal(typeof text, "string", file.relative);
                 assert.deepEqual(placeholders(text), placeholders(message), `${file.relative}: ${message}`);
+                if (entry.slug === "powerquery-language-services" &&
+                    !file.relative.endsWith("/bundle.l10n.json") && text === message) {
+                    // "Type" is also the native word in these locales, not untranslated prose.
+                    assert.equal(message, "Type: `{type}`", file.relative);
+                    assert.ok(["da-DK", "nb-NO", "nl-NL"].some((locale) =>
+                        file.relative.endsWith(`.${locale}.json`)), file.relative);
+                }
+            }
+        }
+    }
+});
+
+test("active legacy localization targets match the l10n bundles and placeholders", () => {
+    const root = path.resolve(__dirname, "..", "..");
+    const placeholders = (message) => [...new Set([...message.matchAll(/\{([^}]+)\}/g)]
+        .map((match) => match[1]))].sort();
+    for (const entry of PACKAGES.filter((item) => item.slug !== "powerquery-formatter")) {
+        const localization = path.join(root, entry.workspace, "src", "localization");
+        const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
+        for (const locale of fs.readdirSync(path.join(localization, "loc"))) {
+            const bundle = JSON.parse(fs.readFileSync(path.join(localization, "bundles",
+                `bundle.l10n.${locale}.json`), "utf8"));
+            const xml = fs.readFileSync(path.join(localization, "loc", locale, "templates", `${stem}.json.lcl`), "utf8");
+            // LCX uses CDATA; compare active Val/Tgt pairs, not historical Prev values.
+            const values = [...xml.matchAll(
+                /<Str\b[^>]*>\s*<Val><!\[CDATA\[([\s\S]*?)\]\]><\/Val>\s*<Tgt\b[^>]*>\s*<Val><!\[CDATA\[([\s\S]*?)\]\]><\/Val>/g)];
+            assert.ok(values.length > 0, `${entry.slug}/${locale}`);
+            for (const [, source, target] of values) {
+                if (!Object.hasOwn(bundle, source)) continue;
+                assert.equal(bundle[source], target, `${entry.slug}/${locale}: ${source}`);
+                assert.deepEqual(placeholders(target), placeholders(source), `${entry.slug}/${locale}: ${source}`);
             }
         }
     }

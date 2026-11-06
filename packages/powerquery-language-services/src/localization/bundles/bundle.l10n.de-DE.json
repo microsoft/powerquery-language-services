@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Ein Argument für den nicht optionalen Parameter „{argName}“ fehlt.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "„{funcName}“ hat erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, hat aber stattdessen „{actual}“ erhalten.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Es wurde erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, aber stattdessen wurde „{actual}“ erhalten.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Der Name „{identifier}“ wurde nicht gefunden.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Der Name „{identifier}“ kann nicht gefunden werden. Meinten Sie „{suggestion}“?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Standardwert: `{value}`",
+    "Allowed values: {values}": "Zulässige Werte: {values}",
+    "Sample values: {values}": "Beispielwerte: {values}",
+    "Type: `{type}`": "Typ: `{type}`"
 }

@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Lipsește un argument pentru parametrul non-opțional „{argName}”.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "„{funcName}” se aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar a primit în schimb „{actual}”.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Se aștepta ca argumentul pentru „{argName}” să fie „{expected}”, dar s-a primit în schimb „{actual}”.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Nu se poate găsi numele „{identifier}”.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nu se poate găsi numele „{identifier}”, ați vrut să vă referiți la „{suggestion}”?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Valoare implicită: `{value}`",
+    "Allowed values: {values}": "Valori permise: {values}",
+    "Sample values: {values}": "Exemple de valori: {values}",
+    "Type: `{type}`": "Tip: `{type}`"
 }

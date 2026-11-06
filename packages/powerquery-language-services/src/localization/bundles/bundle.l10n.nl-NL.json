@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Er ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Kan de naam {identifier} niet vinden.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Kan de naam {identifier} niet vinden. Bedoelt u {suggestion}?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
+    "Default: `{value}`": "Standaardwaarde: `{value}`",
+    "Allowed values: {values}": "Toegestane waarden: {values}",
+    "Sample values: {values}": "Voorbeeldwaarden: {values}",
     "Type: `{type}`": "Type: `{type}`"
 }

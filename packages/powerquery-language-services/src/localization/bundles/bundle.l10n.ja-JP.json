@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "オプションではないパラメーター '{argName}' の引数がありません。",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "名前 '{identifier}' が見つかりません。",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "既定値: `{value}`",
+    "Allowed values: {values}": "使用可能な値: {values}",
+    "Sample values: {values}": "値の例: {values}",
+    "Type: `{type}`": "型: `{type}`"
 }

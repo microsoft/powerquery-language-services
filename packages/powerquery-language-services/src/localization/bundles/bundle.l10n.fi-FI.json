@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Odotettiin, että {argName}-argumentiksi tulee {expected}, mutta se sai sen sijaan {actual}.",
     "Cannot find the name '{identifier}'.": "Nimeä {identifier} ei löydy.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nimeä {identifier} ei löydy, tarkoititko {suggestion}?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Oletusarvo: `{value}`",
+    "Allowed values: {values}": "Sallitut arvot: {values}",
+    "Sample values: {values}": "Esimerkkiarvot: {values}",
+    "Type: `{type}`": "Tyyppi: `{type}`"
 }

@@ -34,6 +34,20 @@ describe("Localization", () => {
         );
     });
 
+    it("uses the restored unknown-name translation and retains English fallback", () => {
+        expect(Localization.error_validation_unknownIdentifier(Templates.fr_FR, "x", undefined)).to.equal(
+            "Le nom «x» est introuvable.",
+        );
+
+        expect(
+            Localization.error_validation_unknownIdentifier(
+                LocalizationUtils.getLocalizationTemplates("unsupported"),
+                "x",
+                undefined,
+            ),
+        ).to.equal("Cannot find the name 'x'.");
+    });
+
     it("keeps interleaved parser and validation locales independent", async () => {
         l10n.config({
             contents: {

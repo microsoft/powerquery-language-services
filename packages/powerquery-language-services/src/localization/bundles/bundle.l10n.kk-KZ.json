@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан.",
     "Cannot find the name '{identifier}'.": "«{identifier}» деген атауды табу мүмкін емес.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "\"{identifier}\" атауын табу мүмкін емес. Сіз \"{suggestion}\" деп енгізгіңіз келді ме?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Әдепкі мән: `{value}`",
+    "Allowed values: {values}": "Рұқсат етілген мәндер: {values}",
+    "Sample values: {values}": "Мәндердің мысалдары: {values}",
+    "Type: `{type}`": "Түрі: `{type}`"
 }

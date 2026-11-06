@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Відсутній аргумент для обов’язкового параметра \"{argName}\".",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Функція «{funcName}» очікувала, що аргумент для «{argName}» матиме значення «{expected}», але натомість він має значення «{actual}».",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Очікувалося, що аргумент для \"{argName}\" матиме значення \"{expected}\", але натомість він має значення \"{actual}\".",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Не вдалося знайти ім’я \"{identifier}\".",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Не вдалося знайти ім’я '{identifier}'. Можливо, ви мали на увазі '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Значення за замовчуванням: `{value}`",
+    "Allowed values: {values}": "Допустимі значення: {values}",
+    "Sample values: {values}": "Приклади значень: {values}",
+    "Type: `{type}`": "Тип: `{type}`"
 }

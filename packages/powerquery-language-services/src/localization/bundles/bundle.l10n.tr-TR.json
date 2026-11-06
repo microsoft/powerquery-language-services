@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı.",
     "Cannot find the name '{identifier}'.": "'{identifier}' adı bulunamıyor.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "'{identifier}' adı bulunamıyor. Şunu mu demek istediniz: '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Varsayılan değer: `{value}`",
+    "Allowed values: {values}": "İzin verilen değerler: {values}",
+    "Sample values: {values}": "Örnek değerler: {values}",
+    "Type: `{type}`": "Tür: `{type}`"
 }

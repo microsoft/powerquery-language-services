@@ -8,8 +8,8 @@
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Za argument »{argName}« je bil pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
     "Cannot find the name '{identifier}'.": "Imena '{identifier}' ni mogoče najti.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Imena '{identifier}' ni mogoče najti. Ali ste mislili '{suggestion}'?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Privzeta vrednost: `{value}`",
+    "Allowed values: {values}": "Dovoljene vrednosti: {values}",
+    "Sample values: {values}": "Primeri vrednosti: {values}",
+    "Type: `{type}`": "Vrsta: `{type}`"
 }

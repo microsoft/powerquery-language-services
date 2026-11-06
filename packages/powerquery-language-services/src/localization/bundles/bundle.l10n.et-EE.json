@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "Puudub mittevalikulise parameetri argument „{argName}“.",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' eeldas, et argument '{argName}' jaoks on '{expected}', kuid sai selle asemel '{actual}'.",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Eeldati, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“.",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "Nime „{identifier}“ ei leidu.",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nime „{identifier}“ ei leitud. Kas pidasite silmas nime „{suggestion}“?",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "Vaikeväärtus: `{value}`",
+    "Allowed values: {values}": "Lubatud väärtused: {values}",
+    "Sample values: {values}": "Näidisväärtused: {values}",
+    "Type: `{type}`": "Tüüp: `{type}`"
 }

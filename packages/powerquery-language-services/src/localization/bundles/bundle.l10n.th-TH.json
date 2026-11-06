@@ -6,10 +6,10 @@
     "Missing an argument for the non-optional parameter '{argName}'.": "ไม่พบอาร์กิวเมนต์สำหรับพารามิเตอร์ที่ไม่ใช่ตัวเลือก '{argName}'",
     "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' ต้องการอาร์กิวเมนต์สําหรับ '{argName}' เป็น '{expected}' แต่ได้รับ '{actual}' แทน",
     "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "ต้องการอาร์กิวเมนต์สำหรับ '{argName}‘ เป็น '{expected}' แต่ได้ '{actual}' แทน",
-    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}'.": "ไม่พบชื่อ '{identifier}'",
     "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "ไม่พบชื่อ '{identifier}' คุณหมายถึง '{suggestion}' ใช่หรือไม่",
-    "Default: `{value}`": "Default: `{value}`",
-    "Allowed values: {values}": "Allowed values: {values}",
-    "Sample values: {values}": "Sample values: {values}",
-    "Type: `{type}`": "Type: `{type}`"
+    "Default: `{value}`": "ค่าเริ่มต้น: `{value}`",
+    "Allowed values: {values}": "ค่าที่อนุญาต: {values}",
+    "Sample values: {values}": "ตัวอย่างค่า: {values}",
+    "Type: `{type}`": "ชนิด: `{type}`"
 }

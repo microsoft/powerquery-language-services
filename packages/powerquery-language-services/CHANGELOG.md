@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Complete localized parameter-documentation headings and restore unknown-name diagnostics
+  from existing locale resources, retaining intentional technical terms and synchronizing legacy targets.
 - Use `@vscode/l10n` bundles and formatting for validation and parameter documentation while
   retaining per-request locales, translations, and existing template APIs and published JSON paths.
 - Correct malformed placeholder names in Galician, Portuguese (Portugal), and Serbian (Cyrillic)

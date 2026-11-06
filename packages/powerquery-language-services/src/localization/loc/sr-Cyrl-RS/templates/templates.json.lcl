@@ -59,7 +59,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Expected between {numMin}-{numMax} arguments, but {numGiven} were given.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Очекивано је између {numMin}-{numMax} аргумената, али је дат {нумГивен}.]]></Val>
+            <Val><![CDATA[Очекивано је између {numMin}-{numMax} аргумената, али је дат {numGiven}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
