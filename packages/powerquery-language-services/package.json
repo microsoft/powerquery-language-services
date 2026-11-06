@@ -64,6 +64,7 @@
     "dependencies": {
         "@microsoft/powerquery-formatter": "5.0.0",
         "@microsoft/powerquery-parser": "5.0.0",
+        "@vscode/l10n": "^0.0.18",
         "vscode-languageserver-textdocument": "1.0.12",
         "vscode-languageserver-types": "3.17.5"
     }

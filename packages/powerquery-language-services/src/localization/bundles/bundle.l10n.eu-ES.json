@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Bikoiztu \"{identifier}\" identifikatzailea",
+    "Duplicate parameter name '{identifier}'": "Parametro-izen bikoiztua: \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Ez da aurkitu '{identifier}' izena; '{suggestion}' esan nahi zenuen?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

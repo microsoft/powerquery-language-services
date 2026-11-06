@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Yinelenen '{identifier}' tanımlayıcısı",
+    "Duplicate parameter name '{identifier}'": "'{identifier}' yinelenen parametre adı",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} bağımsız değişken arasında bekleniyor, ancak {numGiven} bağımsız değişken verildi.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}'işlevinin isteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişkeni eksik.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "İsteğe bağlı olmayan '{argName}' parametresi için bir bağımsız değişken eksik.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}, '{argName}' bağımsız değişkeninin '{expected}' olmasını bekliyordu, ancak bunun yerine '{actual}' alındı.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' bağımsız değişkeninin' {expected}' olması bekleniyordu, ancak bunun yerine '{actual}' alındı.",
+    "Cannot find the name '{identifier}'.": "'{identifier}' adı bulunamıyor.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "'{identifier}' adı bulunamıyor. Şunu mu demek istediniz: '{suggestion}'?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

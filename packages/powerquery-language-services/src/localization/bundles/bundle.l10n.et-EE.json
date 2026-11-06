@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Dubleeritud identifikaator \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Parameetrinimi „{identifier}“ on dubleeritud",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Eeldati {numMin}–{numMax} argumenti, kuid edastati {numGiven}.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Funktsioonil „{funcName}“ puudub mittevalikulise parameetri argument „{argName}“.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Puudub mittevalikulise parameetri argument „{argName}“.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName}' eeldas, et argument '{argName}' jaoks on '{expected}', kuid sai selle asemel '{actual}'.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Eeldati, et argumendi „{argName}“ väärtus on „{expected}“, kuid selle asemel oli väärtus „{actual}“.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nime „{identifier}“ ei leitud. Kas pidasite silmas nime „{suggestion}“?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

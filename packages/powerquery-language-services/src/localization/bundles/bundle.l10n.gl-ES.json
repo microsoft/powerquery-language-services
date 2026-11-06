@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Duplicar identificador \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Duplicar o nome do parámetro '{identifier}'",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Esperábanse entre {numMin}-{numMax} argumentos, déronse {numGiven}.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "A “{funcName}” fáltalle un argumento para o parámetro “{argName}” non opcional.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Falta un argumento para o parámetro “{argName}” non opcional.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” esperaba que o argumento para “{argName}” fose “{expected}”, mais recibiu “{actual}”.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Esperábase que o argumento para “{argName}” fose “{expected}”, mais recibiu “{actual}”.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Non se pode atopar o nome '{identifier}', querías dicir '{suggestion}'?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

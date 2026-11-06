@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Повторяющийся идентификатор \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Дублирующееся имя параметра \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Ожидаемое число аргументов: от {numMin} до {numMax}, указанное: {numGiven}.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Функции \"{funcName}\" требуется аргумент для обязательного параметра \"{argName}\".",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Требуется аргумент для обязательного параметра \"{argName}\".",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Для функции \"{funcName}' ожидалось значение \"{expected}\" аргумента \"{argName}\", но было получено значение \"{actual}\".",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Ожидалось, что аргументом для \"{argName}\" будет \"{expected}\", однако вместо этого получен аргумент \"{actual}\".",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Не удается найти имя \"{identifier}\". Вы имели в виду \"{suggestion}\"?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

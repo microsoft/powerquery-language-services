@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "識別子 '{identifier}' が重複しています",
+    "Duplicate parameter name '{identifier}'": "パラメーター名 '{identifier}' が重複しています",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
+    "Missing an argument for the non-optional parameter '{argName}'.": "オプションではないパラメーター '{argName}' の引数がありません。",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

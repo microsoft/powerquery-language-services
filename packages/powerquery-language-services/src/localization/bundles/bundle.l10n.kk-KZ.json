@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Қайталанатын идентификатор \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Қайталанатын параметр атауы: «{identifier}»",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Күтілген аргументтер саны: {numMin}-{numMax}, көрсетілгені: {numGiven}.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' функциясында '{argName}' міндетті параметріне аргументі жоқ.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "''{argName}' міндетті параметріне аргументі жоқ.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{funcName}\" функциясы үшін \"{argName}\" аргументінің мәні \"{expected}\" болып күтілген, бірақ \"{actual}\" мәні болып шыққан.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' параметрінің аргументі '{expected}' болып күтілген, бірақ аргументі '{actual}' болып шыққан.",
+    "Cannot find the name '{identifier}'.": "«{identifier}» деген атауды табу мүмкін емес.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "\"{identifier}\" атауын табу мүмкін емес. Сіз \"{suggestion}\" деп енгізгіңіз келді ме?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

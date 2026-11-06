@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Duplikeret identifikator '{identifier}'",
+    "Duplicate parameter name '{identifier}'": "Duplikér parameternavn '{identifier}' ",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Forventet mellem {numMin} {numMax} argumenter, men {numGiven} blev angivet.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}'mangler et argument for den ikke-valgfrie parameter '{argName}'.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Der mangler et argument for den ikke-valgfrie parameter '{argName}'.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Forventede, at argumentet for '{argName} ville være '{expected}', men modtog '{actual}' i stedet for.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Navnet '{identifier}' blev ikke fundet. Mente du '{suggestion}'?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

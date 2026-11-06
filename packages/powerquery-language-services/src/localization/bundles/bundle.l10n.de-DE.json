@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Doppelter Bezeichner \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Doppelter Parametername „{identifier}“",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Es wurden {numMin} bis {numMax} Argumente erwartet, aber {numGiven} angegeben.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Für „{funcName}“ fehlt ein Argument für den nicht optionalen Parameter „{argName}“.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Ein Argument für den nicht optionalen Parameter „{argName}“ fehlt.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "„{funcName}“ hat erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, hat aber stattdessen „{actual}“ erhalten.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Es wurde erwartet, dass das Argument für „{argName}“ „{expected}“ sein würde, aber stattdessen wurde „{actual}“ erhalten.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Der Name „{identifier}“ kann nicht gefunden werden. Meinten Sie „{suggestion}“?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

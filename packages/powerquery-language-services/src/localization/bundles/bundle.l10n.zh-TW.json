@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "重複的識別碼 '{identifier}'",
+    "Duplicate parameter name '{identifier}'": "重複的參數名稱 '{identifier}'",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "預期介於 {numMin}-{numMax} 個引數之間，但給予了 {numGiven} 個。",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' 遺漏非選擇性參數 '{argName}' 的引數。",
+    "Missing an argument for the non-optional parameter '{argName}'.": "遺漏非選擇性參數 '{argName}' 的引數。",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} 預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "預期 '{argName}' 的引數為 '{expected}'，但卻得到 '{actual}'。",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "找不到名稱 '{identifier}'，您指的是 '{suggestion}' 嗎?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

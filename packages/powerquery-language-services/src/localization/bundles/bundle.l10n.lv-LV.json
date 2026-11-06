@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Identifikatora dublikāts: {identifier}",
+    "Duplicate parameter name '{identifier}'": "Parametra nosaukuma “{identifier}” dublikāts",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Paredzams starp {numMin}–{numMax} argumentiem, taču tika norādīts {numGiven}.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Funkcijai {funcName} trūkst argumenta obligātajam parametram {argName}.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Trūkst argumenta obligātajam parametram {argName}.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Funkcijā {funcName} bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Bija paredzēts, ka būs arguments {argName} ar vērtību {expected}, bet tā vietā bija {actual}.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Nevar atrast nosaukumu \"{identifier}\". Vai domājāt \"{suggestion}\"?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

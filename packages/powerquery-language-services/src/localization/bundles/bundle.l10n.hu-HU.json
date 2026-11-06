@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Duplikált azonosító: „{identifier}”",
+    "Duplicate parameter name '{identifier}'": "Ismétlődő paraméternév: {identifier}",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "A rendszer {numMin}–{numMax} argumentumot várt, de {numGiven} lett megadva.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Ebből: {funcName} hiányzik egy argumentum a nem válaszható {argName} paraméterhez.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Hiányzik egy argumentum a nem választható {argName} paraméterhez.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "A(z) {funcName} a(z) {expected} argumentumot várta ehhez: {argName}, de helyette {actual} argumentumot kapott.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "A rendszer várta ehhez: {argName} az argumentumot, így: {expected}, de ehelyett ezt: {actual} kapta.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "A(z) „{identifier}“ név nem található. Erre gondolt: „{suggestion}“?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

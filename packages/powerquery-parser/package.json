@@ -37,6 +37,7 @@
         "tag": "latest"
     },
     "dependencies": {
+        "@vscode/l10n": "^0.0.18",
         "grapheme-splitter": "^1.0.4",
         "performance-now": "^2.1.0"
     },

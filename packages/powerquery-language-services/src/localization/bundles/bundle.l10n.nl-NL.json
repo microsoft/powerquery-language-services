@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Dubbele id {identifier}",
+    "Duplicate parameter name '{identifier}'": "Dubbele parameternaam {identifier}",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} argumenten verwacht, maar {numGiven} zijn opgegeven.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Bij '{funcName}' ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Er ontbreekt een argument voor de niet-optionele parameter '{argName}'.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Verwachtte dat het argument voor '{argName}' '{expected}' zou zijn, maar kreeg in plaats daarvan '{actual}'.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Kan de naam {identifier} niet vinden. Bedoelt u {suggestion}?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

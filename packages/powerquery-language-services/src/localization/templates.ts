@@ -1,92 +1,92 @@
 import * as PQP from "@microsoft/powerquery-parser";
+import { createTemplates } from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templateUtils";
 
-import * as bg_BG from "./templates/templates.bg-BG.json";
-import * as ca_ES from "./templates/templates.ca-ES.json";
-import * as cs_CZ from "./templates/templates.cs-CZ.json";
-import * as da_DK from "./templates/templates.da-DK.json";
-import * as de_DE from "./templates/templates.de-DE.json";
-import * as el_GR from "./templates/templates.el-GR.json";
-import * as en_US from "./templates/templates.json";
-import * as es_ES from "./templates/templates.es-ES.json";
-import * as et_EE from "./templates/templates.et-EE.json";
-import * as eu_ES from "./templates/templates.eu-ES.json";
-import * as fi_FI from "./templates/templates.fi-FI.json";
-import * as fr_FR from "./templates/templates.fr-FR.json";
-import * as gl_ES from "./templates/templates.gl-ES.json";
-import * as hi_IN from "./templates/templates.hi-IN.json";
-import * as hr_HR from "./templates/templates.hr-HR.json";
-import * as hu_HU from "./templates/templates.hu-HU.json";
-import * as id_ID from "./templates/templates.id-ID.json";
-import * as it_IT from "./templates/templates.it-IT.json";
-import * as ja_JP from "./templates/templates.ja-JP.json";
-import * as kk_KZ from "./templates/templates.kk-KZ.json";
-import * as ko_KR from "./templates/templates.ko-KR.json";
-import * as lt_LT from "./templates/templates.lt-LT.json";
-import * as lv_LV from "./templates/templates.lv-LV.json";
-import * as ms_MY from "./templates/templates.ms-MY.json";
-import * as nb_NO from "./templates/templates.nb-NO.json";
-import * as nl_NL from "./templates/templates.nl-NL.json";
-import * as pl_PL from "./templates/templates.pl-PL.json";
-import * as pt_BR from "./templates/templates.pt-BR.json";
-import * as pt_PT from "./templates/templates.pt-PT.json";
-import * as ro_RO from "./templates/templates.ro-RO.json";
-import * as ru_RU from "./templates/templates.ru-RU.json";
-import * as sk_SK from "./templates/templates.sk-SK.json";
-import * as sl_SI from "./templates/templates.sl-SI.json";
-import * as sr_Cyrl_RS from "./templates/templates.sr-Cyrl-RS.json";
-import * as sr_Latn_RS from "./templates/templates.sr-Latn-RS.json";
-import * as sv_SE from "./templates/templates.sv-SE.json";
-import * as th_TH from "./templates/templates.th-TH.json";
-import * as tr_TR from "./templates/templates.tr-TR.json";
-import * as uk_UA from "./templates/templates.uk-UA.json";
-import * as vi_VN from "./templates/templates.vi-VN.json";
-import * as zh_CN from "./templates/templates.zh-CN.json";
-import * as zh_TW from "./templates/templates.zh-TW.json";
+import bg_BGBundle from "./bundles/bundle.l10n.bg-BG.json";
+import ca_ESBundle from "./bundles/bundle.l10n.ca-ES.json";
+import cs_CZBundle from "./bundles/bundle.l10n.cs-CZ.json";
+import da_DKBundle from "./bundles/bundle.l10n.da-DK.json";
+import de_DEBundle from "./bundles/bundle.l10n.de-DE.json";
+import defaultBundle from "./bundles/bundle.l10n.json";
+import defaultTemplates from "./templates/templates.json";
+import el_GRBundle from "./bundles/bundle.l10n.el-GR.json";
+import es_ESBundle from "./bundles/bundle.l10n.es-ES.json";
+import et_EEBundle from "./bundles/bundle.l10n.et-EE.json";
+import eu_ESBundle from "./bundles/bundle.l10n.eu-ES.json";
+import fi_FIBundle from "./bundles/bundle.l10n.fi-FI.json";
+import fr_FRBundle from "./bundles/bundle.l10n.fr-FR.json";
+import gl_ESBundle from "./bundles/bundle.l10n.gl-ES.json";
+import hi_INBundle from "./bundles/bundle.l10n.hi-IN.json";
+import hr_HRBundle from "./bundles/bundle.l10n.hr-HR.json";
+import hu_HUBundle from "./bundles/bundle.l10n.hu-HU.json";
+import id_IDBundle from "./bundles/bundle.l10n.id-ID.json";
+import it_ITBundle from "./bundles/bundle.l10n.it-IT.json";
+import ja_JPBundle from "./bundles/bundle.l10n.ja-JP.json";
+import kk_KZBundle from "./bundles/bundle.l10n.kk-KZ.json";
+import ko_KRBundle from "./bundles/bundle.l10n.ko-KR.json";
+import lt_LTBundle from "./bundles/bundle.l10n.lt-LT.json";
+import lv_LVBundle from "./bundles/bundle.l10n.lv-LV.json";
+import ms_MYBundle from "./bundles/bundle.l10n.ms-MY.json";
+import nb_NOBundle from "./bundles/bundle.l10n.nb-NO.json";
+import nl_NLBundle from "./bundles/bundle.l10n.nl-NL.json";
+import pl_PLBundle from "./bundles/bundle.l10n.pl-PL.json";
+import pt_BRBundle from "./bundles/bundle.l10n.pt-BR.json";
+import pt_PTBundle from "./bundles/bundle.l10n.pt-PT.json";
+import ro_ROBundle from "./bundles/bundle.l10n.ro-RO.json";
+import ru_RUBundle from "./bundles/bundle.l10n.ru-RU.json";
+import sk_SKBundle from "./bundles/bundle.l10n.sk-SK.json";
+import sl_SIBundle from "./bundles/bundle.l10n.sl-SI.json";
+import sr_Cyrl_RSBundle from "./bundles/bundle.l10n.sr-Cyrl-RS.json";
+import sr_Latn_RSBundle from "./bundles/bundle.l10n.sr-Latn-RS.json";
+import sv_SEBundle from "./bundles/bundle.l10n.sv-SE.json";
+import th_THBundle from "./bundles/bundle.l10n.th-TH.json";
+import tr_TRBundle from "./bundles/bundle.l10n.tr-TR.json";
+import uk_UABundle from "./bundles/bundle.l10n.uk-UA.json";
+import vi_VNBundle from "./bundles/bundle.l10n.vi-VN.json";
+import zh_CNBundle from "./bundles/bundle.l10n.zh-CN.json";
+import zh_TWBundle from "./bundles/bundle.l10n.zh-TW.json";
 
-export {
-    bg_BG,
-    ca_ES,
-    cs_CZ,
-    da_DK,
-    de_DE,
-    el_GR,
-    en_US,
-    es_ES,
-    et_EE,
-    eu_ES,
-    fi_FI,
-    fr_FR,
-    gl_ES,
-    hi_IN,
-    hr_HR,
-    hu_HU,
-    id_ID,
-    it_IT,
-    ja_JP,
-    kk_KZ,
-    ko_KR,
-    lt_LT,
-    lv_LV,
-    ms_MY,
-    nb_NO,
-    nl_NL,
-    pl_PL,
-    pt_BR,
-    pt_PT,
-    ro_RO,
-    ru_RU,
-    sk_SK,
-    sl_SI,
-    sr_Cyrl_RS,
-    sr_Latn_RS,
-    sv_SE,
-    th_TH,
-    tr_TR,
-    uk_UA,
-    vi_VN,
-    zh_CN,
-    zh_TW,
-};
+export const en_US: typeof defaultTemplates = createTemplates(defaultTemplates, defaultBundle);
+export const bg_BG: typeof defaultTemplates = createTemplates(defaultTemplates, bg_BGBundle);
+export const ca_ES: typeof defaultTemplates = createTemplates(defaultTemplates, ca_ESBundle);
+export const cs_CZ: typeof defaultTemplates = createTemplates(defaultTemplates, cs_CZBundle);
+export const da_DK: typeof defaultTemplates = createTemplates(defaultTemplates, da_DKBundle);
+export const de_DE: typeof defaultTemplates = createTemplates(defaultTemplates, de_DEBundle);
+export const el_GR: typeof defaultTemplates = createTemplates(defaultTemplates, el_GRBundle);
+export const es_ES: typeof defaultTemplates = createTemplates(defaultTemplates, es_ESBundle);
+export const et_EE: typeof defaultTemplates = createTemplates(defaultTemplates, et_EEBundle);
+export const eu_ES: typeof defaultTemplates = createTemplates(defaultTemplates, eu_ESBundle);
+export const fi_FI: typeof defaultTemplates = createTemplates(defaultTemplates, fi_FIBundle);
+export const fr_FR: typeof defaultTemplates = createTemplates(defaultTemplates, fr_FRBundle);
+export const gl_ES: typeof defaultTemplates = createTemplates(defaultTemplates, gl_ESBundle);
+export const hi_IN: typeof defaultTemplates = createTemplates(defaultTemplates, hi_INBundle);
+export const hr_HR: typeof defaultTemplates = createTemplates(defaultTemplates, hr_HRBundle);
+export const hu_HU: typeof defaultTemplates = createTemplates(defaultTemplates, hu_HUBundle);
+export const id_ID: typeof defaultTemplates = createTemplates(defaultTemplates, id_IDBundle);
+export const it_IT: typeof defaultTemplates = createTemplates(defaultTemplates, it_ITBundle);
+export const ja_JP: typeof defaultTemplates = createTemplates(defaultTemplates, ja_JPBundle);
+export const kk_KZ: typeof defaultTemplates = createTemplates(defaultTemplates, kk_KZBundle);
+export const ko_KR: typeof defaultTemplates = createTemplates(defaultTemplates, ko_KRBundle);
+export const lt_LT: typeof defaultTemplates = createTemplates(defaultTemplates, lt_LTBundle);
+export const lv_LV: typeof defaultTemplates = createTemplates(defaultTemplates, lv_LVBundle);
+export const ms_MY: typeof defaultTemplates = createTemplates(defaultTemplates, ms_MYBundle);
+export const nb_NO: typeof defaultTemplates = createTemplates(defaultTemplates, nb_NOBundle);
+export const nl_NL: typeof defaultTemplates = createTemplates(defaultTemplates, nl_NLBundle);
+export const pl_PL: typeof defaultTemplates = createTemplates(defaultTemplates, pl_PLBundle);
+export const pt_BR: typeof defaultTemplates = createTemplates(defaultTemplates, pt_BRBundle);
+export const pt_PT: typeof defaultTemplates = createTemplates(defaultTemplates, pt_PTBundle);
+export const ro_RO: typeof defaultTemplates = createTemplates(defaultTemplates, ro_ROBundle);
+export const ru_RU: typeof defaultTemplates = createTemplates(defaultTemplates, ru_RUBundle);
+export const sk_SK: typeof defaultTemplates = createTemplates(defaultTemplates, sk_SKBundle);
+export const sl_SI: typeof defaultTemplates = createTemplates(defaultTemplates, sl_SIBundle);
+export const sr_Cyrl_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Cyrl_RSBundle);
+export const sr_Latn_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Latn_RSBundle);
+export const sv_SE: typeof defaultTemplates = createTemplates(defaultTemplates, sv_SEBundle);
+export const th_TH: typeof defaultTemplates = createTemplates(defaultTemplates, th_THBundle);
+export const tr_TR: typeof defaultTemplates = createTemplates(defaultTemplates, tr_TRBundle);
+export const uk_UA: typeof defaultTemplates = createTemplates(defaultTemplates, uk_UABundle);
+export const vi_VN: typeof defaultTemplates = createTemplates(defaultTemplates, vi_VNBundle);
+export const zh_CN: typeof defaultTemplates = createTemplates(defaultTemplates, zh_CNBundle);
+export const zh_TW: typeof defaultTemplates = createTemplates(defaultTemplates, zh_TWBundle);
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [PQP.Locale.bg_BG.toLowerCase(), bg_BG],

@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Дублиран идентификатор „{identifier}“",
+    "Duplicate parameter name '{identifier}'": "Име на дублиран параметър \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "Очаква се между {numMin}-{numMax} аргументи, но {numGiven} бяха предоставени.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "\"{funcName}\" липсва аргумент за незадължителния параметър \"{argName}\".",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Липсва аргумент за незадължителния параметър \"{argName}\".",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "\"{funcName}\" очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Очакваше аргументът за \"{argName}\" да е \"{expected}\", но вместо това получи \"{actual}\".",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Не можем да намерим името '{identifier}', да не би да имахте предвид '{suggestion}'?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

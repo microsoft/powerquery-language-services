@@ -1,0 +1,536 @@
+{
+    "CancellationError: {reason}": {
+        "message": "CancellationError: {reason}",
+        "comment": [
+            "A fatal error, such as a timeout error. Intended to be user facing."
+        ]
+    },
+    "InvariantError: {invariantBroken} - {details}": {
+        "message": "InvariantError: {invariantBroken} - {details}",
+        "comment": [
+            "A fatal error, such as division by 0. Not intended to be user facing."
+        ]
+    },
+    "InvariantError: {invariantBroken}": {
+        "message": "InvariantError: {invariantBroken}",
+        "comment": [
+            "A fatal error, such as division by 0. Not intended to be user facing."
+        ]
+    },
+    "An unknown error was encountered, innerError: {innerError}": {
+        "message": "An unknown error was encountered, innerError: {innerError}",
+        "comment": [
+            "A fatal error from unknown causes. The locked string refers to an attribute on an object. Possibly user facing. {Locked=\"innerError\"}"
+        ]
+    },
+    "While attempting to read a token the document stream ended part way through": {
+        "message": "While attempting to read a token the document stream ended part way through",
+        "comment": [
+            "The lexer reached EOF partway through reading a token. Not intended to be user facing."
+        ]
+    },
+    "Expected a hex literal": {
+        "message": "Expected a hex literal",
+        "comment": [
+            "The lexer expected a hex literal ('0xdeadbeef') but failed to find one. Intended to be user facing."
+        ]
+    },
+    "Expected a keyword or identifier": {
+        "message": "Expected a keyword or identifier",
+        "comment": [
+            "The lexer expected a hex literal ('foo') but failed to find one. Intended to be user facing."
+        ]
+    },
+    "Expected a numeric literal": {
+        "message": "Expected a numeric literal",
+        "comment": [
+            "The lexer expected a hex literal ('foo') but failed to find one. Intended to be user facing."
+        ]
+    },
+    "Unexpected read during tokenization": {
+        "message": "Unexpected read during tokenization",
+        "comment": [
+            "A generic lex error. Possibly user facing."
+        ]
+    },
+    "Unterminated multiline comment": {
+        "message": "Unterminated multiline comment",
+        "comment": [
+            "The lexer found an unterminated multiline comment. Expected to be user facing."
+        ]
+    },
+    "Unterminated quoted identifier": {
+        "message": "Unterminated quoted identifier",
+        "comment": [
+            "The lexer found an unterminated quoted identifier. Expected to be user facing."
+        ]
+    },
+    "Unterminated string": {
+        "message": "Unterminated string",
+        "comment": [
+            "The lexer found an unterminated multiline string. Expected to be user facing."
+        ]
+    },
+    "Did you leave a dangling comma?": {
+        "message": "Did you leave a dangling comma?",
+        "comment": [
+            "A common parser error caused by a trailing comma, eg. '{1,2,}'. Expected to be user facing."
+        ]
+    },
+    "A comma cannot proceed an 'in'": {
+        "message": "A comma cannot proceed an 'in'",
+        "comment": [
+            "A common parser error caused by a trailing comma, eg. 'let x = 1, in x'. The locked string refers to a keyword. Expected to be user facing. {Locked=\"in\"}"
+        ]
+    },
+    "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}": {
+        "message": "Expected to find one of the following, but a {foundTokenKind} was found instead: {expectedAnyTokenKinds}",
+        "comment": [
+            "A common parser error where expectedAnyTokenKinds is a csv collection of localized tokenKind strings and foundTokenKind is a localized tokenKind string. Expected to be user facing."
+        ]
+    },
+    "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}": {
+        "message": "Expected to find one of the following, but the end-of-stream was reached instead: {expectedAnyTokenKinds}",
+        "comment": [
+            "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing."
+        ]
+    },
+    "Expected to find either a {localizedComma} or {localizedAlternative}.": {
+        "message": "Expected to find either a {localizedComma} or {localizedAlternative}.",
+        "comment": [
+            "A common parser error where the user needs either a comma or a closing token. Expected to be user facing."
+        ]
+    },
+    "Expected to find a generalized identifier": {
+        "message": "Expected to find a generalized identifier",
+        "comment": [
+            "A common parser error. Expected to be user facing."
+        ]
+    },
+    "Expected to find a generalized identifier but the end-of-stream was reached first": {
+        "message": "Expected to find a generalized identifier but the end-of-stream was reached first",
+        "comment": [
+            "A common parser error. Expected to be user facing."
+        ]
+    },
+    "Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead": {
+        "message": "Expected to find a {expectedTokenKind}, but a {foundTokenKind} was found instead",
+        "comment": [
+            "A common parser error where expectedTokenKind and foundTokenKind are a localized tokenKind string. Expected to be user facing."
+        ]
+    },
+    "Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead": {
+        "message": "Expected to find a {expectedTokenKind}, but the end-of-stream was reached instead",
+        "comment": [
+            "A common parser error where expectedTokenKind is a localized tokenKind string. Expected to be user facing."
+        ]
+    },
+    "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints": {
+        "message": "The 'catch' clause of a try/catch expression must be followed by a function definition with 0 or 1 arguments and no type constraints",
+        "comment": [
+            "A common parser error where the user has created an invalid lambda as a catch expression. Expected to be user facing."
+        ]
+    },
+    "Expected to find a primitive literal, but a {foundTokenKind} was found instead": {
+        "message": "Expected to find a primitive literal, but a {foundTokenKind} was found instead",
+        "comment": [
+            "A common parser error where foundTokenKind is a localized tokenKind string. Expected to be user facing."
+        ]
+    },
+    "You cannot have a non-optional parameter after an optional parameter": {
+        "message": "You cannot have a non-optional parameter after an optional parameter",
+        "comment": [
+            "Optional parameters must come after non-optional parameters, eg. ('(optional x, y) => x + y') causes an error. Expected to be user facing."
+        ]
+    },
+    "Unterminated bracket": {
+        "message": "Unterminated bracket",
+        "comment": [
+            "A common parser where it could not disambiguate a bracket. Expected to be user facing."
+        ]
+    },
+    "Unterminated parenthesis": {
+        "message": "Unterminated parenthesis",
+        "comment": [
+            "A common parser where it could not disambiguate a parenthesis. Expected to be user facing."
+        ]
+    },
+    "Finished parsing but more tokens remain": {
+        "message": "Finished parsing but more tokens remain",
+        "comment": [
+            "A common parser where not every token was parsed. Possibly user facing."
+        ]
+    },
+    "ampersand <'&'>": {
+        "message": "ampersand <'&'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'&'>\"}"
+        ]
+    },
+    "asterisk <'*'>": {
+        "message": "asterisk <'*'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'*'>\"}"
+        ]
+    },
+    "at sign <'@'>": {
+        "message": "at sign <'@'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'@'>\"}"
+        ]
+    },
+    "exclamation mark <'!'>": {
+        "message": "exclamation mark <'!'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'!'>\"}"
+        ]
+    },
+    "comma <','>": {
+        "message": "comma <','>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<','>\"}"
+        ]
+    },
+    "division operator <'/'>": {
+        "message": "division operator <'/'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'/'>\"}"
+        ]
+    },
+    "dot dot <'..'>": {
+        "message": "dot dot <'..'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'..'>\"}"
+        ]
+    },
+    "ellipsis <'...'>": {
+        "message": "ellipsis <'...'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'...'>\"}"
+        ]
+    },
+    "equal operator <'='>": {
+        "message": "equal operator <'='>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'='>\"}"
+        ]
+    },
+    "goes to ('=>')": {
+        "message": "goes to ('=>')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('=>')\"}"
+        ]
+    },
+    "greater than operator ('>')": {
+        "message": "greater than operator ('>')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('>')\"}"
+        ]
+    },
+    "greater than or equal to operator ('>=')": {
+        "message": "greater than or equal to operator ('>=')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('>=')\"}"
+        ]
+    },
+    "hex literal": {
+        "message": "hex literal",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing."
+        ]
+    },
+    "identifier": {
+        "message": "identifier",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing."
+        ]
+    },
+    "keyword <'and'>": {
+        "message": "keyword <'and'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'and'>\"}"
+        ]
+    },
+    "keyword <'as'>": {
+        "message": "keyword <'as'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'as'>\"}"
+        ]
+    },
+    "keyword <'each'>": {
+        "message": "keyword <'each'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'each'>\"}"
+        ]
+    },
+    "keyword <'else'>": {
+        "message": "keyword <'else'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'else'>\"}"
+        ]
+    },
+    "keyword <'error'>": {
+        "message": "keyword <'error'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'error'>\"}"
+        ]
+    },
+    "keyword <'false'>": {
+        "message": "keyword <'false'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'false'>\"}"
+        ]
+    },
+    "keyword <'#binary'>": {
+        "message": "keyword <'#binary'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#binary'>\"}"
+        ]
+    },
+    "keyword <'#date'>": {
+        "message": "keyword <'#date'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#date'>\"}"
+        ]
+    },
+    "keyword <'#datetime'>": {
+        "message": "keyword <'#datetime'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#datetime'>\"}"
+        ]
+    },
+    "keyword <'#datetimezone'>": {
+        "message": "keyword <'#datetimezone'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#datetimezone'>\"}"
+        ]
+    },
+    "keyword <'#duration'>": {
+        "message": "keyword <'#duration'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#duration'>\"}"
+        ]
+    },
+    "keyword <'#infinity'>": {
+        "message": "keyword <'#infinity'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#infinity'>\"}"
+        ]
+    },
+    "keyword <'#nan'>": {
+        "message": "keyword <'#nan'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#nan'>\"}"
+        ]
+    },
+    "keyword <'#sections'>": {
+        "message": "keyword <'#sections'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#sections'>\"}"
+        ]
+    },
+    "keyword <'#shared'>": {
+        "message": "keyword <'#shared'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#shared'>\"}"
+        ]
+    },
+    "keyword <'#table'>": {
+        "message": "keyword <'#table'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#table'>\"}"
+        ]
+    },
+    "keyword <'#time'>": {
+        "message": "keyword <'#time'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'#time'>\"}"
+        ]
+    },
+    "keyword <'if'>": {
+        "message": "keyword <'if'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'if'>\"}"
+        ]
+    },
+    "keyword <'in'>": {
+        "message": "keyword <'in'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'in'>\"}"
+        ]
+    },
+    "keyword <'is'>": {
+        "message": "keyword <'is'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'is'>\"}"
+        ]
+    },
+    "keyword <'let'>": {
+        "message": "keyword <'let'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'let'>\"}"
+        ]
+    },
+    "keyword <'meta'>": {
+        "message": "keyword <'meta'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'meta'>\"}"
+        ]
+    },
+    "keyword <'not'>": {
+        "message": "keyword <'not'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'not'>\"}"
+        ]
+    },
+    "keyword <'or'>": {
+        "message": "keyword <'or'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'or'>\"}"
+        ]
+    },
+    "keyword <'otherwise'>": {
+        "message": "keyword <'otherwise'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'otherwise'>\"}"
+        ]
+    },
+    "keyword <'section'>": {
+        "message": "keyword <'section'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'section'>\"}"
+        ]
+    },
+    "keyword <'shared'>": {
+        "message": "keyword <'shared'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'shared'>\"}"
+        ]
+    },
+    "keyword <'then'>": {
+        "message": "keyword <'then'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'then'>\"}"
+        ]
+    },
+    "keyword <'true'>": {
+        "message": "keyword <'true'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'true'>\"}"
+        ]
+    },
+    "keyword <'try'>": {
+        "message": "keyword <'try'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'try'>\"}"
+        ]
+    },
+    "keyword <'type'>": {
+        "message": "keyword <'type'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'type'>\"}"
+        ]
+    },
+    "left brace <'{'>": {
+        "message": "left brace <'{'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'{'>\"}"
+        ]
+    },
+    "left bracket <'['>": {
+        "message": "left bracket <'['>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'['>\"}"
+        ]
+    },
+    "left parenthesis <'('>": {
+        "message": "left parenthesis <'('>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'('>\"}"
+        ]
+    },
+    "less than operator ('<')": {
+        "message": "less than operator ('<')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<')\"}"
+        ]
+    },
+    "less than or equal to operator ('<=')": {
+        "message": "less than or equal to operator ('<=')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<=')\"}"
+        ]
+    },
+    "minus <'-'>": {
+        "message": "minus <'-'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'-'>\"}"
+        ]
+    },
+    "not equal to operator ('<>')": {
+        "message": "not equal to operator ('<>')",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"('<>')\"}"
+        ]
+    },
+    "null coalescing operator <'??'>": {
+        "message": "null coalescing operator <'??'>",
+        "comment": [
+            "The localized respresentation of a tokenKind enum. Expected to be user facing. {Locked=\"<'??'>\"}"
+        ]
+    },
+    "<'null'>": {
+        "message": "<'null'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'null'>\"}"
+        ]
+    },
+    "numeric literal": {
+        "message": "numeric literal",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing."
+        ]
+    },
+    "addition operator <'+'>": {
+        "message": "addition operator <'+'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'+'>\"}"
+        ]
+    },
+    "question mark <'?'>": {
+        "message": "question mark <'?'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'?'>\"}"
+        ]
+    },
+    "right brace <'}'>": {
+        "message": "right brace <'}'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<'}'>\"}"
+        ]
+    },
+    "right bracket <']'>": {
+        "message": "right bracket <']'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<']'>\"}"
+        ]
+    },
+    "right parenthesis <')'>": {
+        "message": "right parenthesis <')'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<')'>\"}"
+        ]
+    },
+    "semicolon <';'>": {
+        "message": "semicolon <';'>",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing. {Locked=\"<';'>\"}"
+        ]
+    },
+    "text": {
+        "message": "text",
+        "comment": [
+            "The localized representation of a tokenKind enum. Expected to be user facing."
+        ]
+    }
+}

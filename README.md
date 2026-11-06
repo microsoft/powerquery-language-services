@@ -50,6 +50,42 @@ Shared license, security, conduct policy, and issue forms live at the repository
 includes the canonical root LICENSE in every tarball. Published entry points and deep imports are
 under `lib/<name>`.
 
+## Localization
+
+Parser and language-service messages use `@vscode/l10n` bundles in each package's
+`src/localization/bundles/bundle.l10n[.<locale>].json`. Keys are the English messages,
+including named placeholders such as `{identifier}`. The English bundle retains translator
+comments as `{ "message": "...", "comment": ["..."] }` values; translated bundles contain strings.
+Keep placeholder names unchanged in translations.
+
+The English JSON in `src/localization/templates` maps the existing public template IDs to
+English messages. When adding or changing a message, update this compatibility catalog, the
+English bundle, and the corresponding English keys in translated bundles. Missing translations
+fall back to the catalog's English message. Existing locale exports, `ILocalizationTemplates`,
+`Localization` builders, and `getLocalizationTemplates(locale)` remain available.
+Builds generate the published ID-keyed `localization/templates/*.json` compatibility views from
+the bundles; do not edit those generated files. Translation-service assets under `loc` and
+`LocProject.json` are not inputs to the runtime build.
+
+These are standalone libraries; no VS Code host is needed. Locale selection remains per request,
+using case-insensitive exact locale tags and English fallback for unsupported tags. The formatter
+has no separate messages and uses the parser's localized errors. The compatibility adapter selects
+the bundle before calling `l10n.t` for interpolation, rather than calling process-global
+`l10n.config`. Package-name comments namespace those formatting calls so ordinary host bundles
+do not translate the selected text again. Hosts must not define matching
+`<selected message>/@microsoft/powerquery-parser` or
+`<selected message>/@microsoft/powerquery-language-services` keys in their global bundle.
+
+Formatting follows `l10n.t`: all occurrences of a placeholder are replaced, replacement text is
+literal (including `$&` and braces), and unmatched placeholders remain visible. The general-purpose
+`StringUtils.assertGetFormatted` API remains unchanged for existing callers, but localization no
+longer uses it. Dynamic locale-selected messages are maintained in the bundles directly; running
+`l10n-dev` extraction on these adapters will not reconstruct the catalogs.
+
+Run root `npm run lint`, `npm run build`, `npm test`, and `npm run validate:release` after changes.
+The last command checks both bundle and legacy JSON assets and exercises localized messages in an
+isolated tarball consumer.
+
 ## Release preparation
 
 All three packages share a version, with exact internal dependencies. Set a specific version:

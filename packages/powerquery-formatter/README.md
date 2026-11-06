@@ -1,3 +1,5 @@
+<!-- markdownlint-disable -->
+
 # powerquery-formatter
 
 Developed in the [Power Query monorepo](../../README.md).
@@ -56,6 +58,12 @@ Start with `DefaultSettings` and override the fields you need:
 
 `FormatSettings` also includes parser settings, locale, tracing, and cooperative cancellation settings.
 See [error and cancellation behavior](ARCHITECTURE.md#errors-and-cancellation) before relying on cancellation.
+
+Set `locale`, for example `"fr-FR"`, on each `FormatSettings` object to select parser error
+translations. Different requests may use different locales concurrently. The formatter has no
+independent localized strings or bundles; it uses the parser's `@vscode/l10n` localization
+adapter without adding another runtime dependency. See the shared
+[localization instructions](../../README.md#localization).
 
 | API | Use |
 | --- | --- |

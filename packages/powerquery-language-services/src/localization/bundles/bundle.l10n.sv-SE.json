@@ -1,0 +1,15 @@
+{
+    "Duplicate identifier '{identifier}'": "Dubblettidentifierare {identifier}",
+    "Duplicate parameter name '{identifier}'": "Duplicerat parameternamn “{identifier}”",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": "{numMin}-{numMax} argument förväntades, men {numGiven} angavs.",
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "{funcName} saknas för den icke-valfria parametern {argName}.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Ett argument saknas för den icke-valfria parametern {argName}.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "{funcName} förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Förväntade att argumentet för {argName} ska vara {expected}, men ha {actual} i stället.",
+    "Cannot find the name '{identifier}'.": "Cannot find the name '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Det gick inte att hitta namnet {identifier}, menar du {suggestion}?",
+    "Default: `{value}`": "Default: `{value}`",
+    "Allowed values: {values}": "Allowed values: {values}",
+    "Sample values: {values}": "Sample values: {values}",
+    "Type: `{type}`": "Type: `{type}`"
+}

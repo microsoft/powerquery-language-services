@@ -10,6 +10,7 @@ const { PACKAGES, versionTag, validatePackage, validateLock, setVersion, bumpPat
 const { safeRelative, inside, integrity, allowedFile, requireOutputs, requireBuiltOutputs, inspectTarball,
     validateManifest, verifyManifest } = require("../release-artifacts.cjs");
 const { cleanEnvironment } = require("../release-consumer.cjs");
+const { localizationFiles } = require("../localization.cjs");
 
 const VERSION = "5.0.0";
 const clone = (value) => structuredClone(value);
@@ -294,12 +295,49 @@ test("output paths reject directory symlinks/junctions", (context) => {
 test("runtime allowlist excludes sources, tests, build metadata and npm auth", () => {
     const entry = PACKAGES[0];
     for (const file of [entry.main, entry.types, `${entry.main}.map`, "README.md", "CHANGELOG.md", "LICENSE", "NOTICE.txt",
-        `lib/${entry.slug}/localization/templates/template.fr-FR.json`]) assert.equal(allowedFile(file, entry), true, file);
+        `lib/${entry.slug}/localization/templates/template.fr-FR.json`,
+        `lib/${entry.slug}/localization/bundles/bundle.l10n.json`,
+        `lib/${entry.slug}/localization/bundles/bundle.l10n.fr-FR.json`]) assert.equal(allowedFile(file, entry), true, file);
     for (const file of [".npmrc", "package-lock.json", "tsconfig.tsbuildinfo", "src/index.ts", "ARCHITECTURE.md",
         `lib/${entry.slug}/test/a.js`, "lib/test/a.js", `lib/${entry.slug}/benchmark/a.js`,
         `lib/${entry.slug}/localization/LocProject.json`, `lib/${entry.slug}/private.json`,
         `lib/${entry.slug}/index.ts`]) assert.equal(allowedFile(file, entry), false, file);
     for (const documented of PACKAGES.slice(1)) assert.equal(allowedFile("ARCHITECTURE.md", documented), true);
+});
+
+test("every supported locale preserves message coverage, comments and placeholder names", () => {
+    const root = path.resolve(__dirname, "..", "..");
+    const localeSource = fs.readFileSync(path.join(root, "packages", "powerquery-parser",
+        "src", "localization", "locale.ts"), "utf8");
+    const locales = [...localeSource.matchAll(/^\s+\w+ = "([^"]+)",$/gm)].map((match) => match[1]);
+    assert.ok(locales.length > 1 && locales.includes("fr-FR"));
+    const placeholders = (message) => [...new Set([...message.matchAll(/\{([^}]+)\}/g)]
+        .map((match) => match[1]))].sort();
+    for (const entry of PACKAGES.filter((item) => item.slug !== "powerquery-formatter")) {
+        const workspace = path.join(root, entry.workspace);
+        const files = localizationFiles(workspace, entry.slug);
+        const bundleFiles = files.filter((file) => file.relative.startsWith("localization/bundles/"));
+        assert.deepEqual(bundleFiles.map((file) => file.relative).sort(), locales.map((locale) =>
+            `localization/bundles/bundle.l10n${locale === "en-US" ? "" : `.${locale}`}.json`).sort());
+        const stem = entry.slug === "powerquery-parser" ? "template" : "templates";
+        const defaults = JSON.parse(fs.readFileSync(path.join(workspace, "src", "localization",
+            "templates", `${stem}.json`), "utf8"));
+        const ids = Object.keys(defaults).filter((key) => !key.startsWith("_"));
+        const messages = ids.map((key) => defaults[key]).sort();
+        const english = bundleFiles.find((file) => file.relative.endsWith("/bundle.l10n.json")).contents;
+        for (const id of ids) {
+            assert.equal(english[defaults[id]].message, defaults[id]);
+            assert.deepEqual(english[defaults[id]].comment, [defaults[`_${id}.comment`] ?? defaults[`_${id}`]]);
+        }
+        for (const file of bundleFiles) {
+            assert.deepEqual(Object.keys(file.contents).sort(), messages, file.relative);
+            for (const [message, translation] of Object.entries(file.contents)) {
+                const text = typeof translation === "string" ? translation : translation.message;
+                assert.equal(typeof text, "string", file.relative);
+                assert.deepEqual(placeholders(text), placeholders(message), `${file.relative}: ${message}`);
+            }
+        }
+    }
 });
 
 test("pack requires every production module's JavaScript and declaration output", (context) => {
@@ -419,8 +457,8 @@ test("tar refuses symbolic links and traversal even without extraction", async (
 for (const [label, files, expected] of [
     ["missing", {}, /omits localization/],
     ["stale", {
-        [`lib/${PACKAGES[0].slug}/localization/templates/template.json`]: "{}",
-        [`lib/${PACKAGES[0].slug}/localization/templates/template.fr-FR.json`]: "{}",
+        [`lib/${PACKAGES[0].slug}/localization/bundles/bundle.l10n.json`]: "{}",
+        [`lib/${PACKAGES[0].slug}/localization/bundles/bundle.l10n.fr-FR.json`]: "{}",
     }, /localization content differs/],
 ]) {
     test(`tar rejects ${label} runtime localizations against baseline source content`, async (context) => {
@@ -429,7 +467,10 @@ for (const [label, files, expected] of [
         const source = path.join(directory, PACKAGES[0].workspace, "src", "localization", "templates");
         fs.mkdirSync(source, { recursive: true });
         fs.writeFileSync(path.join(source, "template.json"), '{"message":"English"}');
-        fs.writeFileSync(path.join(source, "template.fr-FR.json"), '{"message":"French"}');
+        const bundles = path.join(path.dirname(source), "bundles");
+        fs.mkdirSync(bundles);
+        fs.writeFileSync(path.join(bundles, "bundle.l10n.json"), '{"English":"English"}');
+        fs.writeFileSync(path.join(bundles, "bundle.l10n.fr-FR.json"), '{"English":"French"}');
         const filename = await createTar(directory, PACKAGES[0], { files });
         await assert.rejects(inspectTarball(filename, PACKAGES[0], VERSION, directory), expected);
     });

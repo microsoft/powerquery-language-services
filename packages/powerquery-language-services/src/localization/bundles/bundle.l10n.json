@@ -1,0 +1,80 @@
+{
+    "Duplicate identifier '{identifier}'": {
+        "message": "Duplicate identifier '{identifier}'",
+        "comment": [
+            "A common error where the user declared two values using the same name. Expected to be user facing."
+        ]
+    },
+    "Duplicate parameter name '{identifier}'": {
+        "message": "Duplicate parameter name '{identifier}'",
+        "comment": [
+            "An error which occurs when a duplicate name is used in defining a function. Expected to be user facing."
+        ]
+    },
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.",
+        "comment": [
+            "An error when a function call was given either too few or too many arguments. Expected to be user facing."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": {
+        "message": "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.",
+        "comment": [
+            "An error when a named function call is missing a mandatory argument. Expected to be user facing."
+        ]
+    },
+    "Missing an argument for the non-optional parameter '{argName}'.": {
+        "message": "Missing an argument for the non-optional parameter '{argName}'.",
+        "comment": [
+            "An error when an unnamed function call is missing a mandatory argument. Expected to be user facing."
+        ]
+    },
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": {
+        "message": "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+        "comment": [
+            "An error when a named function call is missing a mandatory argument. Expected to be user facing."
+        ]
+    },
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": {
+        "message": "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.",
+        "comment": [
+            "An error when an unnamed function call is missing a mandatory argument. Expected to be user facing."
+        ]
+    },
+    "Cannot find the name '{identifier}'.": {
+        "message": "Cannot find the name '{identifier}'.",
+        "comment": [
+            "An error when an unknown variable is referenced. Expected to be user facing."
+        ]
+    },
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": {
+        "message": "Cannot find the name '{identifier}', did you mean '{suggestion}'?",
+        "comment": [
+            "An error when an unknown variable is referenced, but a similarly named variable is in scope. Expected to be user facing."
+        ]
+    },
+    "Default: `{value}`": {
+        "message": "Default: `{value}`",
+        "comment": [
+            "Label shown in parameter documentation indicating the default value. The {value} placeholder is the actual default. Expected to be user facing."
+        ]
+    },
+    "Allowed values: {values}": {
+        "message": "Allowed values: {values}",
+        "comment": [
+            "Label shown in parameter documentation listing the allowed values. The {values} placeholder is a comma-separated list. Expected to be user facing."
+        ]
+    },
+    "Sample values: {values}": {
+        "message": "Sample values: {values}",
+        "comment": [
+            "Label shown in parameter documentation listing sample values. The {values} placeholder is a comma-separated list. Expected to be user facing."
+        ]
+    },
+    "Type: `{type}`": {
+        "message": "Type: `{type}`",
+        "comment": [
+            "Label shown in parameter documentation indicating the type. The {type} placeholder is the type name. Expected to be user facing."
+        ]
+    }
+}
