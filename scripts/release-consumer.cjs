@@ -96,6 +96,54 @@ async function main(): Promise<void> {
 void main();
 `;
 
+const LOCALIZATION_CACHE_SMOKE = `
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const cases = {
+    "@microsoft/powerquery-parser": { slug: "powerquery-parser", englishCount: 1,
+        property: "error_lex_expectedKind_1_hex", key: "Expected a hex literal" },
+    "@microsoft/powerquery-formatter": { slug: "powerquery-parser", englishCount: 1,
+        property: "error_lex_expectedKind_1_hex", key: "Expected a hex literal" },
+    "@microsoft/powerquery-language-services": { slug: "powerquery-language-services", englishCount: 2,
+        property: "error_validation_duplicate_identifier", key: "Duplicate identifier '{identifier}'" },
+};
+const name = process.argv[1];
+const scenario = cases[name];
+assert.ok(scenario, "Unknown cold-cache scenario");
+function cachedBundles() {
+    return Object.keys(require.cache).map(file => file.replace(/\\\\/g, "/"))
+        .filter(file => /\\/localization\\/bundles\\/bundle\\.l10n.*\\.json$/.test(file)).sort();
+}
+function nonEnglish(files) { return files.filter(file => !file.endsWith("/bundle.l10n.json")); }
+require(name);
+const cold = cachedBundles();
+assert.equal(cold.length, scenario.englishCount);
+assert.equal(nonEnglish(cold).length, 0, "Cold import eagerly loaded a non-English bundle");
+const owner = "@microsoft/" + scenario.slug;
+const templates = require(owner + "/lib/" + scenario.slug + "/localization/templates");
+const utils = require(owner + "/lib/" + scenario.slug + "/localization").LocalizationUtils;
+const french = templates.fr_FR;
+assert.equal(templates.TemplatesByLocale instanceof Map, true);
+assert.equal(templates.TemplatesByLocale.get("fr-fr"), french);
+assert.equal(utils.getLocalizationTemplates("FR-fr"), french);
+assert.equal(utils.getLocalizationTemplates("unsupported"), templates.DefaultTemplates);
+Array.from(templates.TemplatesByLocale.values());
+assert.deepEqual(cachedBundles(), cold, "Export/map access eagerly constructed locale templates");
+const actual = french[scenario.property];
+const first = cachedBundles();
+assert.equal(nonEnglish(first).length, 1);
+assert.ok(nonEnglish(first)[0].endsWith("/bundle.l10n.fr-FR.json"));
+const source = JSON.parse(fs.readFileSync(require.resolve(owner + "/lib/" + scenario.slug +
+    "/localization/bundles/bundle.l10n.fr-FR.json"), "utf8"));
+const value = source[scenario.key];
+assert.equal(actual, typeof value === "string" ? value : value.message);
+assert.ok(Object.keys(french).length > 0);
+assert.equal(french[scenario.property], actual);
+assert.deepEqual(cachedBundles(), first, "Repeated template access loaded another bundle");
+console.log(JSON.stringify({ package: name, coldJson: cold.length, coldNonEnglish: 0,
+    afterFirstUseJson: first.length, afterFirstUseNonEnglish: 1 }));
+`;
+
 function cleanEnvironment() {
     const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
         !/^(?:node_path$|node_options$|npm_lifecycle_|npm_package_)/i.test(key)).map(([key, value]) =>
@@ -150,6 +198,9 @@ async function validateConsumer(root, manifest) {
                 }
             }
         `], { cwd: consumer, env });
+        for (const entry of PACKAGES) {
+            run(process.execPath, ["-e", LOCALIZATION_CACHE_SMOKE, entry.name], { cwd: consumer, env });
+        }
         fs.writeFileSync(path.join(consumer, "smoke.ts"), SMOKE);
         writeJson(path.join(consumer, "tsconfig.json"), {
             compilerOptions: {
@@ -167,4 +218,4 @@ async function validateConsumer(root, manifest) {
     }
 }
 
-module.exports = { SMOKE, cleanEnvironment, validateConsumer };
+module.exports = { SMOKE, LOCALIZATION_CACHE_SMOKE, cleanEnvironment, validateConsumer };

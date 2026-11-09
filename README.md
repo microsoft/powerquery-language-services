@@ -79,6 +79,14 @@ Bundles are the only localization resource files. The exported `templates.ts` mo
 not a template resource directory; its stable ID lookups preserve the existing TypeScript shape.
 Use these APIs or `localization/bundles` JSON rather than the removed template JSON deep imports.
 
+Non-English bundles and their template records load synchronously on first property use and are
+cached thereafter. Named locale exports and `TemplatesByLocale` hold lightweight lazy facades;
+reading values, enumerating/spreading a template, or changing its property descriptors materializes
+that locale once. Merely selecting a locale or enumerating the locale map does not load its bundle.
+The English bundle and ID/metadata mapping remain an intentional initialization cost for default
+messages and English fallback. Bundlers may still include static JSON assets in their output;
+this synchronous adapter does not promise browser network code-splitting.
+
 Do not translate code snippets, placeholders, API identifiers, or intentional native words merely because they match
 English. Resource tests verify bundle coverage, English keys, translator comments and placeholder names.
 

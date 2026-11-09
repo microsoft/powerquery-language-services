@@ -63,6 +63,7 @@ Set `locale`, for example `"fr-FR"`, on each `FormatSettings` object to select p
 translations. `tryFormat` forwards this setting to the parser and returns its lexical and parse
 errors unchanged. Different calls may use different locales concurrently. The formatter has no
 translated message catalog of its own; no VS Code host or global localization setup is required.
+Unused non-English parser bundles are loaded only when a localized message is first needed.
 See the shared
 [localization instructions](../../README.md#localization).
 

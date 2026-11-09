@@ -1,48 +1,10 @@
 import * as PQP from "@microsoft/powerquery-parser";
-import { createTemplates } from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templateUtils";
+import {
+    createLazyTemplates,
+    createTemplates,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templateUtils";
 
-import bg_BGBundle from "./bundles/bundle.l10n.bg-BG.json";
-import ca_ESBundle from "./bundles/bundle.l10n.ca-ES.json";
-import cs_CZBundle from "./bundles/bundle.l10n.cs-CZ.json";
-import da_DKBundle from "./bundles/bundle.l10n.da-DK.json";
-import de_DEBundle from "./bundles/bundle.l10n.de-DE.json";
 import defaultBundle from "./bundles/bundle.l10n.json";
-import el_GRBundle from "./bundles/bundle.l10n.el-GR.json";
-import es_ESBundle from "./bundles/bundle.l10n.es-ES.json";
-import et_EEBundle from "./bundles/bundle.l10n.et-EE.json";
-import eu_ESBundle from "./bundles/bundle.l10n.eu-ES.json";
-import fi_FIBundle from "./bundles/bundle.l10n.fi-FI.json";
-import fr_FRBundle from "./bundles/bundle.l10n.fr-FR.json";
-import gl_ESBundle from "./bundles/bundle.l10n.gl-ES.json";
-import hi_INBundle from "./bundles/bundle.l10n.hi-IN.json";
-import hr_HRBundle from "./bundles/bundle.l10n.hr-HR.json";
-import hu_HUBundle from "./bundles/bundle.l10n.hu-HU.json";
-import id_IDBundle from "./bundles/bundle.l10n.id-ID.json";
-import it_ITBundle from "./bundles/bundle.l10n.it-IT.json";
-import ja_JPBundle from "./bundles/bundle.l10n.ja-JP.json";
-import kk_KZBundle from "./bundles/bundle.l10n.kk-KZ.json";
-import ko_KRBundle from "./bundles/bundle.l10n.ko-KR.json";
-import lt_LTBundle from "./bundles/bundle.l10n.lt-LT.json";
-import lv_LVBundle from "./bundles/bundle.l10n.lv-LV.json";
-import ms_MYBundle from "./bundles/bundle.l10n.ms-MY.json";
-import nb_NOBundle from "./bundles/bundle.l10n.nb-NO.json";
-import nl_NLBundle from "./bundles/bundle.l10n.nl-NL.json";
-import pl_PLBundle from "./bundles/bundle.l10n.pl-PL.json";
-import pt_BRBundle from "./bundles/bundle.l10n.pt-BR.json";
-import pt_PTBundle from "./bundles/bundle.l10n.pt-PT.json";
-import ro_ROBundle from "./bundles/bundle.l10n.ro-RO.json";
-import ru_RUBundle from "./bundles/bundle.l10n.ru-RU.json";
-import sk_SKBundle from "./bundles/bundle.l10n.sk-SK.json";
-import sl_SIBundle from "./bundles/bundle.l10n.sl-SI.json";
-import sr_Cyrl_RSBundle from "./bundles/bundle.l10n.sr-Cyrl-RS.json";
-import sr_Latn_RSBundle from "./bundles/bundle.l10n.sr-Latn-RS.json";
-import sv_SEBundle from "./bundles/bundle.l10n.sv-SE.json";
-import th_THBundle from "./bundles/bundle.l10n.th-TH.json";
-import tr_TRBundle from "./bundles/bundle.l10n.tr-TR.json";
-import uk_UABundle from "./bundles/bundle.l10n.uk-UA.json";
-import vi_VNBundle from "./bundles/bundle.l10n.vi-VN.json";
-import zh_CNBundle from "./bundles/bundle.l10n.zh-CN.json";
-import zh_TWBundle from "./bundles/bundle.l10n.zh-TW.json";
 
 type TemplateMessageKey = keyof ILocalizationTemplates | "error_validation_duplicate_parameter_name";
 type DefaultTemplateKey =
@@ -104,47 +66,170 @@ const defaultTemplates: DefaultTemplateShape = {
 };
 
 export const en_US: typeof defaultTemplates = createTemplates(defaultTemplates, defaultBundle);
-export const bg_BG: typeof defaultTemplates = createTemplates(defaultTemplates, bg_BGBundle);
-export const ca_ES: typeof defaultTemplates = createTemplates(defaultTemplates, ca_ESBundle);
-export const cs_CZ: typeof defaultTemplates = createTemplates(defaultTemplates, cs_CZBundle);
-export const da_DK: typeof defaultTemplates = createTemplates(defaultTemplates, da_DKBundle);
-export const de_DE: typeof defaultTemplates = createTemplates(defaultTemplates, de_DEBundle);
-export const el_GR: typeof defaultTemplates = createTemplates(defaultTemplates, el_GRBundle);
-export const es_ES: typeof defaultTemplates = createTemplates(defaultTemplates, es_ESBundle);
-export const et_EE: typeof defaultTemplates = createTemplates(defaultTemplates, et_EEBundle);
-export const eu_ES: typeof defaultTemplates = createTemplates(defaultTemplates, eu_ESBundle);
-export const fi_FI: typeof defaultTemplates = createTemplates(defaultTemplates, fi_FIBundle);
-export const fr_FR: typeof defaultTemplates = createTemplates(defaultTemplates, fr_FRBundle);
-export const gl_ES: typeof defaultTemplates = createTemplates(defaultTemplates, gl_ESBundle);
-export const hi_IN: typeof defaultTemplates = createTemplates(defaultTemplates, hi_INBundle);
-export const hr_HR: typeof defaultTemplates = createTemplates(defaultTemplates, hr_HRBundle);
-export const hu_HU: typeof defaultTemplates = createTemplates(defaultTemplates, hu_HUBundle);
-export const id_ID: typeof defaultTemplates = createTemplates(defaultTemplates, id_IDBundle);
-export const it_IT: typeof defaultTemplates = createTemplates(defaultTemplates, it_ITBundle);
-export const ja_JP: typeof defaultTemplates = createTemplates(defaultTemplates, ja_JPBundle);
-export const kk_KZ: typeof defaultTemplates = createTemplates(defaultTemplates, kk_KZBundle);
-export const ko_KR: typeof defaultTemplates = createTemplates(defaultTemplates, ko_KRBundle);
-export const lt_LT: typeof defaultTemplates = createTemplates(defaultTemplates, lt_LTBundle);
-export const lv_LV: typeof defaultTemplates = createTemplates(defaultTemplates, lv_LVBundle);
-export const ms_MY: typeof defaultTemplates = createTemplates(defaultTemplates, ms_MYBundle);
-export const nb_NO: typeof defaultTemplates = createTemplates(defaultTemplates, nb_NOBundle);
-export const nl_NL: typeof defaultTemplates = createTemplates(defaultTemplates, nl_NLBundle);
-export const pl_PL: typeof defaultTemplates = createTemplates(defaultTemplates, pl_PLBundle);
-export const pt_BR: typeof defaultTemplates = createTemplates(defaultTemplates, pt_BRBundle);
-export const pt_PT: typeof defaultTemplates = createTemplates(defaultTemplates, pt_PTBundle);
-export const ro_RO: typeof defaultTemplates = createTemplates(defaultTemplates, ro_ROBundle);
-export const ru_RU: typeof defaultTemplates = createTemplates(defaultTemplates, ru_RUBundle);
-export const sk_SK: typeof defaultTemplates = createTemplates(defaultTemplates, sk_SKBundle);
-export const sl_SI: typeof defaultTemplates = createTemplates(defaultTemplates, sl_SIBundle);
-export const sr_Cyrl_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Cyrl_RSBundle);
-export const sr_Latn_RS: typeof defaultTemplates = createTemplates(defaultTemplates, sr_Latn_RSBundle);
-export const sv_SE: typeof defaultTemplates = createTemplates(defaultTemplates, sv_SEBundle);
-export const th_TH: typeof defaultTemplates = createTemplates(defaultTemplates, th_THBundle);
-export const tr_TR: typeof defaultTemplates = createTemplates(defaultTemplates, tr_TRBundle);
-export const uk_UA: typeof defaultTemplates = createTemplates(defaultTemplates, uk_UABundle);
-export const vi_VN: typeof defaultTemplates = createTemplates(defaultTemplates, vi_VNBundle);
-export const zh_CN: typeof defaultTemplates = createTemplates(defaultTemplates, zh_CNBundle);
-export const zh_TW: typeof defaultTemplates = createTemplates(defaultTemplates, zh_TWBundle);
+export const bg_BG: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.bg-BG.json") => require("./bundles/bundle.l10n.bg-BG.json"),
+);
+export const ca_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ca-ES.json") => require("./bundles/bundle.l10n.ca-ES.json"),
+);
+export const cs_CZ: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.cs-CZ.json") => require("./bundles/bundle.l10n.cs-CZ.json"),
+);
+export const da_DK: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.da-DK.json") => require("./bundles/bundle.l10n.da-DK.json"),
+);
+export const de_DE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.de-DE.json") => require("./bundles/bundle.l10n.de-DE.json"),
+);
+export const el_GR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.el-GR.json") => require("./bundles/bundle.l10n.el-GR.json"),
+);
+export const es_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.es-ES.json") => require("./bundles/bundle.l10n.es-ES.json"),
+);
+export const et_EE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.et-EE.json") => require("./bundles/bundle.l10n.et-EE.json"),
+);
+export const eu_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.eu-ES.json") => require("./bundles/bundle.l10n.eu-ES.json"),
+);
+export const fi_FI: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.fi-FI.json") => require("./bundles/bundle.l10n.fi-FI.json"),
+);
+export const fr_FR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.fr-FR.json") => require("./bundles/bundle.l10n.fr-FR.json"),
+);
+export const gl_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.gl-ES.json") => require("./bundles/bundle.l10n.gl-ES.json"),
+);
+export const hi_IN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hi-IN.json") => require("./bundles/bundle.l10n.hi-IN.json"),
+);
+export const hr_HR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hr-HR.json") => require("./bundles/bundle.l10n.hr-HR.json"),
+);
+export const hu_HU: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hu-HU.json") => require("./bundles/bundle.l10n.hu-HU.json"),
+);
+export const id_ID: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.id-ID.json") => require("./bundles/bundle.l10n.id-ID.json"),
+);
+export const it_IT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.it-IT.json") => require("./bundles/bundle.l10n.it-IT.json"),
+);
+export const ja_JP: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ja-JP.json") => require("./bundles/bundle.l10n.ja-JP.json"),
+);
+export const kk_KZ: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.kk-KZ.json") => require("./bundles/bundle.l10n.kk-KZ.json"),
+);
+export const ko_KR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ko-KR.json") => require("./bundles/bundle.l10n.ko-KR.json"),
+);
+export const lt_LT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.lt-LT.json") => require("./bundles/bundle.l10n.lt-LT.json"),
+);
+export const lv_LV: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.lv-LV.json") => require("./bundles/bundle.l10n.lv-LV.json"),
+);
+export const ms_MY: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ms-MY.json") => require("./bundles/bundle.l10n.ms-MY.json"),
+);
+export const nb_NO: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.nb-NO.json") => require("./bundles/bundle.l10n.nb-NO.json"),
+);
+export const nl_NL: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.nl-NL.json") => require("./bundles/bundle.l10n.nl-NL.json"),
+);
+export const pl_PL: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pl-PL.json") => require("./bundles/bundle.l10n.pl-PL.json"),
+);
+export const pt_BR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pt-BR.json") => require("./bundles/bundle.l10n.pt-BR.json"),
+);
+export const pt_PT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pt-PT.json") => require("./bundles/bundle.l10n.pt-PT.json"),
+);
+export const ro_RO: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ro-RO.json") => require("./bundles/bundle.l10n.ro-RO.json"),
+);
+export const ru_RU: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ru-RU.json") => require("./bundles/bundle.l10n.ru-RU.json"),
+);
+export const sk_SK: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sk-SK.json") => require("./bundles/bundle.l10n.sk-SK.json"),
+);
+export const sl_SI: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sl-SI.json") => require("./bundles/bundle.l10n.sl-SI.json"),
+);
+export const sr_Cyrl_RS: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sr-Cyrl-RS.json") => require("./bundles/bundle.l10n.sr-Cyrl-RS.json"),
+);
+export const sr_Latn_RS: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sr-Latn-RS.json") => require("./bundles/bundle.l10n.sr-Latn-RS.json"),
+);
+export const sv_SE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sv-SE.json") => require("./bundles/bundle.l10n.sv-SE.json"),
+);
+export const th_TH: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.th-TH.json") => require("./bundles/bundle.l10n.th-TH.json"),
+);
+export const tr_TR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.tr-TR.json") => require("./bundles/bundle.l10n.tr-TR.json"),
+);
+export const uk_UA: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.uk-UA.json") => require("./bundles/bundle.l10n.uk-UA.json"),
+);
+export const vi_VN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.vi-VN.json") => require("./bundles/bundle.l10n.vi-VN.json"),
+);
+export const zh_CN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.zh-CN.json") => require("./bundles/bundle.l10n.zh-CN.json"),
+);
+export const zh_TW: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.zh-TW.json") => require("./bundles/bundle.l10n.zh-TW.json"),
+);
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [PQP.Locale.bg_BG.toLowerCase(), bg_BG],

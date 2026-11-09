@@ -52,6 +52,9 @@ lives as code-defined lookups in the exported `templates.ts` API module, not a s
 See the monorepo
 [localization instructions](../../README.md#localization) for bundle maintenance and formatting semantics.
 
+Unused non-English bundles are not loaded at module import. Their templates are constructed on
+first message access and cached; locale selection and error APIs remain synchronous.
+
 ## Related projects
 
 - [powerquery-formatter](../powerquery-formatter/README.md): A code formatter for Power Query which is bundled in the VSCode extension.

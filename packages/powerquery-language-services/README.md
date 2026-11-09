@@ -75,6 +75,9 @@ ID-keyed template JSON deep imports are removed; use the template APIs or
 `localization/bundles` JSON. The exported `templates.ts` module preserves existing IDs and types
 with code-defined English bundle-key lookups, not another translation resource catalog.
 
+Non-English bundles load synchronously when a localized message or documentation heading is
+first read, then reuse cached templates. The same behavior applies to named locale exports.
+
 ## Related projects
 
 - [powerquery-parser](../powerquery-parser/README.md): A lexer + parser for Power Query. Also contains features such as type validation.

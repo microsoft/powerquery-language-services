@@ -5,8 +5,8 @@ import "mocha";
 import * as l10n from "@vscode/l10n";
 import { expect } from "chai";
 
+import { createLazyTemplates, createTemplates } from "../../src/localization/templateUtils";
 import { Localization, LocalizationUtils, Templates } from "../../src";
-import { createTemplates } from "../../src/localization/templateUtils";
 import { ParseError } from "../../src/parser";
 import { Token } from "../../src/language";
 
@@ -67,6 +67,52 @@ describe("Localization", () => {
                 { English: { message: "Translated", comment: ["Context"] } },
             ),
         ).to.deep.equal({ translated: "Translated", fallback: "Missing" });
+    });
+
+    it("defers locale construction, caches it, and preserves object reflection and mutations", () => {
+        let loads: number = 0;
+        const defaults: { translated: string; fallback: string } = { translated: "English", fallback: "Missing" };
+
+        const templates: typeof defaults = createLazyTemplates(defaults, () => {
+            loads += 1;
+
+            return { English: "Translated" };
+        });
+
+        expect(loads).to.equal(0);
+        expect(Object.getPrototypeOf(templates)).to.equal(Object.prototype);
+        expect(loads).to.equal(0);
+        expect("translated" in templates).to.equal(true);
+        expect(loads).to.equal(1);
+        expect(templates.translated).to.equal("Translated");
+        expect(Object.keys(templates)).to.deep.equal(["translated", "fallback"]);
+        expect({ ...templates }).to.deep.equal({ translated: "Translated", fallback: "Missing" });
+        templates.fallback = "Updated";
+        expect(templates.fallback).to.equal("Updated");
+        expect(defaults.fallback).to.equal("Missing");
+        Object.defineProperty(templates, "translated", { value: "Locked", writable: false, configurable: false });
+        expect(templates.translated).to.equal("Locked");
+        Object.freeze(templates);
+        expect(Object.isFrozen(templates)).to.equal(true);
+        expect(loads).to.equal(1);
+    });
+
+    it("does not cache a failed locale load as a successful initialization", () => {
+        let loads: number = 0;
+
+        const templates: { translated: string } = createLazyTemplates({ translated: "English" }, () => {
+            loads += 1;
+
+            if (loads === 1) {
+                throw new Error("Bundle unavailable");
+            }
+
+            return { English: "Translated" };
+        });
+
+        expect(() => templates.translated).to.throw("Bundle unavailable");
+        expect(templates.translated).to.equal("Translated");
+        expect(loads).to.equal(2);
     });
 
     it("does not consume or overwrite an ordinary host l10n bundle", () => {
