@@ -38,7 +38,7 @@
         "@typescript-eslint/parser": "^8.72.1",
         "chai": "^4.5.0",
         "cross-env": "^10.1.0",
-        "eslint": "^10.13.0",
+        "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.7",
         "eslint-plugin-promise": "^7.3.0",
