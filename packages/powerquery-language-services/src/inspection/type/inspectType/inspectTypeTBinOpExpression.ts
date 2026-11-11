@@ -96,7 +96,16 @@ export async function inspectTypeTBinOpExpression(
         const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
         const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
 
-        if (resultTypeKind === undefined) {
+        if (
+            operatorKind === Constant.EqualityOperator.EqualTo ||
+            operatorKind === Constant.EqualityOperator.NotEqualTo
+        ) {
+            // Equality compares differing value kinds and null without producing a nullable result.
+            result =
+                Type.TypeKinds.includes(leftType.kind) && Type.TypeKinds.includes(rightType.kind)
+                    ? Type.LogicalInstance
+                    : Type.NoneInstance;
+        } else if (resultTypeKind === undefined) {
             result = Type.NoneInstance;
         } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Record) {
             result = inspectRecordUnion(leftType as Type.TRecord, rightType as Type.TRecord);

@@ -131,6 +131,54 @@ describe(`Inspection - Type`, () => {
                     text: `true + 1`,
                     expected: Type.NoneInstance,
                 }));
+
+            describe(`equality`, () => {
+                for (const operator of [`=`, `<>`]) {
+                    for (const [left, right] of [
+                        [`1`, `"x"`],
+                        [`"x"`, `1`],
+                        [`{1}`, `[a = 1]`],
+                        [`(() => 1)`, `(() => 2)`],
+                        [`(type number)`, `(type text)`],
+                        [`(() => 1)`, `(type number)`],
+                        [`null`, `null`],
+                        [`null`, `1`],
+                        [`1`, `null`],
+                        [`(1 as nullable number)`, `2`],
+                        [`1`, `(2 as nullable number)`],
+                        [`(1 as nullable number)`, `("x" as nullable text)`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.LogicalInstance,
+                                }),
+                        );
+                    }
+
+                    for (const [left, right] of [
+                        [`(error "fail")`, `1`],
+                        [`null`, `(error "fail")`],
+                        [`missing`, `null`],
+                        [`1`, `missing`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.NoneInstance,
+                                }),
+                        );
+                    }
+                }
+            });
         });
 
         describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {
