@@ -35,7 +35,6 @@ declare their own consumer requirement. Runtime dependencies remain in each
 publishable package so tarballs can be installed independently of the workspace.
 Common compiler settings live in `tsconfig.base.json`, with package-specific inputs and safety
 options in each package's config. All packages use the same root ESLint rule set.
-Non-null assertions are prohibited; narrow optional values or use the shared assertion helpers.
 Mocha's shared config and composite reporter are configured once at the root;
 package configs select their suites and the parser resource command selects its own XML output.
 
