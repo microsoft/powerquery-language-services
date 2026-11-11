@@ -38,13 +38,15 @@ export async function inspectTypeNullCoalescingExpression(
     // '??' isn't present, treat it as an Expression.
     if (nullCoalescingOperator === undefined) {
         result = leftType;
+    } else if (leftType.kind === Type.TypeKind.None) {
+        result = Type.NoneInstance;
+    } else if (!leftType.isNullable) {
+        result = leftType;
     } else {
         const rightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
 
-        if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
+        if (rightType.kind === Type.TypeKind.None) {
             result = Type.NoneInstance;
-        } else if (!leftType.isNullable) {
-            result = leftType;
         } else {
             const nonNullableLeft: Type.TPowerQueryType = { ...leftType, isNullable: false };
             result = TypeUtils.anyUnion([nonNullableLeft, rightType], state.traceManager, trace.id);
