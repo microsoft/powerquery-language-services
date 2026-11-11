@@ -39,10 +39,13 @@ export class InvariantError extends Error {
 
 export class UnknownError extends Error {
     constructor(
-        readonly innerError: any,
+        readonly innerError: unknown,
         locale: string,
     ) {
-        super(Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), innerError));
+        super(
+            Localization.error_common_unknown(LocalizationUtils.getLocalizationTemplates(locale), String(innerError)),
+        );
+
         Object.setPrototypeOf(this, UnknownError.prototype);
     }
 }

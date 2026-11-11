@@ -30,6 +30,7 @@ the parser resource suite, and release-helper tests. `npm run test:unit` and
 `npm run test:parser:resources` are focused alternatives.
 
 Shared development tools, including ESLint and Prettier, are declared in the private root manifest.
+Explicit `any` types are prohibited; use precise types or narrow `unknown` values before accessing them.
 Use a Node version satisfying the root manifest's development requirement; publishable packages
 declare their own consumer requirement. Runtime dependencies remain in each
 publishable package so tarballs can be installed independently of the workspace.
