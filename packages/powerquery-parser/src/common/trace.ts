@@ -161,11 +161,11 @@ export abstract class TraceManager {
         return new Trace(this.emit.bind(this), phase, task, this.idFactory(), correlationId, details);
     }
 
-    // Copied signature from `JSON.stringify`.
+    // Like `JSON.stringify`, but returns an error marker when serialization fails.
     // Subclass this by providing values for `replacer` and/or `space`.
     protected safeJsonStringify(
         obj: object,
-        replacer?: (this: any, key: string, value: any) => any,
+        replacer?: (this: unknown, key: string, value: unknown) => unknown,
         space?: string | number,
     ): string {
         try {
