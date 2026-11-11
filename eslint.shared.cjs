@@ -58,6 +58,7 @@ module.exports = (directory, files, globals = {}) => {
                 "@typescript-eslint/no-floating-promises": "error",
                 "@typescript-eslint/no-inferrable-types": "off",
                 "@typescript-eslint/no-namespace": "error",
+                "@typescript-eslint/no-non-null-assertion": "error",
                 "@typescript-eslint/no-unused-vars": [
                     "error",
                     {
