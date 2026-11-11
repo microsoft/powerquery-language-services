@@ -1318,6 +1318,86 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.numberLiteral(false, `0`),
                     ]),
                 }));
+
+            it(`null ?? 1`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? 1`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`null ?? null`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? null`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`null ?? (null as nullable number)`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? (null as nullable number)`,
+                    expected: Type.NullableNumberInstance,
+                }));
+
+            it(`removes null alternatives from the left union`, async () =>
+                await assertEqualRootType({
+                    text: `(if true then null else 1) ?? 2`,
+                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `2`)]),
+                }));
+
+            it(`strips nullability from every left union member`, async () =>
+                await assertEqualRootType({
+                    text: `(if true then (null as nullable number) else (null as nullable text)) ?? false`,
+                    expected: anyUnion([Type.NumberInstance, Type.TextInstance, Type.LogicalInstance]),
+                }));
+
+            it(`preserves nullable right union members`, async () =>
+                await assertEqualRootType({
+                    text: `(if true then null else (1 as nullable number)) ?? (if true then null else "fallback")`,
+                    expected: anyUnion([
+                        Type.NumberInstance,
+                        Type.NullInstance,
+                        TypeUtils.textLiteral(false, `"fallback"`),
+                    ]),
+                }));
+
+            it(`preserves right nullability when nullable any absorbs the right type`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable any) ?? (null as nullable text)`,
+                    expected: Type.NullableAnyInstance,
+                }));
+
+            it(`removes null and nullability from nested left unions`, async () => {
+                const nestedUnion: Type.AnyUnion = {
+                    kind: Type.TypeKind.Any,
+                    extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                    isNullable: true,
+                    unionedTypePairs: [
+                        Type.NullInstance,
+                        {
+                            kind: Type.TypeKind.Any,
+                            extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                            isNullable: true,
+                            unionedTypePairs: [Type.NullInstance, Type.NullableNumberInstance],
+                        },
+                        Type.NullableTextInstance,
+                    ],
+                };
+
+                await assertEqualRootType({
+                    text: `foo ?? false`,
+                    expected: anyUnion([Type.NumberInstance, Type.TextInstance, Type.LogicalInstance]),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        library: {
+                            ...ExtendedInspectionSettings.library,
+                            externalTypeResolver: (request: ExternalType.TExternalTypeRequest) =>
+                                request.kind === ExternalType.ExternalTypeRequestKind.Value &&
+                                request.identifierLiteral === `foo`
+                                    ? nestedUnion
+                                    : undefined,
+                        },
+                    },
+                });
+            });
         });
 
         describe(`${Ast.NodeKind.Parameter}`, () => {

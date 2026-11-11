@@ -46,12 +46,29 @@ export async function inspectTypeNullCoalescingExpression(
         } else if (!leftType.isNullable) {
             result = leftType;
         } else {
-            const nonNullableLeft: Type.TPowerQueryType = { ...leftType, isNullable: false };
-            result = TypeUtils.anyUnion([nonNullableLeft, rightType], state.traceManager, trace.id);
+            const nonNullableLeft: ReadonlyArray<Type.TPowerQueryType> = nonNullableMembers(leftType);
+
+            result = nonNullableLeft.length
+                ? {
+                      ...TypeUtils.anyUnion([...nonNullableLeft, rightType], state.traceManager, trace.id),
+                      // Simplification can absorb a nullable RHS into a non-nullable left member.
+                      isNullable: rightType.isNullable,
+                  }
+                : rightType;
         }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function nonNullableMembers(type: Type.TPowerQueryType): ReadonlyArray<Type.TPowerQueryType> {
+    if (type.kind === Type.TypeKind.Null) {
+        return [];
+    } else if (TypeUtils.isAnyUnion(type)) {
+        return type.unionedTypePairs.flatMap(nonNullableMembers);
+    } else {
+        return [{ ...type, isNullable: false }];
+    }
 }
