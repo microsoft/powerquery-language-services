@@ -261,6 +261,15 @@ describe(`TypeUtils`, () => {
             ).not.to.throw();
         });
 
+        for (const columnType of [Type.DateInstance, Type.NullableDateInstance]) {
+            it(`accepts a date row for a ${noopNameOf(columnType)} column`, () => {
+                const dateFields: Type.OrderedFields = new OrderedMap([["D", columnType]]);
+                const rows: ReadonlyArray<Type.UnorderedFields> = [row([["D", Type.DateInstance]])];
+
+                expect(() => TypeUtils.definedTable(false, dateFields, rows)).not.to.throw();
+            });
+        }
+
         it(`rejects a row with a missing column`, () => {
             expect(() =>
                 TypeUtils.definedTable(false, fields, [row([["Name", TypeUtils.textLiteral(false, `"A"`)]])]),

@@ -19,6 +19,47 @@ const noopIsCompatible: (left: Type.TPowerQueryType, right: Type.TPowerQueryType
 ) => TypeUtils.isCompatible(left, right, NoOpTraceManagerInstance, undefined);
 
 describe(`TypeUtils.isCompatible`, () => {
+    describe(`primitive nullability`, () => {
+        const kinds: ReadonlyArray<Type.TypeKind> = [
+            Type.TypeKind.Action,
+            Type.TypeKind.Binary,
+            Type.TypeKind.Date,
+            Type.TypeKind.DateTime,
+            Type.TypeKind.DateTimeZone,
+            Type.TypeKind.Duration,
+            Type.TypeKind.Time,
+        ];
+
+        for (const kind of kinds) {
+            describe(`${kind}`, () => {
+                const nonNullable: Type.TPrimitiveType = TypeUtils.primitiveType(false, kind);
+                const nullable: Type.TPrimitiveType = TypeUtils.primitiveType(true, kind);
+
+                it(`non-nullable is compatible with nullable`, () => {
+                    expect(noopIsCompatible(nonNullable, nullable)).to.equal(true);
+                });
+
+                it(`nullable is not compatible with non-nullable`, () => {
+                    expect(noopIsCompatible(nullable, nonNullable)).to.equal(false);
+                });
+
+                it(`identical nullability remains compatible`, () => {
+                    expect(noopIsCompatible(nonNullable, nonNullable)).to.equal(true);
+                    expect(noopIsCompatible(nullable, nullable)).to.equal(true);
+                });
+
+                it(`different primitive kinds remain incompatible`, () => {
+                    const otherKind: Type.TypeKind =
+                        kind === Type.TypeKind.Date ? Type.TypeKind.DateTime : Type.TypeKind.Date;
+
+                    expect(noopIsCompatible(TypeUtils.primitiveType(false, otherKind), nonNullable)).to.equal(false);
+                    expect(noopIsCompatible(TypeUtils.primitiveType(false, otherKind), nullable)).to.equal(false);
+                    expect(noopIsCompatible(TypeUtils.primitiveType(true, otherKind), nullable)).to.equal(false);
+                });
+            });
+        }
+    });
+
     describe(`${Type.TypeKind.AnyNonNull}`, () => {
         it(`null is not compatible`, () => {
             expect(noopIsCompatible(Type.NullInstance, Type.AnyNonNullInstance)).to.equal(false, undefined);
