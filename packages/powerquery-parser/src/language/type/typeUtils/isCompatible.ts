@@ -13,6 +13,7 @@ import { TypeUtilsTraceConstant } from "./typeTraceConstant";
 // `Type.AnyInstance is compatible with Type.TextInstance` -> false
 // `Type.NullInstance is compatible with Type.AnyNonNull` -> false
 // `Type.TextInstance is compatible with Type.AnyUnion([Type.TextInstance, Type.NumberInstance])` -> true
+// A source union is compatible only if every alternative is compatible with the target.
 export function isCompatible(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType,
@@ -32,6 +33,8 @@ export function isCompatible(
         result = undefined;
     } else if (left.kind === Type.TypeKind.None || right.kind === Type.TypeKind.None) {
         result = false;
+    } else if (left.extendedKind === Type.ExtendedTypeKind.AnyUnion) {
+        result = isCompatibleAnyUnion(left, right, traceManager, trace.id);
     } else if (right.kind === Type.TypeKind.Any && right.extendedKind === undefined) {
         result = true;
     } else if (left.isNullable && !right.isNullable) {
@@ -166,6 +169,42 @@ function isCompatibleWithAny(
     return result;
 }
 
+function isCompatibleAnyUnion(
+    left: Type.AnyUnion,
+    right: Type.TPowerQueryType,
+    traceManager: TraceManager,
+    correlationId: number,
+): boolean | undefined {
+    const trace: Trace = traceManager.entry(
+        TypeUtilsTraceConstant.IsCompatible,
+        isCompatibleAnyUnion.name,
+        correlationId,
+    );
+
+    // A union's nullable flag can admit null independently of its stored alternatives.
+    const subtypes: ReadonlyArray<Type.TPowerQueryType> = left.isNullable
+        ? [Type.NullInstance, ...left.unionedTypePairs]
+        : left.unionedTypePairs;
+
+    let result: boolean | undefined = true;
+
+    for (const subtype of subtypes) {
+        const isSubtypeCompatible: boolean | undefined = isCompatible(subtype, right, traceManager, trace.id);
+
+        if (isSubtypeCompatible === false) {
+            trace.exit();
+
+            return false;
+        } else if (isSubtypeCompatible === undefined) {
+            result = undefined;
+        }
+    }
+
+    trace.exit();
+
+    return result;
+}
+
 function isCompatibleWithAnyUnion(
     left: Type.TPowerQueryType,
     right: Type.AnyUnion,
@@ -178,17 +217,33 @@ function isCompatibleWithAnyUnion(
         correlationId,
     );
 
+    // isCompatible already checked nullability; null need not match the same alternative as the non-null value.
+    const nonNullableLeft: Type.TPowerQueryType = left.isNullable ? { ...left, isNullable: false } : left;
+    let result: boolean | undefined = false;
+
     for (const subtype of right.unionedTypePairs) {
-        if (isCompatible(left, subtype, traceManager, trace.id)) {
+        const nonNullableSubtype: Type.TPowerQueryType =
+            subtype.isNullable && subtype.kind !== Type.TypeKind.Null ? { ...subtype, isNullable: false } : subtype;
+
+        const isSubtypeCompatible: boolean | undefined = isCompatible(
+            nonNullableLeft,
+            nonNullableSubtype,
+            traceManager,
+            trace.id,
+        );
+
+        if (isSubtypeCompatible === true) {
             trace.exit();
 
             return true;
+        } else if (isSubtypeCompatible === undefined) {
+            result = undefined;
         }
     }
 
     trace.exit();
 
-    return false;
+    return result;
 }
 
 function isCompatibleWithDefinedList(

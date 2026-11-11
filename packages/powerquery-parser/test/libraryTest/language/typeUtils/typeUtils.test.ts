@@ -261,6 +261,22 @@ describe(`TypeUtils`, () => {
             ).not.to.throw();
         });
 
+        it(`accepts a union-valued row field under the same union column`, () => {
+            const union: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, Type.TextInstance]);
+            const unionFields: Type.OrderedFields = new OrderedMap([["Value", union]]);
+
+            expect(() => TypeUtils.definedTable(false, unionFields, [row([["Value", union]])])).not.to.throw();
+        });
+
+        it(`rejects a union-valued row field when only one alternative fits the column`, () => {
+            const union: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, Type.TextInstance]);
+            const numberFields: Type.OrderedFields = new OrderedMap([["Value", Type.NumberInstance]]);
+
+            expect(() => TypeUtils.definedTable(false, numberFields, [row([["Value", union]])])).to.throw(
+                `row field type is incompatible with table field type`,
+            );
+        });
+
         it(`rejects a row with a missing column`, () => {
             expect(() =>
                 TypeUtils.definedTable(false, fields, [row([["Name", TypeUtils.textLiteral(false, `"A"`)]])]),
