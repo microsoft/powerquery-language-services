@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "識別子 '{identifier}' が重複しています",
+    "Duplicate parameter name '{identifier}'": "パラメーター名 '{identifier}' が重複しています",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin} から {numMax} 個の引数が必要ですが、{numGiven} 個でした。",
+        "comment": [
+            "関数呼び出しの指定の引数の数が少なすぎるか、多すぎる場合のエラーです。ユーザー向けである必要があります。"
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "'{funcName}' には、オプションではないパラメーター '{argName}' の引数がありません。",
+    "Missing an argument for the non-optional parameter '{argName}'.": "オプションではないパラメーター '{argName}' の引数がありません。",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{funcName} は '{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "'{argName}' の引数が '{expected}' であることを期待していましたが、代わりに '{actual}' を取得しました。",
+    "Cannot find the name '{identifier}'.": "名前 '{identifier}' が見つかりません。",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "名前 '{identifier}' が見つかりません。'{suggestion}' のことですか?",
+    "Default: `{value}`": "既定値: `{value}`",
+    "Allowed values: {values}": "使用可能な値: {values}",
+    "Sample values: {values}": "値の例: {values}",
+    "Type: `{type}`": "型: `{type}`"
+}

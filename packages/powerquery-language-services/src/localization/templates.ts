@@ -1,92 +1,235 @@
 import * as PQP from "@microsoft/powerquery-parser";
+import {
+    createLazyTemplates,
+    createTemplates,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templateUtils";
 
-import * as bg_BG from "./templates/templates.bg-BG.json";
-import * as ca_ES from "./templates/templates.ca-ES.json";
-import * as cs_CZ from "./templates/templates.cs-CZ.json";
-import * as da_DK from "./templates/templates.da-DK.json";
-import * as de_DE from "./templates/templates.de-DE.json";
-import * as el_GR from "./templates/templates.el-GR.json";
-import * as en_US from "./templates/templates.json";
-import * as es_ES from "./templates/templates.es-ES.json";
-import * as et_EE from "./templates/templates.et-EE.json";
-import * as eu_ES from "./templates/templates.eu-ES.json";
-import * as fi_FI from "./templates/templates.fi-FI.json";
-import * as fr_FR from "./templates/templates.fr-FR.json";
-import * as gl_ES from "./templates/templates.gl-ES.json";
-import * as hi_IN from "./templates/templates.hi-IN.json";
-import * as hr_HR from "./templates/templates.hr-HR.json";
-import * as hu_HU from "./templates/templates.hu-HU.json";
-import * as id_ID from "./templates/templates.id-ID.json";
-import * as it_IT from "./templates/templates.it-IT.json";
-import * as ja_JP from "./templates/templates.ja-JP.json";
-import * as kk_KZ from "./templates/templates.kk-KZ.json";
-import * as ko_KR from "./templates/templates.ko-KR.json";
-import * as lt_LT from "./templates/templates.lt-LT.json";
-import * as lv_LV from "./templates/templates.lv-LV.json";
-import * as ms_MY from "./templates/templates.ms-MY.json";
-import * as nb_NO from "./templates/templates.nb-NO.json";
-import * as nl_NL from "./templates/templates.nl-NL.json";
-import * as pl_PL from "./templates/templates.pl-PL.json";
-import * as pt_BR from "./templates/templates.pt-BR.json";
-import * as pt_PT from "./templates/templates.pt-PT.json";
-import * as ro_RO from "./templates/templates.ro-RO.json";
-import * as ru_RU from "./templates/templates.ru-RU.json";
-import * as sk_SK from "./templates/templates.sk-SK.json";
-import * as sl_SI from "./templates/templates.sl-SI.json";
-import * as sr_Cyrl_RS from "./templates/templates.sr-Cyrl-RS.json";
-import * as sr_Latn_RS from "./templates/templates.sr-Latn-RS.json";
-import * as sv_SE from "./templates/templates.sv-SE.json";
-import * as th_TH from "./templates/templates.th-TH.json";
-import * as tr_TR from "./templates/templates.tr-TR.json";
-import * as uk_UA from "./templates/templates.uk-UA.json";
-import * as vi_VN from "./templates/templates.vi-VN.json";
-import * as zh_CN from "./templates/templates.zh-CN.json";
-import * as zh_TW from "./templates/templates.zh-TW.json";
+import defaultBundle from "./bundles/bundle.l10n.json";
 
-export {
-    bg_BG,
-    ca_ES,
-    cs_CZ,
-    da_DK,
-    de_DE,
-    el_GR,
-    en_US,
-    es_ES,
-    et_EE,
-    eu_ES,
-    fi_FI,
-    fr_FR,
-    gl_ES,
-    hi_IN,
-    hr_HR,
-    hu_HU,
-    id_ID,
-    it_IT,
-    ja_JP,
-    kk_KZ,
-    ko_KR,
-    lt_LT,
-    lv_LV,
-    ms_MY,
-    nb_NO,
-    nl_NL,
-    pl_PL,
-    pt_BR,
-    pt_PT,
-    ro_RO,
-    ru_RU,
-    sk_SK,
-    sl_SI,
-    sr_Cyrl_RS,
-    sr_Latn_RS,
-    sv_SE,
-    th_TH,
-    tr_TR,
-    uk_UA,
-    vi_VN,
-    zh_CN,
-    zh_TW,
+type TemplateMessageKey = keyof ILocalizationTemplates | "error_validation_duplicate_parameter_name";
+type DefaultTemplateKey =
+    | TemplateMessageKey
+    | `_${Exclude<TemplateMessageKey, "error_validation_invokeExpression_numArgs">}.comment`
+    | "_error_validation_invokeExpression_numArgs";
+type DefaultTemplateShape = { [K in DefaultTemplateKey]: string };
+
+const defaultTemplates: DefaultTemplateShape = {
+    error_validation_duplicate_identifier: defaultBundle["Duplicate identifier '{identifier}'"].message,
+    "_error_validation_duplicate_identifier.comment":
+        defaultBundle["Duplicate identifier '{identifier}'"].comment.join(""),
+    error_validation_duplicate_parameter_name: defaultBundle["Duplicate parameter name '{identifier}'"].message,
+    "_error_validation_duplicate_parameter_name.comment":
+        defaultBundle["Duplicate parameter name '{identifier}'"].comment.join(""),
+    error_validation_invokeExpression_numArgs:
+        defaultBundle["Expected between {numMin}-{numMax} arguments, but {numGiven} were given."].message,
+    _error_validation_invokeExpression_numArgs:
+        defaultBundle["Expected between {numMin}-{numMax} arguments, but {numGiven} were given."].comment.join(""),
+    error_validation_invokeExpression_missingMandatory_named:
+        defaultBundle["'{funcName}' is missing an argument for the non-optional parameter '{argName}'."].message,
+    "_error_validation_invokeExpression_missingMandatory_named.comment":
+        defaultBundle["'{funcName}' is missing an argument for the non-optional parameter '{argName}'."].comment.join(
+            "",
+        ),
+    error_validation_invokeExpression_missingMandatory_unnamed:
+        defaultBundle["Missing an argument for the non-optional parameter '{argName}'."].message,
+    "_error_validation_invokeExpression_missingMandatory_unnamed.comment":
+        defaultBundle["Missing an argument for the non-optional parameter '{argName}'."].comment.join(""),
+    error_validation_invokeExpression_typeMismatch_named:
+        defaultBundle[
+            "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].message,
+    "_error_validation_invokeExpression_typeMismatch_named.comment":
+        defaultBundle[
+            "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].comment.join(""),
+    error_validation_invokeExpression_typeMismatch_unnamed:
+        defaultBundle["Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."].message,
+    "_error_validation_invokeExpression_typeMismatch_unnamed.comment":
+        defaultBundle[
+            "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead."
+        ].comment.join(""),
+    error_validation_unknownIdentifier_noSuggestion: defaultBundle["Cannot find the name '{identifier}'."].message,
+    "_error_validation_unknownIdentifier_noSuggestion.comment":
+        defaultBundle["Cannot find the name '{identifier}'."].comment.join(""),
+    error_validation_unknownIdentifier_suggestion:
+        defaultBundle["Cannot find the name '{identifier}', did you mean '{suggestion}'?"].message,
+    "_error_validation_unknownIdentifier_suggestion.comment":
+        defaultBundle["Cannot find the name '{identifier}', did you mean '{suggestion}'?"].comment.join(""),
+    parameterDocumentation_default: defaultBundle["Default: `{value}`"].message,
+    "_parameterDocumentation_default.comment": defaultBundle["Default: `{value}`"].comment.join(""),
+    parameterDocumentation_allowedValues: defaultBundle["Allowed values: {values}"].message,
+    "_parameterDocumentation_allowedValues.comment": defaultBundle["Allowed values: {values}"].comment.join(""),
+    parameterDocumentation_sampleValues: defaultBundle["Sample values: {values}"].message,
+    "_parameterDocumentation_sampleValues.comment": defaultBundle["Sample values: {values}"].comment.join(""),
+    parameterDocumentation_type: defaultBundle["Type: `{type}`"].message,
+    "_parameterDocumentation_type.comment": defaultBundle["Type: `{type}`"].comment.join(""),
 };
+
+export const en_US: typeof defaultTemplates = createTemplates(defaultTemplates, defaultBundle);
+export const bg_BG: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.bg-BG.json") => require("./bundles/bundle.l10n.bg-BG.json"),
+);
+export const ca_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ca-ES.json") => require("./bundles/bundle.l10n.ca-ES.json"),
+);
+export const cs_CZ: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.cs-CZ.json") => require("./bundles/bundle.l10n.cs-CZ.json"),
+);
+export const da_DK: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.da-DK.json") => require("./bundles/bundle.l10n.da-DK.json"),
+);
+export const de_DE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.de-DE.json") => require("./bundles/bundle.l10n.de-DE.json"),
+);
+export const el_GR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.el-GR.json") => require("./bundles/bundle.l10n.el-GR.json"),
+);
+export const es_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.es-ES.json") => require("./bundles/bundle.l10n.es-ES.json"),
+);
+export const et_EE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.et-EE.json") => require("./bundles/bundle.l10n.et-EE.json"),
+);
+export const eu_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.eu-ES.json") => require("./bundles/bundle.l10n.eu-ES.json"),
+);
+export const fi_FI: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.fi-FI.json") => require("./bundles/bundle.l10n.fi-FI.json"),
+);
+export const fr_FR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.fr-FR.json") => require("./bundles/bundle.l10n.fr-FR.json"),
+);
+export const gl_ES: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.gl-ES.json") => require("./bundles/bundle.l10n.gl-ES.json"),
+);
+export const hi_IN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hi-IN.json") => require("./bundles/bundle.l10n.hi-IN.json"),
+);
+export const hr_HR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hr-HR.json") => require("./bundles/bundle.l10n.hr-HR.json"),
+);
+export const hu_HU: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.hu-HU.json") => require("./bundles/bundle.l10n.hu-HU.json"),
+);
+export const id_ID: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.id-ID.json") => require("./bundles/bundle.l10n.id-ID.json"),
+);
+export const it_IT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.it-IT.json") => require("./bundles/bundle.l10n.it-IT.json"),
+);
+export const ja_JP: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ja-JP.json") => require("./bundles/bundle.l10n.ja-JP.json"),
+);
+export const kk_KZ: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.kk-KZ.json") => require("./bundles/bundle.l10n.kk-KZ.json"),
+);
+export const ko_KR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ko-KR.json") => require("./bundles/bundle.l10n.ko-KR.json"),
+);
+export const lt_LT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.lt-LT.json") => require("./bundles/bundle.l10n.lt-LT.json"),
+);
+export const lv_LV: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.lv-LV.json") => require("./bundles/bundle.l10n.lv-LV.json"),
+);
+export const ms_MY: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ms-MY.json") => require("./bundles/bundle.l10n.ms-MY.json"),
+);
+export const nb_NO: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.nb-NO.json") => require("./bundles/bundle.l10n.nb-NO.json"),
+);
+export const nl_NL: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.nl-NL.json") => require("./bundles/bundle.l10n.nl-NL.json"),
+);
+export const pl_PL: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pl-PL.json") => require("./bundles/bundle.l10n.pl-PL.json"),
+);
+export const pt_BR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pt-BR.json") => require("./bundles/bundle.l10n.pt-BR.json"),
+);
+export const pt_PT: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.pt-PT.json") => require("./bundles/bundle.l10n.pt-PT.json"),
+);
+export const ro_RO: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ro-RO.json") => require("./bundles/bundle.l10n.ro-RO.json"),
+);
+export const ru_RU: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.ru-RU.json") => require("./bundles/bundle.l10n.ru-RU.json"),
+);
+export const sk_SK: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sk-SK.json") => require("./bundles/bundle.l10n.sk-SK.json"),
+);
+export const sl_SI: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sl-SI.json") => require("./bundles/bundle.l10n.sl-SI.json"),
+);
+export const sr_Cyrl_RS: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sr-Cyrl-RS.json") => require("./bundles/bundle.l10n.sr-Cyrl-RS.json"),
+);
+export const sr_Latn_RS: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sr-Latn-RS.json") => require("./bundles/bundle.l10n.sr-Latn-RS.json"),
+);
+export const sv_SE: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.sv-SE.json") => require("./bundles/bundle.l10n.sv-SE.json"),
+);
+export const th_TH: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.th-TH.json") => require("./bundles/bundle.l10n.th-TH.json"),
+);
+export const tr_TR: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.tr-TR.json") => require("./bundles/bundle.l10n.tr-TR.json"),
+);
+export const uk_UA: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.uk-UA.json") => require("./bundles/bundle.l10n.uk-UA.json"),
+);
+export const vi_VN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.vi-VN.json") => require("./bundles/bundle.l10n.vi-VN.json"),
+);
+export const zh_CN: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.zh-CN.json") => require("./bundles/bundle.l10n.zh-CN.json"),
+);
+export const zh_TW: typeof defaultTemplates = createLazyTemplates(
+    defaultTemplates,
+    (): typeof import("./bundles/bundle.l10n.zh-TW.json") => require("./bundles/bundle.l10n.zh-TW.json"),
+);
 
 export const TemplatesByLocale: Map<string, ILocalizationTemplates> = new Map([
     [PQP.Locale.bg_BG.toLowerCase(), bg_BG],

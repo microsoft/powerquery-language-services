@@ -6,8 +6,10 @@ import { Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { CompletionItemKind } from "vscode-languageserver-types";
 import { expect } from "chai";
 
+import { DefaultTemplates, ILocalizationTemplates } from "../../src/localization/templates";
 import { Library, LibrarySymbolUtils } from "../../src";
 import { LibrarySymbol, LibrarySymbolFunctionParameter } from "../../src/library/librarySymbol";
+import { LocalizationUtils } from "../../src/localization";
 
 function createLibrarySymbolWithParameter(paramOverrides: Partial<LibrarySymbolFunctionParameter>): LibrarySymbol {
     return {
@@ -36,9 +38,12 @@ function createLibrarySymbolWithParameter(paramOverrides: Partial<LibrarySymbolF
     };
 }
 
-function getParameterDocumentation(librarySymbol: LibrarySymbol): string | undefined {
+function getParameterDocumentation(
+    librarySymbol: LibrarySymbol,
+    templates: ILocalizationTemplates = DefaultTemplates,
+): string | undefined {
     const result: Result<Library.TLibraryDefinition, LibrarySymbolUtils.FailedLibrarySymbolConversion> =
-        LibrarySymbolUtils.createLibraryDefinition(librarySymbol);
+        LibrarySymbolUtils.createLibraryDefinition(librarySymbol, templates);
 
     ResultUtils.assertIsOk(result);
     const funcDef: Library.LibraryFunction = result.value as Library.LibraryFunction;
@@ -81,6 +86,21 @@ describe("buildParameterDocumentation", () => {
 
         expect(documentation).to.equal(
             "**Caption**\n\ndescription text\n\nDefault: `hello`\n\nAllowed values: `a`, `b`\n\nSample values: `x`, `y`\n\nType: `text`",
+        );
+    });
+
+    it("localizes documentation headings without translating code values", () => {
+        const documentation: string | undefined = getParameterDocumentation(
+            createLibrarySymbolWithParameter({
+                defaultValue: "hello",
+                allowedValues: ["a", "b"],
+                sampleValues: ["x", "y"],
+            }),
+            LocalizationUtils.getLocalizationTemplates("fr-FR"),
+        );
+
+        expect(documentation).to.equal(
+            "Valeur par défaut : `hello`\n\nValeurs autorisées : `a`, `b`\n\nExemples de valeurs : `x`, `y`\n\nType : `text`",
         );
     });
 

@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Podvojeni identifikator »{identifier}«",
+    "Duplicate parameter name '{identifier}'": "Podvojeno ime parametra »{identifier}«",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Pričakovano je bilo med {numMin}-{numMax} argumenti, vendar je bilo podanih {numGiven}.",
+        "comment": [
+            "Napaka, ko je bil klicu funkcije podanih premalo ali preveč argumentov. Pričakuje se, da se bo usmerjena k uporabniku."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Za funkcijo »{funcName}« manjka argument za neizbirni parameter »{argName}«.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Manjka argument za neizbirni parameter »{argName}«.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Za funkcijo »{funcName}« je bil za argument »{argName}« pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Za argument »{argName}« je bil pričakovan parameter »{expected}«, vendar je bil namesto tega uporabljen parameter »{actual}«.",
+    "Cannot find the name '{identifier}'.": "Imena '{identifier}' ni mogoče najti.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Imena '{identifier}' ni mogoče najti. Ali ste mislili '{suggestion}'?",
+    "Default: `{value}`": "Privzeta vrednost: `{value}`",
+    "Allowed values: {values}": "Dovoljene vrednosti: {values}",
+    "Sample values: {values}": "Primeri vrednosti: {values}",
+    "Type: `{type}`": "Vrsta: `{type}`"
+}

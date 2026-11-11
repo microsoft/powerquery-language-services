@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Διπλότυπο αναγνωριστικό \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Διπλότυπο όνομα της παραμέτρου '{identifier}'",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Αναμενόταν μεταξύ των ορισμάτων {numMin}-{numMax}, αλλά δόθηκε {numGiven}.",
+        "comment": [
+            "Παρουσιάστηκε σφάλμα κατά την κλήση συνάρτησης με υπερβολικά λίγα ή πάρα πολλά ορίσματα. Αναμενόταν να είναι στραμμένη προς το χρήστη."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Λείπει ένα όρισμα από τον τύπο {funcName} για τη μη προαιρετική παράμετρο {argName}.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Λείπει ένα όρισμα για τη μη προαιρετική παράμετρο {argName}.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "{funcName} ανέμενε το όρισμα για {argName} να είναι {expected}, αλλά έλαβε το {actual} αντ' αυτού.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Αναμενόταν το όρισμα για {argName} να είναι {expected}, αλλά έλαβε το {actual} αντ ' αυτού.",
+    "Cannot find the name '{identifier}'.": "Δεν είναι δυνατή η εύρεση του ονόματος '{identifier}'.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Δεν είναι δυνατή η εύρεση του ονόματος '{identifier}', μήπως εννοείτε '{suggestion}';",
+    "Default: `{value}`": "Προεπιλεγμένη τιμή: `{value}`",
+    "Allowed values: {values}": "Επιτρεπόμενες τιμές: {values}",
+    "Sample values: {values}": "Ενδεικτικές τιμές: {values}",
+    "Type: `{type}`": "Τύπος: `{type}`"
+}

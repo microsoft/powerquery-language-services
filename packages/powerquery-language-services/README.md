@@ -1,3 +1,5 @@
+<!-- markdownlint-disable -->
+
 # powerquery-language-services
 
 Developed in the [Power Query monorepo](../../README.md).
@@ -54,6 +56,27 @@ async function getSymbols() {
 This example uses no library symbols. Supply your environment's library definitions through `inspectionSettings.library` to enable completion, hover, and signature help for library functions. Position-based requests such as `getHover` and `getAutocompleteItems` accept zero-based line and character positions. Analysis requests return parser `Result` values; the example uses `ResultUtils.assertOk` to extract a successful value or throw on an error.
 
 For internal design, request flow, providers, and caching, see [Architecture](ARCHITECTURE.md).
+
+### Localization
+
+Set `inspectionSettings.locale` for parser errors and language features, and set
+`validationSettings.locale` when calling `validate`. Pass the same locale to both for consistent
+diagnostics. Use exact locale tags such as `"fr-FR"`; matching ignores case and unsupported tags
+fall back to English. Concurrent analyses can select different locales.
+
+The `localization` deep import retains `LocalizationUtils.getLocalizationTemplates(locale)` and
+`Localization` builders; `localization/templates` retains the named locale exports and
+`ILocalizationTemplates`. Library-symbol documentation accepts the same template objects as before.
+These APIs read `@vscode/l10n` bundles without configuring global locale state or requiring a
+VS Code host. See the monorepo [localization instructions](../../README.md#localization) for
+bundle maintenance, host-bundle namespaces, and placeholder semantics.
+
+ID-keyed template JSON deep imports are removed; use the template APIs or
+`localization/bundles` JSON. The exported `templates.ts` module preserves existing IDs and types
+with code-defined English bundle-key lookups, not another translation resource catalog.
+
+Non-English bundles load synchronously when a localized message or documentation heading is
+first read, then reuse cached templates. The same behavior applies to named locale exports.
 
 ## Related projects
 

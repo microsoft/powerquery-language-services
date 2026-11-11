@@ -3,5 +3,5 @@
     "compilerOptions": {
         "noUncheckedIndexedAccess": true
     },
-    "include": ["src/**/*.ts", "src/localization/templates/*.json", "test/**/*.ts", "*.ts"]
+    "include": ["src/**/*.ts", "test/**/*.ts", "*.ts"]
 }

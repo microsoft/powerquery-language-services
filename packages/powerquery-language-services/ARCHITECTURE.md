@@ -574,9 +574,10 @@ inference, and provider latency; it is not a performance benchmark.
 
 ### Localization
 
-[Localization templates](src/localization/templates.ts) are backed by
-JSON resources. Locale lookup lowercases the requested locale and falls back to the default English
-templates. Validation helpers construct localized messages; parse diagnostics reuse the parser's
+[Localization templates](src/localization/templates.ts) preserve public IDs through code-defined
+lookups into l10n bundles, the only localization resource files. Locale lookup lowercases the
+requested locale and falls back to the default English templates. Validation helpers construct
+localized messages; parse diagnostics reuse the parser's
 message. Library-symbol conversion also uses templates for parameter documentation.
 
 ## Tests and development infrastructure

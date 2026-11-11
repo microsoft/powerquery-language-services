@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Повторяющийся идентификатор \"{identifier}\"",
+    "Duplicate parameter name '{identifier}'": "Дублирующееся имя параметра \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "Ожидаемое число аргументов: от {numMin} до {numMax}, указанное: {numGiven}.",
+        "comment": [
+            "Ошибка при указании слишком маленького или слишком большого числа аргументов при вызове функции. Будет доступно пользователю."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Функции \"{funcName}\" требуется аргумент для обязательного параметра \"{argName}\".",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Требуется аргумент для обязательного параметра \"{argName}\".",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Для функции \"{funcName}' ожидалось значение \"{expected}\" аргумента \"{argName}\", но было получено значение \"{actual}\".",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Ожидалось, что аргументом для \"{argName}\" будет \"{expected}\", однако вместо этого получен аргумент \"{actual}\".",
+    "Cannot find the name '{identifier}'.": "Не удается найти имя \"{identifier}\".",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Не удается найти имя \"{identifier}\". Вы имели в виду \"{suggestion}\"?",
+    "Default: `{value}`": "Значение по умолчанию: `{value}`",
+    "Allowed values: {values}": "Допустимые значения: {values}",
+    "Sample values: {values}": "Примеры значений: {values}",
+    "Type: `{type}`": "Тип: `{type}`"
+}

@@ -59,6 +59,56 @@ Shared license, security, conduct policy, and issue forms live at the repository
 includes the canonical root LICENSE in every tarball. Published entry points and deep imports are
 under `lib/<name>`.
 
+## Localization
+
+Parser and language-service messages use `@vscode/l10n` bundles in each package's
+`src/localization/bundles/bundle.l10n[.<locale>].json`. Keys are the English messages,
+including named placeholders such as `{identifier}`. The English bundle retains translator
+comments as `{ "message": "...", "comment": ["..."] }` values. Translated bundles use strings or
+the same message/comment object form when retaining localized context.
+Keep placeholder names unchanged in translations.
+
+Code-defined lookups in `src/localization/templates.ts` map existing public message IDs to
+English bundle keys. English values and translator-comment metadata are read from the English
+bundle, not copied into a second catalog. When adding or changing a message, update the code
+lookup, the English bundle, and the corresponding keys in translated bundles. Missing translations
+fall back to English. Existing locale exports, `ILocalizationTemplates`, `Localization` builders,
+and `getLocalizationTemplates(locale)` remain available.
+
+Bundles are the only localization resource files. The exported `templates.ts` module is an API,
+not a template resource directory; its stable ID lookups preserve the existing TypeScript shape.
+Use these APIs or `localization/bundles` JSON rather than the removed template JSON deep imports.
+
+Non-English bundles and their template records load synchronously on first property use and are
+cached thereafter. Named locale exports and `TemplatesByLocale` hold lightweight lazy facades;
+reading values, enumerating/spreading a template, or changing its property descriptors materializes
+that locale once. Merely selecting a locale or enumerating the locale map does not load its bundle.
+The English bundle and ID/metadata mapping remain an intentional initialization cost for default
+messages and English fallback. Bundlers may still include static JSON assets in their output;
+this synchronous adapter does not promise browser network code-splitting.
+
+Do not translate code snippets, placeholders, API identifiers, or intentional native words merely because they match
+English. Resource tests verify bundle coverage, English keys, translator comments and placeholder names.
+
+These are standalone libraries; no VS Code host is needed. Locale selection remains per request,
+using case-insensitive exact locale tags and English fallback for unsupported tags. The formatter
+has no separate messages and uses the parser's localized errors. The compatibility adapter selects
+the bundle before calling `l10n.t` for interpolation, rather than calling process-global
+`l10n.config`. Package-name comments namespace those formatting calls so ordinary host bundles
+do not translate the selected text again. Hosts must not define matching
+`<selected message>/@microsoft/powerquery-parser` or
+`<selected message>/@microsoft/powerquery-language-services` keys in their global bundle.
+
+Formatting follows `l10n.t`: all occurrences of a placeholder are replaced, replacement text is
+literal (including `$&` and braces), and unmatched placeholders remain visible. The general-purpose
+`StringUtils.assertGetFormatted` API remains unchanged for existing callers, but localization no
+longer uses it. Dynamic locale-selected messages are maintained in the bundles directly; running
+`l10n-dev` extraction on these adapters will not reconstruct the catalogs.
+
+Run root `npm run lint`, `npm run build`, `npm test`, and `npm run validate:release` after changes.
+The last command checks required bundles and template APIs, rejects obsolete template resources,
+and exercises localized messages in an isolated tarball consumer.
+
 ## Release preparation
 
 All three packages share a version, with exact internal dependencies. Set a specific version:

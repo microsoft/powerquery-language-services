@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Duplikált azonosító: „{identifier}”",
+    "Duplicate parameter name '{identifier}'": "Ismétlődő paraméternév: {identifier}",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "A rendszer {numMin}–{numMax} argumentumot várt, de {numGiven} lett megadva.",
+        "comment": [
+            "Hiba, ha a függvény hívása túl kevés vagy túl sok argumentumot adott meg. Várhatóan megjelenik a felhasználók számára."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Ebből: {funcName} hiányzik egy argumentum a nem válaszható {argName} paraméterhez.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Hiányzik egy argumentum a nem választható {argName} paraméterhez.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "A(z) {funcName} a(z) {expected} argumentumot várta ehhez: {argName}, de helyette {actual} argumentumot kapott.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "A rendszer várta ehhez: {argName} az argumentumot, így: {expected}, de ehelyett ezt: {actual} kapta.",
+    "Cannot find the name '{identifier}'.": "A(z) '{identifier}' név nem található.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "A(z) „{identifier}“ név nem található. Erre gondolt: „{suggestion}“?",
+    "Default: `{value}`": "Alapértelmezett érték: `{value}`",
+    "Allowed values: {values}": "Megengedett értékek: {values}",
+    "Sample values: {values}": "Példaértékek: {values}",
+    "Type: `{type}`": "Típus: `{type}`"
+}

@@ -10,12 +10,16 @@ const SMOKE = `
 import * as parser from "@microsoft/powerquery-parser";
 import * as formatter from "@microsoft/powerquery-formatter";
 import * as services from "@microsoft/powerquery-language-services";
+import * as l10n from "@vscode/l10n";
 import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { TaskUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/task";
 import { tryFormat } from "@microsoft/powerquery-formatter/lib/powerquery-formatter/format";
 import { AnalysisUtils } from "@microsoft/powerquery-language-services/lib/powerquery-language-services/analysis";
 import * as parserTemplates from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/templates";
 import * as serviceTemplates from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization/templates";
+import { Localization as serviceLocalization } from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization";
+import parserFrench from "@microsoft/powerquery-parser/lib/powerquery-parser/localization/bundles/bundle.l10n.fr-FR.json";
+import serviceFrench from "@microsoft/powerquery-language-services/lib/powerquery-language-services/localization/bundles/bundle.l10n.fr-FR.json";
 
 function expect(condition: unknown, message: string): asserts condition {
     if (!condition) throw new Error(message);
@@ -26,6 +30,49 @@ async function main(): Promise<void> {
     TaskUtils.assertIsParseStageOk(parsed);
     expect(Type.TypeKind.Number !== undefined, "Parser deep import failed");
     expect(parserTemplates.fr_FR && serviceTemplates.fr_FR, "Localized runtime imports failed");
+    expect(parserFrench["Expected a hex literal"] === parserTemplates.fr_FR.error_lex_expectedKind_1_hex,
+        "Parser bundle content differs from exported templates");
+    expect(serviceFrench["Duplicate identifier '{identifier}'"] === serviceTemplates.fr_FR.error_validation_duplicate_identifier,
+        "Services bundle content differs from exported templates");
+    const argumentCountKey = "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.";
+    expect(serviceFrench[argumentCountKey].message === serviceTemplates.fr_FR.error_validation_invokeExpression_numArgs &&
+        serviceFrench[argumentCountKey].comment.length > 0,
+        "Localized message/context bundle objects failed");
+    expect(serviceFrench["Cannot find the name '{identifier}'."] !== "Cannot find the name '{identifier}'." &&
+        serviceTemplates.fr_FR.error_validation_unknownIdentifier_noSuggestion === serviceFrench["Cannot find the name '{identifier}'."],
+        "Packed unknown-name translation or template API mismatch");
+    l10n.config({ contents: { "Host {value}": "Host translation {value}",
+        "Duplicate identifier '{identifier}'": "Host duplicate {identifier}" } });
+    await Promise.all(["fr-FR", "de-DE", "ja-JP", "en-US"].map(async (locale) => {
+        const settings = { ...parser.DefaultSettings, locale };
+        const task = await TaskUtils.tryLexParse(settings, "let");
+        TaskUtils.assertIsParseStageParseError(task);
+        const templates = parser.LocalizationUtils.getLocalizationTemplates(locale);
+        expect(task.error.message === templates.error_parse_expectTokenKind_2_endOfStream.replace(
+            "{expectedTokenKind}", templates.tokenKind_identifier), "Packed parser locale isolation failed");
+        const formatted = await tryFormat({ ...formatter.DefaultSettings, locale }, "let");
+        expect(parser.ResultUtils.isError(formatted) && formatted.error.message === task.error.message,
+            "Packed formatter locale propagation failed");
+        const templatesForLocale = serviceTemplates.TemplatesByLocale.get(locale.toLowerCase());
+        expect(templatesForLocale, "Packed services locale missing");
+        expect(serviceLocalization.error_validation_duplicate_identifier(templatesForLocale, "$&") ===
+            templatesForLocale.error_validation_duplicate_identifier.replace("{identifier}", () => "$&"),
+            "Packed services placeholder or locale isolation failed");
+        expect(serviceLocalization.parameterDocumentation_default(templatesForLocale, "$&") ===
+            templatesForLocale.parameterDocumentation_default.replace("{value}", () => "$&"),
+            "Packed documentation translation substitution failed");
+        if (locale !== "en-US") {
+            expect(templatesForLocale.parameterDocumentation_default !== serviceTemplates.DefaultTemplates.parameterDocumentation_default,
+                "Packed documentation heading remained in English");
+            expect(templatesForLocale.error_validation_unknownIdentifier_noSuggestion !==
+                serviceTemplates.DefaultTemplates.error_validation_unknownIdentifier_noSuggestion,
+                "Packed unknown-name diagnostic remained in English");
+        }
+    }));
+    expect(parser.LocalizationUtils.getLocalizationTemplates("unsupported") === parserTemplates.DefaultTemplates,
+        "Packed English fallback failed");
+    expect(l10n.t("Host {value}", { value: "unchanged" }) === "Host translation unchanged",
+        "Packed libraries changed host l10n configuration");
     const formatted = await tryFormat(formatter.DefaultSettings, source);
     expect(parser.ResultUtils.isOk(formatted) && formatted.value.includes("let"), "Formatter smoke failed");
     const document = services.textDocument("file:///release-smoke.pq", 1, source);
@@ -47,6 +94,54 @@ async function main(): Promise<void> {
     }
 }
 void main();
+`;
+
+const LOCALIZATION_CACHE_SMOKE = `
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const cases = {
+    "@microsoft/powerquery-parser": { slug: "powerquery-parser", englishCount: 1,
+        property: "error_lex_expectedKind_1_hex", key: "Expected a hex literal" },
+    "@microsoft/powerquery-formatter": { slug: "powerquery-parser", englishCount: 1,
+        property: "error_lex_expectedKind_1_hex", key: "Expected a hex literal" },
+    "@microsoft/powerquery-language-services": { slug: "powerquery-language-services", englishCount: 2,
+        property: "error_validation_duplicate_identifier", key: "Duplicate identifier '{identifier}'" },
+};
+const name = process.argv[1];
+const scenario = cases[name];
+assert.ok(scenario, "Unknown cold-cache scenario");
+function cachedBundles() {
+    return Object.keys(require.cache).map(file => file.replace(/\\\\/g, "/"))
+        .filter(file => /\\/localization\\/bundles\\/bundle\\.l10n.*\\.json$/.test(file)).sort();
+}
+function nonEnglish(files) { return files.filter(file => !file.endsWith("/bundle.l10n.json")); }
+require(name);
+const cold = cachedBundles();
+assert.equal(cold.length, scenario.englishCount);
+assert.equal(nonEnglish(cold).length, 0, "Cold import eagerly loaded a non-English bundle");
+const owner = "@microsoft/" + scenario.slug;
+const templates = require(owner + "/lib/" + scenario.slug + "/localization/templates");
+const utils = require(owner + "/lib/" + scenario.slug + "/localization").LocalizationUtils;
+const french = templates.fr_FR;
+assert.equal(templates.TemplatesByLocale instanceof Map, true);
+assert.equal(templates.TemplatesByLocale.get("fr-fr"), french);
+assert.equal(utils.getLocalizationTemplates("FR-fr"), french);
+assert.equal(utils.getLocalizationTemplates("unsupported"), templates.DefaultTemplates);
+Array.from(templates.TemplatesByLocale.values());
+assert.deepEqual(cachedBundles(), cold, "Export/map access eagerly constructed locale templates");
+const actual = french[scenario.property];
+const first = cachedBundles();
+assert.equal(nonEnglish(first).length, 1);
+assert.ok(nonEnglish(first)[0].endsWith("/bundle.l10n.fr-FR.json"));
+const source = JSON.parse(fs.readFileSync(require.resolve(owner + "/lib/" + scenario.slug +
+    "/localization/bundles/bundle.l10n.fr-FR.json"), "utf8"));
+const value = source[scenario.key];
+assert.equal(actual, typeof value === "string" ? value : value.message);
+assert.ok(Object.keys(french).length > 0);
+assert.equal(french[scenario.property], actual);
+assert.deepEqual(cachedBundles(), first, "Repeated template access loaded another bundle");
+console.log(JSON.stringify({ package: name, coldJson: cold.length, coldNonEnglish: 0,
+    afterFirstUseJson: first.length, afterFirstUseNonEnglish: 1 }));
 `;
 
 function cleanEnvironment() {
@@ -103,6 +198,9 @@ async function validateConsumer(root, manifest) {
                 }
             }
         `], { cwd: consumer, env });
+        for (const entry of PACKAGES) {
+            run(process.execPath, ["-e", LOCALIZATION_CACHE_SMOKE, entry.name], { cwd: consumer, env });
+        }
         fs.writeFileSync(path.join(consumer, "smoke.ts"), SMOKE);
         writeJson(path.join(consumer, "tsconfig.json"), {
             compilerOptions: {
@@ -120,4 +218,4 @@ async function validateConsumer(root, manifest) {
     }
 }
 
-module.exports = { SMOKE, cleanEnvironment, validateConsumer };
+module.exports = { SMOKE, LOCALIZATION_CACHE_SMOKE, cleanEnvironment, validateConsumer };

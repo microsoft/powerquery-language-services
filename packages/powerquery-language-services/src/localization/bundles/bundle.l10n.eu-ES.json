@@ -1,0 +1,20 @@
+{
+    "Duplicate identifier '{identifier}'": "Bikoiztu \"{identifier}\" identifikatzailea",
+    "Duplicate parameter name '{identifier}'": "Parametro-izen bikoiztua: \"{identifier}\"",
+    "Expected between {numMin}-{numMax} arguments, but {numGiven} were given.": {
+        "message": "{numMin}-{numMax} argumentu espero dira, baina {numGiven} eman dira.",
+        "comment": [
+            "Errore bat gertatuko da funtzio-dei batek argumentu gutxiegi edo gehiegi ematen dituenean. Erabiltzaileak kudeatuko ditu balio horiek."
+        ]
+    },
+    "'{funcName}' is missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}” parametroaren argumentu bat falta zaio “{funcName}” elementuari.",
+    "Missing an argument for the non-optional parameter '{argName}'.": "Aukerakoa ez den “{argName}”parametroaren argumentu bat falta da.",
+    "'{funcName}' expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "“{funcName}” elementuak espero zuen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+    "Expected the argument for '{argName}' to be '{expected}', but got '{actual}' instead.": "Espero zen “{expected}” izango zela “{argName}” elementuaren argumentua, baina “{actual}” da.",
+    "Cannot find the name '{identifier}'.": "Ezin da aurkitu “{identifier}” izena.",
+    "Cannot find the name '{identifier}', did you mean '{suggestion}'?": "Ez da aurkitu '{identifier}' izena; '{suggestion}' esan nahi zenuen?",
+    "Default: `{value}`": "Balio lehenetsia: `{value}`",
+    "Allowed values: {values}": "Onartutako balioak: {values}",
+    "Sample values: {values}": "Balioen adibideak: {values}",
+    "Type: `{type}`": "Mota: `{type}`"
+}
