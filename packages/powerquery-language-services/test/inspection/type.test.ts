@@ -224,7 +224,7 @@ describe(`Inspection - Type`, () => {
                     }));
             });
 
-            it(`each [foo]`, async () =>
+            it(`each [foo] with a table parameter selects a column`, async () =>
                 await assertEqualRootType({
                     text: `each [foo]`,
                     expected: TypeUtils.definedFunction(
@@ -237,7 +237,7 @@ describe(`Inspection - Type`, () => {
                                 nameLiteral: `_`,
                             },
                         ],
-                        TypeUtils.numberLiteral(false, `1`),
+                        TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, `1`)]),
                     ),
                     settings: {
                         ...ExtendedInspectionSettings,
@@ -750,6 +750,99 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FieldSelector}`, () => {
+            it(`selects a table column as an exact list in row order`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number, B = text], {{1, "x"}, {2, "y"}})[A]`,
+                    expected: TypeUtils.definedList(false, [
+                        TypeUtils.numberLiteral(false, 1),
+                        TypeUtils.numberLiteral(false, 2),
+                    ]),
+                }));
+
+            it(`indexes a selected table column`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {{1}})[A]{0}`,
+                    expected: TypeUtils.numberLiteral(false, 1),
+                }));
+
+            it(`preserves nullable column elements without making the list nullable`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = nullable number], {{null}, {1}})[A]?`,
+                    expected: TypeUtils.definedList(false, [Type.NullInstance, TypeUtils.numberLiteral(false, 1)]),
+                }));
+
+            it(`selects an empty column as an exact empty list`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {})[A]`,
+                    expected: TypeUtils.definedList(false, []),
+                }));
+
+            it(`selects a column with unknown rows as a list value`, async () =>
+                await assertEqualRootType({
+                    text: `let rows = {} as list in #table(type table [A = number], rows)[A]`,
+                    expected: Type.ListInstance,
+                }));
+
+            it(`selects a column from a nullable primitive table as a non-null list`, async () =>
+                await assertEqualRootType({
+                    text: `(#table({"A"}, {}) as nullable table)[A]`,
+                    expected: Type.ListInstance,
+                }));
+
+            it(`allows null when an optional column has an unknown table schema`, async () =>
+                await assertEqualRootType({
+                    text: `(#table({"A"}, {}) as table)[B]?`,
+                    expected: Type.NullableListInstance,
+                }));
+
+            it(`rejects a missing table column`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {})[B]`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`returns null for an optional missing table column`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [A = number], {})[B]?`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`uses a list for an undeclared column of an open table`, async () =>
+                await assertEqualRootType({
+                    text: `(each [Other])([A = 1])`,
+                    expected: Type.ListInstance,
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        eachScopeById: new Map([
+                            [
+                                4,
+                                openDefinedTable(
+                                    [[`A`, Type.NumberInstance]],
+                                    [definedRow([[`A`, TypeUtils.numberLiteral(false, 1)]])],
+                                ),
+                            ],
+                        ]),
+                    },
+                }));
+
+            it(`allows null for an optional undeclared column of an open table`, async () =>
+                await assertEqualRootType({
+                    text: `(each [Other]?)([A = 1])`,
+                    expected: Type.NullableListInstance,
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        eachScopeById: new Map([
+                            [
+                                4,
+                                openDefinedTable(
+                                    [[`A`, Type.NumberInstance]],
+                                    [definedRow([[`A`, TypeUtils.numberLiteral(false, 1)]])],
+                                ),
+                            ],
+                        ]),
+                    },
+                }));
+
             it(`[a = 1][a]`, async () =>
                 await assertEqualRootType({
                     text: `[a = 1][a]`,
