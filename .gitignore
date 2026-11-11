@@ -188,7 +188,6 @@ PublishScripts/
 # NuGet Symbol Packages
 *.snupkg
 # The packages folder can be ignored because of Package Restore
-**/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
@@ -353,6 +352,8 @@ MigrationBackup/
 lib/
 tsconfig.tsbuildinfo
 test-results.xml
+test-results-resources.xml
+/dist/
 *.tgz
 
 .copilot-current-task.md

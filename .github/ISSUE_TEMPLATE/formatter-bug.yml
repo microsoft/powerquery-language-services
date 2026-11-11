@@ -1,0 +1,42 @@
+name: Formatter bug
+description: Report a problem with powerquery-formatter.
+title: "[Formatter bug] "
+labels: ["bug", "powerquery-formatter"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue applies to powerquery-formatter. Report security vulnerabilities using the root SECURITY.md policy, not public issues.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the package version, errors, and relevant output.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Power Query script and reproduction steps
+      description: Include a minimal script and the API call that triggers the problem. The package's example.ts can help isolate it.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: API settings
+      description: Include non-default settings, or state that all settings are defaults.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

@@ -1,0 +1,7 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noUncheckedIndexedAccess": true
+    },
+    "include": ["src/**/*.ts", "src/localization/templates/*.json", "test/**/*.ts", "*.ts"]
+}

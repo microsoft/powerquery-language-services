@@ -1,0 +1,52 @@
+{
+    "name": "@microsoft/powerquery-parser",
+    "version": "5.0.0",
+    "description": "A parser for the Power Query/M formula language.",
+    "author": "Microsoft",
+    "license": "MIT",
+    "keywords": [
+        "power query",
+        "power bi"
+    ],
+    "scripts": {
+        "build": "node ../../scripts/build-package.cjs powerquery-parser",
+        "clean": "node ../../scripts/workspace.cjs clean powerquery-parser",
+        "watch": "node ../../scripts/build-package.cjs powerquery-parser --watch",
+        "test": "mocha --no-package",
+        "test:resources": "mocha --no-package --config .mocharc.resources.cjs",
+        "script:benchmark": "npx ts-node test/scripts/createBenchmark.ts",
+        "script:nodeDump": "npx ts-node test/scripts/createNodeDump.ts",
+        "lint": "eslint src test *.ts --ext ts"
+    },
+    "homepage": "https://github.com/microsoft/powerquery-language-services/tree/master/packages/powerquery-parser#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/microsoft/powerquery-language-services.git",
+        "directory": "packages/powerquery-parser"
+    },
+    "bugs": {
+        "url": "https://github.com/microsoft/powerquery-language-services/issues"
+    },
+    "main": "lib/powerquery-parser/index.js",
+    "types": "lib/powerquery-parser/index.d.ts",
+    "engines": {
+        "node": ">=22"
+    },
+    "publishConfig": {
+        "access": "public",
+        "tag": "latest"
+    },
+    "dependencies": {
+        "grapheme-splitter": "^1.0.4",
+        "performance-now": "^2.1.0"
+    },
+    "files": [
+        "lib/powerquery-parser/**/*",
+        "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        "NOTICE.txt",
+        "specification.md",
+        "style.md"
+    ]
+}

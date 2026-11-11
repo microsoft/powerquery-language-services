@@ -1,7 +1,7 @@
 {
     "typescript.tsdk": "node_modules\\typescript\\lib",
     "files.exclude": {
-        "src/**/*.js": true
+        "packages/*/src/**/*.js": true
     },
     "editor.formatOnSave": true,
 
@@ -16,7 +16,13 @@
     "testing.followRunningTest": true,
 
     // Mocha Explorer settings
-    "mochaExplorer.files": ["src/test/**/*.test.ts"],
+    "eslint.workingDirectories": [
+        "./packages/powerquery-parser",
+        "./packages/powerquery-formatter",
+        "./packages/powerquery-language-services"
+    ],
+    "mochaExplorer.cwd": "${workspaceFolder}/packages/powerquery-language-services",
+    "mochaExplorer.files": ["test/**/*.test.ts"],
     "mochaExplorer.require": ["ts-node/register"],
     "mochaExplorer.env": {
         "NODE_ENV": "test"
@@ -24,5 +30,5 @@
     "mochaExplorer.timeout": 60000,
     "mochaExplorer.ui": "bdd",
     "mochaExplorer.exit": true,
-    "mochaExplorer.optsFile": ".mocharc.json"
+    "mochaExplorer.optsFile": ".mocharc.cjs"
 }

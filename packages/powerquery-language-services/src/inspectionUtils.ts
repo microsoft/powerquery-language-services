@@ -1,0 +1,206 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+import * as PQP from "@microsoft/powerquery-parser";
+import { Assert, ResultUtils } from "@microsoft/powerquery-parser";
+import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
+
+import { Inspection, PositionUtils } from ".";
+import { InspectionSettings, TypeStrategy } from "./inspectionSettings";
+import { AutocompleteItemProviderContext } from "./providers/commonTypes";
+import { AutocompleteItemUtils } from "./inspection/autocomplete";
+import { Library } from "./library";
+
+/** Creates a InspectionSettings instance by:
+ *  1. shallow copying Settings
+ *  2. applying optional overrides for properties specific to InspectionSettings */
+export function inspectionSettings(
+    settings: PQP.Settings,
+    overrides?: Partial<Omit<InspectionSettings, keyof PQP.Settings>>,
+): InspectionSettings {
+    return {
+        ...settings,
+        isWorkspaceCacheAllowed: overrides?.isWorkspaceCacheAllowed ?? true,
+        library: overrides?.library ?? Library.NoOpLibrary,
+        typeStrategy: overrides?.typeStrategy ?? TypeStrategy.Extended,
+        eachScopeById: overrides?.eachScopeById ?? undefined,
+    };
+}
+
+export async function getAutocompleteItemsFromScope(
+    context: AutocompleteItemProviderContext,
+): Promise<ReadonlyArray<Inspection.AutocompleteItem>> {
+    const triedNodeScope: Inspection.TriedNodeScope = context.triedNodeScope;
+    const triedScopeType: Inspection.TriedScopeType = context.triedScopeType;
+
+    if (ResultUtils.isError(triedNodeScope)) {
+        return [];
+    }
+
+    const nodeScope: Inspection.NodeScope = triedNodeScope.value;
+
+    const scopeTypeByKey: Inspection.ScopeTypeByKey = ResultUtils.isOk(triedScopeType)
+        ? triedScopeType.value
+        : Inspection.ScopeUtils.emptyScopeTypeByKey();
+
+    const result: Inspection.AutocompleteItem[] = [];
+
+    for (const [label, scopeItem] of Inspection.ScopeBindingsUtils.scopeMapEntries(nodeScope.scopeItemByKey)) {
+        // Resolve sequentially because aliases share the type inspector's cycle-detection state.
+        const scopeItemType: Type.TPowerQueryType =
+            // eslint-disable-next-line no-await-in-loop
+            (await Inspection.ScopeUtils.resolveType(scopeTypeByKey, label)) ?? Type.UnknownInstance;
+
+        const autocompleteItem: Inspection.AutocompleteItem | undefined = AutocompleteItemUtils.fromScopeItem(
+            label,
+            scopeItem,
+            scopeItemType,
+            context,
+        );
+
+        if (autocompleteItem) {
+            result.push(autocompleteItem);
+        }
+    }
+
+    return result;
+}
+
+export async function getIdentifierType(
+    inspected: Inspection.Inspected,
+    identifier: string,
+): Promise<Type.TPowerQueryType | undefined> {
+    const triedScopeType: Inspection.TriedScopeType = await inspected.triedScopeType;
+
+    if (ResultUtils.isOk(triedScopeType)) {
+        return Inspection.ScopeUtils.resolveType(triedScopeType.value, identifier);
+    }
+
+    return undefined;
+}
+
+export function getScopeItemKindText(scopeItemKind: Inspection.ScopeItemKind): string {
+    switch (scopeItemKind) {
+        case Inspection.ScopeItemKind.Each:
+            return "each";
+
+        case Inspection.ScopeItemKind.LetVariable:
+            return "let-variable";
+
+        case Inspection.ScopeItemKind.Parameter:
+            return "parameter";
+
+        case Inspection.ScopeItemKind.RecordField:
+            return "record-field";
+
+        case Inspection.ScopeItemKind.SectionMember:
+            return "section-member";
+
+        case Inspection.ScopeItemKind.Undefined:
+            return "unknown";
+
+        default:
+            throw Assert.isNever(scopeItemKind);
+    }
+}
+
+export function getSymbolKindFromLiteralExpression(node: Ast.LiteralExpression): SymbolKind {
+    switch (node.literalKind) {
+        case Ast.LiteralKind.List:
+            return SymbolKind.Array;
+
+        case Ast.LiteralKind.Logical:
+            return SymbolKind.Boolean;
+
+        case Ast.LiteralKind.Null:
+            return SymbolKind.Null;
+
+        case Ast.LiteralKind.Numeric:
+            return SymbolKind.Number;
+
+        case Ast.LiteralKind.Text:
+            return SymbolKind.String;
+
+        default:
+            return Assert.isNever(node.literalKind);
+    }
+}
+
+export function getSymbolKindFromNode(node: Ast.TNode): SymbolKind {
+    switch (node.kind) {
+        case Ast.NodeKind.Constant:
+            return SymbolKind.Constant;
+
+        case Ast.NodeKind.FunctionExpression:
+            return SymbolKind.Function;
+
+        case Ast.NodeKind.ListExpression:
+        case Ast.NodeKind.ListLiteral:
+            return SymbolKind.Array;
+
+        case Ast.NodeKind.LiteralExpression:
+            return getSymbolKindFromLiteralExpression(node);
+
+        case Ast.NodeKind.MetadataExpression:
+            return SymbolKind.TypeParameter;
+
+        case Ast.NodeKind.RecordExpression:
+        case Ast.NodeKind.RecordLiteral:
+            return SymbolKind.Struct;
+
+        case Ast.NodeKind.Section:
+            return SymbolKind.Module;
+
+        default:
+            return SymbolKind.Variable;
+    }
+}
+
+export function getSymbolsForLetExpression(expressionNode: Ast.LetExpression): ReadonlyArray<DocumentSymbol> {
+    const documentSymbols: DocumentSymbol[] = [];
+
+    for (const element of expressionNode.variableList.elements) {
+        const pairedExpression: Ast.ICsv<Ast.IdentifierPairedExpression> = element;
+        const memberSymbol: DocumentSymbol = getSymbolForIdentifierPairedExpression(pairedExpression.node);
+        documentSymbols.push(memberSymbol);
+    }
+
+    return documentSymbols;
+}
+
+export function getSymbolsForRecord(
+    recordNode: Ast.RecordExpression | Ast.RecordLiteral,
+): ReadonlyArray<DocumentSymbol> {
+    const documentSymbols: DocumentSymbol[] = [];
+
+    for (const element of recordNode.content.elements) {
+        documentSymbols.push({
+            kind: SymbolKind.Field,
+            deprecated: false,
+            name: element.node.key.literal,
+            range: PositionUtils.rangeFromTokenRange(element.node.tokenRange),
+            selectionRange: PositionUtils.rangeFromTokenRange(element.node.key.tokenRange),
+        });
+    }
+
+    return documentSymbols;
+}
+
+export function getSymbolsForSection(sectionNode: Ast.Section): ReadonlyArray<DocumentSymbol> {
+    return sectionNode.sectionMembers.elements.map((sectionMember: Ast.SectionMember) =>
+        getSymbolForIdentifierPairedExpression(sectionMember.namePairedExpression),
+    );
+}
+
+export function getSymbolForIdentifierPairedExpression(
+    identifierPairedExpressionNode: Ast.IdentifierPairedExpression,
+): DocumentSymbol {
+    return {
+        kind: getSymbolKindFromNode(identifierPairedExpressionNode.value),
+        deprecated: false,
+        name: identifierPairedExpressionNode.key.literal,
+        range: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.tokenRange),
+        selectionRange: PositionUtils.rangeFromTokenRange(identifierPairedExpressionNode.key.tokenRange),
+    };
+}

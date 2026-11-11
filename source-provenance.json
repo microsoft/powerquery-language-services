@@ -1,0 +1,107 @@
+{
+    "schemaVersion": 1,
+    "frozenAt": "2026-11-05",
+    "initialReleaseVersion": "5.0.0",
+    "historyImport": "unsquashed-subtree",
+    "structuralImportCommit": "6efdceeeabad7ca0ed1b03d5ebcfeb033672827a",
+    "sourceLayout": {
+        "production": "packages/<name>/src (original src/<name> tree moved without functional edits)",
+        "preservedProductionTrees": {
+            "powerquery-parser": "3daf4f7d0fd9017e2d7e3ca4769a1e7f8328a96a",
+            "powerquery-formatter": "0eb5bdc9bb8153507d047f5283876fca98b3fd15",
+            "powerquery-language-services": "3c46364c9781c417103c002c6aa6eca574a55a66"
+        },
+        "toolsAndTests": "Original src siblings moved to package root with relative imports and fixture paths rebased",
+        "publishedOutput": "lib/<name> preserved by build-output relocation",
+        "sharedPolicies": "Root LICENSE, SECURITY.md, CODE_OF_CONDUCT.md; canonical root LICENSE staged into all tarballs"
+    },
+    "upstreamIntegration": {
+        "date": "2026-11-05",
+        "method": "Preserve upstream commits as merge parents; apply reviewed deltas to workspace paths without replacing monorepo tooling",
+        "sources": [
+            {
+                "repository": "https://github.com/microsoft/powerquery-parser",
+                "commit": "37e5cec3ba65d74b79ad3817e1534f1977f9d3de",
+                "version": "4.0.1",
+                "pullRequests": [438, 439],
+                "dependencyRemediationCommit": "1cb6649d1d186bba019092f6ada4d225775b2a9e"
+            },
+            {
+                "repository": "https://github.com/microsoft/powerquery-formatter",
+                "commit": "5cd9cfa7d89c8004f235d2290a120c9de1f2bd36",
+                "version": "1.1.0",
+                "pullRequest": 101
+            },
+            {
+                "repository": "https://github.com/microsoft/powerquery-language-services",
+                "commit": "834b14f660fad67b3cb71a9bff639e5245e377c1",
+                "version": "1.3.0",
+                "pullRequests": [312, 305],
+                "dependencyRemediationCommit": "3932cb07ff94c8bb9f3818101f6cd093baad34c8"
+            }
+        ],
+        "changes": [
+            "Upgrade Mocha to ^12.0.3 and use upstream built-in Spec/XUnit composite reporters",
+            "Remove mocha-junit-reporter, mocha-multi-reporters, obsolete reporter JSON, and serialize-javascript override",
+            "Regenerate the root workspace lockfile for merged upstream audit remediation",
+            "Account for parser #439 Node 22 CI correction through the Windows monorepo workflow and root Node >=22 support range",
+            "Incorporate merged services #305 checkout/setup-node and dorny/test-reporter upgrades; summarize wildcard XUnit reports in the Actions Summary",
+            "Retain four distinct report paths, exact 5.0.0 internal edges, and existing runtime source/resource trees"
+        ],
+        "auditObservation": {
+            "date": "2026-11-05",
+            "source": "Existing configured npm audit service",
+            "counts": {
+                "moderate": 8,
+                "high": 0,
+                "critical": 0
+            },
+            "residualAdvisory": "GHSA-g3hv-75wg-m249",
+            "note": "Development-dependency minimatch 10.2.6 paths also remain in updated upstream lockfiles; no unreviewed breaking override or Mocha downgrade applied."
+        }
+    },
+    "sources": [
+        {
+            "repository": "https://github.com/microsoft/powerquery-parser",
+            "branch": "master",
+            "commit": "6316752ef34866e219eaeb4b506ae12f65091733",
+            "version": "4.0.1",
+            "workspace": "packages/powerquery-parser",
+            "sourceTree": "2886e4664ac8248a27ca48cac605e28dfe2f5d86",
+            "pendingDependencyPullRequests": [436, 435, 433, 434]
+        },
+        {
+            "repository": "https://github.com/microsoft/powerquery-formatter",
+            "branch": "master",
+            "commit": "5fd6b65b9ea3e1bb1a9856074011ed4b293c9d74",
+            "version": "1.1.0",
+            "workspace": "packages/powerquery-formatter",
+            "sourceTree": "aa35718bfed34cdec7348dcfe5f09d7bf0f4ffdd",
+            "pendingDependencyPullRequests": [103, 102, 100, 99, 98, 97, 85]
+        },
+        {
+            "repository": "https://github.com/microsoft/powerquery-language-services",
+            "branch": "master",
+            "commit": "d74cece9240956ec5ae4ed3cd4aba87491e27a2c",
+            "version": "1.3.0",
+            "workspace": "packages/powerquery-language-services",
+            "sourceTree": "a672d1bc70716933140909b2d216505cc3aaa1a8",
+            "pendingDependencyPullRequests": [305]
+        }
+    ],
+    "registryObservation": {
+        "source": "Existing configured npm registry/proxy; no private registry address recorded",
+        "date": "2026-11-05",
+        "latest": {
+            "@microsoft/powerquery-parser": "4.0.1",
+            "@microsoft/powerquery-formatter": "1.1.0",
+            "@microsoft/powerquery-language-services": "1.3.0"
+        },
+        "targetVersion": "5.0.0",
+        "targetAbsentInProxyVisibleVersions": true,
+        "proxyVisibleVersionsNewerThanFrozenSources": false,
+        "freshCacheProxyPreflightVerified": true,
+        "authoritativePublicPreflightVerified": false,
+        "note": "Read-only fresh-cache queries used the user-configured npm proxy. Proxy visibility does not reserve a version or attest authoritative public publication state; recheck through the approved release process."
+    }
+}

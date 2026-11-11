@@ -1,65 +1,55 @@
 {
-    "name": "@microsoft/powerquery-language-services",
-    "version": "1.3.0",
-    "author": "Microsoft",
+    "name": "powerquery-monorepo",
+    "private": true,
+    "version": "0.0.0",
+    "description": "Development workspace for the Power Query parser, formatter, and language services.",
     "license": "MIT",
-    "scripts": {
-        "prepublishOnly": "git clean -xdf && npm install-clean && npm run lint && npm run build && npm run test",
-        "build": ".\\node_modules\\.bin\\tsc",
-        "benchmark": "node --expose-gc node_modules\\ts-node\\dist\\bin.js src\\benchmark\\cli.ts",
-        "watch": ".\\node_modules\\.bin\\tsc -b -watch",
-        "link:start": "npm link && npm uninstall @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm link @microsoft/powerquery-parser @microsoft/powerquery-formatter",
-        "link:stop": "npm unlink @microsoft/powerquery-parser @microsoft/powerquery-formatter && git clean -xdf && npm install && npm install @microsoft/powerquery-parser@latest @microsoft/powerquery-formatter@latest --save-exact",
-        "lint": "eslint src --ext ts",
-        "test": "mocha --no-package --reporter mocha-multi-reporters --reporter-options configFile=mochaReporterConfig.json"
-    },
-    "homepage": "https://github.com/microsoft/powerquery-language-services#readme",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/microsoft/powerquery-language-services.git"
-    },
-    "issues": {
-        "url": "https://github.com/microsoft/powerquery-language-services/issues"
-    },
-    "description": "Language services for the Power Query/M formula language.",
-    "main": "lib/powerquery-language-services/index.js",
-    "types": "lib/powerquery-language-services/index.d.ts",
     "engines": {
-        "node": ">=22"
+        "node": "^22.13.0 || >=24"
     },
-    "keywords": [
-        "power query",
-        "power bi"
+    "workspaces": [
+        "packages/powerquery-parser",
+        "packages/powerquery-formatter",
+        "packages/powerquery-language-services"
     ],
-    "files": [
-        "lib/powerquery-language-services/**/*"
-    ],
+    "scripts": {
+        "clean": "node scripts/workspace.cjs clean",
+        "build": "npm run build --workspace @microsoft/powerquery-parser && npm run build --workspace @microsoft/powerquery-formatter && npm run build --workspace @microsoft/powerquery-language-services",
+        "lint": "npm run lint --workspaces",
+        "test": "npm run test:unit && npm run test:parser:resources && npm run test:release",
+        "test:unit": "npm test --workspaces",
+        "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
+        "test:release": "node --test scripts/test/release*.cjs",
+        "version:set": "node scripts/release.cjs version",
+        "version:patch": "node scripts/release.cjs patch",
+        "validate:release": "node scripts/release.cjs validate",
+        "pack:release": "node scripts/release.cjs pack"
+    },
+    "overrides": {
+        "glob": "^14.0.3",
+        "minimatch": "^11.0.3"
+    },
     "devDependencies": {
+        "@eslint/js": "^10.0.1",
         "@types/chai": "^4.3.20",
         "@types/mocha": "^10.0.8",
         "@types/node": "^22.7.3",
-        "@typescript-eslint/eslint-plugin": "^8.43.0",
-        "@typescript-eslint/parser": "^8.43.0",
+        "@typescript-eslint/eslint-plugin": "^8.72.1",
+        "@typescript-eslint/parser": "^8.72.1",
         "chai": "^4.5.0",
-        "cross-env": "^7.0.3",
-        "eslint": "^9.35.0",
+        "cross-env": "^10.1.0",
+        "eslint": "^10.14.0",
         "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
-        "eslint-plugin-promise": "^7.2.1",
-        "eslint-plugin-security": "^3.0.1",
-        "mocha": "^11.3.0",
-        "mocha-junit-reporter": "^2.2.1",
-        "mocha-multi-reporters": "^1.5.1",
-        "prettier": "^3.3.3",
+        "eslint-plugin-prettier": "^5.5.7",
+        "eslint-plugin-promise": "^7.3.0",
+        "eslint-plugin-security": "^4.2.0",
+        "mocha": "^12.0.3",
+        "prettier": "^3.8.1",
+        "semver": "^7.7.2",
+        "tar": "^7.5.1",
         "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.2",
         "webpack": "^5.105.1"
-    },
-    "dependencies": {
-        "@microsoft/powerquery-formatter": "1.1.0",
-        "@microsoft/powerquery-parser": "4.0.0",
-        "vscode-languageserver-textdocument": "1.0.12",
-        "vscode-languageserver-types": "3.17.5"
     }
 }
