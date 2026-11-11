@@ -1499,6 +1499,38 @@ describe(`Inspection - Type`, () => {
                             expected: Type.NoneInstance,
                         }));
 
+                    for (const text of [
+                        `{1}{5}?`,
+                        `{}{0}?`,
+                        `#table(type table [A = number], {{1}}){5}?`,
+                        `#table(type table [A = number], {}){0}?`,
+                        `(if true then {1} else #table(type table [A = number], {{1}})){5}?`,
+                    ]) {
+                        it(`missing optional item returns null: ${text}`, async () =>
+                            await assertEqualRootType({
+                                text,
+                                expected: Type.NullInstance,
+                            }));
+                    }
+
+                    it(`optional access does not suppress an existing element error`, async () =>
+                        await assertEqualRootType({
+                            text: `{error "fail"}{0}?`,
+                            expected: Type.NullableNoneInstance,
+                        }));
+
+                    it(`optional access combines missing and present collection alternatives`, async () =>
+                        await assertEqualRootType({
+                            text: `(if true then {} else {1}){0}?`,
+                            expected: anyUnion([Type.NullInstance, TypeUtils.numberLiteral(false, `1`)]),
+                        }));
+
+                    it(`optional access preserves errors alongside missing collection alternatives`, async () =>
+                        await assertEqualRootType({
+                            text: `(if true then {} else {error "fail"}){0}?`,
+                            expected: anyUnion([Type.NullInstance, Type.NoneInstance]),
+                        }));
+
                     it(`list access through let binding resolves element type`, async () =>
                         await assertEqualRootType({
                             text: `let x = {1, 2} in x{0}`,
