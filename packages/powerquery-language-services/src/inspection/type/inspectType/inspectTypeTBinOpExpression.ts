@@ -138,6 +138,13 @@ function inspectBinaryOperation(
         );
     }
 
+    if (operatorKind === Constant.EqualityOperator.EqualTo || operatorKind === Constant.EqualityOperator.NotEqualTo) {
+        // Compare each union alternative before combining results so errors are retained.
+        return Type.TypeKinds.includes(leftType.kind) && Type.TypeKinds.includes(rightType.kind)
+            ? Type.LogicalInstance
+            : Type.NoneInstance;
+    }
+
     const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
     const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
 

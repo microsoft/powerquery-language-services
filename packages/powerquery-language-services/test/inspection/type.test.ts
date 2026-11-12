@@ -132,6 +132,75 @@ describe(`Inspection - Type`, () => {
                     expected: Type.NoneInstance,
                 }));
 
+            describe(`equality`, () => {
+                for (const operator of [`=`, `<>`]) {
+                    for (const [left, right] of [
+                        [`1`, `"x"`],
+                        [`"x"`, `1`],
+                        [`{1}`, `[a = 1]`],
+                        [`(() => 1)`, `(() => 2)`],
+                        [`(type number)`, `(type text)`],
+                        [`(() => 1)`, `(type number)`],
+                        [`null`, `null`],
+                        [`null`, `1`],
+                        [`1`, `null`],
+                        [`(1 as nullable number)`, `2`],
+                        [`1`, `(2 as nullable number)`],
+                        [`(1 as nullable number)`, `("x" as nullable text)`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.LogicalInstance,
+                                }),
+                        );
+                    }
+
+                    for (const [left, right] of [
+                        [`(error "fail")`, `1`],
+                        [`null`, `(error "fail")`],
+                        [`missing`, `null`],
+                        [`1`, `missing`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.NoneInstance,
+                                }),
+                        );
+                    }
+
+                    const unionCases: ReadonlyArray<[string, string, Type.TPowerQueryType]> = [
+                        [`(if true then null else 1)`, `(if true then "x" else 2)`, Type.LogicalInstance],
+                        [
+                            `(if true then (error "fail") else (1 as nullable number))`,
+                            `null`,
+                            anyUnion([Type.NoneInstance, Type.LogicalInstance]),
+                        ],
+                        [
+                            `null`,
+                            `(if true then (error "fail") else (1 as nullable number))`,
+                            anyUnion([Type.NoneInstance, Type.LogicalInstance]),
+                        ],
+                    ];
+
+                    for (const [left, right, expected] of unionCases) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(`combines union equality results: ${text}`, async () =>
+                            await assertEqualRootType({ text, expected }));
+                    }
+                }
+            });
+
             describe(`union operands`, () => {
                 for (const text of [`foo + 1`, `1 + foo`]) {
                     it(`preserves outer union nullability: ${text}`, async () =>
