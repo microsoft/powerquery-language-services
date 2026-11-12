@@ -1307,6 +1307,42 @@ describe(`Inspection - Type`, () => {
             it(`1 ?? (1 + "")`, async () =>
                 await assertEqualRootType({
                     text: `1 ?? (1 + "")`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`1 ?? (error "unused")`, async () =>
+                await assertEqualRootType({
+                    text: `1 ?? (error "unused")`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`null ?? (error "reachable")`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? (error "reachable")`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`(null as nullable number) ?? (error "reachable")`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable number) ?? (error "reachable")`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`(error "left") ?? 1`, async () =>
+                await assertEqualRootType({
+                    text: `(error "left") ?? 1`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`normalized nullable union makes a later fallback unreachable`, async () =>
+                await assertEqualRootType({
+                    text: `((if true then null else 1) ?? 2) ?? (error "unused")`,
+                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `2`)]),
+                }));
+
+            it(`nullable fallback keeps a later fallback reachable`, async () =>
+                await assertEqualRootType({
+                    text: `((if true then null else 1) ?? null) ?? (error "reachable")`,
                     expected: Type.NoneInstance,
                 }));
 
