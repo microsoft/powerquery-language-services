@@ -53,10 +53,18 @@ export async function inspectTypeIfExpression(
     } else {
         const condition: boolean | undefined = literalCondition(state, xorNode);
 
-        result =
-            condition === undefined
-                ? await createAnyUnion(state, xorNode, trace.id)
-                : await inspectTypeFromChildAttributeIndex(state, xorNode, condition ? 3 : 5, trace.id);
+        if (condition === undefined) {
+            result = await createAnyUnion(state, xorNode, trace.id);
+            trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
+
+            return result;
+        }
+
+        if (condition) {
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
+        } else {
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
+        }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
