@@ -2,8 +2,13 @@
 // Licensed under the MIT license.
 
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMapUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode, XorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
@@ -46,12 +51,36 @@ export async function inspectTypeIfExpression(
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         result = Type.NoneInstance;
     } else {
-        result = await createAnyUnion(state, xorNode, trace.id);
+        const condition: boolean | undefined = literalCondition(state, xorNode);
+
+        result =
+            condition === undefined
+                ? await createAnyUnion(state, xorNode, trace.id)
+                : await inspectTypeFromChildAttributeIndex(state, xorNode, condition ? 3 : 5, trace.id);
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function literalCondition(state: InspectTypeState, xorNode: XorNode<Ast.IfExpression>): boolean | undefined {
+    let condition: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, xorNode.node.id, 1);
+
+    while (condition?.node.kind === Ast.NodeKind.ParenthesizedExpression) {
+        state.cancellationToken?.throwIfCancelled();
+        condition = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, condition.node.id, 1);
+    }
+
+    if (
+        condition !== undefined &&
+        XorNodeUtils.isAstChecked<Ast.LiteralExpression>(condition, Ast.NodeKind.LiteralExpression) &&
+        condition.node.literalKind === Ast.LiteralKind.Logical
+    ) {
+        return condition.node.literal === "true";
+    }
+
+    return undefined;
 }
 
 async function createAnyUnion(
