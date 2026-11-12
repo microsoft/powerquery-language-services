@@ -13,17 +13,19 @@
         "packages/powerquery-language-services"
     ],
     "scripts": {
-        "clean": "node scripts/workspace.cjs clean",
+        "clean": "ts-node scripts/workspace.ts clean",
         "build": "npm run build --workspace @microsoft/powerquery-parser && npm run build --workspace @microsoft/powerquery-formatter && npm run build --workspace @microsoft/powerquery-language-services",
-        "lint": "npm run lint --workspaces",
+        "lint": "npm run typecheck:scripts && npm run lint --workspaces",
+        "typecheck:scripts": "tsc --project tsconfig.json",
         "test": "npm run test:unit && npm run test:parser:resources && npm run test:release",
         "test:unit": "npm test --workspaces",
         "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
-        "test:release": "node --test scripts/test/release*.cjs",
-        "version:set": "node scripts/release.cjs version",
-        "version:patch": "node scripts/release.cjs patch",
-        "validate:release": "node scripts/release.cjs validate",
-        "pack:release": "node scripts/release.cjs pack"
+        "test:release": "node --require ts-node/register --test scripts/test/release*.ts",
+        "release:prepare": "ts-node scripts/release.ts prepare",
+        "version:set": "ts-node scripts/release.ts version",
+        "version:patch": "ts-node scripts/release.ts patch",
+        "validate:release": "ts-node scripts/release.ts validate",
+        "pack:release": "ts-node scripts/release.ts pack"
     },
     "overrides": {
         "glob": "^14.0.3",
@@ -34,6 +36,7 @@
         "@types/chai": "^4.3.20",
         "@types/mocha": "^10.0.8",
         "@types/node": "^22.7.3",
+        "@types/semver": "^7.7.1",
         "@typescript-eslint/eslint-plugin": "^8.72.1",
         "@typescript-eslint/parser": "^8.72.1",
         "chai": "^4.5.0",

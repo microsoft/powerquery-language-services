@@ -14,13 +14,17 @@ const analysisByUri: Map<string, [Analysis, number]> = new Map();
 export function analysis(document: TextDocument, analysisSettings: AnalysisSettings): Analysis {
     const cacheKey: string = document.uri.toString();
 
-    if (analysisSettings.isWorkspaceCacheAllowed && analysisByUri.has(cacheKey)) {
-        const [analysis, version]: [Analysis, number] = analysisByUri.get(cacheKey)!;
+    if (analysisSettings.isWorkspaceCacheAllowed) {
+        const cachedAnalysis: [Analysis, number] | undefined = analysisByUri.get(cacheKey);
 
-        if (version === document.version) {
-            return analysis;
-        } else {
-            analysisByUri.delete(cacheKey);
+        if (cachedAnalysis !== undefined) {
+            const [analysis, version]: [Analysis, number] = cachedAnalysis;
+
+            if (version === document.version) {
+                return analysis;
+            } else {
+                analysisByUri.delete(cacheKey);
+            }
         }
     }
 

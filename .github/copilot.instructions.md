@@ -44,5 +44,11 @@ packaged-consumer behavior.
 - Prefix every entry with exactly one of: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`.
 - Keep entries brief and describe the observable consumer impact.
 - Put entries under `Unreleased` when the change does not include a version bump.
-- When bumping the shared package version, move all `Unreleased` entries into the new version section and remove the
-  `Unreleased` section.
+- Packages are independently versioned. Use `npm run release:prepare -- <project> <major|minor|patch>` to bump one
+  package after preparing accurate notes under exactly one nonempty `## Unreleased` heading.
+- The command gates on full lint, build, and tests, rolls the selected package's entries verbatim into a dated UTC
+  version section, removes `Unreleased`, updates direct dependent pins without bumping their versions, refreshes the
+  root lockfile, and validates all three packaged consumers. Do not hand-edit versions/dates for this workflow.
+- Do not publish unchanged dependent versions merely because their pins changed. Prepare their own releases separately.
+- Read `.github/skills/prepare-release/SKILL.md` for release-note wording and safe invocation. Legacy shared-version
+  helpers are not the independent release workflow. Never bypass gates or fabricate release entries.
