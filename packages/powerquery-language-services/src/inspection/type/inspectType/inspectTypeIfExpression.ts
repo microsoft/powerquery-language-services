@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Keyword, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import {
+    NodeIdMapUtils,
+    TXorNode,
+    XorNode,
+    XorNodeUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { TXorNode, XorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 
 import { allForAnyUnion, inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectionTraceConstant, TraceUtils } from "../../..";
@@ -46,12 +51,41 @@ export async function inspectTypeIfExpression(
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         result = Type.NoneInstance;
     } else {
-        result = await createAnyUnion(state, xorNode, trace.id);
+        const literalCondition: boolean | undefined = isLiteralCondition(state, xorNode);
+
+        if (literalCondition === undefined) {
+            result = await createAnyUnion(state, xorNode, trace.id);
+        } else if (literalCondition) {
+            // Attribute index 3 is the expression after "then".
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 3, trace.id);
+        } else {
+            // Attribute index 5 is the expression after "else".
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 5, trace.id);
+        }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function isLiteralCondition(state: InspectTypeState, xorNode: XorNode<Ast.IfExpression>): boolean | undefined {
+    let condition: TXorNode | undefined = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, xorNode.node.id, 1);
+
+    while (condition?.node.kind === Ast.NodeKind.ParenthesizedExpression) {
+        state.cancellationToken?.throwIfCancelled();
+        condition = NodeIdMapUtils.nthChildXor(state.nodeIdMapCollection, condition.node.id, 1);
+    }
+
+    if (
+        condition !== undefined &&
+        XorNodeUtils.isAstChecked<Ast.LiteralExpression>(condition, Ast.NodeKind.LiteralExpression) &&
+        condition.node.literalKind === Ast.LiteralKind.Logical
+    ) {
+        return condition.node.literal === Keyword.KeywordKind.True;
+    }
+
+    return undefined;
 }
 
 async function createAnyUnion(

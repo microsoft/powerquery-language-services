@@ -885,12 +885,19 @@ describe(`Inspection - Type`, () => {
                 }));
 
             // Test AnyUnion return
-            it(`() => if true then 1 else ""`, async () =>
+            it(`(b as logical) => if b then 1 else ""`, async () =>
                 await assertEqualRootType({
-                    text: `() => if true then 1 else ""`,
+                    text: `(b as logical) => if b then 1 else ""`,
                     expected: TypeUtils.definedFunction(
                         false,
-                        [],
+                        [
+                            {
+                                nameLiteral: `b`,
+                                isNullable: false,
+                                isOptional: false,
+                                type: Type.TypeKind.Logical,
+                            },
+                        ],
                         anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.textLiteral(false, `""`)]),
                     ),
                 }));
@@ -1149,10 +1156,69 @@ describe(`Inspection - Type`, () => {
             it(`if true then 1 else false`, async () =>
                 await assertEqualRootType({
                     text: `if true then 1 else false`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`(if true then null else 1)`, async () =>
+                await assertEqualRootType({
+                    text: `(if true then null else 1)`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`(if false then null else 1)`, async () =>
+                await assertEqualRootType({
+                    text: `(if false then null else 1)`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`if false then 1 else "fallback"`, async () =>
+                await assertEqualRootType({
+                    text: `if false then 1 else "fallback"`,
+                    expected: TypeUtils.textLiteral(false, `"fallback"`),
+                }));
+
+            it(`unknown logical condition retains both branches`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => if b then 1 else false in select(true)`,
                     expected: anyUnion([TypeUtils.numberLiteral(false, `1`), Type.LogicalInstance]),
                 }));
 
-            it(`if if true then true else false then 1 else 0`, async () =>
+            for (const condition of ["true", "false", "((true))", "((false))"]) {
+                const isTrue: boolean = condition.includes("true");
+
+                it(`if ${condition} ignores an unreachable error`, async () =>
+                    await assertEqualRootType({
+                        text: `if ${condition} then ${isTrue ? "1" : 'error "unused"'} else ${
+                            isTrue ? 'error "unused"' : "2"
+                        }`,
+                        expected: TypeUtils.numberLiteral(false, isTrue ? `1` : `2`),
+                    }));
+
+                it(`if ${condition} preserves a reachable error`, async () =>
+                    await assertEqualRootType({
+                        text: `if ${condition} then ${isTrue ? 'error "reachable"' : "1"} else ${
+                            isTrue ? "2" : 'error "reachable"'
+                        }`,
+                        expected: Type.NoneInstance,
+                    }));
+            }
+
+            it(`does not resolve the unreachable branch`, async () =>
+                await assertEqualRootType({
+                    text: `if (false) then unreachable else 2`,
+                    expected: TypeUtils.numberLiteral(false, `2`),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        library: {
+                            ...ExtendedInspectionSettings.library,
+                            externalTypeResolver: () => {
+                                throw new Error("Unreachable branch must not be inspected");
+                            },
+                        },
+                    },
+                }));
+
+            it(`if if true then true else false then 1 else ""`, async () =>
                 await assertEqualRootType({
                     text: `if if true then true else false then 1 else ""`,
                     expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.textLiteral(false, `""`)]),
@@ -1191,7 +1257,13 @@ describe(`Inspection - Type`, () => {
             it(`if true then 1`, async () =>
                 await assertEqualRootType({
                     text: `if true then 1`,
-                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), Type.UnknownInstance]),
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`if false then 1`, async () =>
+                await assertEqualRootType({
+                    text: `if false then 1`,
+                    expected: Type.UnknownInstance,
                 }));
         });
 
@@ -1307,6 +1379,42 @@ describe(`Inspection - Type`, () => {
             it(`1 ?? (1 + "")`, async () =>
                 await assertEqualRootType({
                     text: `1 ?? (1 + "")`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`1 ?? (error "unused")`, async () =>
+                await assertEqualRootType({
+                    text: `1 ?? (error "unused")`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`null ?? (error "reachable")`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? (error "reachable")`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`(null as nullable number) ?? (error "reachable")`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable number) ?? (error "reachable")`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`(error "left") ?? 1`, async () =>
+                await assertEqualRootType({
+                    text: `(error "left") ?? 1`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`normalized nullable union makes a later fallback unreachable`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => ((if b then null else 1) ?? 2) ?? (error "unused") in select(true)`,
+                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `2`)]),
+                }));
+
+            it(`nullable fallback keeps a later fallback reachable`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => ((if b then null else 1) ?? null) ?? (error "reachable") in select(true)`,
                     expected: Type.NoneInstance,
                 }));
 
@@ -1318,6 +1426,98 @@ describe(`Inspection - Type`, () => {
                         TypeUtils.numberLiteral(false, `0`),
                     ]),
                 }));
+
+            it(`null ?? 1`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? 1`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`null ?? null`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? null`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`null ?? (null as nullable number)`, async () =>
+                await assertEqualRootType({
+                    text: `null ?? (null as nullable number)`,
+                    expected: Type.NullableNumberInstance,
+                }));
+
+            it(`(if true then null else 1) ?? 2`, async () =>
+                await assertEqualRootType({
+                    text: `(if true then null else 1) ?? 2`,
+                    expected: TypeUtils.numberLiteral(false, `2`),
+                }));
+
+            it(`(if false then null else 1) ?? 2`, async () =>
+                await assertEqualRootType({
+                    text: `(if false then null else 1) ?? 2`,
+                    expected: TypeUtils.numberLiteral(false, `1`),
+                }));
+
+            it(`removes null alternatives from the left union`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => (if b then null else 1) ?? 2 in select(true)`,
+                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `2`)]),
+                }));
+
+            it(`strips nullability from every left union member`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => (if b then (null as nullable number) else (null as nullable text)) ?? false in select(true)`,
+                    expected: anyUnion([Type.NumberInstance, Type.TextInstance, Type.LogicalInstance]),
+                }));
+
+            it(`preserves nullable right union members`, async () =>
+                await assertEqualRootType({
+                    text: `let select = (b as logical) => (if b then null else (1 as nullable number)) ?? (if b then null else "fallback") in select(true)`,
+                    expected: anyUnion([
+                        Type.NumberInstance,
+                        Type.NullInstance,
+                        TypeUtils.textLiteral(false, `"fallback"`),
+                    ]),
+                }));
+
+            it(`preserves right nullability when nullable any absorbs the right type`, async () =>
+                await assertEqualRootType({
+                    text: `(null as nullable any) ?? (null as nullable text)`,
+                    expected: Type.NullableAnyInstance,
+                }));
+
+            it(`removes null and nullability from nested left unions`, async () => {
+                const nestedUnion: Type.AnyUnion = {
+                    kind: Type.TypeKind.Any,
+                    extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                    isNullable: true,
+                    unionedTypePairs: [
+                        Type.NullInstance,
+                        {
+                            kind: Type.TypeKind.Any,
+                            extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                            isNullable: true,
+                            unionedTypePairs: [Type.NullInstance, Type.NullableNumberInstance],
+                        },
+                        Type.NullableTextInstance,
+                    ],
+                };
+
+                await assertEqualRootType({
+                    text: `foo ?? false`,
+                    expected: anyUnion([Type.NumberInstance, Type.TextInstance, Type.LogicalInstance]),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        library: {
+                            ...ExtendedInspectionSettings.library,
+                            externalTypeResolver: (request: ExternalType.TExternalTypeRequest) =>
+                                request.kind === ExternalType.ExternalTypeRequestKind.Value &&
+                                request.identifierLiteral === `foo`
+                                    ? nestedUnion
+                                    : undefined,
+                        },
+                    },
+                });
+            });
         });
 
         describe(`${Ast.NodeKind.Parameter}`, () => {
@@ -1504,7 +1704,7 @@ describe(`Inspection - Type`, () => {
                         `{}{0}?`,
                         `#table(type table [A = number], {{1}}){5}?`,
                         `#table(type table [A = number], {}){0}?`,
-                        `(if true then {1} else #table(type table [A = number], {{1}})){5}?`,
+                        `let select = (b as logical) => (if b then {1} else #table(type table [A = number], {{1}})){5}? in select(true)`,
                     ]) {
                         it(`missing optional item returns null: ${text}`, async () =>
                             await assertEqualRootType({
@@ -1521,13 +1721,13 @@ describe(`Inspection - Type`, () => {
 
                     it(`optional access combines missing and present collection alternatives`, async () =>
                         await assertEqualRootType({
-                            text: `(if true then {} else {1}){0}?`,
+                            text: `let select = (b as logical) => (if b then {} else {1}){0}? in select(true)`,
                             expected: anyUnion([Type.NullInstance, TypeUtils.numberLiteral(false, `1`)]),
                         }));
 
                     it(`optional access preserves errors alongside missing collection alternatives`, async () =>
                         await assertEqualRootType({
-                            text: `(if true then {} else {error "fail"}){0}?`,
+                            text: `let select = (b as logical) => (if b then {} else {error "fail"}){0}? in select(true)`,
                             expected: anyUnion([Type.NullInstance, Type.NoneInstance]),
                         }));
 
