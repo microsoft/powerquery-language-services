@@ -108,6 +108,62 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
+        for (const literal of [
+            Type.TrueInstance,
+            Type.FalseInstance,
+            Type.NullableTrueInstance,
+            Type.NullableFalseInstance,
+        ]) {
+            describe(`${literal.isNullable ? "nullable " : ""}${literal.normalizedLiteral}`, () => {
+                it(`retain a single logical literal`, () => {
+                    expect(noopSimplify([literal])).deep.equal([literal]);
+                });
+
+                it(`dedupe repeated logical literals`, () => {
+                    expect(noopSimplify([literal, literal])).deep.equal([literal]);
+                });
+
+                it(`retain the logical alternative in a mixed-type union`, () => {
+                    const number: Type.NumberLiteral = TypeUtils.numberLiteral(false, 1);
+
+                    const expected: Type.AnyUnion = {
+                        kind: Type.TypeKind.Any,
+                        extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                        isNullable: literal.isNullable,
+                        unionedTypePairs: [literal, number],
+                    };
+
+                    expect(noopCreateAnyUnion([literal, number])).deep.equal(expected);
+                });
+
+                it(`simplify with a logical primitive without losing nullability`, () => {
+                    expect(noopSimplify([Type.LogicalInstance, literal])).deep.equal([
+                        literal.isNullable ? Type.NullableLogicalInstance : Type.LogicalInstance,
+                    ]);
+
+                    expect(noopSimplify([literal, Type.NullableLogicalInstance])).deep.equal([
+                        Type.NullableLogicalInstance,
+                    ]);
+                });
+            });
+        }
+
+        for (const value of [true, false]) {
+            it(`prefer nullable for mixed-nullability ${value} literals in either order`, () => {
+                const literal: Type.LogicalLiteral = TypeUtils.logicalLiteral(false, value);
+                const nullableLiteral: Type.LogicalLiteral = TypeUtils.logicalLiteral(true, value);
+
+                expect(noopSimplify([literal, nullableLiteral, literal])).deep.equal([nullableLiteral]);
+                expect(noopSimplify([nullableLiteral, literal, nullableLiteral])).deep.equal([nullableLiteral]);
+            });
+        }
+
+        it(`retain a nullable logical primitive when both truth values are present`, () => {
+            expect(noopSimplify([Type.NullableLogicalInstance, Type.TrueInstance, Type.FalseInstance])).deep.equal([
+                Type.NullableLogicalInstance,
+            ]);
+        });
+
         it(`prefer nullable in boolean simplification`, () => {
             const actual: ReadonlyArray<AbridgedType> = noopSimplify([
                 Type.FalseInstance,
