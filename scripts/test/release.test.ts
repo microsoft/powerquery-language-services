@@ -14,15 +14,10 @@ import {
     writeJson,
     loadRelease,
     findNpmCli,
-    rollChangelog,
-    prepareRelease,
-    main,
-    npm,
     PackageEntry,
     PackageMetadata,
     PackageLock,
     RootMetadata,
-    Execute,
     readJson,
 } from "../release";
 import {
@@ -37,10 +32,9 @@ import {
     verifyManifest,
     ReleaseManifest,
 } from "../release-artifacts";
-import { cleanEnvironment, validateInstalledPackages } from "../release-consumer";
+import { cleanEnvironment } from "../release-consumer";
 
 const VERSION = "5.0.0";
-const versions = (version = VERSION) => Object.fromEntries(PACKAGES.map(entry => [entry.name, version]));
 const clone = <T>(value: T): T => structuredClone(value);
 
 function packageMetadata(entry: PackageEntry, version = VERSION): PackageMetadata {
@@ -193,7 +187,7 @@ test("npm selection honors the invoking npm and PATH before Node's bundled npm",
 });
 
 test("enforces public names, entrypoints, package versions, dist tags and exact graph", () => {
-    PACKAGES.forEach(entry => validatePackage(packageMetadata(entry), entry, versions()));
+    PACKAGES.forEach(entry => validatePackage(packageMetadata(entry), entry, VERSION));
     const entry = PACKAGES[2];
     for (const mutate of [
         item => {
@@ -235,11 +229,11 @@ test("enforces public names, entrypoints, package versions, dist tags and exact 
     ] satisfies ((item: PackageMetadata) => void)[]) {
         const item = packageMetadata(entry);
         mutate(item);
-        assert.throws(() => validatePackage(item, entry, versions()));
+        assert.throws(() => validatePackage(item, entry, VERSION));
     }
     const parser = packageMetadata(PACKAGES[0]);
     parser.dependencies[PACKAGES[1].name] = VERSION;
-    assert.throws(() => validatePackage(parser, PACKAGES[0], versions()), /closure/);
+    assert.throws(() => validatePackage(parser, PACKAGES[0], VERSION), /closure/);
 });
 
 test("validates lockfile root and workspace metadata and forbids registry duplicates", () => {
@@ -316,7 +310,7 @@ test("version updates all three versions/edges/tags and refreshes the lock once"
     });
     assert.equal(calls, 1);
     const release = loadRelease(directory, { resolution: false });
-    assert.deepEqual(release.versions, versions("5.1.0-rc.1+build.4"));
+    assert.equal(release.version, "5.1.0-rc.1+build.4");
     for (const item of release.metadata) assert.equal(item.publishConfig.tag, "next");
 });
 
@@ -336,7 +330,7 @@ test("patch increments the shared version and exact edges through reviewed prepa
     assert.equal(next, "5.0.1");
     assert.equal(calls, 1);
     const release = loadRelease(directory, { resolution: false });
-    assert.deepEqual(release.versions, versions(next));
+    assert.equal(release.version, next);
     for (const [index, metadata] of release.metadata.entries()) {
         assert.equal(metadata.publishConfig.tag, "latest");
         for (const name of PACKAGES[index].dependencies) assert.equal(metadata.dependencies[name], next);
@@ -356,7 +350,7 @@ test("patch rejects inconsistent versions without changing manifests", context =
             bumpPatch(directory, () => {
                 throw new Error("Must not refresh");
             }),
-        /closure/,
+        /release version/,
     );
     assert.deepEqual(fs.readFileSync(file), before);
 });
@@ -580,7 +574,7 @@ test("inspects real tar contents rather than trusting pack filenames", async con
     const directory = fixture(context);
     const entry = PACKAGES[0];
     const filename = await createTar(directory, entry);
-    assert.equal((await inspectTarball(filename, entry, versions())).name, entry.name);
+    assert.equal((await inspectTarball(filename, entry, VERSION)).name, entry.name);
 });
 
 for (const [label, options, expected] of [
@@ -605,7 +599,7 @@ for (const [label, options, expected] of [
     test(`tar rejects ${label}`, async context => {
         const directory = fixture(context);
         const filename = await createTar(directory, PACKAGES[0], options);
-        await assert.rejects(inspectTarball(filename, PACKAGES[0], versions()), expected);
+        await assert.rejects(inspectTarball(filename, PACKAGES[0], VERSION), expected);
     });
 }
 
@@ -627,7 +621,7 @@ test("tar refuses symbolic links and traversal even without extraction", async c
         assert.ok(header.block);
         fs.writeFileSync(filename, zlib.gzipSync(Buffer.concat([header.block, Buffer.alloc(1024)])));
         await assert.rejects(
-            inspectTarball(filename, PACKAGES[0], versions()),
+            inspectTarball(filename, PACKAGES[0], VERSION),
             /Unsafe tar entry type|Unsafe relative path/,
         );
     }
@@ -652,7 +646,7 @@ for (const [label, files, expected] of [
         fs.writeFileSync(path.join(source, "template.json"), '{"message":"English"}');
         fs.writeFileSync(path.join(source, "template.fr-FR.json"), '{"message":"French"}');
         const filename = await createTar(directory, PACKAGES[0], { files });
-        await assert.rejects(inspectTarball(filename, PACKAGES[0], versions(), directory), expected);
+        await assert.rejects(inspectTarball(filename, PACKAGES[0], VERSION, directory), expected);
     });
 }
 
@@ -694,435 +688,3 @@ test("consumer preserves configured npm proxy settings but suppresses module inj
         Object.assign(process.env, previous);
     }
 });
-
-function preparationFixture(context: TestContext, initialVersions = versions()): string {
-    const directory = fixture(context);
-    const data = createRepository(directory);
-    PACKAGES.forEach(entry => {
-        const metadata = packageMetadata(entry, initialVersions[entry.name]);
-        metadata.dependencies = Object.fromEntries(entry.dependencies.map(name => [name, initialVersions[name]]));
-        writeJson(path.join(directory, entry.workspace, "package.json"), metadata);
-        data.lock.packages[entry.workspace] = clone(metadata);
-        fs.writeFileSync(
-            path.join(directory, entry.workspace, "CHANGELOG.md"),
-            "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixes\r\n\r\n- Fixed: Keep comments.\r\n\r\n" +
-                "```markdown\r\n## Unreleased\r\n## 6.0.0\r\n```\r\n\r\n## 4.0.0\r\n\r\n- Added: Earlier behavior.\r\n",
-        );
-    });
-    writeJson(path.join(directory, "package-lock.json"), data.lock);
-    return directory;
-}
-
-function releaseBytes(directory: string): Map<string, Buffer> {
-    return new Map(
-        [
-            "package.json",
-            "package-lock.json",
-            ...PACKAGES.flatMap(entry => [`${entry.workspace}/package.json`, `${entry.workspace}/CHANGELOG.md`]),
-        ].map(relative => [relative, fs.readFileSync(path.join(directory, relative))]),
-    );
-}
-
-function assertReleaseBytes(directory: string, expected: ReadonlyMap<string, Buffer>): void {
-    for (const [relative, bytes] of expected)
-        assert.deepEqual(fs.readFileSync(path.join(directory, relative)), bytes, relative);
-}
-
-function refreshFixtureLock(directory: string): void {
-    const lockfile = path.join(directory, "package-lock.json");
-    const lock = readJson<PackageLock>(lockfile);
-    for (const entry of PACKAGES) {
-        const metadata = readJson<PackageMetadata>(path.join(directory, entry.workspace, "package.json"));
-        lock.packages[entry.workspace].version = metadata.version;
-        lock.packages[entry.workspace].dependencies = metadata.dependencies;
-    }
-    writeJson(lockfile, lock);
-}
-
-function preparationOptions(
-    root: string,
-    execute: Execute = (args, options) => {
-        if (args[0] === "install") refreshFixtureLock(options.cwd);
-    },
-) {
-    return { root, resolution: false, execute, now: () => new Date("2026-11-12T23:15:00-06:00") };
-}
-
-for (const [projectIndex, increment, next] of [
-    [0, "major", "6.0.0"],
-    [1, "minor", "5.1.0"],
-    [2, "patch", "5.0.1"],
-] as const) {
-    test(`prepares ${increment} for ${PACKAGES[projectIndex].slug} with only direct dependent pins`, context => {
-        const directory = preparationFixture(context);
-        const before = releaseBytes(directory);
-        const selected = PACKAGES[projectIndex];
-        const phases: string[] = [];
-        const options = preparationOptions(directory, (args, commandOptions) => {
-            if (args[0] === "install") {
-                assert.notEqual(commandOptions.cwd, directory);
-                refreshFixtureLock(commandOptions.cwd);
-            } else {
-                phases.push(args.join(" "));
-                if (args.join(" ") !== "run validate:release") assertReleaseBytes(directory, before);
-            }
-        });
-        const result = prepareRelease([projectIndex === 1 ? selected.name : selected.slug, increment], options);
-        assert.deepEqual(phases, ["run lint", "run build", "test", "run validate:release"]);
-        assert.equal(result.version, next);
-        assert.equal(result.date, "2026-11-13");
-        const release = loadRelease(directory, { resolution: false });
-        assert.deepEqual(release.versions, { ...versions(), [selected.name]: next });
-        PACKAGES.forEach((entry, index) => {
-            for (const name of entry.dependencies) {
-                assert.equal(release.metadata[index].dependencies[name], name === selected.name ? next : VERSION);
-            }
-            const relative = `${entry.workspace}/CHANGELOG.md`;
-            const actual = fs.readFileSync(path.join(directory, relative));
-            const original = before.get(relative);
-            assert.ok(original);
-            assert.deepEqual(
-                actual,
-                entry === selected
-                    ? Buffer.from(original.toString().replace("## Unreleased", `## ${next} - 2026-11-13`))
-                    : original,
-            );
-            if (index < projectIndex) {
-                assert.deepEqual(
-                    fs.readFileSync(path.join(directory, entry.workspace, "package.json")),
-                    before.get(`${entry.workspace}/package.json`),
-                );
-            }
-        });
-        assert.deepEqual(fs.readFileSync(path.join(directory, "package.json")), before.get("package.json"));
-        assert.equal(
-            result.files.length,
-            2 + PACKAGES.filter(entry => entry === selected || entry.dependencies.includes(selected.name)).length,
-        );
-    });
-}
-
-test("supports unequal versions and promotes prereleases following semver.inc", context => {
-    const initial = {
-        [PACKAGES[0].name]: "6.0.0-rc.2",
-        [PACKAGES[1].name]: "4.2.0",
-        [PACKAGES[2].name]: "3.1.0-beta.1",
-    };
-    const directory = preparationFixture(context, initial);
-    const result = prepareRelease([PACKAGES[0].slug, "patch"], preparationOptions(directory));
-    assert.equal(result.version, "6.0.0");
-    const release = loadRelease(directory, { resolution: false });
-    assert.deepEqual(release.versions, { ...initial, [PACKAGES[0].name]: "6.0.0" });
-    assert.deepEqual(
-        release.metadata.map(item => item.publishConfig.tag),
-        ["latest", "latest", "next"],
-    );
-    assert.throws(() => bumpPatch(directory), /Legacy patch requires a shared release version/);
-});
-
-test("changelog rollup preserves nested sections, fenced headings, history and line endings", () => {
-    for (const newline of ["\n", "\r\n"]) {
-        const source = [
-            "# Changelog",
-            "",
-            "## Unreleased",
-            "",
-            "### Added",
-            "",
-            "- Added: Public behavior.",
-            "",
-            "~~~~md",
-            "## Unreleased",
-            "## 5.1.0",
-            "```",
-            "~~~~",
-            "",
-            "## 5.0.0",
-            "",
-            "- Fixed: Old behavior.",
-        ].join(newline);
-        assert.equal(
-            rollChangelog(source, "5.1.0", "2026-11-13"),
-            source.replace("## Unreleased", "## 5.1.0 - 2026-11-13"),
-        );
-    }
-    assert.equal(
-        rollChangelog("## Unreleased ##\n\n- Fixed: Behavior.\n", "5.0.1", "2026-11-13"),
-        "## 5.0.1 - 2026-11-13\n\n- Fixed: Behavior.\n",
-    );
-});
-
-for (const [label, source] of [
-    ["missing", "# Changelog\n\n## 5.0.0\n\n- Fixed: Old.\n"],
-    ["empty", "## Unreleased\n\n## 5.0.0\n\n- Fixed: Old.\n"],
-    ["only subsection headings", "## Unreleased\n\n### Fixed\n\n<!-- pending -->\n"],
-    ["empty fence", "## Unreleased\n\n```\n```\n"],
-    ["duplicate", "## Unreleased\n\n- Fixed: A.\n\n## Unreleased\n\n- Fixed: B.\n"],
-    ["malformed", "##Unreleased\n\n- Fixed: A.\n"],
-    ["ambiguous", "## Unreleased - pending\n\n- Fixed: A.\n"],
-    ["case variant", "## unreleased\n\n- Fixed: A.\n"],
-    ["setext", "Unreleased\n---\n\n- Fixed: A.\n"],
-    ["duplicate release", "## Unreleased\n\n- Fixed: A.\n\n## 5.0.1 - 2026-11-12\n\n- Fixed: B.\n"],
-    ["linked duplicate release", "## Unreleased\n\n- Fixed: A.\n\n## [5.0.1]\n\n- Fixed: B.\n"],
-    ["setext duplicate release", "## Unreleased\n\n- Fixed: A.\n\n5.0.1\n---\n\n- Fixed: B.\n"],
-    ["empty before setext history", "## Unreleased\n\n5.0.0\n---\n\n- Fixed: Old.\n"],
-    ["tabbed duplicate release", "## Unreleased\n\n- Fixed: A.\n\n## 5.0.1\t- 2026-11-12\n"],
-    ["linked duplicate URL", "## Unreleased\n\n- Fixed: A.\n\n## [5.0.1](https://example.invalid/release)\n"],
-]) {
-    test(`rejects ${label} changelog without writes or commands`, context => {
-        const directory = preparationFixture(context);
-        fs.writeFileSync(path.join(directory, PACKAGES[0].workspace, "CHANGELOG.md"), source);
-        const before = releaseBytes(directory);
-        assert.throws(() =>
-            prepareRelease(
-                [PACKAGES[0].slug, "patch"],
-                preparationOptions(directory, () => assert.fail("Invalid changelog must not launch commands")),
-            ),
-        );
-        assertReleaseBytes(directory, before);
-    });
-}
-
-test("rejects invalid arguments before reading files or running commands", async context => {
-    const directory = fixture(context);
-    for (const args of [
-        [],
-        [PACKAGES[0].slug],
-        ["unknown", "patch"],
-        ["../powerquery-parser", "patch"],
-        [PACKAGES[0].slug, "prerelease"],
-        [PACKAGES[0].slug, "PATCH"],
-        [PACKAGES[0].slug, "patch", "extra"],
-    ]) {
-        assert.throws(
-            () =>
-                prepareRelease(
-                    args,
-                    preparationOptions(directory, () => assert.fail("No commands")),
-                ),
-            /Expected exactly|Unknown release project|Invalid release increment/,
-        );
-        await assert.rejects(main(["prepare", ...args]), /Usage:|Unknown release project|Invalid release increment/);
-    }
-    assert.deepEqual(fs.readdirSync(directory), []);
-});
-
-test("preflight rejects invalid package and lock metadata without writes or commands", context => {
-    const directory = preparationFixture(context);
-    const originals = releaseBytes(directory);
-    for (const relative of [`${PACKAGES[2].workspace}/package.json`, "package-lock.json"]) {
-        fs.writeFileSync(path.join(directory, relative), "{}");
-        const before = releaseBytes(directory);
-        assert.throws(() =>
-            prepareRelease(
-                [PACKAGES[0].slug, "patch"],
-                preparationOptions(directory, () => assert.fail("Invalid metadata must not launch commands")),
-            ),
-        );
-        assertReleaseBytes(directory, before);
-        const original = originals.get(relative);
-        assert.ok(original);
-        fs.writeFileSync(path.join(directory, relative), original);
-    }
-});
-
-for (const failure of [
-    "run lint",
-    "run build",
-    "test",
-    "install",
-    "stale lock",
-    "unrelated lock",
-    "run validate:release",
-]) {
-    test(`${failure} failure leaves release-source bytes unchanged`, context => {
-        const directory = preparationFixture(context);
-        const before = releaseBytes(directory);
-        assert.throws(
-            () =>
-                prepareRelease(
-                    [PACKAGES[0].slug, "patch"],
-                    preparationOptions(directory, (args, options) => {
-                        const phase = args[0] === "install" ? "install" : args.join(" ");
-                        if (phase === failure) throw new Error(`Failed ${failure}`);
-                        if (phase === "install" && failure !== "stale lock") {
-                            refreshFixtureLock(options.cwd);
-                            if (failure === "unrelated lock") {
-                                const filename = path.join(options.cwd, "package-lock.json");
-                                const lock = readJson<PackageLock>(filename);
-                                lock.packages["node_modules/unrelated"] = { version: "2.0.0" };
-                                writeJson(filename, lock);
-                            }
-                        }
-                    }),
-                ),
-            /Failed|mismatch|unrelated/,
-        );
-        assertReleaseBytes(directory, before);
-    });
-}
-
-for (const phase of ["run lint", "install", "run validate:release"]) {
-    test(`preserves concurrent manifest edits during ${phase} and restores only owned bytes`, context => {
-        const directory = preparationFixture(context);
-        const before = releaseBytes(directory);
-        const relative = `${PACKAGES[1].workspace}/package.json`;
-        const filename = path.join(directory, relative);
-        const concurrent = Buffer.from('{"name":"concurrent human edit"}\n');
-        assert.throws(
-            () =>
-                prepareRelease(
-                    [PACKAGES[0].slug, "patch"],
-                    preparationOptions(directory, (args, options) => {
-                        if (args[0] === "install") refreshFixtureLock(options.cwd);
-                        if ((args[0] === "install" ? "install" : args.join(" ")) === phase)
-                            fs.writeFileSync(filename, concurrent);
-                    }),
-                ),
-            phase === "run lint" ? /Concurrent release-file edit/ : /rollback incomplete.*preserved concurrent edit/,
-        );
-        before.set(relative, concurrent);
-        assertReleaseBytes(directory, before);
-    });
-}
-
-test("preserves concurrent edits to the real lock while npm refreshes its isolated copy", context => {
-    const directory = preparationFixture(context);
-    const before = releaseBytes(directory);
-    const concurrent = Buffer.from("human lock edit");
-    assert.throws(
-        () =>
-            prepareRelease(
-                [PACKAGES[0].slug, "patch"],
-                preparationOptions(directory, (args, options) => {
-                    if (args[0] !== "install") return;
-                    refreshFixtureLock(options.cwd);
-                    fs.writeFileSync(path.join(directory, "package-lock.json"), concurrent);
-                }),
-            ),
-        /Concurrent release-file edit/,
-    );
-    before.set("package-lock.json", concurrent);
-    assertReleaseBytes(directory, before);
-});
-
-test("detects unselected changelog edits during final validation without overwriting them", context => {
-    const directory = preparationFixture(context);
-    const before = releaseBytes(directory);
-    const relative = `${PACKAGES[2].workspace}/CHANGELOG.md`;
-    const concurrent = Buffer.from("# Human notes\n");
-    assert.throws(
-        () =>
-            prepareRelease(
-                [PACKAGES[0].slug, "patch"],
-                preparationOptions(directory, (args, options) => {
-                    if (args[0] === "install") refreshFixtureLock(options.cwd);
-                    if (args.join(" ") === "run validate:release")
-                        fs.writeFileSync(path.join(directory, relative), concurrent);
-                }),
-            ),
-        /Concurrent release-file edit/,
-    );
-    before.set(relative, concurrent);
-    assertReleaseBytes(directory, before);
-});
-
-test("schema v2 verifies unequal tar versions and exact referenced pins; v1 remains readable", async context => {
-    const root = fixture(context);
-    const dist = path.join(root, "dist");
-    fs.mkdirSync(dist);
-    const manifest = createManifest(dist);
-    validateManifest(manifest, dist);
-    manifest.schemaVersion = 2;
-    delete manifest.releaseVersion;
-    const selectedVersions = {
-        [PACKAGES[0].name]: "6.0.0",
-        [PACKAGES[1].name]: "4.2.0-rc.1",
-        [PACKAGES[2].name]: "3.0.1",
-    };
-    for (const [index, item] of manifest.packages.entries()) {
-        const metadata = packageMetadata(PACKAGES[index], selectedVersions[item.name]);
-        metadata.dependencies = Object.fromEntries(
-            PACKAGES[index].dependencies.map(name => [name, selectedVersions[name]]),
-        );
-        item.version = metadata.version;
-        item.distTag = versionTag(item.version);
-        item.internalDependencies = metadata.dependencies;
-        const archive = path.join(root, `archive-${index}`);
-        fs.mkdirSync(archive);
-        const filename = await createTar(archive, PACKAGES[index], { metadata });
-        fs.copyFileSync(filename, path.join(dist, item.tarball));
-        item.integrity = integrity(fs.readFileSync(filename));
-        const installed = path.join(root, "consumer", "node_modules", item.name);
-        fs.mkdirSync(installed, { recursive: true });
-        writeJson(path.join(installed, "package.json"), metadata);
-    }
-    await verifyManifest(manifest, dist);
-    validateInstalledPackages(path.join(root, "consumer"), manifest);
-    const wrongInstall = path.join(root, "consumer", "node_modules", PACKAGES[1].name, "package.json");
-    writeJson(wrongInstall, packageMetadata(PACKAGES[1]));
-    assert.throws(() => validateInstalledPackages(path.join(root, "consumer"), manifest), /wrong release/);
-    for (const mutate of [
-        value => {
-            value.packages[1].internalDependencies[PACKAGES[0].name] = "4.2.0-rc.1";
-        },
-        value => {
-            value.packages[1].distTag = "latest";
-        },
-        value => {
-            value.schemaVersion = 1;
-            value.releaseVersion = "6.0.0";
-        },
-        value => {
-            value.schemaVersion = 7;
-        },
-    ] satisfies ((value: ReleaseManifest) => void)[]) {
-        const invalid = clone(manifest);
-        mutate(invalid);
-        assert.throws(() => validateManifest(invalid, dist));
-    }
-});
-
-test("rollup ignores commented headings and stops at older setext release sections", () => {
-    const source =
-        "# Changelog\n\n<!--\n## Unreleased\n## 5.0.1\n-->\n\n## Unreleased\n\n- Fixed: A.\n\n" +
-        "5.0.0\n------\n\n- Fixed: Old.\n";
-    assert.equal(
-        rollChangelog(source, "5.0.1", "2026-11-13"),
-        source.replace("## Unreleased\n\n- Fixed: A.", "## 5.0.1 - 2026-11-13\n\n- Fixed: A."),
-    );
-});
-
-for (const [index, increment] of [
-    [0, "major"],
-    [1, "minor"],
-    [2, "patch"],
-] as const) {
-    test(`real npm lock refresh accepts only scoped ${increment} changes in a disposable repository`, context => {
-        const directory = fixture(context);
-        const root = path.resolve(__dirname, "..", "..");
-        for (const relative of [
-            "package.json",
-            "package-lock.json",
-            ".npmrc",
-            ...PACKAGES.map(entry => `${entry.workspace}/package.json`),
-        ]) {
-            const destination = path.join(directory, relative);
-            fs.mkdirSync(path.dirname(destination), { recursive: true });
-            fs.copyFileSync(path.join(root, relative), destination);
-        }
-        fs.writeFileSync(
-            path.join(directory, PACKAGES[index].workspace, "CHANGELOG.md"),
-            "# Changelog\n\n## Unreleased\n\n- Fixed: Fixture-only release content.\n",
-        );
-        const before = loadRelease(directory, { resolution: false });
-        const result = prepareRelease(
-            [PACKAGES[index].slug, increment],
-            preparationOptions(directory, (args, options) => {
-                if (args[0] === "install") npm([...args, "--offline", "--no-audit", "--no-fund"], { cwd: options.cwd });
-            }),
-        );
-        const after = loadRelease(directory, { resolution: false });
-        assert.deepEqual(after.versions, { ...before.versions, [PACKAGES[index].name]: result.version });
-    });
-}

@@ -130,11 +130,8 @@ function resolveParsedThemeRules<T extends IParameters = IParameters>(
 
     // pop up any rules of empty scope names and apply them together
     while (parsedThemeRules.length >= 1 && parsedThemeRules[0].scope === "") {
-        const incomingDefaults: ParsedThemeRule | undefined = parsedThemeRules.shift();
-
-        if (incomingDefaults === undefined) {
-            break;
-        }
+        // parsedThemeRules must be non-empty thus it should shift over here
+        const incomingDefaults: ParsedThemeRule = parsedThemeRules.shift()!;
 
         // no harm to be cautious, do not trust ts types as one this theme would be injected from clients
         if (incomingDefaults.parameters) {
@@ -244,15 +241,16 @@ export class ThemeTrieElement<T extends IParameters = IParameters> {
         b: ThemeTrieElementRule<T>,
     ): number {
         if (a.scopeDepth === b.scopeDepth) {
-            const aParentScopes: string[] = a.parentScopes ?? [];
-            const bParentScopes: string[] = b.parentScopes ?? [];
-            const aParentScopesLen: number = aParentScopes.length;
-            const bParentScopesLen: number = bParentScopes.length;
+            const aParentScopes: string[] | undefined = a.parentScopes;
+            const bParentScopes: string[] | undefined = b.parentScopes;
+            const aParentScopesLen: number = !aParentScopes ? 0 : aParentScopes.length;
+            const bParentScopesLen: number = !bParentScopes ? 0 : bParentScopes.length;
 
             if (aParentScopesLen === bParentScopesLen) {
                 for (let i: number = 0; i < aParentScopesLen; i += 1) {
-                    const aLen: number = aParentScopes[i].length;
-                    const bLen: number = bParentScopes[i].length;
+                    // aParentScopes and bParentScopes cannot be empty as aParentScopesLen is larger than 0
+                    const aLen: number = aParentScopes![i].length;
+                    const bLen: number = bParentScopes![i].length;
 
                     if (aLen !== bLen) {
                         return bLen - aLen;

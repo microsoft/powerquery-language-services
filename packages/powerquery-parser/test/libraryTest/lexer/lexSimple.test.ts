@@ -334,7 +334,7 @@ describe(`Lexer.Simple.Whitespace Pattern`, () => {
         // With bug: matches ":\u000B" (length 2) — colon consumed as whitespace
         // With fix: matches "\u000B" (length 1) — only the vertical tab
         expect(match).to.not.equal(null, "should match the vertical tab");
-        expect(match?.[0]).to.equal("\u000B", "should match only the whitespace char, not the preceding colon");
+        expect(match![0]).to.equal("\u000B", "should match only the whitespace char, not the preceding colon");
     });
 
     it(`should match vertical tab (U+000B) as whitespace`, () => {
@@ -346,6 +346,6 @@ describe(`Lexer.Simple.Whitespace Pattern`, () => {
         const match: RegExpExecArray | null = regex.exec(testStr);
 
         expect(match).to.not.equal(null, "Whitespace pattern should match vertical tab U+000B");
-        expect(match?.[0]).to.equal("\u000B");
+        expect(match![0]).to.equal("\u000B");
     });
 });

@@ -62,17 +62,6 @@ export function cleanEnvironment(): NodeJS.ProcessEnv {
     };
 }
 
-export function validateInstalledPackages(consumer: string, manifest: ReleaseManifest): void {
-    for (const entry of manifest.packages) {
-        const installed = path.join(consumer, "node_modules", entry.name);
-        check(!fs.lstatSync(installed).isSymbolicLink(), `${entry.name} consumer resolved to a workspace link`);
-        check(
-            readJson<PackageMetadata>(path.join(installed, "package.json")).version === entry.version,
-            `${entry.name} consumer installed the wrong release`,
-        );
-    }
-}
-
 export async function validateConsumer(root: string, manifest: ReleaseManifest): Promise<void> {
     const dist = path.join(root, "dist");
     await verifyManifest(manifest, dist, root);
@@ -111,7 +100,14 @@ export async function validateConsumer(root: string, manifest: ReleaseManifest):
             ],
             { cwd: consumer, env },
         );
-        validateInstalledPackages(consumer, manifest);
+        for (const entry of PACKAGES) {
+            const installed = path.join(consumer, "node_modules", entry.name);
+            check(!fs.lstatSync(installed).isSymbolicLink(), `${entry.name} consumer resolved to a workspace link`);
+            check(
+                readJson<PackageMetadata>(path.join(installed, "package.json")).version === manifest.releaseVersion,
+                `${entry.name} consumer installed the wrong release`,
+            );
+        }
         run(
             process.execPath,
             [

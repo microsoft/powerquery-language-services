@@ -21,7 +21,6 @@
         "test:unit": "npm test --workspaces",
         "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
         "test:release": "node --require ts-node/register --test scripts/test/release*.ts",
-        "release:prepare": "ts-node scripts/release.ts prepare",
         "version:set": "ts-node scripts/release.ts version",
         "version:patch": "ts-node scripts/release.ts patch",
         "validate:release": "ts-node scripts/release.ts validate",

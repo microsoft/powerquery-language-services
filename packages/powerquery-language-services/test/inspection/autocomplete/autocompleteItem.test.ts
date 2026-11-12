@@ -28,9 +28,9 @@ describe("AutocompleteItemUtils", () => {
             );
 
             expect(letSnippet).to.not.equal(undefined);
-            expect(letSnippet?.kind).to.equal(CompletionItemKind.Snippet);
-            expect(letSnippet?.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(letSnippet?.insertText).to.equal("let\n\t${1:name} = ${2:value}\nin\n\t${0:result}");
+            expect(letSnippet!.kind).to.equal(CompletionItemKind.Snippet);
+            expect(letSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(letSnippet!.insertText).to.equal("let\n\t${1:name} = ${2:value}\nin\n\t${0:result}");
         });
 
         it("if...then...else snippet has correct properties", () => {
@@ -39,9 +39,9 @@ describe("AutocompleteItemUtils", () => {
             );
 
             expect(ifSnippet).to.not.equal(undefined);
-            expect(ifSnippet?.kind).to.equal(CompletionItemKind.Snippet);
-            expect(ifSnippet?.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(ifSnippet?.insertText).to.equal("if ${1:condition} then ${2:trueValue} else ${3:falseValue}");
+            expect(ifSnippet!.kind).to.equal(CompletionItemKind.Snippet);
+            expect(ifSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(ifSnippet!.insertText).to.equal("if ${1:condition} then ${2:trueValue} else ${3:falseValue}");
         });
 
         it("try...otherwise snippet has correct properties", () => {
@@ -50,9 +50,9 @@ describe("AutocompleteItemUtils", () => {
             );
 
             expect(trySnippet).to.not.equal(undefined);
-            expect(trySnippet?.kind).to.equal(CompletionItemKind.Snippet);
-            expect(trySnippet?.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(trySnippet?.insertText).to.equal("try ${1:expression} otherwise ${2:default}");
+            expect(trySnippet!.kind).to.equal(CompletionItemKind.Snippet);
+            expect(trySnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(trySnippet!.insertText).to.equal("try ${1:expression} otherwise ${2:default}");
         });
 
         it("each snippet has correct properties", () => {
@@ -61,9 +61,9 @@ describe("AutocompleteItemUtils", () => {
             );
 
             expect(eachSnippet).to.not.equal(undefined);
-            expect(eachSnippet?.kind).to.equal(CompletionItemKind.Snippet);
-            expect(eachSnippet?.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(eachSnippet?.insertText).to.equal("each ${0:expression}");
+            expect(eachSnippet!.kind).to.equal(CompletionItemKind.Snippet);
+            expect(eachSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(eachSnippet!.insertText).to.equal("each ${0:expression}");
         });
 
         it("all snippets have jaroWinklerScore of 1", () => {

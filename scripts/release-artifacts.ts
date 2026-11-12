@@ -31,7 +31,7 @@ export interface ManifestPackage {
 
 export interface ReleaseManifest {
     schemaVersion: number;
-    releaseVersion?: string;
+    releaseVersion: string;
     sourceCommit: string;
     packages: ManifestPackage[];
 }
@@ -155,7 +155,7 @@ export function requireBuiltOutputs(root: string, entry: PackageEntry): void {
 export async function inspectTarball(
     filename: string,
     entry: PackageEntry,
-    versions: Record<string, string>,
+    version: string,
     root?: string,
 ): Promise<PackageMetadata> {
     const files = new Map<string, Buffer>();
@@ -217,7 +217,7 @@ export async function inspectTarball(
     const packageBytes = files.get("package.json");
     check(packageBytes, `${entry.name} missing package.json`);
     const metadata: PackageMetadata = JSON.parse(packageBytes.toString("utf8"));
-    validatePackage(metadata, entry, versions);
+    validatePackage(metadata, entry, version);
     check(
         !Object.keys(metadata).some(
             key => key.startsWith("_") || /^(?:auth|authentication|authToken|password|token|registry)$/i.test(key),
@@ -274,18 +274,13 @@ export async function inspectTarball(
 }
 
 export function validateManifest(manifest: ReleaseManifest, dist: string): ReleaseManifest {
-    check(
-        manifest && [1, 2].includes(manifest.schemaVersion),
-        "Unsupported release manifest schemaVersion; expected 1 or 2",
-    );
+    check(manifest && manifest.schemaVersion === 1, "Release manifest schemaVersion must be 1");
     same(
         Object.keys(manifest).sort(),
-        manifest.schemaVersion === 1
-            ? ["packages", "releaseVersion", "schemaVersion", "sourceCommit"]
-            : ["packages", "schemaVersion", "sourceCommit"],
+        ["packages", "releaseVersion", "schemaVersion", "sourceCommit"],
         "Release manifest contains unexpected fields",
     );
-    if (manifest.schemaVersion === 1) versionTag(manifest.releaseVersion);
+    const tag = versionTag(manifest.releaseVersion);
     check(
         typeof manifest.sourceCommit === "string" && /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(manifest.sourceCommit),
         "Release manifest must contain a git sourceCommit",
@@ -294,7 +289,6 @@ export function validateManifest(manifest: ReleaseManifest, dist: string): Relea
         Array.isArray(manifest.packages) && manifest.packages.length === PACKAGES.length,
         "Release manifest must contain exactly three ordered packages",
     );
-    const versions = Object.fromEntries(manifest.packages.map(item => [item.name, item.version]));
     const allowedRoot = ["npm", "release-manifest.json"];
     check(
         fs.readdirSync(dist).every(name => allowedRoot.includes(name)),
@@ -315,8 +309,8 @@ export function validateManifest(manifest: ReleaseManifest, dist: string): Relea
         check(
             item.name === entry.name &&
                 item.workspace === entry.workspace &&
-                (manifest.schemaVersion === 2 || item.version === manifest.releaseVersion) &&
-                item.distTag === versionTag(item.version),
+                item.version === manifest.releaseVersion &&
+                item.distTag === tag,
             `Release manifest identity/order/version/tag mismatch for ${entry.name}`,
         );
         safeRelative(item.workspace);
@@ -329,7 +323,7 @@ export function validateManifest(manifest: ReleaseManifest, dist: string): Relea
         );
         same(
             item.internalDependencies,
-            Object.fromEntries(entry.dependencies.map(name => [name, versions[name]])),
+            Object.fromEntries(entry.dependencies.map(name => [name, manifest.releaseVersion])),
             `Release manifest internal dependency closure mismatch for ${entry.name}`,
         );
         check(
@@ -349,9 +343,13 @@ export function validateManifest(manifest: ReleaseManifest, dist: string): Relea
 
 export async function verifyManifest(manifest: ReleaseManifest, dist: string, root?: string): Promise<void> {
     validateManifest(manifest, dist);
-    const versions = Object.fromEntries(manifest.packages.map(item => [item.name, item.version]));
     for (const [index, item] of manifest.packages.entries()) {
-        const metadata = await inspectTarball(inside(dist, item.tarball), PACKAGES[index], versions, root);
+        const metadata = await inspectTarball(
+            inside(dist, item.tarball),
+            PACKAGES[index],
+            manifest.releaseVersion,
+            root,
+        );
         same(
             item.internalDependencies,
             internalDependencies(metadata),
@@ -368,7 +366,8 @@ export async function packRelease(root: string): Promise<ReleaseManifest> {
     const manifestPath = inside(dist, "release-manifest.json");
     fs.rmSync(manifestPath, { force: true });
     const manifest: ReleaseManifest = {
-        schemaVersion: 2,
+        schemaVersion: 1,
+        releaseVersion: release.version,
         sourceCommit: run("git", ["rev-parse", "HEAD"], { cwd: root }),
         packages: [],
     };
@@ -432,7 +431,7 @@ export async function packRelease(root: string): Promise<ReleaseManifest> {
             const actual = safeRelative(result[0].filename);
             check(!actual.includes("/") && actual.endsWith(".tgz"), "npm pack returned an unsafe filename");
             const filename = inside(output, actual);
-            const metadata = await inspectTarball(filename, entry, release.versions, root);
+            const metadata = await inspectTarball(filename, entry, release.version, root);
             manifest.packages.push({
                 name: metadata.name,
                 version: metadata.version,

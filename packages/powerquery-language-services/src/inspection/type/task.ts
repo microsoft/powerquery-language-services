@@ -147,14 +147,11 @@ async function inspectScopeType(
     const result: ScopeTypeByKey = ScopeUtils.createScopeTypeByKey(
         nodeScope,
         async (scopeItem: TScopeItem): Promise<Type.TPowerQueryType> => {
-            let type: Type.TPowerQueryType | undefined = state.typeById.get(scopeItem.nodeId);
-
-            if (type === undefined) {
-                type = await getOrCreateScopeItemType(state, scopeItem);
-                state.typeById.set(scopeItem.nodeId, type);
+            if (!state.typeById.has(scopeItem.nodeId)) {
+                state.typeById.set(scopeItem.nodeId, await getOrCreateScopeItemType(state, scopeItem));
             }
 
-            return type;
+            return state.typeById.get(scopeItem.nodeId)!;
         },
     );
 

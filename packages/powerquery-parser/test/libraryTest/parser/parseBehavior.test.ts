@@ -188,10 +188,7 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-
-        const yVariable: Language.Ast.IdentifierPairedExpression = Assert.asDefined(
-            letExpression.variableList.elements[1],
-        ).node;
+        const yVariable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[1]!.node;
 
         expect(yVariable.precedingDirectives).to.equal(undefined, "y should not have directives from x's line");
     });
@@ -211,10 +208,7 @@ in
         );
 
         const letExpression: Language.Ast.LetExpression = parseOk.ast as Language.Ast.LetExpression;
-
-        const variable: Language.Ast.IdentifierPairedExpression = Assert.asDefined(
-            letExpression.variableList.elements[0],
-        ).node;
+        const variable: Language.Ast.IdentifierPairedExpression = letExpression.variableList.elements[0]!.node;
 
         expect(variable.precedingDirectives).to.not.equal(undefined);
         expect(variable.precedingDirectives?.length).to.equal(2);

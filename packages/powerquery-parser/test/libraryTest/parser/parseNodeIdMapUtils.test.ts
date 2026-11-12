@@ -356,22 +356,14 @@ describe(`nodeIdMapUtils`, () => {
             const originalState: Parser.ParseState = triedLexParseTask.parseState;
 
             expect(originalState.currentContextNode).to.not.be.undefined;
-
-            const originalCurrentContextNode: Parser.ParseContext.TNode = Assert.asDefined(
-                originalState.currentContextNode,
-            );
-
-            const originalAttributeCounter: number = originalCurrentContextNode.attributeCounter;
+            const originalAttributeCounter: number = originalState.currentContextNode!.attributeCounter;
 
             const copiedState: Parser.ParseState = await Parser.ParseStateUtils.copyState(originalState);
 
-            const copiedCurrentContextNode: Parser.ParseContext.TNode = Assert.asDefined(
-                copiedState.currentContextNode,
-            );
+            expect(copiedState.currentContextNode).to.not.be.undefined;
+            copiedState.currentContextNode!.attributeCounter += 1;
 
-            copiedCurrentContextNode.attributeCounter += 1;
-
-            expect(originalCurrentContextNode.attributeCounter).to.equal(
+            expect(originalState.currentContextNode!.attributeCounter).to.equal(
                 originalAttributeCounter,
                 "Mutating currentContextNode on copied state should not affect the original state",
             );
@@ -382,29 +374,21 @@ describe(`nodeIdMapUtils`, () => {
 
             TaskUtils.assertIsParseStageParseError(triedLexParseTask);
             const originalState: Parser.ParseState = triedLexParseTask.parseState;
-
             expect(originalState.currentContextNode).to.not.be.undefined;
 
-            const originalCurrentContextNode: Parser.ParseContext.TNode = Assert.asDefined(
-                originalState.currentContextNode,
-            );
-
             const copiedState: Parser.ParseState = await Parser.ParseStateUtils.copyState(originalState);
-
             expect(copiedState.currentContextNode).to.not.be.undefined;
 
-            const copiedCurrentContextNode: Parser.ParseContext.TNode = Assert.asDefined(
-                copiedState.currentContextNode,
+            expect(copiedState.currentContextNode!.id).to.equal(originalState.currentContextNode!.id);
+            expect(copiedState.currentContextNode!.kind).to.equal(originalState.currentContextNode!.kind);
+
+            expect(copiedState.currentContextNode!.attributeCounter).to.equal(
+                originalState.currentContextNode!.attributeCounter,
             );
 
-            expect(copiedCurrentContextNode.id).to.equal(originalCurrentContextNode.id);
-            expect(copiedCurrentContextNode.kind).to.equal(originalCurrentContextNode.kind);
+            expect(copiedState.currentContextNode!.isClosed).to.equal(originalState.currentContextNode!.isClosed);
 
-            expect(copiedCurrentContextNode.attributeCounter).to.equal(originalCurrentContextNode.attributeCounter);
-
-            expect(copiedCurrentContextNode.isClosed).to.equal(originalCurrentContextNode.isClosed);
-
-            expect(copiedCurrentContextNode).to.not.equal(originalCurrentContextNode);
+            expect(copiedState.currentContextNode).to.not.equal(originalState.currentContextNode);
         });
     });
 
