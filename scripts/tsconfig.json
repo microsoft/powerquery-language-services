@@ -6,5 +6,5 @@
         "rootDir": "..",
         "types": ["node", "mocha"]
     },
-    "include": ["**/*.ts"]
+    "include": ["**/*.ts", "../eslint.shared.ts", "../mocha.shared.ts", "../packages/*/.mocharc*.ts"]
 }
