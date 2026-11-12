@@ -1,9 +1,10 @@
 {
-    "extends": "./tsconfig.base.json",
+    "extends": "../tsconfig.base.json",
     "compilerOptions": {
         "noEmit": true,
         "incremental": false,
+        "rootDir": "..",
         "types": ["node", "mocha"]
     },
-    "include": ["scripts/**/*.ts"]
+    "include": ["**/*.ts"]
 }

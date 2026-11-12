@@ -37,9 +37,6 @@ Common compiler settings live in `tsconfig.base.json`, with package-specific inp
 options in each package's config. All packages use the same root ESLint rule set.
 Mocha's shared config and composite reporter are configured once at the root;
 package configs select their suites and the parser resource command selects its own XML output.
-Shared build/release helpers and their tests are TypeScript, executed through `ts-node`.
-`npm run typecheck:scripts` checks them with strict compiler settings and is included in `npm run lint`.
-The small CommonJS Mocha and ESLint configurations remain directly loadable by their tools.
 
 Use workspace commands after building prerequisites:
 
