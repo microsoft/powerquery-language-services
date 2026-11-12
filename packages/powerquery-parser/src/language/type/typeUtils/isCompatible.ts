@@ -47,7 +47,7 @@ export function isCompatible(
             case Type.TypeKind.DateTimeZone:
             case Type.TypeKind.Duration:
             case Type.TypeKind.Time:
-                result = isEqualType(left, right);
+                result = left.kind === right.kind;
                 break;
 
             case Type.TypeKind.Any:
