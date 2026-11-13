@@ -133,6 +133,7 @@ export async function validateConsumer(root: string, manifest: ReleaseManifest):
                 target: "ES2022",
                 module: "commonjs",
                 moduleResolution: "node",
+                ignoreDeprecations: "6.0",
                 strict: true,
                 skipLibCheck: false,
                 noEmitOnError: true,

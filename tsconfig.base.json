@@ -2,11 +2,11 @@
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "declaration": true,
-        "downlevelIteration": true,
         "esModuleInterop": true,
         "incremental": true,
         "module": "commonjs",
         "moduleResolution": "node",
+        "ignoreDeprecations": "6.0",
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
@@ -17,6 +17,7 @@
         "sourceMap": true,
         "strict": true,
         "target": "es2022",
+        "types": ["node", "mocha"],
         "outDir": "${configDir}/lib",
         "rootDir": "${configDir}",
         "tsBuildInfoFile": "${configDir}/tsconfig.tsbuildinfo"

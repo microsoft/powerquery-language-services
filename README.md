@@ -30,11 +30,13 @@ the parser resource suite, and release-helper tests. `npm run test:unit` and
 `npm run test:parser:resources` are focused alternatives.
 
 Shared development tools, including ESLint and Prettier, are declared in the private root manifest.
-Use a Node version satisfying the root manifest's development requirement; publishable packages
+Use Node.js 26.13.1 or later for development and CI; publishable packages
 declare their own consumer requirement. Runtime dependencies remain in each
 publishable package so tarballs can be installed independently of the workspace.
 Common compiler settings live in `tsconfig.base.json`, with package-specific inputs and safety
 options in each package's config. All packages use the same root ESLint rule set.
+TypeScript 6 retains the existing CommonJS/Node resolution settings with `ignoreDeprecations`
+until the build and script tooling can migrate together.
 Mocha's shared config and composite reporter are configured once at the root;
 package configs select their suites and the parser resource command selects its own XML output.
 
