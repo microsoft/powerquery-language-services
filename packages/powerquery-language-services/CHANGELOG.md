@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed: Infer binary operations over union alternatives while retaining invalid-operation alternatives.
+- Fixed: Infer non-nullable logical results for equality and inequality across value kinds, including null.
 - Fixed: Infer table column selections as lists, preserving exact elements when rows are known.
 - Fixed: Infer null for missing optional list items and table rows without suppressing errors in existing elements.
 - Fixed: Null-coalescing type inference removes null alternatives from the left operand while preserving right operand nullability.

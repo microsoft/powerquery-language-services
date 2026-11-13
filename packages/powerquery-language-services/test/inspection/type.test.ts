@@ -131,6 +131,173 @@ describe(`Inspection - Type`, () => {
                     text: `true + 1`,
                     expected: Type.NoneInstance,
                 }));
+
+            describe(`equality`, () => {
+                for (const operator of [`=`, `<>`]) {
+                    for (const [left, right] of [
+                        [`1`, `"x"`],
+                        [`"x"`, `1`],
+                        [`{1}`, `[a = 1]`],
+                        [`(() => 1)`, `(() => 2)`],
+                        [`(type number)`, `(type text)`],
+                        [`(() => 1)`, `(type number)`],
+                        [`null`, `null`],
+                        [`null`, `1`],
+                        [`1`, `null`],
+                        [`(1 as nullable number)`, `2`],
+                        [`1`, `(2 as nullable number)`],
+                        [`(1 as nullable number)`, `("x" as nullable text)`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.LogicalInstance,
+                                }),
+                        );
+                    }
+
+                    for (const [left, right] of [
+                        [`(error "fail")`, `1`],
+                        [`null`, `(error "fail")`],
+                        [`missing`, `null`],
+                        [`1`, `missing`],
+                    ]) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(
+                            text,
+                            async () =>
+                                await assertEqualRootType({
+                                    text,
+                                    expected: Type.NoneInstance,
+                                }),
+                        );
+                    }
+
+                    const unionCases: ReadonlyArray<[string, string, Type.TPowerQueryType]> = [
+                        [`(if b then null else 1)`, `(if b then "x" else 2)`, Type.LogicalInstance],
+                        [
+                            `(if b then (error "fail") else (1 as nullable number))`,
+                            `null`,
+                            anyUnion([Type.NoneInstance, Type.LogicalInstance]),
+                        ],
+                        [
+                            `null`,
+                            `(if b then (error "fail") else (1 as nullable number))`,
+                            anyUnion([Type.NoneInstance, Type.LogicalInstance]),
+                        ],
+                    ];
+
+                    for (const [left, right, expected] of unionCases) {
+                        const text: string = `${left} ${operator} ${right}`;
+
+                        it(`combines union equality results: ${text}`, async () =>
+                            await assertEqualRootType({
+                                text: `let compare = (b as logical) => ${text} in compare(true)`,
+                                expected,
+                            }));
+                    }
+                }
+            });
+
+            describe(`union operands`, () => {
+                for (const text of [`foo + 1`, `1 + foo`]) {
+                    it(`preserves outer union nullability: ${text}`, async () =>
+                        await assertEqualRootType({
+                            text,
+                            expected: Type.NullableNumberInstance,
+                            settings: {
+                                ...ExtendedInspectionSettings,
+                                library: {
+                                    ...ExtendedInspectionSettings.library,
+                                    externalTypeResolver: (request: ExternalType.TExternalTypeRequest) =>
+                                        request.kind === ExternalType.ExternalTypeRequestKind.Value &&
+                                        request.identifierLiteral === `foo`
+                                            ? {
+                                                  ...anyUnion([
+                                                      TypeUtils.numberLiteral(false, 1),
+                                                      TypeUtils.numberLiteral(false, 2),
+                                                  ]),
+                                                  isNullable: true,
+                                              }
+                                            : undefined,
+                                },
+                            },
+                        }));
+                }
+
+                const cases: ReadonlyArray<[string, Type.TPowerQueryType]> = [
+                    [`(if b then 1 else 2) + 1`, Type.NumberInstance],
+                    [`1 - (if b then 2 else 3)`, Type.NumberInstance],
+                    [`(if b then 1 else 2) * (if b then 3 else 4)`, Type.NumberInstance],
+                    [`(if b then 1 else "two") + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
+                    [`(if b then "one" else "two") + 1`, Type.NoneInstance],
+                    [`(if b then true + 1 else 2) + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
+                    [`(if b then {1}{0}? else 2) + 1`, Type.NullableNumberInstance],
+                    [`(1 as any) + 1`, Type.NoneInstance],
+                    [`missing + 1`, Type.NoneInstance],
+                    [
+                        `(if b then [a = 1] else [a = 2]) & [z = "x"]`,
+                        anyUnion([
+                            definedRecord([
+                                [`a`, TypeUtils.numberLiteral(false, 1)],
+                                [`z`, TypeUtils.textLiteral(false, `"x"`)],
+                            ]),
+                            definedRecord([
+                                [`a`, TypeUtils.numberLiteral(false, 2)],
+                                [`z`, TypeUtils.textLiteral(false, `"x"`)],
+                            ]),
+                        ]),
+                    ],
+                    [
+                        `(if b then #table(type table [a = number], {{1}})
+                            else #table(type table [a = number], {{2}}))
+                            & #table(type table [a = number], {{3}})`,
+                        anyUnion([
+                            definedTable(
+                                [[`a`, Type.NumberInstance]],
+                                [
+                                    definedRow([[`a`, TypeUtils.numberLiteral(false, 1)]]),
+                                    definedRow([[`a`, TypeUtils.numberLiteral(false, 3)]]),
+                                ],
+                            ),
+                            definedTable(
+                                [[`a`, Type.NumberInstance]],
+                                [
+                                    definedRow([[`a`, TypeUtils.numberLiteral(false, 2)]]),
+                                    definedRow([[`a`, TypeUtils.numberLiteral(false, 3)]]),
+                                ],
+                            ),
+                        ]),
+                    ],
+                ];
+
+                for (const [expression, returnType] of cases) {
+                    it(
+                        expression,
+                        async () =>
+                            await assertEqualRootType({
+                                text: `(b as logical) => ${expression}`,
+                                expected: TypeUtils.definedFunction(
+                                    false,
+                                    [
+                                        {
+                                            nameLiteral: `b`,
+                                            type: Type.TypeKind.Logical,
+                                            isNullable: false,
+                                            isOptional: false,
+                                        },
+                                    ],
+                                    returnType,
+                                ),
+                            }),
+                    );
+                }
+            });
         });
 
         describe(`${Ast.NodeKind.AsNullablePrimitiveType}`, () => {

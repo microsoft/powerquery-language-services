@@ -93,23 +93,78 @@ export async function inspectTypeTBinOpExpression(
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
         const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
 
-        const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
-        const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
-
-        if (resultTypeKind === undefined) {
-            result = Type.NoneInstance;
-        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Record) {
-            result = inspectRecordUnion(leftType as Type.TRecord, rightType as Type.TRecord);
-        } else if (operatorKind === Constant.ArithmeticOperator.And && resultTypeKind === Type.TypeKind.Table) {
-            result = inspectTableUnion(state, leftType as Type.TTable, rightType as Type.TTable, trace.id);
-        } else {
-            result = TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
-        }
+        result = inspectBinaryOperation(state, leftType, operatorKind, rightType, trace.id);
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function inspectBinaryOperation(
+    state: InspectTypeState,
+    leftType: Type.TPowerQueryType,
+    operatorKind: Constant.TBinOpExpressionOperator,
+    rightType: Type.TPowerQueryType,
+    correlationId: number,
+): Type.TPowerQueryType {
+    if (TypeUtils.isAnyUnion(leftType)) {
+        return TypeUtils.anyUnion(
+            leftType.unionedTypePairs.map((member: Type.TPowerQueryType) =>
+                inspectBinaryOperation(
+                    state,
+                    leftType.isNullable ? { ...member, isNullable: true } : member,
+                    operatorKind,
+                    rightType,
+                    correlationId,
+                ),
+            ),
+            state.traceManager,
+            correlationId,
+        );
+    } else if (TypeUtils.isAnyUnion(rightType)) {
+        return TypeUtils.anyUnion(
+            rightType.unionedTypePairs.map((member: Type.TPowerQueryType) =>
+                inspectBinaryOperation(
+                    state,
+                    leftType,
+                    operatorKind,
+                    rightType.isNullable ? { ...member, isNullable: true } : member,
+                    correlationId,
+                ),
+            ),
+            state.traceManager,
+            correlationId,
+        );
+    }
+
+    if (operatorKind === Constant.EqualityOperator.EqualTo || operatorKind === Constant.EqualityOperator.NotEqualTo) {
+        // Compare each union alternative before combining results so errors are retained.
+        return Type.TypeKinds.includes(leftType.kind) && Type.TypeKinds.includes(rightType.kind)
+            ? Type.LogicalInstance
+            : Type.NoneInstance;
+    }
+
+    const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
+    const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
+
+    if (resultTypeKind === undefined) {
+        return Type.NoneInstance;
+    } else if (
+        operatorKind === Constant.ArithmeticOperator.And &&
+        TypeUtils.isRecord(leftType) &&
+        TypeUtils.isRecord(rightType)
+    ) {
+        return inspectRecordUnion(leftType, rightType);
+    } else if (
+        operatorKind === Constant.ArithmeticOperator.And &&
+        TypeUtils.isTable(leftType) &&
+        TypeUtils.isTable(rightType)
+    ) {
+        return inspectTableUnion(state, leftType, rightType, correlationId);
+    } else {
+        return TypeUtils.primitiveType(leftType.isNullable || rightType.isNullable, resultTypeKind);
+    }
 }
 
 function inspectRecordUnion(leftType: Type.TRecord, rightType: Type.TRecord): Type.TRecord {
