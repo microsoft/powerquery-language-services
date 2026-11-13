@@ -95,31 +95,34 @@ function inspectRecordOrTable(
     fieldName: string,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    const unknownFieldType: Type.TPowerQueryType =
-        fieldType.kind === Type.TypeKind.Table
-            ? TypeUtils.primitiveType(isOptional, Type.TypeKind.List)
-            : Type.AnyInstance;
+    if (fieldType.extendedKind === undefined || (fieldType.isOpen && !fieldType.fields.has(fieldName))) {
+        if (fieldType.kind === Type.TypeKind.Table) {
+            return TypeUtils.primitiveType(isOptional, Type.TypeKind.List);
+        }
 
-    if (fieldType.extendedKind === undefined) {
-        return unknownFieldType;
+        return Type.AnyInstance;
     }
 
     const namedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
 
-    if (namedField !== undefined) {
-        if (fieldType.kind === Type.TypeKind.Table) {
-            return fieldType.rows === undefined
-                ? Type.ListInstance
-                : TypeUtils.definedList(
-                      false,
-                      fieldType.rows.map((row: Type.UnorderedFields) => MapUtils.assertGet(row, fieldName)),
-                  );
+    if (namedField === undefined) {
+        if (isOptional) {
+            return Type.NullInstance;
         }
 
-        return namedField;
-    } else if (fieldType.isOpen) {
-        return unknownFieldType;
-    } else {
-        return isOptional ? Type.NullInstance : Type.NoneInstance;
+        return Type.NoneInstance;
     }
+
+    if (fieldType.kind === Type.TypeKind.Record) {
+        return namedField;
+    }
+
+    if (fieldType.rows === undefined) {
+        return Type.ListInstance;
+    }
+
+    return TypeUtils.definedList(
+        false,
+        fieldType.rows.map((row: Type.UnorderedFields) => MapUtils.assertGet(row, fieldName)),
+    );
 }

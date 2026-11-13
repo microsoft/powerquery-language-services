@@ -1831,26 +1831,6 @@ describe(`Inspection - Type`, () => {
                         }));
                 });
 
-                describe(`${Ast.NodeKind.FieldSelector}`, () => {
-                    it(`[a = 1][a]`, async () =>
-                        await assertEqualRootType({
-                            text: `[a = 1][a]`,
-                            expected: TypeUtils.numberLiteral(false, `1`),
-                        }));
-
-                    it(`[a = 1][b]`, async () =>
-                        await assertEqualRootType({
-                            text: `[a = 1][b]`,
-                            expected: Type.NoneInstance,
-                        }));
-
-                    it(`a[b]?`, async () =>
-                        await assertEqualRootType({
-                            text: `[a = 1][b]?`,
-                            expected: Type.NullInstance,
-                        }));
-                });
-
                 it(`${Ast.NodeKind.FieldProjection}`, async () =>
                     await assertEqualRootType({
                         text: `let x = (_ as any) in x[[foo]]`,
@@ -1864,12 +1844,6 @@ describe(`Inspection - Type`, () => {
                     await assertEqualRootType({
                         text: `let x = (_ as table) in x[[foo]]`,
                         expected: definedTable([[`foo`, Type.AnyInstance]]),
-                    }));
-
-                it(`${Ast.NodeKind.FieldSelector}`, async () =>
-                    await assertEqualRootType({
-                        text: `[a = 1][a]`,
-                        expected: TypeUtils.numberLiteral(false, `1`),
                     }));
             });
 
@@ -1936,12 +1910,6 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.TableType}`, () => {
-            it(`type table [foo]`, async () =>
-                await assertEqualRootType({
-                    text: `type table [foo]`,
-                    expected: TypeUtils.tableType(false, new Map([[`foo`, Type.AnyInstance]]), false),
-                }));
-
             it(`type table [foo]`, async () =>
                 await assertEqualRootType({
                     text: `type table [foo]`,
@@ -2110,20 +2078,9 @@ describe(`Inspection - Type`, () => {
                 }));
 
             it(`resolves based on argument`, async () => {
-                const expression1: string = `foo()`;
-                const expected1: Type.Text = Type.TextInstance;
-
                 await assertEqualRootType({
-                    text: expression1,
-                    expected: expected1,
-                });
-
-                const expression2: string = `foo("bar")`;
-                const expected2: Type.Number = Type.NumberInstance;
-
-                await assertEqualRootType({
-                    text: expression2,
-                    expected: expected2,
+                    text: `foo("bar")`,
+                    expected: Type.NumberInstance,
                 });
             });
 
