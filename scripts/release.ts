@@ -371,9 +371,12 @@ export async function main(args: string[]): Promise<void> {
     } else if (command === "patch") {
         console.log(`Set the public release group to ${bumpPatch()}`);
     } else {
-        const artifacts = await import("./release-artifacts");
+        const artifacts: typeof import("./release-artifacts") = require("./release-artifacts");
         const manifest = await artifacts.packRelease(ROOT);
-        if (command === "validate") await (await import("./release-consumer")).validateConsumer(ROOT, manifest);
+        if (command === "validate") {
+            const consumer: typeof import("./release-consumer") = require("./release-consumer");
+            await consumer.validateConsumer(ROOT, manifest);
+        }
         console.log(`${command === "validate" ? "Validated" : "Packed"} public release ${manifest.releaseVersion}`);
     }
 }

@@ -4,9 +4,8 @@
         "declaration": true,
         "esModuleInterop": true,
         "incremental": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
-        "ignoreDeprecations": "6.0",
+        "module": "node16",
+        "moduleResolution": "node16",
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
@@ -25,7 +24,7 @@
     "exclude": ["${configDir}/node_modules", "${configDir}/lib"],
     "ts-node": {
         "compilerOptions": {
-            "module": "commonjs",
+            "module": "node16",
             "target": "es2022"
         }
     }

@@ -131,9 +131,8 @@ export async function validateConsumer(root: string, manifest: ReleaseManifest):
         writeJson(path.join(consumer, "tsconfig.json"), {
             compilerOptions: {
                 target: "ES2022",
-                module: "commonjs",
-                moduleResolution: "node",
-                ignoreDeprecations: "6.0",
+                module: "node16",
+                moduleResolution: "node16",
                 strict: true,
                 skipLibCheck: false,
                 noEmitOnError: true,
