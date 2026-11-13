@@ -5,7 +5,7 @@
     "description": "Development workspace for the Power Query parser, formatter, and language services.",
     "license": "MIT",
     "engines": {
-        "node": "^22.13.0 || >=24"
+        "node": ">=26.13.1"
     },
     "workspaces": [
         "packages/powerquery-parser",
@@ -21,10 +21,10 @@
         "test:unit": "npm test --workspaces",
         "test:parser:resources": "npm run test:resources --workspace @microsoft/powerquery-parser",
         "test:release": "cross-env TS_NODE_PROJECT=scripts/tsconfig.json node --require ts-node/register --test scripts/test/release*.ts",
-        "version:set": "ts-node scripts/release.ts version",
-        "version:patch": "ts-node scripts/release.ts patch",
-        "validate:release": "ts-node scripts/release.ts validate",
-        "pack:release": "ts-node scripts/release.ts pack"
+        "version:set": "ts-node scripts/release-cli.ts version",
+        "version:patch": "ts-node scripts/release-cli.ts patch",
+        "validate:release": "ts-node scripts/release-cli.ts validate",
+        "pack:release": "ts-node scripts/release-cli.ts pack"
     },
     "overrides": {
         "glob": "^14.0.3",
@@ -34,7 +34,7 @@
         "@eslint/js": "^10.0.1",
         "@types/chai": "^4.3.20",
         "@types/mocha": "^10.0.8",
-        "@types/node": "^22.7.3",
+        "@types/node": "^26.6.6",
         "@types/semver": "^7.7.1",
         "@typescript-eslint/eslint-plugin": "^8.72.1",
         "@typescript-eslint/parser": "^8.72.1",
@@ -51,7 +51,7 @@
         "tar": "^7.5.1",
         "ts-loader": "^9.5.4",
         "ts-node": "^10.9.2",
-        "typescript": "^5.9.2",
+        "typescript": "^6.0.3",
         "webpack": "^5.105.1"
     }
 }
