@@ -144,14 +144,134 @@ describe(`TypeUtils.isCompatible`, () => {
 
             expect(actual).to.equal(true, undefined);
         });
+    });
 
-        it(`AnyUnion, contains any`, () => {
-            const actual: boolean | undefined = noopIsCompatible(
+    describe(`${Type.ExtendedTypeKind.AnyUnion}`, () => {
+        const numberOrText: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, Type.TextInstance]);
+
+        it(`accepts identity and separately constructed equivalent unions`, () => {
+            expect(noopIsCompatible(numberOrText, numberOrText)).to.equal(true);
+
+            expect(
+                noopIsCompatible(numberOrText, noopCreateAnyUnion([Type.TextInstance, Type.NumberInstance])),
+            ).to.equal(true);
+        });
+
+        it(`accepts a subset but rejects a superset`, () => {
+            const wider: Type.TPowerQueryType = noopCreateAnyUnion([
+                Type.NumberInstance,
                 Type.TextInstance,
-                noopCreateAnyUnion([Type.TextInstance, Type.NumberInstance]),
-            );
+                Type.LogicalInstance,
+            ]);
 
-            expect(actual).to.equal(true, undefined);
+            expect(noopIsCompatible(numberOrText, wider)).to.equal(true);
+            expect(noopIsCompatible(wider, numberOrText)).to.equal(false);
+        });
+
+        it(`rejects partially overlapping and disjoint unions`, () => {
+            expect(
+                noopIsCompatible(numberOrText, noopCreateAnyUnion([Type.TextInstance, Type.LogicalInstance])),
+            ).to.equal(false);
+
+            expect(
+                noopIsCompatible(numberOrText, noopCreateAnyUnion([Type.LogicalInstance, Type.ListInstance])),
+            ).to.equal(false);
+        });
+
+        it(`requires every source alternative to fit a non-union target`, () => {
+            const numbers: Type.TPowerQueryType = noopCreateAnyUnion([
+                TypeUtils.numberLiteral(false, 1),
+                TypeUtils.numberLiteral(false, 2),
+            ]);
+
+            expect(noopIsCompatible(numbers, Type.NumberInstance)).to.equal(true);
+            expect(noopIsCompatible(numberOrText, Type.NumberInstance)).to.equal(false);
+        });
+
+        it(`recursively compares unsimplified nested unions`, () => {
+            const nested: Type.AnyUnion = {
+                kind: Type.TypeKind.Any,
+                extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [numberOrText, Type.LogicalInstance],
+            };
+
+            const equivalent: Type.AnyUnion = {
+                ...nested,
+                unionedTypePairs: [Type.NumberInstance, noopCreateAnyUnion([Type.TextInstance, Type.LogicalInstance])],
+            };
+
+            expect(noopIsCompatible(nested, equivalent)).to.equal(true);
+            expect(noopIsCompatible(equivalent, nested)).to.equal(true);
+            expect(noopIsCompatible(nested, numberOrText)).to.equal(false);
+        });
+
+        it(`preserves outer union nullability even without a null member`, () => {
+            const nullable: Type.AnyUnion = {
+                kind: Type.TypeKind.Any,
+                extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: true,
+                unionedTypePairs: [numberOrText],
+            };
+
+            expect(noopIsCompatible(nullable, nullable)).to.equal(true);
+            expect(noopIsCompatible(numberOrText, nullable)).to.equal(true);
+            expect(noopIsCompatible(nullable, numberOrText)).to.equal(false);
+            expect(noopIsCompatible(nullable, Type.AnyNonNullInstance)).to.equal(false);
+            expect(noopIsCompatible(nullable, Type.AnyInstance)).to.equal(true);
+        });
+
+        it(`matches nullable members against separate non-null and null alternatives`, () => {
+            const nullableMember: Type.TPowerQueryType = noopCreateAnyUnion([
+                Type.NullableNumberInstance,
+                Type.TextInstance,
+            ]);
+
+            const explicitNull: Type.TPowerQueryType = noopCreateAnyUnion([
+                Type.NumberInstance,
+                Type.TextInstance,
+                Type.NullInstance,
+            ]);
+
+            expect(noopIsCompatible(nullableMember, explicitNull)).to.equal(true);
+            expect(noopIsCompatible(explicitNull, nullableMember)).to.equal(true);
+            expect(noopIsCompatible(Type.NullableNumberInstance, numberOrText)).to.equal(false);
+        });
+
+        it(`preserves nullable date compatibility with a matching target alternative`, () => {
+            const target: Type.TPowerQueryType = noopCreateAnyUnion([Type.NullableDateInstance, Type.TextInstance]);
+
+            expect(noopIsCompatible(Type.NullableDateInstance, target)).to.equal(true);
+            expect(noopIsCompatible(target, target)).to.equal(true);
+        });
+
+        for (const unknown of [Type.UnknownInstance, Type.NotApplicableInstance]) {
+            it(`preserves ${unknown.kind} source uncertainty unless an alternative is incompatible`, () => {
+                const uncertain: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, unknown]);
+                const incompatible: Type.TPowerQueryType = noopCreateAnyUnion([Type.LogicalInstance, unknown]);
+
+                expect(noopIsCompatible(unknown, unknown)).to.equal(undefined);
+                expect(noopIsCompatible(uncertain, numberOrText)).to.equal(undefined);
+                expect(noopIsCompatible(uncertain, Type.AnyInstance)).to.equal(undefined);
+                expect(noopIsCompatible(incompatible, numberOrText)).to.equal(false);
+            });
+
+            it(`preserves ${unknown.kind} target uncertainty unless an alternative matches`, () => {
+                const target: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, unknown]);
+
+                expect(noopIsCompatible(Type.NumberInstance, target)).to.equal(true);
+                expect(noopIsCompatible(Type.TextInstance, target)).to.equal(undefined);
+                expect(noopIsCompatible(numberOrText, target)).to.equal(undefined);
+            });
+        }
+
+        it(`does not treat None identity or a None source alternative as compatible`, () => {
+            const withNone: Type.TPowerQueryType = noopCreateAnyUnion([Type.NumberInstance, Type.NoneInstance]);
+
+            expect(noopIsCompatible(Type.NoneInstance, Type.NoneInstance)).to.equal(false);
+            expect(noopIsCompatible(withNone, withNone)).to.equal(false);
+            expect(noopIsCompatible(withNone, Type.AnyInstance)).to.equal(false);
+            expect(noopIsCompatible(numberOrText, Type.NoneInstance)).to.equal(false);
         });
     });
 
