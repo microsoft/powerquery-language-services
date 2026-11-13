@@ -357,32 +357,3 @@ export function bumpPatch(root = ROOT, refresh?: () => unknown): string {
     setVersion(next, root, refresh);
     return next;
 }
-
-export async function main(args: string[]): Promise<void> {
-    const [command, ...rest] = args;
-    check(
-        ["version", "patch", "pack", "validate"].includes(command) &&
-            (command === "version" ? rest.length === 1 : rest.length === 0),
-        "Usage: ts-node scripts/release.ts version <SemVer> | patch | pack | validate",
-    );
-    if (command === "version") {
-        setVersion(rest[0]);
-        console.log(`Set the public release group to ${rest[0]}`);
-    } else if (command === "patch") {
-        console.log(`Set the public release group to ${bumpPatch()}`);
-    } else {
-        const artifacts: typeof import("./release-artifacts") = require("./release-artifacts");
-        const manifest = await artifacts.packRelease(ROOT);
-        if (command === "validate") {
-            const consumer: typeof import("./release-consumer") = require("./release-consumer");
-            await consumer.validateConsumer(ROOT, manifest);
-        }
-        console.log(`${command === "validate" ? "Validated" : "Packed"} public release ${manifest.releaseVersion}`);
-    }
-}
-
-if (require.main === module)
-    main(process.argv.slice(2)).catch(error => {
-        console.error(`Release failed: ${errorMessage(error)}`);
-        process.exitCode = 1;
-    });

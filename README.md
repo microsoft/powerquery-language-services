@@ -87,6 +87,7 @@ npm run validate:release
 ```
 
 Packaging requires existing build outputs and never builds, commits, tags, pushes, or publishes.
+Release commands use `scripts/release-cli.ts`; reusable release helpers remain in `scripts/release.ts`.
 `validate:release` packs and validates the release; use `pack:release` when only packaging is needed.
 Use the configured npm registry for the root restore and isolated consumer install.
 The three tarballs and `dist/release-manifest.json` form one release set. The validation command
