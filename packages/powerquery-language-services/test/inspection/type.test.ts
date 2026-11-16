@@ -819,6 +819,17 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FieldProjection}`, () => {
+            for (const suffix of ["", "?"]) {
+                it(`projects known and undeclared fields from an open record${suffix}`, async () =>
+                    await assertEqualRootType({
+                        text: `let project = (r as record) => (r & [a = 1])[[a], [b]]${suffix} in project([b = 2])`,
+                        expected: definedRecord([
+                            ["a", TypeUtils.numberLiteral(false, 1)],
+                            ["b", Type.AnyInstance],
+                        ]),
+                    }));
+            }
+
             it(`[a = 1][[a]]`, async () =>
                 await assertEqualRootType({
                     text: `[a = 1][[a]]`,
