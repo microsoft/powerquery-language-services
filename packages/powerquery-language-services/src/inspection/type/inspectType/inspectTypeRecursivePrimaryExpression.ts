@@ -12,8 +12,9 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
-import { inspectTypeFromChildAttributeIndex, inspectXor } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
+import { inspectXor } from "./common";
+import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeRecursivePrimaryExpression(
     state: InspectTypeState,
@@ -36,14 +37,6 @@ export async function inspectTypeRecursivePrimaryExpression(
         trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.UnknownInstance) });
 
         return Type.UnknownInstance;
-    }
-
-    const headType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
-
-    if (headType.kind === Type.TypeKind.None || headType.kind === Type.TypeKind.Unknown) {
-        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(headType) });
-
-        return headType;
     }
 
     const arrayWrapper: XorNode<Ast.TArrayWrapper> | undefined = NodeIdMapUtils.nthChildXorChecked<Ast.TArrayWrapper>(
@@ -70,9 +63,30 @@ export async function inspectTypeRecursivePrimaryExpression(
         return Type.UnknownInstance;
     }
 
-    let leftType: Type.TPowerQueryType = headType;
+    // Item access can select a lazy list item without inspecting the entire head collection.
+    const firstNonItemAccessIndex: number = expressions.findIndex(
+        (expression: TXorNode) => expression.node.kind !== Ast.NodeKind.ItemAccessExpression,
+    );
 
-    for (const right of expressions) {
+    const numItemAccesses: number = firstNonItemAccessIndex === -1 ? expressions.length : firstNonItemAccessIndex;
+    const numInitialItemAccesses: number = state.typeStrategy === TypeStrategy.Extended ? numItemAccesses : 0;
+
+    let leftType: Type.TPowerQueryType = await inspectXor(
+        state,
+        numInitialItemAccesses ? expressions[numInitialItemAccesses - 1] : head,
+        trace.id,
+    );
+
+    if (
+        numInitialItemAccesses === 0 &&
+        (leftType.kind === Type.TypeKind.None || leftType.kind === Type.TypeKind.Unknown)
+    ) {
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(leftType) });
+
+        return leftType;
+    }
+
+    for (const right of expressions.slice(numInitialItemAccesses)) {
         // eslint-disable-next-line no-await-in-loop
         const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
         leftType = rightType;

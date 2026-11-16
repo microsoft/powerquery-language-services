@@ -30,29 +30,15 @@ export async function inspectTypeList(
             state.cancellationToken?.throwIfCancelled();
             const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
 
-            const itemTypes: ReadonlyArray<Type.TPowerQueryType> = await Promise.all(
-                items.map((item: TXorNode) => inspectXor(state, item, trace.id)),
-            );
-
-            const elements: Type.TPowerQueryType[] = [];
-            let isLengthKnown: boolean = true;
-
-            for (const [index, item] of items.entries()) {
-                const itemType: Type.TPowerQueryType = itemTypes[index];
-
-                if (item.node.kind === Ast.NodeKind.RangeExpression) {
-                    if (itemType.extendedKind !== Type.ExtendedTypeKind.DefinedList) {
-                        isLengthKnown = false;
-                        break;
-                    }
-
-                    elements.push(...itemType.elements);
-                } else {
-                    elements.push(itemType);
-                }
+            // Ranges contribute a variable number of items, not a nested list element.
+            if (items.some((item: TXorNode) => item.node.kind === Ast.NodeKind.RangeExpression)) {
+                result = Type.ListInstance;
+            } else {
+                result = TypeUtils.definedList(
+                    false,
+                    await Promise.all(items.map((item: TXorNode) => inspectXor(state, item, trace.id))),
+                );
             }
-
-            result = isLengthKnown ? TypeUtils.definedList(false, elements) : Type.ListInstance;
 
             break;
         }
