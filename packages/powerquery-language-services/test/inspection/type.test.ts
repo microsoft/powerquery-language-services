@@ -767,7 +767,19 @@ describe(`Inspection - Type`, () => {
             it(`try 1`, async () =>
                 await assertEqualRootType({
                     text: `try 1`,
-                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), Type.RecordInstance]),
+                    expected: Type.RecordInstance,
+                }));
+
+            it(`try error returns a record`, async () =>
+                await assertEqualRootType({
+                    text: `try error "failure"`,
+                    expected: Type.RecordInstance,
+                }));
+
+            it(`does not use the protected value as the result of a bare try`, async () =>
+                await assertEqualRootType({
+                    text: `(try 1) + 1`,
+                    expected: Type.NoneInstance,
                 }));
 
             it(`try 1 otherwise false`, async () => {

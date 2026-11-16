@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: Infer handlerless try expressions as records rather than unions with their protected values.
 - Fixed: Infer binary operations over union alternatives while retaining invalid-operation alternatives.
 - Fixed: Infer non-nullable logical results for equality and inequality across value kinds, including null.
 - Fixed: Infer table column selections as lists, preserving exact elements when rows are known.
