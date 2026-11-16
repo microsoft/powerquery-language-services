@@ -825,6 +825,30 @@ describe(`TypeUtils.typeCheck`, () => {
     });
 
     describe(`${Language.Type.ExtendedTypeKind.RecordType}`, () => {
+        it(`reports a nested record missing a required field as invalid`, () => {
+            const nestedValue: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
+
+            const nestedSchema: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map([["a", Type.NumberInstance]]),
+                false,
+            );
+
+            const actual: TypeUtils.CheckedDefinedRecord = TypeUtils.typeCheckRecord(
+                TypeUtils.definedRecord(false, new Map([["nested", nestedValue]]), false),
+                TypeUtils.recordType(false, new Map([["nested", nestedSchema]]), false),
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(actual).to.deep.equal({
+                valid: [],
+                invalid: new Map([["nested", { expected: nestedSchema, actual: nestedValue }]]),
+                extraneous: [],
+                missing: [],
+            });
+        });
+
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
             const valueType: Language.Type.DefinedRecord = TypeUtils.definedRecord(
                 false,

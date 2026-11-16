@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: Require all target record and table fields for type compatibility, permitting extra fields only for open targets and rejecting open sources for closed targets.
 - Fixed: Check every source union alternative for type compatibility, allowing matching union-typed table rows.
 - Fixed: Preserve logical literal alternatives and their nullability when simplifying types and unions.
 - Fixed: Allow non-nullable action, binary, date, datetime, datetimezone, duration, and time types where their nullable counterparts are expected, including table rows.
