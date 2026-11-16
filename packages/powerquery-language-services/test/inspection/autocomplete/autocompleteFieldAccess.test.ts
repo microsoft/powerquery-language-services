@@ -13,7 +13,7 @@ import { inspectFieldAccess } from "../../../src/inspection/autocomplete/autocom
 describe(`Inspection - Autocomplete - FieldAccess`, () => {
     it("preserves field order and duplicate labels across union members", async () => {
         const autocomplete: Inspection.Autocomplete = await TestUtils.expectAutocomplete(
-            "let foo = () => if true then [shared = 1, first = 2] else [shared = 3, second = 4] in foo()[|",
+            "let foo = (b as logical) => if b then [shared = 1, first = 2] else [shared = 3, second = 4] in foo(true)[|",
         );
 
         const items: ReadonlyArray<Inspection.AutocompleteItem> =
@@ -573,9 +573,9 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
                 },
             }));
 
-        it(`let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`, async () =>
+        it(`let foo = (b as logical) => if b then [cat = 1] else [car = 2] in foo(true)[|`, async () =>
             await expectFieldAccessSuggestions({
-                textWithPipe: `let foo = () => if true then [cat = 1] else [car = 2] in foo()[|`,
+                textWithPipe: `let foo = (b as logical) => if b then [cat = 1] else [car = 2] in foo(true)[|`,
                 expected: {
                     labels: ["car", "cat"],
                     isTextEdit: false,

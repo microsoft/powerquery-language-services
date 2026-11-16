@@ -71,9 +71,9 @@ export async function inspectTypeItemAccessExpression(
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    let result: Type.TPowerQueryType = getElementType(state, collectionType, indexValue, trace.id);
+    let result: Type.TPowerQueryType = getElementType(state, collectionType, indexValue, isOptional, trace.id);
 
-    if (isOptional) {
+    if (isOptional && !result.isNullable) {
         result = { ...result, isNullable: true };
     }
 
@@ -86,12 +86,13 @@ function getElementType(
     state: InspectTypeState,
     collectionType: Type.TPowerQueryType,
     indexValue: number | undefined,
+    isOptional: boolean,
     correlationId: number,
 ): Type.TPowerQueryType {
     switch (collectionType.kind) {
         case Type.TypeKind.Any:
             if (collectionType.extendedKind === Type.ExtendedTypeKind.AnyUnion) {
-                return getElementTypeFromAnyUnion(state, collectionType, indexValue, correlationId);
+                return getElementTypeFromAnyUnion(state, collectionType, indexValue, isOptional, correlationId);
             }
 
             return Type.AnyInstance;
@@ -103,9 +104,9 @@ function getElementType(
                     return collectionType.elements[indexValue];
                 }
 
-                // Known index but out of bounds — this will error at runtime.
+                // Optional access suppresses a missing item, not errors in existing elements.
                 if (indexValue !== undefined) {
-                    return Type.NoneInstance;
+                    return isOptional ? Type.NullInstance : Type.NoneInstance;
                 }
 
                 return TypeUtils.anyUnion(collectionType.elements, state.traceManager, correlationId);
@@ -118,7 +119,11 @@ function getElementType(
                 if (indexValue !== undefined && collectionType.rows !== undefined) {
                     const row: Type.UnorderedFields | undefined = collectionType.rows[indexValue];
 
-                    return row === undefined ? Type.NoneInstance : TypeUtils.definedRecord(false, row, false);
+                    if (row === undefined) {
+                        return isOptional ? Type.NullInstance : Type.NoneInstance;
+                    }
+
+                    return TypeUtils.definedRecord(false, row, false);
                 }
 
                 return TypeUtils.definedRecord(false, collectionType.fields, collectionType.isOpen);
@@ -135,12 +140,13 @@ function getElementTypeFromAnyUnion(
     state: InspectTypeState,
     anyUnion: Type.AnyUnion,
     indexValue: number | undefined,
+    isOptional: boolean,
     correlationId: number,
 ): Type.TPowerQueryType {
     const elementTypes: Type.TPowerQueryType[] = [];
 
     for (const member of anyUnion.unionedTypePairs) {
-        const elementType: Type.TPowerQueryType = getElementType(state, member, indexValue, correlationId);
+        const elementType: Type.TPowerQueryType = getElementType(state, member, indexValue, isOptional, correlationId);
         elementTypes.push(elementType);
     }
 

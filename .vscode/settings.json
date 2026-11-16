@@ -30,5 +30,5 @@
     "mochaExplorer.timeout": 60000,
     "mochaExplorer.ui": "bdd",
     "mochaExplorer.exit": true,
-    "mochaExplorer.optsFile": ".mocharc.cjs"
+    "mochaExplorer.optsFile": ".mocharc.js"
 }

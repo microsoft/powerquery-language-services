@@ -4,10 +4,10 @@
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "build": "node ../../scripts/build-package.cjs powerquery-formatter",
-        "clean": "node ../../scripts/workspace.cjs clean powerquery-formatter",
+        "build": "ts-node ../../scripts/build-package.ts powerquery-formatter",
+        "clean": "ts-node ../../scripts/workspace.ts clean powerquery-formatter",
         "benchmark": "node --expose-gc --require ts-node/register benchmark/cli.ts",
-        "watch": "node ../../scripts/build-package.cjs powerquery-formatter --watch",
+        "watch": "ts-node ../../scripts/build-package.ts powerquery-formatter --watch",
         "test": "mocha --no-package",
         "script:recursiveDirectoryFormat": "npx ts-node scripts/recursiveDirectoryFormat.ts",
         "lint": "eslint src test benchmark scripts *.ts --ext ts"

@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, IdentifierUtils, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, IdentifierUtils, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { MapUtils } from "@microsoft/powerquery-parser";
 
 import { InspectionTraceConstant, TraceUtils } from "../../../..";
 import { inspectFieldType } from "./common";
@@ -94,17 +95,34 @@ function inspectRecordOrTable(
     fieldName: string,
     isOptional: boolean,
 ): Type.TPowerQueryType {
-    if (fieldType.extendedKind === undefined) {
+    if (fieldType.extendedKind === undefined || (fieldType.isOpen && !fieldType.fields.has(fieldName))) {
+        if (fieldType.kind === Type.TypeKind.Table) {
+            return TypeUtils.primitiveType(isOptional, Type.TypeKind.List);
+        }
+
         return Type.AnyInstance;
     }
 
     const namedField: Type.TPowerQueryType | undefined = fieldType.fields.get(fieldName);
 
-    if (namedField !== undefined) {
-        return namedField;
-    } else if (fieldType.isOpen) {
-        return Type.AnyInstance;
-    } else {
-        return isOptional ? Type.NullInstance : Type.NoneInstance;
+    if (namedField === undefined) {
+        if (isOptional) {
+            return Type.NullInstance;
+        }
+
+        return Type.NoneInstance;
     }
+
+    if (fieldType.kind === Type.TypeKind.Record) {
+        return namedField;
+    }
+
+    if (fieldType.rows === undefined) {
+        return Type.ListInstance;
+    }
+
+    return TypeUtils.definedList(
+        false,
+        fieldType.rows.map((row: Type.UnorderedFields) => MapUtils.assertGet(row, fieldName)),
+    );
 }

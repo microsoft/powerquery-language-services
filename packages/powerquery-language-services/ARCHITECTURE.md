@@ -582,8 +582,8 @@ message. Library-symbol conversion also uses templates for parameter documentati
 ## Tests and development infrastructure
 
 Tests use Mocha, Chai, and TypeScript through `ts-node/register`.
-[.mocharc.cjs](.mocharc.cjs) discovers `test\**\*.test.ts`; the
-[composite reporter](../../scripts/mochaReporter.cjs) emits readable console and XUnit results to
+[.mocharc.ts](.mocharc.ts) discovers `test\**\*.test.ts`; the
+[composite reporter](../../scripts/mochaReporter.ts) emits readable console and XUnit results to
 `test-results.xml`. The build is not
 required merely to discover the source tests, though CI builds before running them.
 

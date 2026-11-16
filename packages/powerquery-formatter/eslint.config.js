@@ -1,4 +1,8 @@
-module.exports = require("../../eslint.shared.cjs")(
-    __dirname,
-    ["src/**/*.ts", "test/**/*.ts", "benchmark/**/*.ts", "scripts/**/*.ts", "*.ts"],
-);
+require("ts-node/register");
+module.exports = require("../../eslint.shared.ts")(__dirname, [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "benchmark/**/*.ts",
+    "scripts/**/*.ts",
+    "*.ts",
+]);

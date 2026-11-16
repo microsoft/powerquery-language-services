@@ -1,12 +1,10 @@
-"use strict";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+import { PACKAGES, check, readJson, writeJson, run, npm, PackageMetadata } from "./release";
+import { inside, verifyManifest, ReleaseManifest } from "./release-artifacts";
 
-const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
-const { PACKAGES, check, readJson, writeJson, run, npm } = require("./release.cjs");
-const { inside, verifyManifest } = require("./release-artifacts.cjs");
-
-const SMOKE = `
+export const SMOKE = `
 import * as parser from "@microsoft/powerquery-parser";
 import * as formatter from "@microsoft/powerquery-formatter";
 import * as services from "@microsoft/powerquery-language-services";
@@ -49,10 +47,12 @@ async function main(): Promise<void> {
 void main();
 `;
 
-function cleanEnvironment() {
-    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
-        !/^(?:node_path$|node_options$|npm_lifecycle_|npm_package_)/i.test(key)).map(([key, value]) =>
-        [/^npm_config_/i.test(key) ? key.toUpperCase() : key, value]));
+export function cleanEnvironment(): NodeJS.ProcessEnv {
+    const env = Object.fromEntries(
+        Object.entries(process.env)
+            .filter(([key]) => !/^(?:node_path$|node_options$|npm_lifecycle_|npm_package_)/i.test(key))
+            .map(([key, value]) => [/^npm_config_/i.test(key) ? key.toUpperCase() : key, value]),
+    );
     return {
         ...env,
         NODE_PATH: "",
@@ -62,7 +62,7 @@ function cleanEnvironment() {
     };
 }
 
-async function validateConsumer(root, manifest) {
+export async function validateConsumer(root: string, manifest: ReleaseManifest): Promise<void> {
     const dist = path.join(root, "dist");
     await verifyManifest(manifest, dist, root);
     const compiler = path.join(root, "node_modules", "typescript", "bin", "tsc");
@@ -74,26 +74,47 @@ async function validateConsumer(root, manifest) {
     try {
         const realConsumer = fs.realpathSync(consumer);
         const realRoot = fs.realpathSync(root);
-        check(!realConsumer.startsWith(`${realRoot}${path.sep}`) && realConsumer !== realRoot,
-            "Consumer must be outside the release workspace");
+        check(
+            !realConsumer.startsWith(`${realRoot}${path.sep}`) && realConsumer !== realRoot,
+            "Consumer must be outside the release workspace",
+        );
         writeJson(path.join(consumer, "package.json"), {
-            name: "powerquery-release-consumer", version: "1.0.0", private: true,
+            name: "powerquery-release-consumer",
+            version: "1.0.0",
+            private: true,
         });
         const env = cleanEnvironment();
         env.NPM_CONFIG_USERCONFIG = npm(["config", "get", "userconfig"]);
         env.NPM_CONFIG_GLOBALCONFIG = npm(["config", "get", "globalconfig"]);
-        npm(["install", "--ignore-scripts", "--no-audit", "--no-fund", "--workspaces=false",
-            "--prefer-online", "--fetch-retries=0", "--fetch-timeout=30000",
-            ...manifest.packages.map((item) => inside(dist, item.tarball))], { cwd: consumer, env });
+        npm(
+            [
+                "install",
+                "--ignore-scripts",
+                "--no-audit",
+                "--no-fund",
+                "--workspaces=false",
+                "--prefer-online",
+                "--fetch-retries=0",
+                "--fetch-timeout=30000",
+                ...manifest.packages.map(item => inside(dist, item.tarball)),
+            ],
+            { cwd: consumer, env },
+        );
         for (const entry of PACKAGES) {
             const installed = path.join(consumer, "node_modules", entry.name);
             check(!fs.lstatSync(installed).isSymbolicLink(), `${entry.name} consumer resolved to a workspace link`);
-            check(readJson(path.join(installed, "package.json")).version === manifest.releaseVersion,
-                `${entry.name} consumer installed the wrong release`);
+            check(
+                readJson<PackageMetadata>(path.join(installed, "package.json")).version === manifest.releaseVersion,
+                `${entry.name} consumer installed the wrong release`,
+            );
         }
-        run(process.execPath, ["-e", `
+        run(
+            process.execPath,
+            [
+                "-e",
+                `
             const fs = require("node:fs"), path = require("node:path");
-            const names = ${JSON.stringify(PACKAGES.map((entry) => entry.name))};
+            const names = ${JSON.stringify(PACKAGES.map(entry => entry.name))};
             for (const name of names) {
                 const expected = fs.realpathSync(require.resolve(name + "/package.json"));
                 for (const parent of names) {
@@ -102,22 +123,32 @@ async function validateConsumer(root, manifest) {
                         throw new Error(parent + " did not resolve the installed " + name + " tarball");
                 }
             }
-        `], { cwd: consumer, env });
+        `,
+            ],
+            { cwd: consumer, env },
+        );
         fs.writeFileSync(path.join(consumer, "smoke.ts"), SMOKE);
         writeJson(path.join(consumer, "tsconfig.json"), {
             compilerOptions: {
-                target: "ES2022", module: "commonjs", moduleResolution: "node",
-                strict: true, skipLibCheck: false, noEmitOnError: true, types: [],
-                resolveJsonModule: true, esModuleInterop: true,
+                target: "ES2022",
+                module: "commonjs",
+                moduleResolution: "node",
+                strict: true,
+                skipLibCheck: false,
+                noEmitOnError: true,
+                types: [],
+                resolveJsonModule: true,
+                esModuleInterop: true,
             },
             files: ["smoke.ts"],
         });
         run(process.execPath, [compiler, "--project", path.join(consumer, "tsconfig.json")], { cwd: consumer, env });
-        run(process.execPath, ["--unhandled-rejections=strict", path.join(consumer, "smoke.js")], { cwd: consumer, env });
+        run(process.execPath, ["--unhandled-rejections=strict", path.join(consumer, "smoke.js")], {
+            cwd: consumer,
+            env,
+        });
     } finally {
         fs.rmSync(consumer, { recursive: true, force: true });
         if (fs.readdirSync(base).length === 0) fs.rmdirSync(base);
     }
 }
-
-module.exports = { SMOKE, cleanEnvironment, validateConsumer };

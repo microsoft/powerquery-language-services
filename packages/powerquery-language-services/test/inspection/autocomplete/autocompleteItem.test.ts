@@ -4,6 +4,7 @@
 import "mocha";
 import { CompletionItemKind, InsertTextFormat, MarkupKind } from "vscode-languageserver-types";
 import { Keyword, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Assert } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import { Library, LibraryDefinitionUtils } from "../../../src";
@@ -23,47 +24,43 @@ describe("AutocompleteItemUtils", () => {
         });
 
         it("let...in snippet has correct properties", () => {
-            const letSnippet: AutocompleteItem | undefined = snippetItems.find(
-                (item: AutocompleteItem) => item.label === "let...in",
+            const letSnippet: AutocompleteItem = Assert.asDefined(
+                snippetItems.find((item: AutocompleteItem) => item.label === "let...in"),
             );
 
-            expect(letSnippet).to.not.equal(undefined);
-            expect(letSnippet!.kind).to.equal(CompletionItemKind.Snippet);
-            expect(letSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(letSnippet!.insertText).to.equal("let\n\t${1:name} = ${2:value}\nin\n\t${0:result}");
+            expect(letSnippet.kind).to.equal(CompletionItemKind.Snippet);
+            expect(letSnippet.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(letSnippet.insertText).to.equal("let\n\t${1:name} = ${2:value}\nin\n\t${0:result}");
         });
 
         it("if...then...else snippet has correct properties", () => {
-            const ifSnippet: AutocompleteItem | undefined = snippetItems.find(
-                (item: AutocompleteItem) => item.label === "if...then...else",
+            const ifSnippet: AutocompleteItem = Assert.asDefined(
+                snippetItems.find((item: AutocompleteItem) => item.label === "if...then...else"),
             );
 
-            expect(ifSnippet).to.not.equal(undefined);
-            expect(ifSnippet!.kind).to.equal(CompletionItemKind.Snippet);
-            expect(ifSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(ifSnippet!.insertText).to.equal("if ${1:condition} then ${2:trueValue} else ${3:falseValue}");
+            expect(ifSnippet.kind).to.equal(CompletionItemKind.Snippet);
+            expect(ifSnippet.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(ifSnippet.insertText).to.equal("if ${1:condition} then ${2:trueValue} else ${3:falseValue}");
         });
 
         it("try...otherwise snippet has correct properties", () => {
-            const trySnippet: AutocompleteItem | undefined = snippetItems.find(
-                (item: AutocompleteItem) => item.label === "try...otherwise",
+            const trySnippet: AutocompleteItem = Assert.asDefined(
+                snippetItems.find((item: AutocompleteItem) => item.label === "try...otherwise"),
             );
 
-            expect(trySnippet).to.not.equal(undefined);
-            expect(trySnippet!.kind).to.equal(CompletionItemKind.Snippet);
-            expect(trySnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(trySnippet!.insertText).to.equal("try ${1:expression} otherwise ${2:default}");
+            expect(trySnippet.kind).to.equal(CompletionItemKind.Snippet);
+            expect(trySnippet.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(trySnippet.insertText).to.equal("try ${1:expression} otherwise ${2:default}");
         });
 
         it("each snippet has correct properties", () => {
-            const eachSnippet: AutocompleteItem | undefined = snippetItems.find(
-                (item: AutocompleteItem) => item.label === "each",
+            const eachSnippet: AutocompleteItem = Assert.asDefined(
+                snippetItems.find((item: AutocompleteItem) => item.label === "each"),
             );
 
-            expect(eachSnippet).to.not.equal(undefined);
-            expect(eachSnippet!.kind).to.equal(CompletionItemKind.Snippet);
-            expect(eachSnippet!.insertTextFormat).to.equal(InsertTextFormat.Snippet);
-            expect(eachSnippet!.insertText).to.equal("each ${0:expression}");
+            expect(eachSnippet.kind).to.equal(CompletionItemKind.Snippet);
+            expect(eachSnippet.insertTextFormat).to.equal(InsertTextFormat.Snippet);
+            expect(eachSnippet.insertText).to.equal("each ${0:expression}");
         });
 
         it("all snippets have jaroWinklerScore of 1", () => {

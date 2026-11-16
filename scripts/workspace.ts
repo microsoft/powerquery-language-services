@@ -1,10 +1,10 @@
-const fs = require("node:fs");
-const path = require("node:path");
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 const root = path.resolve(__dirname, "..");
 const packages = ["powerquery-parser", "powerquery-formatter", "powerquery-language-services"];
 
-function main() {
+function main(): void {
     const [command, selected] = process.argv.slice(2);
     if (selected && !packages.includes(selected)) {
         throw new Error(`Unknown package: ${selected}`);
@@ -21,13 +21,13 @@ function main() {
             }
         }
     } else {
-        throw new Error("Usage: node scripts/workspace.cjs clean [package]");
+        throw new Error("Usage: ts-node scripts/workspace.ts clean [package]");
     }
 }
 
 try {
     main();
 } catch (error) {
-    console.error(error.message);
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;
 }

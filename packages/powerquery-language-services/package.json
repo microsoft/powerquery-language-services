@@ -4,10 +4,10 @@
     "author": "Microsoft",
     "license": "MIT",
     "scripts": {
-        "build": "node ../../scripts/build-package.cjs powerquery-language-services",
-        "clean": "node ../../scripts/workspace.cjs clean powerquery-language-services",
+        "build": "ts-node ../../scripts/build-package.ts powerquery-language-services",
+        "clean": "ts-node ../../scripts/workspace.ts clean powerquery-language-services",
         "benchmark": "node --expose-gc --require ts-node/register benchmark/cli.ts",
-        "watch": "node ../../scripts/build-package.cjs powerquery-language-services --watch",
+        "watch": "ts-node ../../scripts/build-package.ts powerquery-language-services --watch",
         "lint": "eslint src test benchmark *.ts --ext ts",
         "test": "mocha --no-package"
     },

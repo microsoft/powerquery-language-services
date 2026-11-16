@@ -1,12 +1,14 @@
-const js = require("@eslint/js");
-const tseslint = require("@typescript-eslint/eslint-plugin");
-const tsparser = require("@typescript-eslint/parser");
-const prettier = require("eslint-plugin-prettier");
-const promise = require("eslint-plugin-promise");
-const security = require("eslint-plugin-security");
-const prettierConfig = require("eslint-config-prettier");
+import js from "@eslint/js";
+import prettier from "eslint-plugin-prettier";
+import security from "eslint-plugin-security";
+import prettierConfig from "eslint-config-prettier";
+import type { ESLint, Linter } from "eslint";
 
-module.exports = (directory, files, globals = {}) => {
+const promise: ESLint.Plugin = require("eslint-plugin-promise");
+const tseslint: ESLint.Plugin = require("@typescript-eslint/eslint-plugin");
+const tsparser: Linter.Parser = require("@typescript-eslint/parser");
+
+function createConfig(directory: string, files: string[], globals: Linter.Globals = {}): Linter.Config[] {
     return [
         js.configs.recommended,
         {
@@ -56,8 +58,10 @@ module.exports = (directory, files, globals = {}) => {
                 "@typescript-eslint/consistent-type-assertions": ["warn", { assertionStyle: "as" }],
                 "@typescript-eslint/explicit-function-return-type": "error",
                 "@typescript-eslint/no-floating-promises": "error",
+                "@typescript-eslint/no-explicit-any": "error",
                 "@typescript-eslint/no-inferrable-types": "off",
                 "@typescript-eslint/no-namespace": "error",
+                "@typescript-eslint/no-non-null-assertion": "error",
                 "@typescript-eslint/no-unused-vars": [
                     "error",
                     {
@@ -205,6 +209,16 @@ module.exports = (directory, files, globals = {}) => {
                 "sort-imports": ["error", { allowSeparatedGroups: true, ignoreCase: true }],
             },
         },
+        {
+            files: [".mocharc*.ts"],
+            languageOptions: {
+                parserOptions: {
+                    project: "../../scripts/tsconfig.json",
+                },
+            },
+        },
         prettierConfig,
     ];
-};
+}
+
+export = createConfig;

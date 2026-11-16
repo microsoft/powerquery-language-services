@@ -211,7 +211,7 @@ function convertScopeTypeToArray(
     return Array.from(scopeType.entries()).map(([key, value]: [string, TPowerQueryType]) => [key, value]);
 }
 
-function mapReplacer(_key: string, value: any): any {
+function mapReplacer(_key: string, value: unknown): unknown {
     if (value instanceof Map) {
         return {
             __type: "Map",

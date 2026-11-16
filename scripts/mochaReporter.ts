@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-"use strict";
+import Mocha = require("mocha");
 
-const Mocha = require("mocha");
-
-module.exports = class MultiReporter {
-    constructor(runner, options) {
+class MultiReporter {
+    constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
         new Mocha.reporters.Spec(runner, options);
         new Mocha.reporters.XUnit(runner, options);
     }
-};
+}
+
+export = MultiReporter;

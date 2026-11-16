@@ -112,17 +112,23 @@ function simplifyListCategory(category: ListCategory | undefined): ReadonlyArray
 function simplifyLogicalCategory(category: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
     if (category === undefined) {
         return [];
-    } else if (
-        (category.hasFalsyNullableLiteral || category.hasFalsyNonNullableLiteral) &&
-        (category.hasTruthyNullableLiteral || category.hasTruthyNonNullableLiteral)
-    ) {
-        return category.hasFalsyNullableLiteral || category.hasTruthyNullableLiteral
-            ? [Type.NullableLogicalInstance]
-            : [Type.LogicalInstance];
-    } else {
-        const type: Type.Logical | undefined = firstNullableElseFirst(category.primitives);
+    }
 
-        return type ? [type] : [];
+    const primitive: Type.Logical | undefined = firstNullableElseFirst(category.primitives);
+    const hasFalsyLiteral: boolean = category.hasFalsyNullableLiteral || category.hasFalsyNonNullableLiteral;
+    const hasTruthyLiteral: boolean = category.hasTruthyNullableLiteral || category.hasTruthyNonNullableLiteral;
+
+    const isNullable: boolean =
+        primitive?.isNullable === true || category.hasFalsyNullableLiteral || category.hasTruthyNullableLiteral;
+
+    if (primitive || (hasFalsyLiteral && hasTruthyLiteral)) {
+        return isNullable ? [Type.NullableLogicalInstance] : [Type.LogicalInstance];
+    } else if (hasTruthyLiteral) {
+        return isNullable ? [Type.NullableTrueInstance] : [Type.TrueInstance];
+    } else if (hasFalsyLiteral) {
+        return isNullable ? [Type.NullableFalseInstance] : [Type.FalseInstance];
+    } else {
+        return [];
     }
 }
 
