@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Assert } from "@microsoft/powerquery-parser";
@@ -10,6 +10,8 @@ import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { inspectTypeFromChildAttributeIndex } from "./common";
 import { InspectTypeState } from "./inspectTypeState";
 import { TypeStrategy } from "../../../inspectionSettings";
+
+const MaxDefinedRangeElements: number = 100;
 
 export async function inspectTypeRangeExpression(
     state: InspectTypeState,
@@ -26,7 +28,7 @@ export async function inspectTypeRangeExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
-    let result: Type.List | Type.None | Type.Unknown;
+    let result: Type.TList | Type.None | Type.Unknown;
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
@@ -47,7 +49,7 @@ export async function inspectTypeRangeExpression(
             if (leftType === undefined || rightType === undefined) {
                 result = Type.UnknownInstance;
             } else if (leftType.kind === Type.TypeKind.Number && rightType.kind === Type.TypeKind.Number) {
-                result = Type.ListInstance;
+                result = inspectNumericRange(leftType, rightType);
             } else if (leftType.kind === Type.TypeKind.None || rightType.kind === Type.TypeKind.None) {
                 result = Type.NoneInstance;
             } else if (leftType.kind === Type.TypeKind.Unknown || rightType.kind === Type.TypeKind.Unknown) {
@@ -70,4 +72,34 @@ export async function inspectTypeRangeExpression(
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function inspectNumericRange(leftType: Type.TNumber, rightType: Type.TNumber): Type.TList {
+    if (
+        leftType.extendedKind !== Type.ExtendedTypeKind.NumberLiteral ||
+        rightType.extendedKind !== Type.ExtendedTypeKind.NumberLiteral ||
+        leftType.isNullable ||
+        rightType.isNullable
+    ) {
+        return Type.ListInstance;
+    }
+
+    const start: number = leftType.normalizedLiteral;
+    const end: number = rightType.normalizedLiteral;
+
+    // Only expand bounded integer ranges whose increments can be represented exactly.
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end)) {
+        return Type.ListInstance;
+    }
+
+    const length: number = Math.max(0, end - start + 1);
+
+    if (!Number.isSafeInteger(length) || length > MaxDefinedRangeElements) {
+        return Type.ListInstance;
+    }
+
+    return TypeUtils.definedList(
+        false,
+        Array.from({ length }, (_: unknown, index: number) => TypeUtils.numberLiteral(false, start + index)),
+    );
 }

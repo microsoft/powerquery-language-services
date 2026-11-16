@@ -814,6 +814,99 @@ describe(`Inspection - Type`, () => {
             it(`nullable range operand returns list`, async () =>
                 await assertEqualRootType({
                     text: `let x = 1 as nullable number in {x..5}`,
+                    expected: Type.ListInstance,
+                }));
+
+            for (const [text, values] of [
+                [`{1..3}`, [1, 2, 3]],
+                [`{1, 5..9, 11}`, [1, 5, 6, 7, 8, 9, 11]],
+                [`{-2..0, 3..4}`, [-2, -1, 0, 3, 4]],
+                [`{2..2}`, [2]],
+                [`{3..1}`, []],
+            ] as const) {
+                it(`range contributes flat elements: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.definedList(
+                            false,
+                            values.map((value: number) => TypeUtils.numberLiteral(false, value)),
+                        ),
+                    }));
+            }
+
+            for (const [text, value] of [
+                [`{1..3}{0}`, 1],
+                [`{1..3}{1}`, 2],
+                [`{1, 5..9, 11}{6}`, 11],
+                [`{1..2, 5..6, 9}{3}`, 6],
+                [`{3..1, 7}{0}`, 7],
+                [`{1..100}{99}`, 100],
+                [`{9007199254740990..9007199254740991}{1}`, 9007199254740991],
+                [`{{1..3}}{0}{1}`, 2],
+            ] as const) {
+                it(`range-aware positional access: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.numberLiteral(false, value),
+                    }));
+            }
+
+            it(`access beyond a known range returns none`, async () =>
+                await assertEqualRootType({
+                    text: `{1..3}{3}`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`optional access into an empty range returns null`, async () =>
+                await assertEqualRootType({
+                    text: `{3..1}{0}?`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`list expressions remain nested alongside ranges`, async () =>
+                await assertEqualRootType({
+                    text: `{1..2, {3..4}}`,
+                    expected: TypeUtils.definedList(false, [
+                        TypeUtils.numberLiteral(false, 1),
+                        TypeUtils.numberLiteral(false, 2),
+                        TypeUtils.definedList(false, [
+                            TypeUtils.numberLiteral(false, 3),
+                            TypeUtils.numberLiteral(false, 4),
+                        ]),
+                    ]),
+                }));
+
+            for (const text of [
+                `{1..101}`,
+                `{1..1000000000000}`,
+                `{9007199254740992..9007199254740994}`,
+                `{-9007199254740991..9007199254740991}`,
+                `{1..1e309}`,
+                `{0.5..2.5}`,
+                `let x = 1 as number in {0, x..5, "tail"}`,
+            ]) {
+                it(`range with unexpanded length returns a plain list: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: Type.ListInstance,
+                    }));
+            }
+
+            for (const text of [
+                `{0, 1..1000000000000, "tail"}{2}`,
+                `{0, 1..1000000000000, "tail"}{1000}?`,
+                `let x = 1 as number in {0, x..5, "tail"}{2}`,
+            ]) {
+                it(`unexpanded range does not imply exact positions or bounds: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: text.endsWith("?") ? Type.NullableAnyInstance : Type.AnyInstance,
+                    }));
+            }
+
+            it(`an unexpanded range inside a list expression remains nested`, async () =>
+                await assertEqualRootType({
+                    text: `{{1..1000000000000}}`,
                     expected: TypeUtils.definedList(false, [Type.ListInstance]),
                 }));
         });
