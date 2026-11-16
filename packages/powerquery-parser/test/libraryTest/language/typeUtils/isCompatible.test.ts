@@ -276,6 +276,32 @@ describe(`TypeUtils.isCompatible`, () => {
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
+        it(`is compatible with its primitive list supertype`, () => {
+            const list: Type.DefinedList = TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, 1)]);
+            const nullableList: Type.DefinedList = { ...list, isNullable: true };
+
+            expect(noopIsCompatible(list, Type.ListInstance)).to.equal(true);
+            expect(noopIsCompatible(list, Type.NullableListInstance)).to.equal(true);
+            expect(noopIsCompatible(nullableList, Type.NullableListInstance)).to.equal(true);
+            expect(noopIsCompatible(nullableList, Type.ListInstance)).to.equal(false);
+            expect(noopIsCompatible(Type.ListInstance, list)).to.equal(false);
+        });
+
+        it(`accepts defined lists as elements of a list-of-lists schema`, () => {
+            const checked: TypeUtils.CheckedDefinedList = TypeUtils.typeCheckListWithListType(
+                TypeUtils.definedList(false, [
+                    TypeUtils.definedList(false, []),
+                    TypeUtils.definedList(false, [Type.TextInstance]),
+                ]),
+                TypeUtils.listType(false, Type.ListInstance),
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(checked.valid).to.deep.equal([0, 1]);
+            expect(checked.invalid.size).to.equal(0);
+        });
+
         describe(`identity`, () => {
             it(`empty`, () => {
                 const definedList: Type.DefinedList = TypeUtils.definedList(false, []);
@@ -334,6 +360,105 @@ describe(`TypeUtils.isCompatible`, () => {
                 expect(noopIsCompatible(Type.NullInstance, definedList)).to.equal(true, undefined);
             });
         });
+    });
+
+    describe(`required fields and openness`, () => {
+        const factories: ReadonlyArray<
+            (isNullable: boolean, fields: Map<string, Type.TPowerQueryType>, isOpen: boolean) => Type.TPowerQueryType
+        > = [
+            TypeUtils.definedRecord,
+            TypeUtils.recordType,
+            TypeUtils.tableType,
+            (isNullable: boolean, fields: Map<string, Type.TPowerQueryType>, isOpen: boolean): Type.DefinedTable => ({
+                ...TypeUtils.definedTable(isNullable, new OrderedMap(fields)),
+                isOpen,
+            }),
+        ];
+
+        for (const createType of factories) {
+            describe(`${createType(false, new Map(), false).extendedKind}`, () => {
+                const required: Map<string, Type.TPowerQueryType> = new Map([["a", Type.NumberInstance]]);
+
+                const extra: Map<string, Type.TPowerQueryType> = new Map<string, Type.TPowerQueryType>([
+                    ["a", Type.NumberInstance],
+                    ["b", Type.TextInstance],
+                ]);
+
+                it(`rejects missing required fields regardless of openness`, () => {
+                    for (const sourceIsOpen of [false, true]) {
+                        for (const targetIsOpen of [false, true]) {
+                            const target: Type.TPowerQueryType = createType(false, required, targetIsOpen);
+
+                            expect(noopIsCompatible(createType(false, new Map(), sourceIsOpen), target)).to.equal(
+                                false,
+                            );
+
+                            expect(
+                                noopIsCompatible(
+                                    createType(false, new Map([["b", Type.NumberInstance]]), sourceIsOpen),
+                                    target,
+                                ),
+                            ).to.equal(false);
+                        }
+                    }
+                });
+
+                it(`allows extra fields only in open targets`, () => {
+                    for (const sourceIsOpen of [false, true]) {
+                        const source: Type.TPowerQueryType = createType(false, extra, sourceIsOpen);
+
+                        expect(noopIsCompatible(source, createType(false, required, true))).to.equal(true);
+                        expect(noopIsCompatible(source, createType(false, required, false))).to.equal(false);
+                        expect(noopIsCompatible(source, createType(false, new Map(), true))).to.equal(true);
+                        expect(noopIsCompatible(source, createType(false, new Map(), false))).to.equal(false);
+                    }
+                });
+
+                it(`rejects open sources for closed targets even with identical declared fields`, () => {
+                    const closed: Type.TPowerQueryType = createType(false, required, false);
+                    const open: Type.TPowerQueryType = createType(false, required, true);
+
+                    expect(noopIsCompatible(open, closed)).to.equal(false);
+                    expect(noopIsCompatible(closed, open)).to.equal(true);
+                    expect(noopIsCompatible(open, open)).to.equal(true);
+                });
+
+                it(`compares source field values to target types while permitting extra fields`, () => {
+                    const source: Type.TPowerQueryType = createType(
+                        false,
+                        new Map<string, Type.TPowerQueryType>([
+                            ["a", TypeUtils.numberLiteral(false, 1)],
+                            ["b", Type.TextInstance],
+                        ]),
+                        false,
+                    );
+
+                    expect(noopIsCompatible(source, createType(false, required, true))).to.equal(true);
+
+                    expect(
+                        noopIsCompatible(
+                            createType(false, extra, false),
+                            createType(false, new Map([["a", TypeUtils.numberLiteral(false, 1)]]), true),
+                        ),
+                    ).to.equal(false);
+
+                    expect(
+                        noopIsCompatible(source, createType(false, new Map([["a", Type.TextInstance]]), true)),
+                    ).to.equal(false);
+                });
+
+                it(`does not accept None or Unknown required field types`, () => {
+                    const known: Type.TPowerQueryType = createType(false, required, true);
+
+                    for (const fieldType of [Type.NoneInstance, Type.UnknownInstance]) {
+                        const special: Type.TPowerQueryType = createType(false, new Map([["a", fieldType]]), true);
+
+                        expect(noopIsCompatible(special, known)).to.equal(false);
+                        expect(noopIsCompatible(known, special)).to.equal(false);
+                    }
+                });
+            });
+        }
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedRecord}`, () => {
