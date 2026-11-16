@@ -48,6 +48,25 @@ const noopSimplify: (types: ReadonlyArray<Type.TPowerQueryType>) => ReadonlyArra
 
 describe(`TypeUtils`, () => {
     describe(`simplify`, () => {
+        const nullableSubtypes: ReadonlyArray<[Type.TPrimitiveType, Type.TPowerQueryType]> = [
+            [Type.NumberInstance, TypeUtils.numberLiteral(true, 1)],
+            [Type.TextInstance, TypeUtils.textLiteral(true, "value")],
+            [Type.ListInstance, TypeUtils.definedList(true, [])],
+            [Type.RecordInstance, TypeUtils.definedRecord(true, new Map(), false)],
+            [Type.TableInstance, TypeUtils.definedTable(true, new OrderedMap())],
+            [Type.FunctionInstance, TypeUtils.definedFunction(true, [], Type.NumberInstance)],
+            [Type.TypePrimitiveInstance, TypeUtils.listType(true, Type.NumberInstance)],
+        ];
+
+        for (const [primitive, subtype] of nullableSubtypes) {
+            it(`preserves null when a ${subtype.extendedKind} is absorbed by its primitive`, () => {
+                const expected: Type.TPowerQueryType = { ...primitive, isNullable: true };
+
+                expect(noopSimplify([primitive, subtype])).to.deep.equal([expected]);
+                expect(noopCreateAnyUnion([subtype, primitive])).to.deep.equal(expected);
+            });
+        }
+
         it(`generic, identical nullability should reduce to single type`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
                 noopSimplify([Type.RecordInstance, Type.RecordInstance]),

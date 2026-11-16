@@ -1624,6 +1624,12 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+            it(`preserves a coalescing fallback after simplifying a nullable numeric branch`, async () =>
+                await assertEqualRootType({
+                    text: `let f = (b as logical, i as number) => (if b then (1 as number) else {1}{i}?) ?? "fallback" in f(false, 1)`,
+                    expected: anyUnion([Type.NumberInstance, TypeUtils.textLiteral(false, "fallback")]),
+                }));
+
             it(`1 ?? 1`, async () =>
                 await assertEqualRootType({
                     text: `1 ?? 1`,
