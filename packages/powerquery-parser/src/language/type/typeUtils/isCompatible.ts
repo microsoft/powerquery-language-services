@@ -490,7 +490,7 @@ function isCompatibleWithList(
     } else {
         switch (right.extendedKind) {
             case undefined:
-                result = left.extendedKind === undefined;
+                result = true;
                 break;
 
             case Type.ExtendedTypeKind.DefinedList:

@@ -276,6 +276,32 @@ describe(`TypeUtils.isCompatible`, () => {
     });
 
     describe(`${Type.ExtendedTypeKind.DefinedList}`, () => {
+        it(`is compatible with its primitive list supertype`, () => {
+            const list: Type.DefinedList = TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, 1)]);
+            const nullableList: Type.DefinedList = { ...list, isNullable: true };
+
+            expect(noopIsCompatible(list, Type.ListInstance)).to.equal(true);
+            expect(noopIsCompatible(list, Type.NullableListInstance)).to.equal(true);
+            expect(noopIsCompatible(nullableList, Type.NullableListInstance)).to.equal(true);
+            expect(noopIsCompatible(nullableList, Type.ListInstance)).to.equal(false);
+            expect(noopIsCompatible(Type.ListInstance, list)).to.equal(false);
+        });
+
+        it(`accepts defined lists as elements of a list-of-lists schema`, () => {
+            const checked: TypeUtils.CheckedDefinedList = TypeUtils.typeCheckListWithListType(
+                TypeUtils.definedList(false, [
+                    TypeUtils.definedList(false, []),
+                    TypeUtils.definedList(false, [Type.TextInstance]),
+                ]),
+                TypeUtils.listType(false, Type.ListInstance),
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(checked.valid).to.deep.equal([0, 1]);
+            expect(checked.invalid.size).to.equal(0);
+        });
+
         describe(`identity`, () => {
             it(`empty`, () => {
                 const definedList: Type.DefinedList = TypeUtils.definedList(false, []);
