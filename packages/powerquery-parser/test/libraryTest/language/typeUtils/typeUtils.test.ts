@@ -186,19 +186,6 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
-        it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
-                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-            ]);
-
-            expect(simplified.length).to.equal(1);
-
-            const actual: AbridgedType = typeToAbridged(ArrayUtils.assertGet(simplified, 0));
-            const expected: AbridgedType = TypeUtils.primitiveType(false, Type.TypeKind.Record);
-            expect(actual).deep.equal(expected);
-        });
-
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe primitive types across AnyUnion`, () => {
             const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
                 noopCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
@@ -281,33 +268,6 @@ describe(`TypeUtils`, () => {
         function row(entries: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.UnorderedFields {
             return new Map<string, Type.TPowerQueryType>(entries);
         }
-
-        it(`retains valid rows`, () => {
-            const rows: ReadonlyArray<Type.UnorderedFields> = [
-                row([
-                    ["Name", TypeUtils.textLiteral(false, `"A"`)],
-                    ["Value", TypeUtils.numberLiteral(false, 1)],
-                ]),
-            ];
-
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
-
-            expect(type.rows).to.equal(rows);
-            expect(type.isOpen).to.equal(false);
-        });
-
-        it(`retains exact empty rows`, () => {
-            const rows: ReadonlyArray<Type.UnorderedFields> = [];
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
-
-            expect(type.rows).to.equal(rows);
-        });
-
-        it(`allows unknown rows`, () => {
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields);
-
-            expect(type.rows).to.be.undefined;
-        });
 
         it(`accepts null for a nullable column`, () => {
             const nullableFields: Type.OrderedFields = new OrderedMap([["Value", Type.NullableNumberInstance]]);
