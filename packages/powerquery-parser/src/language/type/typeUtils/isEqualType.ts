@@ -169,6 +169,7 @@ export function isEqualDefinedRecord(left: Type.DefinedRecord, right: Type.Defin
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
+            left.isOpen === right.isOpen &&
             MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType))
     );
 }
@@ -177,6 +178,7 @@ export function isEqualDefinedTable(left: Type.DefinedTable, right: Type.Defined
     return (
         left === right ||
         (left.isNullable === right.isNullable &&
+            left.isOpen === right.isOpen &&
             MapUtils.isEqualMap<string, Type.TPowerQueryType>(left.fields, right.fields, isEqualType) &&
             isEqualDefinedTableRows(left.rows, right.rows))
     );
