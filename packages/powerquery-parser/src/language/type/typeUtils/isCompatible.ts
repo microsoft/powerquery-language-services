@@ -130,6 +130,9 @@ export function isCompatibleWithFunctionParameter(
         return (
             !right.type ||
             right.type === Type.TypeKind.Any ||
+            (right.type === Type.TypeKind.AnyNonNull &&
+                Type.TypeKinds.includes(left.kind) &&
+                left.kind !== Type.TypeKind.Null) ||
             left.kind === Type.TypeKind.Any ||
             (left.kind === Type.TypeKind.Null && right.isNullable) ||
             left.kind === right.type

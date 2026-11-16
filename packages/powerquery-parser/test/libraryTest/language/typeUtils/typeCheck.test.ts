@@ -49,6 +49,38 @@ const noopTypeCheckListWithListType: (valueType: Type.DefinedList, schemaType: T
 
 describe(`TypeUtils.typeCheck`, () => {
     describe(`typeCheckInvocation`, () => {
+        it(`accepts non-null values for anynonnull parameters while rejecting nullable values`, () => {
+            const parameter: Type.FunctionParameter = {
+                nameLiteral: "value",
+                type: Type.TypeKind.AnyNonNull,
+                isNullable: false,
+                isOptional: false,
+            };
+
+            const args: ReadonlyArray<Type.TPowerQueryType> = [
+                Type.NumberInstance,
+                Type.TextInstance,
+                TypeUtils.definedList(false, []),
+                Type.NullInstance,
+                Type.NullableNumberInstance,
+                Type.NoneInstance,
+                Type.UnknownInstance,
+            ];
+
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                args.map(() => parameter),
+                Type.AnyInstance,
+            );
+
+            assertAbridgedEqual(createAbridgedChecked(noopTypeCheckInvocation(args, fn)), {
+                valid: [0, 1, 2],
+                invalid: [3, 4, 5, 6],
+                extraneous: [],
+                missing: [],
+            });
+        });
+
         it(`extraneous parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.ActionInstance];
 

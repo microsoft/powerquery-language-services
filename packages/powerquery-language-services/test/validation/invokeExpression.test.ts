@@ -94,6 +94,14 @@ function expectInvocationDiagnosticPositions(
 }
 
 describe("Validation - InvokeExpression", () => {
+    it(`accepts a number passed to an anynonnull parameter`, async () => {
+        expect(
+            await assertInvokeExpressionDiagnostics({
+                text: `let f = (x as anynonnull) => x in f(1)`,
+            }),
+        ).to.deep.equal([]);
+    });
+
     describe(`checkInvokeExpressions = false`, () => {
         it(`argument count suppressed`, async () => {
             const text: string = `${TestConstants.TestLibraryName.SquareIfNumber}()`;
