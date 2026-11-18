@@ -39,7 +39,7 @@ async function assertInvokeExpressionDiagnostics(params: {
                 diagnostic.code === DiagnosticErrorCode.InvokeArgumentTypeMismatch,
         )
         .map((diagnostic: Diagnostic) => ({
-            message: diagnostic.message,
+            message: Diagnostic.getMessageString(diagnostic),
             startPosition: Assert.asDefined(diagnostic.range).start,
         }));
 }
