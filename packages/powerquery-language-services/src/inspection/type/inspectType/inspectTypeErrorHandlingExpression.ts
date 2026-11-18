@@ -39,14 +39,17 @@ export async function inspectTypeErrorHandlingExpression(
             [Ast.NodeKind.CatchExpression, Ast.NodeKind.OtherwiseExpression],
         );
 
-    let errorHandlerResult: Type.TPowerQueryType;
-
     // No handler exists, i.e. `try 0`
     if (handler === undefined) {
-        errorHandlerResult = Type.RecordInstance;
+        trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.RecordInstance) });
+
+        return Type.RecordInstance;
     }
+
+    let errorHandlerResult: Type.TPowerQueryType;
+
     // If it's a catch handler, i.e. `try 1/0 catch () => "div by 0"`
-    else if (handler.node.kind === Ast.NodeKind.CatchExpression) {
+    if (handler.node.kind === Ast.NodeKind.CatchExpression) {
         // We care about the evaluation of the function,
         // and as typing isn't allowed on a catch expression it requires an inspection on the function's body
         const fnExpression: XorNode<Ast.FunctionExpression> | undefined =
