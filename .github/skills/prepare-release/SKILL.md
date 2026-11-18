@@ -51,9 +51,11 @@ Recommend a minor version for backward-compatible new functionality and a major 
 consumer changes. Explain the reason and ask before changing from the default patch version; do not
 silently promote the release.
 
-Use exactly one existing category prefix for every added entry: `Added`, `Changed`, `Deprecated`,
-`Removed`, `Fixed`, or `Security`. Keep new text brief and describe the observable result rather than
-the implementation or pull request title.
+Use exactly one existing category prefix for every added consumer-facing entry: `Added`, `Changed`,
+`Deprecated`, `Removed`, `Fixed`, or `Security`. Keep new text brief and describe the observable result
+rather than the implementation or pull request title. End each newly written consumer-facing entry
+with its GitHub pull request reference in the form `(#<number>)`. Do not add references to entries
+copied from `Unreleased`, because those entries must remain verbatim.
 
 Finalize all three changelogs:
 
@@ -62,7 +64,7 @@ Finalize all three changelogs:
 - If a package has no direct consumer-facing change but its published package dependencies changed,
   add `- Changed: Updated package dependencies.`
 - If the package has neither consumer-facing changes nor package dependency changes, add
-  `- Changed: No changes.`
+  `- Version change only`
 - Remove the `Unreleased` heading for the prepared release.
 - Keep prior release sections unchanged and in descending version order.
 
