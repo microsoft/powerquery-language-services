@@ -43,6 +43,7 @@ packaged-consumer behavior.
   refactoring, or development tooling unless they change published package behavior.
 - Prefix every entry with exactly one of: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`.
 - Keep entries brief and describe the observable consumer impact.
-- Put entries under `Unreleased` when the change does not include a version bump.
+- Put entries under `Unreleased` when the change does not include a version bump, and end each new entry with its
+  GitHub pull request reference in the form `(#<number>)`.
 - When bumping the shared package version, move all `Unreleased` entries into the new version section and remove the
   `Unreleased` section.
