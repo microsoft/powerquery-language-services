@@ -2,7 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    ExpiredCancellationToken,
+    ICancellationToken,
+    Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
 import { FoldingRange, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range } from "vscode-languageserver-textdocument";
 
@@ -547,6 +554,32 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                     adjacentToken,
                 ]),
             ).to.deep.equal([functionToken, adjacentToken]);
+        });
+
+        it(`preserves producer order for many distinct token ranges`, () => {
+            const tokens: PartialSemanticToken[] = Array.from({ length: 10_000 }, (_: unknown, index: number) => ({
+                range: {
+                    end: { character: 1, line: 9_999 - index },
+                    start: { character: 0, line: 9_999 - index },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.variable,
+            }));
+
+            expect(removeOverlappingTokens(tokens)).to.deep.equal(tokens);
+        });
+
+        it(`checks cancellation while filtering overlapping tokens`, () => {
+            const token: PartialSemanticToken = {
+                range: {
+                    end: { character: 1, line: 0 },
+                    start: { character: 0, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.variable,
+            };
+
+            expect(() => removeOverlappingTokens([token], ExpiredCancellationToken)).to.throw();
         });
 
         it(`function invocation takes precedence over variable classification`, async () =>
