@@ -55,11 +55,12 @@ silently promote the release.
 Use exactly one existing category prefix for every added consumer-facing entry: `Added`, `Changed`,
 `Deprecated`, `Removed`, `Fixed`, or `Security`. Keep new text brief and describe the observable result
 rather than the implementation or pull request title. End every consumer-facing entry in the finalized
-version section with its GitHub pull request reference in the form `(#<number>)`, including entries
-moved from `Unreleased`. Trace copied entries to the commits and associated pull requests rather than
-requiring authors to know the PR number before creating it. The generated `Updated package dependencies`
-and `Version change only` entries are release bookkeeping rather than consumer-facing changes and do
-not need pull request references.
+version section with a clickable GitHub pull request Markdown link in the form
+`([#<number>](https://github.com/microsoft/powerquery-language-services/pull/<number>))`, including
+entries moved from `Unreleased`. Trace copied entries to the commits and associated pull requests
+rather than requiring authors to know the PR number before creating it. The generated `Updated package
+dependencies` and `Version change only` entries are release bookkeeping rather than consumer-facing
+changes and do not need pull request references.
 
 Finalize all three changelogs:
 
