@@ -509,16 +509,21 @@ computed in an existing analysis/provider can still reflect older metadata.
 
 ### Disposal is cache clearing, not registry eviction
 
-`MemoizedAnalysis.dispose()` clears its five maps and calls `AnalysisBase.dispose()`, which clears the
-scope/type maps. It does not cancel work already running, discard the lex/parse promise, dispose
-providers, or itself remove the analysis from `AnalysisUtils`' module-level registry.
+`AnalysisBase.dispose()` requests clearing of the scope/type maps and, for `MemoizedAnalysis`, its
+five memoization maps. It does not cancel work already running, discard the lex/parse promise,
+dispose providers, or itself remove the analysis from `AnalysisUtils`' module-level registry.
 
 The registry disposes analyses that it replaces, invalidates, or clears. Cached results therefore
 belong to the registry and should not be disposed by callers. When workspace caching is disabled,
 the returned analysis is owned by the caller and is not affected by registry invalidation or clear
-operations. Actual cache clearing is deferred while an analysis has pending operations so an
-inspection cannot lose scope/type state after eviction. Do not treat `dispose()` as a terminal-state
-enforced for new uncached instances.
+operations. Internal lifetime tracking defers cache clearing until pending analysis operations and
+the complete `validate()` call finish. Eviction takes effect immediately, while existing operations
+retain their scope/type state until completion, including error paths.
+
+Disposal is repeatable cache clearing, not a terminal state: an instance can be reused and disposed
+again. References returned by `getTypeCache()` remain owned by that analysis, not independent
+snapshots. Direct inspection callers must coordinate their own lifetimes with disposal and
+invalidation; only analysis methods and `validate()` participate in internal operation tracking.
 
 ## Formatting and editor-facing structures
 

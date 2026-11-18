@@ -48,6 +48,7 @@ import {
     TScopeItem,
 } from "../inspection/scope/scopeUtils";
 import { LanguageAutocompleteItemProvider, LibraryProvider, LocalDocumentProvider } from "../providers";
+import { requestDisposal, withDeferredDisposal } from "./analysisLifetime";
 import type { Analysis } from "./analysis";
 import type { AnalysisSettings } from "./analysisSettings";
 import { ValidationTraceConstant } from "../trace";
@@ -70,10 +71,6 @@ export class AnalysisBase implements Analysis {
     protected triedLexParse: Promise<PQP.Task.TriedLexParseTask>;
     // Local type cache that is shared across provider actions.
     protected typeCache: TypeCache = Inspection.TypeCacheUtils.emptyCache();
-
-    private activeOperationCount: number = 0;
-    private isDisposalRequested: boolean = false;
-    private isDisposed: boolean = false;
 
     constructor(
         protected textDocument: TextDocument,
@@ -589,8 +586,7 @@ export class AnalysisBase implements Analysis {
     }
 
     public dispose(): void {
-        this.isDisposalRequested = true;
-        this.disposeIfIdle();
+        requestDisposal(this, () => this.disposeNow());
     }
 
     protected disposeNow(): void {
@@ -598,30 +594,8 @@ export class AnalysisBase implements Analysis {
         this.typeCache.typeById.clear();
     }
 
-    public async withDeferredDisposal<T>(operation: () => Promise<T>): Promise<T> {
-        this.activeOperationCount += 1;
-
-        try {
-            return await operation();
-        } finally {
-            this.completeOperation();
-        }
-    }
-
     protected ensureResultAsync<T>(taskFactory: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
-        return this.withDeferredDisposal(() => ResultUtils.ensureResultAsync(taskFactory, this.locale));
-    }
-
-    private completeOperation(): void {
-        this.activeOperationCount -= 1;
-        this.disposeIfIdle();
-    }
-
-    private disposeIfIdle(): void {
-        if (this.isDisposalRequested && !this.isDisposed && this.activeOperationCount === 0) {
-            this.isDisposed = true;
-            this.disposeNow();
-        }
+        return withDeferredDisposal(this, () => ResultUtils.ensureResultAsync(taskFactory, this.locale));
     }
 
     protected static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {

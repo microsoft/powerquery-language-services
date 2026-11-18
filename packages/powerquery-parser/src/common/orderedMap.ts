@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils } from ".";
+import { ArrayUtils, Assert } from ".";
 
 export class OrderedMap<K, V> implements Map<K, V> {
     public size: number;
@@ -49,14 +49,10 @@ export class OrderedMap<K, V> implements Map<K, V> {
         }
     }
 
-    public entries(): MapIterator<[K, V]> {
-        const orderedMap: Map<K, V> = new Map();
-
+    public *entries(): MapIterator<[K, V]> {
         for (const key of this.order) {
-            orderedMap.set(key, this.getAssertedValue(key));
+            yield [key, Assert.asDefined(this.map.get(key))];
         }
-
-        return orderedMap.entries();
     }
 
     public forEach(callback: (value: V, key: K, map: Map<K, V>) => void): void {
@@ -74,7 +70,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public keys(): MapIterator<K> {
-        return new Map(this.order.map((key: K) => [key, undefined])).keys();
+        return this.order[Symbol.iterator]();
     }
 
     public set(key: K, value: V, maintainIndex?: boolean): this {
@@ -93,22 +89,6 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public values(): MapIterator<V> {
-        const orderedMap: Map<K, V> = new Map();
-
-        for (const key of this.order) {
-            orderedMap.set(key, this.getAssertedValue(key));
-        }
-
-        return orderedMap.values();
-    }
-
-    private getAssertedValue(key: K): V {
-        const value: V | undefined = this.map.get(key);
-
-        if (value === undefined && !this.map.has(key)) {
-            throw new Error("OrderedMap key was removed without updating order");
-        }
-
-        return value as V;
+        return this.map.values();
     }
 }

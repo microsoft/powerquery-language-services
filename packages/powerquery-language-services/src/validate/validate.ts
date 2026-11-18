@@ -17,6 +17,7 @@ import { validateParse } from "./validateParse";
 import { validateUnknownIdentifiers } from "./validateUnknownIdentifiers";
 import type { ValidationSettings } from "./validationSettings";
 import { ValidationTraceConstant } from "../trace";
+import { withDeferredDisposal } from "../analysis/analysisLifetime";
 
 export function validate(
     textDocument: TextDocument,
@@ -37,7 +38,7 @@ export function validate(
 
         const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
 
-        return await analysis.withDeferredDisposal(async () => {
+        return await withDeferredDisposal(analysis, async () => {
             const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
             const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 

@@ -125,6 +125,27 @@ describe(`Analysis cache`, () => {
         uncachedDisposeTracker.dispose();
     });
 
+    for (const isWorkspaceCacheAllowed of [false, true]) {
+        it(`clears caches again after reuse with workspace caching ${isWorkspaceCacheAllowed}`, async () => {
+            const [text, position]: [string, Position] = TestUtils.extractPosition("let x = 1 in x|");
+
+            const analysis: Analysis = AnalysisUtils.analysis(
+                textDocument("repeated-disposal", 1, text),
+                cacheSettings({ isWorkspaceCacheAllowed }),
+            );
+
+            ResultUtils.assertIsOk(await analysis.getHover(position));
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.be.greaterThan(0);
+            analysis.dispose();
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+
+            ResultUtils.assertIsOk(await analysis.getHover(position));
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.be.greaterThan(0);
+            analysis.dispose();
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+        });
+    }
+
     it(`defers disposal until a pending inspection finishes after invalidation`, async () => {
         await assertPendingDisposal((document: TextDocument, settings: AnalysisSettings): Analysis => {
             expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
@@ -146,34 +167,60 @@ describe(`Analysis cache`, () => {
         );
     });
 
-    it(`defers disposal for the duration of validation`, async () => {
-        const document: TextDocument = textDocument("pending-validation", 1, "let f = (x) => x in f(1)");
-        const analysis: Analysis = AnalysisUtils.analysis(document, cacheSettings());
-        let invalidated: boolean = false;
+    it(`defers disposal until a pending inspection finishes after clearing the cache`, async () => {
+        await assertPendingDisposal((document: TextDocument, settings: AnalysisSettings): Analysis => {
+            AnalysisUtils.clearCache();
 
-        const cancellationToken: ICancellationToken = {
-            ...NoOpCancellationToken,
-            throwIfCancelled: (): void => {
-                if (!invalidated && analysis.getTypeCache().scopeById.scopes.size > 0) {
-                    invalidated = true;
-                    expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
-                }
-            },
-        };
-
-        const result: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
-            document,
-            cacheSettings(),
-            {
-                ...TestConstants.SimpleLibraryValidateAllSettings,
-                cancellationToken,
-            },
-        );
-
-        ResultUtils.assertIsOk(result);
-        expect(invalidated).to.be.true;
-        expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+            return AnalysisUtils.analysis(document, settings);
+        });
     });
+
+    for (const shouldCancel of [false, true]) {
+        it(`defers disposal for the duration of validation with cancellation ${shouldCancel}`, async () => {
+            const [text, position]: [string, Position] = TestUtils.extractPosition("let f = (x) => x in f|(1)");
+            const document: TextDocument = textDocument("pending-validation", 1, text);
+            const analysis: Analysis = AnalysisUtils.analysis(document, cacheSettings());
+            let invalidated: boolean = false;
+
+            if (shouldCancel) {
+                ResultUtils.assertIsOk(await analysis.getHover(position));
+                expect(analysis.getTypeCache().scopeById.scopes.size).to.be.greaterThan(0);
+            }
+
+            const cancellationToken: ICancellationToken = {
+                ...NoOpCancellationToken,
+                throwIfCancelled: (): void => {
+                    if (!invalidated && analysis.getTypeCache().scopeById.scopes.size > 0) {
+                        invalidated = true;
+                        expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
+                        expect(analysis.getTypeCache().scopeById.scopes.size).to.be.greaterThan(0);
+
+                        if (shouldCancel) {
+                            throw new CommonError.CancellationError(cancellationToken, "Cancel after cache eviction");
+                        }
+                    }
+                },
+            };
+
+            const result: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
+                document,
+                cacheSettings(),
+                {
+                    ...TestConstants.SimpleLibraryValidateAllSettings,
+                    cancellationToken,
+                },
+            );
+
+            if (shouldCancel) {
+                ResultUtils.assertIsError(result);
+            } else {
+                ResultUtils.assertIsOk(result);
+            }
+
+            expect(invalidated).to.be.true;
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+        });
+    }
 });
 
 function cacheSettings(overrides: Partial<AnalysisSettings> = {}): AnalysisSettings {
