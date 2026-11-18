@@ -9,7 +9,7 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
+import { Position, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -32,7 +32,9 @@ export function createPartialSemanticTokens(
 
     const tokens: PartialSemanticToken[] = [];
 
-    // Consumed as first-come first-serve priority.
+    // Producer order defines semantic precedence. More specific classifications are emitted before generic
+    // identifiers, with invocation functions taking precedence over variable uses. Overlaps are resolved
+    // first-wins below, while distinct tokens retain their original order.
     getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
     getEachExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
     getFieldSelectorTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
@@ -78,9 +80,102 @@ export function createPartialSemanticTokens(
         cancellationToken,
     );
 
+    const nonOverlappingTokens: PartialSemanticToken[] = removeOverlappingTokens(tokens, cancellationToken);
+
     trace.exit();
 
-    return tokens;
+    return nonOverlappingTokens;
+}
+
+export function removeOverlappingTokens(
+    tokens: ReadonlyArray<PartialSemanticToken>,
+    cancellationToken: ICancellationToken | undefined = undefined,
+): PartialSemanticToken[] {
+    const positions: Position[] = [];
+
+    for (const token of tokens) {
+        cancellationToken?.throwIfCancelled();
+        positions.push(token.range.start, token.range.end);
+    }
+
+    positions.sort(comparePositions);
+
+    const positionIndexes: Map<string, number> = new Map();
+
+    for (const position of positions) {
+        cancellationToken?.throwIfCancelled();
+
+        const key: string = positionKey(position);
+
+        if (!positionIndexes.has(key)) {
+            positionIndexes.set(key, positionIndexes.size);
+        }
+    }
+
+    // Compressed boundaries allow indexed overlap queries without changing the producer-order precedence.
+    const rangeIndex: FenwickRangeIndex = new FenwickRangeIndex(positionIndexes.size);
+    const nonOverlappingTokens: PartialSemanticToken[] = [];
+
+    for (const token of tokens) {
+        cancellationToken?.throwIfCancelled();
+
+        const startIndex: number | undefined = positionIndexes.get(positionKey(token.range.start));
+        const endIndex: number | undefined = positionIndexes.get(positionKey(token.range.end));
+        Assert.isDefined(startIndex);
+        Assert.isDefined(endIndex);
+
+        if (!rangeIndex.overlaps(startIndex, endIndex)) {
+            rangeIndex.add(startIndex, endIndex);
+            nonOverlappingTokens.push(token);
+        }
+    }
+
+    return nonOverlappingTokens;
+}
+
+class FenwickRangeIndex {
+    private readonly maximumEnds: number[];
+
+    constructor(positionCount: number) {
+        this.maximumEnds = Array(positionCount + 1).fill(0);
+    }
+
+    public overlaps(startIndex: number, endIndex: number): boolean {
+        if (startIndex >= endIndex) {
+            return false;
+        }
+
+        let maximumEnd: number = 0;
+        let index: number = endIndex;
+
+        while (index > 0) {
+            maximumEnd = Math.max(maximumEnd, this.maximumEnds[index]);
+            index -= index & -index;
+        }
+
+        return maximumEnd > startIndex;
+    }
+
+    public add(startIndex: number, endIndex: number): void {
+        if (startIndex >= endIndex) {
+            return;
+        }
+
+        let index: number = startIndex + 1;
+
+        while (index < this.maximumEnds.length) {
+            this.maximumEnds[index] = Math.max(this.maximumEnds[index], endIndex);
+            index += index & -index;
+        }
+    }
+}
+
+function comparePositions(left: Position, right: Position): number {
+    return left.line === right.line ? left.character - right.character : left.line - right.line;
+}
+
+function positionKey(position: Position): string {
+    return `${position.line}:${position.character}`;
 }
 
 function getAsNullablePrimitiveTypeTokens(

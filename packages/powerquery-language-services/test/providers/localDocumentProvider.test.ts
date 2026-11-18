@@ -2,7 +2,14 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    ExpiredCancellationToken,
+    ICancellationToken,
+    Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
 import { FoldingRange, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import type { Range } from "vscode-languageserver-textdocument";
 
@@ -19,6 +26,7 @@ import {
 import { TestConstants, TestUtils } from "..";
 import { AutocompleteItem } from "../../src/inspection";
 import { expect } from "chai";
+import { removeOverlappingTokens } from "../../src/providers/localDocumentProvider/partialSemanticToken";
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -509,6 +517,96 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
         }
 
+        it(`removes duplicate and partially overlapping tokens while preserving distinct tokens`, () => {
+            const functionToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 3, line: 0 },
+                    start: { character: 0, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.function,
+            };
+
+            const adjacentToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 4, line: 0 },
+                    start: { character: 3, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.number,
+            };
+
+            const emptyToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 1, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.operator,
+            };
+
+            expect(
+                removeOverlappingTokens([
+                    functionToken,
+                    {
+                        ...functionToken,
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                    {
+                        ...functionToken,
+                        range: {
+                            end: { character: 4, line: 0 },
+                            start: { character: 2, line: 0 },
+                        },
+                        tokenType: SemanticTokenTypes.parameter,
+                    },
+                    adjacentToken,
+                    emptyToken,
+                ]),
+            ).to.deep.equal([functionToken, adjacentToken, emptyToken]);
+        });
+
+        it(`preserves producer order for many distinct token ranges`, () => {
+            const tokens: PartialSemanticToken[] = Array.from({ length: 10_000 }, (_: unknown, index: number) => ({
+                range: {
+                    end: { character: 1, line: 9_999 - index },
+                    start: { character: 0, line: 9_999 - index },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.variable,
+            }));
+
+            expect(removeOverlappingTokens(tokens)).to.deep.equal(tokens);
+        });
+
+        it(`checks cancellation while filtering overlapping tokens`, () => {
+            const token: PartialSemanticToken = {
+                range: {
+                    end: { character: 1, line: 0 },
+                    start: { character: 0, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.variable,
+            };
+
+            expect(() => removeOverlappingTokens([token], ExpiredCancellationToken)).to.throw();
+        });
+
+        it(`function invocation takes precedence over variable classification`, async () =>
+            await assertSemanticTokens({
+                text: `foo()`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                ],
+            }));
+
         it(`field projection`, async () =>
             await assertSemanticTokens({
                 text: `a[[b]]?`,
@@ -990,14 +1088,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         range: {
                             end: { character: 17, line: 0 },
                             start: { character: 16, line: 0 },
-                        },
-                        tokenModifiers: [],
-                        tokenType: SemanticTokenTypes.variable,
-                    },
-                    {
-                        range: {
-                            end: { character: 23, line: 0 },
-                            start: { character: 21, line: 0 },
                         },
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
