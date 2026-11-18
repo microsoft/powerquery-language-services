@@ -55,7 +55,8 @@ Use exactly one existing category prefix for every added consumer-facing entry: 
 `Deprecated`, `Removed`, `Fixed`, or `Security`. Keep new text brief and describe the observable result
 rather than the implementation or pull request title. End each newly written consumer-facing entry
 with its GitHub pull request reference in the form `(#<number>)`. Do not add references to entries
-copied from `Unreleased`, because those entries must remain verbatim.
+copied from `Unreleased`, because those entries must remain verbatim. The generated `Updated package
+dependencies` and `Version change only` entries do not need pull request references.
 
 Finalize all three changelogs:
 
