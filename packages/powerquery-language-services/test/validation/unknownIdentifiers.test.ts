@@ -43,7 +43,7 @@ async function assertUnknownIdentifierDiagnostics(
     return diagnostics
         .filter((diagnostic: Diagnostic) => diagnostic.code === DiagnosticErrorCode.UnknownIdentifier)
         .map((diagnostic: Diagnostic) => ({
-            message: diagnostic.message,
+            message: TestUtils.diagnosticMessageText(diagnostic),
             startPosition: Assert.asDefined(diagnostic.range).start,
         }));
 }

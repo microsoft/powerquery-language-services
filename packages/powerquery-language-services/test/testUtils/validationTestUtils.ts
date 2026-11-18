@@ -55,3 +55,7 @@ export async function assertValidateDiagnostics(params: {
 }): Promise<PQLS.Diagnostic[]> {
     return (await assertValidate(params)).diagnostics;
 }
+
+export function diagnosticMessageText(diagnostic: PQLS.Diagnostic): string {
+    return typeof diagnostic.message === "string" ? diagnostic.message : diagnostic.message.value;
+}

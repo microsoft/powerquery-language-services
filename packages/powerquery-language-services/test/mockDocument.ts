@@ -95,6 +95,35 @@ export class MockDocument implements TextDocument {
         return Position.create(line, offset - lineOffsets[line]);
     }
 
+    public getLineRange(line: number): Range {
+        const lineOffsets: number[] = this.getLineOffsets();
+
+        if (lineOffsets.length === 0 || line < 0) {
+            return Range.create(0, 0, 0, 0);
+        } else if (line >= lineOffsets.length) {
+            const lastLine: number = lineOffsets.length - 1;
+
+            return Range.create(lastLine, 0, lastLine, this._content.length - lineOffsets[lastLine]);
+        }
+
+        const startOffset: number = lineOffsets[line];
+        const nextLineOffset: number = line + 1 < lineOffsets.length ? lineOffsets[line + 1] : this._content.length;
+
+        return Range.create(line, 0, line, this.ensureBeforeEol(nextLineOffset, startOffset) - startOffset);
+    }
+
+    public getEOLCharacters(line: number): string {
+        const lineOffsets: number[] = this.getLineOffsets();
+
+        if (line < 0 || line >= lineOffsets.length) {
+            return "";
+        }
+
+        const nextLineOffset: number = line + 1 < lineOffsets.length ? lineOffsets[line + 1] : this._content.length;
+
+        return this._content.substring(this.ensureBeforeEol(nextLineOffset, lineOffsets[line]), nextLineOffset);
+    }
+
     // Helper function
     public update(text: string): ReadonlyArray<TextDocumentContentChangeEvent> {
         this.setText(text);
@@ -110,6 +139,20 @@ export class MockDocument implements TextDocument {
         MockDocument.NextUri += 1;
 
         return MockDocument.NextUri.toString();
+    }
+
+    private ensureBeforeEol(offset: number, lineOffset: number): number {
+        while (offset > lineOffset) {
+            const character: string = this._content.charAt(offset - 1);
+
+            if (character !== "\r" && character !== "\n") {
+                break;
+            }
+
+            offset -= 1;
+        }
+
+        return offset;
     }
 
     private getLineOffsets(): number[] {
