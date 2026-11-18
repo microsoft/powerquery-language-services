@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 5.1.0
 
 - Fixed: Accept non-null argument types for anynonnull function parameters.
 - Fixed: Require target fields and respect record/table openness when checking structural type compatibility.

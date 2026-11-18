@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 5.1.0
 
 - Fixed: Infer annotated function returns from uncertain bodies and nullable results while preserving compatible type detail.
 - Fixed: Infer projections of undeclared fields from open records without failing type inspection.
@@ -13,6 +13,9 @@
 - Fixed: Null-coalescing type inference removes null alternatives from the left operand while preserving right operand nullability.
 - Fixed: Infer null-coalescing results without propagating errors from an unreachable fallback.
 - Fixed: Infer only the reachable branch of if expressions with literal true or false conditions, including parenthesized literals.
+- Changed: Update the VS Code language server runtime dependencies. (#361)
+- Fixed: Prevent overlapping semantic tokens from being returned. (#357)
+- Added: Expose targeted and global invalidation for cached analyses. (#358)
 
 ## 5.0.0
 
