@@ -832,6 +832,173 @@ describe(`Inspection - Type`, () => {
             it(`nullable range operand returns list`, async () =>
                 await assertEqualRootType({
                     text: `let x = 1 as nullable number in {x..5}`,
+                    expected: Type.ListInstance,
+                }));
+
+            for (const text of [`{1..3}`, `{1, 5..9, 11}`, `{-2..0, 3..4}`, `{2..2}`, `{3..1}`]) {
+                it(`does not materialize range elements when inspecting a whole list: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: Type.ListInstance,
+                    }));
+            }
+
+            for (const [text, value] of [
+                [`{1..3}{0}`, 1],
+                [`{1..3}{1}`, 2],
+                [`{1, 5..9, 11}{6}`, 11],
+                [`{1..2, 5..6, 9}{3}`, 6],
+                [`{3..1, 7}{0}`, 7],
+                [`{1..100}{99}`, 100],
+                [`{10..1000000000}{5}`, 15],
+                [`{0, 1..1000000000000, "tail"}{2}`, 2],
+                [`{1..1000000000000}{999999999999}`, 1000000000000],
+                [`{-2..0, 3..4}{4}`, 4],
+                [`{9007199254740990..9007199254740991}{1}`, 9007199254740991],
+                [`{{1..3}}{0}{1}`, 2],
+                [`let xs = {10..1000000000}, alias = (xs) in alias{5}`, 15],
+                [`let xs = {{10..1000000000}}, inner = xs{0} in inner{5}`, 15],
+                [`(let xs = {10..1000000000} in xs){5}`, 15],
+                [`let i = 5 in {10..1000000000}{i}`, 15],
+                [`let xs = {10..1000000000} in (let xs = {20..1000000000} in xs{5})`, 25],
+            ] as const) {
+                it(`range-aware positional access: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.numberLiteral(false, value),
+                    }));
+            }
+
+            it(`access beyond a known range returns none`, async () =>
+                await assertEqualRootType({
+                    text: `{1..1000000000000}{1000000000000}`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`optional access into an empty range returns null`, async () =>
+                await assertEqualRootType({
+                    text: `{3..1}{0}?`,
+                    expected: Type.NullInstance,
+                }));
+
+            it(`list expressions remain nested alongside ranges`, async () =>
+                await assertEqualRootType({
+                    text: `{1..1000000000000, {3, 4}}{1000000000000}`,
+                    expected: TypeUtils.definedList(false, [
+                        TypeUtils.numberLiteral(false, 3),
+                        TypeUtils.numberLiteral(false, 4),
+                    ]),
+                }));
+
+            it(`selects a scalar after a large range`, async () =>
+                await assertEqualRootType({
+                    text: `{"first", 10..1000000000, "last"}{999999992}`,
+                    expected: TypeUtils.textLiteral(false, "last"),
+                }));
+
+            it(`preserves optional item nullability for a large range`, async () =>
+                await assertEqualRootType({
+                    text: `{0, 1..1000000000000, "tail"}{1000}?`,
+                    expected: TypeUtils.numberLiteral(true, 1000),
+                }));
+
+            for (const text of [
+                `{1..101}`,
+                `{1..1000000000000}`,
+                `{9007199254740992..9007199254740994}`,
+                `{-9007199254740991..9007199254740991}`,
+                `{1..1e309}`,
+                `{0.5..2.5}`,
+                `let x = 1 as number in {0, x..5, "tail"}`,
+            ]) {
+                it(`range with unexpanded length returns a plain list: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: Type.ListInstance,
+                    }));
+            }
+
+            for (const text of [
+                `let x = 1 as number in {0, x..5, "tail"}{2}`,
+                `let x = 1 as number in {0, x..5, "tail"}{2}?`,
+                `{0.5..2.5}{1}`,
+                `{9007199254740992..9007199254740994}{1}`,
+                `{-9007199254740991..9007199254740991}{1}`,
+                `(i as number) => {1..1000000000000}{i}`,
+            ]) {
+                it(`unexpanded range does not imply exact positions or bounds: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text: text.startsWith("(i") ? `(${text})(1)` : text,
+                        expected: text.endsWith("?") ? Type.NullableAnyInstance : Type.AnyInstance,
+                    }));
+            }
+
+            for (const text of [
+                `{unrequested, 10..1000000000, unrequested}{6}`,
+                `let xs = {unrequested, 10..1000000000, unrequested}, alias = xs in alias{6}`,
+                `{{unrequested, 10..1000000000, unrequested}}{0}{6}`,
+                `{{unrequested, 15}}{0}{1}`,
+                `let xs = {15, unrequested..1000000000} in xs{0}`,
+            ]) {
+                it(`inspects only the selected item and needed range bounds: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.numberLiteral(false, 15),
+                        settings: {
+                            ...ExtendedInspectionSettings,
+                            library: {
+                                ...ExtendedInspectionSettings.library,
+                                externalTypeResolver: () => {
+                                    throw new Error("Unselected list elements must not require external resolution");
+                                },
+                            },
+                        },
+                    }));
+            }
+
+            it(`retains errors in a selected optional item`, async () =>
+                await assertEqualRootType({
+                    text: `{1..1000000000000, error "selected"}{1000000000000}?`,
+                    expected: { ...Type.NoneInstance, isNullable: true },
+                }));
+
+            it(`terminates recursive list item inference`, async () =>
+                await assertEqualRootType({
+                    text: `let xs = {@xs{0}} in xs{0}`,
+                    expected: Type.AnyInstance,
+                }));
+
+            it(`preserves errors in the collection before optional access`, async () =>
+                await assertEqualRootType({
+                    text: `(error "collection"){0}?`,
+                    expected: Type.NoneInstance,
+                }));
+
+            it(`reuses the external collection resolution when falling back to its type`, async () => {
+                let resolutions: number = 0;
+
+                await assertEqualRootType({
+                    text: `external{0}`,
+                    expected: TypeUtils.numberLiteral(false, 15),
+                    settings: {
+                        ...ExtendedInspectionSettings,
+                        library: {
+                            ...ExtendedInspectionSettings.library,
+                            externalTypeResolver: () => {
+                                resolutions += 1;
+
+                                return TypeUtils.definedList(false, [TypeUtils.numberLiteral(false, 15)]);
+                            },
+                        },
+                    },
+                });
+
+                expect(resolutions).to.equal(1);
+            });
+
+            it(`an unexpanded range inside a list expression remains nested`, async () =>
+                await assertEqualRootType({
+                    text: `{{1..1000000000000}}`,
                     expected: TypeUtils.definedList(false, [Type.ListInstance]),
                 }));
         });

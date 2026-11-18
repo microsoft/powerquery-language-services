@@ -26,7 +26,7 @@ export async function inspectTypeRangeExpression(
     state.cancellationToken?.throwIfCancelled();
     XorNodeUtils.assertIsNodeKind<Ast.RangeExpression>(xorNode, Ast.NodeKind.RangeExpression);
 
-    let result: Type.List | Type.None | Type.Unknown;
+    let result: Type.TList | Type.None | Type.Unknown;
 
     switch (state.typeStrategy) {
         case TypeStrategy.Extended: {
