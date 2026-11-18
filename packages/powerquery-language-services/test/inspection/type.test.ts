@@ -443,6 +443,12 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`#table`, () => {
+            it(`preserves exact list-valued cells in typed tables`, async () =>
+                await assertEqualRootType({
+                    text: `#table(type table [xs = list], {{{1, 2}}}){0}[xs]{0}`,
+                    expected: TypeUtils.numberLiteral(false, 1),
+                }));
+
             it(`infers columns from a literal list`, async () =>
                 await assertEqualRootType({
                     text: `let Source = #table({"Name", "Score"}, {}) in Source`,

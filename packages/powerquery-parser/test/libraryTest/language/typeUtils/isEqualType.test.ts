@@ -5,6 +5,7 @@ import "mocha";
 import { expect } from "chai";
 
 import { Type, TypeUtils } from "../../../../src/language";
+import { NoOpTraceManagerInstance } from "../../../../src/common/trace";
 import { OrderedMap } from "../../../../src/common";
 import { TPowerQueryType } from "../../../../src/language/type/type";
 
