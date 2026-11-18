@@ -95,6 +95,14 @@ export class MockDocument implements TextDocument {
         return Position.create(line, offset - lineOffsets[line]);
     }
 
+    public getLineRange(line: number): Range {
+        return TextDocument.create(this.uri, this.languageId, this.version, this._content).getLineRange(line);
+    }
+
+    public getEOLCharacters(line: number): string {
+        return TextDocument.create(this.uri, this.languageId, this.version, this._content).getEOLCharacters(line);
+    }
+
     // Helper function
     public update(text: string): ReadonlyArray<TextDocumentContentChangeEvent> {
         this.setText(text);

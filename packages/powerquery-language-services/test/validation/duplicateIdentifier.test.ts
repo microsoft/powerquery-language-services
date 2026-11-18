@@ -70,7 +70,7 @@ async function validateDuplicateIdentifierDiagnostics(params: {
         expect(diagnostic.relatedInformation?.length).to.be.greaterThan(0, "expected at least one relatedInformation");
         expect(diagnostic.source).to.equal(errorSource, `expected diagnostic to have errorSource of ${errorSource}`);
 
-        const match: RegExpMatchArray | null = diagnostic.message.match(/'(.*?)'/);
+        const match: RegExpMatchArray | null = Diagnostic.getMessageString(diagnostic).match(/'(.*?)'/);
         const name: string = match ? match[1] : "";
 
         abridgedActual.push({
