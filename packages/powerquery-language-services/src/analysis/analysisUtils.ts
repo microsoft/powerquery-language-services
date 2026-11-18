@@ -18,12 +18,15 @@ const analysisByUri: Map<string, CachedAnalysis> = new Map();
 // If AnalysisSettings.isWorkspaceCacheAllowed is true then the analysis will be cached by its URI.
 // A URI with an updated version or settings will cause a new Analysis to be generated and cached.
 export function analysis(document: TextDocument, analysisSettings: AnalysisSettings): Analysis {
+    if (!analysisSettings.isWorkspaceCacheAllowed) {
+        return new DocumentAnalysis(document, analysisSettings);
+    }
+
     const cacheKey: string = document.uri.toString();
     const cachedAnalysis: CachedAnalysis | undefined = analysisByUri.get(cacheKey);
 
     if (cachedAnalysis !== undefined) {
         if (
-            analysisSettings.isWorkspaceCacheAllowed &&
             cachedAnalysis.version === document.version &&
             areAnalysisSettingsEqual(cachedAnalysis.analysisSettings, analysisSettings)
         ) {
@@ -36,16 +39,14 @@ export function analysis(document: TextDocument, analysisSettings: AnalysisSetti
 
     const analysis: Analysis = new DocumentAnalysis(document, analysisSettings);
 
-    if (analysisSettings.isWorkspaceCacheAllowed) {
-        analysisByUri.set(cacheKey, {
-            analysis,
-            analysisSettings: {
-                ...analysisSettings,
-                inspectionSettings: { ...analysisSettings.inspectionSettings },
-            },
-            version: document.version,
-        });
-    }
+    analysisByUri.set(cacheKey, {
+        analysis,
+        analysisSettings: {
+            ...analysisSettings,
+            inspectionSettings: { ...analysisSettings.inspectionSettings },
+        },
+        version: document.version,
+    });
 
     return analysis;
 }

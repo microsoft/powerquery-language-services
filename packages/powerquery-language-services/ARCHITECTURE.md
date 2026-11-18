@@ -516,7 +516,9 @@ providers, or itself remove the analysis from `AnalysisUtils`' module-level regi
 The registry disposes analyses that it replaces, invalidates, or clears. Cached results therefore
 belong to the registry and should not be disposed by callers. When workspace caching is disabled,
 the returned analysis is owned by the caller and is not affected by registry invalidation or clear
-operations. Do not treat `dispose()` as a terminal-state enforced for new uncached instances.
+operations. Actual cache clearing is deferred while an analysis has pending operations so an
+inspection cannot lose scope/type state after eviction. Do not treat `dispose()` as a terminal-state
+enforced for new uncached instances.
 
 ## Formatting and editor-facing structures
 

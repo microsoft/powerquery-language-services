@@ -24,14 +24,14 @@ export class MemoizedAnalysis extends AnalysisBase {
     private readonly nodeScopeCache: Map<number | undefined, Promise<TriedNodeScope | undefined>> = new Map();
     private readonly scopeTypeCache: Map<number | undefined, Promise<TriedScopeType | undefined>> = new Map();
 
-    public override dispose(): void {
+    protected override disposeNow(): void {
         this.activeNodeCache.clear();
         this.autocompleteCache.clear();
         this.currentInvokeExpressionCache.clear();
         this.nodeScopeCache.clear();
         this.scopeTypeCache.clear();
 
-        super.dispose();
+        super.disposeNow();
     }
 
     public override getActiveNode(

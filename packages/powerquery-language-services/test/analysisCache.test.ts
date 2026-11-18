@@ -2,14 +2,31 @@
 // Licensed under the MIT license.
 
 import "mocha";
+import { CommonError, Result } from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
-import { Analysis, AnalysisSettings, AnalysisUtils, TextDocument, textDocument } from "../src";
-import { TestConstants } from ".";
+import {
+    Analysis,
+    AnalysisSettings,
+    AnalysisUtils,
+    Hover,
+    HoverProviderContext,
+    Library,
+    LibraryProvider,
+    Position,
+    TextDocument,
+    textDocument,
+} from "../src";
+import { TestConstants, TestUtils } from ".";
 
 interface DisposalTracker {
     readonly count: () => number;
     readonly dispose: () => void;
+}
+
+interface Deferred {
+    readonly promise: Promise<void>;
+    readonly resolve: () => void;
 }
 
 describe(`Analysis cache`, () => {
@@ -82,16 +99,43 @@ describe(`Analysis cache`, () => {
     });
 
     it(`leaves uncached analyses under caller ownership`, () => {
-        const analysis: Analysis = AnalysisUtils.analysis(
-            textDocument("uncached", 1, "let x = 1 in x"),
-            cacheSettings({ isWorkspaceCacheAllowed: false }),
-        );
+        const document: TextDocument = textDocument("uncached", 1, "let x = 1 in x");
+        const cached: Analysis = AnalysisUtils.analysis(document, cacheSettings());
+        const cachedDisposeTracker: DisposalTracker = trackDisposal(cached);
 
-        const disposeTracker: DisposalTracker = trackDisposal(analysis);
+        const uncached: Analysis = AnalysisUtils.analysis(document, cacheSettings({ isWorkspaceCacheAllowed: false }));
+
+        const uncachedDisposeTracker: DisposalTracker = trackDisposal(uncached);
+
+        expect(uncached).not.to.equal(cached);
+        expect(AnalysisUtils.analysis(document, cacheSettings())).to.equal(cached);
+        expect(cachedDisposeTracker.count()).to.equal(0);
         AnalysisUtils.clearCache();
 
-        expect(disposeTracker.count()).to.equal(0);
-        disposeTracker.dispose();
+        expect(cachedDisposeTracker.count()).to.equal(1);
+        expect(uncachedDisposeTracker.count()).to.equal(0);
+        uncachedDisposeTracker.dispose();
+    });
+
+    it(`defers disposal until a pending inspection finishes after invalidation`, async () => {
+        await assertPendingDisposal((document: TextDocument, settings: AnalysisSettings): Analysis => {
+            expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
+
+            return AnalysisUtils.analysis(document, settings);
+        });
+    });
+
+    it(`defers disposal until a pending inspection finishes after replacement`, async () => {
+        await assertPendingDisposal(
+            (document: TextDocument, settings: AnalysisSettings): Analysis =>
+                AnalysisUtils.analysis(document, {
+                    ...settings,
+                    inspectionSettings: {
+                        ...settings.inspectionSettings,
+                        library: TestConstants.EmptyLibrary,
+                    },
+                }),
+        );
     });
 });
 
@@ -116,4 +160,69 @@ function trackDisposal(analysis: Analysis): DisposalTracker {
         count: () => count,
         dispose,
     };
+}
+
+async function assertPendingDisposal(
+    replaceOrInvalidate: (document: TextDocument, settings: AnalysisSettings) => Analysis,
+): Promise<void> {
+    const [text, position]: [string, Position] = TestUtils.extractPosition("let x = 1 in x|");
+    const document: TextDocument = textDocument("pending-disposal", 1, text);
+    const started: Deferred = deferred();
+    const blocked: Deferred = deferred();
+
+    const settings: AnalysisSettings = cacheSettings({
+        libraryProviderFactory: (library: Library.ILibrary, locale: string): BlockingLibraryProvider =>
+            new BlockingLibraryProvider(library, locale, started, blocked),
+    });
+
+    const analysis: Analysis = AnalysisUtils.analysis(document, settings);
+    const disposeTracker: DisposalTracker = trackDisposal(analysis);
+    const pending: Promise<Result<Hover | undefined, CommonError.CommonError>> = analysis.getHover(position);
+
+    await started.promise;
+    const scopeCount: number = analysis.getTypeCache().scopeById.scopes.size;
+    expect(scopeCount).to.be.greaterThan(0);
+
+    const replacement: Analysis = replaceOrInvalidate(document, settings);
+    expect(replacement).not.to.equal(analysis);
+    expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(scopeCount);
+
+    blocked.resolve();
+    await pending;
+    await Promise.resolve();
+
+    expect(disposeTracker.count()).to.equal(1);
+    expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+}
+
+function deferred(): Deferred {
+    let resolve: () => void = (): never => {
+        throw new Error("Deferred promise has not been initialized");
+    };
+
+    const promise: Promise<void> = new Promise((resolvePromise: () => void) => {
+        resolve = resolvePromise;
+    });
+
+    return { promise, resolve };
+}
+
+class BlockingLibraryProvider extends LibraryProvider {
+    public constructor(
+        library: Library.ILibrary,
+        locale: string,
+        private readonly started: Deferred,
+        private readonly blocked: Deferred,
+    ) {
+        super(library, locale);
+    }
+
+    public override async getHover(
+        context: HoverProviderContext,
+    ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
+        this.started.resolve();
+        await this.blocked.promise;
+
+        return super.getHover(context);
+    }
 }

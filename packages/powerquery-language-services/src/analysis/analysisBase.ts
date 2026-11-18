@@ -71,6 +71,10 @@ export class AnalysisBase implements Analysis {
     // Local type cache that is shared across provider actions.
     protected typeCache: TypeCache = Inspection.TypeCacheUtils.emptyCache();
 
+    private activeOperationCount: number = 0;
+    private isDisposalRequested: boolean = false;
+    private isDisposed: boolean = false;
+
     constructor(
         protected textDocument: TextDocument,
         analysisSettings: AnalysisSettings,
@@ -115,7 +119,7 @@ export class AnalysisBase implements Analysis {
         position: Position,
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<Inspection.AutocompleteItem[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getAutocompleteItems.name,
@@ -161,14 +165,14 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return autocompleteItems;
-        }, this.locale);
+        });
     }
 
     public getDefinition(
         position: Position,
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<Location[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getDefinition.name,
@@ -199,13 +203,13 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return result.value;
-        }, this.locale);
+        });
     }
 
     public getDocumentSymbols(
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<PQP.Result<DocumentSymbol[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined);
 
             if (parseState === undefined) {
@@ -229,13 +233,13 @@ export class AnalysisBase implements Analysis {
             addRecordSymbols(nodeIdMapCollection, currentSymbols, parentSymbolById, cancellationToken);
 
             return currentSymbols;
-        }, this.locale);
+        });
     }
 
     public getFoldingRanges(
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<FoldingRange[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getFoldingRanges.name,
@@ -267,14 +271,14 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return result.value;
-        }, this.locale);
+        });
     }
 
     public getHover(
         position: Position,
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<Hover | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getHover.name,
@@ -322,12 +326,12 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return undefined;
-        }, this.locale);
+        });
     }
 
     // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
     public getActiveNode(position: Position): Promise<Result<TActiveNode | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const parseState: ParseState | undefined = await this.getParseStateOkOrThrow(undefined);
 
             if (parseState === undefined) {
@@ -335,12 +339,12 @@ export class AnalysisBase implements Analysis {
             }
 
             return ActiveNodeUtils.activeNode(parseState.contextState.nodeIdMapCollection, position);
-        }, this.locale);
+        });
     }
 
     // undefined means either the parse pass wasn't done (lexing error), or there was no error.
     public getParseError(): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const triedLexParse: PQP.Task.TriedLexParseTask = await this.triedLexParse;
 
             if (PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
@@ -350,12 +354,12 @@ export class AnalysisBase implements Analysis {
             } else {
                 return undefined;
             }
-        }, this.locale);
+        });
     }
 
     // We should only get an undefined for an activeNode iff a parse pass hasn't been done.
     public getParseState(): Promise<Result<ParseState | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const triedLexParse: PQP.Task.TriedLexParseTask = await this.triedLexParse;
 
             if (PQP.TaskUtils.isParseStageCommonError(triedLexParse)) {
@@ -367,13 +371,13 @@ export class AnalysisBase implements Analysis {
             } else {
                 return undefined;
             }
-        }, this.locale);
+        });
     }
 
     public getPartialSemanticTokens(
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<PartialSemanticToken[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getPartialSemanticTokens.name,
@@ -406,14 +410,14 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return result.value;
-        }, this.locale);
+        });
     }
 
     public getSignatureHelp(
         position: Position,
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<SignatureHelp | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getSignatureHelp.name,
@@ -445,7 +449,7 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return undefined;
-        }, this.locale);
+        });
     }
 
     public getRenameEdits(
@@ -453,7 +457,7 @@ export class AnalysisBase implements Analysis {
         newName: string,
         cancellationTokenOverride?: ICancellationToken | undefined,
     ): Promise<Result<TextEdit[] | undefined, CommonError.CommonError>> {
-        return ResultUtils.ensureResultAsync(async () => {
+        return this.ensureResultAsync(async () => {
             const trace: Trace = this.traceManager.entry(
                 ValidationTraceConstant.AnalysisBase,
                 this.getRenameEdits.name,
@@ -581,12 +585,39 @@ export class AnalysisBase implements Analysis {
             trace.exit();
 
             return result;
-        }, this.locale);
+        });
     }
 
     public dispose(): void {
+        this.isDisposalRequested = true;
+        this.disposeIfIdle();
+    }
+
+    protected disposeNow(): void {
         Inspection.ScopeUtils.clearScopeById(this.typeCache.scopeById);
         this.typeCache.typeById.clear();
+    }
+
+    protected async ensureResultAsync<T>(taskFactory: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
+        this.activeOperationCount += 1;
+
+        try {
+            return await ResultUtils.ensureResultAsync(taskFactory, this.locale);
+        } finally {
+            this.completeOperation();
+        }
+    }
+
+    private completeOperation(): void {
+        this.activeOperationCount -= 1;
+        this.disposeIfIdle();
+    }
+
+    private disposeIfIdle(): void {
+        if (this.isDisposalRequested && !this.isDisposed && this.activeOperationCount === 0) {
+            this.isDisposed = true;
+            this.disposeNow();
+        }
     }
 
     protected static isValidHoverIdentifier(activeNode: Inspection.ActiveNode): boolean {
