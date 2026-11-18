@@ -182,6 +182,15 @@ describe("OrderedMap", () => {
             const map: OrderedMap<string, number> = new OrderedMap();
             expect([...map.values()]).to.deep.equal([]);
         });
+
+        it("preserves undefined values", () => {
+            const map: OrderedMap<string, number | undefined> = new OrderedMap([
+                ["a", undefined],
+                ["b", 2],
+            ]);
+
+            expect([...map.values()]).to.deep.equal([undefined, 2]);
+        });
     });
 
     describe("entries", () => {
@@ -199,6 +208,18 @@ describe("OrderedMap", () => {
         it("returns empty iterator for empty map", () => {
             const map: OrderedMap<string, number> = new OrderedMap();
             expect([...map.entries()]).to.deep.equal([]);
+        });
+
+        it("preserves undefined values", () => {
+            const map: OrderedMap<string, number | undefined> = new OrderedMap([
+                ["a", undefined],
+                ["b", 2],
+            ]);
+
+            expect([...map.entries()]).to.deep.equal([
+                ["a", undefined],
+                ["b", 2],
+            ]);
         });
     });
 

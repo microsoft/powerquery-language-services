@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ArrayUtils, Assert } from ".";
+import { ArrayUtils } from ".";
 
 export class OrderedMap<K, V> implements Map<K, V> {
     public size: number;
@@ -50,7 +50,13 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public entries(): MapIterator<[K, V]> {
-        return new Map(this.order.map((key: K) => [key, Assert.asDefined(this.map.get(key))])).entries();
+        const orderedMap: Map<K, V> = new Map();
+
+        for (const key of this.order) {
+            orderedMap.set(key, this.getAssertedValue(key));
+        }
+
+        return orderedMap.entries();
     }
 
     public forEach(callback: (value: V, key: K, map: Map<K, V>) => void): void {
@@ -87,6 +93,22 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public values(): MapIterator<V> {
-        return new Map(this.order.map((key: K) => [key, Assert.asDefined(this.map.get(key))])).values();
+        const orderedMap: Map<K, V> = new Map();
+
+        for (const key of this.order) {
+            orderedMap.set(key, this.getAssertedValue(key));
+        }
+
+        return orderedMap.values();
+    }
+
+    private getAssertedValue(key: K): V {
+        const value: V | undefined = this.map.get(key);
+
+        if (value === undefined && !this.map.has(key)) {
+            throw new Error("OrderedMap key was removed without updating order");
+        }
+
+        return value as V;
     }
 }

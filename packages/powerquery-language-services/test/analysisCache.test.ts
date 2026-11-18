@@ -2,7 +2,13 @@
 // Licensed under the MIT license.
 
 import "mocha";
-import { CommonError, Result } from "@microsoft/powerquery-parser";
+import {
+    CommonError,
+    ICancellationToken,
+    NoOpCancellationToken,
+    Result,
+    ResultUtils,
+} from "@microsoft/powerquery-parser";
 import { expect } from "chai";
 
 import {
@@ -14,8 +20,10 @@ import {
     Library,
     LibraryProvider,
     Position,
-    TextDocument,
     textDocument,
+    TextDocument,
+    validate,
+    ValidateOk,
 } from "../src";
 import { TestConstants, TestUtils } from ".";
 
@@ -136,6 +144,35 @@ describe(`Analysis cache`, () => {
                     },
                 }),
         );
+    });
+
+    it(`defers disposal for the duration of validation`, async () => {
+        const document: TextDocument = textDocument("pending-validation", 1, "let f = (x) => x in f(1)");
+        const analysis: Analysis = AnalysisUtils.analysis(document, cacheSettings());
+        let invalidated: boolean = false;
+
+        const cancellationToken: ICancellationToken = {
+            ...NoOpCancellationToken,
+            throwIfCancelled: (): void => {
+                if (!invalidated && analysis.getTypeCache().scopeById.scopes.size > 0) {
+                    invalidated = true;
+                    expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
+                }
+            },
+        };
+
+        const result: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
+            document,
+            cacheSettings(),
+            {
+                ...TestConstants.SimpleLibraryValidateAllSettings,
+                cancellationToken,
+            },
+        );
+
+        ResultUtils.assertIsOk(result);
+        expect(invalidated).to.be.true;
+        expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
     });
 });
 

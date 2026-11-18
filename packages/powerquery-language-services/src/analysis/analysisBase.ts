@@ -598,14 +598,18 @@ export class AnalysisBase implements Analysis {
         this.typeCache.typeById.clear();
     }
 
-    protected async ensureResultAsync<T>(taskFactory: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
+    public async withDeferredDisposal<T>(operation: () => Promise<T>): Promise<T> {
         this.activeOperationCount += 1;
 
         try {
-            return await ResultUtils.ensureResultAsync(taskFactory, this.locale);
+            return await operation();
         } finally {
             this.completeOperation();
         }
+    }
+
+    protected ensureResultAsync<T>(taskFactory: () => Promise<T>): Promise<Result<T, CommonError.CommonError>> {
+        return this.withDeferredDisposal(() => ResultUtils.ensureResultAsync(taskFactory, this.locale));
     }
 
     private completeOperation(): void {

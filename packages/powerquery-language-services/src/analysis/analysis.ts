@@ -64,4 +64,5 @@ export interface Analysis extends IDisposable {
     getParseError(): Promise<Result<ParseError.ParseError | undefined, CommonError.CommonError>>;
     getParseState(): Promise<Result<ParseState | undefined, CommonError.CommonError>>;
     getTypeCache(): TypeCache;
+    withDeferredDisposal<T>(operation: () => Promise<T>): Promise<T>;
 }
