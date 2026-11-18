@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed: Infer annotated function returns from uncertain bodies and nullable results while preserving compatible type detail.
 - Fixed: Infer projections of undeclared fields from open records without failing type inspection.
 - Fixed: Infer selected list items directly from range bounds without expanding ranges, including large ranges, aliases, and nested lists.
 - Fixed: Infer handlerless try expressions as records rather than unions with their protected values.

@@ -1268,6 +1268,79 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.FunctionExpression}`, () => {
+            it(`narrows an untyped parameter to the return annotation`, async () =>
+                await assertEqualRootType({
+                    text: `(x) as number => x`,
+                    expected: TypeUtils.definedFunction(
+                        false,
+                        [{ nameLiteral: `x`, isNullable: true, isOptional: false, type: undefined }],
+                        Type.NumberInstance,
+                    ),
+                }));
+
+            it(`uses the return annotation for an incomplete body`, async () =>
+                await assertEqualRootType({
+                    text: `() as number =>`,
+                    expected: TypeUtils.definedFunction(false, [], Type.NumberInstance),
+                }));
+
+            for (const [text, returnType] of [
+                [`() as nullable number => null`, Type.NullInstance],
+                [`() as nullable number => 1`, TypeUtils.numberLiteral(false, `1`)],
+                [`() as number => (1 as nullable number)`, Type.NumberInstance],
+                [`() as record => [a = 1]`, definedRecord([[`a`, TypeUtils.numberLiteral(false, `1`)]])],
+            ] as const) {
+                it(`retains compatible return detail: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.definedFunction(false, [], returnType),
+                    }));
+            }
+
+            for (const [text, returnType] of [
+                [
+                    `(condition as logical) as nullable number => if condition then 1 else null`,
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), Type.NullInstance]),
+                ],
+                [
+                    `(condition as logical) as number => if condition then 1 else 2`,
+                    anyUnion([TypeUtils.numberLiteral(false, `1`), TypeUtils.numberLiteral(false, `2`)]),
+                ],
+                [`(condition as logical) as number => if condition then 1 else missing`, Type.NumberInstance],
+            ] as const) {
+                it(`checks each union alternative: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: TypeUtils.definedFunction(
+                            false,
+                            [
+                                {
+                                    nameLiteral: `condition`,
+                                    isNullable: false,
+                                    isOptional: false,
+                                    type: Type.TypeKind.Logical,
+                                },
+                            ],
+                            returnType,
+                        ),
+                    }));
+            }
+
+            for (const text of [
+                `() as number => null`,
+                `() as nullable number => "text"`,
+                `(condition as logical) as nullable number => if condition then 1 else "text"`,
+                `(condition as logical) as number => if condition then 1 else null`,
+                `() as number => error "failure"`,
+                `(condition as logical) as number => if condition then 1 else error "failure"`,
+            ]) {
+                it(`rejects incompatible annotated returns: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: Type.NoneInstance,
+                    }));
+            }
+
             it(`retains a parameter with an incomplete annotation`, async () =>
                 await assertEqualRootType({
                     text: `(x as`,
