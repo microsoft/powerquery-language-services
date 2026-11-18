@@ -49,10 +49,8 @@ export class OrderedMap<K, V> implements Map<K, V> {
         }
     }
 
-    public *entries(): MapIterator<[K, V]> {
-        for (const key of this.order) {
-            yield [key, Assert.asDefined(this.map.get(key))];
-        }
+    public entries(): MapIterator<[K, V]> {
+        return new Map(this.order.map((key: K) => [key, Assert.asDefined(this.map.get(key))])).entries();
     }
 
     public forEach(callback: (value: V, key: K, map: Map<K, V>) => void): void {
@@ -70,7 +68,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public keys(): MapIterator<K> {
-        return this.order[Symbol.iterator]();
+        return new Map(this.order.map((key: K) => [key, undefined])).keys();
     }
 
     public set(key: K, value: V, maintainIndex?: boolean): this {
@@ -89,6 +87,6 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
 
     public values(): MapIterator<V> {
-        return this.map.values();
+        return new Map(this.order.map((key: K) => [key, Assert.asDefined(this.map.get(key))])).values();
     }
 }
