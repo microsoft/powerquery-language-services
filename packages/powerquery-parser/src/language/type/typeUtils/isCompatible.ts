@@ -130,6 +130,9 @@ export function isCompatibleWithFunctionParameter(
         return (
             !right.type ||
             right.type === Type.TypeKind.Any ||
+            (right.type === Type.TypeKind.AnyNonNull &&
+                Type.TypeKinds.includes(left.kind) &&
+                left.kind !== Type.TypeKind.Null) ||
             left.kind === Type.TypeKind.Any ||
             (left.kind === Type.TypeKind.Null && right.isNullable) ||
             left.kind === right.type
@@ -401,7 +404,6 @@ function isCompatibleWithDefinedTable(
     return result;
 }
 
-// TODO: decide what a compatible FieldSpecificationList should look like
 function isCompatibleWithFieldSpecificationList(
     left: Type.TPowerQueryType,
     right: Type.TPowerQueryType & Type.TFieldSpecificationList,
@@ -418,11 +420,13 @@ function isCompatibleWithFieldSpecificationList(
 
     if (!isFieldSpecificationList(left)) {
         result = false;
+    } else if (!right.isOpen && (left.isOpen || left.fields.size !== right.fields.size)) {
+        result = false;
     } else {
         result = MapUtils.isSubsetMap(
-            left.fields,
             right.fields,
-            (leftValue: Type.TPowerQueryType, rightValue: Type.TPowerQueryType) => {
+            left.fields,
+            (rightValue: Type.TPowerQueryType, leftValue: Type.TPowerQueryType) => {
                 const subsetResult: boolean | undefined = isCompatible(leftValue, rightValue, traceManager, trace.id);
 
                 return subsetResult !== undefined && subsetResult;
@@ -490,7 +494,7 @@ function isCompatibleWithList(
     } else {
         switch (right.extendedKind) {
             case undefined:
-                result = left.extendedKind === undefined;
+                result = true;
                 break;
 
             case Type.ExtendedTypeKind.DefinedList:

@@ -102,11 +102,11 @@ function simplifyAnyCategory(category: AnyCategory | undefined): ReadonlyArray<T
 }
 
 function simplifyFunctionCategory(category: FunctionCategory | undefined): ReadonlyArray<Type.TFunction> {
-    return category ? simplifyExtendedType(category.primitives, category.definedFunctions) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.definedFunctions.values()]) : [];
 }
 
 function simplifyListCategory(category: ListCategory | undefined): ReadonlyArray<Type.TList> {
-    return category ? simplifyExtendedType(category.primitives, category.definedLists) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.definedLists.values()]) : [];
 }
 
 function simplifyLogicalCategory(category: LogicalCategory | undefined): ReadonlyArray<Type.TLogical> {
@@ -133,30 +133,26 @@ function simplifyLogicalCategory(category: LogicalCategory | undefined): Readonl
 }
 
 function simplifyNumberCategory(category: NumberCategory | undefined): ReadonlyArray<Type.TNumber> {
-    return category ? simplifyExtendedType(category.primitives, category.literals) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.literals.values()]) : [];
 }
 
 function simplifyRecordCategory(category: RecordCategory | undefined): ReadonlyArray<Type.TRecord> {
-    return category ? simplifyExtendedType(category.primitives, category.definedRecords) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.definedRecords.values()]) : [];
 }
 
 function simplifyTableCategory(category: TableCategory | undefined): ReadonlyArray<Type.TTable> {
-    return category ? simplifyExtendedType(category.primitives, category.definedTables) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.definedTables.values()]) : [];
 }
 
 function simplifyTextCategory(category: TextCategory | undefined): ReadonlyArray<Type.TText> {
-    return category ? simplifyExtendedType(category.primitives, category.literals) : [];
+    return category ? simplifyExtendedType(category.primitives, [...category.literals.values()]) : [];
 }
 
 function simplifyTypeCategory(category: TypeCategory | undefined): ReadonlyArray<Type.TPowerQueryType> {
     if (category === undefined) {
         return [];
-    } else if (category.primitives.size) {
-        const typeType: Type.Type | undefined | undefined = firstNullableElseFirst(category.primitives);
-
-        return typeType ? [typeType] : [];
     } else {
-        return [
+        return simplifyExtendedType(category.primitives, [
             ...category.definedListTypes.values(),
             ...category.functionTypes.values(),
             ...category.listTypes.values(),
@@ -164,21 +160,21 @@ function simplifyTypeCategory(category: TypeCategory | undefined): ReadonlyArray
             ...category.recordTypes.values(),
             ...category.tablePrimaryExpressionTypes.values(),
             ...category.tableTypes.values(),
-        ];
+        ]);
     }
 }
 
 function simplifyExtendedType<T extends Type.TPowerQueryType, L extends Type.TPowerQueryType>(
     primitives: ImmutableSet<T>,
-    literals: ImmutableSet<L>,
+    literals: ReadonlyArray<L>,
 ): ReadonlyArray<T> | ReadonlyArray<L> {
     if (primitives.size) {
         const type: T | undefined = firstNullableElseFirst(primitives);
 
-        return type ? [type] : [];
-    } else if (literals.size) {
-        return [...literals.values()];
+        return type
+            ? [{ ...type, isNullable: type.isNullable || literals.some((literal: L) => literal.isNullable) }]
+            : [];
     } else {
-        return [];
+        return literals;
     }
 }

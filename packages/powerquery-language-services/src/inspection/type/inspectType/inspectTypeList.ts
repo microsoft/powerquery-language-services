@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import { NodeIdMapIterator, TXorNode } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Assert } from "@microsoft/powerquery-parser";
-import { Type } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
 import { InspectTypeState } from "./inspectTypeState";
@@ -30,16 +30,15 @@ export async function inspectTypeList(
             state.cancellationToken?.throwIfCancelled();
             const items: ReadonlyArray<TXorNode> = NodeIdMapIterator.iterListItems(state.nodeIdMapCollection, xorNode);
 
-            const elements: ReadonlyArray<Type.TPowerQueryType> = await Promise.all(
-                items.map((item: TXorNode) => inspectXor(state, item, trace.id)),
-            );
-
-            result = {
-                kind: Type.TypeKind.List,
-                isNullable: false,
-                extendedKind: Type.ExtendedTypeKind.DefinedList,
-                elements,
-            };
+            // Ranges contribute a variable number of items, not a nested list element.
+            if (items.some((item: TXorNode) => item.node.kind === Ast.NodeKind.RangeExpression)) {
+                result = Type.ListInstance;
+            } else {
+                result = TypeUtils.definedList(
+                    false,
+                    await Promise.all(items.map((item: TXorNode) => inspectXor(state, item, trace.id))),
+                );
+            }
 
             break;
         }

@@ -144,7 +144,7 @@ function reducedFieldsToKeys<T extends Type.DefinedRecord | Type.DefinedTable>(
 }
 
 function reducedRecordFields(current: Type.DefinedRecord, keys: ReadonlyArray<string>): Type.UnorderedFields {
-    return PQP.MapUtils.pick(current.fields, keys);
+    return new Map(keys.map((key: string) => [key, current.fields.get(key) ?? Type.AnyInstance]));
 }
 
 function reducedTableToKeys(
