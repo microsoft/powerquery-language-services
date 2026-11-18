@@ -39,7 +39,7 @@ through the main library barrel.
 and incremental build metadata. `package.json` points consumers at
 `lib\powerquery-formatter\index.js` and its declaration file. Its `files` list selects the formatter
 subtree, not the compiled tests, benchmark CLI, or scripts. Those tools are run from a checkout.
-The dependency manifest requires Node.js 22 or later; current CI jobs run on Windows with Node.js 22.
+The dependency manifest requires Node.js 22 or later; current CI jobs run on Windows with Node.js 26.13.1 or later.
 
 ### API boundaries
 
@@ -461,6 +461,6 @@ When changing behavior:
    representative benchmark distributions and output hashes for performance changes.
 
 Normal development uses `npm run build`, `npm run lint`, and `npm test`. The GitHub pull-request
-workflow builds and tests on Windows/Node 22; the Azure pipeline also packages and publishes build
+workflow builds and tests on Windows/Node 26.13.1 or later; the Azure pipeline also packages and publishes build
 artifacts. Some linking and prepublish scripts contain `git clean -xdf`: they are destructive to
 untracked files and are not substitutes for ordinary local validation.
