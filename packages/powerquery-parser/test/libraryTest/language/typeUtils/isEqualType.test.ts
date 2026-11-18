@@ -9,6 +9,27 @@ import { OrderedMap } from "../../../../src/common";
 import { TPowerQueryType } from "../../../../src/language/type/type";
 
 describe(`TypeUtils.isEqualType`, () => {
+    const closedStructures: ReadonlyArray<Type.DefinedRecord | Type.DefinedTable> = [
+        TypeUtils.definedRecord(false, new Map([["a", Type.NumberInstance]]), false),
+        TypeUtils.definedTable(false, new OrderedMap([["a", Type.NumberInstance]])),
+    ];
+
+    for (const closed of closedStructures) {
+        it(`preserves open and closed ${closed.kind} alternatives in a union`, () => {
+            const open: Type.DefinedRecord | Type.DefinedTable = { ...closed, isOpen: true };
+
+            expect(TypeUtils.isEqualType(closed, open)).to.equal(false);
+            expect(TypeUtils.isEqualType(open, closed)).to.equal(false);
+
+            expect(TypeUtils.anyUnion([closed, open], NoOpTraceManagerInstance, undefined)).to.deep.equal({
+                kind: Type.TypeKind.Any,
+                extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [closed, open],
+            });
+        });
+    }
+
     function runTest(params: {
         readonly left: TPowerQueryType;
         readonly right: TPowerQueryType;
