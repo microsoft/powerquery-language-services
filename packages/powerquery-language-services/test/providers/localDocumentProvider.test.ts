@@ -536,6 +536,15 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                 tokenType: SemanticTokenTypes.number,
             };
 
+            const emptyToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 1, line: 0 },
+                    start: { character: 1, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.operator,
+            };
+
             expect(
                 removeOverlappingTokens([
                     functionToken,
@@ -552,8 +561,9 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         tokenType: SemanticTokenTypes.parameter,
                     },
                     adjacentToken,
+                    emptyToken,
                 ]),
-            ).to.deep.equal([functionToken, adjacentToken]);
+            ).to.deep.equal([functionToken, adjacentToken, emptyToken]);
         });
 
         it(`preserves producer order for many distinct token ranges`, () => {

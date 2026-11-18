@@ -113,7 +113,7 @@ export function removeOverlappingTokens(
     }
 
     // Compressed boundaries allow indexed overlap queries without changing the producer-order precedence.
-    const rangeIndex: RangeIndex = new RangeIndex(Math.max(0, positionIndexes.size - 1));
+    const rangeIndex: FenwickRangeIndex = new FenwickRangeIndex(positionIndexes.size);
     const nonOverlappingTokens: PartialSemanticToken[] = [];
 
     for (const token of tokens) {
@@ -124,8 +124,8 @@ export function removeOverlappingTokens(
         Assert.isDefined(startIndex);
         Assert.isDefined(endIndex);
 
-        if (!rangeIndex.hasCoveredRange(startIndex, endIndex)) {
-            rangeIndex.coverRange(startIndex, endIndex);
+        if (!rangeIndex.overlaps(startIndex, endIndex)) {
+            rangeIndex.add(startIndex, endIndex);
             nonOverlappingTokens.push(token);
         }
     }
@@ -133,81 +133,39 @@ export function removeOverlappingTokens(
     return nonOverlappingTokens;
 }
 
-class RangeIndex {
-    private readonly leafCount: number;
-    // 0 = none, 1 = partially covered, 2 = fully covered.
-    private readonly covered: Uint8Array;
+class FenwickRangeIndex {
+    private readonly maximumEnds: number[];
 
-    constructor(rangeCount: number) {
-        this.leafCount = 1;
-
-        while (this.leafCount < rangeCount) {
-            this.leafCount *= 2;
-        }
-
-        this.covered = new Uint8Array(this.leafCount * 2);
+    constructor(positionCount: number) {
+        this.maximumEnds = Array(positionCount + 1).fill(0);
     }
 
-    public hasCoveredRange(startIndex: number, endIndex: number): boolean {
-        return this.query(1, 0, this.leafCount, startIndex, endIndex);
-    }
-
-    public coverRange(startIndex: number, endIndex: number): void {
-        this.update(1, 0, this.leafCount, startIndex, endIndex);
-    }
-
-    private query(
-        nodeIndex: number,
-        nodeStart: number,
-        nodeEnd: number,
-        startIndex: number,
-        endIndex: number,
-    ): boolean {
-        if (startIndex >= endIndex || nodeEnd <= startIndex || endIndex <= nodeStart) {
+    public overlaps(startIndex: number, endIndex: number): boolean {
+        if (startIndex >= endIndex) {
             return false;
         }
 
-        if (this.covered[nodeIndex] === 2) {
-            return true;
+        let maximumEnd: number = 0;
+        let index: number = endIndex;
+
+        while (index > 0) {
+            maximumEnd = Math.max(maximumEnd, this.maximumEnds[index]);
+            index -= index & -index;
         }
 
-        if (startIndex <= nodeStart && nodeEnd <= endIndex) {
-            return this.covered[nodeIndex] !== 0;
-        }
-
-        const middle: number = (nodeStart + nodeEnd) >> 1;
-
-        return (
-            this.query(nodeIndex * 2, nodeStart, middle, startIndex, endIndex) ||
-            this.query(nodeIndex * 2 + 1, middle, nodeEnd, startIndex, endIndex)
-        );
+        return maximumEnd > startIndex;
     }
 
-    private update(nodeIndex: number, nodeStart: number, nodeEnd: number, startIndex: number, endIndex: number): void {
-        if (startIndex >= endIndex || nodeEnd <= startIndex || endIndex <= nodeStart || this.covered[nodeIndex] === 2) {
+    public add(startIndex: number, endIndex: number): void {
+        if (startIndex >= endIndex) {
             return;
         }
 
-        if (startIndex <= nodeStart && nodeEnd <= endIndex) {
-            this.covered[nodeIndex] = 2;
+        let index: number = startIndex + 1;
 
-            return;
-        }
-
-        const middle: number = (nodeStart + nodeEnd) >> 1;
-
-        this.update(nodeIndex * 2, nodeStart, middle, startIndex, endIndex);
-        this.update(nodeIndex * 2 + 1, middle, nodeEnd, startIndex, endIndex);
-
-        const left: number = this.covered[nodeIndex * 2];
-        const right: number = this.covered[nodeIndex * 2 + 1];
-
-        if (left === 2 && right === 2) {
-            this.covered[nodeIndex] = 2;
-        } else if (left !== 0 || right !== 0) {
-            this.covered[nodeIndex] = 1;
-        } else {
-            this.covered[nodeIndex] = 0;
+        while (index < this.maximumEnds.length) {
+            this.maximumEnds[index] = Math.max(this.maximumEnds[index], endIndex);
+            index += index & -index;
         }
     }
 }
