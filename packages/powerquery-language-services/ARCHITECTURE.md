@@ -473,7 +473,7 @@ There are several distinct cache lifetimes, not one global type cache:
 
 | Owner | Key | Cached value / lifetime |
 | --- | --- | --- |
-| Module-level `AnalysisUtils` registry | Document URI, with version compared separately | One `Analysis` per cached URI until replaced; module lifetime. |
+| Module-level `AnalysisUtils` registry | Document URI, with version and settings compared separately | One `Analysis` per cached URI until replaced or invalidated. |
 | `AnalysisBase` | The analysis instance | One lex/parse promise for that document snapshot. |
 | `MemoizedAnalysis.activeNodeCache` | `"line:character"` | Active-node result promise. |
 | `MemoizedAnalysis.currentInvokeExpressionCache` | `"line:character"` | Current-invocation inspection promise. |
@@ -486,12 +486,14 @@ There are several distinct cache lifetimes, not one global type cache:
 ### Invalidation constraints
 
 `AnalysisSettings.isWorkspaceCacheAllowed` controls reuse in `AnalysisUtils`. With reuse enabled,
-the same URI and version returns the existing object. A different version removes the old registry
-entry and installs a new analysis. With reuse disabled, each factory call creates a new analysis.
+the same URI, version, and settings returns the existing object. A different version or settings
+snapshot removes and disposes the old registry entry before installing a new analysis. With reuse
+disabled, each factory call creates a new, caller-owned analysis.
 
-The registry key does not include text, settings, library contents, or provider factories. Changing
-any of these without changing the URI/version can leave the old analysis in use. For such changes,
-use a fresh analysis with registry reuse disabled or manage a new instance directly.
+The registry compares setting values and object references at factory-call time. Hosts must call
+`AnalysisUtils.invalidateCache(uri)` after mutating library state in place, or
+`AnalysisUtils.clearCache()` when a workspace-wide library/settings change requires all cached
+analyses to be rebuilt. Explicit invalidation also supports document-close cleanup.
 
 `InspectionSettings.isWorkspaceCacheAllowed` is carried through inspection settings, but does not
 disable the five promise caches in `MemoizedAnalysis` or the analysis's shared type cache. Those are
@@ -509,12 +511,12 @@ computed in an existing analysis/provider can still reflect older metadata.
 
 `MemoizedAnalysis.dispose()` clears its five maps and calls `AnalysisBase.dispose()`, which clears the
 scope/type maps. It does not cancel work already running, discard the lex/parse promise, dispose
-providers, or remove the analysis from `AnalysisUtils`' module-level registry.
+providers, or itself remove the analysis from `AnalysisUtils`' module-level registry.
 
-The registry currently exposes no close-document eviction or clear API, and replacing a version does
-not dispose the previous analysis automatically. Hosts needing explicit lifetime control should
-manage analysis instances themselves or avoid registry reuse. Do not treat `dispose()` as a
-terminal-state or document-close protocol enforced by this library.
+The registry disposes analyses that it replaces, invalidates, or clears. Cached results therefore
+belong to the registry and should not be disposed by callers. When workspace caching is disabled,
+the returned analysis is owned by the caller and is not affected by registry invalidation or clear
+operations. Do not treat `dispose()` as a terminal-state enforced for new uncached instances.
 
 ## Formatting and editor-facing structures
 
