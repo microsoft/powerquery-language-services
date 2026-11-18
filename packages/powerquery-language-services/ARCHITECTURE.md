@@ -487,7 +487,7 @@ There are several distinct cache lifetimes, not one global type cache:
 
 `AnalysisSettings.isWorkspaceCacheAllowed` controls reuse in `AnalysisUtils`. With reuse enabled,
 the same URI, version, and settings returns the existing object. A different version or settings
-snapshot removes and disposes the old registry entry before installing a new analysis. With reuse
+snapshot replaces the old registry entry without disposing its analysis. With reuse
 disabled, each factory call creates a new, caller-owned analysis.
 
 The registry compares setting values and object references at factory-call time. Hosts must call
@@ -509,21 +509,20 @@ computed in an existing analysis/provider can still reflect older metadata.
 
 ### Disposal is cache clearing, not registry eviction
 
-`AnalysisBase.dispose()` requests clearing of the scope/type maps and, for `MemoizedAnalysis`, its
-five memoization maps. It does not cancel work already running, discard the lex/parse promise,
-dispose providers, or itself remove the analysis from `AnalysisUtils`' module-level registry.
+`MemoizedAnalysis.dispose()` clears its five maps and calls `AnalysisBase.dispose()`, which clears
+the scope/type maps. It does not cancel work already running, discard the lex/parse promise,
+dispose providers, or remove the analysis from `AnalysisUtils`' module-level registry.
 
-The registry disposes analyses that it replaces, invalidates, or clears. Cached results therefore
-belong to the registry and should not be disposed by callers. When workspace caching is disabled,
-the returned analysis is owned by the caller and is not affected by registry invalidation or clear
-operations. Internal lifetime tracking defers cache clearing until pending analysis operations and
-the complete `validate()` call finish. Eviction takes effect immediately, while existing operations
-retain their scope/type state until completion, including error paths.
+Replacement, `invalidateCache(uri)`, and `clearCache()` only remove registry references. They never
+dispose analyses or mutate their caches, so pending requests and validation can finish using the
+old instance. An evicted analysis and its caches are eligible for garbage collection once no caller
+or pending operation retains them. Callers retaining an evicted analysis also retain its caches.
+Uncached analyses remain caller-owned and independent of all registry operations.
 
 Disposal is repeatable cache clearing, not a terminal state: an instance can be reused and disposed
 again. References returned by `getTypeCache()` remain owned by that analysis, not independent
-snapshots. Direct inspection callers must coordinate their own lifetimes with disposal and
-invalidation; only analysis methods and `validate()` participate in internal operation tracking.
+snapshots. Explicit `dispose()` is caller-controlled and must only be used when no operation is
+using that instance's caches. Invalidation does not require coordinating with in-flight operations.
 
 ## Formatting and editor-facing structures
 

@@ -50,7 +50,7 @@ describe(`Analysis cache`, () => {
         expect(second).to.equal(first);
     });
 
-    it(`replaces and disposes an analysis when its settings change`, () => {
+    it(`replaces without disposing an analysis when its settings change`, () => {
         const document: TextDocument = textDocument("settings-change", 1, "let x = 1 in x");
         const first: Analysis = AnalysisUtils.analysis(document, cacheSettings());
         const disposeTracker: DisposalTracker = trackDisposal(first);
@@ -65,20 +65,20 @@ describe(`Analysis cache`, () => {
         const second: Analysis = AnalysisUtils.analysis(document, changedSettings);
 
         expect(second).not.to.equal(first);
-        expect(disposeTracker.count()).to.equal(1);
+        expect(disposeTracker.count()).to.equal(0);
     });
 
-    it(`replaces and disposes an analysis when its document version changes`, () => {
+    it(`replaces without disposing an analysis when its document version changes`, () => {
         const first: Analysis = AnalysisUtils.analysis(textDocument("version-change", 1, "1"), cacheSettings());
         const disposeTracker: DisposalTracker = trackDisposal(first);
 
         const second: Analysis = AnalysisUtils.analysis(textDocument("version-change", 2, "2"), cacheSettings());
 
         expect(second).not.to.equal(first);
-        expect(disposeTracker.count()).to.equal(1);
+        expect(disposeTracker.count()).to.equal(0);
     });
 
-    it(`invalidates and disposes only the targeted URI`, () => {
+    it(`invalidates only the targeted URI without disposing retained analyses`, () => {
         const firstDocument: TextDocument = textDocument("targeted", 1, "let x = 1 in x");
         const secondDocument: TextDocument = textDocument("untargeted", 1, "let x = 2 in x");
         const first: Analysis = AnalysisUtils.analysis(firstDocument, cacheSettings());
@@ -88,13 +88,13 @@ describe(`Analysis cache`, () => {
 
         expect(AnalysisUtils.invalidateCache(firstDocument.uri)).to.be.true;
         expect(AnalysisUtils.invalidateCache(firstDocument.uri)).to.be.false;
-        expect(firstDisposeTracker.count()).to.equal(1);
+        expect(firstDisposeTracker.count()).to.equal(0);
         expect(secondDisposeTracker.count()).to.equal(0);
         expect(AnalysisUtils.analysis(firstDocument, cacheSettings())).not.to.equal(first);
         expect(AnalysisUtils.analysis(secondDocument, cacheSettings())).to.equal(second);
     });
 
-    it(`clears and disposes all cached analyses`, () => {
+    it(`clears all registry entries without disposing retained analyses`, () => {
         const first: Analysis = AnalysisUtils.analysis(textDocument("clear-first", 1, "1"), cacheSettings());
         const second: Analysis = AnalysisUtils.analysis(textDocument("clear-second", 1, "2"), cacheSettings());
         const firstDisposeTracker: DisposalTracker = trackDisposal(first);
@@ -102,8 +102,10 @@ describe(`Analysis cache`, () => {
 
         AnalysisUtils.clearCache();
 
-        expect(firstDisposeTracker.count()).to.equal(1);
-        expect(secondDisposeTracker.count()).to.equal(1);
+        expect(firstDisposeTracker.count()).to.equal(0);
+        expect(secondDisposeTracker.count()).to.equal(0);
+        expect(AnalysisUtils.analysis(textDocument("clear-first", 1, "1"), cacheSettings())).not.to.equal(first);
+        expect(AnalysisUtils.analysis(textDocument("clear-second", 1, "2"), cacheSettings())).not.to.equal(second);
     });
 
     it(`leaves uncached analyses under caller ownership`, () => {
@@ -120,7 +122,7 @@ describe(`Analysis cache`, () => {
         expect(cachedDisposeTracker.count()).to.equal(0);
         AnalysisUtils.clearCache();
 
-        expect(cachedDisposeTracker.count()).to.equal(1);
+        expect(cachedDisposeTracker.count()).to.equal(0);
         expect(uncachedDisposeTracker.count()).to.equal(0);
         uncachedDisposeTracker.dispose();
     });
@@ -146,16 +148,16 @@ describe(`Analysis cache`, () => {
         });
     }
 
-    it(`defers disposal until a pending inspection finishes after invalidation`, async () => {
-        await assertPendingDisposal((document: TextDocument, settings: AnalysisSettings): Analysis => {
+    it(`preserves pending hover results after invalidation`, async () => {
+        await assertPendingHoverPreserved((document: TextDocument, settings: AnalysisSettings): Analysis => {
             expect(AnalysisUtils.invalidateCache(document.uri)).to.be.true;
 
             return AnalysisUtils.analysis(document, settings);
         });
     });
 
-    it(`defers disposal until a pending inspection finishes after replacement`, async () => {
-        await assertPendingDisposal(
+    it(`preserves pending hover results after replacement`, async () => {
+        await assertPendingHoverPreserved(
             (document: TextDocument, settings: AnalysisSettings): Analysis =>
                 AnalysisUtils.analysis(document, {
                     ...settings,
@@ -167,8 +169,8 @@ describe(`Analysis cache`, () => {
         );
     });
 
-    it(`defers disposal until a pending inspection finishes after clearing the cache`, async () => {
-        await assertPendingDisposal((document: TextDocument, settings: AnalysisSettings): Analysis => {
+    it(`preserves pending hover results after clearing the cache`, async () => {
+        await assertPendingHoverPreserved((document: TextDocument, settings: AnalysisSettings): Analysis => {
             AnalysisUtils.clearCache();
 
             return AnalysisUtils.analysis(document, settings);
@@ -176,10 +178,21 @@ describe(`Analysis cache`, () => {
     });
 
     for (const shouldCancel of [false, true]) {
-        it(`defers disposal for the duration of validation with cancellation ${shouldCancel}`, async () => {
-            const [text, position]: [string, Position] = TestUtils.extractPosition("let f = (x) => x in f|(1)");
+        it(`preserves validation state after eviction with cancellation ${shouldCancel}`, async () => {
+            const [text, position]: [string, Position] = TestUtils.extractPosition(
+                "let f = (x) => x in f|(1) + missing",
+            );
+
             const document: TextDocument = textDocument("pending-validation", 1, text);
             const analysis: Analysis = AnalysisUtils.analysis(document, cacheSettings());
+
+            const expected: Result<ValidateOk | undefined, CommonError.CommonError> = await validate(
+                document,
+                cacheSettings({ isWorkspaceCacheAllowed: false }),
+                TestConstants.SimpleLibraryValidateAllSettings,
+            );
+
+            expect(ResultUtils.assertOk(expected)?.diagnostics.length).to.be.greaterThan(0);
             let invalidated: boolean = false;
 
             if (shouldCancel) {
@@ -215,10 +228,11 @@ describe(`Analysis cache`, () => {
                 ResultUtils.assertIsError(result);
             } else {
                 ResultUtils.assertIsOk(result);
+                expect(result).to.deep.equal(expected);
             }
 
             expect(invalidated).to.be.true;
-            expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
+            expect(analysis.getTypeCache().scopeById.scopes.size).to.be.greaterThan(0);
         });
     }
 });
@@ -246,7 +260,7 @@ function trackDisposal(analysis: Analysis): DisposalTracker {
     };
 }
 
-async function assertPendingDisposal(
+async function assertPendingHoverPreserved(
     replaceOrInvalidate: (document: TextDocument, settings: AnalysisSettings) => Analysis,
 ): Promise<void> {
     const [text, position]: [string, Position] = TestUtils.extractPosition("let x = 1 in x|");
@@ -261,6 +275,12 @@ async function assertPendingDisposal(
 
     const analysis: Analysis = AnalysisUtils.analysis(document, settings);
     const disposeTracker: DisposalTracker = trackDisposal(analysis);
+
+    const expected: Result<Hover | undefined, CommonError.CommonError> = await AnalysisUtils.analysis(
+        document,
+        cacheSettings({ isWorkspaceCacheAllowed: false }),
+    ).getHover(position);
+
     const pending: Promise<Result<Hover | undefined, CommonError.CommonError>> = analysis.getHover(position);
 
     await started.promise;
@@ -272,10 +292,14 @@ async function assertPendingDisposal(
     expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(scopeCount);
 
     blocked.resolve();
-    await pending;
-    await Promise.resolve();
+    const actual: Result<Hover | undefined, CommonError.CommonError> = await pending;
 
-    expect(disposeTracker.count()).to.equal(1);
+    ResultUtils.assertIsOk(actual);
+    expect(actual).to.deep.equal(expected);
+    expect(disposeTracker.count()).to.equal(0);
+    expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(scopeCount);
+
+    analysis.dispose();
     expect(analysis.getTypeCache().scopeById.scopes.size).to.equal(0);
 }
 

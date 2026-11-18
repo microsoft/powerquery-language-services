@@ -32,9 +32,6 @@ export function analysis(document: TextDocument, analysisSettings: AnalysisSetti
         ) {
             return cachedAnalysis.analysis;
         }
-
-        analysisByUri.delete(cacheKey);
-        cachedAnalysis.analysis.dispose();
     }
 
     const analysis: Analysis = new DocumentAnalysis(document, analysisSettings);
@@ -51,26 +48,13 @@ export function analysis(document: TextDocument, analysisSettings: AnalysisSetti
     return analysis;
 }
 
+// Eviction never disposes an analysis: existing requests may still be using its caches.
 export function invalidateCache(uri: string): boolean {
-    const cachedAnalysis: CachedAnalysis | undefined = analysisByUri.get(uri);
-
-    if (cachedAnalysis === undefined) {
-        return false;
-    }
-
-    analysisByUri.delete(uri);
-    cachedAnalysis.analysis.dispose();
-
-    return true;
+    return analysisByUri.delete(uri);
 }
 
 export function clearCache(): void {
-    const cachedAnalyses: ReadonlyArray<CachedAnalysis> = [...analysisByUri.values()];
     analysisByUri.clear();
-
-    for (const cachedAnalysis of cachedAnalyses) {
-        cachedAnalysis.analysis.dispose();
-    }
 }
 
 function areAnalysisSettingsEqual(left: AnalysisSettings, right: AnalysisSettings): boolean {
