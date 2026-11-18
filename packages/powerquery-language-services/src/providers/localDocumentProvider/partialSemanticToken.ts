@@ -9,7 +9,7 @@ import {
     XorNode,
     XorNodeUtils,
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
-import { SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
+import { Position, Range, SemanticTokenModifiers, SemanticTokenTypes } from "vscode-languageserver-types";
 import { Trace, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
@@ -32,7 +32,9 @@ export function createPartialSemanticTokens(
 
     const tokens: PartialSemanticToken[] = [];
 
-    // Consumed as first-come first-serve priority.
+    // Producer order defines semantic precedence. More specific classifications are emitted before generic
+    // identifiers, with invocation functions taking precedence over variable uses. Overlaps are resolved
+    // first-wins below, while distinct tokens retain their original order.
     getAsNullablePrimitiveTypeTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
     getEachExpressionTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
     getFieldSelectorTokens(nodeIdMapCollection, tokens, traceManager, trace.id, cancellationToken);
@@ -80,7 +82,31 @@ export function createPartialSemanticTokens(
 
     trace.exit();
 
-    return tokens;
+    return removeOverlappingTokens(tokens);
+}
+
+export function removeOverlappingTokens(tokens: ReadonlyArray<PartialSemanticToken>): PartialSemanticToken[] {
+    const nonOverlappingTokens: PartialSemanticToken[] = [];
+
+    for (const token of tokens) {
+        if (
+            !nonOverlappingTokens.some((existingToken: PartialSemanticToken) =>
+                rangesOverlap(existingToken.range, token.range),
+            )
+        ) {
+            nonOverlappingTokens.push(token);
+        }
+    }
+
+    return nonOverlappingTokens;
+}
+
+function rangesOverlap(left: Range, right: Range): boolean {
+    return comparePositions(left.start, right.end) < 0 && comparePositions(right.start, left.end) < 0;
+}
+
+function comparePositions(left: Position, right: Position): number {
+    return left.line === right.line ? left.character - right.character : left.line - right.line;
 }
 
 function getAsNullablePrimitiveTypeTokens(

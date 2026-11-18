@@ -19,6 +19,7 @@ import {
 import { TestConstants, TestUtils } from "..";
 import { AutocompleteItem } from "../../src/inspection";
 import { expect } from "chai";
+import { removeOverlappingTokens } from "../../src/providers/localDocumentProvider/partialSemanticToken";
 
 describe(`SimpleLocalDocumentSymbolProvider`, () => {
     const IsolatedAnalysisSettings: AnalysisSettings = {
@@ -509,6 +510,60 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
             });
         }
 
+        it(`removes duplicate and partially overlapping tokens while preserving distinct tokens`, () => {
+            const functionToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 3, line: 0 },
+                    start: { character: 0, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.function,
+            };
+
+            const adjacentToken: PartialSemanticToken = {
+                range: {
+                    end: { character: 4, line: 0 },
+                    start: { character: 3, line: 0 },
+                },
+                tokenModifiers: [],
+                tokenType: SemanticTokenTypes.number,
+            };
+
+            expect(
+                removeOverlappingTokens([
+                    functionToken,
+                    {
+                        ...functionToken,
+                        tokenType: SemanticTokenTypes.variable,
+                    },
+                    {
+                        ...functionToken,
+                        range: {
+                            end: { character: 4, line: 0 },
+                            start: { character: 2, line: 0 },
+                        },
+                        tokenType: SemanticTokenTypes.parameter,
+                    },
+                    adjacentToken,
+                ]),
+            ).to.deep.equal([functionToken, adjacentToken]);
+        });
+
+        it(`function invocation takes precedence over variable classification`, async () =>
+            await assertSemanticTokens({
+                text: `foo()`,
+                expected: [
+                    {
+                        range: {
+                            end: { character: 3, line: 0 },
+                            start: { character: 0, line: 0 },
+                        },
+                        tokenModifiers: [],
+                        tokenType: SemanticTokenTypes.function,
+                    },
+                ],
+            }));
+
         it(`field projection`, async () =>
             await assertSemanticTokens({
                 text: `a[[b]]?`,
@@ -990,14 +1045,6 @@ describe(`SimpleLocalDocumentSymbolProvider`, () => {
                         range: {
                             end: { character: 17, line: 0 },
                             start: { character: 16, line: 0 },
-                        },
-                        tokenModifiers: [],
-                        tokenType: SemanticTokenTypes.variable,
-                    },
-                    {
-                        range: {
-                            end: { character: 23, line: 0 },
-                            start: { character: 21, line: 0 },
                         },
                         tokenModifiers: [],
                         tokenType: SemanticTokenTypes.variable,
