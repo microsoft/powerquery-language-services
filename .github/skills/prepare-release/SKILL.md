@@ -29,8 +29,9 @@ earlier preparation commit.
 ## Audit the changelogs
 
 Before editing, copy every entry currently under each `Unreleased` heading. Move those entries into the
-new version section verbatim, preserving their text and order. Do not rewrite, combine, or silently
-drop an existing entry. Flag a questionable existing entry in the final handoff instead.
+new version section, preserving their wording and order. Append the originating GitHub pull request
+reference if it is missing; do not otherwise rewrite, combine, or silently drop an existing entry. Flag
+a questionable existing entry in the final handoff instead.
 
 Review the commits and diff from the previous release tag through `HEAD`. Inspect the associated pull
 request or implementation when a title does not establish consumer impact. Classify each applicable
@@ -53,10 +54,13 @@ silently promote the release.
 
 Use exactly one existing category prefix for every added consumer-facing entry: `Added`, `Changed`,
 `Deprecated`, `Removed`, `Fixed`, or `Security`. Keep new text brief and describe the observable result
-rather than the implementation or pull request title. End each newly written consumer-facing entry
-with its GitHub pull request reference in the form `(#<number>)`. Do not add references to entries
-copied from `Unreleased`, because those entries must remain verbatim. The generated `Updated package
-dependencies` and `Version change only` entries do not need pull request references.
+rather than the implementation or pull request title. End every consumer-facing entry in the finalized
+version section with a clickable GitHub pull request Markdown link in the form
+`([#<number>](https://github.com/microsoft/powerquery-language-services/pull/<number>))`, including
+entries moved from `Unreleased`. Trace copied entries to the commits and associated pull requests
+rather than requiring authors to know the PR number before creating it. The generated `Updated package
+dependencies` and `Version change only` entries are release bookkeeping rather than consumer-facing
+changes and do not need pull request references.
 
 Finalize all three changelogs:
 
@@ -70,7 +74,8 @@ Finalize all three changelogs:
 - Keep prior release sections unchanged and in descending version order.
 
 After editing, compare the final entries with the saved `Unreleased` entries and confirm that every
-saved line appears verbatim under the new version.
+saved entry remains present under the new version in the original order, with only a pull request
+reference appended when needed.
 
 ## Apply the shared version
 
