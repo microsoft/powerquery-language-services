@@ -30,9 +30,13 @@ the parser resource suite, and release-helper tests. `npm run test:unit` and
 `npm run test:parser:resources` are focused alternatives.
 
 Shared development tools, including ESLint and Prettier, are declared in the private root manifest.
-Use Node.js 26.13.1 or later for development and CI; publishable packages
-declare their own consumer requirement. Runtime dependencies remain in each
-publishable package so tarballs can be installed independently of the workspace.
+The exact Node.js version used for development and CI is pinned in `.node-version`; compatible
+version managers can use that file automatically. When updating the development Node.js version,
+update `.node-version` and the root `package.json` `engines.node` minimum together. The pin should
+be bumped when adopting a newer Node.js LTS release or when a required runtime or toolchain update
+needs a newer patch. Publishable packages declare their own consumer requirement. Runtime
+dependencies remain in each publishable package so tarballs can be installed independently of the
+workspace.
 Common compiler settings live in `tsconfig.base.json`, with package-specific inputs and safety
 options in each package's config. All packages use the same root ESLint rule set.
 Compilation uses Node16 module resolution and preserves CommonJS output for the existing packages.
