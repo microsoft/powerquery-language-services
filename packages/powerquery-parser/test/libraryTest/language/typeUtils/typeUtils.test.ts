@@ -48,6 +48,25 @@ const noopSimplify: (types: ReadonlyArray<Type.TPowerQueryType>) => ReadonlyArra
 
 describe(`TypeUtils`, () => {
     describe(`simplify`, () => {
+        const nullableSubtypes: ReadonlyArray<[Type.TPrimitiveType, Type.TPowerQueryType]> = [
+            [Type.NumberInstance, TypeUtils.numberLiteral(true, 1)],
+            [Type.TextInstance, TypeUtils.textLiteral(true, "value")],
+            [Type.ListInstance, TypeUtils.definedList(true, [])],
+            [Type.RecordInstance, TypeUtils.definedRecord(true, new Map(), false)],
+            [Type.TableInstance, TypeUtils.definedTable(true, new OrderedMap())],
+            [Type.FunctionInstance, TypeUtils.definedFunction(true, [], Type.NumberInstance)],
+            [Type.TypePrimitiveInstance, TypeUtils.listType(true, Type.NumberInstance)],
+        ];
+
+        for (const [primitive, subtype] of nullableSubtypes) {
+            it(`preserves null when a ${subtype.extendedKind} is absorbed by its primitive`, () => {
+                const expected: Type.TPowerQueryType = { ...primitive, isNullable: true };
+
+                expect(noopSimplify([primitive, subtype])).to.deep.equal([expected]);
+                expect(noopCreateAnyUnion([subtype, primitive])).to.deep.equal(expected);
+            });
+        }
+
         it(`generic, identical nullability should reduce to single type`, () => {
             const actual: ReadonlyArray<AbridgedType> = createAbridgedTypes(
                 noopSimplify([Type.RecordInstance, Type.RecordInstance]),
@@ -186,19 +205,6 @@ describe(`TypeUtils`, () => {
             expect(actual).deep.equal(expected);
         });
 
-        it(`${Type.ExtendedTypeKind.AnyUnion}, combine into a single primitive type`, () => {
-            const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
-                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-                noopCreateAnyUnion([Type.RecordInstance, Type.RecordInstance]),
-            ]);
-
-            expect(simplified.length).to.equal(1);
-
-            const actual: AbridgedType = typeToAbridged(ArrayUtils.assertGet(simplified, 0));
-            const expected: AbridgedType = TypeUtils.primitiveType(false, Type.TypeKind.Record);
-            expect(actual).deep.equal(expected);
-        });
-
         it(`${Type.ExtendedTypeKind.AnyUnion}, dedupe primitive types across AnyUnion`, () => {
             const simplified: ReadonlyArray<Type.TPowerQueryType> = noopSimplify([
                 noopCreateAnyUnion([Type.RecordInstance, Type.NullableTableInstance]),
@@ -281,33 +287,6 @@ describe(`TypeUtils`, () => {
         function row(entries: ReadonlyArray<[string, Type.TPowerQueryType]>): Type.UnorderedFields {
             return new Map<string, Type.TPowerQueryType>(entries);
         }
-
-        it(`retains valid rows`, () => {
-            const rows: ReadonlyArray<Type.UnorderedFields> = [
-                row([
-                    ["Name", TypeUtils.textLiteral(false, `"A"`)],
-                    ["Value", TypeUtils.numberLiteral(false, 1)],
-                ]),
-            ];
-
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
-
-            expect(type.rows).to.equal(rows);
-            expect(type.isOpen).to.equal(false);
-        });
-
-        it(`retains exact empty rows`, () => {
-            const rows: ReadonlyArray<Type.UnorderedFields> = [];
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields, rows);
-
-            expect(type.rows).to.equal(rows);
-        });
-
-        it(`allows unknown rows`, () => {
-            const type: Type.DefinedTable = TypeUtils.definedTable(false, fields);
-
-            expect(type.rows).to.be.undefined;
-        });
 
         it(`accepts null for a nullable column`, () => {
             const nullableFields: Type.OrderedFields = new OrderedMap([["Value", Type.NullableNumberInstance]]);

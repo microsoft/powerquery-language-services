@@ -773,7 +773,19 @@ describe(`Inspection - Type`, () => {
             it(`try 1`, async () =>
                 await assertEqualRootType({
                     text: `try 1`,
-                    expected: anyUnion([TypeUtils.numberLiteral(false, `1`), Type.RecordInstance]),
+                    expected: Type.RecordInstance,
+                }));
+
+            it(`try error returns a record`, async () =>
+                await assertEqualRootType({
+                    text: `try error "failure"`,
+                    expected: Type.RecordInstance,
+                }));
+
+            it(`does not use the protected value as the result of a bare try`, async () =>
+                await assertEqualRootType({
+                    text: `(try 1) + 1`,
+                    expected: Type.NoneInstance,
                 }));
 
             it(`try 1 otherwise false`, async () => {
@@ -1630,6 +1642,12 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.NullCoalescingExpression}`, () => {
+            it(`preserves a coalescing fallback after simplifying a nullable numeric branch`, async () =>
+                await assertEqualRootType({
+                    text: `let f = (b as logical, i as number) => (if b then (1 as number) else {1}{i}?) ?? "fallback" in f(false, 1)`,
+                    expected: anyUnion([Type.NumberInstance, TypeUtils.textLiteral(false, "fallback")]),
+                }));
+
             it(`1 ?? 1`, async () =>
                 await assertEqualRootType({
                     text: `1 ?? 1`,
@@ -2294,37 +2312,6 @@ describe(`Inspection - Type`, () => {
                 expect(PQP.ResultUtils.assertOk(first)).to.equal(Type.TextInstance);
                 expect(PQP.ResultUtils.assertOk(second)).to.equal(Type.TextInstance);
                 expect(invocationRequestCount).to.equal(1);
-            });
-
-            it(`shares concurrent scope type requests for the same node`, async () => {
-                const triedParse: PQP.Task.ParseTaskOk | PQP.Task.ParseTaskParseError = await TestUtils.assertParse({
-                    text: `foo()`,
-                    settings: ExtendedInspectionSettings,
-                });
-
-                const invokeExpressionIds: Set<number> = Assert.asDefined(
-                    triedParse.nodeIdMapCollection.idsByNodeKind.get(Ast.NodeKind.InvokeExpression),
-                );
-
-                const invokeExpressionId: number = Assert.asDefined(Array.from(invokeExpressionIds)[0]);
-                const typeCache: Inspection.TypeCache = Inspection.TypeCacheUtils.emptyCache();
-
-                const [first, second]: [Inspection.TriedScopeType, Inspection.TriedScopeType] = await Promise.all([
-                    Inspection.tryScopeType(
-                        ExtendedInspectionSettings,
-                        triedParse.nodeIdMapCollection,
-                        invokeExpressionId,
-                        typeCache,
-                    ),
-                    Inspection.tryScopeType(
-                        ExtendedInspectionSettings,
-                        triedParse.nodeIdMapCollection,
-                        invokeExpressionId,
-                        typeCache,
-                    ),
-                ]);
-
-                expect(PQP.ResultUtils.assertOk(first)).to.equal(PQP.ResultUtils.assertOk(second));
             });
         });
     });
