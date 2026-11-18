@@ -2,17 +2,14 @@
 // Licensed under the MIT license.
 
 import { Ast, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
-import {
-    NodeIdMapUtils,
-    TXorNode,
-    XorNodeKind,
-    XorNodeUtils,
-} from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
+import { NodeIdMapUtils, TXorNode, XorNodeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { InspectionTraceConstant, TraceUtils } from "../../..";
+import { inspectListIndex, tryGetListItem } from "./inspectTypeListItem";
 import { InspectTypeState } from "./inspectTypeState";
 import { inspectXor } from "./common";
+import { TypeStrategy } from "../../../inspectionSettings";
 
 export async function inspectTypeItemAccessExpression(
     state: InspectTypeState,
@@ -52,16 +49,7 @@ export async function inspectTypeItemAccessExpression(
         xorNode.node.id,
     );
 
-    const collectionType: Type.TPowerQueryType = await inspectXor(state, previousSibling, trace.id);
-
-    // Child index 1 is the content (index expression) of the brace-wrapped ItemAccessExpression.
-    const indexXorNode: TXorNode | undefined = NodeIdMapUtils.nthChildXor(
-        state.nodeIdMapCollection,
-        xorNode.node.id,
-        1,
-    );
-
-    const indexValue: number | undefined = tryExtractNumericLiteralIndex(indexXorNode);
+    const indexValue: number | undefined = await inspectListIndex(state, xorNode, trace.id);
 
     const isOptional: boolean =
         NodeIdMapUtils.nthChildAstChecked<Ast.TConstant>(
@@ -71,7 +59,46 @@ export async function inspectTypeItemAccessExpression(
             Ast.NodeKind.Constant,
         ) !== undefined;
 
-    let result: Type.TPowerQueryType = getElementType(state, collectionType, indexValue, isOptional, trace.id);
+    let result: Type.TPowerQueryType | undefined;
+
+    if (state.typeStrategy === TypeStrategy.Extended && indexValue !== undefined) {
+        if (state.computingNodeIds.has(xorNode.node.id)) {
+            trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(Type.AnyInstance) });
+
+            return Type.AnyInstance;
+        }
+
+        state.computingNodeIds.add(xorNode.node.id);
+
+        try {
+            const item: TXorNode | Type.TPowerQueryType | null | undefined = await tryGetListItem(
+                state,
+                previousSibling,
+                indexValue,
+                trace,
+            );
+
+            if (item === null) {
+                result = isOptional ? Type.NullInstance : Type.NoneInstance;
+            } else if (item !== undefined) {
+                result = "node" in item ? await inspectXor(state, item, trace.id) : item;
+            }
+        } finally {
+            state.computingNodeIds.delete(xorNode.node.id);
+        }
+    }
+
+    if (result === undefined) {
+        const collectionType: Type.TPowerQueryType = await inspectXor(state, previousSibling, trace.id);
+
+        if (collectionType.kind === Type.TypeKind.None || collectionType.kind === Type.TypeKind.Unknown) {
+            trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(collectionType) });
+
+            return collectionType;
+        }
+
+        result = getElementType(state, collectionType, indexValue, isOptional, trace.id);
+    }
 
     if (isOptional && !result.isNullable) {
         result = { ...result, isNullable: true };
@@ -151,28 +178,4 @@ function getElementTypeFromAnyUnion(
     }
 
     return TypeUtils.anyUnion(elementTypes, state.traceManager, correlationId);
-}
-
-function tryExtractNumericLiteralIndex(indexXorNode: TXorNode | undefined): number | undefined {
-    if (
-        indexXorNode === undefined ||
-        indexXorNode.kind !== XorNodeKind.Ast ||
-        indexXorNode.node.kind !== Ast.NodeKind.LiteralExpression
-    ) {
-        return undefined;
-    }
-
-    const literalExpression: Ast.LiteralExpression = indexXorNode.node as Ast.LiteralExpression;
-
-    if (literalExpression.literalKind !== Ast.LiteralKind.Numeric) {
-        return undefined;
-    }
-
-    const parsed: number = Number(literalExpression.literal);
-
-    if (!Number.isInteger(parsed) || parsed < 0) {
-        return undefined;
-    }
-
-    return parsed;
 }

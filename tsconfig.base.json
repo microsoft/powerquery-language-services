@@ -2,11 +2,10 @@
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
         "declaration": true,
-        "downlevelIteration": true,
         "esModuleInterop": true,
         "incremental": true,
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "node16",
+        "moduleResolution": "node16",
         "noEmitOnError": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
@@ -17,6 +16,7 @@
         "sourceMap": true,
         "strict": true,
         "target": "es2022",
+        "types": ["node", "mocha"],
         "outDir": "${configDir}/lib",
         "rootDir": "${configDir}",
         "tsBuildInfoFile": "${configDir}/tsconfig.tsbuildinfo"
@@ -24,7 +24,7 @@
     "exclude": ["${configDir}/node_modules", "${configDir}/lib"],
     "ts-node": {
         "compilerOptions": {
-            "module": "commonjs",
+            "module": "node16",
             "target": "es2022"
         }
     }

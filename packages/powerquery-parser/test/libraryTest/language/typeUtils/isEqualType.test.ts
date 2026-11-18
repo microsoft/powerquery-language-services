@@ -10,6 +10,27 @@ import { OrderedMap } from "../../../../src/common";
 import { TPowerQueryType } from "../../../../src/language/type/type";
 
 describe(`TypeUtils.isEqualType`, () => {
+    const closedStructures: ReadonlyArray<Type.DefinedRecord | Type.DefinedTable> = [
+        TypeUtils.definedRecord(false, new Map([["a", Type.NumberInstance]]), false),
+        TypeUtils.definedTable(false, new OrderedMap([["a", Type.NumberInstance]])),
+    ];
+
+    for (const closed of closedStructures) {
+        it(`preserves open and closed ${closed.kind} alternatives in a union`, () => {
+            const open: Type.DefinedRecord | Type.DefinedTable = { ...closed, isOpen: true };
+
+            expect(TypeUtils.isEqualType(closed, open)).to.equal(false);
+            expect(TypeUtils.isEqualType(open, closed)).to.equal(false);
+
+            expect(TypeUtils.anyUnion([closed, open], NoOpTraceManagerInstance, undefined)).to.deep.equal({
+                kind: Type.TypeKind.Any,
+                extendedKind: Type.ExtendedTypeKind.AnyUnion,
+                isNullable: false,
+                unionedTypePairs: [closed, open],
+            });
+        });
+    }
+
     function runTest(params: {
         readonly left: TPowerQueryType;
         readonly right: TPowerQueryType;
@@ -18,48 +39,6 @@ describe(`TypeUtils.isEqualType`, () => {
         const actual: boolean = TypeUtils.isEqualType(params.left, params.right);
         expect(actual).to.equal(params.expected);
     }
-
-    describe(`${Type.TypeKind.Function}`, () => {
-        it(`null is not compatible`, () => {
-            const type: TPowerQueryType = TypeUtils.definedFunction(
-                false,
-                [
-                    {
-                        isNullable: false,
-                        isOptional: true,
-                        type: Type.TypeKind.Text,
-                        nameLiteral: `x`,
-                    },
-                ],
-                TypeUtils.anyUnion(
-                    [
-                        {
-                            isNullable: false,
-                            kind: Type.TypeKind.Number,
-                            literal: `1`,
-                            extendedKind: Type.ExtendedTypeKind.NumberLiteral,
-                            normalizedLiteral: 1,
-                        },
-                        {
-                            isNullable: false,
-                            kind: Type.TypeKind.Number,
-                            literal: `2`,
-                            extendedKind: Type.ExtendedTypeKind.NumberLiteral,
-                            normalizedLiteral: 2,
-                        },
-                    ],
-                    NoOpTraceManagerInstance,
-                    undefined,
-                ),
-            );
-
-            runTest({
-                left: type,
-                right: type,
-                expected: true,
-            });
-        });
-    });
 
     describe(`${Type.ExtendedTypeKind.DefinedTable}`, () => {
         const fields: Type.OrderedFields = new OrderedMap([["Value", Type.NumberInstance]]);

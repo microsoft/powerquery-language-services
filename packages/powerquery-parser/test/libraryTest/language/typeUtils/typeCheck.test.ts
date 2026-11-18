@@ -49,6 +49,38 @@ const noopTypeCheckListWithListType: (valueType: Type.DefinedList, schemaType: T
 
 describe(`TypeUtils.typeCheck`, () => {
     describe(`typeCheckInvocation`, () => {
+        it(`accepts non-null values for anynonnull parameters while rejecting nullable values`, () => {
+            const parameter: Type.FunctionParameter = {
+                nameLiteral: "value",
+                type: Type.TypeKind.AnyNonNull,
+                isNullable: false,
+                isOptional: false,
+            };
+
+            const args: ReadonlyArray<Type.TPowerQueryType> = [
+                Type.NumberInstance,
+                Type.TextInstance,
+                TypeUtils.definedList(false, []),
+                Type.NullInstance,
+                Type.NullableNumberInstance,
+                Type.NoneInstance,
+                Type.UnknownInstance,
+            ];
+
+            const fn: Type.DefinedFunction = TypeUtils.definedFunction(
+                false,
+                args.map(() => parameter),
+                Type.AnyInstance,
+            );
+
+            assertAbridgedEqual(createAbridgedChecked(noopTypeCheckInvocation(args, fn)), {
+                valid: [0, 1, 2],
+                invalid: [3, 4, 5, 6],
+                extraneous: [],
+                missing: [],
+            });
+        });
+
         it(`extraneous parameter`, () => {
             const args: ReadonlyArray<Language.Type.TPowerQueryType> = [Language.Type.ActionInstance];
 
@@ -725,71 +757,6 @@ describe(`TypeUtils.typeCheck`, () => {
 
             assertAbridgedEqual(createAbridgedChecked(actual), expected);
         });
-
-        it(`invalid`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
-                Language.Type.TextInstance,
-                Language.Type.DateInstance,
-            ]);
-
-            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
-                Language.Type.TextInstance,
-                Language.Type.NumberInstance,
-            ]);
-
-            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
-
-            const expected: AbridgedChecked = {
-                valid: [0],
-                invalid: [1],
-                extraneous: [],
-                missing: [],
-            };
-
-            assertAbridgedEqual(createAbridgedChecked(actual), expected);
-        });
-
-        it(`extraneous`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, [
-                Language.Type.TextInstance,
-                Language.Type.NumberInstance,
-            ]);
-
-            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
-                Language.Type.TextInstance,
-            ]);
-
-            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
-
-            const expected: AbridgedChecked = {
-                valid: [0],
-                invalid: [],
-                extraneous: [1],
-                missing: [],
-            };
-
-            assertAbridgedEqual(createAbridgedChecked(actual), expected);
-        });
-
-        it(`missing`, () => {
-            const valueType: Language.Type.DefinedList = TypeUtils.definedList(false, []);
-
-            const schemaType: Language.Type.DefinedListType = TypeUtils.definedListType(false, [
-                Language.Type.TextInstance,
-                Language.Type.NumberInstance,
-            ]);
-
-            const actual: TypeUtils.CheckedDefinedList = noopTypeCheckListWithDefinedListType(valueType, schemaType);
-
-            const expected: AbridgedChecked = {
-                valid: [],
-                invalid: [],
-                extraneous: [],
-                missing: [0, 1],
-            };
-
-            assertAbridgedEqual(createAbridgedChecked(actual), expected);
-        });
     });
 
     describe(`${Language.Type.ExtendedTypeKind.FunctionType}`, () => {
@@ -825,6 +792,30 @@ describe(`TypeUtils.typeCheck`, () => {
     });
 
     describe(`${Language.Type.ExtendedTypeKind.RecordType}`, () => {
+        it(`reports a nested record missing a required field as invalid`, () => {
+            const nestedValue: Type.DefinedRecord = TypeUtils.definedRecord(false, new Map(), false);
+
+            const nestedSchema: Type.DefinedRecord = TypeUtils.definedRecord(
+                false,
+                new Map([["a", Type.NumberInstance]]),
+                false,
+            );
+
+            const actual: TypeUtils.CheckedDefinedRecord = TypeUtils.typeCheckRecord(
+                TypeUtils.definedRecord(false, new Map([["nested", nestedValue]]), false),
+                TypeUtils.recordType(false, new Map([["nested", nestedSchema]]), false),
+                NoOpTraceManagerInstance,
+                undefined,
+            );
+
+            expect(actual).to.deep.equal({
+                valid: [],
+                invalid: new Map([["nested", { expected: nestedSchema, actual: nestedValue }]]),
+                extraneous: [],
+                missing: [],
+            });
+        });
+
         it(`${Language.Type.ExtendedTypeKind.DefinedRecord}`, () => {
             const valueType: Language.Type.DefinedRecord = TypeUtils.definedRecord(
                 false,

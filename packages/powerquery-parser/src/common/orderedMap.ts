@@ -28,7 +28,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
     }
     [Symbol.toStringTag]: string = "OrderedMap";
 
-    public [Symbol.iterator](): IterableIterator<[K, V]> {
+    public [Symbol.iterator](): MapIterator<[K, V]> {
         return this.entries();
     }
 
@@ -49,7 +49,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
         }
     }
 
-    public *entries(): IterableIterator<[K, V]> {
+    public *entries(): MapIterator<[K, V]> {
         for (const key of this.order) {
             yield [key, Assert.asDefined(this.map.get(key))];
         }
@@ -69,7 +69,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
         return this.map.has(key);
     }
 
-    public keys(): IterableIterator<K> {
+    public keys(): MapIterator<K> {
         return this.order[Symbol.iterator]();
     }
 
@@ -88,7 +88,7 @@ export class OrderedMap<K, V> implements Map<K, V> {
         return this;
     }
 
-    public values(): IterableIterator<V> {
+    public values(): MapIterator<V> {
         return this.map.values();
     }
 }
