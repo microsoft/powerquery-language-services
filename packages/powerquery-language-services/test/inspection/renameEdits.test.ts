@@ -385,9 +385,13 @@ describe("Analysis - rename edits", () => {
                 analysisSettings: TestConstants.SimpleLibraryAnalysisSettings,
             });
 
+            if (edits === undefined) {
+                throw new Error("Expected rename edits");
+            }
+
             expect(edits).to.have.length(2);
 
-            const renamed: string = TextDocument.applyEdits(TestUtils.mockDocument(text), edits!);
+            const renamed: string = TextDocument.applyEdits(TestUtils.mockDocument(text), edits);
             expect(renamed).to.equal(expected);
 
             const result: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
