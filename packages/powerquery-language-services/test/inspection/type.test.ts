@@ -860,6 +860,9 @@ describe(`Inspection - Type`, () => {
                 [`let xs = {{10..1000000000}}, inner = xs{0} in inner{5}`, 15],
                 [`(let xs = {10..1000000000} in xs){5}`, 15],
                 [`let i = 5 in {10..1000000000}{i}`, 15],
+                [`{10, 20}{0x1}`, 20],
+                [`{0x10..0x12}{1}`, 17],
+                [`{-0x2..0}{1}`, -1],
                 [`let xs = {10..1000000000} in (let xs = {20..1000000000} in xs{5})`, 25],
             ] as const) {
                 it(`range-aware positional access: ${text}`, async () =>
@@ -2373,6 +2376,67 @@ describe(`Inspection - Type`, () => {
         });
 
         describe(`${Ast.NodeKind.UnaryExpression}`, () => {
+            const cases: ReadonlyArray<[string, Type.TPowerQueryType]> = [
+                [`+null`, Type.NullInstance],
+                [`-null`, Type.NullInstance],
+                [`not null`, Type.NullInstance],
+                [`not - null`, Type.NullInstance],
+                [`let f = (d as duration) => -d in f(#duration(1, 0, 0, 0))`, Type.DurationInstance],
+                [`let f = (d as nullable duration) => +d in f(null)`, Type.NullableDurationInstance],
+                [`let f = (d as duration) => not d in f(#duration(1, 0, 0, 0))`, Type.NoneInstance],
+                [
+                    `let f = (b as logical) => -(if b then 1 else 2) in f(true)`,
+                    anyUnion([TypeUtils.numberLiteral(false, `-1`), TypeUtils.numberLiteral(false, `-2`)]),
+                ],
+                [
+                    `let f = (b as logical) => -(if b then 1 else "bad") in f(true)`,
+                    anyUnion([TypeUtils.numberLiteral(false, `-1`), Type.NoneInstance]),
+                ],
+                [
+                    `let f = (b as logical) => not (if b then true else null) in f(true)`,
+                    anyUnion([Type.LogicalInstance, Type.NullInstance]),
+                ],
+            ];
+
+            for (const [text, expected] of cases) {
+                it(`infers unary operand alternatives: ${text}`, async () =>
+                    await assertEqualRootType({ text, expected }));
+            }
+
+            for (const [text, operand, expected] of [
+                [`not foo`, Type.TrueInstance, Type.FalseInstance],
+                [`not not foo`, Type.NullableFalseInstance, Type.NullableFalseInstance],
+                [
+                    `-foo`,
+                    {
+                        ...anyUnion([TypeUtils.numberLiteral(false, 1), TypeUtils.numberLiteral(false, 2)]),
+                        isNullable: true,
+                    },
+                    anyUnion([
+                        TypeUtils.numberLiteral(false, `-1`),
+                        TypeUtils.numberLiteral(false, `-2`),
+                        Type.NullInstance,
+                    ]),
+                ],
+            ] as const) {
+                it(`preserves unary value detail: ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected,
+                        settings: {
+                            ...ExtendedInspectionSettings,
+                            library: {
+                                ...ExtendedInspectionSettings.library,
+                                externalTypeResolver: (request: ExternalType.TExternalTypeRequest) =>
+                                    request.kind === ExternalType.ExternalTypeRequestKind.Value &&
+                                    request.identifierLiteral === `foo`
+                                        ? operand
+                                        : undefined,
+                            },
+                        },
+                    }));
+            }
+
             it(`+1`, async () =>
                 await assertEqualRootType({
                     text: `+1`,

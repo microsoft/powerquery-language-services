@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Ast, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
+import { Ast, AstUtils, Constant, Type, TypeUtils } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     NodeIdMap,
     NodeIdMapIterator,
@@ -56,13 +56,15 @@ export async function inspectTypeUnaryExpression(
     } else {
         const expressionType: Type.TPowerQueryType = await inspectXor(state, expression, trace.id);
 
-        if (expressionType.kind === Type.TypeKind.Number) {
-            result = inspectTypeUnaryNumber(state, expressionType, unaryOperatorWrapper.node.id);
-        } else if (TypeUtils.isLogical(expressionType)) {
-            result = inspectTypeUnaryLogical(state, expressionType, unaryOperatorWrapper.node.id);
-        } else {
-            result = Type.NoneInstance;
-        }
+        const operators: ReadonlyArray<Constant.UnaryOperator> = Assert.asDefined(
+            NodeIdMapIterator.iterChildrenAst(nodeIdMapCollection, unaryOperatorWrapper.node.id),
+        ).map((node: Ast.TNode) => {
+            AstUtils.assertIsNodeKind<Ast.IConstant<Constant.UnaryOperator>>(node, Ast.NodeKind.Constant);
+
+            return node.constantKind;
+        });
+
+        result = inspectUnaryOperation(state, expressionType, operators, trace.id);
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
@@ -70,67 +72,66 @@ export async function inspectTypeUnaryExpression(
     return result;
 }
 
-type NumberUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive>;
-type LogicalUnaryNodeOperator = Ast.IConstant<Constant.UnaryOperator.Not>;
-
-function inspectTypeUnaryNumber(
+function inspectUnaryOperation(
     state: InspectTypeState,
-    unaryExpressionType: Type.TNumber,
-    unaryOperatorWrapperId: number,
-): Type.TNumber | Type.None {
-    const unaryNodeOperators: ReadonlyArray<NumberUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.iterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
-    ) as ReadonlyArray<NumberUnaryNodeOperator>;
+    expressionType: Type.TPowerQueryType,
+    operators: ReadonlyArray<Constant.UnaryOperator>,
+    correlationId: number,
+): Type.TPowerQueryType {
+    if (TypeUtils.isAnyUnion(expressionType)) {
+        const members: ReadonlyArray<Type.TPowerQueryType> = expressionType.isNullable
+            ? [...expressionType.unionedTypePairs, Type.NullInstance]
+            : expressionType.unionedTypePairs;
 
-    const expectedUnaryOperators: ReadonlyArray<Constant.UnaryOperator> = [
-        Constant.UnaryOperator.Positive,
-        Constant.UnaryOperator.Negative,
-    ];
-
-    const unaryOperators: (Constant.UnaryOperator.Negative | Constant.UnaryOperator.Positive)[] = [];
-    let isPositive: boolean = true;
-
-    for (const operator of unaryNodeOperators) {
-        if (expectedUnaryOperators.indexOf(operator.constantKind) === -1) {
-            return Type.NoneInstance;
-        }
-
-        unaryOperators.push(operator.constantKind);
-
-        if (operator.constantKind === Constant.UnaryOperator.Negative) {
-            isPositive = !isPositive;
-        }
-    }
-
-    switch (unaryExpressionType.extendedKind) {
-        case Type.ExtendedTypeKind.NumberLiteral:
-            return TypeUtils.numberLiteral(
-                unaryExpressionType.isNullable,
-                [...unaryOperators, unaryExpressionType.literal].join(""),
-            );
-
-        case undefined:
-            return unaryExpressionType;
-
-        default:
-            throw Assert.isNever(unaryExpressionType);
+        return TypeUtils.anyUnion(
+            members.map((member: Type.TPowerQueryType) =>
+                inspectUnaryOperation(state, member, operators, correlationId),
+            ),
+            state.traceManager,
+            correlationId,
+        );
+    } else if (expressionType.kind === Type.TypeKind.Null) {
+        return Type.NullInstance;
+    } else if (expressionType.kind === Type.TypeKind.Number || expressionType.kind === Type.TypeKind.Duration) {
+        return inspectTypeUnaryNumberOrDuration(expressionType, operators);
+    } else if (TypeUtils.isLogical(expressionType)) {
+        return inspectTypeUnaryLogical(expressionType, operators);
+    } else {
+        return Type.NoneInstance;
     }
 }
 
-function inspectTypeUnaryLogical(
-    state: InspectTypeState,
-    unaryExpressionType: Type.TLogical,
-    unaryOperatorWrapperId: number,
-): Type.TLogical | Type.None {
-    const unaryNodeOperators: ReadonlyArray<LogicalUnaryNodeOperator> = Assert.asDefined(
-        NodeIdMapIterator.iterChildrenAst(state.nodeIdMapCollection, unaryOperatorWrapperId),
-    ) as ReadonlyArray<LogicalUnaryNodeOperator>;
-
-    for (const operator of unaryNodeOperators) {
-        if (operator.constantKind !== Constant.UnaryOperator.Not) {
+function inspectTypeUnaryNumberOrDuration(
+    expressionType: Type.TNumber | Type.Duration,
+    operators: ReadonlyArray<Constant.UnaryOperator>,
+): Type.TNumber | Type.Duration | Type.None {
+    for (const operator of operators) {
+        if (operator !== Constant.UnaryOperator.Positive && operator !== Constant.UnaryOperator.Negative) {
             return Type.NoneInstance;
         }
     }
 
-    return unaryExpressionType;
+    if (TypeUtils.isNumberLiteral(expressionType)) {
+        return TypeUtils.numberLiteral(expressionType.isNullable, [...operators, expressionType.literal].join(""));
+    }
+
+    return expressionType;
+}
+
+function inspectTypeUnaryLogical(
+    expressionType: Type.TLogical,
+    operators: ReadonlyArray<Constant.UnaryOperator>,
+): Type.TLogical | Type.None {
+    for (const operator of operators) {
+        if (operator !== Constant.UnaryOperator.Not) {
+            return Type.NoneInstance;
+        }
+    }
+
+    return TypeUtils.isLogicalLiteral(expressionType)
+        ? TypeUtils.logicalLiteral(
+              expressionType.isNullable,
+              operators.length % 2 === 0 ? expressionType.normalizedLiteral : !expressionType.normalizedLiteral,
+          )
+        : expressionType;
 }
