@@ -37,10 +37,8 @@ packaged-consumer behavior.
 
 ## Changelog
 
-- Update the `CHANGELOG.md` for each affected package only when a change impacts package users or downstream
-  consumers.
-- Do not add entries for dependency-only updates or contributor-focused changes such as documentation, tests, CI,
-  refactoring, or development tooling unless they change published package behavior.
+- Do not update package changelogs as part of routine changes unless explicitly requested. Changelogs are
+  maintained during release preparation.
 - Prefix every entry with exactly one of: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`.
 - Keep entries brief and describe the observable consumer impact.
 - Put entries under `Unreleased` when the change does not include a version bump.
