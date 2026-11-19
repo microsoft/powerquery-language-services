@@ -2,7 +2,20 @@
 // Licensed under the MIT license.
 
 import * as PQP from "@microsoft/powerquery-parser/lib/powerquery-parser";
-import { Assert, CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import {
+    Assert,
+    CommonError,
+    ICancellationToken,
+    Result,
+    ResultUtils,
+    StringUtils,
+} from "@microsoft/powerquery-parser";
+import {
+    Ast,
+    IdentifierUtils,
+    KeywordUtils,
+    TextUtils,
+} from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 import {
     AstNodeById,
     ChildIdsById,
@@ -27,7 +40,6 @@ import {
 } from "@microsoft/powerquery-parser/lib/powerquery-parser/parser";
 import type { TextDocument, TextEdit } from "vscode-languageserver-textdocument";
 import { Trace, TraceConstant, TraceManager } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
-import { Ast } from "@microsoft/powerquery-parser/lib/powerquery-parser/language";
 
 import { ActiveNodeUtils, TActiveLeafIdentifier, TActiveNode, TypeCache } from "../inspection";
 import type {
@@ -573,9 +585,26 @@ export class AnalysisBase implements Analysis {
                 );
             }
 
+            const isQuoted: boolean =
+                newName.startsWith('#"') && StringUtils.findQuotes(newName, 1)?.indexEnd === newName.length;
+
+            const isReservedName: boolean = newName === "null" || KeywordUtils.isKeyword(newName);
+
+            let replacementText: string;
+
+            if (
+                isQuoted ||
+                (IdentifierUtils.getIdentifierKind(newName) === IdentifierUtils.IdentifierKind.Regular &&
+                    !isReservedName)
+            ) {
+                replacementText = newName;
+            } else {
+                replacementText = `#"${TextUtils.escape(newName)}"`;
+            }
+
             const result: TextEdit[] = identifiersToBeEdited.map((one: Ast.Identifier | Ast.GeneralizedIdentifier) => ({
                 range: PositionUtils.rangeFromTokenRange(one.tokenRange),
-                newText: newName,
+                newText: replacementText,
             }));
 
             trace.exit();
