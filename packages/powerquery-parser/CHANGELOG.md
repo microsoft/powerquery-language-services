@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: Normalize hexadecimal numeric literal types correctly, including signed literals.
+
 ## 5.1.0
 
 - Fixed: Accept non-null argument types for anynonnull function parameters. ([#349](https://github.com/microsoft/powerquery-language-services/pull/349))

@@ -202,7 +202,13 @@ export function numberLiteral(isNullable: boolean, literal: string | number): Ty
         normalizedLiteral = literal;
     } else {
         parsedLiteral = literal;
-        normalizedLiteral = Number.parseFloat(Assert.asDefined(StringUtils.normalizeNumber(literal)));
+        const normalized: string = Assert.asDefined(StringUtils.normalizeNumber(literal));
+        const isNegative: boolean = normalized.startsWith("-");
+        const unsigned: string = isNegative ? normalized.slice(1) : normalized;
+
+        normalizedLiteral = StringUtils.isHex(unsigned)
+            ? Number.parseInt(unsigned.slice(2), 16) * (isNegative ? -1 : 1)
+            : Number.parseFloat(normalized);
     }
 
     return {

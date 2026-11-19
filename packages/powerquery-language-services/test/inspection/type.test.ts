@@ -860,6 +860,9 @@ describe(`Inspection - Type`, () => {
                 [`let xs = {{10..1000000000}}, inner = xs{0} in inner{5}`, 15],
                 [`(let xs = {10..1000000000} in xs){5}`, 15],
                 [`let i = 5 in {10..1000000000}{i}`, 15],
+                [`{10, 20}{0x1}`, 20],
+                [`{0x10..0x12}{1}`, 17],
+                [`{-0x2..0}{1}`, -1],
                 [`let xs = {10..1000000000} in (let xs = {20..1000000000} in xs{5})`, 25],
             ] as const) {
                 it(`range-aware positional access: ${text}`, async () =>

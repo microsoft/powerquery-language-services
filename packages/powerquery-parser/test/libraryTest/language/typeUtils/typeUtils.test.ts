@@ -47,6 +47,27 @@ const noopSimplify: (types: ReadonlyArray<Type.TPowerQueryType>) => ReadonlyArra
 ) => TypeUtils.simplify(types, NoOpTraceManagerInstance, undefined);
 
 describe(`TypeUtils`, () => {
+    describe(`numberLiteral`, () => {
+        for (const [literal, normalizedLiteral] of [
+            [`0x10`, 16],
+            [`0XfF`, 255],
+            [`-0x10`, -16],
+            [`--0x10`, 16],
+            [`+-0Xf`, -15],
+            [`-1.5e2`, -150],
+        ] as const) {
+            it(`normalizes ${literal}`, () => {
+                expect(TypeUtils.numberLiteral(false, literal)).to.deep.equal({
+                    kind: Type.TypeKind.Number,
+                    extendedKind: Type.ExtendedTypeKind.NumberLiteral,
+                    isNullable: false,
+                    literal,
+                    normalizedLiteral,
+                });
+            });
+        }
+    });
+
     describe(`simplify`, () => {
         const nullableSubtypes: ReadonlyArray<[Type.TPrimitiveType, Type.TPowerQueryType]> = [
             [Type.NumberInstance, TypeUtils.numberLiteral(true, 1)],

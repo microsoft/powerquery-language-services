@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixed: Infer unary operations on nulls, durations, and union alternatives, and negate logical literal types correctly.
+- Fixed: Infer list positions and range bounds correctly when they contain hexadecimal literals.
 
 ## 5.1.0
 
