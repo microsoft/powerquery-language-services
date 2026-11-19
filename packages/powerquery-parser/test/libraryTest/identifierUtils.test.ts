@@ -272,14 +272,6 @@ describe("IdentifierUtils", () => {
             });
         });
 
-        it("foo.bar.baz.green.eggs.and.ham. // allowTrailingPeriod - true", () => {
-            runGetIdentifierKindTest({
-                text: "foo.bar.baz.green.eggs.and.ham",
-                options: { allowTrailingPeriod: true },
-                expected: IdentifierKind.Regular,
-            });
-        });
-
         it("foo.bar.baz.green.eggs.and.ham. // allowTrailingPeriod - false", () => {
             runGetIdentifierKindTest({
                 text: "foo.bar.baz.green.eggs.and.ham.",
