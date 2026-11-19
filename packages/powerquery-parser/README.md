@@ -34,6 +34,21 @@ if (ResultUtils.isOk(result)) {
 
 Cancellation returns a `CommonError` wrapping `CancellationError`; polling occurs at entry and during scanning.
 
+### Quoted identifiers
+
+`Language.IdentifierUtils.isQuotedIdentifier(text)` returns `true` only when the entire string is one quoted M
+identifier. It accepts empty identifiers (`#""`) and doubled quote escapes (`#"a""b"`), but rejects trailing text,
+surrounding whitespace, and unterminated quotes, including a doubled quote at the end without a closing delimiter.
+Like the lexer, it checks quote boundaries, not the validity of `#(...)` escape contents.
+
+`getIdentifierKind` also rejects malformed quoted identifiers; consequently, `getNormalizedIdentifier` returns
+`undefined` and `getAllowedIdentifiers` returns an empty array for them.
+
+This predicate is not an unquoted rename-target validator. `getIdentifierKind` retains its existing lexical-shape
+classification of word keywords (such as `let`) and `null` as `Regular`. To decide whether a name is safe unquoted, require
+`getIdentifierKind(text) === Language.IdentifierUtils.IdentifierKind.Regular`, exclude
+`Language.KeywordUtils.isKeyword(text)`, and separately exclude `text === "null"`.
+
 ## Related projects
 
 - [powerquery-formatter](../powerquery-formatter/README.md): A code formatter for Power Query which is bundled in the VSCode extension.

@@ -4,8 +4,9 @@
 import "mocha";
 import { expect } from "chai";
 
+import { DefaultSettings, Lexer, ResultUtils } from "../../src";
+import { IdentifierUtils, Token } from "../../src/language";
 import { IdentifierKind } from "../../src/language/identifierUtils";
-import { IdentifierUtils } from "../../src/language";
 
 describe("IdentifierUtils", () => {
     function createCommonIdentifierUtilsOptions(
@@ -26,6 +27,67 @@ describe("IdentifierUtils", () => {
             ...overrides,
         };
     }
+
+    describe("isQuotedIdentifier", () => {
+        for (const [text, expected] of [
+            ['#"foo"', true],
+            ['#"my value"', true],
+            ['#""', true],
+            ['#""""', true],
+            ['#"foo""bar"', true],
+            ['#"foo"""', true],
+            ['#"a""""b"', true],
+            ['#"line\nbreak"', true],
+            ['#"let"', true],
+            ['#"null"', true],
+            ["", false],
+            ["foo", false],
+            ["let", false],
+            ["null", false],
+            ['"foo"', false],
+            ['@#"foo"', false],
+            [' #"foo"', false],
+            ['#"foo" ', false],
+            ['#"foo"junk', false],
+            ['#"foo"junk"', false],
+            ['#"foo"#"bar"', false],
+            ['#"', false],
+            ['#"foo', false],
+            ['#"""', false],
+            ['#"foo""', false],
+            ['#"foo""""', false],
+        ] as const) {
+            it(JSON.stringify(text), () => {
+                expect(IdentifierUtils.isQuotedIdentifier(text)).to.equal(expected);
+
+                if (text.startsWith('#"')) {
+                    const triedLex: Lexer.TriedLex = Lexer.tryLex(DefaultSettings, text);
+
+                    const isCompleteIdentifier: boolean =
+                        ResultUtils.isOk(triedLex) &&
+                        triedLex.value.tokens.length === 1 &&
+                        triedLex.value.tokens[0]?.kind === Token.TokenKind.Identifier &&
+                        triedLex.value.tokens[0]?.data === text;
+
+                    expect(isCompleteIdentifier, "lexer agrees on complete quoted identifiers").to.equal(expected);
+                }
+            });
+        }
+    });
+
+    describe("malformed quoted identifiers", () => {
+        for (const text of ['#"foo"junk', '#"foo"junk"', '#"foo" ', '#"""', '#"foo""', '#"foo""""']) {
+            it(`rejects ${JSON.stringify(text)} in identifier utilities`, () => {
+                for (const allowGeneralizedIdentifier of [false, true]) {
+                    const options: IdentifierUtils.CommonIdentifierUtilsOptions = { allowGeneralizedIdentifier };
+
+                    expect(IdentifierUtils.getIdentifierKind(text, options)).to.equal(IdentifierKind.Invalid);
+                    expect(IdentifierUtils.getNormalizedIdentifier(text, options)).to.be.undefined;
+                    expect(IdentifierUtils.getAllowedIdentifiers(text, options)).to.deep.equal([]);
+                }
+            });
+        }
+    });
 
     describe(`getAllowedIdentifiers`, () => {
         function getAllowedIdentifiersTest(params: {
@@ -150,6 +212,13 @@ describe("IdentifierUtils", () => {
 
             const actual: IdentifierKind = IdentifierUtils.getIdentifierKind(text, options);
             expect(actual).to.equal(params.expected);
+        }
+
+        for (const text of ["let", "null"]) {
+            it(`preserves lexical-shape classification for ${text}`, () => {
+                expect(IdentifierUtils.getIdentifierKind(text)).to.equal(IdentifierKind.Regular);
+                expect(IdentifierUtils.getIdentifierKind(`#"${text}"`)).to.equal(IdentifierKind.RegularWithQuotes);
+            });
         }
 
         it("foo", () => {

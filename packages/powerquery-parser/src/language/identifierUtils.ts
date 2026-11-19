@@ -230,6 +230,11 @@ export function getNormalizedIdentifier(text: string, options?: CommonIdentifier
     }
 }
 
+// Returns true only when the entire text is one quoted identifier, including doubled quote escapes.
+export function isQuotedIdentifier(text: string): boolean {
+    return findQuotedIdentifierQuotes(text, 0)?.indexEnd === text.length;
+}
+
 type TQuotedAndUnquoted =
     | {
           readonly identifierKind: IdentifierKind.Generalized;
@@ -378,10 +383,6 @@ function isGeneralizedIdentifier(text: string): boolean {
 
 function isRegularIdentifier(text: string, options?: CommonIdentifierUtilsOptions): boolean {
     return text.length > 0 && getIdentifierLength(text, 0, options) === text.length;
-}
-
-function isQuotedIdentifier(text: string): boolean {
-    return findQuotedIdentifierQuotes(text, 0) !== undefined;
 }
 
 function stripQuotes(text: string): string {
