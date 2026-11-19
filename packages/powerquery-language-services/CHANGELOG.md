@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Fixed: Infer unary operations on nulls, durations, and union alternatives, and negate logical literal types correctly.
+
 ## 5.1.0
 
 - Fixed: Infer annotated function returns from uncertain bodies and nullable results while preserving compatible type detail. ([#347](https://github.com/microsoft/powerquery-language-services/pull/347))
