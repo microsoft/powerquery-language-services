@@ -118,23 +118,9 @@ export function nthChildXor(
     parentId: number,
     attributeIndex: number,
 ): TXorNode | undefined {
-    // Grab the node's childIds.
-    const childIds: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
+    const childId: number | undefined = nodeIdMapCollection.childIdsByAttributeIndex.get(parentId)?.[attributeIndex];
 
-    if (childIds === undefined) {
-        return undefined;
-    }
-
-    // Iterate over the children and try to find one which matches attributeIndex.
-    for (const childId of childIds) {
-        const xorNode: TXorNode = assertXor(nodeIdMapCollection, childId);
-
-        if (xorNode.node.attributeIndex === attributeIndex) {
-            return xorNode;
-        }
-    }
-
-    return undefined;
+    return childId === undefined ? undefined : assertXor(nodeIdMapCollection, childId);
 }
 
 export function nthChildXorChecked<T extends Ast.TNode>(

@@ -2,16 +2,17 @@
 // Licensed under the MIT license.
 
 import { ArrayUtils, MapUtils, TypeScriptUtils } from "../../../common";
+import { Collection, MutableCollection } from "../nodeIdMap";
 import { Trace, TraceConstant, TraceManager } from "../../../common/trace";
 import { Ast } from "../../../language";
-import { Collection } from "../nodeIdMap";
 import { NodeIdMap } from "..";
 import { ParseContext } from "../../context";
+import { setChildIds } from "./nodeIdMapUtils";
 
 // Helper functions which are related to updating / remapping nodeIds for NodeIdMap.Collection
 
 export function recalculateAndUpdateIds(
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: MutableCollection,
     nodeId: number,
     traceManager: TraceManager,
     correlationId: number | undefined,
@@ -79,7 +80,7 @@ export function recalculateIds(
 // Given a mapping of (existingId) => (newId) this mutates the NodeIdMap.Collection and the TXorNodes it holds.
 // Assumes the given arguments are valid as this function does no validation.
 export function updateNodeIds(
-    nodeIdMapCollection: Collection,
+    nodeIdMapCollection: MutableCollection,
     newIdByOldId: ReadonlyMap<number, number>,
     traceManager: TraceManager,
     correlationId: number | undefined,
@@ -229,7 +230,7 @@ function createDelta(
 }
 
 function applyCollectionDelta(
-    nodeIdMapCollection: Collection,
+    nodeIdMapCollection: MutableCollection,
     collectionDelta: CollectionDelta,
     traceManager: TraceManager,
     correlationId: number,
@@ -271,10 +272,11 @@ function applyCollectionDelta(
     }
 
     for (const [newId, { oldId, value }] of collectionDelta.childIdsById.entries()) {
-        nodeIdMapCollection.childIdsById.set(newId, value);
+        setChildIds(nodeIdMapCollection, newId, value);
 
         if (!collectionDelta.childIdsById.has(oldId)) {
             nodeIdMapCollection.childIdsById.delete(oldId);
+            nodeIdMapCollection.childIdsByAttributeIndex.delete(oldId);
         }
     }
 

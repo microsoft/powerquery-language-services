@@ -26,7 +26,7 @@ import { NodeIdMap } from "..";
 //  With the third child being a yet-to-be evaluated Context of NodeKind.Csv
 
 export interface State {
-    readonly nodeIdMapCollection: NodeIdMap.Collection;
+    readonly nodeIdMapCollection: NodeIdMap.MutableCollection;
     root: Node<Ast.TNode> | undefined;
     // Allocation high-water mark: every live AST/context node ID must be <= idCounter.
     // Copy/apply it with the node maps; rollback may rewind it when removing newer nodes.

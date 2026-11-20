@@ -49,6 +49,17 @@ The parser implements recursive-descent and combinatorial parsing strategies for
 [Power Query M language specification](https://docs.microsoft.com/en-us/powerquery-m/power-query-m-language-specification).
 Document deviations from the language specification in [specification.md](specification.md).
 
+`NodeIdMap.Collection` exposes read-only child storage: `childIdsById` contains dense child IDs in parse order,
+while `childIdsByAttributeIndex` contains direct attribute slots (absent optional attributes remain empty).
+Child and sibling selectors use attribute indices, not positions in the dense arrays. If nodes share an
+attribute index after operator reparenting, selection retains the first child in parse order.
+
+Custom parsers should mutate the `MutableCollection` owned by their parse context, using
+`NodeIdMapUtils.appendChildId` for construction and `NodeIdMapUtils.setChildIds` for structural rewrites.
+Keep parent links and node attribute indices consistent with those updates. `NodeIdMapUtils.copy` and
+`ParseContextUtils.copyState` copy both child arrays and attribute slots so speculative states do not share
+mutable child storage. To rewrite a published collection, copy it first.
+
 ### Style
 
 This project uses [prettier](https://github.com/prettier/prettier) as the primary source of style enforcement. Additional style requirements are located in [style.md](style.md).

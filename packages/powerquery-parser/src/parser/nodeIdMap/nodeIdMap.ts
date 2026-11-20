@@ -5,7 +5,8 @@ import { Ast } from "../../language";
 import { ParseContext } from "..";
 
 export type AstNodeById = Map<number, Ast.TNode>;
-export type ChildIdsById = Map<number, ReadonlyArray<number>>;
+export type ChildIdsById = ReadonlyMap<number, ReadonlyArray<number>>;
+export type ChildIdsByAttributeIndex = ReadonlyMap<number, ReadonlyArray<number | undefined>>;
 export type ContextNodeById = Map<number, ParseContext.TNode>;
 export type IdsByNodeKind = Map<Ast.NodeKind, Set<number>>;
 export type ParentIdById = Map<number, number>;
@@ -21,12 +22,20 @@ export interface Collection {
     // Holds all of the childIds for a given parentId.
     // The childIds are in the order that they were parsed.
     readonly childIdsById: ChildIdsById;
+    // Attribute slots preserve absent optional attributes, unlike the dense childIdsById arrays.
+    readonly childIdsByAttributeIndex: ChildIdsByAttributeIndex;
     readonly idsByNodeKind: IdsByNodeKind;
 
     // A collection of all leaf nodes (which by definition are Ast.TNodes)
     readonly leafIds: Set<number>;
     // The right most Ast in the parse context, which can be treated as the most recently parsed node.
     readonly rightMostLeaf: Ast.TNode | undefined;
+}
+
+// Owned by a parse state. Published collections expose only read-only child storage.
+export interface MutableCollection extends Collection {
+    readonly childIdsById: Map<number, number[]>;
+    readonly childIdsByAttributeIndex: Map<number, (number | undefined)[]>;
 }
 
 export interface CollectionValidation {

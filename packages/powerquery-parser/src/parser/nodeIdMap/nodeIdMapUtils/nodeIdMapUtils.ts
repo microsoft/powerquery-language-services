@@ -3,12 +3,13 @@
 
 import { ArrayUtils, Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
-import { Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
+import { Collection, CollectionValidation, IdsByNodeKind, MutableCollection, NodeSummary } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
+import { assertXor } from "./commonSelectors";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
 
-export function copy(nodeIdMapCollection: Collection): Collection {
+export function copy(nodeIdMapCollection: Collection): MutableCollection {
     const astNodeById: Map<number, Ast.TNode> = new Map(
         Array.from(nodeIdMapCollection.astNodeById.entries()).map(([id, astNode]: [number, Ast.TNode]) => [
             id,
@@ -34,13 +35,67 @@ export function copy(nodeIdMapCollection: Collection): Collection {
 
     return {
         astNodeById,
-        childIdsById: new Map(nodeIdMapCollection.childIdsById),
+        childIdsById: new Map(
+            Array.from(nodeIdMapCollection.childIdsById, ([id, childIds]: [number, ReadonlyArray<number>]) => [
+                id,
+                [...childIds],
+            ]),
+        ),
+        childIdsByAttributeIndex: new Map(
+            Array.from(
+                nodeIdMapCollection.childIdsByAttributeIndex,
+                ([id, slots]: [number, ReadonlyArray<number | undefined>]) => [id, [...slots]],
+            ),
+        ),
         contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
         idsByNodeKind,
         rightMostLeaf,
         parentIdById: new Map(nodeIdMapCollection.parentIdById),
     };
+}
+
+export function appendChildId(
+    collection: MutableCollection,
+    parentId: number,
+    childId: number,
+    attributeIndex: number | undefined,
+): void {
+    const childIds: number[] | undefined = collection.childIdsById.get(parentId);
+
+    if (childIds === undefined) {
+        collection.childIdsById.set(parentId, [childId]);
+    } else {
+        childIds.push(childId);
+    }
+
+    let slots: (number | undefined)[] | undefined = collection.childIdsByAttributeIndex.get(parentId);
+
+    if (slots === undefined) {
+        slots = [];
+        collection.childIdsByAttributeIndex.set(parentId, slots);
+    }
+
+    if (attributeIndex !== undefined && slots[attributeIndex] === undefined) {
+        slots[attributeIndex] = childId;
+    }
+}
+
+// For structural rewrites; the normal construction path uses appendChildId.
+export function setChildIds(collection: MutableCollection, parentId: number, childIds: ReadonlyArray<number>): void {
+    const slots: (number | undefined)[] = [];
+
+    for (const childId of childIds) {
+        const attributeIndex: number | undefined = assertXor(collection, childId).node.attributeIndex;
+
+        // Preserve first-child selection even for reparented nodes sharing an attribute index.
+        if (attributeIndex !== undefined && slots[attributeIndex] === undefined) {
+            slots[attributeIndex] = childId;
+        }
+    }
+
+    collection.childIdsById.set(parentId, [...childIds]);
+    collection.childIdsByAttributeIndex.set(parentId, slots);
 }
 
 // Checks if the given nodeId contains at least one parsed token.

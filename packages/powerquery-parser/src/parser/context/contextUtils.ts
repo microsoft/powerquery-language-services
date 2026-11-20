@@ -33,6 +33,7 @@ export function newState(): ParseContext.State {
         nodeIdMapCollection: {
             astNodeById: new Map(),
             childIdsById: new Map(),
+            childIdsByAttributeIndex: new Map(),
             contextNodeById: new Map(),
             leafIds: new Set(),
             rightMostLeaf: undefined,
@@ -45,12 +46,17 @@ export function newState(): ParseContext.State {
 }
 
 export function copyState(state: ParseContext.State): ParseContext.State {
-    const root: ParseContext.TNode | undefined = state.root !== undefined ? { ...state.root } : undefined;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = NodeIdMapUtils.copy(state.nodeIdMapCollection);
+
+    const root: ParseContext.TNode | undefined =
+        state.root !== undefined
+            ? (nodeIdMapCollection.contextNodeById.get(state.root.id) ?? { ...state.root })
+            : undefined;
 
     return {
         ...state,
         root,
-        nodeIdMapCollection: NodeIdMapUtils.copy(state.nodeIdMapCollection),
+        nodeIdMapCollection,
     };
 }
 
@@ -81,26 +87,19 @@ export function startContext<T extends Ast.TNode>(
     tokenStart: Token.Token | undefined,
     parentNode: ParseContext.TNode | undefined,
 ): ParseContext.Node<T> {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.nodeIdMapCollection;
     let attributeIndex: number | undefined;
 
     const nodeId: number = nextId(state);
 
     // If a parent context Node exists, update the parent/child mapping attributes and attributeCounter.
     if (parentNode) {
-        const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
         const parentId: number = parentNode.id;
 
         attributeIndex = nextAttributeIndex(parentNode);
         nodeIdMapCollection.parentIdById.set(nodeId, parentId);
 
-        const existingChildren: ReadonlyArray<number> | undefined = childIdsById.get(parentId);
-
-        if (existingChildren) {
-            childIdsById.set(parentId, [...existingChildren, nodeId]);
-        } else {
-            childIdsById.set(parentId, [nodeId]);
-        }
+        NodeIdMapUtils.appendChildId(nodeIdMapCollection, parentId, nodeId, attributeIndex);
     }
 
     const contextNode: ParseContext.Node<T> = {
@@ -130,7 +129,7 @@ export function startContextAsParent<T extends Ast.TNode>(
     existingNodeId: number,
     existingNodeTokenStart: Token.Token | undefined,
 ): ParseContext.Node<T> {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.nodeIdMapCollection;
     const existingNode: TXorNode = NodeIdMapUtils.assertXor(nodeIdMapCollection, existingNodeId);
 
     let tokenIndexStart: number;
@@ -191,7 +190,7 @@ export function startContextAsParent<T extends Ast.TNode>(
     // Applicable to Scenario (1) and (2)
     // Create `new <-> existing`
     nodeIdMapCollection.parentIdById.set(existingNodeId, newNodeId);
-    nodeIdMapCollection.childIdsById.set(newNodeId, [existingNodeId]);
+    NodeIdMapUtils.appendChildId(nodeIdMapCollection, newNodeId, existingNodeId, 0);
 
     return insertedContext;
 }
@@ -202,7 +201,7 @@ export function endContext<T extends Ast.TNode>(
     contextNode: ParseContext.Node<T>,
     astNode: T,
 ): ParseContext.TNode | undefined {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.nodeIdMapCollection;
 
     if (state.root?.id === astNode.id) {
         Assert.isTrue(
@@ -254,7 +253,7 @@ export function endContext<T extends Ast.TNode>(
 }
 
 export function deleteAst(state: ParseContext.State, nodeId: number, parentWillBeDeleted: boolean): void {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.nodeIdMapCollection;
 
     const astNodeById: NodeIdMap.AstNodeById = nodeIdMapCollection.astNodeById;
 
@@ -265,7 +264,7 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
         { nodeId },
     );
 
-    const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
+    const childIdsById: Map<number, number[]> = nodeIdMapCollection.childIdsById;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
 
     // If Node was a leaf node, remove it from the list of leaf nodes.
@@ -312,12 +311,13 @@ export function deleteAst(state: ParseContext.State, nodeId: number, parentWillB
     deleteFromKindMap(nodeIdMapCollection, nodeId);
     astNodeById.delete(nodeId);
     childIdsById.delete(nodeId);
+    nodeIdMapCollection.childIdsByAttributeIndex.delete(nodeId);
     parentIdById.delete(nodeId);
 }
 
 export function deleteContext(state: ParseContext.State, nodeId: number): ParseContext.TNode | undefined {
-    const nodeIdMapCollection: NodeIdMap.Collection = state.nodeIdMapCollection;
-    const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.nodeIdMapCollection;
+    const childIdsById: Map<number, number[]> = nodeIdMapCollection.childIdsById;
     const contextNodeById: NodeIdMap.ContextNodeById = nodeIdMapCollection.contextNodeById;
     const leafIds: Set<number> = nodeIdMapCollection.leafIds;
     const parentIdById: NodeIdMap.ParentIdById = nodeIdMapCollection.parentIdById;
@@ -370,6 +370,7 @@ export function deleteContext(state: ParseContext.State, nodeId: number): ParseC
     deleteFromKindMap(nodeIdMapCollection, nodeId);
     contextNodeById.delete(nodeId);
     childIdsById.delete(nodeId);
+    nodeIdMapCollection.childIdsByAttributeIndex.delete(nodeId);
     parentIdById.delete(nodeId);
     leafIds.delete(nodeId);
 
@@ -413,15 +414,17 @@ function deleteFromKindMap(nodeIdMapCollection: NodeIdMap.Collection, nodeId: nu
 // Either removes `childId` from its list of children if no `replacementId` is given,
 // else replaces the `childId` with `replacementId`.
 function removeOrReplaceChildId(
-    nodeIdMapCollection: NodeIdMap.Collection,
+    nodeIdMapCollection: NodeIdMap.MutableCollection,
     parentId: number,
     childId: number,
     replacementId: number | undefined,
 ): void {
-    const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
+    const childIdsById: Map<number, number[]> = nodeIdMapCollection.childIdsById;
     const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(childIdsById, parentId);
+    const slots: (number | undefined)[] = MapUtils.assertGet(nodeIdMapCollection.childIdsByAttributeIndex, parentId);
+    const attributeIndex: number = slots.indexOf(childId);
 
-    let newChildIds: ReadonlyArray<number>;
+    let newChildIds: number[];
 
     if (replacementId) {
         nodeIdMapCollection.parentIdById.set(replacementId, parentId);
@@ -430,10 +433,20 @@ function removeOrReplaceChildId(
         newChildIds = ArrayUtils.assertRemoveFirstInstance(childIds, childId);
     }
 
+    if (attributeIndex !== -1) {
+        slots[attributeIndex] =
+            replacementId ??
+            newChildIds.find(
+                (id: number) =>
+                    NodeIdMapUtils.assertXor(nodeIdMapCollection, id).node.attributeIndex === attributeIndex,
+            );
+    }
+
     if (newChildIds.length) {
         childIdsById.set(parentId, newChildIds);
     } else {
         childIdsById.delete(parentId);
+        nodeIdMapCollection.childIdsByAttributeIndex.delete(parentId);
     }
 
     const parent: ParseContext.TNode | undefined = nodeIdMapCollection.contextNodeById.get(parentId);
