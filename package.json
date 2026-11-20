@@ -46,7 +46,7 @@
         "eslint-plugin-promise": "^7.3.0",
         "eslint-plugin-security": "^4.2.1",
         "mocha": "^12.0.3",
-        "prettier": "^3.8.1",
+        "prettier": "^3.10.1",
         "semver": "^7.8.6",
         "tar": "^7.5.1",
         "ts-loader": "^9.5.4",
