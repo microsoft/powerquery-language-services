@@ -4,7 +4,7 @@
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands, TOperand } from "./commonTypes";
-import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils } from "../..";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
@@ -42,7 +42,7 @@ export function combineOperatorsAndOperands(
     const sortedOperatorConstants: ReadonlyArray<PrecedenceSortableOperatorConstant> =
         sortByPrecedence(operatorConstants);
 
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.contextState.nodeIdMapCollection;
     const numOperators: number = sortedOperatorConstants.length;
 
     for (const [precedenceSortableOperatorConstant, index] of ArrayUtils.enumerate(sortedOperatorConstants)) {
@@ -116,6 +116,7 @@ export function combineOperatorsAndOperands(
         // Promote from ParseContext into Ast
         nodeIdMapCollection.astNodeById.set(binOp.id, binOp);
         MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, binOp.id);
+        NodeIdMapUtils.setChildIds(nodeIdMapCollection, placeholderContextNodeId, [binOp.id]);
 
         // Modify the operands and operatorConstants for the next iteration by:
         //  - replacing the `left` and `right` operands with the new `binOp` node
@@ -259,15 +260,17 @@ const ValidatorForMetadataExpression: Validator<Ast.MetadataExpression> = {
         NaiveParseSteps.readUnaryExpression(state, parser, correlationId),
 };
 
-function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseContext.TNode, child: Ast.TNode): void {
+function addAstAsChild(
+    nodeIdMapCollection: NodeIdMap.MutableCollection,
+    parent: ParseContext.TNode,
+    child: Ast.TNode,
+): void {
     parent.attributeCounter += 1;
 
     const parentId: number = parent.id;
-    const oldChildren: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
-
     nodeIdMapCollection.astNodeById.set(child.id, child);
     nodeIdMapCollection.parentIdById.set(child.id, parentId);
-    nodeIdMapCollection.childIdsById.set(parentId, [...(oldChildren ?? []), child.id]);
+    NodeIdMapUtils.appendChildId(nodeIdMapCollection, parentId, child.id, child.attributeIndex);
 
     if (child.isLeaf) {
         nodeIdMapCollection.leafIds.add(child.id);
@@ -305,8 +308,8 @@ function placeParseContextUnderPlaceholderContext(
 ): void {
     state.currentContextNode = parseContext;
 
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    nodeIdMapCollection.childIdsById.set(placeholderContextNodeId, [parseContext.id]);
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.contextState.nodeIdMapCollection;
+    NodeIdMapUtils.setChildIds(nodeIdMapCollection, placeholderContextNodeId, [parseContext.id]);
     nodeIdMapCollection.parentIdById.set(parseContext.id, placeholderContextNodeId);
 }
 

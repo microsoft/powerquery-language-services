@@ -4,7 +4,7 @@
 import { ArrayUtils, Assert, MapUtils, SetUtils } from "../../../common";
 import { Ast, Constant, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands } from "./commonTypes";
-import { NodeIdMap, ParseContext } from "../..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext } from "../..";
 import { ParseState, ParseStateUtils } from "../../parseState";
 import { IdsByNodeKind } from "../../nodeIdMap/nodeIdMap";
 import { NaiveParseSteps } from "..";
@@ -31,7 +31,7 @@ export async function readOperatorsAndOperands(
     );
 
     const initialCurrentContextNode: ParseContext.TNode = Assert.asDefined(state.currentContextNode);
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    const nodeIdMapCollection: NodeIdMap.MutableCollection = state.contextState.nodeIdMapCollection;
     const operatorConstants: Ast.TBinOpExpressionConstant[] = [];
 
     // The initial read will always be a TUnaryExpression.
@@ -101,7 +101,8 @@ export async function readOperatorsAndOperands(
             nodeIdMapCollection.parentIdById.delete(nodeId);
         }
 
-        nodeIdMapCollection.childIdsById.set(
+        NodeIdMapUtils.setChildIds(
+            nodeIdMapCollection,
             initialCurrentContextNode.id,
             ArrayUtils.assertRemoveFirstInstance(
                 MapUtils.assertGet(nodeIdMapCollection.childIdsById, initialCurrentContextNode.id),
@@ -111,6 +112,7 @@ export async function readOperatorsAndOperands(
 
         nodeIdMapCollection.contextNodeById.delete(iterativeParseContext.id);
         nodeIdMapCollection.childIdsById.delete(iterativeParseContext.id);
+        nodeIdMapCollection.childIdsByAttributeIndex.delete(iterativeParseContext.id);
 
         nodeIdMapCollection.leafIds.delete(operatorConstant.id);
         nodeIdMapCollection.leafIds.delete(operand.id);
