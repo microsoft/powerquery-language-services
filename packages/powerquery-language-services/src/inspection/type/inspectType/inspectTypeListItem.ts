@@ -17,13 +17,7 @@ import { inspectTypeFromChildAttributeIndex } from "./common";
 import { ScopeItemKind } from "../../scope";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
-export async function inspectListIndex(
-    state: InspectTypeState,
-    itemAccess: TXorNode,
-    correlationId: number,
-): Promise<number | undefined> {
-    const type: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, itemAccess, 1, correlationId);
-
+export function listIndex(type: Type.TPowerQueryType): number | undefined {
     return TypeUtils.isNumberLiteral(type) &&
         !type.isNullable &&
         Number.isSafeInteger(type.normalizedLiteral) &&
@@ -117,8 +111,10 @@ export async function tryGetListItem(
             }
 
             case Ast.NodeKind.ItemAccessExpression: {
-                // eslint-disable-next-line no-await-in-loop
-                const innerIndex: number | undefined = await inspectListIndex(state, current, trace.id);
+                const innerIndex: number | undefined = listIndex(
+                    // eslint-disable-next-line no-await-in-loop
+                    await inspectTypeFromChildAttributeIndex(state, current, 1, trace.id),
+                );
 
                 if (innerIndex === undefined) {
                     return undefined;
