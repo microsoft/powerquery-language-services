@@ -1932,10 +1932,10 @@ describe(`Inspection - Type`, () => {
                     expected: Type.NoneInstance,
                 }));
 
-            it(`(null as nullable number) ?? (error "reachable")`, async () =>
+            it(`an error fallback does not erase a nullable parameter's non-null result`, async () =>
                 await assertEqualRootType({
-                    text: `(null as nullable number) ?? (error "reachable")`,
-                    expected: Type.NoneInstance,
+                    text: `let f = (x as nullable number) => x ?? (error "reachable") in f(1)`,
+                    expected: anyUnion([Type.NumberInstance, Type.NoneInstance]),
                 }));
 
             it(`(error "left") ?? 1`, async () =>
@@ -1953,7 +1953,7 @@ describe(`Inspection - Type`, () => {
             it(`nullable fallback keeps a later fallback reachable`, async () =>
                 await assertEqualRootType({
                     text: `let select = (b as logical) => ((if b then null else 1) ?? null) ?? (error "reachable") in select(true)`,
-                    expected: Type.NoneInstance,
+                    expected: anyUnion([TypeUtils.numberLiteral(false, 1), Type.NoneInstance]),
                 }));
 
             it(`null coalescing strips nullability from left operand`, async () =>

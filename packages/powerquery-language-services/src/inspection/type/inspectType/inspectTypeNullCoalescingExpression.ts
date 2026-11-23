@@ -45,19 +45,15 @@ export async function inspectTypeNullCoalescingExpression(
     } else {
         const rightType: Type.TPowerQueryType = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
 
-        if (rightType.kind === Type.TypeKind.None) {
-            result = Type.NoneInstance;
-        } else {
-            const nonNullableLeft: ReadonlyArray<Type.TPowerQueryType> = nonNullableMembers(leftType);
+        const nonNullableLeft: ReadonlyArray<Type.TPowerQueryType> = nonNullableMembers(leftType);
 
-            result = nonNullableLeft.length
-                ? {
-                      ...TypeUtils.anyUnion([...nonNullableLeft, rightType], state.traceManager, trace.id),
-                      // Simplification can absorb a nullable RHS into a non-nullable left member.
-                      isNullable: rightType.isNullable,
-                  }
-                : rightType;
-        }
+        result = nonNullableLeft.length
+            ? {
+                  ...TypeUtils.anyUnion([...nonNullableLeft, rightType], state.traceManager, trace.id),
+                  // Simplification can absorb a nullable RHS into a non-nullable left member.
+                  isNullable: rightType.isNullable,
+              }
+            : rightType;
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
