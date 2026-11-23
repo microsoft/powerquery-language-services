@@ -47,6 +47,8 @@ export async function inspectTypeNullCoalescingExpression(
 
         const nonNullableLeft: ReadonlyArray<Type.TPowerQueryType> = nonNullableMembers(leftType);
 
+        // Only the null path evaluates the fallback. Even an error there cannot erase a possible non-null
+        // left value; if no such value exists, the fallback alone determines the result.
         result = nonNullableLeft.length
             ? {
                   ...TypeUtils.anyUnion([...nonNullableLeft, rightType], state.traceManager, trace.id),
