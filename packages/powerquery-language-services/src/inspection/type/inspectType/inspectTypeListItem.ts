@@ -129,6 +129,7 @@ export async function tryGetListItem(
                     new Set(visited),
                 );
 
+                // Following a nested selection requires a source node. Without one, fall back to type-based access.
                 if (item === undefined || item === null || !("node" in item)) {
                     return undefined;
                 }

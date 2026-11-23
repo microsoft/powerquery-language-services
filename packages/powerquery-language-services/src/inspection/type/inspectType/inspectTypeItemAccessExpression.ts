@@ -82,6 +82,7 @@ export async function inspectTypeItemAccessExpression(
             if (item === null) {
                 result = isOptional ? Type.NullInstance : Type.NoneInstance;
             } else if (item !== undefined) {
+                // A list expression supplies a node to inspect; a range item already has an inferred type.
                 result =
                     "node" in item
                         ? await inspectXor(state, item, trace.id)
