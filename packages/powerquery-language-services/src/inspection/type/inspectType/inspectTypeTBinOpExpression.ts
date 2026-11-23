@@ -91,14 +91,41 @@ export async function inspectTypeTBinOpExpression(
     // '1 + 1'
     else {
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
-        const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
 
-        result = inspectBinaryOperation(state, leftType, operatorKind, rightType, trace.id);
+        if (
+            (operatorKind === Constant.LogicalOperator.And || operatorKind === Constant.LogicalOperator.Or) &&
+            leftType.kind === Type.TypeKind.Logical &&
+            !leftType.isNullable &&
+            logicalValue(left, leftType) === (operatorKind === Constant.LogicalOperator.Or)
+        ) {
+            result = leftType;
+        } else {
+            const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
+            result = inspectBinaryOperation(state, leftType, operatorKind, rightType, trace.id);
+        }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function logicalValue(operand: TXorNode, type: Type.TLogical): boolean | undefined {
+    if (TypeUtils.isLogicalLiteral(type)) {
+        return type.normalizedLiteral;
+    } else if (XorNodeUtils.isAst(operand)) {
+        let node: Ast.TNode = operand.node;
+
+        while (node.kind === Ast.NodeKind.ParenthesizedExpression) {
+            node = node.content;
+        }
+
+        if (node.kind === Ast.NodeKind.LiteralExpression && node.literalKind === Ast.LiteralKind.Logical) {
+            return node.literal === "true";
+        }
+    }
+
+    return undefined;
 }
 
 function inspectBinaryOperation(
