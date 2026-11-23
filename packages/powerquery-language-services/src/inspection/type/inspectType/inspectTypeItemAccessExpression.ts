@@ -83,6 +83,7 @@ export async function inspectTypeItemAccessExpression(
                 result = isOptional ? Type.NullInstance : Type.NoneInstance;
             } else if (item !== undefined) {
                 // A list expression supplies a node to inspect; a range item already has an inferred type.
+                // An exact range value proves the position exists; an Any fallback does not.
                 result =
                     "node" in item
                         ? await inspectXor(state, item, trace.id)
@@ -111,6 +112,7 @@ export async function inspectTypeItemAccessExpression(
 }
 
 function possiblyMissing(type: Type.TPowerQueryType, isOptional: boolean): Type.TPowerQueryType {
+    // An unproven position contributes null only for optional access; required access would raise an error.
     return isOptional && !type.isNullable ? { ...type, isNullable: true } : type;
 }
 
@@ -121,6 +123,7 @@ function getElementType(
     isOptional: boolean,
     correlationId: number,
 ): Type.TPowerQueryType {
+    // A union can mix valid and invalid selectors. Keep each outcome rather than treating them all as unknown.
     if (TypeUtils.isAnyUnion(selector)) {
         return TypeUtils.anyUnion(
             selector.unionedTypePairs.map((member: Type.TPowerQueryType) =>
@@ -133,6 +136,7 @@ function getElementType(
 
     const indexValue: number | undefined = listIndex(selector);
 
+    // Unknown selectors may still be valid. A known wrong kind or negative index is invalid even with `?`.
     if (
         (selector.kind !== Type.TypeKind.Any &&
             selector.kind !== Type.TypeKind.Unknown &&
@@ -145,6 +149,7 @@ function getElementType(
 
     switch (collectionType.kind) {
         case Type.TypeKind.Any:
+            // A record selector can succeed for a table alternative and fail for a list alternative.
             if (collectionType.extendedKind === Type.ExtendedTypeKind.AnyUnion) {
                 return getElementTypeFromAnyUnion(state, collectionType, selector, isOptional, correlationId);
             }
@@ -152,6 +157,7 @@ function getElementType(
             return possiblyMissing(Type.AnyInstance, isOptional);
 
         case Type.TypeKind.List:
+            // Records match table rows by field value; lists only support positional access.
             if (selector.kind === Type.TypeKind.Record) {
                 return Type.NoneInstance;
             }
@@ -187,12 +193,14 @@ function getElementType(
                     return TypeUtils.definedRecord(false, row, false);
                 }
 
+                // The schema describes a matching row but does not prove that the requested row exists.
                 return TypeUtils.definedRecord(isOptional, collectionType.fields, collectionType.isOpen);
             }
 
             return possiblyMissing(Type.RecordInstance, isOptional);
 
         default:
+            // Optional access tolerates a missing item, not a value that cannot be indexed.
             return Type.NoneInstance;
     }
 }

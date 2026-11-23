@@ -18,6 +18,7 @@ import { ScopeItemKind } from "../../scope";
 import { tryBuildDereferencedIdentifierPath } from "../../dereferencedIdentifier/dereferencedIdentifierUtils";
 
 export function listIndex(type: Type.TPowerQueryType): number | undefined {
+    // Only a definite, exactly representable position can select a specific item during inspection.
     return TypeUtils.isNumberLiteral(type) &&
         !type.isNullable &&
         Number.isSafeInteger(type.normalizedLiteral) &&
