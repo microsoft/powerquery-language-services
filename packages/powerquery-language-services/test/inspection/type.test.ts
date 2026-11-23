@@ -132,6 +132,21 @@ describe(`Inspection - Type`, () => {
                     expected: Type.NoneInstance,
                 }));
 
+            for (const [text, expected] of [
+                ["(1 + null) ?? 7", TypeUtils.numberLiteral(false, 7)],
+                ["null / 2", Type.NullInstance],
+                ["null <= null", Type.NullInstance],
+                ['"a" & null', Type.NullInstance],
+                ["true and null", Type.NullInstance],
+                ["null or (true)", Type.LogicalInstance],
+                ["null and null", Type.NullInstance],
+                ["let f = (b as logical) => b or null in f(true)", Type.NullableLogicalInstance],
+                ["null + true", Type.NoneInstance],
+                ["{} & null", Type.NoneInstance],
+            ] as const) {
+                it(text, async () => await assertEqualRootType({ text, expected }));
+            }
+
             describe(`equality`, () => {
                 for (const operator of [`=`, `<>`]) {
                     for (const [left, right] of [

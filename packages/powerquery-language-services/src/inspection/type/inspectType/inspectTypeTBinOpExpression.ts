@@ -93,12 +93,34 @@ export async function inspectTypeTBinOpExpression(
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
         const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
 
-        result = inspectBinaryOperation(state, leftType, operatorKind, rightType, trace.id);
+        result = inspectBinaryOperation(
+            state,
+            rightType.kind === Type.TypeKind.Null ? refineLogicalLiteral(left, leftType) : leftType,
+            operatorKind,
+            leftType.kind === Type.TypeKind.Null ? refineLogicalLiteral(right, rightType) : rightType,
+            trace.id,
+        );
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function refineLogicalLiteral(operand: TXorNode, type: Type.TPowerQueryType): Type.TPowerQueryType {
+    if (type.kind === Type.TypeKind.Logical && XorNodeUtils.isAst(operand)) {
+        let node: Ast.TNode = operand.node;
+
+        while (node.kind === Ast.NodeKind.ParenthesizedExpression) {
+            node = node.content;
+        }
+
+        if (node.kind === Ast.NodeKind.LiteralExpression && node.literalKind === Ast.LiteralKind.Logical) {
+            return TypeUtils.logicalLiteral(false, node.literal === "true");
+        }
+    }
+
+    return type;
 }
 
 function inspectBinaryOperation(
@@ -146,6 +168,67 @@ function inspectBinaryOperation(
     }
 
     const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
+
+    if (leftType.kind === Type.TypeKind.Null || rightType.kind === Type.TypeKind.Null) {
+        const nullOnLeft: boolean = leftType.kind === Type.TypeKind.Null;
+        const other: Type.TPowerQueryType = nullOnLeft ? rightType : leftType;
+
+        switch (operatorKind) {
+            case Constant.LogicalOperator.And:
+            case Constant.LogicalOperator.Or:
+                if (other.kind === Type.TypeKind.Null) {
+                    return Type.NullInstance;
+                } else if (!TypeUtils.isLogical(other)) {
+                    return Type.NoneInstance;
+                } else if (TypeUtils.isLogicalLiteral(other) && !other.isNullable) {
+                    return other.normalizedLiteral === (operatorKind === Constant.LogicalOperator.Or)
+                        ? Type.LogicalInstance
+                        : Type.NullInstance;
+                }
+
+                return Type.NullableLogicalInstance;
+
+            case Constant.RelationalOperator.LessThan:
+            case Constant.RelationalOperator.LessThanEqualTo:
+            case Constant.RelationalOperator.GreaterThan:
+            case Constant.RelationalOperator.GreaterThanEqualTo:
+                return Lookup.has(lookupKey(other.kind, operatorKind, other.kind))
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.Addition:
+            case Constant.ArithmeticOperator.Subtraction:
+                if (
+                    [
+                        Type.TypeKind.Date,
+                        Type.TypeKind.DateTime,
+                        Type.TypeKind.DateTimeZone,
+                        Type.TypeKind.Time,
+                    ].includes(other.kind)
+                ) {
+                    return Type.NullInstance;
+                }
+
+                return other.kind === Type.TypeKind.Number || other.kind === Type.TypeKind.Duration
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.Division:
+            case Constant.ArithmeticOperator.Multiplication:
+                return other.kind === Type.TypeKind.Number || other.kind === Type.TypeKind.Duration
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.And:
+                return other.kind === Type.TypeKind.Text ||
+                    other.kind === (nullOnLeft ? Type.TypeKind.Time : Type.TypeKind.Date)
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+            default:
+                return Type.NoneInstance;
+        }
+    }
+
     const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
 
     if (resultTypeKind === undefined) {
