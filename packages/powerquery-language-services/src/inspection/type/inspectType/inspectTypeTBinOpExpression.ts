@@ -92,6 +92,8 @@ export async function inspectTypeTBinOpExpression(
     else {
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
 
+        // Only a definite false for `and` or true for `or` makes the right operand unreachable.
+        // Otherwise its type (including any error) still matters.
         if (
             (operatorKind === Constant.LogicalOperator.And || operatorKind === Constant.LogicalOperator.Or) &&
             leftType.kind === Type.TypeKind.Logical &&
@@ -111,11 +113,13 @@ export async function inspectTypeTBinOpExpression(
 }
 
 function logicalValue(operand: TXorNode, type: Type.TLogical): boolean | undefined {
+    // Prefer the inferred literal. If inference retained only `logical`, the syntax may still give its value.
     if (TypeUtils.isLogicalLiteral(type)) {
         return type.normalizedLiteral;
     } else if (XorNodeUtils.isAst(operand)) {
         let node: Ast.TNode = operand.node;
 
+        // Parentheses preserve the value; other expressions cannot be assumed true or false from syntax alone.
         while (node.kind === Ast.NodeKind.ParenthesizedExpression) {
             node = node.content;
         }
