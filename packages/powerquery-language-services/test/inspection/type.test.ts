@@ -249,6 +249,14 @@ describe(`Inspection - Type`, () => {
             });
 
             describe(`union operands`, () => {
+                for (const body of ["x + 1", "1 + x"]) {
+                    it(`infers possible arithmetic outcomes for ${body}`, async () =>
+                        await assertEqualRootType({
+                            text: `let f = (x as any) => ${body} in f(2)`,
+                            expected: anyUnion([Type.NumberInstance, Type.NullInstance, Type.NoneInstance]),
+                        }));
+                }
+
                 for (const text of [`foo + 1`, `1 + foo`]) {
                     it(`preserves outer union nullability: ${text}`, async () =>
                         await assertEqualRootType({
@@ -282,7 +290,8 @@ describe(`Inspection - Type`, () => {
                     [`(if b then "one" else "two") + 1`, Type.NoneInstance],
                     [`(if b then true + 1 else 2) + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
                     [`(if b then {1}{0}? else 2) + 1`, Type.NumberInstance],
-                    [`(1 as any) + 1`, Type.NoneInstance],
+                    [`(1 as any) + 1`, Type.NumberInstance],
+                    [`((error "fail") as any) + 1`, Type.NoneInstance],
                     [`missing + 1`, Type.NoneInstance],
                     [
                         `(if b then [a = 1] else [a = 2]) & [z = "x"]`,
@@ -373,7 +382,7 @@ describe(`Inspection - Type`, () => {
             it(`1 as any`, async () =>
                 await assertEqualRootType({
                     text: `1 as any`,
-                    expected: Type.AnyInstance,
+                    expected: TypeUtils.numberLiteral(false, 1),
                 }));
         });
 
@@ -1818,15 +1827,15 @@ describe(`Inspection - Type`, () => {
                     expected: Type.UnknownInstance,
                 }));
 
-            it(`if 1 as any then "a" as text else "b" as text`, async () =>
+            it(`an any condition preserves the common branch type`, async () =>
                 await assertEqualRootType({
-                    text: `if 1 as any then "a"as text else "b" as text`,
+                    text: `let f = (x as any) => if x then "a" as text else "b" as text in f(true)`,
                     expected: Type.TextInstance,
                 }));
 
-            it(`if 1 as any then "a" else "b"`, async () =>
+            it(`an any condition preserves distinct branch types`, async () =>
                 await assertEqualRootType({
-                    text: `if 1 as any then "a" else "b"`,
+                    text: `let f = (x as any) => if x then "a" else "b" in f(true)`,
                     expected: anyUnion([TypeUtils.textLiteral(false, `"a"`), TypeUtils.textLiteral(false, `"b"`)]),
                 }));
 
@@ -2063,7 +2072,7 @@ describe(`Inspection - Type`, () => {
 
             it(`preserves right nullability when nullable any absorbs the right type`, async () =>
                 await assertEqualRootType({
-                    text: `(null as nullable any) ?? (null as nullable text)`,
+                    text: `let f = (x as nullable any) => x ?? (null as nullable text) in f(null)`,
                     expected: Type.NullableAnyInstance,
                 }));
 
@@ -2234,13 +2243,13 @@ describe(`Inspection - Type`, () => {
             describe(`any is allowed`, () => {
                 it(`${Ast.NodeKind.InvokeExpression}`, async () =>
                     await assertEqualRootType({
-                        text: `let x = (_ as any) in x()`,
+                        text: `let f = (x as any) => x() in f(() => 1)`,
                         expected: Type.AnyInstance,
                     }));
 
                 it(`${Ast.NodeKind.ItemAccessExpression}`, async () =>
                     await assertEqualRootType({
-                        text: `let x = (_ as any) in x{0}`,
+                        text: `let f = (x as any) => x{0} in f({1})`,
                         expected: Type.AnyInstance,
                     }));
 
@@ -2326,7 +2335,7 @@ describe(`Inspection - Type`, () => {
 
                 it(`${Ast.NodeKind.FieldProjection}`, async () =>
                     await assertEqualRootType({
-                        text: `let x = (_ as any) in x[[foo]]`,
+                        text: `let f = (x as any) => x[[foo]] in f([foo = 1])`,
                         expected: anyUnion([
                             TypeUtils.definedRecord(false, new Map([[`foo`, Type.AnyInstance]]), false),
                             definedTable([[`foo`, Type.AnyInstance]]),

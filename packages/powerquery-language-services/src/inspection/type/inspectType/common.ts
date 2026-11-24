@@ -282,6 +282,15 @@ export async function inspectXor(
             break;
 
         case Ast.NodeKind.AsExpression:
+            result = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
+
+            // Every value satisfies `as any`; the assertion cannot change its type or suppress an error.
+            if (result.kind === Type.TypeKind.Any && result.extendedKind === undefined) {
+                result = await inspectTypeFromChildAttributeIndex(state, xorNode, 0, trace.id);
+            }
+
+            break;
+
         case Ast.NodeKind.SectionMember:
             result = await inspectTypeFromChildAttributeIndex(state, xorNode, 2, trace.id);
             break;
