@@ -104,8 +104,12 @@ export async function readGeneralizedIdentifier(
     let tokenRangeEndIndex: number = tokenRangeStartIndex;
 
     while (state.currentTokenKind && !GeneralizedIdentifierTerminatorTokenKinds.includes(state.currentTokenKind)) {
-        readToken(state);
+        const tokenData: string = readToken(state);
         tokenRangeEndIndex = state.tokenIndex;
+
+        if (IdentifierUtils.isQuotedIdentifier(tokenData)) {
+            break;
+        }
     }
 
     if (tokenRangeStartIndex === tokenRangeEndIndex) {
