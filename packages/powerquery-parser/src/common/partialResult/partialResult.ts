@@ -29,9 +29,7 @@
 // }
 
 export type PartialResult<Ok, Partial, Error> =
-    | PartialResultOk<Ok>
-    | PartialResultIncomplete<Partial>
-    | PartialResultError<Error>;
+    PartialResultOk<Ok> | PartialResultIncomplete<Partial> | PartialResultError<Error>;
 
 export enum PartialResultKind {
     Ok = "Ok",

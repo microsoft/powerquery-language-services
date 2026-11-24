@@ -2210,8 +2210,7 @@ describe(`Inspection - Scope - Identifier`, () => {
 
             for (const id of identifierIds.values()) {
                 const node: Ast.Identifier | undefined = nodeIdMapCollection.astNodeById.get(id) as
-                    | Ast.Identifier
-                    | undefined;
+                    Ast.Identifier | undefined;
 
                 if (node?.identifierContextKind === Ast.IdentifierContextKind.Value) {
                     result.push(node);

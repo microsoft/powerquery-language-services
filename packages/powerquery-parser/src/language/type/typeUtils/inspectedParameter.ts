@@ -5,10 +5,7 @@ import type { Ast, Type } from "../..";
 import type { XorNode } from "../../../parser";
 
 export type InspectedParameter =
-    | ResolvedParameter
-    | ParameterRequiringResolution
-    | NonTypeParameter
-    | MissingNameParameter;
+    ResolvedParameter | ParameterRequiringResolution | NonTypeParameter | MissingNameParameter;
 
 export enum InspectedParameterKind {
     Resolved = "Resolved",

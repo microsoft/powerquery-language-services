@@ -13,6 +13,5 @@ export interface ParseSettings extends CommonSettings {
     readonly parser: Parser;
     readonly newParseState: (lexerSnapshot: LexerSnapshot, overrides?: Partial<ParseState>) => ParseState;
     readonly parserEntryPoint:
-        | ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>)
-        | undefined;
+        ((state: ParseState, parser: Parser, correlationId: number | undefined) => Promise<Ast.TNode>) | undefined;
 }

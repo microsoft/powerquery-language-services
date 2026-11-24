@@ -133,10 +133,7 @@ export type TParameter = IParameter<TParameterType>;
 export type TParameterList = IParameterList<TParameterType>;
 
 export type TRecursivePrimaryExpression =
-    | RecursivePrimaryExpression
-    | InvokeExpression
-    | ItemAccessExpression
-    | TFieldAccessExpression;
+    RecursivePrimaryExpression | InvokeExpression | ItemAccessExpression | TFieldAccessExpression;
 
 // -----------------------------------
 // ---------- Node subtypes ----------
@@ -153,9 +150,7 @@ export type TBinOpExpressionNodeKind =
     | NodeKind.RelationalExpression;
 
 export type TKeyValuePair =
-    | GeneralizedIdentifierPairedAnyLiteral
-    | GeneralizedIdentifierPairedExpression
-    | IdentifierPairedExpression;
+    GeneralizedIdentifierPairedAnyLiteral | GeneralizedIdentifierPairedExpression | IdentifierPairedExpression;
 export type TKeyValuePairNodeKind =
     | NodeKind.GeneralizedIdentifierPairedAnyLiteral
     | NodeKind.GeneralizedIdentifierPairedExpression

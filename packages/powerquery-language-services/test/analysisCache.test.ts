@@ -157,15 +157,14 @@ describe(`Analysis cache`, () => {
     });
 
     it(`preserves pending hover results after replacement`, async () => {
-        await assertPendingHoverPreserved(
-            (document: TextDocument, settings: AnalysisSettings): Analysis =>
-                AnalysisUtils.analysis(document, {
-                    ...settings,
-                    inspectionSettings: {
-                        ...settings.inspectionSettings,
-                        library: TestConstants.EmptyLibrary,
-                    },
-                }),
+        await assertPendingHoverPreserved((document: TextDocument, settings: AnalysisSettings): Analysis =>
+            AnalysisUtils.analysis(document, {
+                ...settings,
+                inspectionSettings: {
+                    ...settings.inspectionSettings,
+                    library: TestConstants.EmptyLibrary,
+                },
+            }),
         );
     });
 
