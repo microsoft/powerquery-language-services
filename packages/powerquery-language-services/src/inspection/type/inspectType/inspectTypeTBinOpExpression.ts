@@ -91,16 +91,27 @@ export async function inspectTypeTBinOpExpression(
     // '1 + 1'
     else {
         const leftType: Type.TPowerQueryType = await inspectXor(state, left, trace.id);
-        const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
 
-        // With a null operand, the opposite boolean's value can distinguish a logical result from null.
-        result = inspectBinaryOperation(
-            state,
-            rightType.kind === Type.TypeKind.Null ? refineLogicalLiteral(left, leftType) : leftType,
-            operatorKind,
-            leftType.kind === Type.TypeKind.Null ? refineLogicalLiteral(right, rightType) : rightType,
-            trace.id,
-        );
+        // Only a definite false for `and` or true for `or` makes the right operand unreachable.
+        // Otherwise its type (including any error) still matters.
+        if (
+            (operatorKind === Constant.LogicalOperator.And || operatorKind === Constant.LogicalOperator.Or) &&
+            leftType.kind === Type.TypeKind.Logical &&
+            !leftType.isNullable &&
+            logicalValue(left, leftType) === (operatorKind === Constant.LogicalOperator.Or)
+        ) {
+            result = leftType;
+        } else {
+            const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
+            // With a null operand, the opposite boolean's value can distinguish a logical result from null.
+            result = inspectBinaryOperation(
+                state,
+                rightType.kind === Type.TypeKind.Null ? refineLogicalLiteral(left, leftType) : leftType,
+                operatorKind,
+                leftType.kind === Type.TypeKind.Null ? refineLogicalLiteral(right, rightType) : rightType,
+                trace.id,
+            );
+        }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
@@ -109,20 +120,32 @@ export async function inspectTypeTBinOpExpression(
 }
 
 function refineLogicalLiteral(operand: TXorNode, type: Type.TPowerQueryType): Type.TPowerQueryType {
-    // A completed literal (possibly parenthesized) can recover the value that primitive `logical` omits.
-    if (type.kind === Type.TypeKind.Logical && XorNodeUtils.isAst(operand)) {
+    if (type.kind !== Type.TypeKind.Logical || TypeUtils.isLogicalLiteral(type)) {
+        return type;
+    }
+
+    const value: boolean | undefined = logicalValue(operand, type);
+    return value === undefined ? type : TypeUtils.logicalLiteral(type.isNullable, value);
+}
+
+function logicalValue(operand: TXorNode, type: Type.TLogical): boolean | undefined {
+    // Prefer the inferred literal. If inference retained only `logical`, the syntax may still give its value.
+    if (TypeUtils.isLogicalLiteral(type)) {
+        return type.normalizedLiteral;
+    } else if (XorNodeUtils.isAst(operand)) {
         let node: Ast.TNode = operand.node;
 
+        // Parentheses preserve the value; other expressions cannot be assumed true or false from syntax alone.
         while (node.kind === Ast.NodeKind.ParenthesizedExpression) {
             node = node.content;
         }
 
         if (node.kind === Ast.NodeKind.LiteralExpression && node.literalKind === Ast.LiteralKind.Logical) {
-            return TypeUtils.logicalLiteral(false, node.literal === "true");
+            return node.literal === "true";
         }
     }
 
-    return type;
+    return undefined;
 }
 
 function inspectBinaryOperation(
