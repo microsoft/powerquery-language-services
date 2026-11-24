@@ -103,13 +103,29 @@ export async function inspectTypeTBinOpExpression(
             result = leftType;
         } else {
             const rightType: Type.TPowerQueryType = await inspectXor(state, right, trace.id);
-            result = inspectBinaryOperation(state, leftType, operatorKind, rightType, trace.id);
+            // With a null operand, the opposite boolean's value can distinguish a logical result from null.
+            result = inspectBinaryOperation(
+                state,
+                rightType.kind === Type.TypeKind.Null ? refineLogicalLiteral(left, leftType) : leftType,
+                operatorKind,
+                leftType.kind === Type.TypeKind.Null ? refineLogicalLiteral(right, rightType) : rightType,
+                trace.id,
+            );
         }
     }
 
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function refineLogicalLiteral(operand: TXorNode, type: Type.TPowerQueryType): Type.TPowerQueryType {
+    if (type.kind !== Type.TypeKind.Logical || TypeUtils.isLogicalLiteral(type)) {
+        return type;
+    }
+
+    const value: boolean | undefined = logicalValue(operand, type);
+    return value === undefined ? type : TypeUtils.logicalLiteral(type.isNullable, value);
 }
 
 function logicalValue(operand: TXorNode, type: Type.TLogical): boolean | undefined {
@@ -177,6 +193,74 @@ function inspectBinaryOperation(
     }
 
     const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
+
+    // A null operand is not just a nullable result: the operator and the other operand determine validity.
+    if (leftType.kind === Type.TypeKind.Null || rightType.kind === Type.TypeKind.Null) {
+        const nullOnLeft: boolean = leftType.kind === Type.TypeKind.Null;
+        const other: Type.TPowerQueryType = nullOnLeft ? rightType : leftType;
+
+        switch (operatorKind) {
+            case Constant.LogicalOperator.And:
+            case Constant.LogicalOperator.Or:
+                // Two nulls yield null. With a logical partner, only false for `and` or true for `or` overrides null.
+                if (other.kind === Type.TypeKind.Null) {
+                    return Type.NullInstance;
+                } else if (!TypeUtils.isLogical(other)) {
+                    return Type.NoneInstance;
+                } else if (TypeUtils.isLogicalLiteral(other) && !other.isNullable) {
+                    return other.normalizedLiteral === (operatorKind === Constant.LogicalOperator.Or)
+                        ? Type.LogicalInstance
+                        : Type.NullInstance;
+                }
+
+                // Without a definite boolean value, both logical and null outcomes remain possible.
+                return Type.NullableLogicalInstance;
+
+            case Constant.RelationalOperator.LessThan:
+            case Constant.RelationalOperator.LessThanEqualTo:
+            case Constant.RelationalOperator.GreaterThan:
+            case Constant.RelationalOperator.GreaterThanEqualTo:
+                // Null propagates only for comparable kinds; it cannot make a list or record orderable.
+                return Lookup.has(lookupKey(other.kind, operatorKind, other.kind))
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.Addition:
+            case Constant.ArithmeticOperator.Subtraction:
+                // Unlike multiplication and division, addition and subtraction also admit date and time kinds.
+                if (
+                    [
+                        Type.TypeKind.Date,
+                        Type.TypeKind.DateTime,
+                        Type.TypeKind.DateTimeZone,
+                        Type.TypeKind.Time,
+                    ].includes(other.kind)
+                ) {
+                    return Type.NullInstance;
+                }
+
+                return other.kind === Type.TypeKind.Number || other.kind === Type.TypeKind.Duration
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.Division:
+            case Constant.ArithmeticOperator.Multiplication:
+                // Only numbers and durations have scaling or quotient operations with a null operand.
+                return other.kind === Type.TypeKind.Number || other.kind === Type.TypeKind.Duration
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+
+            case Constant.ArithmeticOperator.And:
+                // Text concatenation accepts null on either side; date & time keeps its operand order.
+                return other.kind === Type.TypeKind.Text ||
+                    other.kind === (nullOnLeft ? Type.TypeKind.Time : Type.TypeKind.Date)
+                    ? Type.NullInstance
+                    : Type.NoneInstance;
+            default:
+                return Type.NoneInstance;
+        }
+    }
+
     const resultTypeKind: Type.TypeKind | undefined = Lookup.get(key);
 
     if (resultTypeKind === undefined) {
