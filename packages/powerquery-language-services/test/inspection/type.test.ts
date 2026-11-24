@@ -2448,6 +2448,12 @@ describe(`Inspection - Type`, () => {
                 [`-null`, Type.NullInstance],
                 [`not null`, Type.NullInstance],
                 [`not - null`, Type.NullInstance],
+                [`let f = (x as nullable text) => -x in f(null)`, anyUnion([Type.NoneInstance, Type.NullInstance])],
+                [
+                    `let f = (x as nullable number) => not x in f(null)`,
+                    anyUnion([Type.NoneInstance, Type.NullInstance]),
+                ],
+                [`let f = (x as nullable logical) => +x in f(null)`, anyUnion([Type.NoneInstance, Type.NullInstance])],
                 [`let f = (d as duration) => -d in f(#duration(1, 0, 0, 0))`, Type.DurationInstance],
                 [`let f = (d as nullable duration) => +d in f(null)`, Type.NullableDurationInstance],
                 [`let f = (d as duration) => not d in f(#duration(1, 0, 0, 0))`, Type.NoneInstance],
