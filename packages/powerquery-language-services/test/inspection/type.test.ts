@@ -156,6 +156,14 @@ describe(`Inspection - Type`, () => {
             for (const [text, expected] of [
                 ["(1 + null) ?? 7", TypeUtils.numberLiteral(false, 7)],
                 ["null / 2", Type.NullInstance],
+                [
+                    "let ratio = (a as duration, b as duration) => a / b in ratio(#duration(2,0,0,0), #duration(1,0,0,0))",
+                    Type.NumberInstance,
+                ],
+                [
+                    "let ratio = (a as duration, b as nullable duration) => a / b in ratio(#duration(2,0,0,0), null)",
+                    Type.NullableNumberInstance,
+                ],
                 ["null <= null", Type.NullInstance],
                 ['"a" & null', Type.NullInstance],
                 ["true and null", Type.NullInstance],

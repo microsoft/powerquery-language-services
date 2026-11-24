@@ -469,6 +469,10 @@ export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         Type.TypeKind.Duration,
     ],
     [
+        lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Division, Type.TypeKind.Duration),
+        Type.TypeKind.Number,
+    ],
+    [
         lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Division, Type.TypeKind.Number),
         Type.TypeKind.Duration,
     ],
