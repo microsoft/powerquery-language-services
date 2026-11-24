@@ -35,6 +35,18 @@ npm test
 Run `npm run validate:release` after building when changing package metadata, exports, release tooling, or other
 packaged-consumer behavior.
 
+### Blocking validation findings
+
+- When changing a test expectation, justify the new result from the behavior being tested, not from the current
+  implementation's output. For type inference, use the most precise result the contract supports; a test must not
+  reject a correct, more precise result.
+- Treat a review or audit finding that an assertion accepts incorrect behavior or rejects correct behavior as a
+  validation blocker, not optional cleanup. Fix the code or test and rerun the affected cases, or show with
+  independent evidence why the finding does not apply. Green CI running the disputed assertion is not that evidence.
+- While the finding is open, report the affected branch and assertion and withhold ordinary commits and pushes for
+  that branch, including comments-only follow-ups. A routine commit or push request does not waive the blocker.
+  An explicitly authorized forced checkpoint records the unresolved finding; it does not mark the change validated.
+
 ## Changelog
 
 - Do not update package changelogs as part of routine changes unless explicitly requested. Changelogs are
