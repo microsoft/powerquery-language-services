@@ -92,13 +92,20 @@ function inspectUnaryOperation(
         );
     } else if (expressionType.kind === Type.TypeKind.Null) {
         return Type.NullInstance;
-    } else if (expressionType.kind === Type.TypeKind.Number || expressionType.kind === Type.TypeKind.Duration) {
-        return inspectTypeUnaryNumberOrDuration(expressionType, operators);
-    } else if (TypeUtils.isLogical(expressionType)) {
-        return inspectTypeUnaryLogical(expressionType, operators);
-    } else {
-        return Type.NoneInstance;
     }
+
+    let result: Type.TPowerQueryType = Type.NoneInstance;
+
+    if (expressionType.kind === Type.TypeKind.Number || expressionType.kind === Type.TypeKind.Duration) {
+        result = inspectTypeUnaryNumberOrDuration(expressionType, operators);
+    } else if (TypeUtils.isLogical(expressionType)) {
+        result = inspectTypeUnaryLogical(expressionType, operators);
+    }
+
+    // An invalid non-null operand raises an error, but every unary operator propagates null.
+    return result.kind === Type.TypeKind.None && expressionType.isNullable
+        ? TypeUtils.anyUnion([Type.NoneInstance, Type.NullInstance], state.traceManager, correlationId)
+        : result;
 }
 
 function inspectTypeUnaryNumberOrDuration(
