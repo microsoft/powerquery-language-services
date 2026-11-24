@@ -35,6 +35,7 @@ export async function inspectTypeIfExpression(
     if (conditionType.kind === Type.TypeKind.Unknown) {
         result = Type.UnknownInstance;
     } else if (conditionType.kind === Type.TypeKind.Any) {
+        // Neither branch can run if every possible condition is nonlogical.
         if (
             TypeUtils.isAnyUnion(conditionType) &&
             allForAnyUnion(conditionType, (type: Type.TPowerQueryType) => !isLogicalCandidate(type))
@@ -43,6 +44,7 @@ export async function inspectTypeIfExpression(
         } else {
             result = await createAnyUnion(state, xorNode, trace.id);
 
+            // A mixed condition can reach a branch or raise an error before choosing one.
             if (TypeUtils.isAnyUnion(conditionType) && !allForAnyUnion(conditionType, isLogicalCandidate)) {
                 result = TypeUtils.anyUnion([result, Type.NoneInstance], state.traceManager, trace.id);
             }
