@@ -468,6 +468,7 @@ export const Lookup: ReadonlyMap<string, Type.TypeKind> = new Map([
         lookupKey(Type.TypeKind.Number, Constant.ArithmeticOperator.Multiplication, Type.TypeKind.Duration),
         Type.TypeKind.Duration,
     ],
+    // Two durations yield a unitless ratio; dividing a duration by a number scales it instead.
     [
         lookupKey(Type.TypeKind.Duration, Constant.ArithmeticOperator.Division, Type.TypeKind.Duration),
         Type.TypeKind.Number,
