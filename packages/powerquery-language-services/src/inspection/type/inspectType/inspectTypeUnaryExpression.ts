@@ -96,6 +96,7 @@ function inspectUnaryOperation(
 
     let result: Type.TPowerQueryType = Type.NoneInstance;
 
+    // Only numbers and durations accept unary signs; only logical values accept `not` on the non-null path.
     if (expressionType.kind === Type.TypeKind.Number || expressionType.kind === Type.TypeKind.Duration) {
         result = inspectTypeUnaryNumberOrDuration(expressionType, operators);
     } else if (TypeUtils.isLogical(expressionType)) {
