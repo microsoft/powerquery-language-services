@@ -28,9 +28,7 @@ import { SyncThemeRegistry } from "./themes";
 export type TriedFormat = PQP.Result<string, TFormatError>;
 
 export type TFormatError =
-    | PQP.CommonError.CommonError
-    | PQP.Lexer.LexError.TLexError
-    | PQP.Parser.ParseError.TParseError;
+    PQP.CommonError.CommonError | PQP.Lexer.LexError.TLexError | PQP.Parser.ParseError.TParseError;
 
 export interface FormatSettings extends PQP.Settings {
     readonly indentationLiteral: IndentationLiteral;

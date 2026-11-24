@@ -38,9 +38,7 @@ export type TExtendedTypeKind =
 
 export type TLiteral = LogicalLiteral | NumberLiteral | TextLiteral;
 export type TLiteralKind =
-    | ExtendedTypeKind.LogicalLiteral
-    | ExtendedTypeKind.NumberLiteral
-    | ExtendedTypeKind.TextLiteral;
+    ExtendedTypeKind.LogicalLiteral | ExtendedTypeKind.NumberLiteral | ExtendedTypeKind.TextLiteral;
 
 export type TAny = Any | AnyUnion;
 export type TList = List | DefinedList;

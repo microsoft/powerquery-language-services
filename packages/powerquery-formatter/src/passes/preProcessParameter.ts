@@ -44,8 +44,7 @@ function parameterizeOneNodeInForceBlockMode(
 // latter find it a better place when we got those preProcessor registration apis in the following prs
 const recordExpressionParameterPreProcessor: ParameterPreProcessor = (state: PreProcessState) => {
     const currentNode: Ast.RecordExpression | Ast.RecordLiteral = state.currentNode as
-        | Ast.RecordExpression
-        | Ast.RecordLiteral;
+        Ast.RecordExpression | Ast.RecordLiteral;
 
     const serializeParameterMap: Map<number, SerializeParameter> = state.result.parametersMap;
 

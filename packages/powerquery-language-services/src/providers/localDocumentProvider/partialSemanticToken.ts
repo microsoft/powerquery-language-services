@@ -524,8 +524,7 @@ function getLiteralTokens(
         cancellationToken?.throwIfCancelled();
 
         const literal: Ast.LiteralExpression | undefined = nodeIdMapCollection.astNodeById.get(literalId) as
-            | Ast.LiteralExpression
-            | undefined;
+            Ast.LiteralExpression | undefined;
 
         let tokenType: SemanticTokenTypes | undefined;
 

@@ -158,9 +158,7 @@ export async function readOperatorsAndOperands(
 interface NextOperatorAndOperandRead {
     readonly binOpExpressionNodeKind: Ast.NodeKind;
     readonly operandNodeKind:
-        | Ast.NodeKind.UnaryExpression
-        | Ast.NodeKind.NullablePrimitiveType
-        | Ast.NodeKind.LogicalExpression;
+        Ast.NodeKind.UnaryExpression | Ast.NodeKind.NullablePrimitiveType | Ast.NodeKind.LogicalExpression;
     readonly operatorTokenKind: Token.TokenKind;
     readonly operatorConstantKind: Constant.TBinOpExpressionOperator;
 }
