@@ -34,19 +34,18 @@ export async function inspectTypeIfExpression(
 
     if (conditionType.kind === Type.TypeKind.Unknown) {
         result = Type.UnknownInstance;
-    }
-    // Any is allowed so long as AnyUnion only contains Any or Logical.
-    else if (conditionType.kind === Type.TypeKind.Any) {
+    } else if (conditionType.kind === Type.TypeKind.Any) {
         if (
-            conditionType.extendedKind === Type.ExtendedTypeKind.AnyUnion &&
-            !allForAnyUnion(
-                conditionType,
-                (type: Type.TPowerQueryType) => type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any,
-            )
+            TypeUtils.isAnyUnion(conditionType) &&
+            allForAnyUnion(conditionType, (type: Type.TPowerQueryType) => !isLogicalCandidate(type))
         ) {
             result = Type.NoneInstance;
         } else {
             result = await createAnyUnion(state, xorNode, trace.id);
+
+            if (TypeUtils.isAnyUnion(conditionType) && !allForAnyUnion(conditionType, isLogicalCandidate)) {
+                result = TypeUtils.anyUnion([result, Type.NoneInstance], state.traceManager, trace.id);
+            }
         }
     } else if (conditionType.kind !== Type.TypeKind.Logical) {
         result = Type.NoneInstance;
@@ -67,6 +66,10 @@ export async function inspectTypeIfExpression(
     trace.exit({ [TraceConstant.Result]: TraceUtils.typeDetails(result) });
 
     return result;
+}
+
+function isLogicalCandidate(type: Type.TPowerQueryType): boolean {
+    return type.kind === Type.TypeKind.Logical || type.kind === Type.TypeKind.Any;
 }
 
 function isLiteralCondition(state: InspectTypeState, xorNode: XorNode<Ast.IfExpression>): boolean | undefined {

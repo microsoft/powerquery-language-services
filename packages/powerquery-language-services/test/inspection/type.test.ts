@@ -1751,6 +1751,16 @@ describe(`Inspection - Type`, () => {
                     expected: anyUnion([TypeUtils.numberLiteral(false, `1`), Type.LogicalInstance]),
                 }));
 
+            it(`retains both branches and the error path of a mixed condition`, async () =>
+                await assertEqualRootType({
+                    text: `let f = (b as logical) => if (if b then true else 0) then 1 else 2 in f(true)`,
+                    expected: anyUnion([
+                        TypeUtils.numberLiteral(false, 1),
+                        TypeUtils.numberLiteral(false, 2),
+                        Type.NoneInstance,
+                    ]),
+                }));
+
             for (const condition of ["true", "false", "((true))", "((false))"]) {
                 const isTrue: boolean = condition.includes("true");
 
