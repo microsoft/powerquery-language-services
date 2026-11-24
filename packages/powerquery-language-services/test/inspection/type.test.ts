@@ -120,6 +120,27 @@ describe(`Inspection - Type`, () => {
                     expected: Type.LogicalInstance,
                 }));
 
+            for (const text of ["((false)) and unreachable", "true or unreachable"]) {
+                it(`skips the right operand of ${text}`, async () =>
+                    await assertEqualRootType({
+                        text,
+                        expected: Type.LogicalInstance,
+                        settings: {
+                            ...ExtendedInspectionSettings,
+                            library: {
+                                ...ExtendedInspectionSettings.library,
+                                externalTypeResolver: () => {
+                                    throw new Error("Unreachable operand must not be inspected");
+                                },
+                            },
+                        },
+                    }));
+            }
+
+            for (const text of ['true and (error "reachable")', 'false or (error "reachable")']) {
+                it(text, async () => await assertEqualRootType({ text, expected: Type.NoneInstance }));
+            }
+
             it(`"hello" & "world"`, async () =>
                 await assertEqualRootType({
                     text: `"hello" & "world"`,
@@ -1771,7 +1792,7 @@ describe(`Inspection - Type`, () => {
             it(`if true or "a"`, async () =>
                 await assertEqualRootType({
                     text: `if true or "a"`,
-                    expected: Type.NoneInstance,
+                    expected: Type.UnknownInstance,
                 }));
 
             it(`if 1 as any then "a" as text else "b" as text`, async () =>
