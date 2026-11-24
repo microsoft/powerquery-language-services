@@ -194,6 +194,7 @@ function inspectBinaryOperation(
 
     // A plain any describes runtime alternatives, not a concrete operand kind in the operator table.
     if (leftType.kind === Type.TypeKind.Any || rightType.kind === Type.TypeKind.Any) {
+        // Expand one side at a time so two `any` operands cover every concrete pairing.
         const expandLeft: boolean = leftType.kind === Type.TypeKind.Any;
 
         return TypeUtils.anyUnion(
@@ -434,6 +435,7 @@ function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields
     return normalizedRow;
 }
 
+// `any` and `anynonnull` describe sets of values; neither is a concrete kind to look up.
 const ConcreteOperandTypes: ReadonlyArray<Type.TPrimitiveType> = Type.TypeKinds.filter(
     (kind: Type.TypeKind) => kind !== Type.TypeKind.Any && kind !== Type.TypeKind.AnyNonNull,
 ).map((kind: Type.TypeKind) => TypeUtils.primitiveType(kind === Type.TypeKind.Null, kind));
