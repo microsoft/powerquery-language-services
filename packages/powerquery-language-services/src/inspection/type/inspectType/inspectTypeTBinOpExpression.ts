@@ -192,6 +192,25 @@ function inspectBinaryOperation(
             : Type.NoneInstance;
     }
 
+    // A plain any describes runtime alternatives, not a concrete operand kind in the operator table.
+    if (leftType.kind === Type.TypeKind.Any || rightType.kind === Type.TypeKind.Any) {
+        const expandLeft: boolean = leftType.kind === Type.TypeKind.Any;
+
+        return TypeUtils.anyUnion(
+            ConcreteOperandTypes.map((operand: Type.TPrimitiveType) =>
+                inspectBinaryOperation(
+                    state,
+                    expandLeft ? operand : leftType,
+                    operatorKind,
+                    expandLeft ? rightType : operand,
+                    correlationId,
+                ),
+            ),
+            state.traceManager,
+            correlationId,
+        );
+    }
+
     const key: string = lookupKey(leftType.kind, operatorKind, rightType.kind);
 
     // A null operand is not just a nullable result: the operator and the other operand determine validity.
@@ -414,6 +433,10 @@ function normalizeTableRow(row: Type.UnorderedFields, fields: Type.OrderedFields
 
     return normalizedRow;
 }
+
+const ConcreteOperandTypes: ReadonlyArray<Type.TPrimitiveType> = Type.TypeKinds.filter(
+    (kind: Type.TypeKind) => kind !== Type.TypeKind.Any && kind !== Type.TypeKind.AnyNonNull,
+).map((kind: Type.TypeKind) => TypeUtils.primitiveType(kind === Type.TypeKind.Null, kind));
 
 // Keys: <first operand> <operator> <second operand>
 // Values: the resulting type of the binary operation expression.

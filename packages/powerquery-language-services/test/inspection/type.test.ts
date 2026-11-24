@@ -241,6 +241,14 @@ describe(`Inspection - Type`, () => {
             });
 
             describe(`union operands`, () => {
+                for (const body of ["x + 1", "1 + x"]) {
+                    it(`infers possible arithmetic outcomes for ${body}`, async () =>
+                        await assertEqualRootType({
+                            text: `let f = (x as any) => ${body} in f(2)`,
+                            expected: anyUnion([Type.NumberInstance, Type.NullInstance, Type.NoneInstance]),
+                        }));
+                }
+
                 for (const text of [`foo + 1`, `1 + foo`]) {
                     it(`preserves outer union nullability: ${text}`, async () =>
                         await assertEqualRootType({
@@ -274,7 +282,7 @@ describe(`Inspection - Type`, () => {
                     [`(if b then "one" else "two") + 1`, Type.NoneInstance],
                     [`(if b then true + 1 else 2) + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
                     [`(if b then {1}{0}? else 2) + 1`, Type.NumberInstance],
-                    [`(1 as any) + 1`, Type.NoneInstance],
+                    [`(1 as any) + 1`, anyUnion([Type.NoneInstance, Type.NullInstance, Type.NumberInstance])],
                     [`missing + 1`, Type.NoneInstance],
                     [
                         `(if b then [a = 1] else [a = 2]) & [z = "x"]`,
