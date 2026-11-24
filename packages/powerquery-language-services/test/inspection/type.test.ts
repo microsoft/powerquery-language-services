@@ -237,7 +237,7 @@ describe(`Inspection - Type`, () => {
                     [`(if b then 1 else "two") + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
                     [`(if b then "one" else "two") + 1`, Type.NoneInstance],
                     [`(if b then true + 1 else 2) + 1`, anyUnion([Type.NoneInstance, Type.NumberInstance])],
-                    [`(if b then {1}{0}? else 2) + 1`, Type.NullableNumberInstance],
+                    [`(if b then {1}{0}? else 2) + 1`, Type.NumberInstance],
                     [`(1 as any) + 1`, Type.NoneInstance],
                     [`missing + 1`, Type.NoneInstance],
                     [
@@ -899,10 +899,10 @@ describe(`Inspection - Type`, () => {
                     expected: TypeUtils.textLiteral(false, "last"),
                 }));
 
-            it(`preserves optional item nullability for a large range`, async () =>
+            it(`finds a present optional item in a large range`, async () =>
                 await assertEqualRootType({
                     text: `{0, 1..1000000000000, "tail"}{1000}?`,
-                    expected: TypeUtils.numberLiteral(true, 1000),
+                    expected: TypeUtils.numberLiteral(false, 1000),
                 }));
 
             for (const text of [
@@ -962,7 +962,7 @@ describe(`Inspection - Type`, () => {
             it(`retains errors in a selected optional item`, async () =>
                 await assertEqualRootType({
                     text: `{1..1000000000000, error "selected"}{1000000000000}?`,
-                    expected: { ...Type.NoneInstance, isNullable: true },
+                    expected: Type.NoneInstance,
                 }));
 
             it(`terminates recursive list item inference`, async () =>
@@ -2219,10 +2219,14 @@ describe(`Inspection - Type`, () => {
                             expected: TypeUtils.numberLiteral(false, `1`),
                         }));
 
-                    it(`optional item access is nullable`, async () =>
+                    for (const text of ['{42}{"x"}', '{42}{(error "index")}?', "{42}{[A=1]}", "{42}{-1}?"]) {
+                        it(text, async () => await assertEqualRootType({ text, expected: Type.NoneInstance }));
+                    }
+
+                    it(`optional access to a present item preserves its type`, async () =>
                         await assertEqualRootType({
                             text: `{1}{0}?`,
-                            expected: TypeUtils.numberLiteral(true, `1`),
+                            expected: TypeUtils.numberLiteral(false, `1`),
                         }));
 
                     it(`out-of-bounds index returns none`, async () =>
@@ -2254,7 +2258,7 @@ describe(`Inspection - Type`, () => {
                     it(`optional access does not suppress an existing element error`, async () =>
                         await assertEqualRootType({
                             text: `{error "fail"}{0}?`,
-                            expected: Type.NullableNoneInstance,
+                            expected: Type.NoneInstance,
                         }));
 
                     it(`optional access combines missing and present collection alternatives`, async () =>
