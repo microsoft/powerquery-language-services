@@ -172,6 +172,29 @@ describe("ParseBehavior", () => {
 
 type ParseOk = Awaited<ReturnType<typeof AssertTestUtils.assertGetLexParseOk>>;
 
+describe("Quoted record key recovery", () => {
+    for (const [text, expectedKey] of [
+        ['[#"key with a space" blah', '#"key with a space"'],
+        ['[#"key with a space" blah = 1]', '#"key with a space"'],
+        ['[key with a space = 1][#"key with a space" blah', '#"key with a space"'],
+        ['[#"key""with quote" blah', '#"key""with quote"'],
+    ] as const) {
+        it(`stops the key at the quoted identifier in ${text}`, async () => {
+            const result: Task.TriedLexParseTask = await TaskUtils.tryLexParse(DefaultSettings, text);
+
+            TaskUtils.assertIsParseStageParseError(result);
+
+            const quotedKeys: Ast.GeneralizedIdentifier[] = [...result.nodeIdMapCollection.astNodeById.values()].filter(
+                (node: Ast.TNode): node is Ast.GeneralizedIdentifier =>
+                    node.kind === Ast.NodeKind.GeneralizedIdentifier && node.literal.startsWith('#"'),
+            );
+
+            expect(quotedKeys.map((node: Ast.GeneralizedIdentifier) => node.literal)).to.deep.equal([expectedKey]);
+            expect(result.parseState.currentToken?.data).to.equal("blah");
+        });
+    }
+});
+
 describe("Type directives - regression", () => {
     // BUG: type directive scoping — directive on x's line incorrectly attaches to y
     xit("should not attach directive from previous variable to next variable", async () => {

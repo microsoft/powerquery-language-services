@@ -119,28 +119,37 @@ describe(`Inspection - Autocomplete - FieldAccess`, () => {
 
             it(`[key with a space = 1][|#"key with a space" blah`, async () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][|#"key with a space" blah`, {
-                    fieldNames: [],
+                    fieldNames: [`#"key with a space"`],
                     isAutocompleteAllowed: true,
-                    textEditRange: undefined,
-                    textUnderPosition: undefined,
+                    textEditRange: {
+                        start: { line: 0, character: 23 },
+                        end: { line: 0, character: 42 },
+                    },
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
             it(`[key with a space = 1][#"key| with a space" blah`, async () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][#"key| with a space" blah`, {
-                    fieldNames: [],
+                    fieldNames: [`#"key with a space"`],
                     isAutocompleteAllowed: true,
-                    textEditRange: undefined,
-                    textUnderPosition: undefined,
+                    textEditRange: {
+                        start: { line: 0, character: 23 },
+                        end: { line: 0, character: 42 },
+                    },
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
             it(`[key with a space = 1][#|"key with a space" blah`, async () => {
                 await expectInspectedFieldAccess(`[key with a space = 1][#|"key with a space" blah`, {
-                    fieldNames: [],
+                    fieldNames: [`#"key with a space"`],
                     isAutocompleteAllowed: true,
-                    textEditRange: undefined,
-                    textUnderPosition: undefined,
+                    textEditRange: {
+                        start: { line: 0, character: 23 },
+                        end: { line: 0, character: 42 },
+                    },
+                    textUnderPosition: `#"key with a space"`,
                 });
             });
 
