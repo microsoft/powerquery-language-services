@@ -308,12 +308,16 @@ describe("Parser primary-type prediction", () => {
         ]) {
             it(`preserves full parse results for ${text}`, async () => {
                 const actual: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
-                    { ...DefaultSettings, parser },
+                    { ...DefaultSettings, parser, cancellationToken: NoOpCancellationToken },
                     text,
                 );
 
                 const expected: Task.TriedLexParseTask = await TaskUtils.tryLexParse(
-                    { ...DefaultSettings, parser: { ...parser, readType: readTypeWithoutPrediction } },
+                    {
+                        ...DefaultSettings,
+                        parser: { ...parser, readType: readTypeWithoutPrediction },
+                        cancellationToken: NoOpCancellationToken,
+                    },
                     text,
                 );
 

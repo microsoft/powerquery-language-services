@@ -70,6 +70,9 @@ export class TimedCancellationToken implements ICancellationToken {
 
 export const ExpiredCancellationToken: ICancellationToken = new TimedCancellationToken(0);
 
+// Lexing and parsing share a fresh five-second deadline unless the caller supplies a token.
+export const DefaultCancellationTimeoutMs: number = 5_000;
+
 // In case you need to provide a cancellation token but don't want to support cancellation.
 export const NoOpCancellationToken: ICancellationToken = {
     isCancelled: () => false,

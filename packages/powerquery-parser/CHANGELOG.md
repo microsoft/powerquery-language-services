@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Changed: Lexing and parsing use a fresh five-second deadline by default. Supply a cancellation token to override it, or use `NoOpCancellationToken` to opt out.
 - Fixed: Normalize hexadecimal numeric literal types correctly, including signed literals.
 
 ## 5.1.0

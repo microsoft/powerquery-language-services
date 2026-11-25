@@ -3,16 +3,21 @@
 
 import "mocha";
 
+import { Mock, mock } from "node:test";
 import { expect } from "chai";
 
 import {
     CommonError,
     CounterCancellationToken,
     DefaultSettings,
+    ICancellationToken,
     Lexer,
+    Parser,
     Result,
     ResultUtils,
     Settings,
+    Task,
+    TaskUtils,
     TimedCancellationToken,
 } from "../../../src";
 
@@ -40,6 +45,59 @@ function defaultSettingsWithExpiredCancellationToken(): Settings {
 }
 
 describe("CancellationToken", () => {
+    it("shares a five-second deadline across lexing and parsing, renewed on the next call", async () => {
+        let now: number = 0;
+        const clock: Mock<typeof Date.now> = mock.method(Date, "now", () => now);
+
+        const settings: Settings = {
+            ...DefaultSettings,
+            newParseState: (snapshot: Lexer.LexerSnapshot, overrides?: Partial<Parser.ParseState>) => {
+                now += 1;
+
+                return DefaultSettings.newParseState(snapshot, overrides);
+            },
+        };
+
+        try {
+            const first: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, "1");
+            TaskUtils.assertIsParseStageOk(first);
+            const token: ICancellationToken | undefined = first.parseState.cancellationToken;
+            expect(token?.isCancelled()).to.be.false;
+            now = 4_999;
+            expect(token?.isCancelled()).to.be.false;
+            now = 5_000;
+            expect(() => token?.throwIfCancelled()).to.throw(CommonError.CancellationError);
+
+            const second: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, "2");
+            TaskUtils.assertIsParseStageOk(second);
+            expect(second.parseState.cancellationToken?.isCancelled()).to.be.false;
+        } finally {
+            clock.mock.restore();
+        }
+    });
+
+    it("reports a parse-stage timeout as a cancellation result", async () => {
+        let now: number = 0;
+        const clock: Mock<typeof Date.now> = mock.method(Date, "now", () => now);
+
+        const settings: Settings = {
+            ...DefaultSettings,
+            newParseState: (snapshot: Lexer.LexerSnapshot, overrides?: Partial<Parser.ParseState>) => {
+                now += 5_000;
+
+                return DefaultSettings.newParseState(snapshot, overrides);
+            },
+        };
+
+        try {
+            const result: Task.TriedLexParseTask = await TaskUtils.tryLexParse(settings, "1");
+            TaskUtils.assertIsParseStageCommonError(result);
+            expect(result.error.innerError).to.be.instanceOf(CommonError.CancellationError);
+        } finally {
+            clock.mock.restore();
+        }
+    });
+
     describe(`CounterCancellationToken`, () => {
         it(`throwIfCancelled should consume exactly 1 count`, () => {
             // With threshold of 3, we should be able to call throwIfCancelled 2 times
