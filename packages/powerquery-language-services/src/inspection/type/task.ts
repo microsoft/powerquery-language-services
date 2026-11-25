@@ -12,7 +12,6 @@ import { InspectionSettings, InspectionTraceConstant } from "../..";
 import { InspectTypeState, InspectTypeStateUtils } from "./inspectType/inspectTypeState";
 import { NodeScope, ScopeTypeByKey, ScopeUtils, TScopeItem } from "../scope";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { cancellationTokenOrDefault } from "../../cancellation";
 
 export type TriedScopeType = PQP.Result<ScopeTypeByKey, PQP.CommonError.CommonError>;
 
@@ -39,8 +38,7 @@ export async function tryScopeType(
         settings.initialCorrelationId,
     );
 
-    const cancellationToken: PQP.ICancellationToken = cancellationTokenOrDefault(settings.cancellationToken);
-    cancellationToken.throwIfCancelled();
+    settings.cancellationToken?.throwIfCancelled();
 
     let triedScopeTypeTaskById: TriedScopeTypeTaskById | undefined = triedScopeTypeTaskByCache.get(typeCache);
 
@@ -56,12 +54,7 @@ export async function tryScopeType(
         resultTask = ResultUtils.ensureResultAsync(
             () =>
                 inspectScopeType(
-                    InspectTypeStateUtils.fromInspectionSettings(
-                        { ...settings, cancellationToken },
-                        nodeIdMapCollection,
-                        typeCache,
-                        trace.id,
-                    ),
+                    InspectTypeStateUtils.fromInspectionSettings(settings, nodeIdMapCollection, typeCache, trace.id),
                     nodeId,
                     trace.id,
                 ),
@@ -97,8 +90,7 @@ export async function tryType(
         settings.initialCorrelationId,
     );
 
-    const cancellationToken: PQP.ICancellationToken = cancellationTokenOrDefault(settings.cancellationToken);
-    cancellationToken.throwIfCancelled();
+    settings.cancellationToken?.throwIfCancelled();
 
     let triedTypeTaskById: TriedTypeTaskById | undefined = triedTypeTaskByCache.get(typeCache);
 
@@ -114,12 +106,7 @@ export async function tryType(
         resultTask = ResultUtils.ensureResultAsync(
             () =>
                 inspectXor(
-                    InspectTypeStateUtils.fromInspectionSettings(
-                        { ...settings, cancellationToken },
-                        nodeIdMapCollection,
-                        typeCache,
-                        trace.id,
-                    ),
+                    InspectTypeStateUtils.fromInspectionSettings(settings, nodeIdMapCollection, typeCache, trace.id),
                     NodeIdMapUtils.assertXor(nodeIdMapCollection, nodeId),
                     trace.id,
                 ),

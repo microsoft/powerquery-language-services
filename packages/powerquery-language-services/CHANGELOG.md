@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- Changed: Document parsing, language-service requests, inspection, and validation use a fresh fifteen-second deadline by default. Caller-provided cancellation tokens still take precedence.
 - Fixed: Infer unary operations on nulls, durations, and union alternatives, and negate logical literal types correctly.
 - Fixed: Infer list positions and range bounds correctly when they contain hexadecimal literals.
 

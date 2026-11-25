@@ -7,7 +7,6 @@ import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common
 
 import { Autocomplete } from "./commonTypes";
 import { AutocompleteTraceConstant } from "../..";
-import { cancellationTokenOrDefault } from "../../cancellation";
 import { createTrailingToken } from "./trailingTokenUtils";
 import { InspectionSettings } from "../../inspectionSettings";
 import { TActiveNode } from "../activeNode";
@@ -34,7 +33,6 @@ export async function autocomplete(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        cancellationToken: cancellationTokenOrDefault(settings.cancellationToken),
         initialCorrelationId: trace.id,
     };
 

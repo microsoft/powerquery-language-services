@@ -16,7 +16,6 @@ import { ActiveNode, ActiveNodeUtils, TActiveNode } from "../activeNode";
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { InvokeExpression, TriedInvokeExpression, tryInvokeExpression } from "./invokeExpression";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
-import { cancellationTokenOrDefault } from "../../cancellation";
 import { InspectionSettings } from "../../inspectionSettings";
 import { InspectionTraceConstant } from "../..";
 
@@ -52,7 +51,6 @@ export async function tryCurrentInvokeExpression(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        cancellationToken: cancellationTokenOrDefault(settings.cancellationToken),
         initialCorrelationId: trace.id,
     };
 

@@ -19,7 +19,6 @@ import { TriedExpectedType, tryExpectedType } from "./expectedType";
 import { TriedScopeType, tryScopeType } from "./type";
 import { TypeCache, TypeCacheUtils } from "./typeCache";
 import { autocomplete } from "./autocomplete";
-import { cancellationTokenOrDefault } from "../cancellation";
 import { Inspected } from "./commonTypes";
 import { InspectionSettings } from "../inspectionSettings";
 import { TriedCurrentInvokeExpression } from "./invokeExpression";
@@ -40,10 +39,6 @@ export class InspectionInstance implements Inspected {
     ) {}
 
     public tryNodeScope(id: number): Promise<TriedNodeScope> {
-        return this.tryNodeScopeWithToken(id, cancellationTokenOrDefault(this.settings.cancellationToken));
-    }
-
-    private tryNodeScopeWithToken(id: number, cancellationToken: PQP.ICancellationToken): Promise<TriedNodeScope> {
         const trace: Trace = this.settings.traceManager.entry(
             InspectionTraceConstant.Inspect,
             tryNodeScope.name,
@@ -52,7 +47,6 @@ export class InspectionInstance implements Inspected {
 
         const updatedSettings: InspectionSettings = {
             ...this.settings,
-            cancellationToken,
             initialCorrelationId: trace.id,
         };
 
@@ -72,9 +66,6 @@ export class InspectionInstance implements Inspected {
     public async collectAllIdentifiersBeneath(
         valueCreator: Ast.Identifier | Ast.GeneralizedIdentifier,
     ): Promise<Array<Ast.Identifier | Ast.GeneralizedIdentifier>> {
-        const cancellationToken: PQP.ICancellationToken = cancellationTokenOrDefault(this.settings.cancellationToken);
-        cancellationToken.throwIfCancelled();
-
         const astNodeById: AstNodeById = this.nodeIdMapCollection.astNodeById;
         const childIdsById: ChildIdsById = this.nodeIdMapCollection.childIdsById;
         const originLiteral: string = valueCreator.literal;
@@ -93,8 +84,6 @@ export class InspectionInstance implements Inspected {
             let currentTier: ReadonlyArray<number> = childIdsById.get(current.id) ?? [];
 
             while (currentTier.length) {
-                cancellationToken.throwIfCancelled();
-
                 const toBePushed: number[] = currentTier.filter(
                     (one: number) => allIdentifierIdSet.has(one) || allGeneralizedIdentifierIdSet.has(one),
                 );
@@ -133,11 +122,9 @@ export class InspectionInstance implements Inspected {
                             oneIdentifier.identifierContextKind === Ast.IdentifierContextKind.Value,
                     )
                     .map((oneIdentifier: Ast.Identifier | Ast.GeneralizedIdentifier) =>
-                        this.tryNodeScopeWithToken(oneIdentifier.id, cancellationToken),
+                        this.tryNodeScope(oneIdentifier.id),
                     ),
             );
-
-            cancellationToken.throwIfCancelled();
 
             filteredIdentifierNodes = filteredIdentifierNodes.filter(
                 (oneIdentifierNode: Ast.Identifier | Ast.GeneralizedIdentifier) => {
@@ -172,7 +159,7 @@ export class InspectionInstance implements Inspected {
     }
 }
 
-export function inspect(
+export async function inspect(
     settings: InspectionSettings,
     parseState: PQP.Parser.ParseState,
     parseError: PQP.Parser.ParseError.ParseError | undefined,
@@ -180,24 +167,6 @@ export function inspect(
     // If a TypeCache is given, then potentially add to its values and include it as part of the return,
     // Else create a new TypeCache and include it in the return.
     typeCache: TypeCache = TypeCacheUtils.emptyCache(),
-): Promise<Inspected> {
-    return inspectWithToken(
-        settings,
-        parseState,
-        parseError,
-        position,
-        typeCache,
-        cancellationTokenOrDefault(settings.cancellationToken),
-    );
-}
-
-async function inspectWithToken(
-    settings: InspectionSettings,
-    parseState: PQP.Parser.ParseState,
-    parseError: PQP.Parser.ParseError.ParseError | undefined,
-    position: Position,
-    typeCache: TypeCache,
-    cancellationToken: PQP.ICancellationToken,
 ): Promise<Inspected> {
     const trace: Trace = settings.traceManager.entry(
         InspectionTraceConstant.Inspect,
@@ -207,7 +176,6 @@ async function inspectWithToken(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
-        cancellationToken,
         initialCorrelationId: trace.id,
     };
 
@@ -253,7 +221,7 @@ async function inspectWithToken(
     }
 
     const result: InspectionInstance = new InspectionInstance(
-        { ...settings, initialCorrelationId: trace.id },
+        updatedSettings,
         nodeIdMapCollection,
         activeNode,
         await autocomplete(updatedSettings, parseState, typeCache, activeNode, parseError),
@@ -282,11 +250,8 @@ export async function tryInspect(
         settings.initialCorrelationId,
     );
 
-    const cancellationToken: PQP.ICancellationToken = cancellationTokenOrDefault(settings.cancellationToken);
-
     const updatedSettings: InspectionSettings = {
         ...settings,
-        cancellationToken,
         initialCorrelationId: trace.id,
     };
 
@@ -307,14 +272,7 @@ export async function tryInspect(
     }
 
     const result: PQP.OkResult<Promise<Inspection.Inspected>> = PQP.ResultUtils.ok(
-        inspectWithToken(
-            { ...settings, initialCorrelationId: trace.id },
-            parseState,
-            parseError,
-            position,
-            typeCache,
-            cancellationToken,
-        ),
+        inspect(updatedSettings, parseState, parseError, position, typeCache),
     );
 
     trace.exit({ [TraceConstant.IsError]: false });

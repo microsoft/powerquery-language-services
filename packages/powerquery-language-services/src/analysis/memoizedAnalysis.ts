@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
+import { CommonError, ICancellationToken, Result } from "@microsoft/powerquery-parser";
 import { Position } from "vscode-languageserver-types";
 
 import {
@@ -10,9 +10,9 @@ import {
     TActiveNode,
     TriedCurrentInvokeExpression,
     TriedNodeScope,
+    TriedScopeType,
 } from "../inspection";
 import { AnalysisBase } from "./analysisBase";
-import { isCancellationError } from "../cancellation";
 
 // Adds caching to AnalysisBase.
 export class MemoizedAnalysis extends AnalysisBase {
@@ -22,13 +22,14 @@ export class MemoizedAnalysis extends AnalysisBase {
     private readonly currentInvokeExpressionCache: Map<string, Promise<TriedCurrentInvokeExpression | undefined>> =
         new Map();
     private readonly nodeScopeCache: Map<number | undefined, Promise<TriedNodeScope | undefined>> = new Map();
-    // Scope types resolve lazily using the request's token, so do not memoize them across requests.
+    private readonly scopeTypeCache: Map<number | undefined, Promise<TriedScopeType | undefined>> = new Map();
 
     public override dispose(): void {
         this.activeNodeCache.clear();
         this.autocompleteCache.clear();
         this.currentInvokeExpressionCache.clear();
         this.nodeScopeCache.clear();
+        this.scopeTypeCache.clear();
 
         super.dispose();
     }
@@ -52,7 +53,6 @@ export class MemoizedAnalysis extends AnalysisBase {
             this.autocompleteCache,
             () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
             () => super.inspectAutocomplete(activeNode, correlationId, cancellationToken),
-            (value: Autocomplete | undefined) => value !== undefined && Object.values(value).some(isCancelledResult),
         );
     }
 
@@ -65,7 +65,6 @@ export class MemoizedAnalysis extends AnalysisBase {
             this.currentInvokeExpressionCache,
             () => `${position.line}:${position.character}`,
             () => super.inspectCurrentInvokeExpression(position, correlationId, cancellationToken),
-            isCancelledResult,
         );
     }
 
@@ -78,7 +77,18 @@ export class MemoizedAnalysis extends AnalysisBase {
             this.nodeScopeCache,
             () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
             () => super.inspectNodeScope(activeNode, correlationId, cancellationToken),
-            isCancelledResult,
+        );
+    }
+
+    protected override inspectScopeType(
+        activeNode: TActiveNode,
+        correlationId: number,
+        cancellationToken?: ICancellationToken,
+    ): Promise<TriedScopeType | undefined> {
+        return this.getOrCreate(
+            this.scopeTypeCache,
+            () => (ActiveNodeUtils.isPositionInBounds(activeNode) ? activeNode.ancestry[0]?.node?.id : undefined),
+            () => super.inspectScopeType(activeNode, correlationId, cancellationToken),
         );
     }
 
@@ -88,7 +98,6 @@ export class MemoizedAnalysis extends AnalysisBase {
         cache: Map<Key, Promise<Value>>,
         cacheKeyFactory: () => Key,
         valueFactory: () => Promise<Value>,
-        wasCancelled?: (value: Value) => boolean,
     ): Promise<Value> {
         const cacheKey: Key = cacheKeyFactory();
         let result: Promise<Value> | undefined = cache.get(cacheKey);
@@ -100,24 +109,6 @@ export class MemoizedAnalysis extends AnalysisBase {
         result = valueFactory();
         cache.set(cacheKey, result);
 
-        try {
-            const value: Value = await result;
-
-            if (wasCancelled?.(value) && cache.get(cacheKey) === result) {
-                cache.delete(cacheKey);
-            }
-
-            return value;
-        } catch (caught: unknown) {
-            if (isCancellationError(caught) && cache.get(cacheKey) === result) {
-                cache.delete(cacheKey);
-            }
-
-            throw caught;
-        }
+        return result;
     }
-}
-
-function isCancelledResult(result: Result<unknown, CommonError.CommonError> | undefined): boolean {
-    return result !== undefined && ResultUtils.isError(result) && isCancellationError(result.error);
 }

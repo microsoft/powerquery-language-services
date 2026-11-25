@@ -7,8 +7,6 @@ import { Range, TextEdit } from "vscode-languageserver-types";
 import { ResultUtils } from "@microsoft/powerquery-parser";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { cancellationTokenOrDefault } from "./cancellation";
-
 export function tryFormat(
     document: TextDocument,
     settings: PQF.FormatSettings,
@@ -17,7 +15,6 @@ export function tryFormat(
         const formatSettings: PQF.FormatSettings = {
             ...PQF.DefaultSettings,
             ...settings,
-            cancellationToken: cancellationTokenOrDefault(settings.cancellationToken),
         };
 
         const triedFormat: PQF.TriedFormat = await PQF.tryFormat(formatSettings, document.getText());
@@ -27,7 +24,7 @@ export function tryFormat(
         }
         // If an unhandled exception was returned.
         else if (PQP.CommonError.isCommonError(triedFormat.error)) {
-            throw triedFormat.error;
+            throw triedFormat;
         }
         // Else a lexer or parser error was returned and should be ignored.
         else {

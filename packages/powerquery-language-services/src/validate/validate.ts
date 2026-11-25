@@ -7,8 +7,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { Trace } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
 
 import { Analysis, AnalysisSettings, AnalysisUtils } from "../analysis";
-import { CommonError, ICancellationToken, Result, ResultUtils } from "@microsoft/powerquery-parser";
-import { cancellationTokenOrDefault } from "../cancellation";
+import { CommonError, Result, ResultUtils } from "@microsoft/powerquery-parser";
 import { TypeCache } from "../inspection";
 import { validateDuplicateIdentifiers } from "./validateDuplicateIdentifiers";
 import { validateFunctionExpression } from "./validateFunctionExpression";
@@ -25,10 +24,6 @@ export function validate(
     validationSettings: ValidationSettings,
 ): Promise<Result<ValidateOk | undefined, CommonError.CommonError>> {
     return ResultUtils.ensureResultAsync(async () => {
-        const cancellationToken: ICancellationToken = cancellationTokenOrDefault(validationSettings.cancellationToken);
-
-        cancellationToken.throwIfCancelled();
-
         const trace: Trace = validationSettings.traceManager.entry(
             ValidationTraceConstant.Validation,
             validate.name,
@@ -37,25 +32,12 @@ export function validate(
 
         const updatedSettings: ValidationSettings = {
             ...validationSettings,
-            cancellationToken,
             initialCorrelationId: trace.id,
         };
 
         const analysis: Analysis = AnalysisUtils.analysis(textDocument, analysisSettings);
-        const triedParseState: Result<ParseState | undefined, CommonError.CommonError> = await analysis.getParseState();
-
-        const triedParseError: Result<ParseError.ParseError | undefined, CommonError.CommonError> =
-            await analysis.getParseError();
-
-        if (ResultUtils.isError(triedParseState)) {
-            throw triedParseState.error;
-        } else if (ResultUtils.isError(triedParseError)) {
-            throw triedParseError.error;
-        }
-
-        cancellationToken.throwIfCancelled();
-        const parseState: ParseState | undefined = triedParseState.value;
-        const parseError: ParseError.ParseError | undefined = triedParseError.value;
+        const parseState: ParseState | undefined = ResultUtils.assertOk(await analysis.getParseState());
+        const parseError: ParseError.ParseError | undefined = ResultUtils.assertOk(await analysis.getParseError());
 
         if (parseState === undefined) {
             trace.exit();
@@ -84,10 +66,10 @@ export function validate(
         const typeCache: TypeCache = analysis.getTypeCache();
 
         if (validationSettings.checkInvokeExpressions && nodeIdMapCollection) {
-            functionExpressionDiagnostics = validateFunctionExpression(updatedSettings, nodeIdMapCollection);
+            functionExpressionDiagnostics = validateFunctionExpression(validationSettings, nodeIdMapCollection);
 
             invokeExpressionDiagnostics = await validateInvokeExpression(
-                updatedSettings,
+                validationSettings,
                 nodeIdMapCollection,
                 typeCache,
             );
@@ -98,7 +80,7 @@ export function validate(
 
         if (validationSettings.checkUnknownIdentifiers && nodeIdMapCollection) {
             unknownIdentifiersDiagnostics = await validateUnknownIdentifiers(
-                updatedSettings,
+                validationSettings,
                 nodeIdMapCollection,
                 typeCache,
             );
@@ -108,7 +90,12 @@ export function validate(
 
         const result: ValidateOk = {
             diagnostics: [
-                ...validateDuplicateIdentifiers(textDocument, nodeIdMapCollection, updatedSettings, cancellationToken),
+                ...validateDuplicateIdentifiers(
+                    textDocument,
+                    nodeIdMapCollection,
+                    updatedSettings,
+                    validationSettings.cancellationToken,
+                ),
                 ...(await validateParse(parseError, updatedSettings)),
                 ...functionExpressionDiagnostics,
                 ...invokeExpressionDiagnostics,
@@ -117,7 +104,6 @@ export function validate(
             hasSyntaxError: parseError !== undefined,
         };
 
-        cancellationToken.throwIfCancelled();
         trace.exit();
 
         return result;
