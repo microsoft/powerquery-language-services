@@ -168,7 +168,7 @@ async function nthNodeEarlyExit(state: NthNodeOfKindState, _: Ast.TNode): Promis
     return state.nthCounter === state.nthRequired;
 }
 
-function validateNodeIdMapCollection(nodeIdMapCollection: NodeIdMap.Collection, root: TXorNode): void {
+export function validateNodeIdMapCollection(nodeIdMapCollection: NodeIdMap.Collection, root: TXorNode): void {
     const astNodeIds: Set<number> = new Set(nodeIdMapCollection.astNodeById.keys());
     const contextNodeIds: Set<number> = new Set(nodeIdMapCollection.contextNodeById.keys());
     const allNodeIds: Set<number> = new Set([...astNodeIds].concat([...contextNodeIds]));

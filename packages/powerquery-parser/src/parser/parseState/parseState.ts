@@ -16,9 +16,16 @@ export interface ParseState {
     readonly locale: string;
     readonly parseBehavior: ParseBehavior;
     readonly traceManager: TraceManager;
+    speculativeWorkBudget: SpeculativeWorkBudget;
     contextState: ParseContext.State;
     currentContextNode: ParseContext.TNode | undefined;
     currentToken: Token.Token | undefined;
     currentTokenKind: Token.TokenKind | undefined;
     tokenIndex: number;
+}
+
+export interface SpeculativeWorkBudget {
+    readonly limit: number;
+    remaining: number;
+    depth: number;
 }

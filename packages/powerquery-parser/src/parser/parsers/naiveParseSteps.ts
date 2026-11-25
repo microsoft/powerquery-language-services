@@ -3648,6 +3648,10 @@ async function readWrapped<
 export function readToken(state: ParseState): string {
     state.cancellationToken?.throwIfCancelled();
 
+    if (state.speculativeWorkBudget.depth > 0) {
+        ParseStateUtils.consumeSpeculativeWork(state);
+    }
+
     const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
 
     Assert.isFalse(state.tokenIndex >= tokens.length, `index is beyond tokens.length`, {

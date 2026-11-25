@@ -17,6 +17,7 @@ export type TInnerParseError =
     | InvalidCatchFunctionError
     | InvalidPrimitiveTypeError
     | RequiredParameterAfterOptionalParameterError
+    | SpeculativeWorkLimitExceededError
     | UnterminatedSequence
     | UnusedTokensRemainError;
 
@@ -38,6 +39,24 @@ export class ParseError extends Error {
         super(innerError.message);
         Object.setPrototypeOf(this, ParseError.prototype);
     }
+}
+
+export class SpeculativeWorkLimitExceededError extends Error {
+    constructor(
+        readonly limit: number,
+        readonly token: Token.Token | undefined,
+        locale: string,
+    ) {
+        super(Localization.error_parse_speculativeWorkLimit(LocalizationUtils.getLocalizationTemplates(locale), limit));
+        Object.setPrototypeOf(this, SpeculativeWorkLimitExceededError.prototype);
+    }
+}
+
+export function isSpeculativeWorkLimitExceeded(error: unknown): boolean {
+    return (
+        error instanceof SpeculativeWorkLimitExceededError ||
+        (error instanceof ParseError && error.innerError instanceof SpeculativeWorkLimitExceededError)
+    );
 }
 
 export class ExpectedCsvContinuationError extends Error {
@@ -208,6 +227,7 @@ export function isTInnerParseError(error: unknown): error is TInnerParseError {
         error instanceof InvalidCatchFunctionError ||
         error instanceof InvalidPrimitiveTypeError ||
         error instanceof RequiredParameterAfterOptionalParameterError ||
+        error instanceof SpeculativeWorkLimitExceededError ||
         error instanceof UnterminatedSequence ||
         error instanceof UnusedTokensRemainError
     );
@@ -222,7 +242,7 @@ export function tokenFrom(error: TInnerParseError): Token.Token | undefined {
         error instanceof ExpectedTokenKindError
     ) {
         return error.foundToken?.token;
-    } else if (error instanceof InvalidPrimitiveTypeError) {
+    } else if (error instanceof InvalidPrimitiveTypeError || error instanceof SpeculativeWorkLimitExceededError) {
         return error.token;
     } else if (error instanceof RequiredParameterAfterOptionalParameterError) {
         return error.missingOptionalToken;

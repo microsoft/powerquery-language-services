@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { Assert, StringUtils } from "../common";
+import { DefaultTemplates, ILocalizationTemplates } from "./templates";
 import { SequenceKind, TokenWithColumnNumber } from "../parser/error";
-import { ILocalizationTemplates } from "./templates";
 import { LexError } from "../lexer";
 import { ParseError } from "../parser";
 import { Token } from "../language";
@@ -48,6 +48,7 @@ interface ILocalization {
     readonly error_parse_invalidCatchFunction: (templates: ILocalizationTemplates) => string;
     readonly error_parse_invalidPrimitiveType: (templates: ILocalizationTemplates, token: Token.Token) => string;
     readonly error_parse_requiredParameterAfterOptional: (templates: ILocalizationTemplates) => string;
+    readonly error_parse_speculativeWorkLimit: (templates: ILocalizationTemplates, limit: number) => string;
     readonly error_parse_unterminated_sequence: (
         templates: ILocalizationTemplates,
         sequenceKind: SequenceKind,
@@ -188,6 +189,13 @@ export function localizeTokenKind(localizationTemplates: ILocalizationTemplates,
 }
 
 export const Localization: ILocalization = {
+    error_parse_speculativeWorkLimit: (templates: ILocalizationTemplates, limit: number) =>
+        StringUtils.assertGetFormatted(
+            Assert.asDefined(
+                templates.error_parse_speculativeWorkLimit ?? DefaultTemplates.error_parse_speculativeWorkLimit,
+            ),
+            new Map([["limit", limit.toString()]]),
+        ),
     error_common_cancellationError: (templates: ILocalizationTemplates, reason: string) =>
         StringUtils.assertGetFormatted(templates.error_common_cancellationError, new Map([["reason", reason]])),
 

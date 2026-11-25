@@ -598,6 +598,8 @@ describe(`nodeIdMapUtils`, () => {
             expect(maps.childIdsById.get(parent.id)).to.deep.equal([retained.id]);
             expect([...maps.leafIds]).to.deep.equal([retained.id]);
             expect(parent.attributeCounter).to.equal(1);
+            expect(maps.rightMostLeaf).to.equal(retained);
+            expect(state.contextState.root).to.equal(parent);
             expect(state.currentContextNode).to.equal(parent);
             expect(state.contextState.idCounter).to.equal(checkpoint.contextStateIdCounter);
             expect(state.tokenIndex).to.equal(checkpoint.tokenIndex);

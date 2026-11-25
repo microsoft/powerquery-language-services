@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../context";
 import { ParseError, ParseSettings } from "..";
 import { ParseOk, Parser, ParseStateCheckpoint, TriedParse } from "./parser";
-import { ParseState, ParseStateUtils } from "../parseState";
+import { ParseState, ParseStateUtils, SpeculativeWorkBudget } from "../parseState";
 import { Ast } from "../../language";
 import { LexerSnapshot } from "../../lexer";
 import { ParseBehavior } from "../parseBehavior";
@@ -19,9 +19,24 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
         parseSettings.initialCorrelationId,
     );
 
+    const speculativeWorkBudget: SpeculativeWorkBudget = ParseStateUtils.newSpeculativeWorkBudget(
+        lexerSnapshot.tokens.length,
+        parseSettings.maximumSpeculativeWork,
+    );
+
     const updatedSettings: ParseSettings = {
         ...parseSettings,
         initialCorrelationId: trace.id,
+        newParseState: (snapshot: LexerSnapshot, overrides?: Partial<ParseState>): ParseState => {
+            const state: ParseState = parseSettings.newParseState(snapshot, {
+                ...overrides,
+                speculativeWorkBudget,
+            });
+
+            state.speculativeWorkBudget = speculativeWorkBudget;
+
+            return state;
+        },
     };
 
     const result: TriedParse = updatedSettings.parserEntryPoint
@@ -51,6 +66,11 @@ export async function checkpoint(state: ParseState): Promise<ParseStateCheckpoin
         tokenIndex: state.tokenIndex,
         contextStateIdCounter: state.contextState.idCounter,
         contextNodeId: state.currentContextNode?.id,
+        contextSnapshot: {
+            node: state.currentContextNode === undefined ? undefined : { ...state.currentContextNode },
+            root: state.contextState.root,
+            rightMostLeaf: state.contextState.nodeIdMapCollection.rightMostLeaf,
+        },
     };
 }
 
@@ -92,6 +112,16 @@ export async function restoreCheckpoint(state: ParseState, checkpoint: ParseStat
         );
     } else {
         state.currentContextNode = undefined;
+    }
+
+    if (checkpoint.contextSnapshot !== undefined) {
+        contextState.root = checkpoint.contextSnapshot.root;
+        const mutableCollection: TypeScriptUtils.StripReadonly<NodeIdMap.Collection> = nodeIdMapCollection;
+        mutableCollection.rightMostLeaf = checkpoint.contextSnapshot.rightMostLeaf;
+
+        if (state.currentContextNode !== undefined && checkpoint.contextSnapshot.node !== undefined) {
+            Object.assign(state.currentContextNode, checkpoint.contextSnapshot.node);
+        }
     }
 }
 
@@ -203,6 +233,12 @@ async function tryParseExpressionDocumentOrSectionDocument(
         return parseExpressionResult;
     }
 
+    if (ParseError.isSpeculativeWorkLimitExceeded(parseExpressionResult.error.innerError)) {
+        trace.exit();
+
+        return ResultUtils.error(parseExpressionResult.error.innerError);
+    }
+
     // If the expression parse failed, try parsing as a section document.
     const parseSectionResult: InternalTriedParse = await tryParseSectionDocument(parseSettings, lexerSnapshot);
 
@@ -210,6 +246,12 @@ async function tryParseExpressionDocumentOrSectionDocument(
         trace.exit();
 
         return parseSectionResult;
+    }
+
+    if (ParseError.isSpeculativeWorkLimitExceeded(parseSectionResult.error.innerError)) {
+        trace.exit();
+
+        return ResultUtils.error(parseSectionResult.error.innerError);
     }
 
     // If both parse attempts fail then return the instance with the most tokens consumed.

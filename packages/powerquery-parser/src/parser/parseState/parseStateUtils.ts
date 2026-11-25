@@ -5,11 +5,11 @@ import { ArrayUtils, Assert, CommonError, MapUtils } from "../../common";
 import { Ast, Constant, Token } from "../../language";
 import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils, ParseError, TXorNode, XorNodeUtils } from "..";
 import { NoOpTraceManagerInstance, Trace } from "../../common/trace";
+import { ParseState, SpeculativeWorkBudget } from "./parseState";
 import { DefaultLocale } from "../../localization";
 import { Disambiguation } from "../disambiguation";
 import { LexerSnapshot } from "../../lexer";
 import { ParseBehavior } from "../parseBehavior";
-import { ParseState } from "./parseState";
 import { SequenceKind } from "../error";
 
 export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<ParseState>): ParseState {
@@ -37,12 +37,40 @@ export function newState(lexerSnapshot: LexerSnapshot, overrides?: Partial<Parse
         locale: overrides?.locale ?? DefaultLocale,
         cancellationToken: overrides?.cancellationToken,
         traceManager: overrides?.traceManager ?? NoOpTraceManagerInstance,
+        speculativeWorkBudget:
+            overrides?.speculativeWorkBudget ?? newSpeculativeWorkBudget(lexerSnapshot.tokens.length),
         contextState,
         currentToken,
         currentContextNode,
         currentTokenKind,
         tokenIndex,
     };
+}
+
+export function newSpeculativeWorkBudget(tokenCount: number, maximumWork?: number): SpeculativeWorkBudget {
+    const limit: number = maximumWork ?? Math.max(4096, 64 * tokenCount);
+
+    Assert.isTrue(
+        Number.isSafeInteger(limit) && limit >= 0,
+        "speculative work limit must be a non-negative safe integer",
+    );
+
+    return { limit, remaining: limit, depth: 0 };
+}
+
+export function consumeSpeculativeWork(state: ParseState): void {
+    state.cancellationToken?.throwIfCancelled();
+    const budget: SpeculativeWorkBudget = state.speculativeWorkBudget;
+
+    if (budget.remaining === 0) {
+        throw new ParseError.SpeculativeWorkLimitExceededError(
+            budget.limit,
+            state.lexerSnapshot.tokens[state.tokenIndex],
+            state.locale,
+        );
+    }
+
+    budget.remaining -= 1;
 }
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.

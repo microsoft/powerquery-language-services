@@ -160,6 +160,7 @@ export interface ILocalizationTemplates {
     readonly error_parse_invalidCatchFunction: string;
     readonly error_parse_invalidPrimitiveType: string;
     readonly error_parse_requiredParameterAfterOptional: string;
+    readonly error_parse_speculativeWorkLimit?: string;
     readonly error_parse_unterminated_sequence_bracket: string;
     readonly error_parse_unterminated_sequence_parenthesis: string;
     readonly error_parse_unusedTokens: string;

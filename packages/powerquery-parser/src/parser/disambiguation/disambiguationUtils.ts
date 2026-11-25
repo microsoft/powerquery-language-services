@@ -9,7 +9,7 @@ import {
     TAmbiguousBracketNode,
     TAmbiguousParenthesisNode,
 } from "./disambiguation";
-import { ArrayUtils, Assert, CommonError, Result, ResultUtils, TypeScriptUtils } from "../../common";
+import { ArrayUtils, Assert, CommonError, Result, ResultUtils } from "../../common";
 import { Ast, AstUtils, Constant, Token } from "../../language";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
@@ -17,9 +17,8 @@ import { Trace, TraceConstant } from "../../common/trace";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { ParseError } from "..";
 
-// For each given parse function it'll create a deep copy of the state then parse with the function.
-// Mutates the given state to whatever parse state which matched the most amount of tokens.
-// Ties are resolved by the ordering of the given parse functions.
+// Try alternatives in place, keeping only their scores. Replay the winner if it wasn't last.
+// Prefer the most tokens consumed, then success, then callback order.
 export async function readAmbiguous<T extends Ast.TNode>(
     state: ParseState,
     parser: Parser,
@@ -37,42 +36,65 @@ export async function readAmbiguous<T extends Ast.TNode>(
 
     ArrayUtils.assertNonZeroLength(parseCallbacks, "requires at least one parse function");
 
-    let bestMatch: AmbiguousParse<T> | undefined = undefined;
+    const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
+    let bestIndex: number = 0;
+    let bestTokenIndex: number = -1;
+    let bestIsOk: boolean = false;
 
-    for (const parseCallback of parseCallbacks) {
-        // eslint-disable-next-line no-await-in-loop
-        const variantState: ParseState = await parser.copyState(state);
-
-        let node: T | undefined;
-        let variantResult: Result<T, ParseError.ParseError>;
+    async function attempt(index: number): Promise<Result<T, ParseError.ParseError>> {
+        ParseStateUtils.consumeSpeculativeWork(state);
+        state.speculativeWorkBudget.depth += 1;
 
         try {
-            // eslint-disable-next-line no-await-in-loop
-            node = await parseCallback(variantState, parser, trace.id);
-            variantResult = ResultUtils.ok(node);
+            return ResultUtils.ok(await ArrayUtils.assertGet(parseCallbacks, index)(state, parser, trace.id));
         } catch (error: unknown) {
             Assert.isInstanceofError(error);
             CommonError.throwIfCancellationError(error);
 
-            if (!ParseError.isTInnerParseError(error)) {
+            if (ParseError.isSpeculativeWorkLimitExceeded(error)) {
                 throw error;
             }
 
-            variantResult = ResultUtils.error(new ParseError.ParseError(error, variantState));
+            if (ParseError.isParseError(error)) {
+                return ResultUtils.error(error);
+            } else if (ParseError.isTInnerParseError(error)) {
+                return ResultUtils.error(new ParseError.ParseError(error, state));
+            }
+
+            throw error;
+        } finally {
+            state.speculativeWorkBudget.depth -= 1;
         }
-
-        const candiate: AmbiguousParse<T> = {
-            parseState: variantState,
-            result: variantResult,
-        };
-
-        bestMatch = bestAmbiguousParseMatch<T>(bestMatch, candiate);
     }
 
-    Assert.isDefined(bestMatch);
+    for (let index: number = 0; index < parseCallbacks.length; index += 1) {
+        if (index > 0) {
+            // eslint-disable-next-line no-await-in-loop
+            await parser.restoreCheckpoint(state, checkpoint);
+        }
+
+        // eslint-disable-next-line no-await-in-loop
+        const result: Result<T, ParseError.ParseError> = await attempt(index);
+        const isOk: boolean = ResultUtils.isOk(result);
+
+        if (state.tokenIndex > bestTokenIndex || (state.tokenIndex === bestTokenIndex && isOk && !bestIsOk)) {
+            bestIndex = index;
+            bestTokenIndex = state.tokenIndex;
+            bestIsOk = isOk;
+        }
+
+        if (index === parseCallbacks.length - 1 && bestIndex === index) {
+            trace.exit();
+
+            return { parseState: state, result };
+        }
+    }
+
+    await parser.restoreCheckpoint(state, checkpoint);
+    const result: Result<T, ParseError.ParseError> = await attempt(bestIndex);
     trace.exit();
 
-    return bestMatch;
+    return { parseState: state, result };
 }
 
 // Peeks at the token stream and either performs an explicit read or an ambiguous read.
@@ -213,6 +235,12 @@ export async function disambiguateParenthesis(
     let offsetTokenIndex: number = initialTokenIndex + 1;
 
     while (offsetTokenIndex < totalTokens) {
+        state.cancellationToken?.throwIfCancelled();
+
+        if (state.speculativeWorkBudget.depth > 0) {
+            ParseStateUtils.consumeSpeculativeWork(state);
+        }
+
         const offsetTokenKind: Token.TokenKind = ArrayUtils.assertGet(tokens, offsetTokenIndex).kind;
 
         if (offsetTokenKind === Token.TokenKind.LeftParenthesis) {
@@ -229,6 +257,7 @@ export async function disambiguateParenthesis(
             if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
                 // eslint-disable-next-line no-await-in-loop
                 const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
+                ParseStateUtils.consumeSpeculativeWork(state);
                 unsafeMoveTo(state, offsetTokenIndex + 2);
 
                 try {
@@ -237,6 +266,10 @@ export async function disambiguateParenthesis(
                 } catch (error: unknown) {
                     Assert.isInstanceofError(error);
                     CommonError.throwIfCancellationError(error);
+
+                    if (ParseError.isSpeculativeWorkLimitExceeded(error) || !ParseError.isTInnerParseError(error)) {
+                        throw error;
+                    }
 
                     // eslint-disable-next-line no-await-in-loop
                     await parser.restoreCheckpoint(state, checkpoint);
@@ -308,6 +341,12 @@ export function disambiguateBracket(
         offsetTokenIndex += 1;
 
         while (offsetTokenIndex < totalTokens) {
+            state.cancellationToken?.throwIfCancelled();
+
+            if (state.speculativeWorkBudget.depth > 0) {
+                ParseStateUtils.consumeSpeculativeWork(state);
+            }
+
             offsetTokenKind = ArrayUtils.assertGet(tokens, offsetTokenIndex).kind;
 
             if (offsetTokenKind === Token.TokenKind.Equal) {
@@ -331,7 +370,7 @@ const enum DisambiguationTraceConstant {
     Disambiguation = "Disambiguation",
 }
 
-// Copy the current state and attempt to read for each of the following:
+// Checkpoint the current state and attempt to read for each of the following:
 //  FieldProjection, FieldSelection, and RecordExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
 async function thoroughReadAmbiguousBracket(
@@ -358,7 +397,7 @@ async function thoroughReadAmbiguousBracket(
     return ambiguousBracket;
 }
 
-// Copy the current state and attempt to read for each of the following:
+// Checkpoint the current state and attempt to read for each of the following:
 //  FunctionExpression, ParenthesisExpression.
 // Mutates the given state with the read attempt which matched the most tokens.
 function thoroughReadAmbiguousParenthesis(
@@ -391,8 +430,6 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
 
     const ambiguousParse: AmbiguousParse<T> = await readAmbiguous(state, parser, parseFns, trace.id);
 
-    await parser.applyState(state, ambiguousParse.parseState);
-
     if (ResultUtils.isOk(ambiguousParse.result)) {
         trace.exit({
             [TraceConstant.IsThrowing]: false,
@@ -401,12 +438,6 @@ async function thoroughReadAmbiguous<T extends TAmbiguousBracketNode | TAmbiguou
 
         return ambiguousParse.result.value;
     } else {
-        // ParseError.state references the cloned state generated in readAmbiguous, not the current state parameter.
-        // For correctness sake we need to update the existing state with the AmbiguousParse error,
-        // then update the reference.
-        const mutableParseError: TypeScriptUtils.StripReadonly<ParseError.ParseError> = ambiguousParse.result.error;
-        mutableParseError.state = state;
-
         trace.exit({ [TraceConstant.IsThrowing]: true });
 
         throw ambiguousParse.result.error;
@@ -480,22 +511,5 @@ function unsafeMoveTo(state: ParseState, tokenIndex: number): void {
     } else {
         state.currentToken = undefined;
         state.currentTokenKind = undefined;
-    }
-}
-
-function bestAmbiguousParseMatch<T extends Ast.TNode>(
-    best: AmbiguousParse<T> | undefined,
-    candidate: AmbiguousParse<T>,
-): AmbiguousParse<T> {
-    if (best === undefined || best.parseState.tokenIndex < candidate.parseState.tokenIndex) {
-        return candidate;
-    } else if (
-        best.parseState.tokenIndex === candidate.parseState.tokenIndex &&
-        ResultUtils.isError(best.result) &&
-        ResultUtils.isOk(candidate.result)
-    ) {
-        return candidate;
-    } else {
-        return best;
     }
 }

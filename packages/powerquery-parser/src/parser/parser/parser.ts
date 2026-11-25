@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ParseError, ParseState } from "..";
+import { ParseContext, ParseError, ParseState } from "..";
 import { Ast } from "../../language";
 import { Result } from "../../common";
 
@@ -11,6 +11,11 @@ export interface ParseStateCheckpoint {
     readonly tokenIndex: number;
     readonly contextStateIdCounter: number;
     readonly contextNodeId: number | undefined;
+    readonly contextSnapshot?: {
+        readonly node: ParseContext.TNode | undefined;
+        readonly root: ParseContext.TNode | undefined;
+        readonly rightMostLeaf: Ast.TNode | undefined;
+    };
 }
 
 export interface ParseOk {
