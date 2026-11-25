@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Security: Reuse parenthesis lookahead and eliminate repeated operator and child-array copying while preserving bounded malformed-input parsing and cancellation.
 - Security: Bound ambiguous parsing with checkpoint rollback and a shared speculative work budget, returning a structured parse error on exhaustion instead of retaining full-state copies.
 - Fixed: Normalize hexadecimal numeric literal types correctly, including signed literals.
 

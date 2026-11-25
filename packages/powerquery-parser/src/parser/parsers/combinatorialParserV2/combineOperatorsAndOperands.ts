@@ -4,7 +4,7 @@
 import { ArrayUtils, Assert, CommonError, MapUtils } from "../../../common";
 import { Ast, AstUtils, Constant, ConstantUtils, Token } from "../../../language";
 import { CombinatorialParserV2TraceConstant, OperatorsAndOperands, TOperand } from "./commonTypes";
-import { NodeIdMap, ParseContext, ParseContextUtils } from "../..";
+import { NodeIdMap, NodeIdMapUtils, ParseContext, ParseContextUtils, ParseStateUtils } from "../..";
 import { NaiveParseSteps } from "..";
 import { Parser } from "../../parser";
 import { ParseState } from "../../parseState";
@@ -14,14 +14,14 @@ import { Trace } from "../../../common/trace";
 // Continually combines the highest precedence operators the operands they're adjacent to,
 // thus reducing the number of operators and operands by 1 per iteration.
 // Ends with 0 operators and 1 operand.
-export function combineOperatorsAndOperands(
+export async function combineOperatorsAndOperands(
     state: ParseState,
     parser: Parser,
     placeholderContextNodeId: number,
     operatorsAndOperands: OperatorsAndOperands,
     correlationId: number,
-): TOperand {
-    let { operatorConstants, operands }: OperatorsAndOperands = operatorsAndOperands;
+): Promise<TOperand> {
+    const { operatorConstants, operands }: OperatorsAndOperands = operatorsAndOperands;
 
     Assert.isTrue(
         operatorConstants.length + 1 === operands.length,
@@ -38,106 +38,130 @@ export function combineOperatorsAndOperands(
         correlationId,
     );
 
-    // Sorts operator by precedence where the highest precedence operators are first.
-    const sortedOperatorConstants: ReadonlyArray<PrecedenceSortableOperatorConstant> =
-        sortByPrecedence(operatorConstants);
+    // Link adjacent operators and group them by precedence without copying the operands.
+    const operatorsByPrecedence: Map<number, AdjacentOperator[]> = new Map();
+    let previous: AdjacentOperator | undefined;
 
-    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
-    const numOperators: number = sortedOperatorConstants.length;
+    for (let index: number = 0; index < operatorConstants.length; index += 1) {
+        pollReductionWork(state);
 
-    for (const [precedenceSortableOperatorConstant, index] of ArrayUtils.enumerate(sortedOperatorConstants)) {
-        const { leftOperandIndex, operatorConstant }: PrecedenceSortableOperatorConstant =
-            precedenceSortableOperatorConstant;
+        const operatorConstant: Ast.TBinOpExpressionConstant = ArrayUtils.assertGet(operatorConstants, index);
+        const precedence: number = ConstantUtils.binOpExpressionOperatorPrecedence(operatorConstant.constantKind);
 
-        const nodeKind: Ast.TBinOpExpressionNodeKind = AstUtils.nodeKindFromTBinOpExpressionOperator(
-            operatorConstant.constantKind,
-        );
-
-        const left: TOperand = ArrayUtils.assertGet(operands, leftOperandIndex);
-        const right: TOperand = ArrayUtils.assertGet(operands, leftOperandIndex + 1);
-
-        const binOpParseContext: ParseContext.TNode = ParseContextUtils.startContext(
-            state.contextState,
-            nodeKind,
-            left.tokenRange.tokenIndexStart,
-            state.lexerSnapshot.tokens[left.tokenRange.tokenIndexStart],
-            undefined,
-        );
-
-        placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
-
-        const validator: TValidator = validatorForOperator(operatorConstant.constantKind);
-
-        if (!validator.validateLeftOperand(left)) {
-            setParseStateToNodeStart(state, left);
-            validator.fallbackLeftOperand(state, parser, trace.id);
-            throw new CommonError.InvariantError(
-                `validateLeftOperand failed and then fallbackLeftOperand did not throw.`,
-            );
-        }
-
-        addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
-        addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
-
-        if (!validator.validateRightOperand(right)) {
-            setParseStateToAfterNodeEnd(state, operatorConstant);
-            validator.fallbackRightOperand(state, parser, trace.id);
-            throw new CommonError.InvariantError(
-                `validateRightOperand failed and then fallbackRightOperand did not throw.`,
-            );
-        }
-
-        addAstAsChild(nodeIdMapCollection, binOpParseContext, right);
-        setParseStateToAfterNodeEnd(state, right);
-
-        const leftTokenRange: Token.TokenRange = left.tokenRange;
-        const rightTokenRange: Token.TokenRange = right.tokenRange;
-
-        // We started with an operatorConstant belonging under TBinOpExpression["operatorConstant"].
-        // Working backwards, we derived the nodeKind for some TBinOpExpression `T` and validators
-        // which should validate left is `T["left"]` and right is `T["right"]`.
-        // Therefore, we should be able to cast it as a TBinOpExpression.
-        const binOp: Ast.TBinOpExpression = {
-            kind: nodeKind,
-            id: binOpParseContext.id,
-            attributeIndex: 0,
-            tokenRange: {
-                tokenIndexStart: leftTokenRange.tokenIndexStart,
-                tokenIndexEnd: rightTokenRange.tokenIndexEnd,
-                positionStart: leftTokenRange.positionStart,
-                positionEnd: rightTokenRange.positionEnd,
-            },
-            isLeaf: false,
-            left,
+        const operator: AdjacentOperator = {
             operatorConstant,
-            right,
-        } as unknown as Ast.TBinOpExpression;
+            left: ArrayUtils.assertGet(operands, index),
+            right: ArrayUtils.assertGet(operands, index + 1),
+            previous,
+            next: undefined,
+        };
 
-        // Promote from ParseContext into Ast
-        nodeIdMapCollection.astNodeById.set(binOp.id, binOp);
-        MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, binOp.id);
-
-        // Modify the operands and operatorConstants for the next iteration by:
-        //  - replacing the `left` and `right` operands with the new `binOp` node
-        //  - removing the operator
-        operands = [...operands.slice(0, leftOperandIndex), binOp, ...operands.slice(leftOperandIndex + 2)];
-        operatorConstants = ArrayUtils.assertRemoveAtIndex(operatorConstants, leftOperandIndex);
-
-        // Since we've mutated the list of operands we need to update the leftOperandIndex.
-        // for all operators to the right of the one we just processed.
-        for (let unvisitedIndex: number = index + 1; unvisitedIndex < numOperators; unvisitedIndex += 1) {
-            const unvisitedOperator: PrecedenceSortableOperatorConstant = ArrayUtils.assertGet(
-                sortedOperatorConstants,
-                unvisitedIndex,
-            );
-
-            if (unvisitedOperator.leftOperandIndex > leftOperandIndex) {
-                unvisitedOperator.leftOperandIndex -= 1;
-            }
+        if (previous) {
+            previous.next = operator;
         }
+
+        const bucket: AdjacentOperator[] | undefined = operatorsByPrecedence.get(precedence);
+
+        if (bucket) {
+            bucket.push(operator);
+        } else {
+            operatorsByPrecedence.set(precedence, [operator]);
+        }
+
+        previous = operator;
     }
 
-    const result: TOperand = ArrayUtils.assertGet(operands, 0);
+    const nodeIdMapCollection: NodeIdMap.Collection = state.contextState.nodeIdMapCollection;
+    let result: TOperand = ArrayUtils.assertGet(operands, 0);
+
+    // Only the fixed number of distinct precedences is sorted. Buckets retain document order,
+    // including reductions in disconnected subtrees, which determines diagnostics and node IDs.
+    for (const precedence of [...operatorsByPrecedence.keys()].sort((left: number, right: number) => right - left)) {
+        for (const operator of MapUtils.assertGet(operatorsByPrecedence, precedence)) {
+            pollReductionWork(state);
+
+            const { left, right, operatorConstant }: AdjacentOperator = operator;
+
+            const nodeKind: Ast.TBinOpExpressionNodeKind = AstUtils.nodeKindFromTBinOpExpressionOperator(
+                operatorConstant.constantKind,
+            );
+
+            const binOpParseContext: ParseContext.TNode = ParseContextUtils.startContext(
+                state.contextState,
+                nodeKind,
+                left.tokenRange.tokenIndexStart,
+                state.lexerSnapshot.tokens[left.tokenRange.tokenIndexStart],
+                undefined,
+            );
+
+            placeParseContextUnderPlaceholderContext(state, binOpParseContext, placeholderContextNodeId);
+
+            const validator: TValidator = validatorForOperator(operatorConstant.constantKind);
+
+            if (!validator.validateLeftOperand(left)) {
+                setParseStateToNodeStart(state, left);
+                // eslint-disable-next-line no-await-in-loop
+                await validator.fallbackLeftOperand(state, parser, trace.id);
+                throw new CommonError.InvariantError(
+                    `validateLeftOperand failed and then fallbackLeftOperand did not throw.`,
+                );
+            }
+
+            addAstAsChild(nodeIdMapCollection, binOpParseContext, left);
+            addAstAsChild(nodeIdMapCollection, binOpParseContext, operatorConstant);
+
+            if (!validator.validateRightOperand(right)) {
+                setParseStateToAfterNodeEnd(state, operatorConstant);
+                // eslint-disable-next-line no-await-in-loop
+                await validator.fallbackRightOperand(state, parser, trace.id);
+                throw new CommonError.InvariantError(
+                    `validateRightOperand failed and then fallbackRightOperand did not throw.`,
+                );
+            }
+
+            addAstAsChild(nodeIdMapCollection, binOpParseContext, right);
+            setParseStateToAfterNodeEnd(state, right);
+
+            const leftTokenRange: Token.TokenRange = left.tokenRange;
+            const rightTokenRange: Token.TokenRange = right.tokenRange;
+
+            // We started with an operatorConstant belonging under TBinOpExpression["operatorConstant"].
+            // Working backwards, we derived the nodeKind for some TBinOpExpression `T` and validators
+            // which should validate left is `T["left"]` and right is `T["right"]`.
+            // Therefore, we should be able to cast it as a TBinOpExpression.
+            const binOp: Ast.TBinOpExpression = {
+                kind: nodeKind,
+                id: binOpParseContext.id,
+                attributeIndex: 0,
+                tokenRange: {
+                    tokenIndexStart: leftTokenRange.tokenIndexStart,
+                    tokenIndexEnd: rightTokenRange.tokenIndexEnd,
+                    positionStart: leftTokenRange.positionStart,
+                    positionEnd: rightTokenRange.positionEnd,
+                },
+                isLeaf: false,
+                left,
+                operatorConstant,
+                right,
+            } as unknown as Ast.TBinOpExpression;
+
+            // Promote from ParseContext into Ast
+            nodeIdMapCollection.astNodeById.set(binOp.id, binOp);
+            MapUtils.assertDelete(nodeIdMapCollection.contextNodeById, binOp.id);
+
+            if (operator.previous) {
+                operator.previous.right = binOp;
+                operator.previous.next = operator.next;
+            }
+
+            if (operator.next) {
+                operator.next.left = binOp;
+                operator.next.previous = operator.previous;
+            }
+
+            result = binOp;
+        }
+    }
 
     Assert.isTrue(
         AstUtils.isTBinOpExpression(result) || AstUtils.isTUnaryExpression(result),
@@ -160,10 +184,12 @@ type TValidator =
     | Validator<Ast.NullCoalescingExpression>
     | Validator<TEqualityExpressionAndBelow>;
 
-interface PrecedenceSortableOperatorConstant {
-    leftOperandIndex: number;
-    readonly precedence: number;
+interface AdjacentOperator {
     readonly operatorConstant: Ast.TBinOpExpressionConstant;
+    left: TOperand;
+    right: TOperand;
+    previous: AdjacentOperator | undefined;
+    next: AdjacentOperator | undefined;
 }
 
 interface Validator<Node extends Ast.TBinOpExpression> {
@@ -182,8 +208,8 @@ interface Validator<Node extends Ast.TBinOpExpression> {
     readonly validateRightOperand: (node: Ast.TNode) => node is Node["right"];
     // If left/right operand is the wrong type, then it should fallback to a call to NaiveParseStep,
     // which in turn should throw some sort of exception.
-    readonly fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) => void;
-    readonly fallbackRightOperand: (state: ParseState, parser: Parser, correlationId: number) => void;
+    readonly fallbackLeftOperand: (state: ParseState, parser: Parser, correlationId: number) => Promise<Ast.TNode>;
+    readonly fallbackRightOperand: (state: ParseState, parser: Parser, correlationId: number) => Promise<Ast.TNode>;
 }
 
 const ValidatorForAsExpression: Validator<Ast.AsExpression> = {
@@ -263,11 +289,9 @@ function addAstAsChild(nodeIdMapCollection: NodeIdMap.Collection, parent: ParseC
     parent.attributeCounter += 1;
 
     const parentId: number = parent.id;
-    const oldChildren: ReadonlyArray<number> | undefined = nodeIdMapCollection.childIdsById.get(parentId);
-
     nodeIdMapCollection.astNodeById.set(child.id, child);
     nodeIdMapCollection.parentIdById.set(child.id, parentId);
-    nodeIdMapCollection.childIdsById.set(parentId, [...(oldChildren ?? []), child.id]);
+    NodeIdMapUtils.appendChildId(nodeIdMapCollection.childIdsById, parentId, child.id);
 
     if (child.isLeaf) {
         nodeIdMapCollection.leafIds.add(child.id);
@@ -326,26 +350,12 @@ function setParseStateToTokenIndex(state: ParseState, tokenIndex: number): void 
     state.tokenIndex = tokenIndex;
 }
 
-// Returns an array that iterates over the operators in order of precedence,
-// with tie breakers being the order they were given (which should also be the order they appear in the document)
-function sortByPrecedence(
-    operators: ReadonlyArray<Ast.TBinOpExpressionConstant>,
-): ReadonlyArray<PrecedenceSortableOperatorConstant> {
-    const sortableOperatorConstant: PrecedenceSortableOperatorConstant[] = operators.map(
-        (operatorConstant: Ast.TBinOpExpressionConstant, index: number) => ({
-            leftOperandIndex: index,
-            operatorConstant,
-            precedence: ConstantUtils.binOpExpressionOperatorPrecedence(operatorConstant.constantKind),
-        }),
-    );
-
-    return sortableOperatorConstant.sort(
-        (left: PrecedenceSortableOperatorConstant, right: PrecedenceSortableOperatorConstant) => {
-            const precedenceDelta: number = right.precedence - left.precedence;
-
-            return precedenceDelta === 0 ? left.leftOperandIndex - right.leftOperandIndex : precedenceDelta;
-        },
-    );
+function pollReductionWork(state: ParseState): void {
+    if (state.speculativeWorkBudget.depth > 0) {
+        ParseStateUtils.consumeSpeculativeWork(state);
+    } else {
+        state.cancellationToken?.throwIfCancelled();
+    }
 }
 
 function validatorForOperator(operator: Constant.TBinOpExpressionOperator): TValidator {

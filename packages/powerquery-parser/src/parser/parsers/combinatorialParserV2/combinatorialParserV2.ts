@@ -169,7 +169,13 @@ async function readBinOpExpression(
     if (operatorsAndOperands.operands.length === 1) {
         result = ArrayUtils.assertGet(operatorsAndOperands.operands, 0);
     } else {
-        result = combineOperatorsAndOperands(state, parser, placeholderContextNodeId, operatorsAndOperands, trace.id);
+        result = await combineOperatorsAndOperands(
+            state,
+            parser,
+            placeholderContextNodeId,
+            operatorsAndOperands,
+            trace.id,
+        );
     }
 
     ParseStateUtils.deleteContext(state, placeholderContextNode.id);

@@ -14,8 +14,66 @@ import { Ast, AstUtils, Constant, Token } from "../../language";
 import { Parser, ParseStateCheckpoint } from "../parser";
 import { ParseState, ParseStateUtils } from "../parseState";
 import { Trace, TraceConstant } from "../../common/trace";
+import { LexerSnapshot } from "../../lexer";
 import { NodeIdMapUtils } from "../nodeIdMap";
 import { ParseError } from "..";
+
+const parenthesisMatches: WeakMap<LexerSnapshot, Map<number, number>> = new WeakMap();
+
+function matchingParenthesis(state: ParseState): number | undefined {
+    state.cancellationToken?.throwIfCancelled();
+    const snapshot: LexerSnapshot = state.lexerSnapshot;
+    let matches: Map<number, number> | undefined = parenthesisMatches.get(snapshot);
+
+    if (matches === undefined) {
+        matches = new Map();
+        parenthesisMatches.set(snapshot, matches);
+    }
+
+    const cached: number | undefined = matches.get(state.tokenIndex);
+
+    if (cached !== undefined) {
+        if (state.speculativeWorkBudget.depth > 0) {
+            // Unmatched lookahead still bounds speculative descent before it allocates a deep partial tree.
+            ParseStateUtils.consumeSpeculativeWork(
+                state,
+                cached === -1 ? Math.max(1, snapshot.tokens.length - state.tokenIndex - 1) : 1,
+            );
+        }
+
+        return cached === -1 ? undefined : cached;
+    }
+
+    const openers: number[] = [state.tokenIndex];
+
+    for (let index: number = state.tokenIndex + 1; index < snapshot.tokens.length; index += 1) {
+        state.cancellationToken?.throwIfCancelled();
+
+        if (state.speculativeWorkBudget.depth > 0) {
+            ParseStateUtils.consumeSpeculativeWork(state);
+        }
+
+        const kind: Token.TokenKind = ArrayUtils.assertGet(snapshot.tokens, index).kind;
+
+        if (kind === Token.TokenKind.LeftParenthesis) {
+            openers.push(index);
+        } else if (kind === Token.TokenKind.RightParenthesis) {
+            const opener: number = Assert.asDefined(openers.pop());
+            matches.set(opener, index);
+
+            if (openers.length === 0) {
+                return index;
+            }
+        }
+    }
+
+    for (const opener of openers) {
+        state.cancellationToken?.throwIfCancelled();
+        matches.set(opener, -1);
+    }
+
+    return undefined;
+}
 
 // Try alternatives in place, keeping only their scores. Replay the winner if it wasn't last.
 // Prefer the most tokens consumed, then success, then callback order.
@@ -228,72 +286,47 @@ export async function disambiguateParenthesis(
         correlationId,
     );
 
-    const initialTokenIndex: number = state.tokenIndex;
-    const tokens: ReadonlyArray<Token.Token> = state.lexerSnapshot.tokens;
-    const totalTokens: number = tokens.length;
-    let nestedDepth: number = 1;
-    let offsetTokenIndex: number = initialTokenIndex + 1;
+    const offsetTokenIndex: number | undefined = matchingParenthesis(state);
 
-    while (offsetTokenIndex < totalTokens) {
-        state.cancellationToken?.throwIfCancelled();
+    if (offsetTokenIndex !== undefined) {
+        let disambiguation: ParenthesisDisambiguation;
 
-        if (state.speculativeWorkBudget.depth > 0) {
+        // '(x as number) as number' can be either case; inspect the token after the return type.
+        if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
+            const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
             ParseStateUtils.consumeSpeculativeWork(state);
-        }
+            unsafeMoveTo(state, offsetTokenIndex + 2);
 
-        const offsetTokenKind: Token.TokenKind = ArrayUtils.assertGet(tokens, offsetTokenIndex).kind;
+            try {
+                await parser.readNullablePrimitiveType(state, parser, trace.id);
+            } catch (error: unknown) {
+                Assert.isInstanceofError(error);
+                CommonError.throwIfCancellationError(error);
 
-        if (offsetTokenKind === Token.TokenKind.LeftParenthesis) {
-            nestedDepth += 1;
-        } else if (offsetTokenKind === Token.TokenKind.RightParenthesis) {
-            nestedDepth -= 1;
-        }
-
-        let disambiguation: ParenthesisDisambiguation | undefined = undefined;
-
-        if (nestedDepth === 0) {
-            // '(x as number) as number' could either be either case,
-            // so we need to consume test if the trailing 'as number' is followed by a FatArrow.
-            if (ParseStateUtils.isTokenKind(state, Token.TokenKind.KeywordAs, offsetTokenIndex + 1)) {
-                // eslint-disable-next-line no-await-in-loop
-                const checkpoint: ParseStateCheckpoint = await parser.checkpoint(state);
-                ParseStateUtils.consumeSpeculativeWork(state);
-                unsafeMoveTo(state, offsetTokenIndex + 2);
-
-                try {
-                    // eslint-disable-next-line no-await-in-loop
-                    await parser.readNullablePrimitiveType(state, parser, trace.id);
-                } catch (error: unknown) {
-                    Assert.isInstanceofError(error);
-                    CommonError.throwIfCancellationError(error);
-
-                    if (ParseError.isSpeculativeWorkLimitExceeded(error) || !ParseError.isTInnerParseError(error)) {
-                        throw error;
-                    }
-
-                    // eslint-disable-next-line no-await-in-loop
-                    await parser.restoreCheckpoint(state, checkpoint);
-
-                    if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                        return ParenthesisDisambiguation.FunctionExpression;
-                    } else {
-                        return ParenthesisDisambiguation.ParenthesizedExpression;
-                    }
+                if (ParseError.isSpeculativeWorkLimitExceeded(error) || !ParseError.isTInnerParseError(error)) {
+                    throw error;
                 }
+
+                await parser.restoreCheckpoint(state, checkpoint);
 
                 if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
-                    disambiguation = ParenthesisDisambiguation.FunctionExpression;
+                    return ParenthesisDisambiguation.FunctionExpression;
                 } else {
-                    disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
+                    return ParenthesisDisambiguation.ParenthesizedExpression;
                 }
+            }
 
-                // eslint-disable-next-line no-await-in-loop
-                await parser.restoreCheckpoint(state, checkpoint);
-            } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
+            if (ParseStateUtils.isOnTokenKind(state, Token.TokenKind.FatArrow)) {
                 disambiguation = ParenthesisDisambiguation.FunctionExpression;
             } else {
                 disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
             }
+
+            await parser.restoreCheckpoint(state, checkpoint);
+        } else if (ParseStateUtils.isTokenKind(state, Token.TokenKind.FatArrow, offsetTokenIndex + 1)) {
+            disambiguation = ParenthesisDisambiguation.FunctionExpression;
+        } else {
+            disambiguation = ParenthesisDisambiguation.ParenthesizedExpression;
         }
 
         if (disambiguation) {
@@ -301,8 +334,6 @@ export async function disambiguateParenthesis(
 
             return disambiguation;
         }
-
-        offsetTokenIndex += 1;
     }
 
     trace.exit({ [TraceConstant.Result]: undefined });

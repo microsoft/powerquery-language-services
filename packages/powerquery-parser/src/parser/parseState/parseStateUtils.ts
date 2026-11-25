@@ -58,11 +58,13 @@ export function newSpeculativeWorkBudget(tokenCount: number, maximumWork?: numbe
     return { limit, remaining: limit, depth: 0 };
 }
 
-export function consumeSpeculativeWork(state: ParseState): void {
+export function consumeSpeculativeWork(state: ParseState, work: number = 1): void {
+    Assert.isTrue(Number.isSafeInteger(work) && work > 0, "speculative work charge must be a positive safe integer");
     state.cancellationToken?.throwIfCancelled();
     const budget: SpeculativeWorkBudget = state.speculativeWorkBudget;
 
-    if (budget.remaining === 0) {
+    if (budget.remaining < work) {
+        budget.remaining = 0;
         throw new ParseError.SpeculativeWorkLimitExceededError(
             budget.limit,
             state.lexerSnapshot.tokens[state.tokenIndex],
@@ -70,7 +72,7 @@ export function consumeSpeculativeWork(state: ParseState): void {
         );
     }
 
-    budget.remaining -= 1;
+    budget.remaining -= work;
 }
 
 // If you have a custom parser + parser state, then you'll have to create your own copyState/applyState functions.

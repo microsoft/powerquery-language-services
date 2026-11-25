@@ -94,13 +94,7 @@ export function startContext<T extends Ast.TNode>(
         attributeIndex = nextAttributeIndex(parentNode);
         nodeIdMapCollection.parentIdById.set(nodeId, parentId);
 
-        const existingChildren: ReadonlyArray<number> | undefined = childIdsById.get(parentId);
-
-        if (existingChildren) {
-            childIdsById.set(parentId, [...existingChildren, nodeId]);
-        } else {
-            childIdsById.set(parentId, [nodeId]);
-        }
+        NodeIdMapUtils.appendChildId(childIdsById, parentId, nodeId);
     }
 
     const contextNode: ParseContext.Node<T> = {
@@ -419,20 +413,22 @@ function removeOrReplaceChildId(
     replacementId: number | undefined,
 ): void {
     const childIdsById: NodeIdMap.ChildIdsById = nodeIdMapCollection.childIdsById;
-    const childIds: ReadonlyArray<number> = NodeIdMapUtils.assertChildIds(childIdsById, parentId);
+    NodeIdMapUtils.assertChildIds(childIdsById, parentId);
+    const childIds: number[] = NodeIdMapUtils.mutableChildIds(childIdsById, parentId);
 
-    let newChildIds: ReadonlyArray<number>;
+    const index: number =
+        childIds[childIds.length - 1] === childId ? childIds.length - 1 : childIds.lastIndexOf(childId);
+
+    Assert.isTrue(index !== -1, "parent does not contain child", { parentId, childId });
 
     if (replacementId) {
         nodeIdMapCollection.parentIdById.set(replacementId, parentId);
-        newChildIds = ArrayUtils.assertReplaceFirstInstance(childIds, childId, replacementId);
+        childIds[index] = replacementId;
     } else {
-        newChildIds = ArrayUtils.assertRemoveFirstInstance(childIds, childId);
+        childIds.splice(index, 1);
     }
 
-    if (newChildIds.length) {
-        childIdsById.set(parentId, newChildIds);
-    } else {
+    if (!childIds.length) {
         childIdsById.delete(parentId);
     }
 

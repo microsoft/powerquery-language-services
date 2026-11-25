@@ -3,10 +3,38 @@
 
 import { ArrayUtils, Assert } from "../../../common";
 import { Ast, Token } from "../../../language";
-import { Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
+import { ChildIdsById, Collection, CollectionValidation, IdsByNodeKind, NodeSummary } from "../nodeIdMap";
 import { TXorNode, XorNodeKind, XorNodeTokenRange } from "../xorNode";
 import { ParseContext } from "../../context";
 import { rightMostLeaf } from "./leafSelectors";
+
+const ownedChildArrays: WeakMap<ChildIdsById, WeakSet<ReadonlyArray<number>>> = new WeakMap();
+
+// Keep mutation internal to each map; readonly arrays supplied by callers are copied on first write.
+export function mutableChildIds(childIdsById: ChildIdsById, parentId: number): number[] {
+    let owned: WeakSet<ReadonlyArray<number>> | undefined = ownedChildArrays.get(childIdsById);
+
+    if (owned === undefined) {
+        owned = new WeakSet();
+        ownedChildArrays.set(childIdsById, owned);
+    }
+
+    const children: ReadonlyArray<number> | undefined = childIdsById.get(parentId);
+
+    if (children !== undefined && owned.has(children) && Object.isExtensible(children)) {
+        return children as number[];
+    }
+
+    const mutable: number[] = children === undefined ? [] : [...children];
+    owned.add(mutable);
+    childIdsById.set(parentId, mutable);
+
+    return mutable;
+}
+
+export function appendChildId(childIdsById: ChildIdsById, parentId: number, childId: number): void {
+    mutableChildIds(childIdsById, parentId).push(childId);
+}
 
 export function copy(nodeIdMapCollection: Collection): Collection {
     const astNodeById: Map<number, Ast.TNode> = new Map(
@@ -34,7 +62,12 @@ export function copy(nodeIdMapCollection: Collection): Collection {
 
     return {
         astNodeById,
-        childIdsById: new Map(nodeIdMapCollection.childIdsById),
+        childIdsById: new Map(
+            Array.from(nodeIdMapCollection.childIdsById, ([id, children]: [number, ReadonlyArray<number>]) => [
+                id,
+                [...children],
+            ]),
+        ),
         contextNodeById,
         leafIds: new Set(nodeIdMapCollection.leafIds),
         idsByNodeKind,
