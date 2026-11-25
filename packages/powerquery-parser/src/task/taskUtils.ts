@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { DefaultCancellationTimeoutMs, TimedCancellationToken } from "../common/cancellationToken/cancellationToken";
+
 import { CommonError, ResultKind, ResultUtils } from "../common";
 import { Lexer, Parser } from "..";
 import {
@@ -197,12 +199,15 @@ export async function tryLexParse(settings: LexSettings & ParseSettings, text: s
 
     const updatedSettings: LexSettings & ParseSettings = {
         ...settings,
+        cancellationToken: settings.cancellationToken ?? new TimedCancellationToken(DefaultCancellationTimeoutMs),
         initialCorrelationId: trace.id,
     };
 
     const triedLexTask: TriedLexTask = tryLex(updatedSettings, text);
 
     if (triedLexTask.resultKind === ResultKind.Error) {
+        trace.exit();
+
         return triedLexTask;
     }
 

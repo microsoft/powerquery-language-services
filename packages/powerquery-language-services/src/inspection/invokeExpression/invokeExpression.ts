@@ -17,6 +17,7 @@ import { assertGetOrCreateNodeScope, NodeScope, ScopeItemKind, ScopeUtils, TScop
 import { IInvokeExpression, InvokeExpressionArguments } from "./common";
 import { TriedType, tryType } from "../type";
 import { TypeCache, TypeCacheUtils } from "../typeCache";
+import { cancellationTokenOrDefault } from "../../cancellation";
 import { InspectionSettings } from "../../inspectionSettings";
 import { InspectionTraceConstant } from "../../trace";
 
@@ -41,6 +42,7 @@ export function tryInvokeExpression(
 
     const updatedSettings: InspectionSettings = {
         ...settings,
+        cancellationToken: cancellationTokenOrDefault(settings.cancellationToken),
         initialCorrelationId: trace.id,
     };
 

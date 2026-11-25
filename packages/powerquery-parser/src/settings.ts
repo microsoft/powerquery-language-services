@@ -13,6 +13,7 @@ export const DefaultSettings: Settings = {
     newParseState: (lexerSnapshot: LexerSnapshot, overrides?: Partial<ParseState>) =>
         ParseStateUtils.newState(lexerSnapshot, overrides),
     locale: DefaultLocale,
+    // The lexer and parser create a fresh deadline at the operation boundary.
     cancellationToken: undefined,
     isTypeDirectiveAllowed: false,
     initialCorrelationId: undefined,

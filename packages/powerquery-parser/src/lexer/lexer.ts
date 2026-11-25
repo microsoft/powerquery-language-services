@@ -4,6 +4,7 @@
 import * as Pattern from "../common/patterns";
 import { Assert, CommonError, Result, ResultUtils, StringUtils, TypeScriptUtils } from "../common";
 import { Comment, IdentifierUtils, Keyword, Token } from "../language";
+import { DefaultCancellationTimeoutMs, TimedCancellationToken } from "../common/cancellationToken/cancellationToken";
 import { LexerSnapshot, LineTerminator } from "./lexerSnapshot";
 import { LexError } from ".";
 import { LexSettings } from "./lexSettings";
@@ -14,7 +15,16 @@ export function tryLex(settings: LexSettings, text: string): TriedLex {
     const locale: string = settings.locale;
 
     try {
-        return ResultUtils.ok(lex(settings, text));
+        return ResultUtils.ok(
+            lex(
+                {
+                    ...settings,
+                    cancellationToken:
+                        settings.cancellationToken ?? new TimedCancellationToken(DefaultCancellationTimeoutMs),
+                },
+                text,
+            ),
+        );
     } catch (caught: unknown) {
         Assert.isInstanceofError(caught);
 

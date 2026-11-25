@@ -35,6 +35,7 @@ import {
     PseudoFunctionParameterType,
 } from "../pseudoFunctionExpressionType";
 import { Trace, TraceConstant } from "@microsoft/powerquery-parser/lib/powerquery-parser/common/trace";
+import { cancellationTokenOrDefault } from "../../cancellation";
 import { ScopeBindings } from "./scopeBindings";
 import { TypeById } from "../typeCache";
 
@@ -55,6 +56,7 @@ export async function tryNodeScope(
 
     const updatedSettings: PQP.CommonSettings = {
         ...settings,
+        cancellationToken: cancellationTokenOrDefault(settings.cancellationToken),
         initialCorrelationId: trace.id,
     };
 

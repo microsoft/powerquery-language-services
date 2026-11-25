@@ -7,21 +7,74 @@ import {
     CommonError,
     DefaultLocale,
     ExpiredCancellationToken,
+    NoOpCancellationToken,
     Result,
     ResultUtils,
 } from "@microsoft/powerquery-parser";
+import { Mock, mock } from "node:test";
 import { CompletionItemKind } from "vscode-languageserver-types";
 import { expect } from "chai";
 
 import type { Analysis, AnalysisSettings, Hover, Inspection, Library, Position, SignatureHelp } from "../src";
 import type { AutocompleteItem, TypeCache } from "../src/inspection";
-import { ILibraryProvider, ILocalDocumentProvider } from "../src/providers/commonTypes";
+import { FoldingRangeProviderContext, ILibraryProvider, ILocalDocumentProvider } from "../src/providers/commonTypes";
 import { TestConstants, TestUtils } from ".";
 import { ILibrary } from "../src/library/library";
+import { LocalDocumentProvider } from "../src/providers";
 import { SlowLibraryProvider } from "./providers/slowLibraryProvider.test";
 import { SlowLocalDocumentProvider } from "./providers/slowLocalDocumentProvider.test";
 
 describe(`Analysis`, () => {
+    it("gives each request a fresh fifteen-second deadline, unless the caller overrides it", async () => {
+        let now: number = 0;
+        let elapsed: number = 0;
+        const clock: Mock<typeof Date.now> = mock.method(Date, "now", () => now);
+        const baseSettings: AnalysisSettings = TestConstants.SimpleLibraryAnalysisSettings;
+
+        const analysisSettings: AnalysisSettings = {
+            ...baseSettings,
+            localDocumentProviderFactory: (
+                uri: string,
+                typeCache: TypeCache,
+                library: ILibrary,
+                locale: string,
+            ): LocalDocumentProvider => {
+                const provider: LocalDocumentProvider = new LocalDocumentProvider(uri, typeCache, library, locale);
+                const getFoldingRanges: typeof provider.getFoldingRanges = provider.getFoldingRanges.bind(provider);
+
+                provider.getFoldingRanges = (
+                    context: FoldingRangeProviderContext,
+                ): ReturnType<typeof getFoldingRanges> => {
+                    now += elapsed;
+
+                    return getFoldingRanges(context);
+                };
+
+                return provider;
+            },
+        };
+
+        try {
+            const analysis: Analysis = TestUtils.assertAnalysisFromText({ text: "[a = 1]", analysisSettings });
+            ResultUtils.assertIsOk(await analysis.getParseState());
+            now = 60_000;
+
+            elapsed = 14_999;
+            ResultUtils.assertIsOk(await analysis.getFoldingRanges());
+
+            elapsed = 15_000;
+            const timedOut: Awaited<ReturnType<Analysis["getFoldingRanges"]>> = await analysis.getFoldingRanges();
+            ResultUtils.assertIsError(timedOut);
+            expect(timedOut.error.innerError).to.be.instanceOf(CommonError.CancellationError);
+
+            ResultUtils.assertIsOk(await analysis.getFoldingRanges(NoOpCancellationToken));
+            elapsed = 0;
+            ResultUtils.assertIsOk(await analysis.getFoldingRanges());
+        } finally {
+            clock.mock.restore();
+        }
+    });
+
     describe(`getAutocompleteItems;`, () => {
         it(`prefer local over library`, async () => {
             const autocompleteItems: Inspection.AutocompleteItem[] | undefined =

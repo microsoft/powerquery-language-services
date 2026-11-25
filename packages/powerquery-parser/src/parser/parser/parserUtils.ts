@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import { Assert, CommonError, Result, ResultUtils } from "../../common";
+import { DefaultCancellationTimeoutMs, TimedCancellationToken } from "../../common/cancellationToken/cancellationToken";
 import { NodeIdMap, NodeIdMapUtils } from "../nodeIdMap";
 import { ParseContext, ParseContextUtils } from "../context";
 import { ParseError, ParseSettings } from "..";
@@ -21,16 +22,23 @@ export async function tryParse(parseSettings: ParseSettings, lexerSnapshot: Lexe
 
     const updatedSettings: ParseSettings = {
         ...parseSettings,
+        cancellationToken: parseSettings.cancellationToken ?? new TimedCancellationToken(DefaultCancellationTimeoutMs),
         initialCorrelationId: trace.id,
     };
 
-    const result: TriedParse = updatedSettings.parserEntryPoint
-        ? await tryParseEntryPoint(updatedSettings.parserEntryPoint, updatedSettings, lexerSnapshot)
-        : await tryParseDocument(updatedSettings, lexerSnapshot);
+    try {
+        return updatedSettings.parserEntryPoint
+            ? await tryParseEntryPoint(updatedSettings.parserEntryPoint, updatedSettings, lexerSnapshot)
+            : await tryParseDocument(updatedSettings, lexerSnapshot);
+    } catch (caught: unknown) {
+        if (caught instanceof CommonError.CancellationError) {
+            return ResultUtils.error(new CommonError.CommonError(caught));
+        }
 
-    trace.exit();
-
-    return result;
+        throw caught;
+    } finally {
+        trace.exit();
+    }
 }
 
 // If you have a custom parser + parser state,
@@ -132,6 +140,7 @@ async function tryParseEntryPoint(
     const parseState: ParseState = parseSettings.newParseState(lexerSnapshot, defaultOverrides(parseSettings));
 
     try {
+        parseState.cancellationToken?.throwIfCancelled();
         const root: Ast.TNode = await parserEntryPoint(parseState, parseSettings.parser, trace.id);
         ParseStateUtils.assertIsDoneParsing(parseState);
 
@@ -278,6 +287,7 @@ async function tryParseHelper<T extends Ast.TNode>(
     const parseState: ParseState = parseSettings.newParseState(lexerSnapshot, defaultOverrides(parseSettings));
 
     try {
+        parseState.cancellationToken?.throwIfCancelled();
         const root: T = await parserFunction(parseState, parseSettings.parser, correlationId);
 
         ParseStateUtils.assertIsDoneParsing(parseState);
