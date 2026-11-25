@@ -1,9 +1,20 @@
 # Changelog
 
-## Unreleased
+## 6.0.0
 
-- Fixed: Infer unary operations on nulls, durations, and union alternatives, and negate logical literal types correctly.
-- Fixed: Infer list positions and range bounds correctly when they contain hexadecimal literals.
+- Fixed: Infer unary operations on nulls, durations, and union alternatives, and negate logical literal types correctly. ([#365](https://github.com/microsoft/powerquery-language-services/pull/365))
+- Fixed: Infer list positions and range bounds correctly when they contain hexadecimal literals. ([#364](https://github.com/microsoft/powerquery-language-services/pull/364))
+- Fixed: Quote and escape rename targets that cannot be used as bare M identifiers. ([#298](https://github.com/microsoft/powerquery-language-services/pull/298))
+- Fixed: Distinguish invalid item selectors from missing items and retain the types of items that are present. ([#374](https://github.com/microsoft/powerquery-language-services/pull/374))
+- Fixed: Ignore unreachable right operands when inferring short-circuit logical expressions. ([#375](https://github.com/microsoft/powerquery-language-services/pull/375))
+- Fixed: Infer null results for valid binary operations involving null operands. ([#376](https://github.com/microsoft/powerquery-language-services/pull/376))
+- Fixed: Preserve non-null outcomes when a null-coalescing fallback errors. ([#377](https://github.com/microsoft/powerquery-language-services/pull/377))
+- Fixed: Preserve reachable branch types for `if` conditions with mixed-type alternatives. ([#378](https://github.com/microsoft/powerquery-language-services/pull/378))
+- Fixed: Preserve null as a possible unary result when non-null operand alternatives are invalid. ([#379](https://github.com/microsoft/powerquery-language-services/pull/379))
+- Fixed: Infer possible binary operator results when an operand has type `any`. ([#380](https://github.com/microsoft/powerquery-language-services/pull/380))
+- Fixed: Infer a numeric result when dividing one duration by another. ([#381](https://github.com/microsoft/powerquery-language-services/pull/381))
+- Fixed: Field-access autocomplete recognizes a complete quoted field name even when it is followed by stray text. ([#368](https://github.com/microsoft/powerquery-language-services/pull/368))
+- Changed: Document lexing and parsing use the parser's five-second deadline by default; later analysis is not subject to that default deadline. ([#386](https://github.com/microsoft/powerquery-language-services/pull/386))
 
 ## 5.1.0
 

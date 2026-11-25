@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 6.0.0
 
-- Changed: Lexing and parsing use a fresh five-second deadline by default. Supply a cancellation token to override it, or use `NoOpCancellationToken` to opt out.
-- Fixed: Normalize hexadecimal numeric literal types correctly, including signed literals.
+- Changed: Lexing and parsing use a fresh five-second deadline by default. Supply a cancellation token to override it, or use `NoOpCancellationToken` to opt out. ([#386](https://github.com/microsoft/powerquery-language-services/pull/386))
+- Fixed: Normalize hexadecimal numeric literal types correctly, including signed literals. ([#364](https://github.com/microsoft/powerquery-language-services/pull/364))
+- Added: `IdentifierUtils.isQuotedIdentifier` checks whether the entire string is a quoted identifier, including doubled quote escapes. ([#368](https://github.com/microsoft/powerquery-language-services/pull/368))
+- Fixed: Preserve quoted record keys during parse recovery instead of absorbing trailing tokens. ([#368](https://github.com/microsoft/powerquery-language-services/pull/368))
 
 ## 5.1.0
 
